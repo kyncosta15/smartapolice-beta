@@ -1,5 +1,5 @@
 
-import { Calendar, Home, FileText, DollarSign, Settings, Users, Phone, Upload } from 'lucide-react';
+import { Calendar, Home, FileText, DollarSign, Settings, Users, Phone, Upload, UserPlus, Shield } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -15,44 +15,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 
-const navigationItems = [
-  {
-    title: "Dashboard",
-    id: "home",
-    icon: Home,
-  },
-  {
-    title: "Minhas Apólices",
-    id: "policies",
-    icon: FileText,
-  },
-  {
-    title: "Importar Apólice",
-    id: "import",
-    icon: Upload,
-  },
-  {
-    title: "Financeiro",
-    id: "financial",
-    icon: DollarSign,
-  },
-  {
-    title: "Configurações",
-    id: "settings",
-    icon: Settings,
-  },
-  {
-    title: "Quem Somos",
-    id: "about",
-    icon: Users,
-  },
-  {
-    title: "Contato",
-    id: "contact",
-    icon: Phone,
-  },
-];
-
 interface AppSidebarProps {
   onSectionChange: (section: string) => void;
   activeSection: string;
@@ -60,6 +22,66 @@ interface AppSidebarProps {
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
   const { user } = useAuth();
+
+  const getNavigationItems = () => {
+    const baseItems = [
+      {
+        title: "Dashboard",
+        id: "home",
+        icon: Home,
+      },
+      {
+        title: "Minhas Apólices",
+        id: "policies",
+        icon: FileText,
+      },
+      {
+        title: "Importar Apólice",
+        id: "import",
+        icon: Upload,
+      },
+      {
+        title: "Financeiro",
+        id: "financial",
+        icon: DollarSign,
+      },
+      {
+        title: "Configurações",
+        id: "settings",
+        icon: Settings,
+      },
+    ];
+
+    // Adicionar itens específicos para administrador
+    if (user?.role === 'administrador') {
+      baseItems.splice(2, 0, {
+        title: "Painel Admin",
+        id: "admin",
+        icon: Shield,
+      });
+      baseItems.splice(3, 0, {
+        title: "Cadastrar Cliente",
+        id: "register-client",
+        icon: UserPlus,
+      });
+    }
+
+    // Adicionar itens gerais no final
+    baseItems.push(
+      {
+        title: "Quem Somos",
+        id: "about",
+        icon: Users,
+      },
+      {
+        title: "Contato",
+        id: "contact",
+        icon: Phone,
+      }
+    );
+
+    return baseItems;
+  };
 
   const getRoleBadgeColor = (role: string) => {
     const colors = {
@@ -79,12 +101,15 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     return roles[role] || role;
   };
 
+  const navigationItems = getNavigationItems();
+
   return (
     <Sidebar className="border-r border-gray-100 bg-white">
-      <SidebarHeader className="px-4 py-6 border-b border-gray-50">
-        <div className="space-y-3">
+      <SidebarHeader className="px-3 py-4 border-b border-gray-50">
+        <div className="space-y-2">
           <div>
             <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
+            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
           </div>
           <Badge className={`text-xs font-medium px-2 py-1 ${getRoleBadgeColor(user?.role || '')}`}>
             {getRoleLabel(user?.role || '')}
@@ -92,9 +117,9 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         </div>
       </SidebarHeader>
       
-      <SidebarContent className="px-2 py-4">
+      <SidebarContent className="px-2 py-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider px-3 mb-2">
+          <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2 mb-2">
             Navegação
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -103,7 +128,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     onClick={() => onSectionChange(item.id)}
-                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${
+                    className={`w-full flex items-center space-x-2 px-2 py-2 rounded-md text-sm font-medium transition-all duration-200 group ${
                       activeSection === item.id 
                         ? 'bg-blue-50 text-blue-700 shadow-sm' 
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -121,7 +146,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-gray-50">
+      <SidebarFooter className="p-3 border-t border-gray-50">
         <div className="text-xs text-gray-400 text-center font-medium">
           © 2024 SmartApólice
         </div>

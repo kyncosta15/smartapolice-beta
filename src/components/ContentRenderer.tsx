@@ -1,12 +1,12 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { DollarSign, Settings, Phone, Users, Shield } from 'lucide-react';
 import { EnhancedDashboard } from '@/components/EnhancedDashboard';
 import { PolicyTable } from '@/components/PolicyTable';
 import { ChartsSection } from '@/components/ChartsSection';
 import { EnhancedPDFUpload } from '@/components/EnhancedPDFUpload';
 import { PolicyViewer } from '@/components/PolicyViewer';
+import { AdminDashboard } from '@/components/AdminDashboard';
+import { ClientRegistration } from '@/components/ClientRegistration';
 import { OptimizedSettings } from '@/components/OptimizedSettings';
 import { RegionalDashboard } from '@/components/RegionalDashboard';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,10 +17,14 @@ interface ContentRendererProps {
   filterType: string;
   allPolicies: any[];
   extractedPolicies: any[];
+  allUsers: any[];
   onPolicySelect: (policy: any) => void;
   onPolicyUpdate: (updatedPolicy: any) => void;
   onPolicyDelete: (policyId: string) => void;
   onPolicyExtracted: (policy: any) => void;
+  onUserUpdate: (user: any) => void;
+  onUserDelete: (userId: string) => void;
+  onClientRegister: (client: any) => void;
 }
 
 export function ContentRenderer({
@@ -29,27 +33,29 @@ export function ContentRenderer({
   filterType,
   allPolicies,
   extractedPolicies,
+  allUsers,
   onPolicySelect,
   onPolicyUpdate,
   onPolicyDelete,
   onPolicyExtracted,
+  onUserUpdate,
+  onUserDelete,
+  onClientRegister,
 }: ContentRendererProps) {
   const { user } = useAuth();
   
   const handleNotificationClick = () => {
     console.log('Notificações clicadas');
-    // Implementar modal de notificações
   };
 
   const handlePolicyEdit = (policy: any) => {
-    // Usar a mesma função onPolicyUpdate
     onPolicyUpdate(policy);
   };
 
   switch (activeSection) {
     case 'home':
       return (
-        <div className="space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6">
           <EnhancedDashboard 
             policies={allPolicies} 
             onNotificationClick={handleNotificationClick}
@@ -74,7 +80,7 @@ export function ContentRenderer({
 
     case 'policies':
       return (
-        <div className="space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-6">
           <PolicyViewer
             policies={allPolicies}
             onPolicySelect={onPolicySelect}
@@ -97,12 +103,45 @@ export function ContentRenderer({
         </div>
       );
 
+    case 'admin':
+      if (user?.role !== 'administrador') {
+        return (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-500">Acesso restrito a administradores</p>
+          </div>
+        );
+      }
+      return (
+        <AdminDashboard
+          allUsers={allUsers}
+          allPolicies={allPolicies}
+          onUserUpdate={onUserUpdate}
+          onUserDelete={onUserDelete}
+          onPolicyUpdate={onPolicyUpdate}
+          onPolicyDelete={onPolicyDelete}
+        />
+      );
+
+    case 'register-client':
+      if (user?.role !== 'administrador') {
+        return (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-500">Acesso restrito a administradores</p>
+          </div>
+        );
+      }
+      return <ClientRegistration onClientRegister={onClientRegister} />;
+
     case 'import':
-      return <EnhancedPDFUpload onPolicyExtracted={onPolicyExtracted} />;
+      return (
+        <div className="max-w-4xl mx-auto p-4 md:p-6">
+          <EnhancedPDFUpload onPolicyExtracted={onPolicyExtracted} />
+        </div>
+      );
 
     case 'financial':
       return (
-        <div className="space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-6">
           <EnhancedDashboard 
             policies={allPolicies} 
             onNotificationClick={handleNotificationClick}
@@ -142,7 +181,11 @@ export function ContentRenderer({
       );
 
     case 'settings':
-      return <OptimizedSettings />;
+      return (
+        <div className="max-w-4xl mx-auto p-4 md:p-6">
+          <OptimizedSettings />
+        </div>
+      );
 
     case 'about':
       return (
@@ -231,7 +274,7 @@ export function ContentRenderer({
 
     default:
       return (
-        <div className="space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6">
           <EnhancedDashboard 
             policies={allPolicies} 
             onNotificationClick={handleNotificationClick}

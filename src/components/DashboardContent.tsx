@@ -16,6 +16,26 @@ export function DashboardContent() {
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [extractedPolicies, setExtractedPolicies] = useState([]);
+  const [allUsers, setAllUsers] = useState([
+    {
+      id: '1',
+      name: 'João Silva',
+      email: 'admin@empresa.com',
+      role: 'administrador',
+      company: 'Empresa ABC',
+      phone: '(11) 99999-9999',
+      status: 'active'
+    },
+    {
+      id: '2',
+      name: 'Maria Santos',
+      email: 'cliente@exemplo.com',
+      role: 'cliente',
+      company: 'Consultoria XYZ',
+      phone: '(11) 88888-8888',
+      status: 'active'
+    }
+  ]);
   const [activeSection, setActiveSection] = useState('home');
   const { toast } = useToast();
 
@@ -73,6 +93,27 @@ export function DashboardContent() {
     }
   };
 
+  const handleUserUpdate = (updatedUser: any) => {
+    setAllUsers(prev => 
+      prev.map(user => 
+        user.id === updatedUser.id ? updatedUser : user
+      )
+    );
+    
+    toast({
+      title: "Usuário Atualizado",
+      description: "As informações foram salvas com sucesso",
+    });
+  };
+
+  const handleUserDelete = (userId: string) => {
+    setAllUsers(prev => prev.filter(u => u.id !== userId));
+  };
+
+  const handleClientRegister = (client: any) => {
+    setAllUsers(prev => [...prev, client]);
+  };
+
   // Usando apenas as apólices extraídas pelo usuário
   const allPolicies = extractedPolicies;
 
@@ -87,7 +128,7 @@ export function DashboardContent() {
             notificationCount={allPolicies.filter(p => new Date(p.endDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length}
           />
 
-          <div className="flex-1 space-y-6 p-6">
+          <div className="flex-1">
             <WelcomeSection />
             
             <ContentRenderer
@@ -96,10 +137,14 @@ export function DashboardContent() {
               filterType={filterType}
               allPolicies={allPolicies}
               extractedPolicies={extractedPolicies}
+              allUsers={allUsers}
               onPolicySelect={handlePolicySelect}
               onPolicyUpdate={handlePolicyUpdate}
               onPolicyDelete={handleDeletePolicy}
               onPolicyExtracted={handlePolicyExtracted}
+              onUserUpdate={handleUserUpdate}
+              onUserDelete={handleUserDelete}
+              onClientRegister={handleClientRegister}
             />
           </div>
 
