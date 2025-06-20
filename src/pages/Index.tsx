@@ -54,6 +54,19 @@ const DashboardContent = () => {
     setIsDetailsModalOpen(true);
   };
 
+  const handlePolicyUpdate = (updatedPolicy: any) => {
+    setExtractedPolicies(prev => 
+      prev.map(policy => 
+        policy.id === updatedPolicy.id ? updatedPolicy : policy
+      )
+    );
+    
+    toast({
+      title: "Apólice Atualizada",
+      description: "As informações foram salvas com sucesso",
+    });
+  };
+
   const handleDeletePolicy = (policyId: string) => {
     const policyToDelete = extractedPolicies.find(p => p.id === policyId);
     if (policyToDelete) {
@@ -66,7 +79,6 @@ const DashboardContent = () => {
     }
   };
 
-  // Combinar dados mock com dados extraídos para demonstração
   const mockPolicies = [
     {
       id: '1',
@@ -123,6 +135,8 @@ const DashboardContent = () => {
                   filterType={filterType}
                   onPolicySelect={handlePolicySelect}
                   extractedPolicies={extractedPolicies}
+                  onPolicyUpdate={handlePolicyUpdate}
+                  onPolicyDelete={handleDeletePolicy}
                 />
               </div>
               <div>
