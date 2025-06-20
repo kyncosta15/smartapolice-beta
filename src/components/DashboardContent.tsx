@@ -73,48 +73,8 @@ export function DashboardContent() {
     }
   };
 
-  const mockPolicies = [
-    {
-      id: '1',
-      name: 'Seguro Auto Civic',
-      type: 'auto',
-      insurer: 'Porto Seguro',
-      premium: 14400,
-      monthlyAmount: 1200,
-      status: 'active',
-      startDate: '2024-01-15',
-      endDate: '2025-01-15',
-      policyNumber: 'PS-2024-001234',
-      category: 'Veicular',
-      entity: 'Pessoa Física',
-      coverage: ['Cobertura Compreensiva', 'Responsabilidade Civil', 'Danos Materiais'],
-      paymentForm: 'Mensal',
-      installments: 12,
-      deductible: 2500,
-      limits: 'R$ 150.000 por sinistro'
-    },
-    {
-      id: '2',
-      name: 'Seguro Residencial Plus',
-      type: 'patrimonial',
-      insurer: 'Mapfre',
-      premium: 10206,
-      monthlyAmount: 850.50,
-      status: 'expiring',
-      startDate: '2023-08-20',
-      endDate: '2024-08-20',
-      policyNumber: 'MF-2023-005678',
-      category: 'Imóvel',
-      entity: 'Pessoa Física',
-      coverage: ['Incêndio', 'Roubo', 'Danos Elétricos'],
-      paymentForm: 'Mensal',
-      installments: 12,
-      deductible: 1500,
-      limits: 'R$ 200.000 por sinistro'
-    }
-  ];
-
-  const allPolicies = [...mockPolicies, ...extractedPolicies];
+  // Usando apenas as apólices extraídas pelo usuário
+  const allPolicies = extractedPolicies;
 
   return (
     <SidebarProvider>

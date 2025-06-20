@@ -1,11 +1,12 @@
 
 import { useState } from 'react';
-import { Bell, Search, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import { Bell, Search, Menu, X, LogOut, ChevronDown, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { SmartApóliceLogo } from './SmartApoliceLogo';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSidebar } from '@/components/ui/sidebar';
 
 interface NavbarProps {
   searchTerm: string;
@@ -17,6 +18,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount }: Navbar
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, logout } = useAuth();
+  const { toggleSidebar } = useSidebar();
 
   const getRoleLabel = (role: string) => {
     const roles = {
@@ -40,14 +42,26 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount }: Navbar
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Left side - Logo and Mobile Menu */}
-          <div className="flex items-center space-x-4">
+          {/* Left side - Sidebar Toggle, Logo and Mobile Menu */}
+          <div className="flex items-center space-x-3">
+            {/* Sidebar Toggle for Desktop */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebar}
+              className="hidden md:flex p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <PanelLeft className="w-4 h-4" />
+            </Button>
+
+            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 md:hidden transition-colors"
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
+            
             <SmartApóliceLogo size="md" showText={true} />
           </div>
 
