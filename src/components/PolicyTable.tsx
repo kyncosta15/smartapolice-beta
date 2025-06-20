@@ -1,127 +1,69 @@
+
 import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Edit, Trash2 } from 'lucide-react';
+import { PolicyEditModal } from './PolicyEditModal';
 
 interface PolicyTableProps {
   searchTerm: string;
   filterType: string;
   onPolicySelect: (policy: any) => void;
   extractedPolicies: any[];
+  onPolicyUpdate: (updatedPolicy: any) => void;
+  onPolicyDelete: (policyId: string) => void;
 }
 
-export const PolicyTable = ({ searchTerm, filterType, onPolicySelect, extractedPolicies }: PolicyTableProps) => {
+export const PolicyTable = ({ 
+  searchTerm, 
+  filterType, 
+  onPolicySelect, 
+  extractedPolicies,
+  onPolicyUpdate,
+  onPolicyDelete
+}: PolicyTableProps) => {
+  const [editingPolicy, setEditingPolicy] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const mockPolicies = [
     {
       id: '1',
       name: 'Seguro Auto Civic',
       type: 'auto',
       insurer: 'Porto Seguro',
-      premium: 1200.00,
+      premium: 14400,
+      monthlyAmount: 1200,
       status: 'active',
       startDate: '2024-01-15',
       endDate: '2025-01-15',
-      policyNumber: 'PS-2024-001234'
+      policyNumber: 'PS-2024-001234',
+      category: 'Veicular',
+      entity: 'Pessoa Física',
+      coverage: ['Cobertura Compreensiva', 'Responsabilidade Civil'],
+      paymentForm: 'Mensal',
+      installments: 12,
+      deductible: 2500,
+      limits: 'R$ 150.000 por sinistro'
     },
     {
       id: '2',
-      name: 'Seguro Residencial',
+      name: 'Seguro Residencial Plus',
       type: 'patrimonial',
       insurer: 'Mapfre',
-      premium: 850.50,
+      premium: 10206,
+      monthlyAmount: 850.50,
       status: 'expiring',
       startDate: '2023-08-20',
       endDate: '2024-08-20',
-      policyNumber: 'MF-2023-005678'
-    },
-    {
-      id: '3',
-      name: 'Seguro de Vida Plus',
-      type: 'vida',
-      insurer: 'Bradesco Seguros',
-      premium: 2500.00,
-      status: 'active',
-      startDate: '2024-03-01',
-      endDate: '2025-03-01',
-      policyNumber: 'BS-2024-009012'
-    },
-    {
-      id: '4',
-      name: 'Seguro Saúde Essencial',
-      type: 'saude',
-      insurer: 'Amil',
-      premium: 3800.00,
-      status: 'under_review',
-      startDate: '2024-02-10',
-      endDate: '2025-02-10',
-      policyNumber: 'AM-2024-003456'
-    },
-    {
-      id: '5',
-      name: 'Seguro Empresarial Top',
-      type: 'empresarial',
-      insurer: 'Allianz',
-      premium: 5200.00,
-      status: 'active',
-      startDate: '2023-11-05',
-      endDate: '2024-11-05',
-      policyNumber: 'AL-2023-007890'
-    },
-    {
-      id: '6',
-      name: 'Seguro Auto Moto',
-      type: 'auto',
-      insurer: 'SulAmérica',
-      premium: 950.00,
-      status: 'expired',
-      startDate: '2022-12-15',
-      endDate: '2023-12-15',
-      policyNumber: 'SA-2022-002345'
-    },
-    {
-      id: '7',
-      name: 'Seguro de Vida Individual',
-      type: 'vida',
-      insurer: 'Itaú Seguros',
-      premium: 1800.00,
-      status: 'active',
-      startDate: '2024-04-01',
-      endDate: '2025-04-01',
-      policyNumber: 'IT-2024-006789'
-    },
-    {
-      id: '8',
-      name: 'Seguro Saúde Família',
-      type: 'saude',
-      insurer: 'Unimed',
-      premium: 6000.00,
-      status: 'active',
-      startDate: '2024-01-20',
-      endDate: '2025-01-20',
-      policyNumber: 'UM-2024-000123'
-    },
-    {
-      id: '9',
-      name: 'Seguro Residencial Plus',
-      type: 'patrimonial',
-      insurer: 'Liberty Seguros',
-      premium: 1100.00,
-      status: 'expiring',
-      startDate: '2023-09-10',
-      endDate: '2024-09-10',
-      policyNumber: 'LB-2023-004567'
-    },
-    {
-      id: '10',
-      name: 'Seguro Empresarial Master',
-      type: 'empresarial',
-      insurer: 'HDI Seguros',
-      premium: 7500.00,
-      status: 'active',
-      startDate: '2024-03-15',
-      endDate: '2025-03-15',
-      policyNumber: 'HD-2024-008901'
+      policyNumber: 'MF-2023-005678',
+      category: 'Imóvel',
+      entity: 'Pessoa Física',
+      coverage: ['Incêndio', 'Roubo', 'Danos Elétricos'],
+      paymentForm: 'Mensal',
+      installments: 12,
+      deductible: 1500,
+      limits: 'R$ 200.000 por sinistro'
     }
   ];
 
@@ -137,73 +79,122 @@ export const PolicyTable = ({ searchTerm, filterType, onPolicySelect, extractedP
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-100 text-green-700">Ativa</Badge>;
+        return <Badge className="bg-green-50 text-green-600 border-green-200 hover:bg-green-50">Ativa</Badge>;
       case 'expiring':
-        return <Badge className="bg-orange-100 text-orange-700">Vencendo</Badge>;
+        return <Badge className="bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-50">Vencendo</Badge>;
       case 'expired':
-        return <Badge className="bg-red-100 text-red-700">Vencida</Badge>;
+        return <Badge className="bg-red-50 text-red-600 border-red-200 hover:bg-red-50">Vencida</Badge>;
       case 'under_review':
-        return <Badge className="bg-blue-100 text-blue-700">Em Análise</Badge>;
+        return <Badge className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-50">Em Análise</Badge>;
       default:
         return <Badge variant="secondary">Desconhecido</Badge>;
     }
   };
 
+  const handleEdit = (policy: any) => {
+    setEditingPolicy(policy);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (updatedPolicy: any) => {
+    onPolicyUpdate(updatedPolicy);
+    setIsEditModalOpen(false);
+    setEditingPolicy(null);
+  };
+
   return (
-    <div className="rounded-lg border bg-white/70 backdrop-blur-sm shadow-sm">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Apólice</TableHead>
-            <TableHead>Seguradora</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Prêmio</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Vigência</TableHead>
-            <TableHead>Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredPolicies.map((policy) => (
-            <TableRow key={policy.id} className="hover:bg-blue-50/50">
-              <TableCell>
-                <div>
-                  <p className="font-medium">{policy.name}</p>
-                  <p className="text-sm text-gray-500">{policy.policyNumber}</p>
-                </div>
-              </TableCell>
-              <TableCell>{policy.insurer}</TableCell>
-              <TableCell>
-                <Badge variant="outline">
-                  {policy.type === 'auto' ? 'Auto' : 
-                   policy.type === 'vida' ? 'Vida' : 
-                   policy.type === 'saude' ? 'Saúde' : 'Outros'}
-                </Badge>
-              </TableCell>
-              <TableCell>R$ {policy.premium?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
-              <TableCell>{getStatusBadge(policy.status)}</TableCell>
-              <TableCell>
-                <div className="text-sm">
-                  <p>{new Date(policy.startDate).toLocaleDateString('pt-BR')}</p>
-                  <p className="text-gray-500">até {new Date(policy.endDate).toLocaleDateString('pt-BR')}</p>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onPolicySelect(policy)}
-                    className="hover:bg-blue-100"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Apólices Cadastradas</h3>
+          <p className="text-sm text-gray-500 mt-1">Gerencie todas as suas apólices</p>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-gray-100">
+                <TableHead className="font-semibold text-gray-700">Apólice</TableHead>
+                <TableHead className="font-semibold text-gray-700">Seguradora</TableHead>
+                <TableHead className="font-semibold text-gray-700">Tipo</TableHead>
+                <TableHead className="font-semibold text-gray-700">Valor Mensal</TableHead>
+                <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                <TableHead className="font-semibold text-gray-700">Vigência</TableHead>
+                <TableHead className="font-semibold text-gray-700 text-center">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPolicies.map((policy) => (
+                <TableRow key={policy.id} className="hover:bg-gray-50/50 transition-colors">
+                  <TableCell>
+                    <div>
+                      <p className="font-medium text-gray-900">{policy.name}</p>
+                      <p className="text-sm text-gray-500">{policy.policyNumber}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-gray-700">{policy.insurer}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+                      {policy.type === 'auto' ? 'Auto' : 
+                       policy.type === 'vida' ? 'Vida' : 
+                       policy.type === 'saude' ? 'Saúde' : 
+                       policy.type === 'empresarial' ? 'Empresarial' :
+                       policy.type === 'patrimonial' ? 'Patrimonial' : 'Outros'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-semibold text-gray-900">
+                      R$ {policy.monthlyAmount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </TableCell>
+                  <TableCell>{getStatusBadge(policy.status)}</TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <p className="text-gray-900">{new Date(policy.startDate).toLocaleDateString('pt-BR')}</p>
+                      <p className="text-gray-500">até {new Date(policy.endDate).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-center space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onPolicySelect(policy)}
+                        className="hover:bg-blue-50 hover:text-blue-600 h-8 w-8 p-0"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(policy)}
+                        className="hover:bg-green-50 hover:text-green-600 h-8 w-8 p-0"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onPolicyDelete(policy.id)}
+                        className="hover:bg-red-50 hover:text-red-600 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      <PolicyEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        policy={editingPolicy}
+        onSave={handleSaveEdit}
+      />
+    </>
   );
 };
