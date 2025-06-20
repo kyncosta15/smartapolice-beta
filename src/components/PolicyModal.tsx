@@ -337,7 +337,7 @@ export const PolicyModal = ({ isOpen, onClose, policy }: PolicyModalProps) => {
                     </label>
                     <label className="flex items-center space-x-2">
                       <input type="checkbox" className="rounded" />
-                      <span className="text-sm">Alertar para variação de custo > 20%</span>
+                      <span className="text-sm">Alertar para variação de custo {'>'} 20%</span>
                     </label>
                   </div>
                 </div>

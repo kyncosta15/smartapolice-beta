@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -222,7 +221,7 @@ export const AlertsPanel = () => {
                 </label>
                 <label className="flex items-center space-x-2">
                   <input type="checkbox" defaultChecked className="rounded" />
-                  <span className="text-sm">Variação mensal > 20%</span>
+                  <span className="text-sm">Variação mensal {'>'} 20%</span>
                 </label>
                 <label className="flex items-center space-x-2">
                   <input type="checkbox" className="rounded" />
