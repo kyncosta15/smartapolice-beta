@@ -1,5 +1,5 @@
 
-import { Calendar, Home, FileText, DollarSign, Settings, Users, Phone, Upload, Shield } from 'lucide-react';
+import { Calendar, Home, FileText, DollarSign, Settings, Users, Phone, Upload } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -63,11 +63,11 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   const getRoleBadgeColor = (role: string) => {
     const colors = {
-      cliente: 'bg-blue-100 text-blue-700',
-      administrador: 'bg-purple-100 text-purple-700',
-      corretora: 'bg-green-100 text-green-700'
+      cliente: 'bg-blue-50 text-blue-600 border-blue-200',
+      administrador: 'bg-purple-50 text-purple-600 border-purple-200',
+      corretora: 'bg-green-50 text-green-600 border-green-200'
     };
-    return colors[role] || 'bg-gray-100 text-gray-700';
+    return colors[role] || 'bg-gray-50 text-gray-600 border-gray-200';
   };
 
   const getRoleLabel = (role: string) => {
@@ -80,33 +80,39 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   };
 
   return (
-    <Sidebar className="bg-white border-r border-gray-200">
-      <SidebarHeader className="p-4 border-b border-gray-200">
-        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-          <Badge className={`text-xs mt-1 border-0 ${getRoleBadgeColor(user?.role || '')}`}>
+    <Sidebar className="border-r border-gray-100 bg-white">
+      <SidebarHeader className="px-4 py-6 border-b border-gray-50">
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
+          </div>
+          <Badge className={`text-xs font-medium px-2 py-1 ${getRoleBadgeColor(user?.role || '')}`}>
             {getRoleLabel(user?.role || '')}
           </Badge>
         </div>
       </SidebarHeader>
       
-      <SidebarContent>
+      <SidebarContent className="px-2 py-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-600 font-medium px-3">Navegação</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider px-3 mb-2">
+            Navegação
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     onClick={() => onSectionChange(item.id)}
-                    className={`flex items-center space-x-2 hover:bg-gray-100 rounded-lg transition-all duration-200 ${
+                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${
                       activeSection === item.id 
-                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' 
-                        : 'text-gray-700 hover:text-blue-600'
+                        ? 'bg-blue-50 text-blue-700 shadow-sm' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    <item.icon className={`h-4 w-4 ${
+                      activeSection === item.id ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
+                    }`} />
+                    <span className="truncate">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -115,8 +121,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-gray-200">
-        <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg text-center">
+      <SidebarFooter className="p-4 border-t border-gray-50">
+        <div className="text-xs text-gray-400 text-center font-medium">
           © 2024 SmartApólice
         </div>
       </SidebarFooter>
