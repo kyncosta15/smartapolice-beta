@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,8 @@ import {
   X, 
   Image as ImageIcon,
   Eye,
-  Trash2
+  Trash2,
+  Webhook
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -49,6 +49,8 @@ interface EnhancedPDFUploadProps {
   onPolicyExtracted: (policy: ExtractedPolicyData) => void;
 }
 
+const N8N_WEBHOOK_URL = 'https://beneficiosagente.app.n8n.cloud/webhook-test/a2c01401-91f5-4652-a2b7-4faadbf93745';
+
 export const EnhancedPDFUpload = ({ onPolicyExtracted }: EnhancedPDFUploadProps) => {
   const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -67,7 +69,6 @@ export const EnhancedPDFUpload = ({ onPolicyExtracted }: EnhancedPDFUploadProps)
       return 'Arquivo muito grande. Máximo 10MB.';
     }
     
-    // Verificar duplicidade
     const isDuplicate = fileUploads.some(upload => 
       upload.file.name === file.name && upload.file.size === file.size
     );
@@ -79,51 +80,50 @@ export const EnhancedPDFUpload = ({ onPolicyExtracted }: EnhancedPDFUploadProps)
     return null;
   };
 
-  const handleFileUpload = (files: FileList) => {
-    const validFiles: File[] = [];
-    const errors: string[] = [];
+  const sendToN8N = async (file: File, extractedData: ExtractedPolicyData) => {
+    try {
+      console.log('Enviando arquivo para n8n webhook:', file.name);
 
-    Array.from(files).forEach(file => {
-      const error = validateFile(file);
-      if (error) {
-        errors.push(`${file.name}: ${error}`);
-      } else {
-        validFiles.push(file);
-      }
-    });
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('extractedData', JSON.stringify(extractedData));
+      formData.append('timestamp', new Date().toISOString());
 
-    if (errors.length > 0) {
-      toast({
-        title: "Arquivos rejeitados",
-        description: errors.join('\n'),
-        variant: "destructive"
+      const response = await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        body: formData,
       });
-    }
 
-    if (validFiles.length > 0) {
-      const newUploads: FileUploadStatus[] = validFiles.map(file => ({
-        file,
-        status: 'pending',
-        progress: 0
-      }));
-
-      setFileUploads(prev => [...prev, ...newUploads]);
-      
-      // Processar arquivos automaticamente
-      validFiles.forEach((file, index) => {
-        setTimeout(() => processFile(file), index * 500);
+      if (response.ok) {
+        console.log('Arquivo enviado com sucesso para n8n');
+        toast({
+          title: "Webhook Executado",
+          description: `Arquivo ${file.name} processado e enviado para n8n`,
+        });
+      } else {
+        console.error('Erro ao enviar para n8n:', response.status);
+        toast({
+          title: "Erro no Webhook",
+          description: "Falha ao enviar dados para n8n",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Erro na requisição para n8n:', error);
+      toast({
+        title: "Erro de Conexão",
+        description: "Não foi possível conectar com o webhook n8n",
+        variant: "destructive"
       });
     }
   };
 
   const simulateAIExtraction = async (file: File): Promise<ExtractedPolicyData> => {
-    // Simula diferentes cenários baseados no tipo de arquivo
     const isImage = file.type.startsWith('image/');
     const extractionTime = isImage ? 3000 + Math.random() * 2000 : 2000 + Math.random() * 3000;
     
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        // Simula 90% de sucesso
         if (Math.random() < 0.9) {
           const mockData: ExtractedPolicyData = {
             id: `extracted-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -140,7 +140,7 @@ export const EnhancedPDFUpload = ({ onPolicyExtracted }: EnhancedPDFUploadProps)
             monthlyAmount: (Math.random() * 2000 + 200).toFixed(2),
             fileName: file.name,
             extractedAt: new Date().toISOString(),
-            confidence: 0.85 + Math.random() * 0.14 // 85-99%
+            confidence: 0.85 + Math.random() * 0.14
           };
           resolve(mockData);
         } else {
@@ -192,6 +192,9 @@ export const EnhancedPDFUpload = ({ onPolicyExtracted }: EnhancedPDFUploadProps)
           : upload
       ));
 
+      // Enviar para n8n webhook
+      await sendToN8N(file, extractedData);
+
       onPolicyExtracted(extractedData);
 
       toast({
@@ -216,6 +219,43 @@ export const EnhancedPDFUpload = ({ onPolicyExtracted }: EnhancedPDFUploadProps)
         title: "Erro na Extração",
         description: `${file.name}: ${errorMessage}`,
         variant: "destructive"
+      });
+    }
+  };
+
+  const handleFileUpload = (files: FileList) => {
+    const validFiles: File[] = [];
+    const errors: string[] = [];
+
+    Array.from(files).forEach(file => {
+      const error = validateFile(file);
+      if (error) {
+        errors.push(`${file.name}: ${error}`);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (errors.length > 0) {
+      toast({
+        title: "Arquivos rejeitados",
+        description: errors.join('\n'),
+        variant: "destructive"
+      });
+    }
+
+    if (validFiles.length > 0) {
+      const newUploads: FileUploadStatus[] = validFiles.map(file => ({
+        file,
+        status: 'pending',
+        progress: 0
+      }));
+
+      setFileUploads(prev => [...prev, ...newUploads]);
+      
+      // Processar arquivos automaticamente
+      validFiles.forEach((file, index) => {
+        setTimeout(() => processFile(file), index * 500);
       });
     }
   };
@@ -295,7 +335,11 @@ export const EnhancedPDFUpload = ({ onPolicyExtracted }: EnhancedPDFUploadProps)
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Upload className="h-5 w-5 text-blue-600" />
-            <span>Upload Inteligente de Documentos</span>
+            <span>Upload Inteligente com n8n</span>
+            <Badge variant="outline" className="flex items-center space-x-1">
+              <Webhook className="h-3 w-3" />
+              <span>Webhook Ativo</span>
+            </Badge>
             {fileUploads.length > 0 && (
               <Badge variant="outline" className="ml-auto">
                 {completedCount} processados | {errorCount} erros | {processingCount} processando
@@ -337,11 +381,11 @@ export const EnhancedPDFUpload = ({ onPolicyExtracted }: EnhancedPDFUploadProps)
               />
             </div>
 
-            {/* Info sobre IA */}
+            {/* Info sobre IA e n8n */}
             <Alert>
-              <AlertCircle className="h-4 w-4" />
+              <Webhook className="h-4 w-4" />
               <AlertDescription>
-                <strong>IA Avançada:</strong> Nosso sistema utiliza OCR e processamento inteligente para extrair automaticamente dados como número da apólice, seguradora, valores e datas dos seus documentos.
+                <strong>Integração n8n:</strong> Os arquivos processados são automaticamente enviados para o workflow n8n configurado para processamento adicional.
               </AlertDescription>
             </Alert>
           </div>

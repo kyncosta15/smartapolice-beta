@@ -1,4 +1,6 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { DollarSign, Settings, Phone, Users, Shield } from 'lucide-react';
 import { EnhancedDashboard } from '@/components/EnhancedDashboard';
 import { PolicyTable } from '@/components/PolicyTable';
