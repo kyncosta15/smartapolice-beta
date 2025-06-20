@@ -14,6 +14,7 @@ import { EnhancedPDFUpload } from '@/components/EnhancedPDFUpload';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
+import { Navbar } from '@/components/Navbar';
 
 const DashboardContent = () => {
   const { user, logout } = useAuth();
@@ -301,61 +302,21 @@ const DashboardContent = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen flex w-full bg-gray-50">
         <AppSidebar onSectionChange={setActiveSection} activeSection={activeSection} />
         <SidebarInset>
-          {/* Header with glassmorphism */}
-          <header className="border-b bg-white/20 backdrop-blur-xl sticky top-0 z-50 border-white/20">
-            <div className="flex h-16 items-center gap-4 px-6">
-              <SidebarTrigger />
-              
-              <div className="flex items-center space-x-4 flex-1">
-                <div className="flex items-center space-x-2">
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                    SmartApólice
-                  </h1>
-                  <Badge variant="outline" className="bg-white/20 text-blue-700 border-blue-200/50 backdrop-blur-sm hidden sm:inline-flex">
-                    <span className="hidden md:inline">Gestão Inteligente de Apólices</span>
-                    <span className="md:hidden">Gestão IA</span>
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="relative hidden md:block">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Buscar apólice, CPF/CNPJ..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-80 bg-white/20 backdrop-blur-sm border-white/30 focus:bg-white/30 placeholder:text-gray-500"
-                  />
-                </div>
-                <Button variant="ghost" size="icon" className="relative bg-white/10 backdrop-blur-sm hover:bg-white/20">
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
-                    {allPolicies.filter(p => new Date(p.endDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length}
-                  </span>
-                </Button>
-
-                {/* User Menu */}
-                <div className="flex items-center space-x-3 pl-4 border-l border-white/20">
-                  <div className="text-right hidden sm:block">
-                    <p className="text-sm font-medium">{user?.name}</p>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={logout} className="bg-white/10 backdrop-blur-sm hover:bg-white/20">
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </header>
+          {/* New Clean Navbar */}
+          <Navbar 
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            notificationCount={allPolicies.filter(p => new Date(p.endDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length}
+          />
 
           <div className="flex-1 space-y-6 p-6">
-            {/* Welcome Message with glassmorphism */}
-            <div className="bg-gradient-to-r from-blue-600/90 via-purple-600/90 to-indigo-600/90 backdrop-blur-xl p-6 rounded-2xl text-white shadow-2xl border border-white/20">
-              <h2 className="text-2xl font-bold mb-2">Bem-vindo, {user?.name}!</h2>
-              <p className="opacity-90">
+            {/* Clean Welcome Message */}
+            <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Bem-vindo, {user?.name}!</h2>
+              <p className="text-gray-600">
                 {user?.role === 'administrador' && 'Você tem acesso total ao sistema de gestão de apólices.'}
                 {user?.role === 'cliente' && 'Gerencie suas apólices de forma inteligente e segura.'}
                 {user?.role === 'corretora' && 'Administre as apólices dos seus clientes de forma eficiente.'}
@@ -392,7 +353,7 @@ const AppContent = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Shield className="h-12 w-12 text-blue-600 mx-auto mb-4 animate-spin" />
           <p className="text-gray-600">Carregando...</p>
