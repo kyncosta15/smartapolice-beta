@@ -6,6 +6,8 @@ import { EnhancedDashboard } from '@/components/EnhancedDashboard';
 import { PolicyTable } from '@/components/PolicyTable';
 import { ChartsSection } from '@/components/ChartsSection';
 import { EnhancedPDFUpload } from '@/components/EnhancedPDFUpload';
+import { PolicyViewer } from '@/components/PolicyViewer';
+import { OptimizedSettings } from '@/components/OptimizedSettings';
 
 interface ContentRendererProps {
   activeSection: string;
@@ -30,11 +32,24 @@ export function ContentRenderer({
   onPolicyDelete,
   onPolicyExtracted,
 }: ContentRendererProps) {
+  const handleNotificationClick = () => {
+    console.log('Notificações clicadas');
+    // Implementar modal de notificações
+  };
+
+  const handlePolicyEdit = (policy: any) => {
+    // Usar a mesma função onPolicyUpdate
+    onPolicyUpdate(policy);
+  };
+
   switch (activeSection) {
     case 'home':
       return (
         <div className="space-y-8">
-          <EnhancedDashboard policies={allPolicies} />
+          <EnhancedDashboard 
+            policies={allPolicies} 
+            onNotificationClick={handleNotificationClick}
+          />
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
               <PolicyTable 
@@ -53,14 +68,27 @@ export function ContentRenderer({
         </div>
       );
 
+    case 'policies':
+      return (
+        <PolicyViewer
+          policies={allPolicies}
+          onPolicySelect={onPolicySelect}
+          onPolicyEdit={handlePolicyEdit}
+          onPolicyDelete={onPolicyDelete}
+        />
+      );
+
     case 'import':
       return <EnhancedPDFUpload onPolicyExtracted={onPolicyExtracted} />;
 
     case 'financial':
       return (
         <div className="space-y-6">
-          <EnhancedDashboard policies={allPolicies} />
-          <Card className="bg-white backdrop-blur-sm">
+          <EnhancedDashboard 
+            policies={allPolicies} 
+            onNotificationClick={handleNotificationClick}
+          />
+          <Card className="bg-white">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <DollarSign className="h-5 w-5 mr-2" />
@@ -95,36 +123,11 @@ export function ContentRenderer({
       );
 
     case 'settings':
-      return (
-        <Card className="bg-white backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Settings className="h-5 w-5 mr-2" />
-              Configurações do Sistema
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="p-4 bg-blue-50/50 rounded-lg">
-                <h3 className="font-semibold mb-2">Preferências de Notificação</h3>
-                <p className="text-sm text-gray-600">Configure quando receber alertas sobre vencimentos e renovações.</p>
-              </div>
-              <div className="p-4 bg-green-50/50 rounded-lg">
-                <h3 className="font-semibold mb-2">Integração com Seguradoras</h3>
-                <p className="text-sm text-gray-600">Conectar APIs para atualização automática de dados.</p>
-              </div>
-              <div className="p-4 bg-purple-50/50 rounded-lg">
-                <h3 className="font-semibold mb-2">Backup e Segurança</h3>
-                <p className="text-sm text-gray-600">Configurar backup automático dos dados das apólices.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      );
+      return <OptimizedSettings />;
 
     case 'about':
       return (
-        <Card className="bg-white backdrop-blur-sm">
+        <Card className="bg-white">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Users className="h-5 w-5 mr-2" />
@@ -140,15 +143,15 @@ export function ContentRenderer({
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
                   SmartApólice
                 </h2>
-                <p className="text-gray-600">Gestão Inteligente de Apólices com IA</p>
+                <p className="text-gray-600">Central Inteligente de Apólices</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100/30 rounded-xl">
                   <h3 className="font-semibold text-blue-800 mb-3">Nossa Missão</h3>
                   <p className="text-gray-700 text-sm">
-                    Revolucionar a gestão de seguros através de inteligência artificial,
-                    proporcionando controle total e insights estratégicos para nossos usuários.
+                    Oferecer controle total, previsibilidade financeira e segurança jurídica
+                    sobre todas as apólices corporativas em um único painel inteligente.
                   </p>
                 </div>
                 
@@ -167,7 +170,7 @@ export function ContentRenderer({
 
     case 'contact':
       return (
-        <Card className="bg-white backdrop-blur-sm">
+        <Card className="bg-white">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Phone className="h-5 w-5 mr-2" />
@@ -210,7 +213,10 @@ export function ContentRenderer({
     default:
       return (
         <div className="space-y-8">
-          <EnhancedDashboard policies={allPolicies} />
+          <EnhancedDashboard 
+            policies={allPolicies} 
+            onNotificationClick={handleNotificationClick}
+          />
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
               <PolicyTable 

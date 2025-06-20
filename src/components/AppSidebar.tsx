@@ -1,4 +1,5 @@
-import { Calendar, Home, FileText, DollarSign, Settings, Users, Phone, Upload } from 'lucide-react';
+
+import { Calendar, Home, FileText, DollarSign, Settings, Users, Phone, Upload, Shield } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -13,12 +14,18 @@ import {
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { SmartApoliceLogo } from '@/components/SmartApoliceLogo';
 
 const navigationItems = [
   {
-    title: "Home",
+    title: "Dashboard",
     id: "home",
     icon: Home,
+  },
+  {
+    title: "Minhas Apólices",
+    id: "policies",
+    icon: FileText,
   },
   {
     title: "Importar Apólice",
@@ -76,6 +83,10 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   return (
     <Sidebar className="bg-white border-r border-gray-200">
       <SidebarHeader className="p-4 border-b border-gray-200">
+        <div className="flex items-center space-x-3 mb-4">
+          <SmartApoliceLogo size={32} />
+          <span className="text-lg font-bold text-gray-900">SmartApólice</span>
+        </div>
         <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
           <p className="text-sm font-medium text-gray-900">{user?.name}</p>
           <Badge className={`text-xs mt-1 border-0 ${getRoleBadgeColor(user?.role || '')}`}>
@@ -110,7 +121,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-gray-200">
-        <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
+        <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg text-center">
           © 2024 SmartApólice
         </div>
       </SidebarFooter>
