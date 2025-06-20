@@ -3,11 +3,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield, DollarSign } from 'lucide-react';
 
-export const DashboardCards = () => {
+interface DashboardCardsProps {
+  stats?: {
+    totalPolicies: number;
+    monthlyCost: number;
+    totalInsured: number;
+    activeAlerts: number;
+  };
+}
+
+export const DashboardCards = ({ stats }: DashboardCardsProps) => {
+  const defaultStats = {
+    totalPolicies: 247,
+    monthlyCost: 127850,
+    totalInsured: 25400000,
+    activeAlerts: 7
+  };
+
+  const currentStats = stats || defaultStats;
+
   const dashboardData = [
     {
       title: 'Apólices Ativas',
-      value: '247',
+      value: currentStats.totalPolicies.toString(),
       icon: Shield,
       change: '+12%',
       changeType: 'positive',
@@ -15,7 +33,7 @@ export const DashboardCards = () => {
     },
     {
       title: 'Custo Mensal',
-      value: 'R$ 127.850',
+      value: `R$ ${currentStats.monthlyCost.toLocaleString('pt-BR')}`,
       icon: DollarSign,
       change: '-3.2%',
       changeType: 'positive',
@@ -23,7 +41,7 @@ export const DashboardCards = () => {
     },
     {
       title: 'Valor Segurado',
-      value: 'R$ 25.4M',
+      value: `R$ ${(currentStats.totalInsured / 1000000).toFixed(1)}M`,
       icon: TrendingUp,
       change: '+8.1%',
       changeType: 'positive',
@@ -47,7 +65,7 @@ export const DashboardCards = () => {
     },
     {
       title: 'Alertas Ativos',
-      value: '7',
+      value: currentStats.activeAlerts.toString(),
       icon: AlertTriangle,
       change: '-2',
       changeType: 'positive',

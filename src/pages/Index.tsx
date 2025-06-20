@@ -6,18 +6,44 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bell, Search, Plus, FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield } from 'lucide-react';
+import { Bell, Search, Plus, FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield, Upload } from 'lucide-react';
 import { DashboardCards } from '@/components/DashboardCards';
 import { PolicyTable } from '@/components/PolicyTable';
 import { ChartsSection } from '@/components/ChartsSection';
 import { AlertsPanel } from '@/components/AlertsPanel';
 import { PolicyModal } from '@/components/PolicyModal';
+import { PDFUpload } from '@/components/PDFUpload';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState({
+    totalPolicies: 247,
+    monthlyCost: 127850,
+    totalInsured: 25400000,
+    activeAlerts: 7
+  });
+  const { toast } = useToast();
+
+  const handlePolicyExtracted = (policy: any) => {
+    console.log('Nova apólice extraída:', policy);
+    
+    // Atualiza as estatísticas do dashboard
+    setDashboardStats(prev => ({
+      ...prev,
+      totalPolicies: prev.totalPolicies + 1,
+      monthlyCost: prev.monthlyCost + (parseFloat(policy.premium) / 12),
+      totalInsured: prev.totalInsured + parseFloat(policy.premium) * 10 // Simula valor segurado
+    }));
+    
+    toast({
+      title: "Apólice Adicionada",
+      description: `${policy.name} foi adicionada ao sistema`,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -64,7 +90,7 @@ const Index = () => {
 
       <div className="container mx-auto px-6 py-8 space-y-8">
         {/* Dashboard Cards */}
-        <DashboardCards />
+        <DashboardCards stats={dashboardStats} />
 
         {/* Quick Filters */}
         <div className="flex flex-wrap gap-4 items-center">
@@ -100,7 +126,7 @@ const Index = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-fit">
+          <TabsList className="grid w-full grid-cols-5 lg:w-fit">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               Dashboard
@@ -108,6 +134,10 @@ const Index = () => {
             <TabsTrigger value="policies" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Apólices
+            </TabsTrigger>
+            <TabsTrigger value="import" className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Importar PDF
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
@@ -129,6 +159,10 @@ const Index = () => {
               filterType={filterType}
               onPolicySelect={setSelectedPolicy}
             />
+          </TabsContent>
+
+          <TabsContent value="import" className="space-y-6">
+            <PDFUpload onPolicyExtracted={handlePolicyExtracted} />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
