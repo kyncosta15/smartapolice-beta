@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, Edit, Trash2, Search, Filter } from 'lucide-react';
+import { Eye, Edit, Trash2, Search, Filter, FileText } from 'lucide-react';
 import { LocationFilter } from './LocationFilter';
 
 interface PolicyViewerProps {
