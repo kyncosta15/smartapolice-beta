@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 
 const navigationItems = [
   {
@@ -83,7 +82,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   return (
     <Sidebar className="bg-white border-r border-gray-200">
       <SidebarHeader className="p-4 border-b border-gray-200">
-        <SmartApóliceLogo size="md" showText={true} className="mb-4" />
         <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
           <p className="text-sm font-medium text-gray-900">{user?.name}</p>
           <Badge className={`text-xs mt-1 border-0 ${getRoleBadgeColor(user?.role || '')}`}>

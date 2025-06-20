@@ -8,6 +8,8 @@ import { ChartsSection } from '@/components/ChartsSection';
 import { EnhancedPDFUpload } from '@/components/EnhancedPDFUpload';
 import { PolicyViewer } from '@/components/PolicyViewer';
 import { OptimizedSettings } from '@/components/OptimizedSettings';
+import { RegionalDashboard } from '@/components/RegionalDashboard';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ContentRendererProps {
   activeSection: string;
@@ -32,6 +34,8 @@ export function ContentRenderer({
   onPolicyDelete,
   onPolicyExtracted,
 }: ContentRendererProps) {
+  const { user } = useAuth();
+  
   const handleNotificationClick = () => {
     console.log('Notificações clicadas');
     // Implementar modal de notificações
@@ -70,12 +74,27 @@ export function ContentRenderer({
 
     case 'policies':
       return (
-        <PolicyViewer
-          policies={allPolicies}
-          onPolicySelect={onPolicySelect}
-          onPolicyEdit={handlePolicyEdit}
-          onPolicyDelete={onPolicyDelete}
-        />
+        <div className="space-y-6">
+          <PolicyViewer
+            policies={allPolicies}
+            onPolicySelect={onPolicySelect}
+            onPolicyEdit={handlePolicyEdit}
+            onPolicyDelete={onPolicyDelete}
+          />
+          
+          {user?.role === 'administrador' && (
+            <div className="mt-8">
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold text-gray-900">
+                    Dashboard Regional - Visão Administrativa
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              <RegionalDashboard policies={allPolicies} />
+            </div>
+          )}
+        </div>
       );
 
     case 'import':
