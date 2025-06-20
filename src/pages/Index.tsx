@@ -1,21 +1,24 @@
 
 import { useState } from 'react';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { AuthPage } from '@/components/AuthPage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bell, Search, Plus, FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield, Upload } from 'lucide-react';
+import { Bell, Search, Plus, FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield, Upload, LogOut, User } from 'lucide-react';
 import { DashboardCards } from '@/components/DashboardCards';
 import { PolicyTable } from '@/components/PolicyTable';
 import { ChartsSection } from '@/components/ChartsSection';
 import { AlertsPanel } from '@/components/AlertsPanel';
 import { PolicyModal } from '@/components/PolicyModal';
-import { PDFUpload } from '@/components/PDFUpload';
+import { EnhancedPDFUpload } from '@/components/EnhancedPDFUpload';
 import { useToast } from '@/hooks/use-toast';
 
-const Index = () => {
+const DashboardContent = () => {
+  const { user, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,6 +46,24 @@ const Index = () => {
       title: "Apólice Adicionada",
       description: `${policy.name} foi adicionada ao sistema`,
     });
+  };
+
+  const getRoleLabel = (role: string) => {
+    const roles = {
+      cliente: 'Cliente',
+      administrador: 'Administrador',
+      corretora: 'Corretora'
+    };
+    return roles[role] || role;
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    const colors = {
+      cliente: 'bg-blue-100 text-blue-700',
+      administrador: 'bg-purple-100 text-purple-700',
+      corretora: 'bg-green-100 text-green-700'
+    };
+    return colors[role] || 'bg-gray-100 text-gray-700';
   };
 
   return (
@@ -83,12 +104,35 @@ const Index = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Apólice
               </Button>
+
+              {/* User Menu */}
+              <div className="flex items-center space-x-3 pl-4 border-l">
+                <div className="text-right">
+                  <p className="text-sm font-medium">{user?.name}</p>
+                  <Badge className={`text-xs ${getRoleBadgeColor(user?.role || '')}`}>
+                    {getRoleLabel(user?.role || '')}
+                  </Badge>
+                </div>
+                <Button variant="outline" size="icon" onClick={logout}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-6 py-8 space-y-8">
+        {/* Welcome Message */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-xl text-white">
+          <h2 className="text-2xl font-bold mb-2">Bem-vindo, {user?.name}!</h2>
+          <p className="opacity-90">
+            {user?.role === 'administrador' && 'Você tem acesso total ao sistema de gestão de apólices.'}
+            {user?.role === 'cliente' && 'Gerencie suas apólices de forma inteligente e segura.'}
+            {user?.role === 'corretora' && 'Administre as apólices dos seus clientes de forma eficiente.'}
+          </p>
+        </div>
+
         {/* Dashboard Cards */}
         <DashboardCards stats={dashboardStats} />
 
@@ -137,7 +181,7 @@ const Index = () => {
             </TabsTrigger>
             <TabsTrigger value="import" className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
-              Importar PDF
+              Importar Documentos
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
@@ -162,7 +206,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="import" className="space-y-6">
-            <PDFUpload onPolicyExtracted={handlePolicyExtracted} />
+            <EnhancedPDFUpload onPolicyExtracted={handlePolicyExtracted} />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
@@ -183,6 +227,35 @@ const Index = () => {
       />
     </div>
   );
+};
+
+const Index = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+};
+
+const AppContent = () => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="h-12 w-12 text-blue-600 mx-auto mb-4 animate-spin" />
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage />;
+  }
+
+  return <DashboardContent />;
 };
 
 export default Index;
