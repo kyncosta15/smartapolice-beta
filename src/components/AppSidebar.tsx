@@ -4,9 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { SmartApóliceLogo } from "@/components/SmartApoliceLogo"
 import {
   BarChart3,
-  Building2,
   Calendar,
   Contact2,
   FileText,
@@ -130,16 +130,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   return (
     <Sidebar className="bg-white border-r">
-      <SidebarHeader className="space-y-2">
-        <div className="rounded-md p-2 bg-blue-500/10">
-          <Building2 className="h-8 w-8 text-blue-600" />
-        </div>
-        <h4 className="font-semibold text-lg text-gray-900">
-          {user?.company || 'Nome da Empresa'}
-        </h4>
-        <p className="text-sm text-gray-500">
-          {user?.role === 'administrador' ? 'Administrador' : 'Cliente'}
-        </p>
+      <SidebarHeader className="space-y-4 p-4">
+        <SmartApóliceLogo size="md" showText={true} />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
