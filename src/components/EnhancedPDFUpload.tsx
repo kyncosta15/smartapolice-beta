@@ -222,7 +222,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           <CardTitle>Upload de Apólices - Extração Inteligente com IA</CardTitle>
           <CardDescription>
             Arraste e solte os arquivos PDF ou clique para selecionar.
-            
+            Agora o PDF será enviado para o webhook n8n com a chave parametrizada no formato arquivo/data/file - nomedoarquivo.pdf, facilitando o reconhecimento e processamento do arquivo binário no n8n.
           </CardDescription>
         </CardHeader>
         <CardContent>
