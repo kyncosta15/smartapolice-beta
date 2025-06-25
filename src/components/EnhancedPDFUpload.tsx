@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from "@/components/ui/button"
@@ -5,6 +6,7 @@ import { FilePlus, File, X } from 'lucide-react';
 import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { PolicyExtractor } from '@/utils/policyExtractor';
+import { useToast } from '@/hooks/use-toast';
 
 interface EnhancedPDFUploadProps {
   onPolicyExtracted: (policy: any) => void;
@@ -13,6 +15,61 @@ interface EnhancedPDFUploadProps {
 export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps) {
   const [policies, setPolicies] = useState<any[]>([]);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const { toast } = useToast();
+
+  // Webhook n8n URL
+  const N8N_WEBHOOK_URL = 'https://beneficiosagente.app.n8n.cloud/webhook-test/a2c01401-91f5-4652-a2b7-4faadbf93745';
+
+  const triggerN8NWebhook = async (policyData: any, fileName: string) => {
+    try {
+      console.log('Triggering n8n webhook for:', fileName);
+      
+      const webhookData = {
+        timestamp: new Date().toISOString(),
+        fileName: fileName,
+        policyData: {
+          id: policyData.id,
+          name: policyData.name,
+          type: policyData.type,
+          insurer: policyData.insurer,
+          premium: policyData.premium,
+          monthlyAmount: policyData.monthlyAmount,
+          policyNumber: policyData.policyNumber,
+          startDate: policyData.startDate,
+          endDate: policyData.endDate,
+          paymentFrequency: policyData.paymentFrequency,
+          status: policyData.status
+        },
+        source: 'SmartApólice',
+        event: 'policy_uploaded'
+      };
+
+      const response = await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'no-cors',
+        body: JSON.stringify(webhookData),
+      });
+
+      console.log('n8n webhook triggered successfully for:', fileName);
+      
+      toast({
+        title: "Integração Ativada",
+        description: `Webhook n8n executado para ${fileName}`,
+      });
+
+    } catch (error) {
+      console.error('Error triggering n8n webhook:', error);
+      
+      toast({
+        title: "Aviso de Integração",
+        description: "Erro ao executar webhook n8n, mas a apólice foi processada com sucesso",
+        variant: "default",
+      });
+    }
+  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!acceptedFiles || acceptedFiles.length === 0) {
@@ -52,6 +109,9 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         setPolicies(prev => [...prev, newPolicy]);
         onPolicyExtracted(newPolicy);
 
+        // Trigger n8n webhook after successful processing
+        await triggerN8NWebhook(newPolicy, file.name);
+
         setUploadProgress(prev => {
           const { [file.name]: removed, ...rest } = prev;
           return rest;
@@ -66,7 +126,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
     }
 
     setUploadProgress({});
-  }, [onPolicyExtracted]);
+  }, [onPolicyExtracted, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -85,6 +145,8 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           <CardTitle>Upload de Apólices</CardTitle>
           <CardDescription>
             Arraste e solte os arquivos PDF ou clique para selecionar.
+            <br />
+            <span className="text-xs text-blue-600">✓ Integração n8n ativa - webhooks serão executados automaticamente</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
