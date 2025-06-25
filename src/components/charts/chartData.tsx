@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 // Shared chart data and utilities
 export const insurerData = [
   { name: 'Porto Seguro', value: 35, color: '#3B82F6' },
@@ -33,7 +35,16 @@ export const expirationData = [
   { month: 'Dez', vencimentos: 10 }
 ];
 
-export const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+interface RenderCustomLabelProps {
+  cx: number;
+  cy: number;
+  midAngle: number;
+  innerRadius: number;
+  outerRadius: number;
+  percent: number;
+}
+
+export const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: RenderCustomLabelProps) => {
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
