@@ -1,180 +1,35 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Button } from "@/components/ui/button"
-import { FilePlus, File, X, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { Progress } from "@/components/ui/progress"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { FilePlus } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { usePolicyDataFetch } from '@/hooks/usePolicyDataFetch';
 import { useToast } from '@/hooks/use-toast';
-
-interface EnhancedPDFUploadProps {
-  onPolicyExtracted: (policy: ParsedPolicyData) => void;
-}
-
-interface FileProcessingStatus {
-  [fileName: string]: {
-    progress: number;
-    status: 'uploading' | 'processing' | 'completed' | 'failed';
-    message: string;
-  };
-}
+import { useFileStatusManager } from '@/hooks/useFileStatusManager';
+import { FileProcessor } from '@/services/fileProcessor';
+import { FileStatusList } from './FileStatusList';
+import { EnhancedPDFUploadProps } from '@/types/pdfUpload';
 
 export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps) {
-  const [fileStatuses, setFileStatuses] = useState<FileProcessingStatus>({});
-  const { fetchPolicyData, isLoading } = usePolicyDataFetch();
+  const { 
+    fileStatuses, 
+    updateFileStatus, 
+    removeFileStatus, 
+    getActiveFiles, 
+    getProcessingCount 
+  } = useFileStatusManager();
+  
+  const { fetchPolicyData } = usePolicyDataFetch();
   const { toast } = useToast();
 
-  // Webhook n8n URL
-  const N8N_WEBHOOK_URL = 'https://beneficiosagente.app.n8n.cloud/webhook-test/a2c01401-91f5-4652-a2b7-4faadbf93745';
-
-  const updateFileStatus = (fileName: string, update: Partial<FileProcessingStatus[string]>) => {
-    setFileStatuses(prev => ({
-      ...prev,
-      [fileName]: { ...prev[fileName], ...update }
-    }));
-  };
-
-  const triggerN8NWebhook = async (fileName: string, file: File) => {
-    try {
-      console.log('🚀 Enviando arquivo para n8n via multipart/form-data:', fileName);
-      
-      // Criar FormData para envio multipart/form-data
-      const formData = new FormData();
-      
-      // Anexar o arquivo no campo 'arquivo' (será acessível via $binary["arquivo"] no n8n)
-      formData.append('arquivo', file);
-      
-      // Anexar dados da apólice como JSON string
-      const policyData = {
-        fileName: fileName,
-        fileSize: file.size,
-        fileType: file.type,
-        timestamp: new Date().toISOString(),
-        source: 'SmartApólice',
-        event: 'pdf_uploaded'
-      };
-      
-      formData.append('policyData', JSON.stringify(policyData));
-      
-      console.log(`📄 Arquivo anexado no campo 'arquivo': ${fileName}`);
-      console.log(`📝 Dados da apólice:`, policyData);
-
-      const response = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
-        // NÃO definir Content-Type manualmente - o browser define automaticamente com boundary
-        body: formData,
-      });
-
-      if (response.ok) {
-        console.log('✅ Webhook n8n executado com sucesso para:', fileName);
-        console.log('📋 Arquivo enviado via multipart/form-data e será acessível via $binary["arquivo"]');
-        return true;
-      } else {
-        console.error('❌ Erro HTTP no webhook n8n:', response.status, response.statusText);
-        return false;
-      }
-
-    } catch (error) {
-      console.error('❌ Erro ao executar webhook n8n:', error);
-      return false;
-    }
-  };
-
-  const processFile = async (file: File) => {
-    const fileName = file.name;
-    
-    // Inicializar status do arquivo
-    updateFileStatus(fileName, {
-      progress: 0,
-      status: 'uploading',
-      message: 'Enviando arquivo...'
-    });
-
-    try {
-      // 1. Simular upload progress
-      for (let progress = 0; progress <= 50; progress += 25) {
-        updateFileStatus(fileName, { progress });
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-
-      // 2. Trigger webhook n8n com multipart/form-data
-      updateFileStatus(fileName, {
-        progress: 75,
-        status: 'uploading',
-        message: 'Enviando PDF para análise da IA...'
-      });
-
-      const webhookSuccess = await triggerN8NWebhook(fileName, file);
-      
-      if (!webhookSuccess) {
-        throw new Error('Falha ao comunicar com o workflow de extração');
-      }
-
-      // 3. Aguardar processamento via polling
-      updateFileStatus(fileName, {
-        progress: 100,
-        status: 'processing',
-        message: 'IA analisando documento. Aguarde...'
-      });
-
-      const result = await fetchPolicyData({
-        fileName,
-        maxRetries: 8,
-        retryInterval: 2500
-      });
-
-      if (result.success && result.data) {
-        // 4. Sucesso
-        updateFileStatus(fileName, {
-          progress: 100,
-          status: 'completed',
-          message: `✅ Processado: ${result.data.insurer} - ${result.data.type}`
-        });
-
-        onPolicyExtracted(result.data);
-
-        toast({
-          title: "🎉 Apólice Extraída",
-          description: `${result.data.name} processada com sucesso`,
-        });
-
-        // Remover da lista após 3 segundos
-        setTimeout(() => {
-          setFileStatuses(prev => {
-            const { [fileName]: removed, ...rest } = prev;
-            return rest;
-          });
-        }, 3000);
-
-      } else {
-        throw new Error(result.error || 'Falha no processamento');
-      }
-
-    } catch (error) {
-      console.error('❌ Erro ao processar arquivo:', error);
-      
-      updateFileStatus(fileName, {
-        progress: 100,
-        status: 'failed',
-        message: `❌ ${error instanceof Error ? error.message : 'Erro desconhecido'}`
-      });
-
-      toast({
-        title: "Erro no Processamento",
-        description: `Falha ao processar ${fileName}`,
-        variant: "destructive",
-      });
-
-      // Remover após 5 segundos em caso de erro
-      setTimeout(() => {
-        setFileStatuses(prev => {
-          const { [fileName]: removed, ...rest } = prev;
-          return rest;
-        });
-      }, 5000);
-    }
-  };
+  const fileProcessor = new FileProcessor(
+    updateFileStatus,
+    removeFileStatus,
+    fetchPolicyData,
+    onPolicyExtracted,
+    toast
+  );
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!acceptedFiles || acceptedFiles.length === 0) {
@@ -183,10 +38,10 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
     }
 
     // Processar arquivos em paralelo
-    const processingPromises = acceptedFiles.map(file => processFile(file));
+    const processingPromises = acceptedFiles.map(file => fileProcessor.processFile(file));
     await Promise.allSettled(processingPromises);
 
-  }, [onPolicyExtracted, fetchPolicyData, toast]);
+  }, [fileProcessor]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -196,24 +51,8 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
     maxFiles: 5,
   });
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'uploading':
-      case 'processing':
-        return <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />;
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'failed':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <File className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const activeFiles = Object.keys(fileStatuses);
-  const processingCount = activeFiles.filter(fileName => 
-    ['uploading', 'processing'].includes(fileStatuses[fileName].status)
-  ).length;
+  const activeFiles = getActiveFiles();
+  const processingCount = getProcessingCount();
 
   return (
     <div className="w-full">
@@ -239,34 +78,10 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
             </div>
           </div>
 
-          {activeFiles.length > 0 && (
-            <div className="mt-6 space-y-4">
-              <h4 className="text-sm font-medium text-gray-700">
-                Status do Processamento ({activeFiles.length})
-              </h4>
-              
-              {activeFiles.map((fileName) => {
-                const fileStatus = fileStatuses[fileName];
-                return (
-                  <div key={fileName} className="border border-gray-200 rounded-lg p-4 bg-white">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-3">
-                        {getStatusIcon(fileStatus.status)}
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{fileName}</p>
-                          <p className="text-xs text-gray-500">{fileStatus.message}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">{fileStatus.progress}%</p>
-                      </div>
-                    </div>
-                    <Progress value={fileStatus.progress} className="mt-2" />
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <FileStatusList 
+            fileStatuses={fileStatuses} 
+            activeFiles={activeFiles} 
+          />
         </CardContent>
         <CardFooter className="justify-between">
           <div className="text-xs text-gray-500 space-y-1">
