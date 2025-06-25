@@ -37,21 +37,29 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
 
   const triggerN8NWebhook = async (fileName: string, file: File) => {
     try {
-      console.log('🚀 Enviando arquivo para n8n via multipart/form-data:', fileName);
+      console.log('🚀 Enviando arquivo para n8n como binário:', fileName);
       
-      // Criar FormData para envio multipart
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('fileName', fileName);
-      formData.append('fileSize', file.size.toString());
-      formData.append('fileType', file.type);
-      formData.append('timestamp', new Date().toISOString());
-      formData.append('source', 'SmartApólice');
-      formData.append('event', 'pdf_uploaded');
+      // Converter arquivo para ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      // Criar o payload no formato esperado pelo n8n
+      const payload = {
+        arquivo: Array.from(uint8Array), // Converte para array de bytes
+        fileName: fileName,
+        fileSize: file.size,
+        fileType: file.type,
+        timestamp: new Date().toISOString(),
+        source: 'SmartApólice',
+        event: 'pdf_uploaded'
+      };
 
       const response = await fetch(N8N_WEBHOOK_URL, {
         method: 'POST',
-        body: formData, // FormData automaticamente define multipart/form-data
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -85,7 +93,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
-      // 2. Trigger webhook n8n com multipart/form-data
+      // 2. Trigger webhook n8n com dados binários
       updateFileStatus(fileName, {
         progress: 75,
         status: 'uploading',
