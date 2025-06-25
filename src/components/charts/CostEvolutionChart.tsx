@@ -2,7 +2,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
-import { PolicyData, generateChartData, getEmptyStateData } from './chartData';
+import { PolicyData, generateMonthlyEvolutionData, getEmptyMonthlyData } from './chartData';
+import { formatCurrency } from '@/utils/currencyFormatter';
 
 interface CostEvolutionChartProps {
   policies?: PolicyData[];
@@ -10,7 +11,7 @@ interface CostEvolutionChartProps {
 
 export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) => {
   const hasData = policies && policies.length > 0;
-  const chartData = hasData ? generateChartData(policies) : getEmptyStateData();
+  const chartData = hasData ? generateMonthlyEvolutionData(policies) : getEmptyMonthlyData();
 
   return (
     <Card className="bg-white border-0 shadow-none">
@@ -24,7 +25,7 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
               Evolução de Custos Mensais
             </CardTitle>
             <p className="text-sm text-gray-600 mt-1">
-              {hasData ? 'Tendência de custos ao longo do tempo' : 'Aguardando dados para análise'}
+              {hasData ? 'Tendência de custos distribuídos mensalmente' : 'Aguardando dados para análise'}
             </p>
           </div>
         </div>
@@ -33,7 +34,7 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
         <div className="w-full h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
-              data={chartData.monthlyData} 
+              data={chartData} 
               margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -47,19 +48,18 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
                 tick={{ fontSize: 12, fill: '#64748b' }}
                 tickLine={{ stroke: '#e2e8f0' }}
                 axisLine={{ stroke: '#e2e8f0' }}
-                tickFormatter={(value) => hasData ? value.toLocaleString('pt-BR', { 
-                  style: 'currency', 
-                  currency: 'BRL',
+                tickFormatter={(value) => hasData ? formatCurrency(value, { 
                   minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
+                  maximumFractionDigits: 0,
+                  showSymbol: false
                 }) : '0'}
               />
               <Tooltip 
-                formatter={(value) => [
-                  hasData ? `R$ ${Number(value).toLocaleString('pt-BR')}` : 'Sem dados',
-                  'Custo Total'
+                formatter={(value: number, name: string) => [
+                  hasData ? formatCurrency(value) : 'Sem dados',
+                  'Custo Mensal'
                 ]}
-                labelFormatter={(label) => `Mês: ${label}`}
+                labelFormatter={(label) => `Período: ${label}`}
                 contentStyle={{
                   backgroundColor: 'rgba(255, 255, 255, 0.98)',
                   border: '1px solid #e2e8f0',
@@ -92,7 +92,7 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
         {!hasData && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <p className="text-gray-400 text-sm">Faça upload de PDFs para ver os dados</p>
+              <p className="text-gray-400 text-sm">Faça upload de PDFs para ver a evolução mensal</p>
             </div>
           </div>
         )}

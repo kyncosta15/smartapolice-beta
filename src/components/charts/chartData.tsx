@@ -1,4 +1,6 @@
+
 import React from 'react';
+import { formatCurrency } from '@/utils/currencyFormatter';
 
 // Shared chart data and utilities - now dynamic based on extracted policies
 export interface PolicyData {
@@ -7,9 +9,11 @@ export interface PolicyData {
   type: string;
   insurer: string;
   premium: number;
+  monthlyAmount?: number;
   startDate: string;
   endDate: string;
   policyNumber: string;
+  paymentFrequency?: 'mensal' | 'anual' | 'semestral' | 'trimestral';
 }
 
 // Function to normalize policy types - residencial becomes patrimonial
@@ -40,6 +44,72 @@ export const normalizeInsuranceType = (type: string): string => {
   return typeMap[normalizedType] || normalizedType;
 };
 
+// Generate monthly evolution data based on policy start/end dates and payment frequency
+export const generateMonthlyEvolutionData = (policies: PolicyData[]) => {
+  if (!policies || policies.length === 0) {
+    return getEmptyMonthlyData();
+  }
+
+  // Create a map for monthly costs
+  const monthlyMap: { [key: string]: { custo: number; apolices: number; details: PolicyData[] } } = {};
+  
+  // Initialize 12 months from current date
+  const now = new Date();
+  for (let i = -6; i < 6; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const key = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+    monthlyMap[key] = { custo: 0, apolices: 0, details: [] };
+  }
+
+  // Process each policy
+  policies.forEach(policy => {
+    const startDate = new Date(policy.startDate);
+    const endDate = new Date(policy.endDate);
+    const monthlyAmount = policy.monthlyAmount || (policy.premium / 12);
+    
+    // Distribute costs across active months
+    const current = new Date(startDate);
+    while (current <= endDate && current <= new Date(now.getFullYear(), now.getMonth() + 6, 0)) {
+      const key = current.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      
+      if (monthlyMap[key]) {
+        monthlyMap[key].custo += monthlyAmount;
+        monthlyMap[key].apolices += 1;
+        monthlyMap[key].details.push(policy);
+      }
+      
+      // Move to next month
+      current.setMonth(current.getMonth() + 1);
+    }
+  });
+
+  // Convert to array format for recharts
+  return Object.entries(monthlyMap)
+    .map(([month, data]) => ({
+      month,
+      custo: Math.round(data.custo),
+      apolices: data.apolices,
+      details: data.details
+    }))
+    .sort((a, b) => {
+      // Sort by chronological order
+      const [monthA, yearA] = a.month.split('/');
+      const [monthB, yearB] = b.month.split('/');
+      const dateA = new Date(2000 + parseInt(yearA), getMonthNumber(monthA));
+      const dateB = new Date(2000 + parseInt(yearB), getMonthNumber(monthB));
+      return dateA.getTime() - dateB.getTime();
+    });
+};
+
+// Helper function to get month number
+const getMonthNumber = (monthStr: string): number => {
+  const months: { [key: string]: number } = {
+    'jan': 0, 'fev': 1, 'mar': 2, 'abr': 3, 'mai': 4, 'jun': 5,
+    'jul': 6, 'ago': 7, 'set': 8, 'out': 9, 'nov': 10, 'dez': 11
+  };
+  return months[monthStr.toLowerCase()] || 0;
+};
+
 // Generate dynamic chart data from policies
 export const generateChartData = (policies: PolicyData[]) => {
   if (!policies || policies.length === 0) {
@@ -63,22 +133,8 @@ export const generateChartData = (policies: PolicyData[]) => {
     color: ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#6B7280'][index % 5]
   }));
 
-  // Monthly cost evolution
-  const monthlyGroups = policies.reduce((acc, policy) => {
-    const month = new Date(policy.startDate).toLocaleDateString('pt-BR', { month: 'short' });
-    if (!acc[month]) {
-      acc[month] = { custo: 0, count: 0 };
-    }
-    acc[month].custo += policy.premium;
-    acc[month].count += 1;
-    return acc;
-  }, {} as Record<string, { custo: number; count: number }>);
-
-  const monthlyData = Object.entries(monthlyGroups).map(([month, data]) => ({
-    month,
-    custo: Math.round(data.custo),
-    apolices: data.count
-  }));
+  // Use the new monthly evolution data
+  const monthlyData = generateMonthlyEvolutionData(policies);
 
   // Insurance types distribution with normalization
   const typeCounts = policies.reduce((acc, policy) => {
@@ -121,19 +177,26 @@ export const generateChartData = (policies: PolicyData[]) => {
   };
 };
 
+// Default empty state data for monthly evolution
+export const getEmptyMonthlyData = () => {
+  const now = new Date();
+  const months = [];
+  
+  for (let i = -6; i < 6; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const month = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+    months.push({ month, custo: 0, apolices: 0 });
+  }
+  
+  return months;
+};
+
 // Default empty state data
 export const getEmptyStateData = () => ({
   insurerData: [
     { name: 'Nenhum dado', value: 100, color: '#e5e7eb' }
   ],
-  monthlyData: [
-    { month: 'Jan', custo: 0, apolices: 0 },
-    { month: 'Fev', custo: 0, apolices: 0 },
-    { month: 'Mar', custo: 0, apolices: 0 },
-    { month: 'Abr', custo: 0, apolices: 0 },
-    { month: 'Mai', custo: 0, apolices: 0 },
-    { month: 'Jun', custo: 0, apolices: 0 }
-  ],
+  monthlyData: getEmptyMonthlyData(),
   typeData: [
     { name: 'Nenhum dado', value: 100, color: '#e5e7eb' }
   ],
