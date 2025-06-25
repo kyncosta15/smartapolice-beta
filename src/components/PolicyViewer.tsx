@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, Edit, Trash2, Search, Filter, FileText } from 'lucide-react';
+import { Eye, Edit, Trash2, Search, Filter, FileText, Download } from 'lucide-react';
 import { LocationFilter } from './LocationFilter';
 
 interface PolicyViewerProps {
@@ -20,6 +19,23 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
   const [filterType, setFilterType] = useState('all');
   const [locationFilters, setLocationFilters] = useState({ states: [], cities: [] });
   const [showFilters, setShowFilters] = useState(false);
+
+  const handleDownload = (policy: any) => {
+    if (policy.file) {
+      // Create a blob URL for the file and trigger download
+      const url = URL.createObjectURL(policy.file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${policy.name}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else {
+      // Fallback for policies without file object
+      console.warn('Arquivo não disponível para download:', policy.name);
+    }
+  };
 
   const filteredPolicies = policies.filter(policy => {
     const matchesSearch = policy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -180,6 +196,15 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
                     className="hover:bg-green-50 hover:text-green-600 h-8 w-8 p-0"
                   >
                     <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDownload(policy)}
+                    className="hover:bg-purple-50 hover:text-purple-600 h-8 w-8 p-0"
+                    disabled={!policy.file}
+                  >
+                    <Download className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
