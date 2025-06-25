@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, Edit, Trash2, Search, Filter, FileText, Download } from 'lucide-react';
 import { LocationFilter } from './LocationFilter';
+import { PolicyEditModal } from './PolicyEditModal';
 
 interface PolicyViewerProps {
   policies: any[];
@@ -19,6 +20,8 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
   const [filterType, setFilterType] = useState('all');
   const [locationFilters, setLocationFilters] = useState({ states: [], cities: [] });
   const [showFilters, setShowFilters] = useState(false);
+  const [editingPolicy, setEditingPolicy] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleDownload = (policy: any) => {
     if (policy.file) {
@@ -35,6 +38,22 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
       // Fallback for policies without file object
       console.warn('Arquivo não disponível para download:', policy.name);
     }
+  };
+
+  const handleEditClick = (policy: any) => {
+    setEditingPolicy(policy);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (updatedPolicy: any) => {
+    onPolicyEdit(updatedPolicy);
+    setIsEditModalOpen(false);
+    setEditingPolicy(null);
+  };
+
+  const handleCloseEdit = () => {
+    setIsEditModalOpen(false);
+    setEditingPolicy(null);
   };
 
   const filteredPolicies = policies.filter(policy => {
@@ -192,7 +211,7 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onPolicyEdit(policy)}
+                    onClick={() => handleEditClick(policy)}
                     className="hover:bg-green-50 hover:text-green-600 h-8 w-8 p-0"
                   >
                     <Edit className="h-4 w-4" />
@@ -238,6 +257,14 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
           </CardContent>
         </Card>
       )}
+
+      {/* Modal de Edição */}
+      <PolicyEditModal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEdit}
+        policy={editingPolicy}
+        onSave={handleSaveEdit}
+      />
     </div>
   );
 }
