@@ -281,8 +281,8 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {policy.installments.slice(0, 4).map((installment, idx) => (
                         <div key={idx} className="text-xs bg-gray-50 p-2 rounded">
-                          <p className="font-medium">{formatCurrency(installment.value)}</p>
-                          <p className="text-gray-600">{new Date(installment.date).toLocaleDateString('pt-BR')}</p>
+                          <p className="font-medium">{formatCurrency(installment.valor)}</p>
+                          <p className="text-gray-600">{new Date(installment.data).toLocaleDateString('pt-BR')}</p>
                         </div>
                       ))}
                     </div>
