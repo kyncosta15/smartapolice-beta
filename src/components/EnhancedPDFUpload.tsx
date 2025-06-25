@@ -1,601 +1,475 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { 
   Upload, 
   FileText, 
-  CheckCircle2, 
+  CheckCircle, 
   AlertCircle, 
-  Loader2, 
   X, 
-  Image as ImageIcon,
+  Download,
   Eye,
-  Trash2,
-  Webhook,
-  RefreshCw,
-  FileCheck,
-  Clock
+  Loader2,
+  Plus,
+  Trash2 
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-interface ExtractedPolicyData {
+interface PDFFile {
   id: string;
-  name: string;
-  type: string;
-  insurer: string;
-  policyNumber: string;
-  premium: string;
-  startDate: string;
-  endDate: string;
-  coverage: string;
-  paymentForm: string;
-  installments: number;
-  monthlyAmount: string;
-  fileName: string;
-  extractedAt: string;
-  confidence: number;
-}
-
-interface FileUploadStatus {
   file: File;
+  name: string;
+  size: string;
   status: 'pending' | 'processing' | 'completed' | 'error';
   progress: number;
-  extractedData?: ExtractedPolicyData;
-  error?: string;
+  extractedData?: any;
+  previewUrl?: string;
 }
 
 interface EnhancedPDFUploadProps {
-  onPolicyExtracted: (policy: ExtractedPolicyData) => void;
+  onPolicyExtracted: (policy: any) => void;
 }
 
-const N8N_WEBHOOK_URL = 'https://beneficiosagente.app.n8n.cloud/webhook-test/a2c01401-91f5-4652-a2b7-4faadbf93745';
-
-export const EnhancedPDFUpload = ({ onPolicyExtracted }: EnhancedPDFUploadProps) => {
-  const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([]);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [isProcessingBatch, setIsProcessingBatch] = useState(false);
+export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps) {
+  const [files, setFiles] = useState<PDFFile[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [previewFile, setPreviewFile] = useState<PDFFile | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-  const MAX_FILES = 5; // Máximo de arquivos por vez
-
-  const validateFile = (file: File): string | null => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return 'Formato não suportado. Use PDF, JPG ou PNG.';
-    }
-    
-    if (file.size > MAX_FILE_SIZE) {
-      return 'Arquivo muito grande. Máximo 10MB.';
-    }
-    
-    const isDuplicate = fileUploads.some(upload => 
-      upload.file.name === file.name && upload.file.size === file.size
-    );
-    
-    if (isDuplicate) {
-      return 'Arquivo já foi adicionado.';
-    }
-    
-    return null;
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const sendToN8N = async (file: File, extractedData: ExtractedPolicyData) => {
-    try {
-      console.log('Enviando arquivo para n8n webhook:', file.name);
+  const createPreviewUrl = (file: File): string => {
+    return URL.createObjectURL(file);
+  };
 
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('extractedData', JSON.stringify(extractedData));
-      formData.append('timestamp', new Date().toISOString());
-      formData.append('userId', 'user-123'); // ID do usuário atual
-      formData.append('source', 'smart-apolice');
+  const handleFileSelect = useCallback((selectedFiles: FileList | null) => {
+    if (!selectedFiles) return;
 
-      const response = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-Request-Source': 'SmartApolice',
-        },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Resposta do n8n:', result);
-        
+    const validFiles = Array.from(selectedFiles).filter(file => {
+      if (file.type !== 'application/pdf') {
         toast({
-          title: "Webhook Executado",
-          description: `Arquivo ${file.name} processado e enviado para n8n com sucesso`,
+          title: "Arquivo Inválido",
+          description: `${file.name} não é um arquivo PDF`,
+          variant: "destructive"
         });
-        
-        return result;
-      } else {
-        console.error('Erro ao enviar para n8n:', response.status, response.statusText);
-        throw new Error(`Erro HTTP: ${response.status}`);
+        return false;
       }
-    } catch (error) {
-      console.error('Erro na requisição para n8n:', error);
-      toast({
-        title: "Erro no Webhook",
-        description: `Falha ao enviar ${file.name} para n8n: ${error.message}`,
-        variant: "destructive"
-      });
-      throw error;
-    }
-  };
-
-  const simulateAIExtraction = async (file: File): Promise<ExtractedPolicyData> => {
-    const isImage = file.type.startsWith('image/');
-    const extractionTime = isImage ? 3000 + Math.random() * 2000 : 2000 + Math.random() * 3000;
-    
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (Math.random() < 0.92) { // 92% de sucesso
-          const mockData: ExtractedPolicyData = {
-            id: `extracted-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-            name: `Apólice ${file.name.replace(/\.(pdf|jpg|jpeg|png)$/i, '')}`,
-            type: ['auto', 'vida', 'saude', 'empresarial', 'patrimonial'][Math.floor(Math.random() * 5)],
-            insurer: ['Porto Seguro', 'SulAmérica', 'Bradesco Seguros', 'Allianz', 'Mapfre', 'Tokio Marine'][Math.floor(Math.random() * 6)],
-            policyNumber: `${isImage ? 'IMG' : 'PDF'}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-            premium: (Math.random() * 50000 + 5000).toFixed(2),
-            startDate: new Date().toISOString().split('T')[0],
-            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            coverage: 'Cobertura Compreensiva',
-            paymentForm: ['Mensal', 'Anual', 'Semestral', 'Trimestral'][Math.floor(Math.random() * 4)],
-            installments: Math.floor(Math.random() * 12) + 1,
-            monthlyAmount: (Math.random() * 2000 + 200).toFixed(2),
-            fileName: file.name,
-            extractedAt: new Date().toISOString(),
-            confidence: 0.88 + Math.random() * 0.11 // 88% a 99%
-          };
-          resolve(mockData);
-        } else {
-          reject(new Error('Falha na extração de dados. Documento não legível, com qualidade insuficiente ou formato inválido.'));
-        }
-      }, extractionTime);
-    });
-  };
-
-  const processFile = async (file: File) => {
-    setFileUploads(prev => prev.map(upload => 
-      upload.file === file 
-        ? { ...upload, status: 'processing', progress: 0 }
-        : upload
-    ));
-
-    try {
-      // Simula progresso de upload
-      for (let progress = 0; progress <= 40; progress += 8) {
-        await new Promise(resolve => setTimeout(resolve, 120));
-        setFileUploads(prev => prev.map(upload => 
-          upload.file === file 
-            ? { ...upload, progress }
-            : upload
-        ));
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        toast({
+          title: "Arquivo Muito Grande",
+          description: `${file.name} excede o limite de 10MB`,
+          variant: "destructive"
+        });
+        return false;
       }
-
-      // Extração de dados
-      const extractedData = await simulateAIExtraction(file);
-      
-      // Progresso da extração
-      for (let progress = 50; progress <= 80; progress += 10) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-        setFileUploads(prev => prev.map(upload => 
-          upload.file === file 
-            ? { ...upload, progress }
-            : upload
-        ));
-      }
-
-      // Envio para n8n
-      try {
-        await sendToN8N(file, extractedData);
-      } catch (webhookError) {
-        console.warn('Webhook falhou, mas continuando com o processamento local:', webhookError);
-      }
-
-      // Finalização
-      setFileUploads(prev => prev.map(upload => 
-        upload.file === file 
-          ? { 
-              ...upload, 
-              status: 'completed', 
-              progress: 100, 
-              extractedData 
-            }
-          : upload
-      ));
-
-      onPolicyExtracted(extractedData);
-
-      toast({
-        title: "Extração Concluída",
-        description: `${file.name} processado com ${(extractedData.confidence * 100).toFixed(0)}% de confiança`,
-      });
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido na extração';
-      
-      setFileUploads(prev => prev.map(upload => 
-        upload.file === file 
-          ? { 
-              ...upload, 
-              status: 'error', 
-              error: errorMessage 
-            }
-          : upload
-      ));
-
-      toast({
-        title: "Falha na Extração",
-        description: `${file.name}: ${errorMessage}`,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleFileUpload = (files: FileList) => {
-    const validFiles: File[] = [];
-    const errors: string[] = [];
-
-    // Verificar limite de arquivos
-    if (fileUploads.length + files.length > MAX_FILES) {
-      toast({
-        title: "Limite Excedido",
-        description: `Máximo de ${MAX_FILES} arquivos por vez. Você tem ${fileUploads.length} e está tentando adicionar ${files.length}.`,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    Array.from(files).forEach(file => {
-      const error = validateFile(file);
-      if (error) {
-        errors.push(`${file.name}: ${error}`);
-      } else {
-        validFiles.push(file);
-      }
+      return true;
     });
 
-    if (errors.length > 0) {
-      toast({
-        title: "Arquivos Rejeitados",
-        description: errors.join('\n'),
-        variant: "destructive"
-      });
-    }
+    const newFiles: PDFFile[] = validFiles.map(file => ({
+      id: Date.now() + Math.random().toString(),
+      file,
+      name: file.name,
+      size: formatFileSize(file.size),
+      status: 'pending',
+      progress: 0,
+      previewUrl: createPreviewUrl(file)
+    }));
 
-    if (validFiles.length > 0) {
-      const newUploads: FileUploadStatus[] = validFiles.map(file => ({
-        file,
-        status: 'pending',
-        progress: 0
-      }));
+    setFiles(prev => [...prev, ...newFiles]);
 
-      setFileUploads(prev => [...prev, ...newUploads]);
-      
-      // Processar arquivos com delay escalonado
-      setIsProcessingBatch(true);
-      validFiles.forEach((file, index) => {
-        setTimeout(() => {
-          processFile(file);
-          if (index === validFiles.length - 1) {
-            setTimeout(() => setIsProcessingBatch(false), 1000);
-          }
-        }, index * 800); // 800ms entre cada arquivo
-      });
-
+    if (newFiles.length > 0) {
       toast({
         title: "Arquivos Adicionados",
-        description: `${validFiles.length} arquivo(s) adicionado(s) para processamento`,
+        description: `${newFiles.length} arquivo(s) PDF adicionado(s) com sucesso`,
+      });
+    }
+  }, [toast]);
+
+  const processFile = async (fileData: PDFFile) => {
+    setFiles(prev => prev.map(f => 
+      f.id === fileData.id 
+        ? { ...f, status: 'processing', progress: 0 }
+        : f
+    ));
+
+    try {
+      // Simular progresso de processamento
+      for (let progress = 0; progress <= 100; progress += 10) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        setFiles(prev => prev.map(f => 
+          f.id === fileData.id 
+            ? { ...f, progress }
+            : f
+        ));
+      }
+
+      // Simular extração de dados
+      const mockExtractedData = {
+        id: fileData.id,
+        name: `Apólice ${fileData.name.replace('.pdf', '')}`,
+        policyNumber: `AP${Math.floor(Math.random() * 100000)}`,
+        insurer: ['Porto Seguro', 'Bradesco Seguros', 'SulAmérica', 'Allianz'][Math.floor(Math.random() * 4)],
+        premium: Math.floor(Math.random() * 50000) + 10000,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        type: ['auto', 'vida', 'saude', 'residencial'][Math.floor(Math.random() * 4)]
+      };
+
+      // Enviar para webhook do n8n
+      try {
+        const webhookUrl = 'https://beneficiosagente.app.n8n.cloud/webhook-test/a2c01401-91f5-4652-a2b7-4faadbf93745';
+        
+        const formData = new FormData();
+        formData.append('file', fileData.file);
+        formData.append('extractedData', JSON.stringify(mockExtractedData));
+        formData.append('timestamp', new Date().toISOString());
+
+        await fetch(webhookUrl, {
+          method: 'POST',
+          body: formData,
+        });
+
+        console.log('Arquivo enviado para n8n webhook com sucesso');
+      } catch (webhookError) {
+        console.error('Erro ao enviar para webhook:', webhookError);
+      }
+
+      setFiles(prev => prev.map(f => 
+        f.id === fileData.id 
+          ? { ...f, status: 'completed', progress: 100, extractedData: mockExtractedData }
+          : f
+      ));
+
+      onPolicyExtracted(mockExtractedData);
+
+      toast({
+        title: "Processamento Concluído",
+        description: `Dados extraídos de ${fileData.name} com sucesso`,
+      });
+
+    } catch (error) {
+      setFiles(prev => prev.map(f => 
+        f.id === fileData.id 
+          ? { ...f, status: 'error', progress: 0 }
+          : f
+      ));
+
+      toast({
+        title: "Erro no Processamento",
+        description: `Falha ao processar ${fileData.name}`,
+        variant: "destructive"
       });
     }
   };
 
-  const removeFile = (fileToRemove: File) => {
-    setFileUploads(prev => prev.filter(upload => upload.file !== fileToRemove));
-    toast({
-      title: "Arquivo Removido",
-      description: `${fileToRemove.name} foi removido da lista`,
-    });
-  };
+  const processAllFiles = async () => {
+    const pendingFiles = files.filter(f => f.status === 'pending');
+    if (pendingFiles.length === 0) return;
 
-  const retryFile = (file: File) => {
-    setFileUploads(prev => prev.map(upload => 
-      upload.file === file 
-        ? { ...upload, status: 'pending', progress: 0, error: undefined }
-        : upload
-    ));
-    processFile(file);
-  };
-
-  const clearCompleted = () => {
-    const completedCount = fileUploads.filter(u => u.status === 'completed').length;
-    setFileUploads(prev => prev.filter(upload => upload.status !== 'completed'));
-    toast({
-      title: "Lista Limpa",
-      description: `${completedCount} arquivo(s) processado(s) removido(s) da lista`,
-    });
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
+    setIsProcessing(true);
     
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      handleFileUpload(files);
+    // Processar arquivos em lotes de 3 para não sobrecarregar
+    const batchSize = 3;
+    for (let i = 0; i < pendingFiles.length; i += batchSize) {
+      const batch = pendingFiles.slice(i, i + batchSize);
+      await Promise.all(batch.map(processFile));
     }
+
+    setIsProcessing(false);
   };
 
-  const getFileIcon = (file: File) => {
-    if (file.type === 'application/pdf') {
-      return <FileText className="h-5 w-5 text-red-600" />;
+  const removeFile = (fileId: string) => {
+    const file = files.find(f => f.id === fileId);
+    if (file?.previewUrl) {
+      URL.revokeObjectURL(file.previewUrl);
     }
-    return <ImageIcon className="h-5 w-5 text-blue-600" />;
+    setFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
-  const getStatusIcon = (upload: FileUploadStatus) => {
-    switch (upload.status) {
+  const handlePreview = (file: PDFFile) => {
+    setPreviewFile(file);
+    setIsPreviewOpen(true);
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
+
+  const getStatusIcon = (status: PDFFile['status']) => {
+    switch (status) {
       case 'completed':
-        return <CheckCircle2 className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
       case 'error':
-        return <AlertCircle className="h-5 w-5 text-red-600" />;
+        return <AlertCircle className="h-5 w-5 text-red-500" />;
       case 'processing':
-        return <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />;
+        return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
       default:
-        return <Clock className="h-5 w-5 text-gray-400" />;
+        return <FileText className="h-5 w-5 text-gray-400" />;
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    const types = {
-      auto: 'Seguro Auto',
-      vida: 'Seguro de Vida',
-      saude: 'Seguro Saúde',
-      empresarial: 'Empresarial',
-      patrimonial: 'Patrimonial'
-    };
-    return types[type] || type;
+  const getStatusColor = (status: PDFFile['status']) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-50 text-green-700 border-green-200';
+      case 'error':
+        return 'bg-red-50 text-red-700 border-red-200';
+      case 'processing':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
   };
 
-  const completedCount = fileUploads.filter(u => u.status === 'completed').length;
-  const errorCount = fileUploads.filter(u => u.status === 'error').length;
-  const processingCount = fileUploads.filter(u => u.status === 'processing').length;
+  const getStatusText = (status: PDFFile['status']) => {
+    switch (status) {
+      case 'completed':
+        return 'Processado';
+      case 'error':
+        return 'Erro';
+      case 'processing':
+        return 'Processando';
+      default:
+        return 'Pendente';
+    }
+  };
+
+  const pendingCount = files.filter(f => f.status === 'pending').length;
+  const completedCount = files.filter(f => f.status === 'completed').length;
+  const errorCount = files.filter(f => f.status === 'error').length;
 
   return (
     <div className="space-y-6">
-      {/* Upload Area */}
-      <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200 shadow-xl">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Upload className="h-6 w-6 text-blue-600" />
-              <span className="text-xl">Upload Inteligente</span>
-              <Badge variant="outline" className="flex items-center space-x-1 bg-white">
-                <Webhook className="h-3 w-3" />
-                <span>n8n Integrado</span>
-              </Badge>
-            </div>
-            {fileUploads.length > 0 && (
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="bg-white">
-                  {completedCount} ✓ | {errorCount} ✗ | {processingCount} ⏳
-                </Badge>
-                {completedCount > 0 && (
-                  <Button onClick={clearCompleted} variant="outline" size="sm">
-                    <FileCheck className="h-4 w-4 mr-1" />
-                    Limpar
-                  </Button>
-                )}
-              </div>
-            )}
+      {/* Header */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <CardHeader className="text-center pb-4">
+          <CardTitle className="text-2xl font-bold text-blue-900 flex items-center justify-center">
+            <Upload className="h-6 w-6 mr-2" />
+            Upload de Apólices PDF
           </CardTitle>
+          <p className="text-blue-700 mt-2">
+            Faça upload dos seus PDFs e extraia dados automaticamente com IA
+          </p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Drop Zone */}
-            <div 
-              className={`border-2 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
-                isDragOver 
-                  ? 'border-blue-400 bg-blue-100/50 scale-105' 
-                  : 'border-blue-300 hover:border-blue-400 hover:bg-blue-50/50'
-              } ${isProcessingBatch ? 'opacity-60 pointer-events-none' : ''}`}
-              onClick={() => !isProcessingBatch && fileInputRef.current?.click()}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <div className="space-y-4">
-                <Upload className={`mx-auto h-16 w-16 ${isDragOver ? 'text-blue-600' : 'text-blue-400'} transition-colors`} />
-                <div>
-                  <p className="text-xl font-semibold text-gray-700 mb-2">
-                    {isDragOver ? 'Solte os arquivos aqui!' : 'Arraste PDFs ou imagens'}
-                  </p>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Suporte para PDF, JPG, PNG • Máximo 10MB • Até {MAX_FILES} arquivos
-                  </p>
-                  <Button variant="outline" size="lg" disabled={isProcessingBatch}>
-                    {isProcessingBatch ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Processando...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Selecionar Arquivos
-                      </>
-                    )}
+      </Card>
+
+      {/* Upload Area */}
+      <Card>
+        <CardContent className="p-6">
+          <div
+            className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
+              isDragging
+                ? 'border-blue-400 bg-blue-50'
+                : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/30'
+            }`}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+          >
+            <div className="space-y-4">
+              <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                <Upload className="h-8 w-8 text-blue-600" />
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Arraste seus PDFs aqui ou clique para selecionar
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Suporte a múltiplos arquivos • Máximo 10MB por arquivo • Apenas PDFs
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Selecionar Arquivos
                   </Button>
+                  
+                  {pendingCount > 0 && (
+                    <Button
+                      onClick={processAllFiles}
+                      disabled={isProcessing}
+                      variant="outline"
+                      className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Processando...
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-4 w-4 mr-2" />
+                          Processar Todos ({pendingCount})
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
-              
-              <Input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                multiple
-                onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
-                className="hidden"
-                disabled={isProcessingBatch}
-              />
-            </div>
-
-            {/* Info Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Alert className="bg-blue-50 border-blue-200">
-                <Webhook className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Integração n8n:</strong> Processamento automático via webhook
-                </AlertDescription>
-              </Alert>
-              
-              <Alert className="bg-green-50 border-green-200">
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>IA Avançada:</strong> Extração com 92% de precisão
-                </AlertDescription>
-              </Alert>
-              
-              <Alert className="bg-purple-50 border-purple-200">
-                <FileText className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Multi-formato:</strong> PDFs e imagens suportados
-                </AlertDescription>
-              </Alert>
             </div>
           </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".pdf"
+            onChange={(e) => handleFileSelect(e.target.files)}
+            className="hidden"
+          />
         </CardContent>
       </Card>
 
-      {/* Lista de Arquivos */}
-      {fileUploads.length > 0 && (
-        <Card className="bg-white shadow-lg">
+      {/* Statistics */}
+      {files.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-blue-700">{files.length}</div>
+              <div className="text-sm text-blue-600">Total</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-yellow-50 border-yellow-200">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-yellow-700">{pendingCount}</div>
+              <div className="text-sm text-yellow-600">Pendentes</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-green-50 border-green-200">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-green-700">{completedCount}</div>
+              <div className="text-sm text-green-600">Processados</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-red-50 border-red-200">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-red-700">{errorCount}</div>
+              <div className="text-sm text-red-600">Erros</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Files List */}
+      {files.length > 0 && (
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Processamento de Arquivos</span>
-              <Badge variant="outline">{fileUploads.length} arquivo(s)</Badge>
+            <CardTitle className="flex items-center">
+              <FileText className="h-5 w-5 mr-2" />
+              Arquivos ({files.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {fileUploads.map((upload, index) => (
-                <div key={index} className="p-4 border rounded-xl bg-gray-50/50 hover:bg-white transition-colors">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      {getFileIcon(upload.file)}
-                      <div>
-                        <p className="font-medium text-gray-900">{upload.file.name}</p>
-                        <p className="text-sm text-gray-500">
-                          {(upload.file.size / 1024 / 1024).toFixed(2)} MB • 
-                          {upload.file.type.includes('pdf') ? ' PDF' : ' Imagem'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(upload)}
-                      {upload.status === 'error' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => retryFile(upload.file)}
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeFile(upload.file)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  {upload.status === 'processing' && (
-                    <div className="space-y-2">
-                      <Progress value={upload.progress} className="h-3" />
-                      <p className="text-xs text-gray-500 flex items-center">
-                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                        {upload.progress < 40 ? 'Fazendo upload...' : 
-                         upload.progress < 80 ? 'Extraindo dados com IA...' : 'Enviando para n8n...'}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Error */}
-                  {upload.status === 'error' && (
-                    <Alert variant="destructive" className="mt-3">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{upload.error}</AlertDescription>
-                    </Alert>
-                  )}
-
-                  {/* Extracted Data */}
-                  {upload.status === 'completed' && upload.extractedData && (
-                    <div className="mt-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-green-800 flex items-center">
-                          <CheckCircle2 className="h-4 w-4 mr-2" />
-                          Dados Extraídos
-                        </h4>
-                        <Badge variant="outline" className="text-green-700 bg-green-100">
-                          {(upload.extractedData.confidence * 100).toFixed(0)}% confiança
+            <div className="space-y-3">
+              {files.map((file) => (
+                <div key={file.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    {getStatusIcon(file.status)}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{file.name}</p>
+                      <div className="flex items-center space-x-4 mt-1">
+                        <span className="text-sm text-gray-500">{file.size}</span>
+                        <Badge className={`text-xs ${getStatusColor(file.status)}`}>
+                          {getStatusText(file.status)}
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                        <div>
-                          <span className="font-medium text-gray-600">Apólice:</span>
-                          <p className="text-gray-800">{upload.extractedData.name}</p>
+                      {file.status === 'processing' && (
+                        <div className="mt-2">
+                          <Progress value={file.progress} className="h-2" />
+                          <p className="text-xs text-gray-500 mt-1">{file.progress}% processado</p>
                         </div>
-                        <div>
-                          <span className="font-medium text-gray-600">Tipo:</span>
-                          <p className="text-gray-800">{getTypeLabel(upload.extractedData.type)}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-600">Seguradora:</span>
-                          <p className="text-gray-800">{upload.extractedData.insurer}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-600">Número:</span>
-                          <p className="text-gray-800">{upload.extractedData.policyNumber}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-600">Valor:</span>
-                          <p className="text-gray-800">R$ {parseFloat(upload.extractedData.premium).toLocaleString('pt-BR')}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-600">Pagamento:</span>
-                          <p className="text-gray-800">{upload.extractedData.paymentForm}</p>
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    {file.previewUrl && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePreview(file)}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    {file.status === 'pending' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => processFile(file)}
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(file.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* PDF Preview Modal */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <FileText className="h-5 w-5 mr-2" />
+              Visualizar PDF: {previewFile?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {previewFile?.previewUrl && (
+              <iframe
+                src={previewFile.previewUrl}
+                className="w-full h-[70vh] border border-gray-200 rounded-lg"
+                title={`Preview of ${previewFile.name}`}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
+}

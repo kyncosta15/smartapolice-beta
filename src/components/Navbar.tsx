@@ -4,7 +4,6 @@ import { Bell, Search, Menu, X, LogOut, ChevronDown, PanelLeft, AlertCircle, Cal
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { SmartApóliceLogo } from './SmartApoliceLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/components/ui/sidebar';
 
@@ -63,7 +62,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Left side - Sidebar Toggle, Logo and Mobile Menu */}
+          {/* Left side - Sidebar Toggle and Mobile Menu */}
           <div className="flex items-center space-x-3">
             {/* Sidebar Toggle for Desktop */}
             <Button
@@ -82,8 +81,6 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            
-            <SmartApóliceLogo size="md" showText={true} />
           </div>
 
           {/* Center - Search Bar */}
@@ -148,10 +145,10 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
+                              <p className="text-sm font-medium text-gray-900 break-words">
                                 {notification.title}
                               </p>
-                              <p className="text-xs text-gray-600 mt-1">
+                              <p className="text-xs text-gray-600 mt-1 break-words">
                                 {notification.message}
                               </p>
                               <p className="text-xs text-gray-400 mt-1">
@@ -174,7 +171,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
                 className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-gray-900 truncate max-w-32">
+                  <p className="text-sm font-medium text-gray-900 truncate max-w-32 break-words">
                     {user?.name}
                   </p>
                   <Badge className={`text-xs font-medium ${getRoleBadgeColor(user?.role || '')}`}>
@@ -188,7 +185,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
                   <div className="px-4 py-2 border-b border-gray-100 sm:hidden">
-                    <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                    <p className="text-sm font-medium text-gray-900 break-words">{user?.name}</p>
                     <Badge className={`text-xs mt-1 ${getRoleBadgeColor(user?.role || '')}`}>
                       {getRoleLabel(user?.role || '')}
                     </Badge>

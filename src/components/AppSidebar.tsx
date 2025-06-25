@@ -12,7 +12,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Badge } from '@/components/ui/badge';
+import { SmartApóliceLogo } from './SmartApoliceLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface AppSidebarProps {
@@ -83,38 +83,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     return baseItems;
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    const colors = {
-      cliente: 'bg-blue-50 text-blue-600 border-blue-200',
-      administrador: 'bg-purple-50 text-purple-600 border-purple-200',
-      corretora: 'bg-green-50 text-green-600 border-green-200'
-    };
-    return colors[role] || 'bg-gray-50 text-gray-600 border-gray-200';
-  };
-
-  const getRoleLabel = (role: string) => {
-    const roles = {
-      cliente: 'Cliente',
-      administrador: 'Administrador',
-      corretora: 'Corretora'
-    };
-    return roles[role] || role;
-  };
-
   const navigationItems = getNavigationItems();
 
   return (
     <Sidebar className="border-r border-gray-100 bg-white">
-      <SidebarHeader className="px-3 py-4 border-b border-gray-50">
-        <div className="space-y-2">
-          <div>
-            <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
-            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-          </div>
-          <Badge className={`text-xs font-medium px-2 py-1 ${getRoleBadgeColor(user?.role || '')}`}>
-            {getRoleLabel(user?.role || '')}
-          </Badge>
-        </div>
+      <SidebarHeader className="px-4 py-6 border-b border-gray-50">
+        <SmartApóliceLogo size="md" showText={true} />
       </SidebarHeader>
       
       <SidebarContent className="px-2 py-3">

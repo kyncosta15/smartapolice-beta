@@ -56,78 +56,28 @@ export function ContentRenderer({
     onPolicyUpdate(policy);
   };
 
+  // Get policies based on user role
+  const getUserPolicies = () => {
+    if (user?.role === 'administrador') {
+      return allPolicies; // Admin sees all policies
+    }
+    return extractedPolicies; // Clients see only their extracted policies
+  };
+
+  const userPolicies = getUserPolicies();
+
   switch (activeSection) {
     case 'home':
       return (
         <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6">
           <EnhancedDashboard 
-            policies={allPolicies} 
+            policies={userPolicies} 
             onNotificationClick={handleNotificationClick}
           />
           
-          {/* Quick Actions - Upload PDF in Focus */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer ring-2 ring-blue-200 ring-opacity-50" 
-                  onClick={() => onSectionChange('import')}>
-              <CardContent className="p-6 text-center">
-                <Upload className="h-14 w-14 text-blue-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-blue-800 mb-2">📄 Upload PDF</h3>
-                <p className="text-sm text-blue-600 font-medium">Adicione PDFs e extraia dados automaticamente</p>
-                <Button className="mt-3 bg-blue-600 hover:bg-blue-700 text-white">
-                  Enviar Arquivo
-                </Button>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all cursor-pointer"
-                  onClick={() => onSectionChange('policies')}>
-              <CardContent className="p-6 text-center">
-                <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-green-800 mb-2">Minhas Apólices</h3>
-                <p className="text-sm text-green-600">Visualize e gerencie suas apólices</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all cursor-pointer"
-                  onClick={() => onSectionChange('financial')}>
-              <CardContent className="p-6 text-center">
-                <DollarSign className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-purple-800 mb-2">Relatório Financeiro</h3>
-                <p className="text-sm text-purple-600">Acompanhe custos e economias</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2">
-              <PolicyTable 
-                searchTerm={searchTerm}
-                filterType={filterType}
-                onPolicySelect={onPolicySelect}
-                extractedPolicies={extractedPolicies}
-                onPolicyUpdate={onPolicyUpdate}
-                onPolicyDelete={onPolicyDelete}
-              />
-            </div>
-            <div>
-              <ChartsSection />
-            </div>
-          </div>
-        </div>
-      );
-
-    case 'policies':
-      return (
-        <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-6">
-          <PolicyViewer
-            policies={allPolicies}
-            onPolicySelect={onPolicySelect}
-            onPolicyEdit={handlePolicyEdit}
-            onPolicyDelete={onPolicyDelete}
-          />
-          
+          {/* Admin Regional Dashboard - Only visible to administrators */}
           {user?.role === 'administrador' && (
-            <div className="mt-8">
+            <div className="mb-8">
               <Card className="mb-6">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold text-gray-900">
@@ -138,6 +88,67 @@ export function ContentRenderer({
               <RegionalDashboard policies={allPolicies} />
             </div>
           )}
+          
+          {/* Quick Actions - Upload PDF in Focus */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer ring-2 ring-blue-200 ring-opacity-50" 
+                  onClick={() => onSectionChange('import')}>
+              <CardContent className="p-6 text-center">
+                <Upload className="h-14 w-14 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-blue-800 mb-2">📄 Upload PDF</h3>
+                <p className="text-sm text-blue-600 font-medium break-words">Adicione PDFs e extraia dados automaticamente</p>
+                <Button className="mt-3 bg-blue-600 hover:bg-blue-700 text-white">
+                  Enviar Arquivo
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => onSectionChange('policies')}>
+              <CardContent className="p-6 text-center">
+                <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-green-800 mb-2 break-words">Minhas Apólices</h3>
+                <p className="text-sm text-green-600 break-words">Visualize e gerencie suas apólices</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => onSectionChange('financial')}>
+              <CardContent className="p-6 text-center">
+                <DollarSign className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-purple-800 mb-2 break-words">Relatório Financeiro</h3>
+                <p className="text-sm text-purple-600 break-words">Acompanhe custos e economias</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
+              <PolicyTable 
+                searchTerm={searchTerm}
+                filterType={filterType}
+                onPolicySelect={onPolicySelect}
+                extractedPolicies={userPolicies}
+                onPolicyUpdate={onPolicyUpdate}
+                onPolicyDelete={onPolicyDelete}
+              />
+            </div>
+            <div className="min-w-0">
+              <ChartsSection />
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'policies':
+      return (
+        <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-6">
+          <PolicyViewer
+            policies={userPolicies}
+            onPolicySelect={onPolicySelect}
+            onPolicyEdit={handlePolicyEdit}
+            onPolicyDelete={onPolicyDelete}
+          />
         </div>
       );
 
@@ -181,7 +192,7 @@ export function ContentRenderer({
       return (
         <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-6">
           <EnhancedDashboard 
-            policies={allPolicies} 
+            policies={userPolicies} 
             onNotificationClick={handleNotificationClick}
           />
           <Card className="bg-white">
@@ -194,23 +205,23 @@ export function ContentRenderer({
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl">
-                  <h3 className="font-semibold text-green-700 mb-2">Custo Mensal Total</h3>
-                  <p className="text-3xl font-bold text-green-600">
-                    R$ {allPolicies.reduce((sum, p) => sum + (p.monthlyAmount || p.premium / 12), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  <h3 className="font-semibold text-green-700 mb-2 break-words">Custo Mensal Total</h3>
+                  <p className="text-3xl font-bold text-green-600 break-all">
+                    R$ {userPolicies.reduce((sum, p) => sum + (p.monthlyAmount || p.premium / 12), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
-                  <p className="text-sm text-green-600 mt-1">Todas as apólices ativas</p>
+                  <p className="text-sm text-green-600 mt-1 break-words">Todas as apólices ativas</p>
                 </div>
                 <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-xl">
-                  <h3 className="font-semibold text-blue-700 mb-2">Total Segurado</h3>
-                  <p className="text-3xl font-bold text-blue-600">
-                    R$ {allPolicies.reduce((sum, p) => sum + p.premium, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  <h3 className="font-semibold text-blue-700 mb-2 break-words">Total Segurado</h3>
+                  <p className="text-3xl font-bold text-blue-600 break-all">
+                    R$ {userPolicies.reduce((sum, p) => sum + p.premium, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
-                  <p className="text-sm text-blue-600 mt-1">Valor total dos prêmios</p>
+                  <p className="text-sm text-blue-600 mt-1 break-words">Valor total dos prêmios</p>
                 </div>
                 <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-6 rounded-xl">
-                  <h3 className="font-semibold text-purple-700 mb-2">Economia Potencial</h3>
+                  <h3 className="font-semibold text-purple-700 mb-2 break-words">Economia Potencial</h3>
                   <p className="text-3xl font-bold text-purple-600">R$ 2.450</p>
-                  <p className="text-sm text-purple-600 mt-1">Com otimização sugerida</p>
+                  <p className="text-sm text-purple-600 mt-1 break-words">Com otimização sugerida</p>
                 </div>
               </div>
             </CardContent>
@@ -314,9 +325,23 @@ export function ContentRenderer({
       return (
         <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6">
           <EnhancedDashboard 
-            policies={allPolicies} 
+            policies={userPolicies} 
             onNotificationClick={handleNotificationClick}
           />
+          
+          {/* Admin Regional Dashboard - Only visible to administrators */}
+          {user?.role === 'administrador' && (
+            <div className="mb-8">
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold text-gray-900">
+                    Dashboard Regional - Visão Administrativa
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              <RegionalDashboard policies={allPolicies} />
+            </div>
+          )}
           
           {/* Quick Actions - Upload PDF in Focus */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -325,7 +350,7 @@ export function ContentRenderer({
               <CardContent className="p-6 text-center">
                 <Upload className="h-14 w-14 text-blue-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-blue-800 mb-2">📄 Upload PDF</h3>
-                <p className="text-sm text-blue-600 font-medium">Adicione PDFs e extraia dados automaticamente</p>
+                <p className="text-sm text-blue-600 font-medium break-words">Adicione PDFs e extraia dados automaticamente</p>
                 <Button className="mt-3 bg-blue-600 hover:bg-blue-700 text-white">
                   Enviar Arquivo
                 </Button>
@@ -336,8 +361,8 @@ export function ContentRenderer({
                   onClick={() => onSectionChange('policies')}>
               <CardContent className="p-6 text-center">
                 <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-green-800 mb-2">Minhas Apólices</h3>
-                <p className="text-sm text-green-600">Visualize e gerencie suas apólices</p>
+                <h3 className="text-lg font-semibold text-green-800 mb-2 break-words">Minhas Apólices</h3>
+                <p className="text-sm text-green-600 break-words">Visualize e gerencie suas apólices</p>
               </CardContent>
             </Card>
             
@@ -345,8 +370,8 @@ export function ContentRenderer({
                   onClick={() => onSectionChange('financial')}>
               <CardContent className="p-6 text-center">
                 <DollarSign className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-purple-800 mb-2">Relatório Financeiro</h3>
-                <p className="text-sm text-purple-600">Acompanhe custos e economias</p>
+                <h3 className="text-lg font-semibold text-purple-800 mb-2 break-words">Relatório Financeiro</h3>
+                <p className="text-sm text-purple-600 break-words">Acompanhe custos e economias</p>
               </CardContent>
             </Card>
           </div>
@@ -357,12 +382,12 @@ export function ContentRenderer({
                 searchTerm={searchTerm}
                 filterType={filterType}
                 onPolicySelect={onPolicySelect}
-                extractedPolicies={extractedPolicies}
+                extractedPolicies={userPolicies}
                 onPolicyUpdate={onPolicyUpdate}
                 onPolicyDelete={onPolicyDelete}
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <ChartsSection />
             </div>
           </div>
