@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DollarSign, Settings, Phone, Users, Shield, Upload, FileText } from 'lucide-react';
@@ -62,17 +63,19 @@ export function ContentRenderer({
           <EnhancedDashboard 
             policies={allPolicies} 
             onNotificationClick={handleNotificationClick}
-            showNotifications={false}
           />
           
-          {/* Quick Actions */}
+          {/* Quick Actions - Upload PDF in Focus */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer" 
+            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer ring-2 ring-blue-200 ring-opacity-50" 
                   onClick={() => onSectionChange('import')}>
               <CardContent className="p-6 text-center">
-                <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-blue-800 mb-2">Importar Apólice</h3>
-                <p className="text-sm text-blue-600">Adicione PDFs e extraia dados automaticamente</p>
+                <Upload className="h-14 w-14 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-blue-800 mb-2">📄 Upload PDF</h3>
+                <p className="text-sm text-blue-600 font-medium">Adicione PDFs e extraia dados automaticamente</p>
+                <Button className="mt-3 bg-blue-600 hover:bg-blue-700 text-white">
+                  Enviar Arquivo
+                </Button>
               </CardContent>
             </Card>
             
@@ -180,7 +183,6 @@ export function ContentRenderer({
           <EnhancedDashboard 
             policies={allPolicies} 
             onNotificationClick={handleNotificationClick}
-            showNotifications={false}
           />
           <Card className="bg-white">
             <CardHeader>
@@ -314,17 +316,19 @@ export function ContentRenderer({
           <EnhancedDashboard 
             policies={allPolicies} 
             onNotificationClick={handleNotificationClick}
-            showNotifications={false}
           />
           
-          {/* Quick Actions */}
+          {/* Quick Actions - Upload PDF in Focus */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer" 
+            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer ring-2 ring-blue-200 ring-opacity-50" 
                   onClick={() => onSectionChange('import')}>
               <CardContent className="p-6 text-center">
-                <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-blue-800 mb-2">Importar Apólice</h3>
-                <p className="text-sm text-blue-600">Adicione PDFs e extraia dados automaticamente</p>
+                <Upload className="h-14 w-14 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-blue-800 mb-2">📄 Upload PDF</h3>
+                <p className="text-sm text-blue-600 font-medium">Adicione PDFs e extraia dados automaticamente</p>
+                <Button className="mt-3 bg-blue-600 hover:bg-blue-700 text-white">
+                  Enviar Arquivo
+                </Button>
               </CardContent>
             </Card>
             
