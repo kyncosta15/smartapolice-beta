@@ -37,18 +37,16 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
 
   const triggerN8NWebhook = async (fileName: string, file: File) => {
     try {
-      console.log('🚀 Enviando arquivo para n8n com chave parametrizada:', fileName);
+      console.log('🚀 Enviando arquivo para n8n via multipart/form-data:', fileName);
       
-      // Converter arquivo para ArrayBuffer
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
+      // Criar FormData para envio multipart/form-data
+      const formData = new FormData();
       
-      // Criar a chave parametrizada: arquivo/data/file - nomedoarquivo.pdf
-      const fileKey = `arquivo/data/file - ${fileName}`;
+      // Anexar o arquivo no campo 'arquivo' (será acessível via $binary["arquivo"] no n8n)
+      formData.append('arquivo', file);
       
-      // Criar o payload no formato esperado pelo n8n
-      const payload = {
-        [fileKey]: Array.from(uint8Array), // Chave parametrizada com array de bytes
+      // Anexar dados da apólice como JSON string
+      const policyData = {
         fileName: fileName,
         fileSize: file.size,
         fileType: file.type,
@@ -56,19 +54,21 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         source: 'SmartApólice',
         event: 'pdf_uploaded'
       };
-
-      console.log(`📝 Chave do arquivo no payload: "${fileKey}"`);
+      
+      formData.append('policyData', JSON.stringify(policyData));
+      
+      console.log(`📄 Arquivo anexado no campo 'arquivo': ${fileName}`);
+      console.log(`📝 Dados da apólice:`, policyData);
 
       const response = await fetch(N8N_WEBHOOK_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        // NÃO definir Content-Type manualmente - o browser define automaticamente com boundary
+        body: formData,
       });
 
       if (response.ok) {
         console.log('✅ Webhook n8n executado com sucesso para:', fileName);
+        console.log('📋 Arquivo enviado via multipart/form-data e será acessível via $binary["arquivo"]');
         return true;
       } else {
         console.error('❌ Erro HTTP no webhook n8n:', response.status, response.statusText);
@@ -98,7 +98,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
-      // 2. Trigger webhook n8n com chave parametrizada
+      // 2. Trigger webhook n8n com multipart/form-data
       updateFileStatus(fileName, {
         progress: 75,
         status: 'uploading',
@@ -222,7 +222,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           <CardTitle>Upload de Apólices - Extração Inteligente com IA</CardTitle>
           <CardDescription>
             Arraste e solte os arquivos PDF ou clique para selecionar.
-            Agora o PDF será enviado para o webhook n8n com a chave parametrizada no formato arquivo/data/file - nomedoarquivo.pdf, facilitando o reconhecimento e processamento do arquivo binário no n8n.
+            Arquivo enviado via multipart/form-data para que o n8n acesse o PDF como $binary["arquivo"].
           </CardDescription>
         </CardHeader>
         <CardContent>
