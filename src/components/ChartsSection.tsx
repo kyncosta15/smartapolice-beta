@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
@@ -65,16 +66,16 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
   };
 
   return (
-    <div className="w-full h-full">
-      {/* Optimized grid layout for better space usage */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
+    <div className="w-full space-y-4">
+      {/* Grid layout otimizado para melhor uso do espaço */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Distribuição por Seguradora */}
-        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-gray-900 truncate">Distribuição por Seguradora</CardTitle>
+        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-gray-900 truncate">Distribuição por Seguradora</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 flex flex-col h-full">
-            <div className="flex-1 min-h-0">
+          <CardContent className="pt-0">
+            <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -83,7 +84,7 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
                     cy="50%"
                     labelLine={false}
                     label={renderCustomLabel}
-                    outerRadius="80%"
+                    outerRadius="70%"
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -95,14 +96,14 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-1 text-xs">
+            <div className="mt-2 grid grid-cols-2 gap-1 text-xs">
               {insurerData.map((item, index) => (
                 <div key={index} className="flex items-center space-x-2 truncate">
                   <div 
                     className="w-2 h-2 rounded-full flex-shrink-0" 
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="text-gray-600 truncate">{item.name}</span>
+                  <span className="text-gray-600 truncate text-xs">{item.name}</span>
                 </div>
               ))}
             </div>
@@ -110,20 +111,20 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
         </Card>
 
         {/* Distribuição por Tipo de Seguro */}
-        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-gray-900 truncate">Tipos de Seguro</CardTitle>
+        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-gray-900 truncate">Tipos de Seguro</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 flex flex-col h-full">
-            <div className="flex-1 min-h-0">
+          <CardContent className="pt-0">
+            <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={typeData}
                     cx="50%"
                     cy="50%"
-                    innerRadius="40%"
-                    outerRadius="80%"
+                    innerRadius="35%"
+                    outerRadius="70%"
                     fill="#8884d8"
                     dataKey="value"
                     label={renderCustomLabel}
@@ -136,7 +137,7 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-3 space-y-1">
+            <div className="mt-2 space-y-1">
               {typeData.map((item, index) => (
                 <div key={index} className="flex items-center justify-between text-xs">
                   <div className="flex items-center space-x-2 flex-1 min-w-0">
@@ -144,7 +145,7 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
                       className="w-2 h-2 rounded-full flex-shrink-0" 
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="text-gray-600 truncate">{item.name}</span>
+                    <span className="text-gray-600 truncate text-xs">{item.name}</span>
                   </div>
                   <span className="text-xs font-medium text-gray-800 ml-2">{item.value}%</span>
                 </div>
@@ -154,24 +155,26 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
         </Card>
 
         {/* Evolução de Custos */}
-        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-gray-900 truncate">Evolução de Custos</CardTitle>
+        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-gray-900 truncate">Evolução de Custos</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 h-full">
-            <div className="h-full min-h-0">
+          <CardContent className="pt-0">
+            <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: 5, bottom: 15 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis 
                     dataKey="month" 
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 10 }}
                     tickLine={{ stroke: '#e5e7eb' }}
+                    height={40}
                   />
                   <YAxis 
-                    tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}K`}
-                    tick={{ fontSize: 11 }}
+                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+                    tick={{ fontSize: 10 }}
                     tickLine={{ stroke: '#e5e7eb' }}
+                    width={40}
                   />
                   <Tooltip 
                     formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Custo']}
@@ -180,7 +183,7 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
                       backgroundColor: 'rgba(255, 255, 255, 0.95)',
                       border: '1px solid #e5e7eb',
                       borderRadius: '8px',
-                      fontSize: '12px'
+                      fontSize: '11px'
                     }}
                   />
                   <Bar dataKey="custo" fill="#3B82F6" radius={[2, 2, 0, 0]} />
@@ -191,23 +194,25 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
         </Card>
 
         {/* Timeline de Vencimentos */}
-        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-gray-900 truncate">Timeline de Vencimentos</CardTitle>
+        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-gray-900 truncate">Timeline de Vencimentos</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 h-full">
-            <div className="h-full min-h-0">
+          <CardContent className="pt-0">
+            <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={expirationData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                <LineChart data={expirationData} margin={{ top: 5, right: 5, left: 5, bottom: 15 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis 
                     dataKey="month" 
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 10 }}
                     tickLine={{ stroke: '#e5e7eb' }}
+                    height={40}
                   />
                   <YAxis 
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 10 }}
                     tickLine={{ stroke: '#e5e7eb' }}
+                    width={40}
                   />
                   <Tooltip 
                     formatter={(value) => [`${value}`, 'Vencimentos']}
@@ -216,7 +221,7 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
                       backgroundColor: 'rgba(255, 255, 255, 0.95)',
                       border: '1px solid #e5e7eb',
                       borderRadius: '8px',
-                      fontSize: '12px'
+                      fontSize: '11px'
                     }}
                   />
                   <Line 
@@ -224,8 +229,8 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
                     dataKey="vencimentos" 
                     stroke="#F59E0B" 
                     strokeWidth={2}
-                    dot={{ fill: '#F59E0B', strokeWidth: 1, r: 4 }}
-                    activeDot={{ r: 6, stroke: '#F59E0B', strokeWidth: 2 }}
+                    dot={{ fill: '#F59E0B', strokeWidth: 1, r: 3 }}
+                    activeDot={{ r: 5, stroke: '#F59E0B', strokeWidth: 2 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -235,17 +240,17 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
       </div>
 
       {detailed && (
-        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm mt-4">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-gray-900">Análise Comparativa - Custo vs Número de Apólices</CardTitle>
+        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-gray-900">Análise Comparativa - Custo vs Número de Apólices</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="h-80">
+            <div className="h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}K`} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`} />
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
                   <Tooltip 
                     formatter={(value, name) => [

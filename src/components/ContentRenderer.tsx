@@ -69,7 +69,7 @@ export function ContentRenderer({
   switch (activeSection) {
     case 'home':
       return (
-        <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-6">
+        <div className="w-full max-w-none space-y-4 p-4 overflow-hidden">
           <EnhancedDashboard 
             policies={userPolicies} 
             onNotificationClick={handleNotificationClick}
@@ -77,10 +77,10 @@ export function ContentRenderer({
           
           {/* Admin Regional Dashboard - Only visible to administrators */}
           {user?.role === 'administrador' && (
-            <div className="mb-6">
+            <div className="w-full">
               <Card className="mb-4">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-bold text-gray-900 break-words">
+                  <CardTitle className="text-lg font-bold text-gray-900">
                     Dashboard Regional - Visão Administrativa
                   </CardTitle>
                 </CardHeader>
@@ -90,13 +90,13 @@ export function ContentRenderer({
           )}
           
           {/* Quick Actions - Enhanced layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer ring-2 ring-blue-200 ring-opacity-50" 
                   onClick={() => onSectionChange('import')}>
               <CardContent className="p-4 text-center">
                 <Upload className="h-12 w-12 text-blue-600 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-blue-800 mb-2 break-words">📄 Upload PDF</h3>
-                <p className="text-sm text-blue-600 font-medium break-words mb-3">Adicione PDFs e extraia dados automaticamente</p>
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">📄 Upload PDF</h3>
+                <p className="text-sm text-blue-600 font-medium mb-3">Adicione PDFs e extraia dados automaticamente</p>
                 <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm">
                   Enviar Arquivo
                 </Button>
@@ -107,8 +107,8 @@ export function ContentRenderer({
                   onClick={() => onSectionChange('policies')}>
               <CardContent className="p-4 text-center">
                 <FileText className="h-10 w-10 text-green-600 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-green-800 mb-2 break-words">Minhas Apólices</h3>
-                <p className="text-sm text-green-600 break-words">Visualize e gerencie suas apólices</p>
+                <h3 className="text-base font-semibold text-green-800 mb-2">Minhas Apólices</h3>
+                <p className="text-sm text-green-600">Visualize e gerencie suas apólices</p>
               </CardContent>
             </Card>
             
@@ -116,15 +116,15 @@ export function ContentRenderer({
                   onClick={() => onSectionChange('financial')}>
               <CardContent className="p-4 text-center">
                 <DollarSign className="h-10 w-10 text-purple-600 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-purple-800 mb-2 break-words">Relatório Financeiro</h3>
-                <p className="text-sm text-purple-600 break-words">Acompanhe custos e economias</p>
+                <h3 className="text-base font-semibold text-purple-800 mb-2">Relatório Financeiro</h3>
+                <p className="text-sm text-purple-600">Acompanhe custos e economias</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Main content grid - Improved responsive layout */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2 min-w-0">
+          {/* Main content grid - Layout otimizado */}
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+            <div className="xl:col-span-3 min-w-0">
               <PolicyTable 
                 searchTerm={searchTerm}
                 filterType={filterType}
@@ -134,7 +134,7 @@ export function ContentRenderer({
                 onPolicyDelete={onPolicyDelete}
               />
             </div>
-            <div className="min-w-0 h-fit">
+            <div className="xl:col-span-2 min-w-0">
               <ChartsSection />
             </div>
           </div>
@@ -328,7 +328,7 @@ export function ContentRenderer({
 
     default:
       return (
-        <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-6">
+        <div className="w-full max-w-none space-y-4 p-4 overflow-hidden">
           <EnhancedDashboard 
             policies={userPolicies} 
             onNotificationClick={handleNotificationClick}
@@ -336,10 +336,10 @@ export function ContentRenderer({
           
           {/* Admin Regional Dashboard - Only visible to administrators */}
           {user?.role === 'administrador' && (
-            <div className="mb-6">
+            <div className="w-full">
               <Card className="mb-4">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-bold text-gray-900 break-words">
+                  <CardTitle className="text-lg font-bold text-gray-900">
                     Dashboard Regional - Visão Administrativa
                   </CardTitle>
                 </CardHeader>
@@ -349,13 +349,13 @@ export function ContentRenderer({
           )}
           
           {/* Quick Actions - Enhanced layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer ring-2 ring-blue-200 ring-opacity-50" 
                   onClick={() => onSectionChange('import')}>
               <CardContent className="p-4 text-center">
                 <Upload className="h-12 w-12 text-blue-600 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-blue-800 mb-2 break-words">📄 Upload PDF</h3>
-                <p className="text-sm text-blue-600 font-medium break-words mb-3">Adicione PDFs e extraia dados automaticamente</p>
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">📄 Upload PDF</h3>
+                <p className="text-sm text-blue-600 font-medium mb-3">Adicione PDFs e extraia dados automaticamente</p>
                 <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm">
                   Enviar Arquivo
                 </Button>
@@ -366,8 +366,8 @@ export function ContentRenderer({
                   onClick={() => onSectionChange('policies')}>
               <CardContent className="p-4 text-center">
                 <FileText className="h-10 w-10 text-green-600 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-green-800 mb-2 break-words">Minhas Apólices</h3>
-                <p className="text-sm text-green-600 break-words">Visualize e gerencie suas apólices</p>
+                <h3 className="text-base font-semibold text-green-800 mb-2">Minhas Apólices</h3>
+                <p className="text-sm text-green-600">Visualize e gerencie suas apólices</p>
               </CardContent>
             </Card>
             
@@ -375,15 +375,15 @@ export function ContentRenderer({
                   onClick={() => onSectionChange('financial')}>
               <CardContent className="p-4 text-center">
                 <DollarSign className="h-10 w-10 text-purple-600 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-purple-800 mb-2 break-words">Relatório Financeiro</h3>
-                <p className="text-sm text-purple-600 break-words">Acompanhe custos e economias</p>
+                <h3 className="text-base font-semibold text-purple-800 mb-2">Relatório Financeiro</h3>
+                <p className="text-sm text-purple-600">Acompanhe custos e economias</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Main content grid - Improved responsive layout */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2 min-w-0">
+          {/* Main content grid - Layout otimizado */}
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+            <div className="xl:col-span-3 min-w-0">
               <PolicyTable 
                 searchTerm={searchTerm}
                 filterType={filterType}
@@ -393,7 +393,7 @@ export function ContentRenderer({
                 onPolicyDelete={onPolicyDelete}
               />
             </div>
-            <div className="min-w-0 h-fit">
+            <div className="xl:col-span-2 min-w-0">
               <ChartsSection />
             </div>
           </div>
