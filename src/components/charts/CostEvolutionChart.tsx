@@ -2,36 +2,148 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
-import { PolicyData, generateMonthlyEvolutionData, getEmptyMonthlyData } from './chartData';
 import { formatCurrency } from '@/utils/currencyFormatter';
+
+interface PolicyData {
+  id: string;
+  name: string;
+  type: string;
+  insurer: string;
+  premium: number;
+  monthlyAmount: number;
+  startDate: string;
+  endDate: string;
+  policyNumber: string;
+  paymentFrequency: 'mensal' | 'anual' | 'semestral' | 'trimestral';
+}
 
 interface CostEvolutionChartProps {
   policies?: PolicyData[];
 }
 
 export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) => {
+  const generateMonthlyData = () => {
+    if (!policies || policies.length === 0) {
+      return getEmptyMonthlyData();
+    }
+
+    // Gera os últimos 12 meses
+    const monthlyMap: { [key: string]: { custo: number; apolices: number } } = {};
+    const now = new Date();
+    
+    // Inicializa 12 meses
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      monthlyMap[key] = { custo: 0, apolices: 0 };
+    }
+
+    // Processa cada apólice
+    policies.forEach(policy => {
+      const startDate = new Date(policy.startDate);
+      const endDate = new Date(policy.endDate);
+      const monthlyAmount = policy.monthlyAmount || (policy.premium / 12);
+      
+      // Distribui custos pelos meses ativos da apólice
+      const current = new Date(Math.max(startDate.getTime(), new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime()));
+      const endLimit = new Date(Math.min(endDate.getTime(), now.getTime()));
+      
+      while (current <= endLimit) {
+        const key = current.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+        
+        if (monthlyMap[key]) {
+          monthlyMap[key].custo += monthlyAmount;
+          monthlyMap[key].apolices += 1;
+        }
+        
+        current.setMonth(current.getMonth() + 1);
+      }
+    });
+
+    // Converte para array ordenado
+    return Object.entries(monthlyMap)
+      .map(([month, data]) => ({
+        month,
+        custo: Math.round(data.custo),
+        apolices: data.apolices
+      }))
+      .sort((a, b) => {
+        const [monthA, yearA] = a.month.split('/');
+        const [monthB, yearB] = b.month.split('/');
+        const dateA = new Date(2000 + parseInt(yearA), getMonthNumber(monthA));
+        const dateB = new Date(2000 + parseInt(yearB), getMonthNumber(monthB));
+        return dateA.getTime() - dateB.getTime();
+      });
+  };
+
+  const getMonthNumber = (monthStr: string): number => {
+    const months: { [key: string]: number } = {
+      'jan': 0, 'fev': 1, 'mar': 2, 'abr': 3, 'mai': 4, 'jun': 5,
+      'jul': 6, 'ago': 7, 'set': 8, 'out': 9, 'nov': 10, 'dez': 11
+    };
+    return months[monthStr.toLowerCase()] || 0;
+  };
+
+  const getEmptyMonthlyData = () => {
+    const now = new Date();
+    const months = [];
+    
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const month = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      months.push({ month, custo: 0, apolices: 0 });
+    }
+    
+    return months;
+  };
+
   const hasData = policies && policies.length > 0;
-  const chartData = hasData ? generateMonthlyEvolutionData(policies) : getEmptyMonthlyData();
+  const chartData = generateMonthlyData();
+  const totalCusto = chartData.reduce((sum, item) => sum + item.custo, 0);
+  const maxCusto = Math.max(...chartData.map(item => item.custo));
+  const avgCusto = chartData.length > 0 ? totalCusto / chartData.length : 0;
 
   return (
     <Card className="bg-white border-0 shadow-none">
       <CardHeader className="pb-6">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <CardTitle className="text-xl font-semibold text-gray-900">
+                Tendências de Custos Mensais
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                {hasData 
+                  ? `Evolução baseada em ${policies.length} apólice${policies.length !== 1 ? 's' : ''} ativa${policies.length !== 1 ? 's' : ''}`
+                  : 'Aguardando dados de apólices para análise'
+                }
+              </p>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-xl font-semibold text-gray-900">
-              Evolução de Custos Mensais
-            </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
-              {hasData ? 'Tendência de custos distribuídos mensalmente' : 'Aguardando dados para análise'}
-            </p>
-          </div>
+          
+          {hasData && (
+            <div className="flex space-x-4 text-sm">
+              <div className="text-center">
+                <p className="text-gray-500">Média Mensal</p>
+                <p className="font-semibold text-blue-600">
+                  {formatCurrency(avgCusto, { minimumFractionDigits: 0 })}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-gray-500">Pico</p>
+                <p className="font-semibold text-green-600">
+                  {formatCurrency(maxCusto, { minimumFractionDigits: 0 })}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="w-full h-80">
+        <div className="w-full h-80 relative">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
               data={chartData} 
@@ -87,12 +199,28 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
               />
             </LineChart>
           </ResponsiveContainer>
+          
+          {!hasData && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80">
+              <div className="text-center">
+                <p className="text-gray-400 text-sm">Faça upload de PDFs para ver a evolução mensal</p>
+              </div>
+            </div>
+          )}
         </div>
-        
-        {!hasData && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-gray-400 text-sm">Faça upload de PDFs para ver a evolução mensal</p>
+
+        {hasData && (
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <TrendingUp className="h-5 w-5 text-blue-600 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-blue-900">Análise Automática</h4>
+                <p className="text-sm text-blue-700 mt-1">
+                  Os custos são calculados com base nas datas de vigência de cada apólice. 
+                  Apólices mensais são distribuídas mês a mês, enquanto anuais são divididas proporcionalmente.
+                  Total de {policies.length} apólice{policies.length !== 1 ? 's' : ''} processada{policies.length !== 1 ? 's' : ''}.
+                </p>
+              </div>
             </div>
           </div>
         )}

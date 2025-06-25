@@ -48,14 +48,57 @@ export function EnhancedDashboard({ policies, onNotificationClick }: EnhancedDas
     return acc;
   }, {});
 
-  const monthlyTrendData = [
-    { month: 'Jan', value: 12000 },
-    { month: 'Fev', value: 15000 },
-    { month: 'Mar', value: 11000 },
-    { month: 'Abr', value: 18000 },
-    { month: 'Mai', value: 16000 },
-    { month: 'Jun', value: 19000 },
-  ];
+  // Gerar dados de tendência mensal baseados nas apólices reais
+  const generateMonthlyTrendData = () => {
+    if (policies.length === 0) {
+      return [
+        { month: 'Jan', value: 0 },
+        { month: 'Fev', value: 0 },
+        { month: 'Mar', value: 0 },
+        { month: 'Abr', value: 0 },
+        { month: 'Mai', value: 0 },
+        { month: 'Jun', value: 0 },
+      ];
+    }
+
+    const monthlyMap: { [key: string]: number } = {};
+    const now = new Date();
+    
+    // Inicializa últimos 6 meses
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = date.toLocaleDateString('pt-BR', { month: 'short' });
+      monthlyMap[key] = 0;
+    }
+
+    // Processa cada apólice
+    policies.forEach(policy => {
+      const startDate = new Date(policy.startDate);
+      const endDate = new Date(policy.endDate);
+      const monthlyAmount = policy.monthlyAmount || (policy.premium / 12);
+      
+      // Distribui custos pelos meses ativos
+      const current = new Date(Math.max(startDate.getTime(), new Date(now.getFullYear(), now.getMonth() - 5, 1).getTime()));
+      const endLimit = new Date(Math.min(endDate.getTime(), now.getTime()));
+      
+      while (current <= endLimit) {
+        const key = current.toLocaleDateString('pt-BR', { month: 'short' });
+        
+        if (monthlyMap[key] !== undefined) {
+          monthlyMap[key] += monthlyAmount;
+        }
+        
+        current.setMonth(current.getMonth() + 1);
+      }
+    });
+
+    return Object.entries(monthlyMap).map(([month, value]) => ({
+      month,
+      value: Math.round(value)
+    }));
+  };
+
+  const monthlyTrendData = generateMonthlyTrendData();
 
   const chartData: ChartData = {
     seguradoras: Object.entries(seguradorasData).map(([name, value]) => ({ name, value: value as number })),
@@ -267,33 +310,42 @@ export function EnhancedDashboard({ policies, onNotificationClick }: EnhancedDas
             <CardTitle className="text-base font-semibold text-gray-900 truncate">Distribuição por Seguradora</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData.seguradoras}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius="80%"
-                    fill="#8884d8"
-                    dataKey="value"
-                    onClick={(data) => handleChartClick(data, 'seguradoras')}
-                    className="cursor-pointer"
-                  >
-                    {chartData.seguradoras.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={COLORS[index % COLORS.length]}
-                        className="hover:opacity-80 transition-opacity"
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value, name) => [`R$ ${value.toLocaleString('pt-BR')}`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            {chartData.seguradoras.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData.seguradoras}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius="80%"
+                      fill="#8884d8"
+                      dataKey="value"
+                      onClick={(data) => handleChartClick(data, 'seguradoras')}
+                      className="cursor-pointer"
+                    >
+                      {chartData.seguradoras.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={COLORS[index % COLORS.length]}
+                          className="hover:opacity-80 transition-opacity"
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [`R$ ${value.toLocaleString('pt-BR')}`, name]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center text-gray-400">
+                <div className="text-center">
+                  <p className="text-sm">Nenhuma apólice encontrada</p>
+                  <p className="text-xs">Faça upload de PDFs para ver os dados</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -303,23 +355,32 @@ export function EnhancedDashboard({ policies, onNotificationClick }: EnhancedDas
             <CardTitle className="text-base font-semibold text-gray-900 truncate">Tipos de Seguro</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData.tipos} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Valor']} />
-                  <Bar 
-                    dataKey="value" 
-                    fill="#3b82f6" 
-                    radius={[2, 2, 0, 0]}
-                    onClick={(data) => handleChartClick(data, 'tipos')}
-                    className="cursor-pointer hover:opacity-80 transition-opacity"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {chartData.tipos.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData.tipos} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Valor']} />
+                    <Bar 
+                      dataKey="value" 
+                      fill="#3b82f6" 
+                      radius={[2, 2, 0, 0]}
+                      onClick={(data) => handleChartClick(data, 'tipos')}
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center text-gray-400">
+                <div className="text-center">
+                  <p className="text-sm">Nenhuma apólice encontrada</p>
+                  <p className="text-xs">Faça upload de PDFs para ver os dados</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -340,14 +401,19 @@ export function EnhancedDashboard({ policies, onNotificationClick }: EnhancedDas
                 <Line 
                   type="monotone" 
                   dataKey="value" 
-                  stroke="#3b82f6" 
+                  stroke={policies.length > 0 ? "#3b82f6" : "#e2e8f0"}
                   strokeWidth={3}
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 5, className: 'cursor-pointer hover:r-7 transition-all' }}
+                  dot={{ fill: policies.length > 0 ? '#3b82f6' : '#e2e8f0', strokeWidth: 2, r: 5, className: 'cursor-pointer hover:r-7 transition-all' }}
                   onClick={(data) => handleChartClick(data, 'tendencia')}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
+          {policies.length === 0 && (
+            <div className="text-center mt-4">
+              <p className="text-gray-400 text-sm">Faça upload de PDFs para ver a tendência mensal</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
