@@ -1,6 +1,7 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarItem, SidebarTrigger } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -41,6 +42,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       icon: FileText,
       id: "policies",
       description: "Gerenciar apólices"
+    },
+    {
+      title: "Upload",
+      icon: FileText,
+      id: "upload",
+      description: "Importar PDFs"
     },
     {
       title: "Clientes",
@@ -88,6 +95,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       description: "Gerenciar suas apólices"
     },
     {
+      title: "Upload",
+      icon: FileText,
+      id: "upload",
+      description: "Importar PDFs"
+    },
+    {
       title: "Agendamentos",
       icon: Calendar,
       id: "appointments",
@@ -129,16 +142,20 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         </p>
       </SidebarHeader>
       <SidebarContent>
-        {navigation.map((item) => (
-          <SidebarItem
-            key={item.id}
-            title={item.title}
-            icon={item.icon}
-            description={item.description}
-            active={activeSection === item.id}
-            onClick={() => handleNavigation(item.id)}
-          />
-        ))}
+        <SidebarMenu>
+          {navigation.map((item) => (
+            <SidebarMenuItem key={item.id}>
+              <SidebarMenuButton
+                onClick={() => handleNavigation(item.id)}
+                isActive={activeSection === item.id}
+                className="w-full justify-start"
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
         <Avatar className="h-8 w-8">
