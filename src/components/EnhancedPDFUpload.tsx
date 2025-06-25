@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from "@/components/ui/button"
@@ -38,28 +37,30 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
 
   const triggerN8NWebhook = async (fileName: string, file: File) => {
     try {
-      console.log('🚀 Enviando arquivo para n8n:', fileName);
+      console.log('🚀 Enviando arquivo para n8n via multipart/form-data:', fileName);
       
-      const webhookData = {
-        timestamp: new Date().toISOString(),
-        fileName: fileName,
-        fileSize: file.size,
-        fileType: file.type,
-        source: 'SmartApólice',
-        event: 'pdf_uploaded'
-      };
+      // Criar FormData para envio multipart
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileName', fileName);
+      formData.append('fileSize', file.size.toString());
+      formData.append('fileType', file.type);
+      formData.append('timestamp', new Date().toISOString());
+      formData.append('source', 'SmartApólice');
+      formData.append('event', 'pdf_uploaded');
 
       const response = await fetch(N8N_WEBHOOK_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'no-cors',
-        body: JSON.stringify(webhookData),
+        body: formData, // FormData automaticamente define multipart/form-data
       });
 
-      console.log('✅ Webhook n8n executado para:', fileName);
-      return true;
+      if (response.ok) {
+        console.log('✅ Webhook n8n executado com sucesso para:', fileName);
+        return true;
+      } else {
+        console.error('❌ Erro HTTP no webhook n8n:', response.status, response.statusText);
+        return false;
+      }
 
     } catch (error) {
       console.error('❌ Erro ao executar webhook n8n:', error);
@@ -78,17 +79,17 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
     });
 
     try {
-      // 1. Simular upload
-      for (let progress = 0; progress <= 100; progress += 25) {
+      // 1. Simular upload progress
+      for (let progress = 0; progress <= 50; progress += 25) {
         updateFileStatus(fileName, { progress });
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
-      // 2. Trigger webhook n8n
+      // 2. Trigger webhook n8n com multipart/form-data
       updateFileStatus(fileName, {
-        progress: 100,
-        status: 'processing',
-        message: 'Enviando para análise da IA...'
+        progress: 75,
+        status: 'uploading',
+        message: 'Enviando PDF para análise da IA...'
       });
 
       const webhookSuccess = await triggerN8NWebhook(fileName, file);
@@ -211,7 +212,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
             <br />
             <span className="text-xs text-blue-600">🤖 IA extrai dados automaticamente via n8n</span>
             <br />
-            <span className="text-xs text-green-600">⚡ Processamento assíncrono em tempo real</span>
+            <span className="text-xs text-green-600">⚡ Upload multipart/form-data</span>
             <br />
             <span className="text-xs text-purple-600">📊 Dashboard atualizado automaticamente</span>
           </CardDescription>
@@ -261,7 +262,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         </CardContent>
         <CardFooter className="justify-between">
           <div className="text-xs text-gray-500 space-y-1">
-            <p>🔄 Processamento automático com IA</p>
+            <p>🔄 Upload multipart/form-data</p>
             <p>📊 Dados sincronizados em tempo real</p>
             <p>⚡ Polling inteligente até completar</p>
           </div>
