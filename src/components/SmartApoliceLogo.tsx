@@ -34,7 +34,7 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
             Smart<span className="text-blue-600">Apólice</span>
           </h1>
           {size !== 'sm' && (
-            <p className="text-xs text-gray-500 leading-none">Central Inteligente de Apólices</p>
+            <p className="text-xs text-gray-500 leading-none">Centralize todas suas apólices em um só lugar</p>
           )}
         </div>
       )}
