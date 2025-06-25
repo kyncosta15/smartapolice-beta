@@ -150,42 +150,39 @@ export function EnhancedDashboard({ policies, onNotificationClick }: EnhancedDas
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900">
+            <DialogTitle className="text-lg font-bold text-gray-900 break-words">
               {detailInfo.title}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-6">
-            {/* Métricas Principais */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {detailInfo.metrics.map((metric, index) => (
-                <div key={index} className={`bg-${metric.color}-50 p-4 rounded-lg border border-${metric.color}-200`}>
-                  <p className={`text-sm text-${metric.color}-600 font-medium`}>{metric.label}</p>
-                  <p className={`text-2xl font-bold text-${metric.color}-700`}>{metric.value}</p>
+                <div key={index} className={`bg-${metric.color}-50 p-3 rounded-lg border border-${metric.color}-200`}>
+                  <p className={`text-xs text-${metric.color}-600 font-medium truncate`}>{metric.label}</p>
+                  <p className={`text-lg font-bold text-${metric.color}-700 break-words`}>{metric.value}</p>
                 </div>
               ))}
             </div>
 
-            {/* Insights e Recomendações */}
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-gray-800 mb-4 flex items-center">
-                <Brain className="h-5 w-5 mr-2 text-purple-600" />
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                <Brain className="h-4 w-4 mr-2 text-purple-600" />
                 Insights e Recomendações
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {detailInfo.insights.map((insight, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 bg-white rounded-lg border border-gray-200">
-                    <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-gray-700">{insight}</p>
+                  <div key={index} className="flex items-start space-x-2 p-2 bg-white rounded-lg border border-gray-200">
+                    <AlertCircle className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-gray-700 break-words">{insight}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Gráfico Adicional */}
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <h4 className="font-semibold text-gray-800 mb-3">Evolução Histórica</h4>
-              <ResponsiveContainer width="100%" height={200}>
+            <div className="bg-white p-3 rounded-lg border border-gray-200">
+              <h4 className="font-semibold text-gray-800 mb-2 text-sm">Evolução Histórica</h4>
+              <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={[
                   { mes: 'Jan', valor: 12000 },
                   { mes: 'Fev', valor: 15000 },
@@ -195,8 +192,8 @@ export function EnhancedDashboard({ policies, onNotificationClick }: EnhancedDas
                   { mes: 'Jun', valor: selectedData.value || 19000 }
                 ]}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
+                  <XAxis dataKey="mes" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Valor']} />
                   <Line type="monotone" dataKey="valor" stroke="#3b82f6" strokeWidth={2} />
                 </LineChart>
@@ -209,181 +206,165 @@ export function EnhancedDashboard({ policies, onNotificationClick }: EnhancedDas
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 w-full">
       {/* Notifications Panel */}
-      <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Bell className="h-5 w-5 text-blue-600" />
-              <h3 className="font-semibold text-blue-800">Notificações Ativas</h3>
-              <Badge className="bg-blue-600 text-white">{notifications.length}</Badge>
-            </div>
-            <Button variant="ghost" size="sm" onClick={onNotificationClick}>
-              Ver todas
-            </Button>
-          </div>
-          <div className="mt-3 space-y-2">
-            {notifications.slice(0, 2).map((notification) => (
-              <div key={notification.id} className="text-sm text-blue-700 bg-white/50 p-2 rounded">
-                {notification.message}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* KPI Cards - Melhor distribuição responsiva */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
+      {/* KPI Cards - Improved responsive layout */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total de Apólices</CardTitle>
-            <FileText className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-xs font-medium text-gray-600 truncate">Total de Apólices</CardTitle>
+            <FileText className="h-3 w-3 text-blue-600 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl lg:text-2xl font-bold text-gray-900">{kpiData.totalApolices}</div>
-            <p className="text-xs text-gray-500 mt-1">Apólices ativas no sistema</p>
+          <CardContent className="pt-0">
+            <div className="text-lg lg:text-xl font-bold text-gray-900 break-words">{kpiData.totalApolices}</div>
+            <p className="text-xs text-gray-500 mt-1 truncate">Apólices ativas no sistema</p>
           </CardContent>
         </Card>
 
         <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Custo Mensal</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-xs font-medium text-gray-600 truncate">Custo Mensal</CardTitle>
+            <DollarSign className="h-3 w-3 text-green-600 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl lg:text-2xl font-bold text-gray-900">
+          <CardContent className="pt-0">
+            <div className="text-lg lg:text-xl font-bold text-gray-900 break-words">
               R$ {kpiData.custoMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Todas as apólices ativas</p>
+            <p className="text-xs text-gray-500 mt-1 truncate">Todas as apólices ativas</p>
           </CardContent>
         </Card>
 
         <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Valor Segurado</CardTitle>
-            <Shield className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-xs font-medium text-gray-600 truncate">Valor Segurado</CardTitle>
+            <Shield className="h-3 w-3 text-purple-600 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl lg:text-2xl font-bold text-gray-900">
+          <CardContent className="pt-0">
+            <div className="text-lg lg:text-xl font-bold text-gray-900 break-words">
               R$ {kpiData.valorSeguradoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Cobertura total</p>
+            <p className="text-xs text-gray-500 mt-1 truncate">Cobertura total</p>
           </CardContent>
         </Card>
 
         <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Vencendo</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-xs font-medium text-gray-600 truncate">Vencendo</CardTitle>
+            <AlertTriangle className="h-3 w-3 text-orange-600 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl lg:text-2xl font-bold text-gray-900">{kpiData.apolicesVencendo}</div>
-            <p className="text-xs text-gray-500 mt-1">Próximos 30 dias</p>
+          <CardContent className="pt-0">
+            <div className="text-lg lg:text-xl font-bold text-gray-900">{kpiData.apolicesVencendo}</div>
+            <p className="text-xs text-gray-500 mt-1 truncate">Próximos 30 dias</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Section - Layout otimizado */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      {/* Charts Section - Optimized layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* Seguradoras Chart */}
         <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-900">Distribuição por Seguradora</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-gray-900 truncate">Distribuição por Seguradora</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={chartData.seguradoras}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={90}
-                  fill="#8884d8"
-                  dataKey="value"
-                  onClick={(data) => handleChartClick(data, 'seguradoras')}
-                  className="cursor-pointer"
-                >
-                  {chartData.seguradoras.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={COLORS[index % COLORS.length]}
-                      className="hover:opacity-80 transition-opacity"
-                    />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value, name) => [`R$ ${value.toLocaleString('pt-BR')}`, name]} />
-              </PieChart>
-            </ResponsiveContainer>
+          <CardContent className="pt-0">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData.seguradoras}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius="80%"
+                    fill="#8884d8"
+                    dataKey="value"
+                    onClick={(data) => handleChartClick(data, 'seguradoras')}
+                    className="cursor-pointer"
+                  >
+                    {chartData.seguradoras.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={COLORS[index % COLORS.length]}
+                        className="hover:opacity-80 transition-opacity"
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value, name) => [`R$ ${value.toLocaleString('pt-BR')}`, name]} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
         {/* Tipos Chart */}
         <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-900">Tipos de Seguro</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-gray-900 truncate">Tipos de Seguro</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={chartData.tipos}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Valor']} />
-                <Bar 
-                  dataKey="value" 
-                  fill="#3b82f6" 
-                  radius={[4, 4, 0, 0]}
-                  onClick={(data) => handleChartClick(data, 'tipos')}
-                  className="cursor-pointer hover:opacity-80 transition-opacity"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+          <CardContent className="pt-0">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData.tipos} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Valor']} />
+                  <Bar 
+                    dataKey="value" 
+                    fill="#3b82f6" 
+                    radius={[2, 2, 0, 0]}
+                    onClick={(data) => handleChartClick(data, 'tipos')}
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tendência Mensal - Gráfico de linha em largura total */}
+      {/* Tendência Mensal - Full width chart */}
       <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900">Tendência de Custos Mensais</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-900 truncate">Tendência de Custos Mensais</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={chartData.monthlyTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Custo']} />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#3b82f6" 
-                strokeWidth={3}
-                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6, className: 'cursor-pointer hover:r-8 transition-all' }}
-                onClick={(data) => handleChartClick(data, 'tendencia')}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <CardContent className="pt-0">
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData.monthlyTrend} margin={{ top: 15, right: 15, left: 15, bottom: 25 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Custo']} />
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#3b82f6" 
+                  strokeWidth={3}
+                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 5, className: 'cursor-pointer hover:r-7 transition-all' }}
+                  onClick={(data) => handleChartClick(data, 'tendencia')}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Insights AI - Layout melhorado */}
+      {/* Insights AI - Improved layout */}
       <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
-            <Brain className="h-5 w-5 mr-2 text-purple-600" />
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-900 flex items-center">
+            <Brain className="h-4 w-4 mr-2 text-purple-600" />
             Insights Inteligentes
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
             {insights.map((insight, index) => (
-              <div key={index} className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer">
-                <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-blue-800">{insight}</p>
+              <div key={index} className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer">
+                <AlertCircle className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-blue-800 break-words">{insight}</p>
               </div>
             ))}
           </div>

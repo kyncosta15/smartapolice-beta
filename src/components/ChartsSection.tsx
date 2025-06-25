@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
@@ -66,165 +65,208 @@ export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Gráfico de Pizza - Distribuição por Seguradora */}
-      <Card className="bg-white/60 backdrop-blur-sm border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle>Distribuição por Seguradora</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={insurerData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={renderCustomLabel}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {insurerData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value}%`, 'Participação']} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {insurerData.map((item, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-sm text-gray-600">{item.name}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Gráfico de Barras - Evolução de Custos */}
-      <Card className="bg-white/60 backdrop-blur-sm border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle>Evolução de Custos Mensais</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}K`} />
-              <Tooltip 
-                formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Custo']}
-                labelFormatter={(label) => `Mês: ${label}`}
-              />
-              <Bar dataKey="custo" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Gráfico de Pizza - Distribuição por Tipo */}
-      <Card className="bg-white/60 backdrop-blur-sm border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle>Distribuição por Tipo de Seguro</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={typeData}
-                cx="50%"
-                cy="50%"
-                innerRadius={40}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-                label={renderCustomLabel}
-              >
-                {typeData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value}%`, 'Participação']} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="mt-4 space-y-2">
-            {typeData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+    <div className="w-full h-full">
+      {/* Optimized grid layout for better space usage */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
+        {/* Distribuição por Seguradora */}
+        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-gray-900 truncate">Distribuição por Seguradora</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 flex flex-col h-full">
+            <div className="flex-1 min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={insurerData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={renderCustomLabel}
+                    outerRadius="80%"
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {insurerData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${value}%`, 'Participação']} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-1 text-xs">
+              {insurerData.map((item, index) => (
+                <div key={index} className="flex items-center space-x-2 truncate">
                   <div 
-                    className="w-3 h-3 rounded-full" 
+                    className="w-2 h-2 rounded-full flex-shrink-0" 
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="text-sm text-gray-600">{item.name}</span>
+                  <span className="text-gray-600 truncate">{item.name}</span>
                 </div>
-                <span className="text-sm font-medium">{item.value}%</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Timeline de Vencimentos */}
-      <Card className="bg-white/60 backdrop-blur-sm border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle>Timeline de Vencimentos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={expirationData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip 
-                formatter={(value) => [`${value}`, 'Vencimentos']}
-                labelFormatter={(label) => `Mês: ${label}`}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="vencimentos" 
-                stroke="#F59E0B" 
-                strokeWidth={3}
-                dot={{ fill: '#F59E0B', strokeWidth: 2, r: 6 }}
-                activeDot={{ r: 8, stroke: '#F59E0B', strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+        {/* Distribuição por Tipo de Seguro */}
+        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-gray-900 truncate">Tipos de Seguro</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 flex flex-col h-full">
+            <div className="flex-1 min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={typeData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="40%"
+                    outerRadius="80%"
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={renderCustomLabel}
+                  >
+                    {typeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${value}%`, 'Participação']} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-3 space-y-1">
+              {typeData.map((item, index) => (
+                <div key={index} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                    <div 
+                      className="w-2 h-2 rounded-full flex-shrink-0" 
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-gray-600 truncate">{item.name}</span>
+                  </div>
+                  <span className="text-xs font-medium text-gray-800 ml-2">{item.value}%</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Evolução de Custos */}
+        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-gray-900 truncate">Evolução de Custos</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 h-full">
+            <div className="h-full min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="month" 
+                    tick={{ fontSize: 11 }}
+                    tickLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}K`}
+                    tick={{ fontSize: 11 }}
+                    tickLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Custo']}
+                    labelFormatter={(label) => `Mês: ${label}`}
+                    contentStyle={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Bar dataKey="custo" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Timeline de Vencimentos */}
+        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-gray-900 truncate">Timeline de Vencimentos</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 h-full">
+            <div className="h-full min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={expirationData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="month" 
+                    tick={{ fontSize: 11 }}
+                    tickLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 11 }}
+                    tickLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`${value}`, 'Vencimentos']}
+                    labelFormatter={(label) => `Mês: ${label}`}
+                    contentStyle={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="vencimentos" 
+                    stroke="#F59E0B" 
+                    strokeWidth={2}
+                    dot={{ fill: '#F59E0B', strokeWidth: 1, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#F59E0B', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {detailed && (
-        <>
-          {/* Gráfico adicional para versão detalhada */}
-          <Card className="bg-white/60 backdrop-blur-sm border-0 shadow-lg lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Análise Comparativa - Custo vs Número de Apólices</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis yAxisId="left" tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}K`} />
-                  <YAxis yAxisId="right" orientation="right" />
+        <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm mt-4">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-gray-900">Análise Comparativa - Custo vs Número de Apólices</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}K`} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
                   <Tooltip 
                     formatter={(value, name) => [
                       name === 'custo' ? `R$ ${value.toLocaleString('pt-BR')}` : value,
                       name === 'custo' ? 'Custo Total' : 'Nº de Apólices'
                     ]}
                     labelFormatter={(label) => `Mês: ${label}`}
+                    contentStyle={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
                   />
-                  <Bar yAxisId="left" dataKey="custo" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                  <Bar yAxisId="right" dataKey="apolices" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  <Bar yAxisId="left" dataKey="custo" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                  <Bar yAxisId="right" dataKey="apolices" fill="#10B981" radius={[2, 2, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
