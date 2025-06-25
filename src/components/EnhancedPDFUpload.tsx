@@ -37,15 +37,18 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
 
   const triggerN8NWebhook = async (fileName: string, file: File) => {
     try {
-      console.log('🚀 Enviando arquivo para n8n como binário:', fileName);
+      console.log('🚀 Enviando arquivo para n8n com chave parametrizada:', fileName);
       
       // Converter arquivo para ArrayBuffer
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
       
+      // Criar a chave parametrizada: arquivo/data/file - nomedoarquivo.pdf
+      const fileKey = `arquivo/data/file - ${fileName}`;
+      
       // Criar o payload no formato esperado pelo n8n
       const payload = {
-        arquivo: Array.from(uint8Array), // Converte para array de bytes
+        [fileKey]: Array.from(uint8Array), // Chave parametrizada com array de bytes
         fileName: fileName,
         fileSize: file.size,
         fileType: file.type,
@@ -53,6 +56,8 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         source: 'SmartApólice',
         event: 'pdf_uploaded'
       };
+
+      console.log(`📝 Chave do arquivo no payload: "${fileKey}"`);
 
       const response = await fetch(N8N_WEBHOOK_URL, {
         method: 'POST',
@@ -93,7 +98,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
-      // 2. Trigger webhook n8n com dados binários
+      // 2. Trigger webhook n8n com chave parametrizada
       updateFileStatus(fileName, {
         progress: 75,
         status: 'uploading',
