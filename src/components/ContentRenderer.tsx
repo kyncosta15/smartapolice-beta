@@ -1,3 +1,4 @@
+
 import { PDFUpload } from '@/components/PDFUpload';
 import { EnhancedPDFUpload } from '@/components/EnhancedPDFUpload';
 import { PolicyViewer } from '@/components/PolicyViewer';
@@ -5,6 +6,7 @@ import { UserManagement } from '@/components/UserManagement';
 import { ClientRegister } from '@/components/ClientRegister';
 import { ContactSection } from '@/components/ContactSection';
 import { EnhancedDashboard } from '@/components/EnhancedDashboard';
+import { DynamicDashboard } from '@/components/DynamicDashboard';
 import { PotentialSavings } from '@/components/PotentialSavings';
 import { InstallmentsDashboard } from '@/components/InstallmentsDashboard';
 
@@ -47,7 +49,7 @@ export function ContentRenderer({
       case 'home':
         return (
           <div className="p-6 space-y-6">
-            <EnhancedDashboard policies={allPolicies} />
+            <DynamicDashboard policies={allPolicies} />
             <InstallmentsDashboard policies={allPolicies} />
           </div>
         );
