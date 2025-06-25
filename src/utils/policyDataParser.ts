@@ -30,7 +30,7 @@ export interface ParsedPolicyData {
   totalCoverage?: number;
   deductible?: number;
   claimRate?: number;
-  installments?: Array<{ value: number; date: string }>;
+  installments?: Array<{ valor: number; data: string }>; // Fixed: using Portuguese property names
   paymentMethod?: string;
   file?: File;
   extractedAt: string;
