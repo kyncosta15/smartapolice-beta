@@ -1,7 +1,6 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DollarSign, Settings, Phone, Users, Shield } from 'lucide-react';
+import { DollarSign, Settings, Phone, Users, Shield, Upload, FileText } from 'lucide-react';
 import { EnhancedDashboard } from '@/components/EnhancedDashboard';
 import { PolicyTable } from '@/components/PolicyTable';
 import { ChartsSection } from '@/components/ChartsSection';
@@ -27,6 +26,7 @@ interface ContentRendererProps {
   onUserUpdate: (user: any) => void;
   onUserDelete: (userId: string) => void;
   onClientRegister: (client: any) => void;
+  onSectionChange: (section: string) => void;
 }
 
 export function ContentRenderer({
@@ -43,6 +43,7 @@ export function ContentRenderer({
   onUserUpdate,
   onUserDelete,
   onClientRegister,
+  onSectionChange,
 }: ContentRendererProps) {
   const { user } = useAuth();
   
@@ -61,7 +62,39 @@ export function ContentRenderer({
           <EnhancedDashboard 
             policies={allPolicies} 
             onNotificationClick={handleNotificationClick}
+            showNotifications={false}
           />
+          
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer" 
+                  onClick={() => onSectionChange('import')}>
+              <CardContent className="p-6 text-center">
+                <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">Importar Apólice</h3>
+                <p className="text-sm text-blue-600">Adicione PDFs e extraia dados automaticamente</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => onSectionChange('policies')}>
+              <CardContent className="p-6 text-center">
+                <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-green-800 mb-2">Minhas Apólices</h3>
+                <p className="text-sm text-green-600">Visualize e gerencie suas apólices</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => onSectionChange('financial')}>
+              <CardContent className="p-6 text-center">
+                <DollarSign className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-purple-800 mb-2">Relatório Financeiro</h3>
+                <p className="text-sm text-purple-600">Acompanhe custos e economias</p>
+              </CardContent>
+            </Card>
+          </div>
+
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
               <PolicyTable 
@@ -147,6 +180,7 @@ export function ContentRenderer({
           <EnhancedDashboard 
             policies={allPolicies} 
             onNotificationClick={handleNotificationClick}
+            showNotifications={false}
           />
           <Card className="bg-white">
             <CardHeader>
@@ -280,7 +314,39 @@ export function ContentRenderer({
           <EnhancedDashboard 
             policies={allPolicies} 
             onNotificationClick={handleNotificationClick}
+            showNotifications={false}
           />
+          
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer" 
+                  onClick={() => onSectionChange('import')}>
+              <CardContent className="p-6 text-center">
+                <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">Importar Apólice</h3>
+                <p className="text-sm text-blue-600">Adicione PDFs e extraia dados automaticamente</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => onSectionChange('policies')}>
+              <CardContent className="p-6 text-center">
+                <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-green-800 mb-2">Minhas Apólices</h3>
+                <p className="text-sm text-green-600">Visualize e gerencie suas apólices</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => onSectionChange('financial')}>
+              <CardContent className="p-6 text-center">
+                <DollarSign className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-purple-800 mb-2">Relatório Financeiro</h3>
+                <p className="text-sm text-purple-600">Acompanhe custos e economias</p>
+              </CardContent>
+            </Card>
+          </div>
+
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
               <PolicyTable 

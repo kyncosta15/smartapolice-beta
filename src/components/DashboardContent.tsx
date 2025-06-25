@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -126,6 +125,7 @@ export function DashboardContent() {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             notificationCount={allPolicies.filter(p => new Date(p.endDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length}
+            policies={allPolicies}
           />
 
           <div className="flex-1">
@@ -145,6 +145,7 @@ export function DashboardContent() {
               onUserUpdate={handleUserUpdate}
               onUserDelete={handleUserDelete}
               onClientRegister={handleClientRegister}
+              onSectionChange={setActiveSection}
             />
           </div>
 
