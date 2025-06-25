@@ -209,12 +209,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           <CardTitle>Upload de Apólices - Extração Inteligente com IA</CardTitle>
           <CardDescription>
             Arraste e solte os arquivos PDF ou clique para selecionar.
-            <br />
-            <span className="text-xs text-blue-600">🤖 IA extrai dados automaticamente via n8n</span>
-            <br />
-            <span className="text-xs text-green-600">⚡ Upload multipart/form-data</span>
-            <br />
-            <span className="text-xs text-purple-600">📊 Dashboard atualizado automaticamente</span>
+            
           </CardDescription>
         </CardHeader>
         <CardContent>
