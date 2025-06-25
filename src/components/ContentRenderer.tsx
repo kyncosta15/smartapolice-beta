@@ -1,4 +1,3 @@
-
 import { PDFUpload } from '@/components/PDFUpload';
 import { EnhancedPDFUpload } from '@/components/EnhancedPDFUpload';
 import { PolicyViewer } from '@/components/PolicyViewer';
@@ -7,6 +6,7 @@ import { ClientRegister } from '@/components/ClientRegister';
 import { ContactSection } from '@/components/ContactSection';
 import { EnhancedDashboard } from '@/components/EnhancedDashboard';
 import { PotentialSavings } from '@/components/PotentialSavings';
+import { InstallmentsDashboard } from '@/components/InstallmentsDashboard';
 
 interface ContentRendererProps {
   activeSection: string;
@@ -46,8 +46,9 @@ export function ContentRenderer({
     switch (activeSection) {
       case 'home':
         return (
-          <div className="p-6">
+          <div className="p-6 space-y-6">
             <EnhancedDashboard policies={allPolicies} />
+            <InstallmentsDashboard policies={allPolicies} />
           </div>
         );
 
