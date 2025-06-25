@@ -9,7 +9,7 @@ export interface PolicyData {
   type: string;
   insurer: string;
   premium: number;
-  monthlyAmount?: number;
+  monthlyAmount?: number; // Made optional to match actual usage
   startDate: string;
   endDate: string;
   policyNumber: string;

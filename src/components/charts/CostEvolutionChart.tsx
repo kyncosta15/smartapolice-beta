@@ -1,21 +1,8 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
-
-interface PolicyData {
-  id: string;
-  name: string;
-  type: string;
-  insurer: string;
-  premium: number;
-  monthlyAmount: number;
-  startDate: string;
-  endDate: string;
-  policyNumber: string;
-  paymentFrequency: 'mensal' | 'anual' | 'semestral' | 'trimestral';
-}
+import { PolicyData } from './chartData';
 
 interface CostEvolutionChartProps {
   policies?: PolicyData[];
