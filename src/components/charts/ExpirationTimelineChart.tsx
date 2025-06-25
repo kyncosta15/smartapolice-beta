@@ -1,13 +1,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { expirationData } from './chartData';
+
+const expirationData = [
+  { month: 'Jul', vencimentos: 12 },
+  { month: 'Ago', vencimentos: 18 },
+  { month: 'Set', vencimentos: 8 },
+  { month: 'Out', vencimentos: 15 },
+  { month: 'Nov', vencimentos: 22 },
+  { month: 'Dez', vencimentos: 10 }
+];
 
 export const ExpirationTimelineChart = () => {
   return (
     <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-gray-900">Timeline de Vencimentos</CardTitle>
+        <CardTitle className="text-lg font-semibold text-gray-900">Tendência de Vencimentos</CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="w-full h-80">

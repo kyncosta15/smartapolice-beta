@@ -12,15 +12,20 @@ interface ChartsSectionProps {
 export const ChartsSection = ({ detailed = false }: ChartsSectionProps) => {
   return (
     <div className="w-full space-y-6">
-      {/* First Row - Two charts side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Charts arranged vertically - one per row for better readability */}
+      <div className="w-full">
+        <CostEvolutionChart />
+      </div>
+
+      <div className="w-full">
         <InsurerDistributionChart />
+      </div>
+
+      <div className="w-full">
         <InsuranceTypesChart />
       </div>
 
-      {/* Second Row - Two charts side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CostEvolutionChart />
+      <div className="w-full">
         <ExpirationTimelineChart />
       </div>
 
