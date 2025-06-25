@@ -1,19 +1,20 @@
-
-import { Calendar, Home, FileText, DollarSign, Settings, Users, Phone, Upload, UserPlus, Shield } from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-} from '@/components/ui/sidebar';
-import { SmartApóliceLogo } from './SmartApoliceLogo';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarItem, SidebarTrigger } from "@/components/ui/sidebar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import {
+  BarChart3,
+  Building2,
+  Calendar,
+  Contact2,
+  FileText,
+  Gauge,
+  Home,
+  Settings,
+  TrendingDown,
+  Users2
+} from "lucide-react"
 
 interface AppSidebarProps {
   onSectionChange: (section: string) => void;
@@ -22,109 +23,133 @@ interface AppSidebarProps {
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
   const { user } = useAuth();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const getNavigationItems = () => {
-    const baseItems = [
-      {
-        title: "Dashboard",
-        id: "home",
-        icon: Home,
-      },
-      {
-        title: "Minhas Apólices",
-        id: "policies",
-        icon: FileText,
-      },
-      {
-        title: "Importar Apólice",
-        id: "import",
-        icon: Upload,
-      },
-      {
-        title: "Financeiro",
-        id: "financial",
-        icon: DollarSign,
-      },
-      {
-        title: "Configurações",
-        id: "settings",
-        icon: Settings,
-      },
-    ];
-
-    // Adicionar itens específicos para administrador
-    if (user?.role === 'administrador') {
-      baseItems.splice(2, 0, {
-        title: "Painel Admin",
-        id: "admin",
-        icon: Shield,
-      });
-      baseItems.splice(3, 0, {
-        title: "Cadastrar Cliente",
-        id: "register-client",
-        icon: UserPlus,
-      });
-    }
-
-    // Adicionar itens gerais no final
-    baseItems.push(
-      {
-        title: "Quem Somos",
-        id: "about",
-        icon: Users,
-      },
-      {
-        title: "Contato",
-        id: "contact",
-        icon: Phone,
-      }
-    );
-
-    return baseItems;
+  const handleNavigation = (section: string) => {
+    onSectionChange(section);
   };
 
-  const navigationItems = getNavigationItems();
+  const adminNavigation = [
+    {
+      title: "Dashboard",
+      icon: Home,
+      id: "home",
+      description: "Visão geral"
+    },
+    {
+      title: "Apólices",
+      icon: FileText,
+      id: "policies",
+      description: "Gerenciar apólices"
+    },
+    {
+      title: "Clientes",
+      icon: Users2,
+      id: "clients",
+      description: "Gerenciar clientes"
+    },
+    {
+      title: "Relatórios",
+      icon: BarChart3,
+      id: "reports",
+      description: "Análises e métricas"
+    },
+    {
+      title: "Economia Potencial",
+      icon: TrendingDown,
+      id: "potential-savings",
+      description: "Oportunidades de otimização"
+    },
+    {
+      title: "Contatos",
+      icon: Contact2,
+      id: "contact",
+      description: "Informações de contato"
+    },
+    {
+      title: "Configurações",
+      icon: Settings,
+      id: "settings",
+      description: "Ajustes do sistema"
+    }
+  ];
+
+  const clientNavigation = [
+    {
+      title: "Dashboard",
+      icon: Gauge,
+      id: "home",
+      description: "Visão geral"
+    },
+    {
+      title: "Minhas Apólices",
+      icon: FileText,
+      id: "policies",
+      description: "Gerenciar suas apólices"
+    },
+    {
+      title: "Agendamentos",
+      icon: Calendar,
+      id: "appointments",
+      description: "Próximas reuniões"
+    },
+    {
+      title: "Economia Potencial",
+      icon: TrendingDown,
+      id: "potential-savings",
+      description: "Oportunidades de otimização"
+    },
+    {
+      title: "Contatos",
+      icon: Contact2,
+      id: "contact",
+      description: "Informações de contato"
+    },
+    {
+      title: "Configurações",
+      icon: Settings,
+      id: "settings",
+      description: "Ajustes da conta"
+    }
+  ];
+
+  const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
 
   return (
-    <Sidebar className="border-r border-gray-100 bg-white">
-      <SidebarHeader className="px-4 py-6 border-b border-gray-50">
-        <SmartApóliceLogo size="md" showText={true} />
-      </SidebarHeader>
-      
-      <SidebarContent className="px-2 py-3">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2 mb-2">
-            Navegação
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
-              {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    onClick={() => onSectionChange(item.id)}
-                    className={`w-full flex items-center space-x-2 px-2 py-2 rounded-md text-sm font-medium transition-all duration-200 group ${
-                      activeSection === item.id 
-                        ? 'bg-blue-50 text-blue-700 shadow-sm' 
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    <item.icon className={`h-4 w-4 ${
-                      activeSection === item.id ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
-                    }`} />
-                    <span className="truncate">{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="p-3 border-t border-gray-50">
-        <div className="text-xs text-gray-400 text-center font-medium">
-          © 2024 SmartApólice
+    <Sidebar className="bg-white border-r">
+      <SidebarHeader className="space-y-2">
+        <div className="rounded-md p-2 bg-blue-500/10">
+          <Building2 className="h-8 w-8 text-blue-600" />
         </div>
+        <h4 className="font-semibold text-lg text-gray-900">
+          {user?.company || 'Nome da Empresa'}
+        </h4>
+        <p className="text-sm text-gray-500">
+          {user?.role === 'administrador' ? 'Administrador' : 'Cliente'}
+        </p>
+      </SidebarHeader>
+      <SidebarContent>
+        {navigation.map((item) => (
+          <SidebarItem
+            key={item.id}
+            title={item.title}
+            icon={item.icon}
+            description={item.description}
+            active={activeSection === item.id}
+            onClick={() => handleNavigation(item.id)}
+          />
+        ))}
+      </SidebarContent>
+      <SidebarFooter>
+        <Avatar className="h-8 w-8">
+          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+          <AvatarFallback>CN</AvatarFallback>
+        </Avatar>
+        <p className="text-sm text-gray-700">{user?.name || 'Nome do Usuário'}</p>
+        <SidebarTrigger className="bg-gray-100 hover:bg-gray-200">
+          Sair
+        </SidebarTrigger>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }
