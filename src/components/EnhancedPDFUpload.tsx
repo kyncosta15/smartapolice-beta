@@ -257,9 +257,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         </CardContent>
         <CardFooter className="justify-between">
           <div className="text-xs text-gray-500 space-y-1">
-            <p>🔄 Upload multipart/form-data</p>
-            <p>📊 Dados sincronizados em tempo real</p>
-            <p>⚡ Polling inteligente até completar</p>
+           
           </div>
           {processingCount > 0 && (
             <div className="text-right">
