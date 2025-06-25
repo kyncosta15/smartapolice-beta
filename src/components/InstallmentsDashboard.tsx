@@ -1,152 +1,184 @@
 
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Calendar, DollarSign } from 'lucide-react';
+import { Calendar, DollarSign, Clock, AlertTriangle } from 'lucide-react';
+import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { formatCurrency } from '@/utils/currencyFormatter';
 
 interface InstallmentsDashboardProps {
-  policies: any[];
+  policies: ParsedPolicyData[];
 }
 
 export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) {
-  // Calcula informações das parcelas para cada apólice
-  const getInstallmentInfo = (policy: any) => {
-    const installments = policy.installments || 12;
-    const totalValue = policy.premium || 0;
-    const installmentValue = totalValue / installments;
-    
-    return {
-      installments,
-      installmentValue,
-      totalValue
-    };
-  };
+  // Extrair todas as parcelas de todas as apólices
+  const allInstallments = policies.flatMap(policy => 
+    (policy.installments || []).map(installment => ({
+      ...installment,
+      policyName: policy.name,
+      policyType: policy.type,
+      insurer: policy.insurer
+    }))
+  );
 
-  // Agrupa estatísticas gerais
-  const getOverallStats = () => {
-    if (policies.length === 0) return { totalPolicies: 0, totalInstallments: 0, totalMonthlyValue: 0 };
-    
-    const totalPolicies = policies.length;
-    const totalInstallments = policies.reduce((sum, policy) => sum + (policy.installments || 12), 0);
-    const totalMonthlyValue = policies.reduce((sum, policy) => sum + (policy.monthlyAmount || 0), 0);
-    
-    return {
-      totalPolicies,
-      totalInstallments,
-      totalMonthlyValue
-    };
-  };
+  // Ordenar por data
+  const sortedInstallments = allInstallments.sort((a, b) => 
+    new Date(a.data).getTime() - new Date(b.data).getTime()
+  );
 
-  const stats = getOverallStats();
+  // Próximas parcelas (próximos 30 dias)
+  const today = new Date();
+  const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+  
+  const upcomingInstallments = sortedInstallments.filter(installment => {
+    const installmentDate = new Date(installment.data);
+    return installmentDate >= today && installmentDate <= thirtyDaysFromNow;
+  });
+
+  // Parcelas vencidas
+  const overdueInstallments = sortedInstallments.filter(installment => {
+    const installmentDate = new Date(installment.data);
+    return installmentDate < today;
+  });
+
+  // Total próximas parcelas
+  const totalUpcoming = upcomingInstallments.reduce((sum, installment) => sum + installment.valor, 0);
+  const totalOverdue = overdueInstallments.reduce((sum, installment) => sum + installment.valor, 0);
+
+  if (policies.length === 0 || allInstallments.length === 0) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma parcela encontrada</h3>
+          <p className="text-gray-500">As parcelas aparecerão aqui quando as apólices forem processadas</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Cards de Resumo */}
+      {/* Resumo das Parcelas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border border-gray-200">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <CreditCard className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total de Apólices</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalPolicies}</p>
-              </div>
-            </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Próximas Parcelas</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{upcomingInstallments.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {formatCurrency(totalUpcoming)} nos próximos 30 dias
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-gray-200">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <Calendar className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total de Parcelas</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalInstallments}</p>
-              </div>
-            </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Parcelas Vencidas</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{overdueInstallments.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {formatCurrency(totalOverdue)} em atraso
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-gray-200">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-50 rounded-lg">
-                <DollarSign className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Valor Mensal Total</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  R$ {stats.totalMonthlyValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-            </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Parcelas</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{allInstallments.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {formatCurrency(allInstallments.reduce((sum, inst) => sum + inst.valor, 0))} total
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Detalhes por Apólice */}
-      <Card className="bg-white border border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900">
-            Detalhes de Parcelas por Apólice
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {policies.length === 0 ? (
-            <div className="text-center py-8">
-              <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhuma apólice encontrada</p>
-              <p className="text-sm text-gray-400 mt-1">Faça upload de PDFs para ver as informações das parcelas</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {policies.map((policy) => {
-                const installmentInfo = getInstallmentInfo(policy);
-                return (
-                  <div key={policy.id} className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{policy.name}</h4>
-                        <p className="text-sm text-gray-500">{policy.insurer} • {policy.policyNumber}</p>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <Badge variant="outline" className="text-xs">
-                            {policy.type === 'auto' ? 'Auto' : 
-                             policy.type === 'vida' ? 'Vida' : 
-                             policy.type === 'saude' ? 'Saúde' : 
-                             policy.type === 'patrimonial' ? 'Patrimonial' : 'Outros'}
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                        <div className="text-center">
-                          <p className="text-gray-500">Parcelas</p>
-                          <p className="font-semibold text-gray-900">{installmentInfo.installments}x</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-gray-500">Valor da Parcela</p>
-                          <p className="font-semibold text-green-600">
-                            R$ {installmentInfo.installmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-gray-500">Valor Total</p>
-                          <p className="font-semibold text-blue-600">
-                            R$ {installmentInfo.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+      {/* Lista de Próximas Parcelas */}
+      {upcomingInstallments.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Clock className="h-5 w-5 mr-2" />
+              Próximas Parcelas (30 dias)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {upcomingInstallments.slice(0, 5).map((installment, index) => (
+                <div key={`${installment.policyName}-${installment.data}-${index}`} 
+                     className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{installment.policyName}</p>
+                    <p className="text-xs text-gray-600">{installment.insurer}</p>
                   </div>
-                );
-              })}
+                  <div className="text-right">
+                    <p className="font-semibold text-blue-600">
+                      {formatCurrency(installment.valor)}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {new Date(installment.data).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {upcomingInstallments.length > 5 && (
+              <p className="text-sm text-gray-500 mt-3 text-center">
+                +{upcomingInstallments.length - 5} parcelas adicionais
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Lista de Parcelas Vencidas */}
+      {overdueInstallments.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center text-red-600">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              Parcelas Vencidas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {overdueInstallments.slice(0, 5).map((installment, index) => (
+                <div key={`overdue-${installment.policyName}-${installment.data}-${index}`} 
+                     className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{installment.policyName}</p>
+                    <p className="text-xs text-gray-600">{installment.insurer}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-red-600">
+                      {formatCurrency(installment.valor)}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Venceu em {new Date(installment.data).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                  <Badge variant="destructive" className="ml-2">
+                    Vencida
+                  </Badge>
+                </div>
+              ))}
+            </div>
+            {overdueInstallments.length > 5 && (
+              <p className="text-sm text-gray-500 mt-3 text-center">
+                +{overdueInstallments.length - 5} parcelas vencidas adicionais
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
