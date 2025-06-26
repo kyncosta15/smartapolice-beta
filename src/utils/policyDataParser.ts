@@ -23,7 +23,7 @@ export interface ParsedPolicyData {
   paymentMethod?: string;
   file?: File;
   extractedAt: string;
-  // Novos campos do modelo expandido
+  // Campos expandidos da nova estrutura
   insuredName?: string;
   insuredCpf?: string;
   insuredEmail?: string;
@@ -46,11 +46,21 @@ export interface ParsedPolicyData {
   };
   broker?: string;
   susepCode?: string;
+  conductorInfo?: {
+    name?: string;
+    cpf?: string;
+    birthDate?: string;
+    isPrincipal?: boolean;
+  };
+  ownerInfo?: {
+    name?: string;
+    cpf?: string;
+  };
 }
 
 export class PolicyDataParser {
   static parseRobustPolicyData(raw: any): PolicyDataRaw {
-    console.log('Parsing enhanced policyData:', raw);
+    console.log('Parsing enhanced policyData with new parametrized structure:', raw);
     
     if (typeof raw === 'object' && raw !== null) {
       return raw as PolicyDataRaw;
@@ -71,7 +81,7 @@ export class PolicyDataParser {
     let policy: PolicyDataRaw = {};
     try {
       policy = JSON.parse(str);
-      console.log('Successfully parsed enhanced policy data:', policy);
+      console.log('Successfully parsed parametrized policy data:', policy);
     } catch (err) {
       console.error('Failed to parse policyData:', err);
       policy = {};
@@ -80,8 +90,8 @@ export class PolicyDataParser {
     return policy;
   }
 
-  static normalizeType(tipo?: string, ramo?: string): string {
-    const combined = `${tipo || ''} ${ramo || ''}`.toLowerCase();
+  static normalizeType(tipoApolice?: string, ramo?: string): string {
+    const combined = `${tipoApolice || ''} ${ramo || ''}`.toLowerCase();
     
     if (combined.includes('auto') || combined.includes('veic') || combined.includes('carro')) {
       return 'auto';
@@ -123,20 +133,20 @@ export class PolicyDataParser {
   }
 
   static convertToParsedPolicy(rawData: PolicyDataRaw, fileName: string, file?: File): ParsedPolicyData {
-    const type = this.normalizeType(rawData.tipo, rawData.ramo);
+    const type = this.normalizeType(rawData.tipo_apolice, rawData.ramo);
     const insurer = rawData.seguradora || 'Seguradora não informada';
-    const premium = rawData.premio_total || 0;
-    const monthlyAmount = rawData.valor_parcela || (premium / (rawData.parcelas || 12));
-    const startDate = rawData.inicio || new Date().toISOString().split('T')[0];
-    const endDate = rawData.fim || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const premium = rawData.pagamento?.premio_total || 0;
+    const monthlyAmount = rawData.pagamento?.custo_mensal || rawData.pagamento?.valor_parcela || (premium / (rawData.pagamento?.parcelas || 12));
+    const startDate = rawData.inicio_vigencia || new Date().toISOString().split('T')[0];
+    const endDate = rawData.fim_vigencia || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const status = this.determineStatus(endDate);
     
     // Criar nome mais descritivo baseado nos dados extraídos
     let policyName = fileName.replace('.pdf', '');
     if (rawData.veiculo?.marca && rawData.veiculo?.modelo) {
       policyName = `${rawData.veiculo.marca} ${rawData.veiculo.modelo}`;
-    } else if (rawData.nome_segurado) {
-      policyName = `Apólice ${rawData.nome_segurado.split(' ')[0]}`;
+    } else if (rawData.segurado?.nome) {
+      policyName = `Apólice ${rawData.segurado.nome.split(' ')[0]}`;
     }
     
     return {
@@ -149,17 +159,17 @@ export class PolicyDataParser {
       startDate,
       endDate,
       policyNumber: this.generatePolicyNumber(rawData.numero_apolice),
-      paymentFrequency: rawData.parcelas ? `${rawData.parcelas}x` : 'mensal',
+      paymentFrequency: rawData.pagamento?.parcelas ? `${rawData.pagamento.parcelas}x` : 'mensal',
       status,
-      deductible: rawData.franquia,
-      paymentMethod: rawData.forma_pagamento,
+      deductible: rawData.coberturas?.franquia,
+      paymentMethod: rawData.pagamento?.forma_pagamento,
       file,
       extractedAt: new Date().toISOString(),
-      // Campos expandidos
-      insuredName: rawData.nome_segurado,
-      insuredCpf: rawData.cpf_segurado,
-      insuredEmail: rawData.email,
-      insuredPhone: rawData.telefone,
+      // Campos expandidos da nova estrutura parametrizada
+      insuredName: rawData.segurado?.nome,
+      insuredCpf: rawData.segurado?.cpf,
+      insuredEmail: rawData.segurado?.email,
+      insuredPhone: rawData.segurado?.telefone,
       vehicleDetails: rawData.veiculo ? {
         brand: rawData.veiculo.marca,
         model: rawData.veiculo.modelo,
@@ -170,14 +180,24 @@ export class PolicyDataParser {
         usage: rawData.veiculo.uso,
         fuel: rawData.veiculo.combustivel
       } : undefined,
-      coverageDetails: {
-        materialDamage: rawData.danos_materiais_terceiros,
-        bodilyInjury: rawData.danos_corporais_terceiros,
-        moralDamage: rawData.danos_morais,
-        comprehensive: rawData.cobertura === 'Compreensiva'
-      },
-      broker: rawData.corretora,
-      susepCode: rawData.susep
+      coverageDetails: rawData.coberturas ? {
+        materialDamage: rawData.coberturas.danos_materiais_terceiros,
+        bodilyInjury: rawData.coberturas.danos_corporais_terceiros,
+        moralDamage: rawData.coberturas.danos_morais,
+        comprehensive: rawData.coberturas.tipo === 'Compreensiva'
+      } : undefined,
+      conductorInfo: rawData.condutor ? {
+        name: rawData.condutor.nome,
+        cpf: rawData.condutor.cpf,
+        birthDate: rawData.condutor.data_nascimento,
+        isPrincipal: rawData.condutor.condutor_principal
+      } : undefined,
+      ownerInfo: rawData.proprietario ? {
+        name: rawData.proprietario.nome,
+        cpf: rawData.proprietario.cpf
+      } : undefined,
+      broker: rawData.outros?.corretora,
+      susepCode: rawData.outros?.susep
     };
   }
 }

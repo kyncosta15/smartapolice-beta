@@ -15,24 +15,32 @@ export interface ExtractedPDFData {
   seguradora?: string;
   numero_apolice?: string;
   item?: string;
-  data_emissao?: string;
-  inicio?: string;
-  fim?: string;
-  tipo?: string;
+  tipo_apolice?: string;
   ramo?: string;
-  cobertura?: string;
-  cosseguro?: boolean;
-  nome_segurado?: string;
-  cpf_segurado?: string;
-  data_nascimento_segurado?: string;
-  email?: string;
-  telefone?: string;
-  condutor_nome?: string;
-  condutor_cpf?: string;
-  condutor_nascimento?: string;
-  condutor_principal?: boolean;
-  proprietario_nome?: string;
-  proprietario_cpf?: string;
+  data_emissao?: string;
+  inicio_vigencia?: string;
+  fim_vigencia?: string;
+  
+  segurado?: {
+    nome?: string;
+    cpf?: string;
+    data_nascimento?: string;
+    email?: string;
+    telefone?: string;
+  };
+
+  condutor?: {
+    nome?: string;
+    cpf?: string;
+    data_nascimento?: string;
+    condutor_principal?: boolean;
+  };
+
+  proprietario?: {
+    nome?: string;
+    cpf?: string;
+  };
+
   veiculo?: {
     marca?: string;
     modelo?: string;
@@ -44,25 +52,38 @@ export interface ExtractedPDFData {
     uso?: string;
     tipo?: string;
     combustivel?: string;
-    portas?: number;
-    eixos?: number;
-    lotacao?: number;
+    portas?: number | null;
+    eixos?: number | null;
+    lotacao?: number | null;
     antifurto?: string;
   };
-  valor_mercado?: string;
-  premio_veiculo?: number;
-  premio_rcf?: number;
-  premio_total?: number;
-  parcelas?: number;
-  valor_parcela?: number;
-  forma_pagamento?: string;
-  bandeira_cartao?: string;
-  fim_validade_cartao?: string;
-  pagamento_confirmado?: boolean;
-  danos_materiais_terceiros?: number;
-  danos_corporais_terceiros?: number;
-  danos_morais?: number;
-  franquia?: number;
-  corretora?: string;
-  susep?: string;
+
+  coberturas?: {
+    tipo?: string;
+    valor_mercado?: string;
+    danos_materiais_terceiros?: number;
+    danos_corporais_terceiros?: number;
+    danos_morais?: number;
+    franquia?: number;
+  };
+
+  pagamento?: {
+    premio_total?: number;
+    premio_veiculo?: number;
+    premio_rcf?: number;
+    parcelas?: number;
+    valor_parcela?: number;
+    forma_pagamento?: string;
+    bandeira_cartao?: string;
+    fim_validade_cartao?: string;
+    pagamento_confirmado?: boolean;
+    custo_mensal?: number;
+  };
+
+  outros?: {
+    cosseguro?: boolean;
+    corretora?: string;
+    susep?: string;
+    observacoes?: string;
+  };
 }
