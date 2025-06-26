@@ -4,7 +4,6 @@ import { useDropzone } from 'react-dropzone';
 import { FilePlus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ParsedPolicyData } from '@/utils/policyDataParser';
-import { usePolicyDataFetch } from '@/hooks/usePolicyDataFetch';
 import { useToast } from '@/hooks/use-toast';
 import { useFileStatusManager } from '@/hooks/useFileStatusManager';
 import { FileProcessor } from '@/services/fileProcessor';
@@ -20,13 +19,12 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
     getProcessingCount 
   } = useFileStatusManager();
   
-  const { fetchPolicyData } = usePolicyDataFetch();
   const { toast } = useToast();
 
   const fileProcessor = new FileProcessor(
     updateFileStatus,
     removeFileStatus,
-    fetchPolicyData,
+    null, // fetchPolicyData não é mais necessário
     onPolicyExtracted,
     toast
   );
@@ -61,7 +59,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           <CardTitle>Upload de Apólices - Extração Inteligente com IA</CardTitle>
           <CardDescription>
             Arraste e solte os arquivos PDF ou clique para selecionar.
-            Arquivo enviado via multipart/form-data para que o n8n acesse o PDF como $binary["arquivo"].
+            A IA vai extrair automaticamente os dados das apólices com base no modelo avançado.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -73,7 +71,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
                 {isDragActive ? 'Solte os arquivos aqui...' : 'Arraste e solte os arquivos PDF ou clique para selecionar'}
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                IA vai extrair os dados automaticamente
+                IA local extrai dados detalhados automaticamente
               </p>
             </div>
           </div>
@@ -85,14 +83,15 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         </CardContent>
         <CardFooter className="justify-between">
           <div className="text-xs text-gray-500 space-y-1">
-           
+            <p>• Extração local com IA avançada</p>
+            <p>• Suporte a dados detalhados de veículos, segurados e coberturas</p>
           </div>
           {processingCount > 0 && (
             <div className="text-right">
               <p className="text-sm text-blue-600 font-medium">
                 Processando {processingCount} arquivo(s)...
               </p>
-              <p className="text-xs text-gray-500">Aguarde a extração da IA</p>
+              <p className="text-xs text-gray-500">Extraindo dados com IA local</p>
             </div>
           )}
         </CardFooter>
