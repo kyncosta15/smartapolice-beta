@@ -35,6 +35,8 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       return;
     }
 
+    console.log(`📤 Processando ${acceptedFiles.length} arquivo(s) com extração dinâmica`);
+
     // Processar arquivos em paralelo
     const processingPromises = acceptedFiles.map(file => fileProcessor.processFile(file));
     await Promise.allSettled(processingPromises);
@@ -56,10 +58,10 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
     <div className="w-full">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Upload de Apólices - Extração Inteligente com IA</CardTitle>
+          <CardTitle>Upload de Apólices - Extração Dinâmica com IA</CardTitle>
           <CardDescription>
-            Arraste e solte os arquivos PDF ou clique para selecionar.
-            A IA vai extrair automaticamente os dados das apólices com base no modelo avançado.
+            Sistema inteligente que identifica automaticamente cada seguradora e extrai dados específicos.
+            Suporte para Liberty, Bradesco, Porto Seguro e outras seguradoras.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -68,10 +70,10 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
             <div className="text-center">
               <FilePlus className="h-6 w-6 mx-auto text-gray-400 mb-2" />
               <p className="text-sm text-gray-500">
-                {isDragActive ? 'Solte os arquivos aqui...' : 'Arraste e solte os arquivos PDF ou clique para selecionar'}
+                {isDragActive ? 'Solte os arquivos aqui...' : 'Arraste e solte os PDFs ou clique para selecionar'}
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                IA local extrai dados detalhados automaticamente
+                IA identifica layout e extrai dados específicos por seguradora
               </p>
             </div>
           </div>
@@ -83,15 +85,16 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         </CardContent>
         <CardFooter className="justify-between">
           <div className="text-xs text-gray-500 space-y-1">
-            <p>• Extração local com IA avançada</p>
-            <p>• Suporte a dados detalhados de veículos, segurados e coberturas</p>
+            <p>• Reconhecimento automático de seguradoras</p>
+            <p>• Extração contextualizada por layout específico</p>
+            <p>• Validação e preenchimento inteligente de dados ausentes</p>
           </div>
           {processingCount > 0 && (
             <div className="text-right">
               <p className="text-sm text-blue-600 font-medium">
                 Processando {processingCount} arquivo(s)...
               </p>
-              <p className="text-xs text-gray-500">Extraindo dados com IA local</p>
+              <p className="text-xs text-gray-500">Extração dinâmica em andamento</p>
             </div>
           )}
         </CardFooter>

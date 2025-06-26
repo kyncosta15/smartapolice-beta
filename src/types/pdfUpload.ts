@@ -11,6 +11,53 @@ export interface EnhancedPDFUploadProps {
   onPolicyExtracted: (policy: any) => void;
 }
 
+export interface DynamicPDFData {
+  informacoes_gerais: {
+    nome_apolice: string;
+    tipo: string;
+    status: string;
+    numero_apolice: string;
+  };
+  seguradora: {
+    empresa: string;
+    categoria: string;
+    cobertura: string;
+    entidade: string;
+  };
+  informacoes_financeiras: {
+    premio_anual: number;
+    premio_mensal: number;
+  };
+  vigencia: {
+    inicio: string;
+    fim: string;
+    extraido_em: string;
+  };
+  // Campos expandidos opcionais
+  segurado?: {
+    nome?: string;
+    cpf?: string;
+    data_nascimento?: string;
+    email?: string;
+    telefone?: string;
+  };
+  veiculo?: {
+    marca?: string;
+    modelo?: string;
+    ano_modelo?: string;
+    placa?: string;
+    chassi?: string;
+    uso?: string;
+  };
+  coberturas?: {
+    tipo?: string;
+    franquia?: number;
+    danos_materiais?: number;
+    danos_corporais?: number;
+  };
+}
+
+// Interface legada mantida para compatibilidade
 export interface ExtractedPDFData {
   seguradora?: string;
   numero_apolice?: string;

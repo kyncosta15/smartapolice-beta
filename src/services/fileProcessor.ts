@@ -1,7 +1,7 @@
 
 import { ParsedPolicyData } from '@/utils/policyDataParser';
-import { PolicyDataParser } from '@/utils/policyDataParser';
-import { PDFExtractor } from './pdfExtractor';
+import { DynamicPDFExtractor } from './dynamicPdfExtractor';
+import { DynamicPolicyParser } from '@/utils/dynamicPolicyParser';
 import { FileProcessingStatus } from '@/types/pdfUpload';
 
 export class FileProcessor {
@@ -36,43 +36,51 @@ export class FileProcessor {
     try {
       // 1. Simular carregamento do arquivo
       this.updateFileStatus(fileName, {
-        progress: 25,
+        progress: 20,
         status: 'processing',
         message: 'Carregando arquivo PDF...'
       });
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // 2. Extrair dados do PDF usando IA local
+      // 2. Extrair dados do PDF usando extração dinâmica
       this.updateFileStatus(fileName, {
-        progress: 50,
+        progress: 40,
         status: 'processing',
-        message: 'Extraindo dados com IA...'
+        message: 'Identificando seguradora e layout...'
       });
 
-      const extractedData = await PDFExtractor.extractFromPDF(file);
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-      // 3. Processar e converter dados
       this.updateFileStatus(fileName, {
-        progress: 75,
+        progress: 65,
+        status: 'processing',
+        message: 'Extraindo dados com IA dinâmica...'
+      });
+
+      const dynamicData = await DynamicPDFExtractor.extractFromPDF(file);
+
+      // 3. Converter para formato do dashboard
+      this.updateFileStatus(fileName, {
+        progress: 85,
         status: 'processing',
         message: 'Processando dados extraídos...'
       });
 
-      const parsedPolicy = PolicyDataParser.convertToParsedPolicy(extractedData, fileName, file);
+      const parsedPolicy = DynamicPolicyParser.convertToParsedPolicy(dynamicData, fileName, file);
 
       // 4. Finalizar processamento
       this.updateFileStatus(fileName, {
         progress: 100,
         status: 'completed',
-        message: `✅ Processado: ${parsedPolicy.insurer} - ${parsedPolicy.type}`
+        message: `✅ Processado: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
       });
 
       this.onPolicyExtracted(parsedPolicy);
 
       this.toast({
-        title: "🎉 Apólice Extraída",
-        description: `${parsedPolicy.name} processada com sucesso`,
+        title: "🎉 Dados Extraídos com Sucesso",
+        description: `${parsedPolicy.name} - ${parsedPolicy.insurer}`,
       });
 
       // Remover da lista após 3 segundos
