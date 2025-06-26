@@ -7,7 +7,6 @@ import { ClientRegister } from '@/components/ClientRegister';
 import { ContactSection } from '@/components/ContactSection';
 import { EnhancedDashboard } from '@/components/EnhancedDashboard';
 import { DynamicDashboard } from '@/components/DynamicDashboard';
-import { PotentialSavings } from '@/components/PotentialSavings';
 import { InstallmentsDashboard } from '@/components/InstallmentsDashboard';
 
 interface ContentRendererProps {
@@ -88,13 +87,6 @@ export function ContentRenderer({
         return (
           <div className="p-6">
             <ClientRegister onClientRegister={onClientRegister} />
-          </div>
-        );
-      
-      case 'potential-savings':
-        return (
-          <div className="p-6">
-            <PotentialSavings policies={allPolicies} />
           </div>
         );
 

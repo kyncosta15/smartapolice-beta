@@ -13,7 +13,6 @@ import {
   Gauge,
   Home,
   Settings,
-  TrendingDown,
   Users2
 } from "lucide-react"
 
@@ -62,12 +61,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       description: "Análises e métricas"
     },
     {
-      title: "Economia Potencial",
-      icon: TrendingDown,
-      id: "potential-savings",
-      description: "Oportunidades de otimização"
-    },
-    {
       title: "Contatos",
       icon: Contact2,
       id: "contact",
@@ -105,12 +98,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       icon: Calendar,
       id: "appointments",
       description: "Próximas reuniões"
-    },
-    {
-      title: "Economia Potencial",
-      icon: TrendingDown,
-      id: "potential-savings",
-      description: "Oportunidades de otimização"
     },
     {
       title: "Contatos",
