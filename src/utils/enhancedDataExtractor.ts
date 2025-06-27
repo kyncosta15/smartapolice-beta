@@ -1,5 +1,5 @@
 
-import { EXTRACTION_PATTERNS, INSURANCE_COMPANIES_LIST } from './extractionPatterns';
+import { EXTRACTION_PATTERNS, INSURANCE_COMPANIES_LIST, INSURER_SPECIFIC_PATTERNS } from './extractionPatterns';
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 export interface ExtractedInstallment {
@@ -27,220 +27,266 @@ export interface EnhancedExtractedData {
 
 export class EnhancedDataExtractor {
   static extractFromText(text: string): EnhancedExtractedData {
-    console.log('🔍 Iniciando extração aprimorada de dados...');
+    console.log('🔍 Iniciando extração precisa de dados...');
     
-    const normalizedText = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    // Normalizar e limpar o texto para melhor processamento
+    const normalizedText = this.normalizeText(text);
+    
+    // Primeiro, identificar a seguradora para usar padrões específicos
+    const detectedInsurer = this.detectInsuranceCompany(normalizedText);
+    console.log(`🏢 Seguradora detectada: ${detectedInsurer}`);
     
     const extractedData: EnhancedExtractedData = {
-      nomeSegurado: this.extractInsuredName(normalizedText),
-      cpf: this.extractCpfCnpj(normalizedText),
-      apolice: this.extractPolicyNumber(normalizedText),
-      vigenciaInicio: this.extractStartDate(normalizedText),
-      vigenciaFim: this.extractEndDate(normalizedText),
-      premioTotal: this.extractTotalPremium(normalizedText),
-      parcelas: this.extractInstallments(normalizedText),
-      parcelasTotais: this.extractNumberOfInstallments(normalizedText),
+      seguradora: detectedInsurer,
+      nomeSegurado: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.insuredName, "Nome não identificado"),
+      cpf: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.cpfCnpj, ""),
+      apolice: this.extractPolicyNumber(normalizedText, detectedInsurer),
+      vigenciaInicio: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.startDate, this.generateStartDate(), this.convertDateFormat),
+      vigenciaFim: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.endDate, this.generateEndDate(), this.convertDateFormat),
+      premioTotal: this.extractTotalPremium(normalizedText, detectedInsurer),
+      parcelas: this.extractInstallments(normalizedText, detectedInsurer),
+      parcelasTotais: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.numberOfInstallments, "12", parseInt),
       valorMensal: 0, // Será calculado depois
-      veiculo: this.extractVehicleModel(normalizedText),
-      placa: this.extractLicensePlate(normalizedText),
-      fipe: this.extractFipeCode(normalizedText),
-      tipoCobertura: this.extractCoverageType(normalizedText),
-      seguradora: this.extractInsuranceCompany(normalizedText)
+      veiculo: this.extractVehicleInfo(normalizedText),
+      placa: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.licensePlate, ""),
+      fipe: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.fipeCode, ""),
+      tipoCobertura: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.coverageType, "BÁSICA")
     };
 
-    // Cálculo dinâmico do valor mensal
+    // Cálculo preciso do valor mensal
     extractedData.valorMensal = this.calculateMonthlyValue(extractedData);
     
-    // Validação e preenchimento de dados ausentes
-    const validatedData = this.validateAndFillMissingData(extractedData);
+    // Validação cruzada e correção de inconsistências
+    const validatedData = this.validateAndCorrectData(extractedData);
     
-    console.log('📊 Dados extraídos com sucesso:', validatedData);
+    console.log('📊 Dados extraídos com precisão:', validatedData);
     return validatedData;
   }
 
-  private static extractInsuredName(text: string): string {
-    let match = text.match(EXTRACTION_PATTERNS.insuredName);
-    
-    if (!match) {
-      // Tentar padrões alternativos
-      for (const pattern of EXTRACTION_PATTERNS.alternativePatterns.insuredName) {
-        match = text.match(pattern);
-        if (match) break;
-      }
-    }
-    
-    return match ? match[1].trim().toUpperCase() : "Nome não identificado";
+  private static normalizeText(text: string): string {
+    return text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
-  private static extractCpfCnpj(text: string): string {
-    const match = text.match(EXTRACTION_PATTERNS.cpfCnpj);
-    return match ? match[1].trim() : "";
-  }
-
-  private static extractPolicyNumber(text: string): string {
-    let match = text.match(EXTRACTION_PATTERNS.policyNumber);
-    
-    if (!match) {
-      // Tentar padrões alternativos
-      for (const pattern of EXTRACTION_PATTERNS.alternativePatterns.policyNumber) {
-        match = text.match(pattern);
-        if (match) break;
-      }
-    }
-    
-    return match ? match[1].trim() : this.generatePolicyNumber();
-  }
-
-  private static extractStartDate(text: string): string {
-    let match = text.match(EXTRACTION_PATTERNS.startDate);
-    
-    if (!match) {
-      // Tentar padrões alternativos
-      for (const pattern of EXTRACTION_PATTERNS.alternativePatterns.startDate) {
-        match = text.match(pattern);
-        if (match) break;
-      }
-    }
-    
-    return match ? this.convertDateFormat(match[1]) : this.generateStartDate();
-  }
-
-  private static extractEndDate(text: string): string {
-    let match = text.match(EXTRACTION_PATTERNS.endDate);
-    
-    if (!match) {
-      // Tentar padrões alternativos
-      for (const pattern of EXTRACTION_PATTERNS.alternativePatterns.endDate) {
-        match = text.match(pattern);
-        if (match) break;
-      }
-    }
-    
-    return match ? this.convertDateFormat(match[1]) : this.generateEndDate();
-  }
-
-  private static extractTotalPremium(text: string): number {
-    let match = text.match(EXTRACTION_PATTERNS.totalPremium);
-    
-    if (!match) {
-      // Tentar padrões alternativos
-      for (const pattern of EXTRACTION_PATTERNS.alternativePatterns.totalPremium) {
-        match = text.match(pattern);
-        if (match) break;
-      }
-    }
-    
-    return match ? this.parseMonetaryValue(match[1]) : this.generateRealisticPremium();
-  }
-
-  private static extractInstallments(text: string): ExtractedInstallment[] {
-    const installments: ExtractedInstallment[] = [];
-    
-    const valueMatches = Array.from(text.matchAll(EXTRACTION_PATTERNS.installmentValue));
-    const dateMatches = Array.from(text.matchAll(EXTRACTION_PATTERNS.installmentDate));
-    
-    const maxLength = Math.min(valueMatches.length, dateMatches.length, 24); // Máximo 24 parcelas
-    
-    for (let i = 0; i < maxLength; i++) {
-      if (valueMatches[i] && dateMatches[i]) {
-        installments.push({
-          numero: i + 1,
-          data: this.convertDateFormat(dateMatches[i][1]),
-          valor: this.parseMonetaryValue(valueMatches[i][1])
-        });
-      }
-    }
-    
-    return installments;
-  }
-
-  private static extractNumberOfInstallments(text: string): number {
-    const match = text.match(EXTRACTION_PATTERNS.numberOfInstallments);
-    return match ? parseInt(match[1]) : 12;
-  }
-
-  private static extractVehicleModel(text: string): string {
-    const match = text.match(EXTRACTION_PATTERNS.vehicleModel);
-    return match ? match[1].trim().toUpperCase() : "";
-  }
-
-  private static extractLicensePlate(text: string): string {
-    const match = text.match(EXTRACTION_PATTERNS.licensePlate);
-    return match ? match[1].trim().toUpperCase() : "";
-  }
-
-  private static extractFipeCode(text: string): string {
-    const match = text.match(EXTRACTION_PATTERNS.fipeCode);
-    return match ? match[1].trim() : "";
-  }
-
-  private static extractCoverageType(text: string): string {
-    const match = text.match(EXTRACTION_PATTERNS.coverageType);
-    return match ? match[1].trim().toUpperCase() : "BÁSICA";
-  }
-
-  private static extractInsuranceCompany(text: string): string {
+  private static detectInsuranceCompany(text: string): string {
     const textLower = text.toLowerCase();
     
-    // Busca por correspondência exata
-    for (const company of INSURANCE_COMPANIES_LIST) {
-      const companyLower = company.toLowerCase();
-      if (textLower.includes(companyLower)) {
-        console.log(`✅ Seguradora detectada: ${company}`);
-        return company;
-      }
-    }
-    
-    // Busca por palavras-chave
-    for (const company of INSURANCE_COMPANIES_LIST) {
-      const keywords = company.toLowerCase().split(' ');
-      const matchCount = keywords.filter(keyword => 
-        keyword.length > 3 && textLower.includes(keyword)
-      ).length;
-      
-      if (matchCount >= Math.ceil(keywords.length / 2)) {
-        console.log(`✅ Seguradora detectada por palavras-chave: ${company}`);
-        return company;
+    // Busca por cabeçalhos e seções específicas primeiro
+    const headerSections = [
+      textLower.substring(0, 500), // Cabeçalho
+      ...textLower.match(/emitido\s+por\s+([^\n.]{5,100})/gi) || [],
+      ...textLower.match(/dados\s+do\s+corretor[^]*?([a-z\s&.-]{10,150})/gi) || []
+    ];
+
+    for (const section of headerSections) {
+      for (const company of INSURANCE_COMPANIES_LIST) {
+        const companyLower = company.toLowerCase();
+        
+        // Verificação exata
+        if (section.includes(companyLower)) {
+          console.log(`✅ Seguradora detectada (exata): ${company}`);
+          return company;
+        }
+        
+        // Verificação por palavras-chave principais
+        const keywords = companyLower.split(' ').filter(word => word.length > 3);
+        const matchCount = keywords.filter(keyword => section.includes(keyword)).length;
+        
+        if (matchCount >= Math.ceil(keywords.length * 0.7)) {
+          console.log(`✅ Seguradora detectada (palavras-chave): ${company}`);
+          return company;
+        }
       }
     }
     
     return "Seguradora não identificada";
   }
 
-  private static calculateMonthlyValue(data: EnhancedExtractedData): number {
-    if (data.parcelas && data.parcelas.length > 0) {
-      // Usar o valor da primeira parcela se disponível
-      return data.parcelas[0].valor;
+  private static extractWithMultiplePatterns<T>(
+    text: string, 
+    patterns: RegExp[], 
+    defaultValue: T, 
+    transformer?: (value: string) => T
+  ): T {
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        const value = match[1].trim();
+        if (value && value.length > 0) {
+          return transformer ? transformer(value) : value as T;
+        }
+      }
+    }
+    return defaultValue;
+  }
+
+  private static extractPolicyNumber(text: string, insurer: string): string {
+    // Usar padrão específico da seguradora se disponível
+    const specificPattern = INSURER_SPECIFIC_PATTERNS[insurer]?.policyPattern;
+    if (specificPattern) {
+      const match = text.match(specificPattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
     }
     
-    if (data.premioTotal && data.parcelasTotais > 0) {
+    // Usar padrões gerais
+    return this.extractWithMultiplePatterns(text, EXTRACTION_PATTERNS.policyNumber, this.generatePolicyNumber());
+  }
+
+  private static extractTotalPremium(text: string, insurer: string): number {
+    // Usar padrão específico da seguradora se disponível
+    const specificPattern = INSURER_SPECIFIC_PATTERNS[insurer]?.premiumPattern;
+    if (specificPattern) {
+      const match = text.match(specificPattern);
+      if (match && match[1]) {
+        return this.parseMonetaryValue(match[1]);
+      }
+    }
+    
+    // Usar padrões gerais
+    const premiumStr = this.extractWithMultiplePatterns(text, EXTRACTION_PATTERNS.totalPremium, "0");
+    return this.parseMonetaryValue(premiumStr);
+  }
+
+  private static extractInstallments(text: string, insurer: string): ExtractedInstallment[] {
+    const installments: ExtractedInstallment[] = [];
+    
+    // Usar padrão específico da seguradora se disponível
+    const specificPattern = INSURER_SPECIFIC_PATTERNS[insurer]?.installmentPattern;
+    if (specificPattern) {
+      const matches = Array.from(text.matchAll(specificPattern));
+      matches.forEach((match, index) => {
+        if (match[1] && match[2]) {
+          installments.push({
+            numero: index + 1,
+            data: this.convertDateFormat(match[1]),
+            valor: this.parseMonetaryValue(match[2])
+          });
+        }
+      });
+    }
+    
+    // Se não encontrou com padrão específico, usar padrões gerais
+    if (installments.length === 0) {
+      const valueMatches = this.getAllMatches(text, EXTRACTION_PATTERNS.installmentValue);
+      const dateMatches = this.getAllMatches(text, EXTRACTION_PATTERNS.installmentDate);
+      
+      const maxLength = Math.min(valueMatches.length, dateMatches.length, 24);
+      
+      for (let i = 0; i < maxLength; i++) {
+        if (valueMatches[i] && dateMatches[i]) {
+          installments.push({
+            numero: i + 1,
+            data: this.convertDateFormat(dateMatches[i]),
+            valor: this.parseMonetaryValue(valueMatches[i])
+          });
+        }
+      }
+    }
+    
+    return installments.sort((a, b) => a.numero - b.numero);
+  }
+
+  private static getAllMatches(text: string, patterns: RegExp[]): string[] {
+    const allMatches: string[] = [];
+    
+    for (const pattern of patterns) {
+      const matches = Array.from(text.matchAll(pattern));
+      matches.forEach(match => {
+        if (match[1]) {
+          allMatches.push(match[1]);
+        }
+      });
+    }
+    
+    return allMatches;
+  }
+
+  private static extractVehicleInfo(text: string): string {
+    const vehiclePatterns = EXTRACTION_PATTERNS.vehicleModel;
+    
+    for (const pattern of vehiclePatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        if (match[1] && match[2]) {
+          // Padrão que captura marca e modelo separadamente
+          return `${match[1].trim()} ${match[2].trim()}`.toUpperCase();
+        } else if (match[1]) {
+          // Padrão que captura tudo junto
+          return match[1].trim().toUpperCase();
+        }
+      }
+    }
+    
+    return "";
+  }
+
+  private static calculateMonthlyValue(data: EnhancedExtractedData): number {
+    // Prioridade: valor da primeira parcela > cálculo baseado no total
+    if (data.parcelas && data.parcelas.length > 0) {
+      const firstInstallment = data.parcelas[0];
+      if (firstInstallment.valor > 0) {
+        return Math.round(firstInstallment.valor * 100) / 100;
+      }
+    }
+    
+    // Calcular baseado no prêmio total e número de parcelas
+    if (data.premioTotal > 0 && data.parcelasTotais > 0) {
       return Math.round((data.premioTotal / data.parcelasTotais) * 100) / 100;
     }
     
+    // Fallback: dividir por 12 meses
     return Math.round((data.premioTotal / 12) * 100) / 100;
   }
 
-  private static validateAndFillMissingData(data: EnhancedExtractedData): EnhancedExtractedData {
-    // Validar número de parcelas vs parcelas extraídas
-    if (data.parcelas.length > 0 && data.parcelasTotais !== data.parcelas.length) {
-      data.parcelasTotais = data.parcelas.length;
+  private static validateAndCorrectData(data: EnhancedExtractedData): EnhancedExtractedData {
+    const correctedData = { ...data };
+    
+    // Validar e corrigir número de parcelas vs parcelas extraídas
+    if (correctedData.parcelas.length > 0) {
+      correctedData.parcelasTotais = correctedData.parcelas.length;
     }
     
-    // Gerar parcelas se não foram encontradas
-    if (data.parcelas.length === 0 && data.premioTotal > 0) {
-      data.parcelas = this.generateInstallments(data.premioTotal, data.parcelasTotais, data.vigenciaInicio);
+    // Gerar parcelas se não foram encontradas mas temos prêmio total
+    if (correctedData.parcelas.length === 0 && correctedData.premioTotal > 0) {
+      correctedData.parcelas = this.generateInstallments(
+        correctedData.premioTotal, 
+        correctedData.parcelasTotais, 
+        correctedData.vigenciaInicio
+      );
     }
     
     // Validar coerência do valor mensal
-    if (data.valorMensal === 0 || data.valorMensal > data.premioTotal) {
-      data.valorMensal = this.calculateMonthlyValue(data);
+    const expectedMonthly = Math.round((correctedData.premioTotal / correctedData.parcelasTotais) * 100) / 100;
+    const tolerance = expectedMonthly * 0.15; // 15% de tolerância
+    
+    if (Math.abs(correctedData.valorMensal - expectedMonthly) > tolerance) {
+      console.warn('⚠️ Valor mensal recalculado por inconsistência');
+      correctedData.valorMensal = expectedMonthly;
     }
     
-    return data;
+    // Validar datas de vigência
+    const startDate = new Date(correctedData.vigenciaInicio);
+    const endDate = new Date(correctedData.vigenciaFim);
+    
+    if (endDate <= startDate) {
+      console.warn('⚠️ Data de fim corrigida');
+      const newEndDate = new Date(startDate);
+      newEndDate.setFullYear(newEndDate.getFullYear() + 1);
+      correctedData.vigenciaFim = newEndDate.toISOString().split('T')[0];
+    }
+    
+    return correctedData;
   }
 
   // Métodos utilitários
   private static parseMonetaryValue(value: string): number {
+    if (!value) return 0;
+    
     const cleanValue = value
       .replace(/[^\d.,]/g, '')
       .replace(/\./g, '')
@@ -252,7 +298,7 @@ export class EnhancedDataExtractor {
 
   private static convertDateFormat(dateStr: string): string {
     const parts = dateStr.split('/');
-    if (parts.length === 3) {
+    if (parts.length === 3 && parts[0].length === 2) {
       return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
     }
     return dateStr;
@@ -272,10 +318,6 @@ export class EnhancedDataExtractor {
     const date = new Date();
     date.setFullYear(date.getFullYear() + 1);
     return date.toISOString().split('T')[0];
-  }
-
-  private static generateRealisticPremium(): number {
-    return Math.round((1500 + Math.random() * 3500) * 100) / 100;
   }
 
   private static generateInstallments(totalPremium: number, numberOfInstallments: number, startDate: string): ExtractedInstallment[] {
