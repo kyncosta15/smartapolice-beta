@@ -14,6 +14,10 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
   const today = new Date();
   const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
+  // Calcular valor total correto baseado no valor segurado ou prêmio
+  const totalValue = policy.totalCoverage || policy.premium || 
+    policy.installments.reduce((sum, inst) => sum + inst.valor, 0);
+
   return (
     <Card key={policy.id || index}>
       <CardHeader>
@@ -25,9 +29,7 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
           <Badge variant="outline">{policy.insurer}</Badge>
         </CardTitle>
         <p className="text-sm text-gray-600">
-          {policy.installments.length} parcelas • Valor total: {formatCurrency(
-            policy.installments.reduce((sum, inst) => sum + inst.valor, 0)
-          )}
+          {policy.installments.length} parcelas • Valor total: {formatCurrency(totalValue)}
         </p>
       </CardHeader>
       <CardContent>

@@ -12,9 +12,13 @@ export interface ExtendedInstallment {
 }
 
 export function generateSimulatedInstallments(policy: ParsedPolicyData): InstallmentData[] {
-  const monthlyAmount = policy.monthlyAmount || (policy.premium / 12) || 100;
+  // Usar valor segurado ou prêmio como base para calcular parcelas
+  const totalValue = policy.totalCoverage || policy.premium || 1000;
   const startDate = new Date(policy.startDate || new Date());
   const numberOfInstallments = 12;
+  
+  // Calcular valor base da parcela
+  const baseInstallmentValue = totalValue / numberOfInstallments;
   
   const installments = [];
   
@@ -22,13 +26,17 @@ export function generateSimulatedInstallments(policy: ParsedPolicyData): Install
     const installmentDate = new Date(startDate);
     installmentDate.setMonth(installmentDate.getMonth() + i);
     
-    // Adicionar pequena variação no valor para realismo
-    const variation = (Math.random() - 0.5) * 20;
-    const installmentValue = Math.round((monthlyAmount + variation) * 100) / 100;
+    // Primeira parcela pode ter um valor ligeiramente diferente para compensar arredondamentos
+    let installmentValue = baseInstallmentValue;
+    if (i === 0) {
+      // Ajustar primeira parcela para que o total seja exato
+      const remainingValue = totalValue - (baseInstallmentValue * (numberOfInstallments - 1));
+      installmentValue = remainingValue;
+    }
     
     installments.push({
       numero: i + 1,
-      valor: installmentValue,
+      valor: Math.round(installmentValue * 100) / 100,
       data: installmentDate.toISOString().split('T')[0],
       status: installmentDate < new Date() ? 'paga' : 'pendente'
     });
