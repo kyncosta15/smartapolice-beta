@@ -60,8 +60,11 @@ export function generateSimulatedInstallments(policy: ParsedPolicyData): Install
 }
 
 export function createExtendedInstallments(policies: ParsedPolicyData[]): ExtendedInstallment[] {
-  return policies.flatMap(policy => 
-    policy.installments.map(installment => ({
+  return policies.flatMap(policy => {
+    // Check if installments is an array
+    const installmentsArray = Array.isArray(policy.installments) ? policy.installments : [];
+    
+    return installmentsArray.map(installment => ({
       numero: installment.numero,
       valor: installment.valor,
       data: installment.data,
@@ -69,8 +72,8 @@ export function createExtendedInstallments(policies: ParsedPolicyData[]): Extend
       policyName: policy.name,
       policyType: policy.type,
       insurer: policy.insurer
-    }))
-  );
+    }));
+  });
 }
 
 export function filterUpcomingInstallments(allInstallments: ExtendedInstallment[]): ExtendedInstallment[] {

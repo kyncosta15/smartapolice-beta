@@ -14,9 +14,12 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Check if installments is an array
+  const installmentsArray = Array.isArray(policy.installments) ? policy.installments : [];
+
   // Calcular valor total correto baseado no valor segurado ou prêmio
   const totalValue = policy.totalCoverage || policy.premium || 
-    policy.installments.reduce((sum, inst) => sum + inst.valor, 0);
+    installmentsArray.reduce((sum, inst) => sum + inst.valor, 0);
 
   return (
     <Card key={policy.id || index}>
@@ -29,12 +32,12 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
           <Badge variant="outline">{policy.insurer}</Badge>
         </CardTitle>
         <p className="text-sm text-gray-600">
-          {policy.installments.length} parcelas • Valor total: {formatCurrency(totalValue)}
+          {installmentsArray.length} parcelas • Valor total: {formatCurrency(totalValue)}
         </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          {policy.installments.map((installment, instIndex) => {
+          {installmentsArray.map((installment, instIndex) => {
             const installmentDate = new Date(installment.data);
             installmentDate.setHours(0, 0, 0, 0);
             const isOverdue = installmentDate < today && installment.status === 'pendente';
