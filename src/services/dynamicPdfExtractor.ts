@@ -7,25 +7,35 @@ import { PDFTextSimulator } from '@/utils/pdfTextSimulator';
 
 export class DynamicPDFExtractor {
   static async extractFromPDF(file: File): Promise<DynamicPDFData> {
-    console.log(`🔍 Extraindo dados dinâmicos do PDF: ${file.name}`);
+    console.log(`🔍 Iniciando extração dinâmica otimizada: ${file.name}`);
     
-    // Simular tempo de processamento OCR
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+    // Simular tempo de processamento OCR realista
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000));
     
-    // Simular extração de texto do PDF
+    // 1. Extrair texto do PDF (simulado)
+    console.log('📄 Extraindo texto do PDF...');
     const extractedText = await PDFTextSimulator.simulateTextExtraction(file);
     
-    // Identificar seguradora usando nova lógica de detecção
+    // 2. Detectar seguradora com algoritmo otimizado
+    console.log('🏢 Detectando seguradora...');
     const detectedInsurer = InsurerDetector.detectInsuranceCompany(extractedText);
     const insurerConfig = InsurerDetector.getInsurerConfig(detectedInsurer);
     
-    // Extrair dados específicos com regex melhorados
+    // 3. Extrair dados específicos com múltiplos padrões
+    console.log('🔧 Extraindo dados específicos...');
     const extractedData = DataExtractor.extractSpecificData(extractedText, insurerConfig, detectedInsurer);
     
-    // Validar e preencher dados ausentes
+    // 4. Validar e normalizar dados
+    console.log('✅ Validando dados extraídos...');
     const validatedData = DataValidator.validateAndFillData(extractedData, file.name);
     
-    console.log(`✅ Dados dinâmicos extraídos:`, validatedData);
+    console.log(`🎉 Extração concluída para ${detectedInsurer}:`, {
+      apolice: validatedData.informacoes_gerais.numero_apolice,
+      premio_anual: validatedData.informacoes_financeiras.premio_anual,
+      premio_mensal: validatedData.informacoes_financeiras.premio_mensal,
+      vigencia: `${validatedData.vigencia.inicio} até ${validatedData.vigencia.fim}`
+    });
+    
     return validatedData;
   }
 }
