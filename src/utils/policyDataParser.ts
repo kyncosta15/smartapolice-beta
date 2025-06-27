@@ -1,3 +1,4 @@
+
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 export interface InstallmentData {
@@ -42,6 +43,9 @@ export interface ParsedPolicyData {
     bodilyInjury?: number;
     comprehensive?: boolean;
   };
+
+  // Add missing claimRate property
+  claimRate?: number;
 
   // Legacy fields for compatibility
   entity?: string;

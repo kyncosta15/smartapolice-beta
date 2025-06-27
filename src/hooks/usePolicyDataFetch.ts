@@ -154,10 +154,19 @@ async function simulateN8NResponse(
     deductible: Math.floor(Math.random() * 5000) + 1000,
     claimRate: Math.floor(Math.random() * 20) + 1,
     installments: [
-      { valor: 250, data: new Date().toISOString().split('T')[0] },
-      { valor: 250, data: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }
+      { 
+        numero: 1,
+        valor: 250, 
+        data: new Date().toISOString().split('T')[0],
+        status: 'paga'
+      },
+      { 
+        numero: 2,
+        valor: 250, 
+        data: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        status: 'pendente'
+      }
     ],
-    paymentMethod: ['boleto', 'cartao', 'debito'][Math.floor(Math.random() * 3)],
     extractedAt: new Date().toISOString()
   };
 
