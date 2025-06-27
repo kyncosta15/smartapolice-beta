@@ -60,7 +60,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Cloud className="h-5 w-5 text-blue-600" />
-            <span>Upload de Apólices - Processamento N8N + IA</span>
+            <span>Upload de Apólices</span>
           </CardTitle>
           <CardDescription>
             Sistema inteligente processa PDFs de forma inteligente e extrai dados específicos por seguradora.
