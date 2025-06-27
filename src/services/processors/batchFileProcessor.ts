@@ -1,7 +1,8 @@
 
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
-import { DynamicPolicyParser } from '@/utils/dynamicPolicyParser';
+import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
+import { StructuredDataConverter } from '@/utils/parsers/structuredDataConverter';
 import { FileProcessingStatus } from '@/types/pdfUpload';
 
 export class BatchFileProcessor {
@@ -128,7 +129,7 @@ export class BatchFileProcessor {
 
     // Convert each data item to parsed policy
     for (const singleData of dataArray) {
-      const parsedPolicy = DynamicPolicyParser.convertToParsedPolicy(singleData, file.name, file);
+      const parsedPolicy = this.convertToParsedPolicy(singleData, file.name, file);
       results.push(parsedPolicy);
       
       // Add to dashboard immediately
@@ -143,5 +144,39 @@ export class BatchFileProcessor {
     });
 
     return results;
+  }
+
+  private convertToParsedPolicy(data: any, fileName: string, file: File): ParsedPolicyData {
+    // Verificar se é dado direto do N8N ou estruturado
+    if (data.numero_apolice && data.segurado && data.seguradora) {
+      // É dado direto do N8N
+      return N8NDataConverter.convertN8NDirectData(data, fileName, file);
+    } else if (data.informacoes_gerais && data.seguradora && data.vigencia) {
+      // É dado estruturado
+      return StructuredDataConverter.convertStructuredData(data, fileName, file);
+    } else {
+      // Fallback para dados não estruturados
+      console.warn('Dados não estruturados recebidos, usando fallback');
+      return this.createFallbackPolicy(data, fileName, file);
+    }
+  }
+
+  private createFallbackPolicy(data: any, fileName: string, file: File): ParsedPolicyData {
+    return {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      name: fileName.replace('.pdf', ''),
+      type: 'auto',
+      insurer: 'Seguradora Não Identificada',
+      premium: 0,
+      monthlyAmount: 0,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      policyNumber: 'N/A',
+      paymentFrequency: 'mensal',
+      status: 'active',
+      file,
+      extractedAt: new Date().toISOString().split('T')[0],
+      installments: []
+    };
   }
 }
