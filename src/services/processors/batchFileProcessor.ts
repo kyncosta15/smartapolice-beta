@@ -1,3 +1,4 @@
+
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
 import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
@@ -52,54 +53,50 @@ export class BatchFileProcessor {
       // Chamar o método otimizado que já trata múltiplos PDFs
       const extractedDataArray = await DynamicPDFExtractor.extractFromMultiplePDFs(files);
 
-      console.log(`📦 Dados extraídos de todos os arquivos:`, extractedDataArray);
+      console.log(`📦 Dados extraídos de todos os arquivos (${extractedDataArray.length} itens):`, extractedDataArray);
 
       if (extractedDataArray.length === 0) {
         throw new Error('Nenhum dado foi extraído dos arquivos');
       }
 
-      // Processar cada item de dados extraído
-      for (let i = 0; i < extractedDataArray.length; i++) {
-        const singleData = extractedDataArray[i];
-        console.log(`🔄 Convertendo item ${i + 1}/${extractedDataArray.length}:`, singleData);
+      // Processar cada item de dados extraído individualmente
+      extractedDataArray.forEach((singleData, index) => {
+        console.log(`🔄 Processando apólice ${index + 1}/${extractedDataArray.length}:`, singleData);
         
-        // Determinar qual arquivo este dado veio (se possível)
-        const relatedFileName = this.findRelatedFileName(singleData, files);
+        // Determinar qual arquivo esta apólice pertence
+        const relatedFileName = this.findRelatedFileName(singleData, files) || files[index]?.name || `Arquivo ${index + 1}`;
         
-        if (relatedFileName) {
+        if (relatedFileName && files.find(f => f.name === relatedFileName)) {
           this.updateFileStatus(relatedFileName, {
-            progress: 80,
+            progress: 60 + (index * 10),
             status: 'processing',
-            message: 'Convertendo dados extraídos...'
+            message: `Processando apólice: ${singleData.segurado || 'Não identificado'}...`
           });
         }
         
-        const parsedPolicy = this.convertToParsedPolicy(singleData, relatedFileName || `Arquivo ${i + 1}`, files[0]);
+        const parsedPolicy = this.convertToParsedPolicy(singleData, relatedFileName, files[index] || files[0]);
         allResults.push(parsedPolicy);
         
         // Add to dashboard immediately
         this.onPolicyExtracted(parsedPolicy);
-        console.log(`✅ Apólice adicionada: ${parsedPolicy.name} - ${parsedPolicy.insurer}`);
+        console.log(`✅ Apólice ${index + 1} adicionada: ${parsedPolicy.name} - ${parsedPolicy.insurer}`);
 
-        if (relatedFileName) {
+        if (relatedFileName && files.find(f => f.name === relatedFileName)) {
           this.updateFileStatus(relatedFileName, {
-            progress: 100,
-            status: 'completed',
-            message: `✅ Processado: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
+            progress: 90 + (index * 2),
+            status: 'processing',
+            message: `✅ Processando: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
           });
         }
-      }
+      });
 
-      // Marcar arquivos restantes como concluídos (caso não conseguimos associar todos)
-      files.forEach(file => {
-        const currentStatus = this.getFileStatus(file.name);
-        if (currentStatus?.status !== 'completed') {
-          this.updateFileStatus(file.name, {
-            progress: 100,
-            status: 'completed',
-            message: '✅ Processado com sucesso'
-          });
-        }
+      // Marcar todos os arquivos como concluídos
+      files.forEach((file, index) => {
+        this.updateFileStatus(file.name, {
+          progress: 100,
+          status: 'completed',
+          message: `✅ Processado com sucesso (${index + 1}/${files.length})`
+        });
       });
 
       console.log(`🎉 Processamento completo! ${allResults.length} apólices processadas no total`);
@@ -145,12 +142,15 @@ export class BatchFileProcessor {
   }
 
   private findRelatedFileName(data: any, files: File[]): string | null {
-    // Tentar encontrar qual arquivo corresponde a este dado
-    // Baseado no nome do segurado ou número da apólice
-    if (data.segurado || data.numero_apolice) {
-      // Por enquanto, retornar o primeiro arquivo
-      // Em uma implementação mais sofisticada, poderíamos comparar nomes
-      return files[0]?.name || null;
+    // Tentar encontrar qual arquivo corresponde a este dado baseado no segurado
+    if (data.segurado) {
+      const seguradoName = data.segurado.toLowerCase();
+      const matchingFile = files.find(file => {
+        const fileName = file.name.toLowerCase();
+        const firstNames = seguradoName.split(' ').slice(0, 2); // Pegar primeiros 2 nomes
+        return firstNames.some(name => fileName.includes(name));
+      });
+      return matchingFile?.name || null;
     }
     return null;
   }

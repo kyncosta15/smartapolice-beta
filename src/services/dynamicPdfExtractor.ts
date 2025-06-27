@@ -139,15 +139,24 @@ export class DynamicPDFExtractor {
           }
         }
 
-        console.log(`✅ Dados extraídos do batch:`, data);
+        console.log(`✅ Dados brutos extraídos do batch:`, data);
         
         if (!data) {
           throw new Error('Dados vazios retornados do batch');
         }
 
-        // Garantir que sempre retornamos um array
-        const resultArray = Array.isArray(data) ? data : [data];
-        console.log(`📦 Retornando ${resultArray.length} apólices do batch`);
+        // CORREÇÃO PRINCIPAL: Garantir que sempre retornamos um array
+        let resultArray: any[];
+        
+        if (Array.isArray(data)) {
+          resultArray = data;
+          console.log(`📦 Dados já são um array com ${resultArray.length} itens`);
+        } else {
+          resultArray = [data];
+          console.log(`📦 Convertendo objeto único para array com 1 item`);
+        }
+        
+        console.log(`📦 Retornando ${resultArray.length} apólices do batch processadas individualmente`);
         
         return resultArray;
 
