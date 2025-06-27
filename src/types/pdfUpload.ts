@@ -1,4 +1,3 @@
-
 export interface FileProcessingStatus {
   [fileName: string]: {
     progress: number;
@@ -55,6 +54,13 @@ export interface DynamicPDFData {
     danos_materiais?: number;
     danos_corporais?: number;
   };
+  // Adicionando parcelas detalhadas
+  parcelas_detalhadas?: Array<{
+    numero: number;
+    valor: number;
+    data: string;
+    status: 'paga' | 'pendente';
+  }>;
 }
 
 // Interface legada mantida para compatibilidade

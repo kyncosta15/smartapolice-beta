@@ -106,8 +106,7 @@ export class N8NWebhookService {
       },
       informacoes_financeiras: {
         premio_anual: premioAnual,
-        premio_mensal: Math.round(premioMensal * 100) / 100,
-        parcelas: parcelas
+        premio_mensal: Math.round(premioMensal * 100) / 100
       },
       vigencia: {
         inicio: startDate,
@@ -116,7 +115,9 @@ export class N8NWebhookService {
       },
       segurado: n8nData.segurado ? {
         nome: n8nData.segurado
-      } : undefined
+      } : undefined,
+      // Adicionar as parcelas como propriedade adicional
+      parcelas_detalhadas: parcelas
     };
   }
 

@@ -1,4 +1,3 @@
-
 import { DynamicPDFData } from '@/types/pdfUpload';
 import { ParsedPolicyData } from './policyDataParser';
 
@@ -17,12 +16,13 @@ export class DynamicPolicyParser {
       policyName = `Apólice ${dynamicData.segurado.nome.split(' ')[0]}`;
     }
     
-    // Gerar parcelas individuais com valores e datas específicas
-    const installmentsArray = this.generateInstallmentsArray(
-      dynamicData.informacoes_financeiras.premio_mensal,
-      dynamicData.vigencia.inicio,
-      12 // número padrão de parcelas
-    );
+    // Usar parcelas detalhadas se disponíveis, senão gerar
+    const installmentsArray = dynamicData.parcelas_detalhadas || 
+      this.generateInstallmentsArray(
+        dynamicData.informacoes_financeiras.premio_mensal,
+        dynamicData.vigencia.inicio,
+        12
+      );
     
     return {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -75,8 +75,10 @@ export class DynamicPolicyParser {
       const installmentValue = Math.round((monthlyValue + variation) * 100) / 100;
       
       installments.push({
+        numero: i + 1,
         valor: installmentValue,
-        data: installmentDate.toISOString().split('T')[0]
+        data: installmentDate.toISOString().split('T')[0],
+        status: installmentDate < new Date() ? 'paga' : 'pendente'
       });
     }
     
