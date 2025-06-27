@@ -1,4 +1,3 @@
-
 import { EXTRACTION_PATTERNS, INSURANCE_COMPANIES_LIST, INSURER_SPECIFIC_PATTERNS } from './extractionPatterns';
 import { DynamicPDFData } from '@/types/pdfUpload';
 
@@ -45,7 +44,7 @@ export class EnhancedDataExtractor {
       vigenciaFim: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.endDate, this.generateEndDate(), this.convertDateFormat),
       premioTotal: this.extractTotalPremium(normalizedText, detectedInsurer),
       parcelas: this.extractInstallments(normalizedText, detectedInsurer),
-      parcelasTotais: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.numberOfInstallments, "12", parseInt),
+      parcelasTotais: this.extractNumberOfInstallments(normalizedText),
       valorMensal: 0, // Será calculado depois
       veiculo: this.extractVehicleInfo(normalizedText),
       placa: this.extractWithMultiplePatterns(normalizedText, EXTRACTION_PATTERNS.licensePlate, ""),
@@ -61,6 +60,19 @@ export class EnhancedDataExtractor {
     
     console.log('📊 Dados extraídos com precisão:', validatedData);
     return validatedData;
+  }
+
+  private static extractNumberOfInstallments(text: string): number {
+    for (const pattern of EXTRACTION_PATTERNS.numberOfInstallments) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        const value = parseInt(match[1].trim());
+        if (!isNaN(value) && value > 0) {
+          return value;
+        }
+      }
+    }
+    return 12; // valor padrão
   }
 
   private static normalizeText(text: string): string {

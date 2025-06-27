@@ -2,10 +2,46 @@
 import { DynamicPDFData } from '@/types/pdfUpload';
 import { PDFTextSimulator } from '@/utils/pdfTextSimulator';
 import { EnhancedDataExtractor } from '@/utils/enhancedDataExtractor';
+import { N8NWebhookService } from './n8nWebhookService';
 
 export class DynamicPDFExtractor {
   static async extractFromPDF(file: File): Promise<DynamicPDFData> {
-    console.log(`🔍 Iniciando extração dinâmica de alta precisão: ${file.name}`);
+    console.log(`🔍 Iniciando extração dinâmica via N8N: ${file.name}`);
+    
+    try {
+      // 1. Primeiro, tentar processar via N8N Webhook
+      console.log('🌐 Enviando para processamento N8N...');
+      const n8nResponse = await N8NWebhookService.sendPDFForProcessing(file);
+      
+      if (n8nResponse.success && n8nResponse.data) {
+        console.log('✅ Dados processados pelo N8N com sucesso!');
+        return n8nResponse.data;
+      }
+      
+      // 2. Se N8N retornou um processId, fazer polling
+      if (n8nResponse.success && n8nResponse.processId) {
+        console.log('⏳ Aguardando processamento assíncrono...');
+        const pollingResult = await N8NWebhookService.pollForResults(n8nResponse.processId);
+        
+        if (pollingResult) {
+          console.log('✅ Dados recebidos via polling!');
+          return pollingResult;
+        }
+      }
+      
+      // 3. Fallback: processamento local se N8N falhar
+      console.log('🔄 N8N indisponível. Usando processamento local...');
+      return await this.extractLocally(file);
+      
+    } catch (error) {
+      console.error('❌ Erro na extração via N8N:', error);
+      console.log('🔄 Fazendo fallback para processamento local...');
+      return await this.extractLocally(file);
+    }
+  }
+
+  private static async extractLocally(file: File): Promise<DynamicPDFData> {
+    console.log(`🔍 Processamento local: ${file.name}`);
     
     // Simular tempo de processamento OCR realista
     await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000));
@@ -24,7 +60,7 @@ export class DynamicPDFExtractor {
       const legacyData = EnhancedDataExtractor.convertToLegacyFormat(enhancedData);
       
       // 4. Log detalhado dos resultados
-      console.log(`🎉 Extração concluída com sucesso:`, {
+      console.log(`🎉 Extração local concluída:`, {
         arquivo: file.name,
         seguradora: legacyData.seguradora.empresa,
         apolice: legacyData.informacoes_gerais.numero_apolice,
@@ -33,13 +69,13 @@ export class DynamicPDFExtractor {
         premio_mensal: `R$ ${legacyData.informacoes_financeiras.premio_mensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
         vigencia: `${legacyData.vigencia.inicio} até ${legacyData.vigencia.fim}`,
         veiculo: legacyData.veiculo?.modelo || "Não identificado",
-        precisao: "Alta"
+        processamento: "Local (fallback)"
       });
       
       return legacyData;
       
     } catch (error) {
-      console.error('❌ Erro na extração de dados:', error);
+      console.error('❌ Erro na extração local:', error);
       
       // Retornar dados padrão em caso de erro
       return {
