@@ -1,4 +1,3 @@
-
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 export interface InstallmentData {
@@ -19,12 +18,12 @@ export interface ParsedPolicyData {
   endDate: string;
   policyNumber: string;
   paymentFrequency: string;
-  status: 'active' | 'expiring' | 'expired';
+  status: string;
   file?: File;
-  extractedAt?: string;
+  extractedAt: string;
   
   // Updated to use proper InstallmentData type
-  installments: InstallmentData[];
+  installments: InstallmentData[] | number;
   
   // Campos expandidos opcionais
   insuredName?: string;
@@ -60,6 +59,11 @@ export interface ParsedPolicyData {
   deductible?: number;
   limits?: string;
   totalCoverage?: number;
+  
+  // Novos campos de análise de vencimentos
+  overdueInstallments?: number;
+  upcomingInstallments?: number;
+  nextDueDate?: string | null;
 }
 
 export function parsePolicyData(data: DynamicPDFData, file?: File): ParsedPolicyData {

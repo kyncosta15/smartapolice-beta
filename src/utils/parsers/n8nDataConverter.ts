@@ -3,6 +3,7 @@ import { N8NDirectData } from '@/types/dynamicPolicyTypes';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyTypeNormalizer } from './policyTypeNormalizer';
 import { InstallmentGenerator } from './installmentGenerator';
+import { InstallmentAnalyzer } from './installmentAnalyzer';
 
 export class N8NDataConverter {
   static convertN8NDirectData(n8nData: N8NDirectData, fileName: string, file?: File): ParsedPolicyData {
@@ -16,12 +17,21 @@ export class N8NDataConverter {
       `Apólice ${n8nData.segurado.split(' ')[0]}` : 
       `Apólice ${n8nData.seguradora}`;
     
-    // Processar vencimentos futuros para criar parcelas
+    // Analisar vencimentos para obter estatísticas
+    const installmentAnalysis = InstallmentAnalyzer.analyzeInstallments(n8nData.vencimentos_futuros);
+    
+    // Processar vencimentos futuros para criar parcelas com análise de status
     const installmentsArray = InstallmentGenerator.generateInstallmentsFromVencimentos(
       n8nData.vencimentos_futuros,
       n8nData.custo_mensal,
       n8nData.inicio
     );
+    
+    console.log(`📊 Análise da apólice ${policyName}:`, {
+      vencidas: installmentAnalysis.vencidas,
+      aVencer: installmentAnalysis.aVencer,
+      proximoVencimento: installmentAnalysis.proximoVencimento
+    });
     
     return {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -43,6 +53,11 @@ export class N8NDataConverter {
       
       // Campos expandidos
       insuredName: n8nData.segurado,
+      
+      // Análise de vencimentos
+      overdueInstallments: installmentAnalysis.vencidas,
+      upcomingInstallments: installmentAnalysis.aVencer,
+      nextDueDate: installmentAnalysis.proximoVencimento,
       
       // Legacy fields for compatibility
       entity: n8nData.seguradora,
