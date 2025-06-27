@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
@@ -49,11 +48,13 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       return endDate <= thirtyDaysFromNow && endDate >= new Date();
     }).length;
 
-    // Calcular total de parcelas
+    // Calcular total de parcelas - corrigindo o erro TypeScript
     const totalInstallments = policies.reduce((sum, p) => {
-      // Assumir 12 parcelas se não especificado
-      const installments = p.installments || 12;
-      return sum + installments;
+      // Se installments for um array, usar o length, senão usar o valor numérico ou 12 como padrão
+      const installmentCount = Array.isArray(p.installments) 
+        ? p.installments.length 
+        : (typeof p.installments === 'number' ? p.installments : 12);
+      return sum + installmentCount;
     }, 0);
 
     // Distribuição por seguradora
@@ -186,8 +187,14 @@ function generateBasicInsights(policies: ParsedPolicyData[]) {
     });
   }
 
-  // Insight sobre parcelas
-  const totalInstallments = policies.reduce((sum, p) => sum + (p.installments || 12), 0);
+  // Insight sobre parcelas - corrigindo o erro TypeScript
+  const totalInstallments = policies.reduce((sum, p) => {
+    const installmentCount = Array.isArray(p.installments) 
+      ? p.installments.length 
+      : (typeof p.installments === 'number' ? p.installments : 12);
+    return sum + installmentCount;
+  }, 0);
+  
   insights.push({
     type: 'info',
     category: 'Parcelas',
