@@ -7,7 +7,6 @@ import { InstallmentsSummaryCards } from '@/components/installments/Installments
 import { PolicyInstallmentsCard } from '@/components/installments/PolicyInstallmentsCard';
 import { UpcomingInstallmentsList } from '@/components/installments/UpcomingInstallmentsList';
 import { OverdueInstallmentsList } from '@/components/installments/OverdueInstallmentsList';
-import { InstallmentAnalysisCard } from '@/components/installments/InstallmentAnalysisCard';
 import { 
   generateSimulatedInstallments, 
   createExtendedInstallments,
@@ -89,23 +88,6 @@ function renderInstallmentsDashboard(policiesWithInstallments: ParsedPolicyData[
         overdueInstallments={overdueInstallments.length}
         totalOverdue={totalOverdue}
       />
-
-      {/* Análise Individual por Apólice - NOVO */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Análise de Vencimentos por Apólice</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {policiesWithInstallments.map((policy, index) => (
-            <InstallmentAnalysisCard
-              key={policy.id || index}
-              policyName={policy.name}
-              overdueCount={policy.overdueInstallments || 0}
-              upcomingCount={policy.upcomingInstallments || 0}
-              nextDueDate={policy.nextDueDate || null}
-              monthlyAmount={policy.monthlyAmount}
-            />
-          ))}
-        </div>
-      </div>
 
       {/* Detalhamento por Apólice */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
