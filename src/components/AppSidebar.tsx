@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from "@/components/ui/sidebar"
@@ -7,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { SmartApóliceLogo } from "@/components/SmartApoliceLogo"
 import {
   BarChart3,
-  Calendar,
   Contact2,
   FileText,
   Gauge,
@@ -92,12 +90,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       icon: FileText,
       id: "upload",
       description: "Importar PDFs"
-    },
-    {
-      title: "Agendamentos",
-      icon: Calendar,
-      id: "appointments",
-      description: "Próximas reuniões"
     },
     {
       title: "Contatos",
