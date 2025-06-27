@@ -10,6 +10,16 @@ interface InstallmentsDashboardProps {
   policies: ParsedPolicyData[];
 }
 
+interface ExtendedInstallment {
+  numero: number;
+  valor: number;
+  data: string;
+  status: 'paga' | 'pendente';
+  policyName: string;
+  policyType: string;
+  insurer: string;
+}
+
 export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) {
   // Verificar se há apólices com dados de parcelas detalhadas
   const policiesWithInstallments = policies.filter(policy => 
@@ -57,9 +67,12 @@ export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) 
   const today = new Date();
   const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
   
-  const allInstallments = policiesWithInstallments.flatMap(policy => 
+  const allInstallments: ExtendedInstallment[] = policiesWithInstallments.flatMap(policy => 
     policy.installments.map(installment => ({
-      ...installment, // Spread all installment properties including status and numero
+      numero: installment.numero,
+      valor: installment.valor,
+      data: installment.data,
+      status: installment.status,
       policyName: policy.name,
       policyType: policy.type,
       insurer: policy.insurer
