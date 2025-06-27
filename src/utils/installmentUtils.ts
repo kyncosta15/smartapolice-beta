@@ -37,14 +37,26 @@ export function generateSimulatedInstallments(policy: ParsedPolicyData): Install
       installmentValue = remainingValue;
     }
     
-    // Determinar status baseado na data
+    // Lógica mais realista para determinar o status
     let status: 'paga' | 'pendente' = 'pendente';
+    
+    // Se a data da parcela é anterior a hoje
     if (installmentDate < today) {
-      // Se a data da parcela é anterior a hoje, considerar como paga
-      // Isso simula parcelas já pagas no passado
-      status = Math.random() > 0.3 ? 'paga' : 'pendente'; // 70% chance de estar paga se é do passado
+      // Determinar se foi paga ou não baseado em uma lógica mais realista
+      const daysDifference = Math.floor((today.getTime() - installmentDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysDifference > 60) {
+        // Parcelas com mais de 60 dias de atraso têm 80% de chance de estarem pagas
+        status = Math.random() > 0.2 ? 'paga' : 'pendente';
+      } else if (daysDifference > 30) {
+        // Parcelas com 30-60 dias têm 60% de chance de estarem pagas
+        status = Math.random() > 0.4 ? 'paga' : 'pendente';
+      } else {
+        // Parcelas recentemente vencidas têm 30% de chance de estarem pagas
+        status = Math.random() > 0.7 ? 'paga' : 'pendente';
+      }
     } else {
-      // Se a data da parcela é hoje ou no futuro, está pendente
+      // Se a data da parcela é hoje ou no futuro, está sempre pendente
       status = 'pendente';
     }
     
@@ -55,6 +67,17 @@ export function generateSimulatedInstallments(policy: ParsedPolicyData): Install
       status: status
     });
   }
+  
+  console.log(`📊 Parcelas geradas para ${policy.name}:`, {
+    total: installments.length,
+    pagas: installments.filter(i => i.status === 'paga').length,
+    pendentes: installments.filter(i => i.status === 'pendente').length,
+    vencidas: installments.filter(i => {
+      const instDate = new Date(i.data);
+      instDate.setHours(0, 0, 0, 0);
+      return instDate < today && i.status === 'pendente';
+    }).length
+  });
   
   return installments;
 }
