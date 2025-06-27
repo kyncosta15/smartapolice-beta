@@ -9,28 +9,20 @@ export class DynamicPDFExtractor {
     console.log(`🔍 Iniciando extração dinâmica via N8N: ${file.name}`);
     
     try {
-      // 1. Primeiro, tentar processar via N8N Webhook
-      console.log('🌐 Enviando para processamento N8N...');
-      const n8nResponse = await N8NWebhookService.sendPDFForProcessing(file);
+      // 1. Primeiro, tentar processar via N8N de forma síncrona
+      console.log('🌐 Processando PDF via N8N + IA...');
+      const n8nResponse = await N8NWebhookService.processarPdfComN8n(file);
       
       if (n8nResponse.success && n8nResponse.data) {
-        console.log('✅ Dados processados pelo N8N com sucesso!');
+        console.log('✅ PDF processado com sucesso pelo N8N!');
+        console.log('📊 Dados extraídos pela IA:', n8nResponse.data);
         return n8nResponse.data;
       }
       
-      // 2. Se N8N retornou um processId, fazer polling
-      if (n8nResponse.success && n8nResponse.processId) {
-        console.log('⏳ Aguardando processamento assíncrono...');
-        const pollingResult = await N8NWebhookService.pollForResults(n8nResponse.processId);
-        
-        if (pollingResult) {
-          console.log('✅ Dados recebidos via polling!');
-          return pollingResult;
-        }
-      }
+      // 2. Se N8N falhar, usar fallback local
+      console.log('🔄 N8N indisponível ou sem dados. Usando processamento local...');
+      console.log('ℹ️ Motivo:', n8nResponse.message);
       
-      // 3. Fallback: processamento local se N8N falhar
-      console.log('🔄 N8N indisponível. Usando processamento local...');
       return await this.extractLocally(file);
       
     } catch (error) {
