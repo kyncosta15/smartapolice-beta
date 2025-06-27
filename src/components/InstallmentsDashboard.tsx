@@ -11,15 +11,49 @@ interface InstallmentsDashboardProps {
 }
 
 export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) {
-  // Extrair todas as parcelas de todas as apólices
-  const allInstallments = policies.flatMap(policy => 
-    (policy.installments || []).map(installment => ({
-      ...installment,
-      policyName: policy.name,
-      policyType: policy.type,
-      insurer: policy.insurer
-    }))
+  // Verificar se as apólices têm dados de parcelas válidos
+  const hasInstallmentData = policies.some(policy => 
+    Array.isArray(policy.installments) && policy.installments.length > 0
   );
+
+  if (policies.length === 0) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma apólice encontrada</h3>
+          <p className="text-gray-500">As apólices aparecerão aqui quando forem processadas</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!hasInstallmentData) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Dados de parcelas não disponíveis</h3>
+          <p className="text-gray-500">
+            As informações detalhadas de parcelas aparecerão aqui quando disponíveis nos PDFs processados
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Extrair todas as parcelas de todas as apólices (apenas se forem arrays)
+  const allInstallments = policies.flatMap(policy => {
+    if (Array.isArray(policy.installments) && policy.installments.length > 0) {
+      return policy.installments.map(installment => ({
+        ...installment,
+        policyName: policy.name,
+        policyType: policy.type,
+        insurer: policy.insurer
+      }));
+    }
+    return [];
+  });
 
   // Ordenar por data
   const sortedInstallments = allInstallments.sort((a, b) => 
@@ -44,18 +78,6 @@ export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) 
   // Total próximas parcelas
   const totalUpcoming = upcomingInstallments.reduce((sum, installment) => sum + installment.valor, 0);
   const totalOverdue = overdueInstallments.reduce((sum, installment) => sum + installment.valor, 0);
-
-  if (policies.length === 0 || allInstallments.length === 0) {
-    return (
-      <Card>
-        <CardContent className="text-center py-8">
-          <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma parcela encontrada</h3>
-          <p className="text-gray-500">As parcelas aparecerão aqui quando as apólices forem processadas</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">
