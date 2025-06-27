@@ -1,89 +1,122 @@
 
 export class PDFTextSimulator {
-  static async simulateTextExtraction(file: File): Promise<string> {
-    // Simular diferentes conteúdos baseados no nome do arquivo
-    const fileName = file.name.toLowerCase();
+  private static readonly SAMPLE_TEXTS = [
+    // Exemplo Liberty Seguros
+    `
+    LIBERTY SEGUROS
+    Apólice: 12345.678.901
+    Nome do Segurado: JOÃO SILVA SANTOS
+    CPF: 123.456.789-00
+    Vigência do Seguro Das 24:00 horas do dia 01/01/2024 às 24:00 horas do dia 31/12/2024
+    Prêmio Total (R$): 2.450,00
+    Nº Parcelas: 12
+    Cobertura: COMPREENSIVA
+    Marca/Tipo do Veículo: TOYOTA COROLLA
+    Placa: ABC1234
+    Código FIPE: 123.456
     
-    if (fileName.includes('liberty') || fileName.includes('edson')) {
-      return `
-        LIBERTY SEGUROS S.A.
-        
-        DADOS DO CORRETOR
-        RCaldas Cor e Adm de Segs Ltda
-        
-        Apólice nº 53.19.2024.0407195
-        Auto Consciente - Responsabilidade Civil Facultativa
-        
-        DADOS DO SEGURADO
-        Nome: EDSON LOPES REIS
-        CPF: 123.456.789-00
-        
-        DADOS DO VEÍCULO
-        Marca: TOYOTA
-        Modelo: COROLLA XEI 2.0
-        Placa: ABC1234
-        
-        VIGÊNCIA
-        Início de Vigência: 05/02/2024
-        Fim de Vigência: 05/02/2025
-        
-        DEMONSTRATIVO DE PRÊMIO
-        Prêmio Total (R$): 8.610,12
-        
-        Parcelamento:
-        2024 05/02/2024 717,51
-        2024 05/03/2024 717,51
-        2024 05/04/2024 717,51
-        2024 05/05/2024 717,51
-        2024 05/06/2024 717,51
-        2024 05/07/2024 717,51
-        2024 05/08/2024 717,51
-        2024 05/09/2024 717,51
-        2024 05/10/2024 717,51
-        2024 05/11/2024 717,51
-        2024 05/12/2024 717,51
-        2025 05/01/2025 717,51
-        
-        VMR - Tabela FIPE
-        emitido por LIBERTY SEGUROS S.A.
-      `;
+    Parcelas:
+    0001 01/01/2024 204,17
+    0002 01/02/2024 204,17
+    0003 01/03/2024 204,17
+    `,
+    
+    // Exemplo Bradesco Seguros
+    `
+    BRADESCO SEGUROS
+    Apólice: 98765.432.100
+    Nome do Segurado: MARIA OLIVEIRA COSTA
+    CPF: 987.654.321-00
+    Vigência do Seguro Das 24:00 horas do dia 15/03/2024 às 24:00 horas do dia 14/03/2025
+    Prêmio Total (R$): 3.240,00
+    Nº Parcelas: 10
+    Cobertura: BÁSICA
+    Marca/Tipo do Veículo: HONDA CIVIC
+    Placa: XYZ9876
+    Código FIPE: 654.321
+    
+    Parcelas:
+    0001 15/03/2024 324,00
+    0002 15/04/2024 324,00
+    0003 15/05/2024 324,00
+    `,
+    
+    // Exemplo Porto Seguro
+    `
+    PORTO SEGURO
+    Apólice: 55555.666.777
+    Nome do Segurado: CARLOS PEREIRA LIMA
+    CPF: 555.666.777-88
+    Vigência do Seguro Das 24:00 horas do dia 10/06/2024 às 24:00 horas do dia 09/06/2025
+    Prêmio Total (R$): 1.890,00
+    Nº Parcelas: 6
+    Cobertura: COMPREENSIVA
+    Marca/Tipo do Veículo: FORD FIESTA
+    Placa: DEF5678
+    Código FIPE: 789.012
+    
+    Parcelas:
+    0001 10/06/2024 315,00
+    0002 10/07/2024 315,00
+    0003 10/08/2024 315,00
+    `
+  ];
+
+  static async simulateTextExtraction(file: File): Promise<string> {
+    console.log('📄 Simulando extração de texto do PDF...');
+    
+    // Selecionar texto baseado no nome do arquivo
+    const fileName = file.name.toLowerCase();
+    let selectedText: string;
+    
+    if (fileName.includes('liberty')) {
+      selectedText = this.SAMPLE_TEXTS[0];
     } else if (fileName.includes('bradesco')) {
-      return `
-        BRADESCO SEGUROS S.A.
-        
-        DADOS DO CORRETOR
-        Corretora XYZ Ltda
-        
-        Apólice: 0865.990.0244.306021
-        Auto Prime - Cobertura Compreensiva
-        
-        Segurado: MARIA OLIVEIRA COSTA
-        CPF: 987.654.321-00
-        
-        Veículo: HONDA CIVIC LX
-        
-        Vigência: 01/11/2023 a 01/11/2024
-        Prêmio Total (R$): 3.245,67
-        12 parcelas de R$ 270,47
-        
-        emitido por BRADESCO SEGUROS S.A.
-      `;
+      selectedText = this.SAMPLE_TEXTS[1];
+    } else if (fileName.includes('porto')) {
+      selectedText = this.SAMPLE_TEXTS[2];
     } else {
-      return `
-        PORTO SEGURO CIA DE SEGUROS GERAIS
-        
-        DADOS DO CORRETOR
-        Corretora ABC Seguros
-        
-        Apólice 7849.123.4567
-        
-        Segurado: CARLOS PEREIRA LIMA
-        Vigência de 15/03/2024 até 15/03/2025
-        Prêmio Total (R$): 2.180,50
-        Parcelamento em 10 parcelas de R$ 218,05
-        
-        emitido por PORTO SEGURO CIA DE SEGUROS GERAIS
-      `;
+      // Selecionar aleatoriamente
+      const randomIndex = Math.floor(Math.random() * this.SAMPLE_TEXTS.length);
+      selectedText = this.SAMPLE_TEXTS[randomIndex];
     }
+    
+    // Simular variações nos dados
+    const variatedText = this.addRealisticVariations(selectedText);
+    
+    console.log('✅ Texto extraído com sucesso');
+    return variatedText;
+  }
+
+  private static addRealisticVariations(text: string): string {
+    // Adicionar variações realistas nos valores
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
+    
+    // Variar datas para o ano atual
+    text = text.replace(/(\d{2}\/\d{2}\/)\d{4}/g, (match, prefix) => {
+      const month = Math.floor(Math.random() * 12) + 1;
+      const day = Math.floor(Math.random() * 28) + 1;
+      return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${currentYear}`;
+    });
+
+    // Variar valores monetários
+    text = text.replace(/(\d+\.\d+,\d+)/g, (match) => {
+      const baseValue = parseFloat(match.replace('.', '').replace(',', '.'));
+      const variation = baseValue * (0.8 + Math.random() * 0.4);
+      return variation.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    });
+
+    // Variar números de apólice
+    text = text.replace(/(\d{5}\.\d{3}\.\d{3})/g, () => {
+      const segments = [
+        Math.floor(10000 + Math.random() * 90000),
+        Math.floor(100 + Math.random() * 900),
+        Math.floor(100 + Math.random() * 900)
+      ];
+      return segments.join('.');
+    });
+
+    return text;
   }
 }

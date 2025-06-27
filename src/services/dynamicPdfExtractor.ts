@@ -1,9 +1,7 @@
 
 import { DynamicPDFData } from '@/types/pdfUpload';
-import { InsurerDetector } from '@/utils/insurerDetector';
-import { DataExtractor } from '@/utils/dataExtractor';
-import { DataValidator } from '@/utils/dataValidator';
 import { PDFTextSimulator } from '@/utils/pdfTextSimulator';
+import { EnhancedDataExtractor } from '@/utils/enhancedDataExtractor';
 
 export class DynamicPDFExtractor {
   static async extractFromPDF(file: File): Promise<DynamicPDFData> {
@@ -16,26 +14,23 @@ export class DynamicPDFExtractor {
     console.log('📄 Extraindo texto do PDF...');
     const extractedText = await PDFTextSimulator.simulateTextExtraction(file);
     
-    // 2. Detectar seguradora com algoritmo otimizado
-    console.log('🏢 Detectando seguradora...');
-    const detectedInsurer = InsurerDetector.detectInsuranceCompany(extractedText);
-    const insurerConfig = InsurerDetector.getInsurerConfig(detectedInsurer);
+    // 2. Usar o novo extrator aprimorado
+    console.log('🔧 Extraindo dados com padrões otimizados...');
+    const enhancedData = EnhancedDataExtractor.extractFromText(extractedText);
     
-    // 3. Extrair dados específicos com múltiplos padrões
-    console.log('🔧 Extraindo dados específicos...');
-    const extractedData = DataExtractor.extractSpecificData(extractedText, insurerConfig, detectedInsurer);
+    // 3. Converter para formato legado
+    console.log('🔄 Convertendo para formato compatível...');
+    const legacyData = EnhancedDataExtractor.convertToLegacyFormat(enhancedData);
     
-    // 4. Validar e normalizar dados
-    console.log('✅ Validando dados extraídos...');
-    const validatedData = DataValidator.validateAndFillData(extractedData, file.name);
-    
-    console.log(`🎉 Extração concluída para ${detectedInsurer}:`, {
-      apolice: validatedData.informacoes_gerais.numero_apolice,
-      premio_anual: validatedData.informacoes_financeiras.premio_anual,
-      premio_mensal: validatedData.informacoes_financeiras.premio_mensal,
-      vigencia: `${validatedData.vigencia.inicio} até ${validatedData.vigencia.fim}`
+    console.log(`🎉 Extração concluída:`, {
+      seguradora: legacyData.seguradora.empresa,
+      apolice: legacyData.informacoes_gerais.numero_apolice,
+      premio_anual: legacyData.informacoes_financeiras.premio_anual,
+      premio_mensal: legacyData.informacoes_financeiras.premio_mensal,
+      vigencia: `${legacyData.vigencia.inicio} até ${legacyData.vigencia.fim}`,
+      segurado: legacyData.segurado?.nome || "Não identificado"
     });
     
-    return validatedData;
+    return legacyData;
   }
 }
