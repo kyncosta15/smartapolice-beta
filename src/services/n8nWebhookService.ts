@@ -1,3 +1,4 @@
+
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 interface N8NDirectResponse {
@@ -53,8 +54,8 @@ export class N8NWebhookService {
       console.log('✅ Resposta recebida do N8N:', result);
       
       // Log specifically the policy number received
-      if (result.numero_apolice) {
-        console.log('📋 Número da apólice recebido:', result.numero_apolice);
+      if (result.numero_apolice || result.apolice) {
+        console.log('📋 Número da apólice recebido:', result.numero_apolice || result.apolice);
       }
       
       // Verificar se temos dados válidos do N8N
@@ -95,10 +96,16 @@ export class N8NWebhookService {
     const premioMensal = n8nData.custo_mensal || (premioAnual / 12);
     const numeroParcelas = n8nData.parcelas || 12;
 
-    // Use the actual policy number from N8N response - prioritize numero_apolice
-    const policyNumber = n8nData.numero_apolice || n8nData.apolice || `EXTR-${Date.now()}`;
+    // Priorizar numero_apolice, depois apolice, e só usar fallback se nenhum estiver disponível
+    let policyNumber = n8nData.numero_apolice || n8nData.apolice;
     
-    console.log('🔢 Usando número da apólice:', policyNumber);
+    // Se não tiver número da apólice, usar um fallback mais específico
+    if (!policyNumber) {
+      console.warn('⚠️ Número da apólice não encontrado no retorno do N8N, usando fallback');
+      policyNumber = `SEM-NUMERO-${Date.now()}`;
+    }
+    
+    console.log('🔢 Número da apólice definido:', policyNumber);
 
     // Gerar parcelas individuais usando os dados do N8N
     const parcelas = this.generateInstallmentDetails(premioMensal, startDate, numeroParcelas);

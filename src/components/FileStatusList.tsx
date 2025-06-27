@@ -24,6 +24,14 @@ export function FileStatusList({ fileStatuses, activeFiles }: FileStatusListProp
     }
   };
 
+  const shouldShowSubtitle = (status: string, message: string) => {
+    // Não mostrar subtítulo quando o status for 'completed' e contiver informações sobre seguradora
+    if (status === 'completed' && message.includes('–')) {
+      return false;
+    }
+    return true;
+  };
+
   if (activeFiles.length === 0) {
     return null;
   }
@@ -43,7 +51,9 @@ export function FileStatusList({ fileStatuses, activeFiles }: FileStatusListProp
                 {getStatusIcon(fileStatus.status)}
                 <div>
                   <p className="text-sm font-medium text-gray-900">{fileName}</p>
-                  <p className="text-xs text-gray-500">{fileStatus.message}</p>
+                  {shouldShowSubtitle(fileStatus.status, fileStatus.message) && (
+                    <p className="text-xs text-gray-500">{fileStatus.message}</p>
+                  )}
                 </div>
               </div>
               <div className="text-right">
