@@ -1,8 +1,8 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { SmartApóliceLogo } from "@/components/SmartApoliceLogo"
 import {
   BarChart3,
@@ -21,7 +21,6 @@ interface AppSidebarProps {
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
   const { user } = useAuth();
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleNavigation = (section: string) => {
     onSectionChange(section);
@@ -128,15 +127,14 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>
-        <Avatar className="h-8 w-8">
-          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
-        <p className="text-sm text-gray-700">{user?.name || 'Nome do Usuário'}</p>
-        <SidebarTrigger className="bg-gray-100 hover:bg-gray-200">
-          Sair
-        </SidebarTrigger>
+      <SidebarFooter className="p-4">
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+          <p className="text-sm text-gray-700 font-medium">{user?.name || 'Nome do Usuário'}</p>
+        </div>
       </SidebarFooter>
     </Sidebar>
   )

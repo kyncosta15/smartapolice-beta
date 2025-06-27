@@ -8,6 +8,7 @@ import { ContactSection } from '@/components/ContactSection';
 import { EnhancedDashboard } from '@/components/EnhancedDashboard';
 import { DynamicDashboard } from '@/components/DynamicDashboard';
 import { InstallmentsDashboard } from '@/components/InstallmentsDashboard';
+import { RegionalDashboard } from '@/components/RegionalDashboard';
 
 interface ContentRendererProps {
   activeSection: string;
@@ -94,6 +95,13 @@ export function ContentRenderer({
         return (
           <div className="p-6">
             <ContactSection />
+          </div>
+        );
+
+      case 'reports':
+        return (
+          <div className="p-6">
+            <RegionalDashboard policies={allPolicies} />
           </div>
         );
 
