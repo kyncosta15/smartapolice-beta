@@ -1,97 +1,77 @@
-import { DynamicPDFData } from '@/types/pdfUpload';
-import { PDFTextSimulator } from '@/utils/pdfTextSimulator';
-import { EnhancedDataExtractor } from '@/utils/enhancedDataExtractor';
-import { N8NWebhookService } from './n8nWebhookService';
-
 export class DynamicPDFExtractor {
-  static async extractFromPDF(file: File): Promise<DynamicPDFData> {
-    console.log(`🔍 Iniciando extração dinâmica via N8N: ${file.name}`);
-    
+  private static readonly WEBHOOK_URL = 'https://beneficiosagente.app.n8n.cloud/webhook-test/a2c01401-91f5-4652-a2b7-4faadbf93745';
+
+  static async extractFromPDF(file: File): Promise<any> {
+    console.log(`🔄 Enviando arquivo individual: ${file.name}`);
+
+    const formData = new FormData();
+    formData.append('arquivo', file);
+    formData.append('fileName', file.name);
+    formData.append('timestamp', new Date().toISOString());
+
     try {
-      // 1. Primeiro, tentar processar via N8N de forma síncrona
-      console.log('🌐 Processando PDF via N8N + IA...');
-      const n8nResponse = await N8NWebhookService.processarPdfComN8n(file);
-      
-      if (n8nResponse.success && n8nResponse.data) {
-        console.log('✅ PDF processado com sucesso pelo N8N!');
-        console.log('📊 Dados extraídos pela IA via N8N:', n8nResponse.data);
-        return n8nResponse.data;
+      const response = await fetch(this.WEBHOOK_URL, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      // 2. Se N8N falhar, usar fallback local
-      console.log('🔄 N8N indisponível ou sem dados. Usando processamento local...');
-      console.log('ℹ️ Motivo:', n8nResponse.message);
-      
-      return await this.extractLocally(file);
-      
+
+      const data = await response.json();
+      console.log('✅ Dados extraídos:', data);
+      return data;
+
     } catch (error) {
-      console.error('❌ Erro na extração via N8N:', error);
-      console.log('🔄 Fazendo fallback para processamento local...');
-      return await this.extractLocally(file);
+      console.error('❌ Erro na extração:', error);
+      throw new Error(`Falha na extração de dados: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 
-  private static async extractLocally(file: File): Promise<DynamicPDFData> {
-    console.log(`🔍 Processamento local: ${file.name}`);
+  // New method for multiple files with indexed keys
+  static async extractFromMultiplePDFs(files: File[]): Promise<any[]> {
+    console.log(`🔄 Enviando ${files.length} arquivos para processamento em lote`);
+
+    const formData = new FormData();
     
-    // Simular tempo de processamento OCR realista
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000));
-    
+    // Add each file with indexed keys: arquivo0, arquivo1, arquivo2, etc.
+    files.forEach((file, index) => {
+      formData.append(`arquivo${index}`, file);
+      console.log(`📎 Adicionado arquivo${index}: ${file.name}`);
+    });
+
+    // Add metadata
+    formData.append('totalFiles', files.length.toString());
+    formData.append('timestamp', new Date().toISOString());
+    formData.append('batchId', `batch_${Date.now()}`);
+
     try {
-      // 1. Extrair texto do PDF (simulado com dados mais realistas)
-      console.log('📄 Extraindo texto do PDF com OCR avançado...');
-      const extractedText = await PDFTextSimulator.simulateTextExtraction(file);
+      console.log(`📤 Enviando lote de ${files.length} arquivos para o webhook...`);
       
-      // 2. Usar o extrator aprimorado com validação rigorosa
-      console.log('🔧 Aplicando algoritmos de extração de precisão...');
-      const enhancedData = EnhancedDataExtractor.extractFromText(extractedText);
-      
-      // 3. Converter para formato legado compatível
-      console.log('🔄 Convertendo para formato do sistema...');
-      const legacyData = EnhancedDataExtractor.convertToLegacyFormat(enhancedData);
-      
-      // 4. Log detalhado dos resultados
-      console.log(`🎉 Extração local concluída:`, {
-        arquivo: file.name,
-        seguradora: legacyData.seguradora.empresa,
-        apolice: legacyData.informacoes_gerais.numero_apolice,
-        segurado: legacyData.segurado?.nome || "Não identificado",
-        premio_anual: `R$ ${legacyData.informacoes_financeiras.premio_anual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-        premio_mensal: `R$ ${legacyData.informacoes_financeiras.premio_mensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-        vigencia: `${legacyData.vigencia.inicio} até ${legacyData.vigencia.fim}`,
-        veiculo: legacyData.veiculo?.modelo || "Não identificado",
-        processamento: "Local (fallback)"
+      const response = await fetch(this.WEBHOOK_URL, {
+        method: 'POST',
+        body: formData
       });
-      
-      return legacyData;
-      
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Resposta do webhook recebida:', data);
+
+      // If the response is an array, return it directly
+      if (Array.isArray(data)) {
+        return data;
+      }
+
+      // If the response is a single object, wrap it in an array
+      return [data];
+
     } catch (error) {
-      console.error('❌ Erro na extração local:', error);
-      
-      // Retornar dados padrão em caso de erro
-      return {
-        informacoes_gerais: {
-          nome_apolice: `Apólice ${file.name.replace('.pdf', '')}`,
-          tipo: "Auto",
-          status: "Processamento com erro",
-          numero_apolice: `ERR-${Date.now()}`
-        },
-        seguradora: {
-          empresa: "Erro na identificação",
-          categoria: "N/A",
-          cobertura: "N/A",
-          entidade: "N/A"
-        },
-        informacoes_financeiras: {
-          premio_anual: 0,
-          premio_mensal: 0
-        },
-        vigencia: {
-          inicio: new Date().toISOString().split('T')[0],
-          fim: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          extraido_em: new Date().toISOString().split('T')[0]
-        }
-      };
+      console.error('❌ Erro ao enviar arquivos para o webhook:', error);
+      throw new Error(`Falha na comunicação com o webhook: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 }
