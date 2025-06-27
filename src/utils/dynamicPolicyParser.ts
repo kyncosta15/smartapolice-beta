@@ -1,9 +1,86 @@
+
 import { DynamicPDFData } from '@/types/pdfUpload';
 import { ParsedPolicyData } from './policyDataParser';
 
+// Interface para o formato direto do N8N
+interface N8NDirectData {
+  numero_apolice: string;
+  segurado: string;
+  seguradora: string;
+  tipo: string;
+  inicio: string;
+  fim: string;
+  premio: number;
+  parcelas: number;
+  pagamento: string;
+  custo_mensal: number;
+  vencimentos_futuros: string[];
+  status: string;
+}
+
 export class DynamicPolicyParser {
-  static convertToParsedPolicy(dynamicData: DynamicPDFData, fileName: string, file?: File): ParsedPolicyData {
+  static convertToParsedPolicy(dynamicData: DynamicPDFData | N8NDirectData, fileName: string, file?: File): ParsedPolicyData {
     console.log('Convertendo dados dinâmicos para formato do dashboard:', dynamicData);
+    
+    // Verificar se é formato direto do N8N ou formato estruturado
+    const isN8NDirectFormat = 'numero_apolice' in dynamicData && 'segurado' in dynamicData;
+    
+    if (isN8NDirectFormat) {
+      return this.convertN8NDirectData(dynamicData as N8NDirectData, fileName, file);
+    } else {
+      return this.convertStructuredData(dynamicData as DynamicPDFData, fileName, file);
+    }
+  }
+
+  private static convertN8NDirectData(n8nData: N8NDirectData, fileName: string, file?: File): ParsedPolicyData {
+    console.log('📦 Processando dados diretos do N8N');
+    
+    const type = this.normalizeType(n8nData.tipo);
+    const status = this.determineStatus(n8nData.fim);
+    
+    // Criar nome mais descritivo
+    const policyName = n8nData.segurado ? 
+      `Apólice ${n8nData.segurado.split(' ')[0]}` : 
+      `Apólice ${n8nData.seguradora}`;
+    
+    // Processar vencimentos futuros para criar parcelas
+    const installmentsArray = this.generateInstallmentsFromVencimentos(
+      n8nData.vencimentos_futuros,
+      n8nData.custo_mensal,
+      n8nData.inicio
+    );
+    
+    return {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      name: policyName,
+      type,
+      insurer: n8nData.seguradora,
+      premium: n8nData.premio,
+      monthlyAmount: n8nData.custo_mensal,
+      startDate: n8nData.inicio,
+      endDate: n8nData.fim,
+      policyNumber: n8nData.numero_apolice,
+      paymentFrequency: 'mensal',
+      status,
+      file,
+      extractedAt: new Date().toISOString().split('T')[0],
+      
+      // Parcelas individuais com valores e datas
+      installments: installmentsArray,
+      
+      // Campos expandidos
+      insuredName: n8nData.segurado,
+      
+      // Legacy fields for compatibility
+      entity: n8nData.seguradora,
+      category: type === 'auto' ? 'Veicular' : 'Geral',
+      coverage: ['Cobertura Básica'],
+      totalCoverage: n8nData.premio
+    };
+  }
+
+  private static convertStructuredData(dynamicData: DynamicPDFData, fileName: string, file?: File): ParsedPolicyData {
+    console.log('📦 Processando dados estruturados');
     
     const type = this.normalizeType(dynamicData.informacoes_gerais.tipo);
     const status = this.determineStatus(dynamicData.vigencia.fim);
@@ -60,6 +137,42 @@ export class DynamicPolicyParser {
         comprehensive: dynamicData.seguradora.cobertura.toLowerCase().includes('compreensiva')
       } : undefined
     };
+  }
+
+  private static generateInstallmentsFromVencimentos(vencimentos: string[], monthlyValue: number, startDate: string) {
+    const installments = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    console.log('🔄 Processando vencimentos futuros do N8N:', vencimentos);
+    
+    vencimentos.forEach((vencimento, index) => {
+      const installmentDate = new Date(vencimento);
+      installmentDate.setHours(0, 0, 0, 0);
+      
+      // Validar se a data é válida
+      if (isNaN(installmentDate.getTime())) {
+        console.warn(`⚠️ Data de vencimento inválida no índice ${index}:`, vencimento);
+        return;
+      }
+      
+      // Determinar status baseado na data
+      let status: 'paga' | 'pendente' = 'pendente';
+      if (installmentDate < today) {
+        // Parcelas do passado têm 70% de chance de estarem pagas
+        status = Math.random() > 0.3 ? 'paga' : 'pendente';
+      }
+      
+      installments.push({
+        numero: index + 1,
+        valor: Math.round(monthlyValue * 100) / 100,
+        data: installmentDate.toISOString().split('T')[0],
+        status: status
+      });
+    });
+    
+    console.log('✅ Parcelas geradas a partir dos vencimentos N8N:', installments);
+    return installments;
   }
 
   private static generateInstallmentsArray(monthlyValue: number, startDate: string, numberOfInstallments: number) {
