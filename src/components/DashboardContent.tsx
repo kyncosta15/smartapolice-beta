@@ -8,6 +8,7 @@ import { ContentRenderer } from '@/components/ContentRenderer';
 import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { ParsedPolicyData } from '@/utils/policyDataParser';
 
 export function DashboardContent() {
   const { user } = useAuth();
@@ -15,7 +16,7 @@ export function DashboardContent() {
   const [filterType, setFilterType] = useState('all');
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [extractedPolicies, setExtractedPolicies] = useState([]);
+  const [extractedPolicies, setExtractedPolicies] = useState<ParsedPolicyData[]>([]);
   const [allUsers, setAllUsers] = useState([
     {
       id: '1',
@@ -45,7 +46,7 @@ export function DashboardContent() {
   const handlePolicyExtracted = (policy: any) => {
     console.log('Nova apólice extraída:', policy);
     
-    const newPolicy = {
+    const newPolicy: ParsedPolicyData = {
       ...policy,
       id: `policy-${Date.now()}`,
       status: 'active',
@@ -58,7 +59,9 @@ export function DashboardContent() {
       premium: policy.premium || 0,
       deductible: Math.floor(Math.random() * 5000) + 1000,
       limits: 'R$ 100.000 por sinistro',
-      installments: policy.installments || 12,
+      // Garantir que installments seja sempre um número para compatibilidade
+      installments: typeof policy.installments === 'number' ? policy.installments : 
+                   Array.isArray(policy.installments) ? policy.installments.length : 12,
       totalCoverage: policy.totalCoverage || policy.premium || 0,
       startDate: policy.startDate || new Date().toISOString().split('T')[0],
       endDate: policy.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -123,8 +126,13 @@ export function DashboardContent() {
     setAllUsers(prev => [...prev, client]);
   };
 
-  // Usando apenas as apólices extraídas pelo usuário com métricas calculadas
-  const allPolicies = extractedPolicies;
+  // Normalizar dados das apólices para garantir compatibilidade com todos os componentes
+  const normalizedPolicies = extractedPolicies.map(policy => ({
+    ...policy,
+    // Garantir que installments seja sempre um número para evitar erros nos componentes filhos
+    installments: typeof policy.installments === 'number' ? policy.installments : 
+                 Array.isArray(policy.installments) ? policy.installments.length : 12
+  }));
 
   return (
     <SidebarProvider>
@@ -135,7 +143,7 @@ export function DashboardContent() {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             notificationCount={dashboardData.expiringPolicies}
-            policies={allPolicies}
+            policies={normalizedPolicies}
           />
 
           <div className="flex-1">
@@ -145,8 +153,8 @@ export function DashboardContent() {
               activeSection={activeSection}
               searchTerm={searchTerm}
               filterType={filterType}
-              allPolicies={allPolicies}
-              extractedPolicies={extractedPolicies}
+              allPolicies={normalizedPolicies}
+              extractedPolicies={normalizedPolicies}
               allUsers={allUsers}
               onPolicySelect={handlePolicySelect}
               onPolicyUpdate={handlePolicyUpdate}
