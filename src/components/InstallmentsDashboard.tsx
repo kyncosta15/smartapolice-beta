@@ -53,27 +53,29 @@ export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) 
 }
 
 function renderInstallmentsDashboard(policiesWithInstallments: ParsedPolicyData[]) {
-  // Calcular totais
-  const totalInstallments = policiesWithInstallments.reduce((sum, policy) => 
-    sum + policy.installments.length, 0
-  );
-
-  const totalValue = policiesWithInstallments.reduce((sum, policy) => 
-    sum + policy.installments.reduce((policySum, installment) => 
-      policySum + installment.valor, 0
-    ), 0
-  );
-
   // Criar lista estendida de parcelas
   const allInstallments = createExtendedInstallments(policiesWithInstallments);
   
-  // Filtrar parcelas por status (removido paidInstallments)
+  // Filtrar parcelas por status
   const upcomingInstallments = filterUpcomingInstallments(allInstallments);
   const overdueInstallments = filterOverdueInstallments(allInstallments);
-
-  // Calcular totais por categoria (removido totalPaid)
+  
+  // Calcular totais gerais
+  const totalInstallments = allInstallments.length;
+  const totalValue = allInstallments.reduce((sum, installment) => sum + installment.valor, 0);
+  
+  // Calcular totais por categoria
   const totalUpcoming = upcomingInstallments.reduce((sum, installment) => sum + installment.valor, 0);
   const totalOverdue = overdueInstallments.reduce((sum, installment) => sum + installment.valor, 0);
+
+  console.log('Dashboard Stats:', {
+    totalInstallments,
+    upcomingCount: upcomingInstallments.length,
+    overdueCount: overdueInstallments.length,
+    totalValue,
+    totalUpcoming,
+    totalOverdue
+  });
 
   return (
     <div className="space-y-6">

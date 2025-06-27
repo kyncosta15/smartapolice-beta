@@ -21,10 +21,13 @@ export function generateSimulatedInstallments(policy: ParsedPolicyData): Install
   const baseInstallmentValue = totalValue / numberOfInstallments;
   
   const installments = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Zerar horas para comparação precisa
   
   for (let i = 0; i < numberOfInstallments; i++) {
     const installmentDate = new Date(startDate);
     installmentDate.setMonth(installmentDate.getMonth() + i);
+    installmentDate.setHours(0, 0, 0, 0); // Zerar horas para comparação precisa
     
     // Primeira parcela pode ter um valor ligeiramente diferente para compensar arredondamentos
     let installmentValue = baseInstallmentValue;
@@ -34,11 +37,22 @@ export function generateSimulatedInstallments(policy: ParsedPolicyData): Install
       installmentValue = remainingValue;
     }
     
+    // Determinar status baseado na data
+    let status: 'paga' | 'pendente' = 'pendente';
+    if (installmentDate < today) {
+      // Se a data da parcela é anterior a hoje, considerar como paga
+      // Isso simula parcelas já pagas no passado
+      status = Math.random() > 0.3 ? 'paga' : 'pendente'; // 70% chance de estar paga se é do passado
+    } else {
+      // Se a data da parcela é hoje ou no futuro, está pendente
+      status = 'pendente';
+    }
+    
     installments.push({
       numero: i + 1,
       valor: Math.round(installmentValue * 100) / 100,
       data: installmentDate.toISOString().split('T')[0],
-      status: installmentDate < new Date() ? 'paga' : 'pendente'
+      status: status
     });
   }
   
@@ -66,6 +80,7 @@ export function filterUpcomingInstallments(allInstallments: ExtendedInstallment[
   return allInstallments.filter(installment => {
     const installmentDate = new Date(installment.data);
     installmentDate.setHours(0, 0, 0, 0);
+    // Próximas parcelas: data >= hoje E status pendente
     return installmentDate >= today && installment.status === 'pendente';
   });
 }
@@ -77,6 +92,7 @@ export function filterOverdueInstallments(allInstallments: ExtendedInstallment[]
   return allInstallments.filter(installment => {
     const installmentDate = new Date(installment.data);
     installmentDate.setHours(0, 0, 0, 0);
+    // Parcelas vencidas: data < hoje E status pendente
     return installmentDate < today && installment.status === 'pendente';
   });
 }
