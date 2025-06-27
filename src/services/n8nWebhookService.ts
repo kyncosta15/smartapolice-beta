@@ -1,6 +1,20 @@
 
 import { DynamicPDFData } from '@/types/pdfUpload';
 
+interface N8NDirectResponse {
+  segurado?: string;
+  seguradora?: string;
+  tipo?: string;
+  inicio?: string;
+  fim?: string;
+  premio?: number;
+  parcelas?: number;
+  pagamento?: string;
+  custo_mensal?: number;
+  vencimentos_futuros?: any[];
+  status?: string;
+}
+
 interface N8NWebhookResponse {
   success: boolean;
   data?: DynamicPDFData;
@@ -32,18 +46,27 @@ export class N8NWebhookService {
         throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
       }
 
-      const result = await response.json() as N8NWebhookResponse;
+      const result = await response.json() as N8NDirectResponse;
       
       console.log('✅ Resposta recebida do N8N:', result);
       
-      if (result.success && result.data) {
+      // Verificar se temos dados válidos do N8N
+      if (result && (result.segurado || result.seguradora || result.premio)) {
         console.log('🎉 Dados processados com sucesso pela IA do N8N!');
-        return result;
+        
+        // Converter dados do N8N para o formato esperado
+        const convertedData = this.convertN8NResponseToDynamicPDFData(result);
+        
+        return {
+          success: true,
+          data: convertedData,
+          message: 'Dados extraídos com sucesso via N8N'
+        };
       } else {
-        console.warn('⚠️ N8N retornou sucesso mas sem dados:', result);
+        console.warn('⚠️ N8N retornou resposta mas sem dados válidos:', result);
         return {
           success: false,
-          message: result.message || 'Dados não encontrados na resposta do N8N'
+          message: 'N8N retornou resposta vazia ou inválida'
         };
       }
       
@@ -56,6 +79,40 @@ export class N8NWebhookService {
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       };
     }
+  }
+
+  private static convertN8NResponseToDynamicPDFData(n8nData: N8NDirectResponse): DynamicPDFData {
+    const startDate = n8nData.inicio || new Date().toISOString().split('T')[0];
+    const endDate = n8nData.fim || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const premioAnual = n8nData.premio || 0;
+    const premioMensal = n8nData.custo_mensal || (premioAnual / 12);
+
+    return {
+      informacoes_gerais: {
+        nome_apolice: `Apólice ${n8nData.seguradora || 'N8N'}`,
+        tipo: n8nData.tipo || "Auto",
+        status: n8nData.status || "Ativa",
+        numero_apolice: `N8N-${Date.now()}`
+      },
+      seguradora: {
+        empresa: n8nData.seguradora || "Seguradora N8N",
+        categoria: "Processado via N8N",
+        cobertura: "Cobertura N8N",
+        entidade: "N8N IA"
+      },
+      informacoes_financeiras: {
+        premio_anual: premioAnual,
+        premio_mensal: Math.round(premioMensal * 100) / 100
+      },
+      vigencia: {
+        inicio: startDate,
+        fim: endDate,
+        extraido_em: new Date().toISOString().split('T')[0]
+      },
+      segurado: n8nData.segurado ? {
+        nome: n8nData.segurado
+      } : undefined
+    };
   }
 
   // Método para teste de conectividade

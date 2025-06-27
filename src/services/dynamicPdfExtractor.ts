@@ -1,4 +1,3 @@
-
 import { DynamicPDFData } from '@/types/pdfUpload';
 import { PDFTextSimulator } from '@/utils/pdfTextSimulator';
 import { EnhancedDataExtractor } from '@/utils/enhancedDataExtractor';
@@ -15,7 +14,7 @@ export class DynamicPDFExtractor {
       
       if (n8nResponse.success && n8nResponse.data) {
         console.log('✅ PDF processado com sucesso pelo N8N!');
-        console.log('📊 Dados extraídos pela IA:', n8nResponse.data);
+        console.log('📊 Dados extraídos pela IA via N8N:', n8nResponse.data);
         return n8nResponse.data;
       }
       
