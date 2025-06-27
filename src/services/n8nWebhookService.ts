@@ -52,6 +52,7 @@ export class N8NWebhookService {
       const result = await response.json() as N8NDirectResponse;
       
       console.log('✅ Resposta recebida do N8N:', result);
+      console.log('📅 Vencimentos futuros recebidos:', result.vencimentos_futuros);
       
       // Log specifically the policy number received
       if (result.numero_apolice || result.apolice) {
@@ -107,8 +108,15 @@ export class N8NWebhookService {
     
     console.log('🔢 Número da apólice definido:', policyNumber);
 
-    // Gerar parcelas individuais usando os dados do N8N
-    const parcelas = this.generateInstallmentDetails(premioMensal, startDate, numeroParcelas);
+    // Usar vencimentos futuros do N8N se disponíveis
+    let parcelas;
+    if (n8nData.vencimentos_futuros && Array.isArray(n8nData.vencimentos_futuros) && n8nData.vencimentos_futuros.length > 0) {
+      console.log('📅 Usando vencimentos futuros do N8N para criar parcelas');
+      parcelas = this.generateInstallmentsFromVencimentos(n8nData.vencimentos_futuros, premioMensal);
+    } else {
+      console.log('📅 Vencimentos futuros não disponíveis, gerando parcelas padrão');
+      parcelas = this.generateInstallmentDetails(premioMensal, startDate, numeroParcelas);
+    }
 
     return {
       informacoes_gerais: {
@@ -140,23 +148,97 @@ export class N8NWebhookService {
     };
   }
 
+  private static generateInstallmentsFromVencimentos(vencimentos: any[], monthlyValue: number) {
+    const installments = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    console.log('🔄 Processando vencimentos futuros:', vencimentos);
+    
+    vencimentos.forEach((vencimento, index) => {
+      let installmentDate: Date;
+      let installmentValue = monthlyValue;
+      
+      // Tentar diferentes formatos de vencimento
+      if (typeof vencimento === 'string') {
+        // Se é uma string de data
+        installmentDate = new Date(vencimento);
+      } else if (vencimento && typeof vencimento === 'object') {
+        // Se é um objeto com data e/ou valor
+        if (vencimento.data || vencimento.date) {
+          installmentDate = new Date(vencimento.data || vencimento.date);
+        } else if (vencimento.vencimento) {
+          installmentDate = new Date(vencimento.vencimento);
+        } else {
+          // Se não tem data definida, usar sequência mensal
+          installmentDate = new Date();
+          installmentDate.setMonth(installmentDate.getMonth() + index);
+        }
+        
+        // Se tem valor específico no vencimento
+        if (vencimento.valor || vencimento.value) {
+          installmentValue = parseFloat(vencimento.valor || vencimento.value) || monthlyValue;
+        }
+      } else {
+        // Fallback: usar sequência mensal
+        installmentDate = new Date();
+        installmentDate.setMonth(installmentDate.getMonth() + index);
+      }
+      
+      // Validar se a data é válida
+      if (isNaN(installmentDate.getTime())) {
+        console.warn(`⚠️ Data de vencimento inválida no índice ${index}:`, vencimento);
+        installmentDate = new Date();
+        installmentDate.setMonth(installmentDate.getMonth() + index);
+      }
+      
+      installmentDate.setHours(0, 0, 0, 0);
+      
+      // Determinar status baseado na data
+      let status: 'paga' | 'pendente' = 'pendente';
+      if (installmentDate < today) {
+        // Parcelas do passado têm 70% de chance de estarem pagas
+        status = Math.random() > 0.3 ? 'paga' : 'pendente';
+      }
+      
+      installments.push({
+        numero: index + 1,
+        valor: Math.round(installmentValue * 100) / 100,
+        data: installmentDate.toISOString().split('T')[0],
+        status: status
+      });
+    });
+    
+    console.log('✅ Parcelas geradas a partir dos vencimentos:', installments);
+    return installments;
+  }
+
   private static generateInstallmentDetails(monthlyValue: number, startDate: string, numberOfInstallments: number) {
     const installments = [];
     const baseDate = new Date(startDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
     for (let i = 0; i < numberOfInstallments; i++) {
       const installmentDate = new Date(baseDate);
       installmentDate.setMonth(installmentDate.getMonth() + i);
+      installmentDate.setHours(0, 0, 0, 0);
       
       // Usar valor base com pequenas variações realistas
       const variation = i === 0 ? 0 : (Math.random() - 0.5) * 10; // Primeira parcela sem variação
       const installmentValue = Math.round((monthlyValue + variation) * 100) / 100;
       
+      // Determinar status baseado na data
+      let status: 'paga' | 'pendente' = 'pendente';
+      if (installmentDate < today) {
+        status = Math.random() > 0.3 ? 'paga' : 'pendente'; // 70% chance de estar paga se é do passado
+      }
+      
       installments.push({
         numero: i + 1,
         valor: installmentValue,
         data: installmentDate.toISOString().split('T')[0],
-        status: installmentDate < new Date() ? 'paga' : 'pendente'
+        status: status
       });
     }
     

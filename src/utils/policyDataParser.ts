@@ -55,3 +55,72 @@ export interface ParsedPolicyData {
   limits?: string;
   totalCoverage?: number;
 }
+
+export function parsePolicyData(data: DynamicPDFData, file?: File): ParsedPolicyData {
+  // Usar parcelas_detalhadas se disponível, caso contrário criar parcelas padrão
+  let installments: InstallmentData[] = [];
+  
+  if (data.parcelas_detalhadas && Array.isArray(data.parcelas_detalhadas) && data.parcelas_detalhadas.length > 0) {
+    console.log('📦 Usando parcelas detalhadas dos vencimentos futuros');
+    installments = data.parcelas_detalhadas.map(parcela => ({
+      numero: parcela.numero,
+      valor: parcela.valor,
+      data: parcela.data,
+      status: parcela.status
+    }));
+  } else {
+    console.log('📦 Criando parcelas padrão baseadas no prêmio mensal');
+    // Criar parcelas padrão se não tiver parcelas detalhadas
+    const monthlyAmount = data.informacoes_financeiras.premio_mensal;
+    const startDate = new Date(data.vigencia.inicio);
+    const numberOfInstallments = 12;
+    
+    for (let i = 0; i < numberOfInstallments; i++) {
+      const installmentDate = new Date(startDate);
+      installmentDate.setMonth(startDate.getMonth() + i);
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      installmentDate.setHours(0, 0, 0, 0);
+      
+      let status: 'paga' | 'pendente' = 'pendente';
+      if (installmentDate < today) {
+        status = Math.random() > 0.3 ? 'paga' : 'pendente';
+      }
+      
+      installments.push({
+        numero: i + 1,
+        valor: monthlyAmount,
+        data: installmentDate.toISOString().split('T')[0],
+        status: status
+      });
+    }
+  }
+
+  return {
+    id: data.informacoes_gerais.numero_apolice || `policy-${Date.now()}`,
+    name: data.informacoes_gerais.nome_apolice || 'Apólice sem nome',
+    type: data.informacoes_gerais.tipo || 'Auto',
+    insurer: data.seguradora.empresa || 'Seguradora não identificada',
+    premium: data.informacoes_financeiras.premio_anual || 0,
+    monthlyAmount: data.informacoes_financeiras.premio_mensal || 0,
+    startDate: data.vigencia.inicio,
+    endDate: data.vigencia.fim,
+    policyNumber: data.informacoes_gerais.numero_apolice || 'Sem número',
+    paymentFrequency: 'Mensal',
+    status: data.informacoes_gerais.status === 'Ativa' ? 'active' : 'expired',
+    file,
+    extractedAt: data.vigencia.extraido_em,
+    installments,
+    
+    // Campos opcionais
+    insuredName: data.segurado?.nome,
+    broker: data.seguradora.entidade,
+    
+    // Legacy compatibility
+    entity: data.seguradora.entidade,
+    category: data.seguradora.categoria,
+    coverage: [data.seguradora.cobertura],
+    totalCoverage: data.informacoes_financeiras.premio_anual
+  };
+}
