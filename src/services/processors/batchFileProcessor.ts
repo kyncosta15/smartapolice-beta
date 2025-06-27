@@ -53,6 +53,7 @@ export class BatchFileProcessor {
         try {
           const fileResults = await this.processSingleFileInBatch(file, i + 1, files.length);
           allResults.push(...fileResults);
+          console.log(`✅ Arquivo ${file.name} processado com sucesso: ${fileResults.length} apólices`);
         } catch (error) {
           console.error(`❌ Erro ao processar ${file.name}:`, error);
           
@@ -114,7 +115,8 @@ export class BatchFileProcessor {
       message: 'Extraindo dados com IA...'
     });
 
-    const extractedData = await DynamicPDFExtractor.extractFromPDF(file);
+    const extractedDataArray = await DynamicPDFExtractor.extractFromPDF(file);
+    console.log(`📦 Dados extraídos de ${file.name}:`, extractedDataArray);
 
     // Update progress
     this.updateFileStatus(file.name, {
@@ -123,24 +125,27 @@ export class BatchFileProcessor {
       message: 'Convertendo dados extraídos...'
     });
 
-    // Verifica se os dados extraídos são um array ou item único
-    const dataArray = Array.isArray(extractedData) ? extractedData : [extractedData];
+    // extractedDataArray já vem como array do DynamicPDFExtractor
     const results: ParsedPolicyData[] = [];
 
     // Convert each data item to parsed policy
-    for (const singleData of dataArray) {
+    for (let j = 0; j < extractedDataArray.length; j++) {
+      const singleData = extractedDataArray[j];
+      console.log(`🔄 Convertendo item ${j + 1}/${extractedDataArray.length} de ${file.name}:`, singleData);
+      
       const parsedPolicy = this.convertToParsedPolicy(singleData, file.name, file);
       results.push(parsedPolicy);
       
       // Add to dashboard immediately
       this.onPolicyExtracted(parsedPolicy);
+      console.log(`✅ Apólice adicionada: ${parsedPolicy.name} - ${parsedPolicy.insurer}`);
     }
 
     // Update success status
     this.updateFileStatus(file.name, {
       progress: 100,
       status: 'completed',
-      message: `✅ Processado: ${dataArray.length} apólice(s) extraída(s)`
+      message: `✅ Processado: ${extractedDataArray.length} apólice(s) extraída(s)`
     });
 
     return results;
