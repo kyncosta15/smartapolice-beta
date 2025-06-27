@@ -7,6 +7,7 @@ interface DashboardMetrics {
   totalMonthlyCost: number;
   totalInsuredValue: number;
   expiringPolicies: number;
+  totalInstallments: number;
   insurerDistribution: Array<{ name: string; value: number; percentage: number }>;
   typeDistribution: Array<{ name: string; value: number }>;
   monthlyEvolution: Array<{ month: string; cost: number }>;
@@ -24,6 +25,7 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
         totalMonthlyCost: 0,
         totalInsuredValue: 0,
         expiringPolicies: 0,
+        totalInstallments: 0,
         insurerDistribution: [],
         typeDistribution: [],
         monthlyEvolution: [],
@@ -34,20 +36,37 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     console.log('Recalculando métricas do dashboard para', policies.length, 'apólices');
 
     const totalPolicies = policies.length;
-    const totalMonthlyCost = policies.reduce((sum, p) => sum + p.monthlyAmount, 0);
-    const totalInsuredValue = policies.reduce((sum, p) => sum + (p.totalCoverage || p.premium), 0);
-    const expiringPolicies = policies.filter(p => p.status === 'expiring').length;
+    const totalMonthlyCost = policies.reduce((sum, p) => sum + (p.monthlyAmount || 0), 0);
+    const totalInsuredValue = policies.reduce((sum, p) => sum + (p.totalCoverage || p.premium || 0), 0);
+    
+    // Calcular apólices vencendo nos próximos 30 dias
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    
+    const expiringPolicies = policies.filter(p => {
+      if (!p.endDate) return false;
+      const endDate = new Date(p.endDate);
+      return endDate <= thirtyDaysFromNow && endDate >= new Date();
+    }).length;
+
+    // Calcular total de parcelas
+    const totalInstallments = policies.reduce((sum, p) => {
+      // Assumir 12 parcelas se não especificado
+      const installments = p.installments || 12;
+      return sum + installments;
+    }, 0);
 
     // Distribuição por seguradora
     const insurerCounts = policies.reduce((acc, policy) => {
-      acc[policy.insurer] = (acc[policy.insurer] || 0) + policy.monthlyAmount;
+      const insurerName = policy.insurer || 'Não informado';
+      acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
 
     const insurerDistribution = Object.entries(insurerCounts).map(([name, value]) => ({
       name,
       value: Math.round(value),
-      percentage: Math.round((value / totalMonthlyCost) * 100)
+      percentage: totalMonthlyCost > 0 ? Math.round((value / totalMonthlyCost) * 100) : 0
     }));
 
     // Distribuição por tipo
@@ -56,8 +75,9 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
                        policy.type === 'vida' ? 'Seguro de Vida' :
                        policy.type === 'saude' ? 'Seguro Saúde' :
                        policy.type === 'patrimonial' ? 'Patrimonial' :
-                       policy.type === 'empresarial' ? 'Empresarial' : policy.type;
-      acc[typeName] = (acc[typeName] || 0) + policy.monthlyAmount;
+                       policy.type === 'empresarial' ? 'Empresarial' : 
+                       policy.type || 'Outros';
+      acc[typeName] = (acc[typeName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
 
@@ -66,10 +86,10 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       value: Math.round(value)
     }));
 
-    // Evolução mensal simplificada
+    // Evolução mensal
     const monthlyEvolution = generateMonthlyEvolution(policies);
 
-    // Insights básicos
+    // Insights
     const insights = generateBasicInsights(policies);
 
     return {
@@ -77,6 +97,7 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       totalMonthlyCost,
       totalInsuredValue,
       expiringPolicies,
+      totalInstallments,
       insurerDistribution,
       typeDistribution,
       monthlyEvolution,
@@ -124,7 +145,7 @@ function generateMonthlyEvolution(policies: ParsedPolicyData[]) {
   // Distribui custos
   policies.forEach(policy => {
     Object.keys(monthlyMap).forEach(month => {
-      monthlyMap[month] += policy.monthlyAmount / 6; // Distribuição simples
+      monthlyMap[month] += (policy.monthlyAmount || 0) / 6; // Distribuição simples
     });
   });
 
@@ -137,8 +158,17 @@ function generateMonthlyEvolution(policies: ParsedPolicyData[]) {
 function generateBasicInsights(policies: ParsedPolicyData[]) {
   const insights: Array<{ type: string; category: string; message: string }> = [];
 
-  const avgCost = policies.reduce((sum, p) => sum + p.monthlyAmount, 0) / policies.length;
-  const highCostPolicies = policies.filter(p => p.monthlyAmount > avgCost * 1.5);
+  if (policies.length === 0) {
+    insights.push({
+      type: 'info',
+      category: 'Início',
+      message: 'Faça upload de PDFs de apólices para começar a análise.'
+    });
+    return insights;
+  }
+
+  const avgCost = policies.reduce((sum, p) => sum + (p.monthlyAmount || 0), 0) / policies.length;
+  const highCostPolicies = policies.filter(p => (p.monthlyAmount || 0) > avgCost * 1.5);
 
   if (highCostPolicies.length > 0) {
     insights.push({
@@ -155,6 +185,14 @@ function generateBasicInsights(policies: ParsedPolicyData[]) {
       message: `Portfolio bem diversificado com ${policies.length} apólices ativas.`
     });
   }
+
+  // Insight sobre parcelas
+  const totalInstallments = policies.reduce((sum, p) => sum + (p.installments || 12), 0);
+  insights.push({
+    type: 'info',
+    category: 'Parcelas',
+    message: `Total de ${totalInstallments} parcelas distribuídas em suas apólices.`
+  });
 
   return insights;
 }

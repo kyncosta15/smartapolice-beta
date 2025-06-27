@@ -7,6 +7,7 @@ import { WelcomeSection } from '@/components/WelcomeSection';
 import { ContentRenderer } from '@/components/ContentRenderer';
 import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
 import { useToast } from '@/hooks/use-toast';
+import { useDashboardData } from '@/hooks/useDashboardData';
 
 export function DashboardContent() {
   const { user } = useAuth();
@@ -38,27 +39,36 @@ export function DashboardContent() {
   const [activeSection, setActiveSection] = useState('home');
   const { toast } = useToast();
 
+  // Usar o hook de dashboard data
+  const { dashboardData } = useDashboardData(extractedPolicies);
+
   const handlePolicyExtracted = (policy: any) => {
     console.log('Nova apólice extraída:', policy);
     
     const newPolicy = {
       ...policy,
+      id: `policy-${Date.now()}`,
       status: 'active',
       entity: user?.company || 'Não informado',
       category: policy.type === 'auto' ? 'Veicular' : 
                policy.type === 'vida' ? 'Pessoal' : 
                policy.type === 'saude' ? 'Saúde' : 'Geral',
       coverage: ['Cobertura Básica', 'Responsabilidade Civil'],
-      monthlyAmount: parseFloat(policy.premium) / 12,
+      monthlyAmount: policy.monthlyAmount || (parseFloat(policy.premium) / 12) || 0,
+      premium: policy.premium || 0,
       deductible: Math.floor(Math.random() * 5000) + 1000,
-      limits: 'R$ 100.000 por sinistro'
+      limits: 'R$ 100.000 por sinistro',
+      installments: policy.installments || 12,
+      totalCoverage: policy.totalCoverage || policy.premium || 0,
+      startDate: policy.startDate || new Date().toISOString().split('T')[0],
+      endDate: policy.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     };
     
     setExtractedPolicies(prev => [...prev, newPolicy]);
     
     toast({
       title: "Apólice Adicionada",
-      description: `${policy.name} foi adicionada ao sistema`,
+      description: `${policy.name || 'Nova apólice'} foi adicionada ao sistema`,
     });
   };
 
@@ -113,7 +123,7 @@ export function DashboardContent() {
     setAllUsers(prev => [...prev, client]);
   };
 
-  // Usando apenas as apólices extraídas pelo usuário
+  // Usando apenas as apólices extraídas pelo usuário com métricas calculadas
   const allPolicies = extractedPolicies;
 
   return (
@@ -124,7 +134,7 @@ export function DashboardContent() {
           <Navbar 
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            notificationCount={allPolicies.filter(p => new Date(p.endDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length}
+            notificationCount={dashboardData.expiringPolicies}
             policies={allPolicies}
           />
 

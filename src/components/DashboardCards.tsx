@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield, DollarSign } from 'lucide-react';
+import { FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield, DollarSign, CreditCard } from 'lucide-react';
 
 interface DashboardCardsProps {
   stats?: {
@@ -9,15 +9,19 @@ interface DashboardCardsProps {
     monthlyCost: number;
     totalInsured: number;
     activeAlerts: number;
+    expiringPolicies: number;
+    totalInstallments: number;
   };
 }
 
 export const DashboardCards = ({ stats }: DashboardCardsProps) => {
   const defaultStats = {
-    totalPolicies: 247,
-    monthlyCost: 127850,
-    totalInsured: 25400000,
-    activeAlerts: 7
+    totalPolicies: 0,
+    monthlyCost: 0,
+    totalInsured: 0,
+    activeAlerts: 0,
+    expiringPolicies: 0,
+    totalInstallments: 0
   };
 
   const currentStats = stats || defaultStats;
@@ -27,49 +31,51 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
       title: 'Apólices Ativas',
       value: currentStats.totalPolicies.toString(),
       icon: Shield,
-      change: '+12%',
+      change: currentStats.totalPolicies > 0 ? '+' + currentStats.totalPolicies : '0',
       changeType: 'positive',
       description: 'Total de apólices vigentes'
     },
     {
-      title: 'Custo Mensal',
-      value: `R$ ${currentStats.monthlyCost.toLocaleString('pt-BR')}`,
+      title: 'Custo Mensal Total',
+      value: `R$ ${currentStats.monthlyCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: DollarSign,
-      change: '-3.2%',
-      changeType: 'positive',
+      change: currentStats.monthlyCost > 0 ? 'Ativo' : 'Vazio',
+      changeType: currentStats.monthlyCost > 0 ? 'positive' : 'neutral',
       description: 'Gasto total mensal'
     },
     {
       title: 'Valor Segurado',
-      value: `R$ ${(currentStats.totalInsured / 1000000).toFixed(1)}M`,
+      value: currentStats.totalInsured > 1000000 
+        ? `R$ ${(currentStats.totalInsured / 1000000).toFixed(1)}M`
+        : `R$ ${currentStats.totalInsured.toLocaleString('pt-BR')}`,
       icon: TrendingUp,
-      change: '+8.1%',
-      changeType: 'positive',
+      change: currentStats.totalInsured > 0 ? 'Protegido' : 'Sem dados',
+      changeType: currentStats.totalInsured > 0 ? 'positive' : 'neutral',
       description: 'Patrimônio total segurado'
     },
     {
-      title: 'Seguradoras',
-      value: '12',
-      icon: Users,
-      change: '0',
-      changeType: 'neutral',
-      description: 'Parceiros ativos'
+      title: 'Total de Parcelas',
+      value: currentStats.totalInstallments.toString(),
+      icon: CreditCard,
+      change: currentStats.totalInstallments > 0 ? `${currentStats.totalInstallments} parcelas` : 'Nenhuma',
+      changeType: currentStats.totalInstallments > 0 ? 'positive' : 'neutral',
+      description: 'Parcelas em todas as apólices'
     },
     {
       title: 'Vencendo (30 dias)',
-      value: '18',
+      value: currentStats.expiringPolicies.toString(),
       icon: Calendar,
-      change: '+5',
-      changeType: 'warning',
-      description: 'Requerem atenção'
+      change: currentStats.expiringPolicies > 0 ? 'Atenção' : 'OK',
+      changeType: currentStats.expiringPolicies > 0 ? 'warning' : 'positive',
+      description: 'Requerem renovação'
     },
     {
-      title: 'Alertas Ativos',
-      value: currentStats.activeAlerts.toString(),
-      icon: AlertTriangle,
-      change: '-2',
-      changeType: 'positive',
-      description: 'Pendências importantes'
+      title: 'Seguradoras Ativas',
+      value: currentStats.totalPolicies > 0 ? Math.max(1, Math.floor(currentStats.totalPolicies / 2)).toString() : '0',
+      icon: Users,
+      change: currentStats.totalPolicies > 0 ? 'Diversificado' : 'Vazio',
+      changeType: currentStats.totalPolicies > 0 ? 'positive' : 'neutral',
+      description: 'Parceiros ativos'
     }
   ];
 
