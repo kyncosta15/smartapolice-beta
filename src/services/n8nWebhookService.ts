@@ -1,4 +1,3 @@
-
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 interface N8NDirectResponse {
@@ -13,6 +12,9 @@ interface N8NDirectResponse {
   custo_mensal?: number;
   vencimentos_futuros?: any[];
   status?: string;
+  // Add policy number field
+  numero_apolice?: string;
+  apolice?: string;
 }
 
 interface N8NWebhookResponse {
@@ -88,6 +90,9 @@ export class N8NWebhookService {
     const premioMensal = n8nData.custo_mensal || (premioAnual / 12);
     const numeroParcelas = n8nData.parcelas || 12;
 
+    // Extract the actual policy number from N8N response
+    const policyNumber = n8nData.numero_apolice || n8nData.apolice || `EXTR-${Date.now()}`;
+
     // Gerar parcelas individuais usando os dados do N8N
     const parcelas = this.generateInstallmentDetails(premioMensal, startDate, numeroParcelas);
 
@@ -96,7 +101,7 @@ export class N8NWebhookService {
         nome_apolice: `Apólice ${n8nData.seguradora || 'N8N'}`,
         tipo: n8nData.tipo || "Auto",
         status: n8nData.status || "Ativa",
-        numero_apolice: `N8N-${Date.now()}`
+        numero_apolice: policyNumber
       },
       seguradora: {
         empresa: n8nData.seguradora || "Seguradora N8N",
