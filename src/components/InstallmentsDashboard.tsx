@@ -1,23 +1,22 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, DollarSign, Clock, AlertTriangle, FileText } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Calendar } from 'lucide-react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
-import { formatCurrency } from '@/utils/currencyFormatter';
+import { InstallmentsSummaryCards } from '@/components/installments/InstallmentsSummaryCards';
+import { PolicyInstallmentsCard } from '@/components/installments/PolicyInstallmentsCard';
+import { UpcomingInstallmentsList } from '@/components/installments/UpcomingInstallmentsList';
+import { OverdueInstallmentsList } from '@/components/installments/OverdueInstallmentsList';
+import { 
+  generateSimulatedInstallments, 
+  createExtendedInstallments,
+  filterUpcomingInstallments,
+  filterOverdueInstallments,
+  filterPaidInstallments
+} from '@/utils/installmentUtils';
 
 interface InstallmentsDashboardProps {
   policies: ParsedPolicyData[];
-}
-
-interface ExtendedInstallment {
-  numero: number;
-  valor: number;
-  data: string;
-  status: 'paga' | 'pendente';
-  policyName: string;
-  policyType: string;
-  insurer: string;
 }
 
 export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) {
@@ -54,32 +53,6 @@ export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) 
   return renderInstallmentsDashboard(policiesWithInstallments);
 }
 
-function generateSimulatedInstallments(policy: ParsedPolicyData) {
-  const monthlyAmount = policy.monthlyAmount || (policy.premium / 12) || 100;
-  const startDate = new Date(policy.startDate || new Date());
-  const numberOfInstallments = 12;
-  
-  const installments = [];
-  
-  for (let i = 0; i < numberOfInstallments; i++) {
-    const installmentDate = new Date(startDate);
-    installmentDate.setMonth(installmentDate.getMonth() + i);
-    
-    // Adicionar pequena variação no valor para realismo
-    const variation = (Math.random() - 0.5) * 20;
-    const installmentValue = Math.round((monthlyAmount + variation) * 100) / 100;
-    
-    installments.push({
-      numero: i + 1,
-      valor: installmentValue,
-      data: installmentDate.toISOString().split('T')[0],
-      status: installmentDate < new Date() ? 'paga' : 'pendente'
-    });
-  }
-  
-  return installments;
-}
-
 function renderInstallmentsDashboard(policiesWithInstallments: ParsedPolicyData[]) {
   // Calcular totais
   const totalInstallments = policiesWithInstallments.reduce((sum, policy) => 
@@ -92,36 +65,15 @@ function renderInstallmentsDashboard(policiesWithInstallments: ParsedPolicyData[
     ), 0
   );
 
-  // Próximas parcelas (próximos 30 dias)
-  const today = new Date();
-  const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+  // Criar lista estendida de parcelas
+  const allInstallments = createExtendedInstallments(policiesWithInstallments);
   
-  const allInstallments: ExtendedInstallment[] = policiesWithInstallments.flatMap(policy => 
-    policy.installments.map(installment => ({
-      numero: installment.numero,
-      valor: installment.valor,
-      data: installment.data,
-      status: installment.status,
-      policyName: policy.name,
-      policyType: policy.type,
-      insurer: policy.insurer
-    }))
-  );
+  // Filtrar parcelas por status
+  const upcomingInstallments = filterUpcomingInstallments(allInstallments);
+  const overdueInstallments = filterOverdueInstallments(allInstallments);
+  const paidInstallments = filterPaidInstallments(allInstallments);
 
-  const upcomingInstallments = allInstallments.filter(installment => {
-    const installmentDate = new Date(installment.data);
-    return installmentDate >= today && installmentDate <= thirtyDaysFromNow && installment.status === 'pendente';
-  });
-
-  const overdueInstallments = allInstallments.filter(installment => {
-    const installmentDate = new Date(installment.data);
-    return installmentDate < today && installment.status === 'pendente';
-  });
-
-  const paidInstallments = allInstallments.filter(installment => 
-    installment.status === 'paga'
-  );
-
+  // Calcular totais por categoria
   const totalUpcoming = upcomingInstallments.reduce((sum, installment) => sum + installment.valor, 0);
   const totalOverdue = overdueInstallments.reduce((sum, installment) => sum + installment.valor, 0);
   const totalPaid = paidInstallments.reduce((sum, installment) => sum + installment.valor, 0);
@@ -129,212 +81,29 @@ function renderInstallmentsDashboard(policiesWithInstallments: ParsedPolicyData[
   return (
     <div className="space-y-6">
       {/* Resumo Geral das Parcelas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Parcelas</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalInstallments}</div>
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(totalValue)} valor total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Próximas Parcelas</CardTitle>
-            <Clock className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{upcomingInstallments.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(totalUpcoming)} nos próximos 30 dias
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Parcelas Vencidas</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{overdueInstallments.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(totalOverdue)} em atraso
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Parcelas Pagas</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{paidInstallments.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(totalPaid)} quitadas
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <InstallmentsSummaryCards
+        totalInstallments={totalInstallments}
+        totalValue={totalValue}
+        upcomingInstallments={upcomingInstallments.length}
+        totalUpcoming={totalUpcoming}
+        overdueInstallments={overdueInstallments.length}
+        totalOverdue={totalOverdue}
+        paidInstallments={paidInstallments.length}
+        totalPaid={totalPaid}
+      />
 
       {/* Detalhamento por Apólice */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {policiesWithInstallments.map((policy, index) => (
-          <Card key={policy.id || index}>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-lg">{policy.name}</span>
-                  <span className="text-sm font-normal text-gray-600">{policy.policyNumber}</span>
-                </div>
-                <Badge variant="outline">{policy.insurer}</Badge>
-              </CardTitle>
-              <p className="text-sm text-gray-600">
-                {policy.installments.length} parcelas • Valor total: {formatCurrency(
-                  policy.installments.reduce((sum, inst) => sum + inst.valor, 0)
-                )}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {policy.installments.map((installment, instIndex) => {
-                  const installmentDate = new Date(installment.data);
-                  const isOverdue = installmentDate < today && installment.status === 'pendente';
-                  const isUpcoming = installmentDate >= today && installmentDate <= thirtyDaysFromNow && installment.status === 'pendente';
-                  
-                  return (
-                    <div 
-                      key={`${policy.id}-${instIndex}`}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${
-                        isOverdue ? 'bg-red-50 border-red-200' :
-                        isUpcoming ? 'bg-blue-50 border-blue-200' :
-                        installment.status === 'paga' ? 'bg-green-50 border-green-200' :
-                        'bg-gray-50 border-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="text-sm font-medium">
-                          Parcela {installment.numero || (instIndex + 1)}
-                        </div>
-                        <Badge 
-                          variant={
-                            installment.status === 'paga' ? 'default' :
-                            isOverdue ? 'destructive' : 'secondary'
-                          }
-                          className="text-xs"
-                        >
-                          {installment.status === 'paga' ? 'Paga' :
-                           isOverdue ? 'Vencida' : 'Pendente'}
-                        </Badge>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-sm">
-                          {formatCurrency(installment.valor)}
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          {installmentDate.toLocaleDateString('pt-BR')}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+          <PolicyInstallmentsCard key={policy.id || index} policy={policy} index={index} />
         ))}
       </div>
 
       {/* Lista de Próximas Parcelas */}
-      {upcomingInstallments.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="h-5 w-5 mr-2 text-blue-500" />
-              Próximas Parcelas (30 dias)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {upcomingInstallments
-                .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
-                .slice(0, 8)
-                .map((installment, index) => (
-                <div key={`upcoming-${index}`} 
-                     className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{installment.policyName}</p>
-                    <p className="text-xs text-gray-600">
-                      {installment.insurer} • Parcela {installment.numero || 'N/A'}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-blue-600">
-                      {formatCurrency(installment.valor)}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      {new Date(installment.data).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {upcomingInstallments.length > 8 && (
-              <p className="text-sm text-gray-500 mt-3 text-center">
-                +{upcomingInstallments.length - 8} parcelas adicionais
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      <UpcomingInstallmentsList upcomingInstallments={upcomingInstallments} />
 
       {/* Lista de Parcelas Vencidas */}
-      {overdueInstallments.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
-              Parcelas Vencidas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {overdueInstallments
-                .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
-                .slice(0, 6)
-                .map((installment, index) => (
-                <div key={`overdue-${index}`} 
-                     className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{installment.policyName}</p>
-                    <p className="text-xs text-gray-600">
-                      {installment.insurer} • Parcela {installment.numero || 'N/A'}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-red-600">
-                      {formatCurrency(installment.valor)}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      Venceu em {new Date(installment.data).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {overdueInstallments.length > 6 && (
-              <p className="text-sm text-gray-500 mt-3 text-center">
-                +{overdueInstallments.length - 6} parcelas vencidas adicionais
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      <OverdueInstallmentsList overdueInstallments={overdueInstallments} />
     </div>
   );
 }
