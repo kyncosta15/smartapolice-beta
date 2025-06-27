@@ -12,7 +12,7 @@ interface N8NDirectResponse {
   custo_mensal?: number;
   vencimentos_futuros?: any[];
   status?: string;
-  // Add policy number field
+  // Policy number fields from N8N
   numero_apolice?: string;
   apolice?: string;
 }
@@ -52,6 +52,11 @@ export class N8NWebhookService {
       
       console.log('✅ Resposta recebida do N8N:', result);
       
+      // Log specifically the policy number received
+      if (result.numero_apolice) {
+        console.log('📋 Número da apólice recebido:', result.numero_apolice);
+      }
+      
       // Verificar se temos dados válidos do N8N
       if (result && (result.segurado || result.seguradora || result.premio)) {
         console.log('🎉 Dados processados com sucesso pela IA do N8N!');
@@ -90,8 +95,10 @@ export class N8NWebhookService {
     const premioMensal = n8nData.custo_mensal || (premioAnual / 12);
     const numeroParcelas = n8nData.parcelas || 12;
 
-    // Extract the actual policy number from N8N response
+    // Use the actual policy number from N8N response - prioritize numero_apolice
     const policyNumber = n8nData.numero_apolice || n8nData.apolice || `EXTR-${Date.now()}`;
+    
+    console.log('🔢 Usando número da apólice:', policyNumber);
 
     // Gerar parcelas individuais usando os dados do N8N
     const parcelas = this.generateInstallmentDetails(premioMensal, startDate, numeroParcelas);
