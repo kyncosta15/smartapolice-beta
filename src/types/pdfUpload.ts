@@ -1,3 +1,4 @@
+
 export interface FileProcessingStatus {
   [fileName: string]: {
     progress: number;
@@ -39,6 +40,10 @@ export interface DynamicPDFData {
     data_nascimento?: string;
     email?: string;
     telefone?: string;
+    // Novos campos de documento
+    documento?: string;
+    tipo_pessoa?: 'PF' | 'PJ';
+    cpf_cnpj?: string;
   };
   veiculo?: {
     marca?: string;
