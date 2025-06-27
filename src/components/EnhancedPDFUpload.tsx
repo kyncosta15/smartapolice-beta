@@ -63,8 +63,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
             <span>Upload de Apólices - Processamento N8N + IA</span>
           </CardTitle>
           <CardDescription>
-            Sistema inteligente integrado ao N8N que processa PDFs de forma síncrona e extrai dados específicos por seguradora.
-            Suporte para Liberty, Bradesco, Porto Seguro e outras seguradoras.
+            Sistema inteligente processa PDFs de forma inteligente e extrai dados específicos por seguradora.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -75,9 +74,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
               <p className="text-sm text-gray-500">
                 {isDragActive ? 'Solte os arquivos aqui...' : 'Arraste e solte os PDFs ou clique para selecionar'}
               </p>
-              <p className="text-xs text-gray-400 mt-1">
-                Processamento direto via N8N com fallback local
-              </p>
+             
             </div>
           </div>
 
@@ -87,18 +84,13 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           />
         </CardContent>
         <CardFooter className="justify-between">
-          <div className="text-xs text-gray-500 space-y-1">
-            <p>• Processamento síncrono via webhook N8N</p>
-            <p>• Extração contextualizada por IA avançada</p>
-            <p>• Fallback automático para processamento local</p>
-            <p>• Validação e preenchimento inteligente de dados</p>
-          </div>
+        
           {processingCount > 0 && (
             <div className="text-right">
               <p className="text-sm text-blue-600 font-medium">
                 Processando {processingCount} arquivo(s)...
               </p>
-              <p className="text-xs text-gray-500">N8N + IA em tempo real</p>
+             
             </div>
           )}
         </CardFooter>
