@@ -59,7 +59,7 @@ export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) 
   
   const allInstallments = policiesWithInstallments.flatMap(policy => 
     policy.installments.map(installment => ({
-      ...installment,
+      ...installment, // Spread all installment properties including status and numero
       policyName: policy.name,
       policyType: policy.type,
       insurer: policy.insurer
@@ -73,7 +73,7 @@ export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) 
 
   const overdueInstallments = allInstallments.filter(installment => {
     const installmentDate = new Date(installment.data);
-    return installmentDate < today && installment.status === 'pendente';
+    return installmentDate < today && (installment.status === 'pendente' || !installment.status);
   });
 
   const paidInstallments = allInstallments.filter(installment => 
@@ -159,7 +159,7 @@ export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) 
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {policy.installments.map((installment, instIndex) => {
                   const installmentDate = new Date(installment.data);
-                  const isOverdue = installmentDate < today && installment.status === 'pendente';
+                  const isOverdue = installmentDate < today && (installment.status === 'pendente' || !installment.status);
                   const isUpcoming = installmentDate >= today && installmentDate <= thirtyDaysFromNow;
                   
                   return (
@@ -174,7 +174,7 @@ export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) 
                     >
                       <div className="flex items-center space-x-3">
                         <div className="text-sm font-medium">
-                          Parcela {installment.numero}
+                          Parcela {installment.numero || (instIndex + 1)}
                         </div>
                         <Badge 
                           variant={
@@ -224,7 +224,7 @@ export function InstallmentsDashboard({ policies }: InstallmentsDashboardProps) 
                   <div className="flex-1">
                     <p className="font-medium text-sm">{installment.policyName}</p>
                     <p className="text-xs text-gray-600">
-                      {installment.insurer} • Parcela {installment.numero}
+                      {installment.insurer} • Parcela {installment.numero || 'N/A'}
                     </p>
                   </div>
                   <div className="text-right">
