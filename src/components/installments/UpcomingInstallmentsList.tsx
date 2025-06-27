@@ -28,7 +28,7 @@ export function UpcomingInstallmentsList({ upcomingInstallments }: UpcomingInsta
       <CardHeader>
         <CardTitle className="flex items-center">
           <Clock className="h-5 w-5 mr-2 text-blue-500" />
-          Próximas Parcelas (30 dias)
+          Próximas Parcelas
         </CardTitle>
       </CardHeader>
       <CardContent>

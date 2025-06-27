@@ -11,8 +11,7 @@ import {
   generateSimulatedInstallments, 
   createExtendedInstallments,
   filterUpcomingInstallments,
-  filterOverdueInstallments,
-  filterPaidInstallments
+  filterOverdueInstallments
 } from '@/utils/installmentUtils';
 
 interface InstallmentsDashboardProps {
@@ -68,15 +67,13 @@ function renderInstallmentsDashboard(policiesWithInstallments: ParsedPolicyData[
   // Criar lista estendida de parcelas
   const allInstallments = createExtendedInstallments(policiesWithInstallments);
   
-  // Filtrar parcelas por status
+  // Filtrar parcelas por status (removido paidInstallments)
   const upcomingInstallments = filterUpcomingInstallments(allInstallments);
   const overdueInstallments = filterOverdueInstallments(allInstallments);
-  const paidInstallments = filterPaidInstallments(allInstallments);
 
-  // Calcular totais por categoria
+  // Calcular totais por categoria (removido totalPaid)
   const totalUpcoming = upcomingInstallments.reduce((sum, installment) => sum + installment.valor, 0);
   const totalOverdue = overdueInstallments.reduce((sum, installment) => sum + installment.valor, 0);
-  const totalPaid = paidInstallments.reduce((sum, installment) => sum + installment.valor, 0);
 
   return (
     <div className="space-y-6">
@@ -88,8 +85,6 @@ function renderInstallmentsDashboard(policiesWithInstallments: ParsedPolicyData[
         totalUpcoming={totalUpcoming}
         overdueInstallments={overdueInstallments.length}
         totalOverdue={totalOverdue}
-        paidInstallments={paidInstallments.length}
-        totalPaid={totalPaid}
       />
 
       {/* Detalhamento por Apólice */}

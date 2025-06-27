@@ -61,23 +61,22 @@ export function createExtendedInstallments(policies: ParsedPolicyData[]): Extend
 
 export function filterUpcomingInstallments(allInstallments: ExtendedInstallment[]): ExtendedInstallment[] {
   const today = new Date();
-  const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+  today.setHours(0, 0, 0, 0); // Zerar horas para comparação precisa de datas
   
   return allInstallments.filter(installment => {
     const installmentDate = new Date(installment.data);
-    return installmentDate >= today && installmentDate <= thirtyDaysFromNow && installment.status === 'pendente';
+    installmentDate.setHours(0, 0, 0, 0);
+    return installmentDate >= today && installment.status === 'pendente';
   });
 }
 
 export function filterOverdueInstallments(allInstallments: ExtendedInstallment[]): ExtendedInstallment[] {
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Zerar horas para comparação precisa de datas
   
   return allInstallments.filter(installment => {
     const installmentDate = new Date(installment.data);
+    installmentDate.setHours(0, 0, 0, 0);
     return installmentDate < today && installment.status === 'pendente';
   });
-}
-
-export function filterPaidInstallments(allInstallments: ExtendedInstallment[]): ExtendedInstallment[] {
-  return allInstallments.filter(installment => installment.status === 'paga');
 }

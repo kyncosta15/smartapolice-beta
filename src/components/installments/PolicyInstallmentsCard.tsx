@@ -12,7 +12,7 @@ interface PolicyInstallmentsCardProps {
 
 export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCardProps) {
   const today = new Date();
-  const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+  today.setHours(0, 0, 0, 0);
 
   // Calcular valor total correto baseado no valor segurado ou prêmio
   const totalValue = policy.totalCoverage || policy.premium || 
@@ -36,8 +36,9 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
         <div className="space-y-2 max-h-60 overflow-y-auto">
           {policy.installments.map((installment, instIndex) => {
             const installmentDate = new Date(installment.data);
+            installmentDate.setHours(0, 0, 0, 0);
             const isOverdue = installmentDate < today && installment.status === 'pendente';
-            const isUpcoming = installmentDate >= today && installmentDate <= thirtyDaysFromNow && installment.status === 'pendente';
+            const isUpcoming = installmentDate >= today && installment.status === 'pendente';
             
             return (
               <div 
@@ -45,7 +46,6 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
                 className={`flex items-center justify-between p-3 rounded-lg border ${
                   isOverdue ? 'bg-red-50 border-red-200' :
                   isUpcoming ? 'bg-blue-50 border-blue-200' :
-                  installment.status === 'paga' ? 'bg-green-50 border-green-200' :
                   'bg-gray-50 border-gray-200'
                 }`}
               >
