@@ -59,9 +59,10 @@ export function DashboardContent() {
       premium: policy.premium || 0,
       deductible: Math.floor(Math.random() * 5000) + 1000,
       limits: 'R$ 100.000 por sinistro',
-      // Garantir que installments seja sempre um número para compatibilidade
-      installments: typeof policy.installments === 'number' ? policy.installments : 
-                   Array.isArray(policy.installments) ? policy.installments.length : 12,
+      // Manter installments como array se já for, senão gerar array de parcelas
+      installments: Array.isArray(policy.installments) ? policy.installments : 
+                   policy.installments ? this.generateInstallmentsFromNumber(policy.installments, policy.monthlyAmount, policy.startDate) :
+                   this.generateDefaultInstallments(policy.monthlyAmount, policy.startDate),
       totalCoverage: policy.totalCoverage || policy.premium || 0,
       startDate: policy.startDate || new Date().toISOString().split('T')[0],
       endDate: policy.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -73,6 +74,31 @@ export function DashboardContent() {
       title: "Apólice Adicionada",
       description: `${policy.name || 'Nova apólice'} foi adicionada ao sistema`,
     });
+  };
+
+  // Função auxiliar para gerar parcelas a partir de um número
+  const generateInstallmentsFromNumber = (numberOfInstallments: number, monthlyAmount: number, startDate: string) => {
+    const installments = [];
+    const baseDate = new Date(startDate);
+    
+    for (let i = 0; i < numberOfInstallments; i++) {
+      const installmentDate = new Date(baseDate);
+      installmentDate.setMonth(installmentDate.getMonth() + i);
+      
+      installments.push({
+        numero: i + 1,
+        valor: monthlyAmount,
+        data: installmentDate.toISOString().split('T')[0],
+        status: installmentDate < new Date() ? 'paga' : 'pendente'
+      });
+    }
+    
+    return installments;
+  };
+
+  // Função auxiliar para gerar parcelas padrão
+  const generateDefaultInstallments = (monthlyAmount: number, startDate: string) => {
+    return this.generateInstallmentsFromNumber(12, monthlyAmount || 100, startDate);
   };
 
   const handlePolicySelect = (policy: any) => {

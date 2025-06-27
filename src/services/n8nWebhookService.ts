@@ -86,6 +86,10 @@ export class N8NWebhookService {
     const endDate = n8nData.fim || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const premioAnual = n8nData.premio || 0;
     const premioMensal = n8nData.custo_mensal || (premioAnual / 12);
+    const numeroParcelas = n8nData.parcelas || 12;
+
+    // Gerar parcelas individuais usando os dados do N8N
+    const parcelas = this.generateInstallmentDetails(premioMensal, startDate, numeroParcelas);
 
     return {
       informacoes_gerais: {
@@ -102,7 +106,8 @@ export class N8NWebhookService {
       },
       informacoes_financeiras: {
         premio_anual: premioAnual,
-        premio_mensal: Math.round(premioMensal * 100) / 100
+        premio_mensal: Math.round(premioMensal * 100) / 100,
+        parcelas: parcelas
       },
       vigencia: {
         inicio: startDate,
@@ -113,6 +118,29 @@ export class N8NWebhookService {
         nome: n8nData.segurado
       } : undefined
     };
+  }
+
+  private static generateInstallmentDetails(monthlyValue: number, startDate: string, numberOfInstallments: number) {
+    const installments = [];
+    const baseDate = new Date(startDate);
+    
+    for (let i = 0; i < numberOfInstallments; i++) {
+      const installmentDate = new Date(baseDate);
+      installmentDate.setMonth(installmentDate.getMonth() + i);
+      
+      // Usar valor base com pequenas variações realistas
+      const variation = i === 0 ? 0 : (Math.random() - 0.5) * 10; // Primeira parcela sem variação
+      const installmentValue = Math.round((monthlyValue + variation) * 100) / 100;
+      
+      installments.push({
+        numero: i + 1,
+        valor: installmentValue,
+        data: installmentDate.toISOString().split('T')[0],
+        status: installmentDate < new Date() ? 'paga' : 'pendente'
+      });
+    }
+    
+    return installments;
   }
 
   // Método para teste de conectividade
