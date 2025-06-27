@@ -21,7 +21,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   } = useFileStatusManager();
   
   const { toast } = useToast();
-  const [isProcessingBatch, setIsProcessingBatch] = useState(false);
+  const [isProcessingSequential, setIsProcessingSequential] = useState(false);
 
   const fileProcessor = new FileProcessor(
     updateFileStatus,
@@ -37,28 +37,30 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       return;
     }
 
-    console.log(`📤 Processando lote de ${acceptedFiles.length} arquivo(s) sequencialmente`);
-    setIsProcessingBatch(true);
+    console.log(`📤 Iniciando processamento sequencial de ${acceptedFiles.length} arquivo(s)`);
+    setIsProcessingSequential(true);
 
     try {
-      // Processar arquivos sequencialmente e aguardar todos os resultados
-      await fileProcessor.processMultipleFiles(acceptedFiles);
+      // Processar arquivos sequencialmente
+      const allResults = await fileProcessor.processMultipleFiles(acceptedFiles);
+      
+      console.log(`🎉 Processamento sequencial completo! ${allResults.length} apólices extraídas`);
       
       toast({
-        title: "🎉 Lote Processado",
-        description: `Todos os ${acceptedFiles.length} arquivos foram processados e adicionados ao dashboard`,
+        title: "🎉 Processamento Sequencial Concluído",
+        description: `${allResults.length} apólices foram processadas e adicionadas ao dashboard`,
       });
 
     } catch (error) {
-      console.error('❌ Erro no processamento do lote:', error);
+      console.error('❌ Erro no processamento sequencial:', error);
       
       toast({
-        title: "Erro no Lote",
-        description: "Ocorreu um erro durante o processamento do lote de arquivos",
+        title: "Erro no Processamento Sequencial",
+        description: "Ocorreu um erro durante o processamento dos arquivos",
         variant: "destructive",
       });
     } finally {
-      setIsProcessingBatch(false);
+      setIsProcessingSequential(false);
     }
 
   }, [fileProcessor, toast]);
@@ -69,7 +71,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       'application/pdf': ['.pdf'],
     },
     maxFiles: 10,
-    disabled: isProcessingBatch,
+    disabled: isProcessingSequential,
   });
 
   const activeFiles = getActiveFiles();
@@ -82,18 +84,18 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           <CardTitle className="flex items-center space-x-2">
             <Cloud className="h-5 w-5 text-blue-600" />
             <span>Upload de Apólices</span>
-            {isProcessingBatch && (
+            {isProcessingSequential && (
               <div className="flex items-center space-x-2 ml-4">
                 <Clock className="h-4 w-4 text-orange-500 animate-pulse" />
-                <span className="text-sm text-orange-600 font-medium">Processando lote...</span>
+                <span className="text-sm text-orange-600 font-medium">Processamento sequencial...</span>
               </div>
             )}
           </CardTitle>
           <CardDescription>
-            Sistema inteligente processa PDFs de forma sequencial e atualiza o dashboard após processamento completo.
-            {isProcessingBatch && (
+            Sistema inteligente processa cada PDF individualmente em sequência, garantindo que todos os dados sejam extraídos corretamente.
+            {isProcessingSequential && (
               <div className="mt-2 text-sm text-orange-600">
-                ⏳ Aguarde o processamento completo de todos os arquivos antes de adicionar novos.
+                ⏳ Processando arquivos um por vez para garantir máxima precisão na extração.
               </div>
             )}
           </CardDescription>
@@ -102,22 +104,27 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           <div 
             {...getRootProps()} 
             className={`relative border-2 border-dashed rounded-md p-6 cursor-pointer transition-colors ${
-              isProcessingBatch 
+              isProcessingSequential 
                 ? 'bg-gray-100 border-gray-300 cursor-not-allowed' 
                 : 'hover:bg-gray-50 border-gray-300'
             } ${isDragActive ? 'border-blue-500 bg-blue-50' : ''}`}
           >
             <input {...getInputProps()} />
             <div className="text-center">
-              <FilePlus className={`h-6 w-6 mx-auto mb-2 ${isProcessingBatch ? 'text-gray-400' : 'text-gray-400'}`} />
-              <p className={`text-sm ${isProcessingBatch ? 'text-gray-400' : 'text-gray-500'}`}>
-                {isProcessingBatch 
-                  ? 'Processando lote atual...' 
+              <FilePlus className={`h-6 w-6 mx-auto mb-2 ${isProcessingSequential ? 'text-gray-400' : 'text-gray-400'}`} />
+              <p className={`text-sm ${isProcessingSequential ? 'text-gray-400' : 'text-gray-500'}`}>
+                {isProcessingSequential 
+                  ? 'Processamento sequencial em andamento...' 
                   : isDragActive 
                     ? 'Solte os arquivos aqui...' 
                     : 'Arraste e solte os PDFs ou clique para selecionar (máx. 10 arquivos)'
                 }
               </p>
+              {isProcessingSequential && (
+                <p className="text-xs text-orange-500 mt-2">
+                  Cada arquivo é processado individualmente para máxima precisão
+                </p>
+              )}
             </div>
           </div>
 
@@ -130,15 +137,15 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           {processingCount > 0 && (
             <div className="text-right">
               <p className="text-sm text-blue-600 font-medium">
-                Processando {processingCount} arquivo(s)...
+                Processando {processingCount} arquivo(s) sequencialmente...
               </p>
             </div>
           )}
           
-          {isProcessingBatch && (
+          {isProcessingSequential && (
             <div className="text-right">
               <p className="text-sm text-orange-600 font-medium">
-                🔄 Processamento sequencial em andamento...
+                🔄 Processamento sequencial garantindo máxima precisão...
               </p>
             </div>
           )}

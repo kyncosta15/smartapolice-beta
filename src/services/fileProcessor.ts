@@ -1,3 +1,4 @@
+
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { DynamicPDFExtractor } from './dynamicPdfExtractor';
 import { DynamicPolicyParser } from '@/utils/dynamicPolicyParser';
@@ -22,65 +23,72 @@ export class FileProcessor {
     this.toast = toast;
   }
 
-  // New method for batch processing with multipart/form-data indexed keys
+  // Método para processar múltiplos arquivos sequencialmente
   async processMultipleFiles(files: File[]): Promise<ParsedPolicyData[]> {
-    console.log(`📤 Iniciando processamento em lote de ${files.length} arquivos`);
+    console.log(`📤 Iniciando processamento sequencial de ${files.length} arquivos`);
     
     // Initialize status for all files
     files.forEach(file => {
       this.updateFileStatus(file.name, {
         progress: 0,
         status: 'uploading',
-        message: 'Preparando para envio em lote...'
+        message: 'Aguardando processamento sequencial...'
       });
     });
 
+    const allResults: ParsedPolicyData[] = [];
+
     try {
-      // Update status to show batch processing
-      files.forEach(file => {
-        this.updateFileStatus(file.name, {
-          progress: 30,
-          status: 'processing',
-          message: 'Enviando em lote para processamento...'
-        });
-      });
-
-      // Send all files with indexed keys (arquivo0, arquivo1, etc.)
-      const batchResults = await DynamicPDFExtractor.extractFromMultiplePDFs(files);
-      
-      // Update progress for all files
-      files.forEach(file => {
-        this.updateFileStatus(file.name, {
-          progress: 70,
-          status: 'processing',
-          message: 'Processando resposta do lote...'
-        });
-      });
-
-      const resultados: ParsedPolicyData[] = [];
-
-      // Process each result
-      for (let i = 0; i < batchResults.length && i < files.length; i++) {
+      // Processar cada arquivo sequencialmente
+      for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const dynamicData = batchResults[i];
-        
+        console.log(`🔄 Processando arquivo ${i + 1}/${files.length}: ${file.name}`);
+
+        // Update status to show current processing
+        this.updateFileStatus(file.name, {
+          progress: 20,
+          status: 'processing',
+          message: `Processando arquivo ${i + 1}/${files.length}...`
+        });
+
         try {
-          // Convert to parsed policy
-          const parsedPolicy = DynamicPolicyParser.convertToParsedPolicy(dynamicData, file.name, file);
-          resultados.push(parsedPolicy);
-          
+          // Extract data from single file
+          this.updateFileStatus(file.name, {
+            progress: 50,
+            status: 'processing',
+            message: 'Extraindo dados com IA...'
+          });
+
+          const extractedData = await DynamicPDFExtractor.extractFromPDF(file);
+
+          // Update progress
+          this.updateFileStatus(file.name, {
+            progress: 80,
+            status: 'processing',
+            message: 'Convertendo dados extraídos...'
+          });
+
+          // Verifica se os dados extraídos são um array ou item único
+          const dataArray = Array.isArray(extractedData) ? extractedData : [extractedData];
+
+          // Convert each data item to parsed policy
+          for (const singleData of dataArray) {
+            const parsedPolicy = DynamicPolicyParser.convertToParsedPolicy(singleData, file.name, file);
+            allResults.push(parsedPolicy);
+            
+            // Add to dashboard immediately
+            this.onPolicyExtracted(parsedPolicy);
+          }
+
           // Update success status
           this.updateFileStatus(file.name, {
             progress: 100,
             status: 'completed',
-            message: `✅ Processado: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
+            message: `✅ Processado: ${dataArray.length} apólice(s) extraída(s)`
           });
 
-          // Add to dashboard
-          this.onPolicyExtracted(parsedPolicy);
-          
         } catch (error) {
-          console.error(`❌ Erro ao processar dados do arquivo ${file.name}:`, error);
+          console.error(`❌ Erro ao processar ${file.name}:`, error);
           
           this.updateFileStatus(file.name, {
             progress: 100,
@@ -90,13 +98,13 @@ export class FileProcessor {
         }
       }
 
-      console.log(`🎉 Processamento em lote completo! ${resultados.length}/${files.length} arquivos processados com sucesso`);
+      console.log(`🎉 Processamento sequencial completo! ${allResults.length} apólices processadas no total`);
       
-      // Show batch completion notification
-      if (resultados.length > 0) {
+      // Show completion notification
+      if (allResults.length > 0) {
         this.toast({
-          title: `🎉 Lote Processado com Sucesso`,
-          description: `${resultados.length} de ${files.length} arquivos processados usando chaves indexadas`,
+          title: `🎉 Processamento Sequencial Concluído`,
+          description: `${allResults.length} apólices foram extraídas e adicionadas ao dashboard`,
         });
       }
 
@@ -107,17 +115,17 @@ export class FileProcessor {
         });
       }, 3000);
 
-      return resultados;
+      return allResults;
 
     } catch (error) {
-      console.error('❌ Erro no processamento do lote:', error);
+      console.error('❌ Erro geral no processamento sequencial:', error);
       
       // Update all files with error status
       files.forEach(file => {
         this.updateFileStatus(file.name, {
           progress: 100,
           status: 'failed',
-          message: `❌ Erro no lote: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+          message: `❌ Erro geral: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
         });
       });
 
