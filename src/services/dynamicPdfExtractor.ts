@@ -1,9 +1,8 @@
 
 export class DynamicPDFExtractor {
   private static readonly WEBHOOK_URL = 'https://beneficiosagente.app.n8n.cloud/webhook-test/a2c01401-91f5-4652-a2b7-4faadbf93745';
-  private static readonly TIMEOUT = 45000; // Aumentar timeout para 45 segundos
-  private static readonly MAX_RETRIES = 3; // Aumentar tentativas
-  private static readonly DELAY_BETWEEN_FILES = 2000; // 2 segundos entre arquivos
+  private static readonly TIMEOUT = 60000; // 60 segundos para múltiplos arquivos
+  private static readonly MAX_RETRIES = 3;
 
   static async extractFromPDF(file: File): Promise<any> {
     console.log(`🔄 Enviando arquivo individual: ${file.name} (${file.size} bytes)`);
@@ -28,9 +27,6 @@ export class DynamicPDFExtractor {
           method: 'POST',
           body: formData,
           signal: controller.signal,
-          headers: {
-            // Não definir Content-Type para FormData - deixar o browser definir
-          }
         });
 
         clearTimeout(timeoutId);
@@ -60,12 +56,10 @@ export class DynamicPDFExtractor {
 
         console.log(`✅ Dados extraídos de ${file.name}:`, data);
         
-        // Verificar se os dados são válidos
         if (!data || (Array.isArray(data) && data.length === 0)) {
           throw new Error(`Dados vazios retornados para ${file.name}`);
         }
 
-        // Se recebeu um array, retorna o array. Se recebeu um objeto, retorna como array
         return Array.isArray(data) ? data : [data];
 
       } catch (error) {
@@ -80,63 +74,132 @@ export class DynamicPDFExtractor {
           throw new Error(`Falha na extração de ${file.name} após ${this.MAX_RETRIES} tentativas: ${errorMessage}`);
         }
         
-        // Aguardar progressivamente mais tempo entre tentativas
-        const retryDelay = 1000 * attempt * 2; // 2s, 4s, 6s
+        const retryDelay = 1000 * attempt * 2;
         console.log(`⏳ Aguardando ${retryDelay}ms antes da próxima tentativa para ${file.name}`);
         await new Promise(resolve => setTimeout(resolve, retryDelay));
       }
     }
   }
 
-  // Método para processar múltiplos arquivos com controle melhorado
+  // Novo método para enviar múltiplos arquivos de uma vez
   static async extractFromMultiplePDFs(files: File[]): Promise<any[]> {
-    console.log(`🔄 Processando ${files.length} arquivos com delay entre eles`);
+    console.log(`🔄 Enviando ${files.length} arquivos de uma vez para o N8N`);
+
+    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+      try {
+        const formData = new FormData();
+        
+        // Adicionar cada arquivo com índice
+        files.forEach((file, index) => {
+          formData.append(`arquivo${index}`, file);
+          formData.append(`fileName${index}`, file.name);
+          formData.append(`fileSize${index}`, file.size.toString());
+        });
+        
+        // Adicionar metadados gerais
+        formData.append('totalFiles', files.length.toString());
+        formData.append('timestamp', new Date().toISOString());
+        formData.append('batchUpload', 'true');
+
+        console.log(`🔄 Tentativa ${attempt}/${this.MAX_RETRIES} para batch de ${files.length} arquivos`);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log(`⏰ Timeout após ${this.TIMEOUT}ms para batch upload`);
+          controller.abort();
+        }, this.TIMEOUT);
+
+        const response = await fetch(this.WEBHOOK_URL, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        console.log(`📡 Resposta recebida para batch: ${response.status} ${response.statusText}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+        let data;
+        
+        if (contentType && contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          const text = await response.text();
+          console.log(`📝 Resposta batch como texto: ${text}`);
+          try {
+            data = JSON.parse(text);
+          } catch (parseError) {
+            console.error(`❌ Erro ao fazer parse do JSON batch: ${parseError}`);
+            throw new Error(`Resposta inválida do servidor: ${text}`);
+          }
+        }
+
+        console.log(`✅ Dados extraídos do batch:`, data);
+        
+        if (!data) {
+          throw new Error('Dados vazios retornados do batch');
+        }
+
+        // Garantir que sempre retornamos um array
+        const resultArray = Array.isArray(data) ? data : [data];
+        console.log(`📦 Retornando ${resultArray.length} apólices do batch`);
+        
+        return resultArray;
+
+      } catch (error) {
+        console.error(`❌ Tentativa ${attempt} falhou para batch:`, error);
+        
+        if (error.name === 'AbortError') {
+          console.log(`⏰ Timeout para batch na tentativa ${attempt}`);
+        }
+        
+        if (attempt === this.MAX_RETRIES) {
+          console.log(`❌ Batch falhou após ${this.MAX_RETRIES} tentativas, tentando individualmente`);
+          
+          // Fallback: tentar processar arquivos individualmente
+          return await this.fallbackToIndividualProcessing(files);
+        }
+        
+        const retryDelay = 2000 * attempt;
+        console.log(`⏳ Aguardando ${retryDelay}ms antes da próxima tentativa do batch`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
+
+    return [];
+  }
+
+  // Método de fallback para processamento individual
+  private static async fallbackToIndividualProcessing(files: File[]): Promise<any[]> {
+    console.log(`🔄 Iniciando processamento individual como fallback para ${files.length} arquivos`);
     const resultados = [];
 
     for (let i = 0; i < files.length; i++) {
       const arquivo = files[i];
-      console.log(`📤 Processando arquivo ${i + 1}/${files.length}: ${arquivo.name}`);
+      console.log(`📤 Processando individualmente arquivo ${i + 1}/${files.length}: ${arquivo.name}`);
       
       try {
         const data = await this.extractFromPDF(arquivo);
-        
-        // data já vem como array do método extractFromPDF
         resultados.push(...data);
-        console.log(`📋 Adicionados ${data.length} itens de ${arquivo.name}`);
-
-        // Pausa maior entre arquivos para evitar sobrecarga do N8N
+        
+        // Pausa entre arquivos individuais
         if (i < files.length - 1) {
-          console.log(`⏳ Aguardando ${this.DELAY_BETWEEN_FILES}ms antes do próximo arquivo`);
-          await new Promise(resolve => setTimeout(resolve, this.DELAY_BETWEEN_FILES));
+          console.log(`⏳ Aguardando 3s antes do próximo arquivo individual`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
         }
 
       } catch (error) {
-        console.error(`❌ Erro ao processar ${arquivo.name}:`, error);
-        // Continuar processando outros arquivos mesmo se um falhar
-        // Mas registrar o erro para relatório final
-        const errorInfo = {
-          fileName: arquivo.name,
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-          timestamp: new Date().toISOString()
-        };
-        
-        // Adicionar um objeto de erro aos resultados para tracking
-        resultados.push({
-          _error: true,
-          ...errorInfo
-        });
+        console.error(`❌ Erro no processamento individual de ${arquivo.name}:`, error);
+        // Continuar com outros arquivos
       }
     }
 
-    const sucessos = resultados.filter(r => !r._error);
-    const erros = resultados.filter(r => r._error);
-    
-    console.log(`🎉 Processamento completo! ${sucessos.length} sucessos, ${erros.length} erros`);
-    
-    if (erros.length > 0) {
-      console.warn('❌ Arquivos com erro:', erros);
-    }
-
-    return sucessos; // Retornar apenas os sucessos
+    console.log(`🎉 Processamento individual completo! ${resultados.length} apólices extraídas`);
+    return resultados;
   }
 }
