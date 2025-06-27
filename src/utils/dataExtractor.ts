@@ -1,7 +1,7 @@
-
 import { DynamicPDFData } from '@/types/pdfUpload';
 import { InsurerConfig } from '@/types/insurerConfig';
 import { DataValidator } from './dataValidator';
+import { DocumentValidator } from './documentValidator';
 
 export class DataExtractor {
   static extractSpecificData(text: string, config: InsurerConfig, detectedInsurer: string): Partial<DynamicPDFData> {
@@ -9,13 +9,16 @@ export class DataExtractor {
     
     const normalizedText = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     
+    // Detectar documento (CPF/CNPJ) no texto
+    const documentInfo = DocumentValidator.detectDocument(normalizedText);
+    
     // Extração inteligente de dados
     const extractedData = {
       informacoes_gerais: this.extractGeneralInfo(normalizedText, config, detectedInsurer),
       seguradora: this.extractInsurerInfo(normalizedText, config, detectedInsurer),
       informacoes_financeiras: this.extractFinancialInfo(normalizedText, config),
       vigencia: this.extractValidityInfo(normalizedText, config),
-      segurado: this.extractInsuredInfo(normalizedText, config),
+      segurado: this.extractInsuredInfo(normalizedText, config, documentInfo),
       veiculo: this.extractVehicleInfo(normalizedText, config)
     };
 
@@ -112,7 +115,7 @@ export class DataExtractor {
     };
   }
 
-  private static extractInsuredInfo(text: string, config: InsurerConfig) {
+  private static extractInsuredInfo(text: string, config: InsurerConfig, documentInfo: any) {
     if (!config.patterns.insuredName) return undefined;
 
     const insuredMatch = this.tryMultiplePatterns(text, [
@@ -122,9 +125,26 @@ export class DataExtractor {
       /nome\s*:?\s*([a-záêôãç\s]+)/i
     ]);
 
-    return insuredMatch ? {
-      nome: this.cleanPersonName(insuredMatch)
-    } : undefined;
+    if (insuredMatch || documentInfo) {
+      const insuredInfo: any = {};
+      
+      if (insuredMatch) {
+        insuredInfo.nome = this.cleanPersonName(insuredMatch);
+      }
+      
+      // Adicionar informações do documento se disponível
+      if (documentInfo && documentInfo.isValid) {
+        insuredInfo.documento = documentInfo.formatted;
+        insuredInfo.tipo_pessoa = documentInfo.personType;
+        insuredInfo.cpf_cnpj = documentInfo.cleanValue;
+        
+        console.log(`📋 Documento detectado: ${documentInfo.type} (${documentInfo.personType}) - ${documentInfo.formatted}`);
+      }
+      
+      return insuredInfo;
+    }
+
+    return undefined;
   }
 
   private static extractVehicleInfo(text: string, config: InsurerConfig) {

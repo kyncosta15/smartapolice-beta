@@ -1,4 +1,3 @@
-
 export const EXTRACTION_PATTERNS = {
   // Padrões principais com múltiplas variações para maior precisão
   insuredName: [
@@ -8,12 +7,22 @@ export const EXTRACTION_PATTERNS = {
     /DADOS\s+DO\s+SEGURADO[^]*?Nome[^]*?([A-ZÁÊÔÃÇÀÉÍÓÚÜ\s\.]{3,})/i
   ],
 
+  // Padrões atualizados para CPF/CNPJ com maior flexibilidade
   cpfCnpj: [
     /CPF\/CNPJ\s*[:\s]*([\d\.\-\/]{11,18})/i,
     /CPF\s*[:\s]*([\d\.\-]{11,14})/i,
     /CNPJ\s*[:\s]*([\d\.\-\/]{14,18})/i,
-    /(\d{3}\.\d{3}\.\d{3}-\d{2})/g, // CPF format
-    /(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/g // CNPJ format
+    /Documento\s*[:\s]*([\d\.\-\/]{11,18})/i,
+    // Padrões mais permissivos para capturar formatos variados
+    /(\d{2,3}[\.\s]?\d{3}[\.\s]?\d{3}[\.\s\/]?\d{4}[\-\s]?\d{2})/g,
+    /(\d{11,14})/g // Números puros de 11 ou 14 dígitos
+  ],
+
+  // Padrões para detectar tipo de pessoa
+  personType: [
+    /Pessoa\s+(Física|Jurídica)/i,
+    /Tipo\s+de\s+Pessoa\s*[:\s]*(PF|PJ|Física|Jurídica)/i,
+    /Natureza\s*[:\s]*(Física|Jurídica)/i
   ],
 
   policyNumber: [

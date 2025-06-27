@@ -28,6 +28,12 @@ export interface ParsedPolicyData {
   
   // Campos expandidos opcionais
   insuredName?: string;
+  
+  // Novas informações de documento
+  insuredDocument?: string;
+  insuredPersonType?: 'PF' | 'PJ';
+  insuredCpfCnpj?: string;
+  
   vehicleDetails?: {
     brand?: string;
     model?: string;
@@ -113,8 +119,11 @@ export function parsePolicyData(data: DynamicPDFData, file?: File): ParsedPolicy
     extractedAt: data.vigencia.extraido_em,
     installments,
     
-    // Campos opcionais
+    // Campos opcionais incluindo novos campos de documento
     insuredName: data.segurado?.nome,
+    insuredDocument: data.segurado?.documento,
+    insuredPersonType: data.segurado?.tipo_pessoa,
+    insuredCpfCnpj: data.segurado?.cpf_cnpj,
     broker: data.seguradora.entidade,
     
     // Legacy compatibility
