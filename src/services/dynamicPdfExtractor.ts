@@ -19,6 +19,35 @@ interface InsurerConfig {
 }
 
 export class DynamicPDFExtractor {
+  // Array completo de seguradoras para detecção
+  private static readonly INSURANCE_COMPANIES = [
+    "Porto Seguro",
+    "Bradesco Seguros", 
+    "SulAmérica",
+    "Itaú Seguros",
+    "Mapfre",
+    "Allianz",
+    "Liberty Seguros",
+    "HDI Seguros",
+    "Tokio Marine",
+    "Sompo Seguros",
+    "Zurich",
+    "Azul Seguros",
+    "Alfa Seguradora",
+    "Suhai Seguradora",
+    "Excelsior Seguros",
+    "Too Seguros",
+    "Icatu Seguros",
+    "Capemisa",
+    "MetLife",
+    "Prudential",
+    "Youse",
+    "Seguros Unimed",
+    "Centauro-ON",
+    "BB Seguros",
+    "Assurant"
+  ];
+
   private static readonly INSURER_CONFIGS: InsurerConfig[] = [
     {
       name: "Liberty Seguros",
@@ -77,17 +106,92 @@ export class DynamicPDFExtractor {
     // Simular extração de texto do PDF
     const extractedText = await this.simulateTextExtraction(file);
     
-    // Identificar seguradora baseado no conteúdo, não no nome do arquivo
-    const insurerConfig = this.identifyInsurerFromContent(extractedText);
+    // Identificar seguradora usando nova lógica de detecção
+    const detectedInsurer = this.detectInsuranceCompany(extractedText);
+    const insurerConfig = this.getInsurerConfig(detectedInsurer);
     
     // Extrair dados específicos com regex melhorados
-    const extractedData = this.extractSpecificData(extractedText, insurerConfig);
+    const extractedData = this.extractSpecificData(extractedText, insurerConfig, detectedInsurer);
     
     // Validar e preencher dados ausentes
     const validatedData = this.validateAndFillData(extractedData, file.name);
     
     console.log(`✅ Dados dinâmicos extraídos:`, validatedData);
     return validatedData;
+  }
+
+  // Nova função para detectar seguradora usando o array completo
+  private static detectInsuranceCompany(textoPdf: string): string {
+    const textoLower = textoPdf.toLowerCase();
+    
+    // Primeiro, procurar na seção "emitido por" ou "DADOS DO CORRETOR"
+    const emitidoPorMatch = textoLower.match(/emitido\s+por\s+([^.\n]+)/i);
+    const dadosCorretorMatch = textoLower.match(/dados\s+do\s+corretor[^]*?([a-záêôãç\s&]+)/i);
+    
+    const searchSections = [
+      emitidoPorMatch ? emitidoPorMatch[1] : '',
+      dadosCorretorMatch ? dadosCorretorMatch[1] : '',
+      textoLower // texto completo como fallback
+    ];
+
+    // Buscar por similaridade com os nomes das seguradoras
+    for (const section of searchSections) {
+      if (!section) continue;
+      
+      for (const seguradora of this.INSURANCE_COMPANIES) {
+        const nomeNormalizado = seguradora.toLowerCase();
+        
+        // Busca exata
+        if (section.includes(nomeNormalizado)) {
+          console.log(`🎯 Seguradora detectada: ${seguradora}`);
+          return seguradora;
+        }
+        
+        // Busca por palavras-chave principais
+        const palavrasChave = nomeNormalizado.split(' ');
+        let matches = 0;
+        for (const palavra of palavrasChave) {
+          if (palavra.length > 3 && section.includes(palavra)) {
+            matches++;
+          }
+        }
+        
+        // Se encontrou a maioria das palavras-chave
+        if (matches > 0 && matches >= Math.ceil(palavrasChave.length / 2)) {
+          console.log(`🎯 Seguradora detectada por similaridade: ${seguradora}`);
+          return seguradora;
+        }
+      }
+    }
+    
+    console.log('⚠️ Seguradora não identificada, usando fallback');
+    return "Seguradora não identificada";
+  }
+
+  // Função para obter configuração baseada na seguradora detectada
+  private static getInsurerConfig(detectedInsurer: string): InsurerConfig {
+    // Procurar configuração específica
+    for (const config of this.INSURER_CONFIGS) {
+      if (config.name.toLowerCase() === detectedInsurer.toLowerCase()) {
+        return config;
+      }
+    }
+    
+    // Configuração genérica para seguradoras não mapeadas
+    return {
+      name: detectedInsurer,
+      keywords: [detectedInsurer.toLowerCase()],
+      patterns: {
+        policyNumber: /(?:apólice|apolice|número|numero).*?([0-9.-]+)/i,
+        annualPremium: /(?:prêmio|premio).*?total.*?(?:r\$)?\s*([\d.,]+)/i,
+        monthlyPremium: /(?:parcela|mensal).*?(?:r\$)?\s*([\d.,]+)/i,
+        startDate: /(?:início|inicio|vigência).*?(\d{2}\/\d{2}\/\d{4})/i,
+        endDate: /(?:fim|final|até).*?(\d{2}\/\d{2}\/\d{4})/i,
+        brokerSection: /(?:corretor|emitido\s+por).*?([a-záêôãç\s&]+)/i
+      },
+      defaultCategory: "Categoria Padrão",
+      defaultCoverage: "Cobertura Básica"
+    };
   }
 
   private static async simulateTextExtraction(file: File): Promise<string> {
@@ -177,34 +281,7 @@ export class DynamicPDFExtractor {
     }
   }
 
-  private static identifyInsurerFromContent(text: string): InsurerConfig {
-    const searchText = text.toLowerCase();
-    
-    // Priorizar identificação pela seção "emitido por" ou dados da seguradora
-    for (const config of this.INSURER_CONFIGS) {
-      for (const keyword of config.keywords) {
-        if (searchText.includes(`emitido por ${keyword}`) || 
-            searchText.includes(`${keyword} s.a.`) ||
-            searchText.includes(`${keyword} seguros`)) {
-          return config;
-        }
-      }
-    }
-    
-    // Fallback para busca geral no texto
-    for (const config of this.INSURER_CONFIGS) {
-      for (const keyword of config.keywords) {
-        if (searchText.includes(keyword)) {
-          return config;
-        }
-      }
-    }
-    
-    // Fallback para Liberty como padrão
-    return this.INSURER_CONFIGS[0];
-  }
-
-  private static extractSpecificData(text: string, config: InsurerConfig): Partial<DynamicPDFData> {
+  private static extractSpecificData(text: string, config: InsurerConfig, detectedInsurer: string): Partial<DynamicPDFData> {
     const data: Partial<DynamicPDFData> = {};
     
     // Extrair número da apólice
@@ -240,13 +317,13 @@ export class DynamicPDFExtractor {
     
     return {
       informacoes_gerais: {
-        nome_apolice: `Apólice ${config.name}`,
+        nome_apolice: `Apólice ${detectedInsurer}`,
         tipo: "Auto",
         status: "Ativa",
         numero_apolice: policyNumber
       },
       seguradora: {
-        empresa: config.name,
+        empresa: detectedInsurer,
         categoria: config.defaultCategory,
         cobertura: config.defaultCoverage,
         entidade: brokerName
