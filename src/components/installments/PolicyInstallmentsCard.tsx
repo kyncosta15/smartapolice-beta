@@ -51,16 +51,14 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
                   <div className="text-sm font-medium">
                     Parcela {installment.numero || (instIndex + 1)}
                   </div>
-                  <Badge 
-                    variant={
-                      installment.status === 'paga' ? 'default' :
-                      isOverdue ? 'destructive' : 'secondary'
-                    }
-                    className="text-xs"
-                  >
-                    {installment.status === 'paga' ? 'Paga' :
-                     isOverdue ? 'Vencida' : 'Pendente'}
-                  </Badge>
+                  {installment.status === 'pendente' && (
+                    <Badge 
+                      variant={isOverdue ? 'destructive' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {isOverdue ? 'Vencida' : 'Pendente'}
+                    </Badge>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="font-semibold text-sm">

@@ -40,9 +40,9 @@ export function OverdueInstallmentsList({ overdueInstallments }: OverdueInstallm
             <div key={`overdue-${index}`} 
                  className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
               <div className="flex-1">
-                <p className="font-medium text-sm">{installment.policyName}</p>
+                <p className="font-medium text-sm">Parcela {installment.numero || 'N/A'}</p>
                 <p className="text-xs text-gray-600">
-                  {installment.insurer} • Parcela {installment.numero || 'N/A'}
+                  {installment.policyName} • {installment.insurer}
                 </p>
               </div>
               <div className="text-right">
