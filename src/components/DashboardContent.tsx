@@ -54,7 +54,7 @@ export function DashboardContent() {
       category: policy.type === 'auto' ? 'Veicular' : 
                policy.type === 'vida' ? 'Pessoal' : 
                policy.type === 'saude' ? 'Saúde' : 'Geral',
-      coverage: ['Cobertura Básica', 'Responsabilidade Civil'],
+      coverage: ['Cobertura Básica', ' Responsabilidade Civil'],
       monthlyAmount: policy.monthlyAmount || (parseFloat(policy.premium) / 12) || 0,
       premium: policy.premium || 0,
       deductible: Math.floor(Math.random() * 5000) + 1000,
