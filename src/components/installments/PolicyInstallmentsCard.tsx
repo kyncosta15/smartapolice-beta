@@ -59,8 +59,6 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
         <div className="flex flex-wrap gap-2 text-sm text-gray-600">
           <span>{installmentsArray.length} parcelas totais</span>
           <span>•</span>
-          <span className="text-green-600">{paidInstallments.length} pagas</span>
-          <span>•</span>
           <span className="text-orange-600">{dueNext30DaysInstallments.length} a vencer</span>
           <span>•</span>
           <span className="text-red-600">{overdueInstallments.length} vencidas</span>
