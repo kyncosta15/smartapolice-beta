@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DynamicDashboard } from './DynamicDashboard';
@@ -48,6 +47,14 @@ export function ContentRenderer({
   onSectionChange
 }: ContentRendererProps) {
   const { user } = useAuth();
+
+  // Convert ParsedPolicyData to PolicyData format for ChartsSection
+  const convertToChartData = (policies: ParsedPolicyData[]) => {
+    return policies.map(policy => ({
+      ...policy,
+      paymentFrequency: policy.paymentFrequency.toLowerCase() as 'mensal' | 'anual' | 'semestral' | 'trimestral'
+    }));
+  };
 
   // Para administradores, mostrar dashboard administrativo na seção de relatórios
   if (user?.role === 'administrador' && activeSection === 'reports') {
@@ -153,7 +160,7 @@ export function ContentRenderer({
     case 'charts':
       return (
         <div className="p-6">
-          <ChartsSection detailed={true} policies={extractedPolicies} />
+          <ChartsSection detailed={true} policies={convertToChartData(extractedPolicies)} />
         </div>
       );
 
