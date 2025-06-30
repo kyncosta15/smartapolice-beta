@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
@@ -106,9 +107,19 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
         documento: policy.documento
       });
 
-      // Verificar se temos o campo documento_tipo do N8N
-      if (policy.documento_tipo) {
-        const tipoDocumento = policy.documento_tipo.toString().toUpperCase().trim();
+      // Função para extrair valor do campo do N8N
+      const extractValue = (field: any): string | null => {
+        if (!field) return null;
+        if (typeof field === 'string') return field;
+        if (typeof field === 'object' && field.value) return field.value;
+        return null;
+      };
+
+      // Extrair o valor do documento_tipo
+      const documentoTipo = extractValue(policy.documento_tipo);
+      
+      if (documentoTipo && documentoTipo !== 'undefined') {
+        const tipoDocumento = documentoTipo.toString().toUpperCase().trim();
         console.log(`📄 Política "${policy.name}": documento_tipo = "${tipoDocumento}"`);
         
         // ✅ LÓGICA CORRIGIDA: CPF = Pessoa Física, CNPJ = Pessoa Jurídica
@@ -123,8 +134,9 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
           console.log('⚠️ Valores aceitos: "CPF" ou "CNPJ"');
         }
       } else {
-        console.log(`⚠️ Política "${policy.name}": campo documento_tipo não encontrado ou vazio`);
+        console.log(`⚠️ Política "${policy.name}": campo documento_tipo não encontrado, vazio ou undefined`);
         console.log('⚠️ Dados disponíveis:', Object.keys(policy));
+        console.log('⚠️ Valor do campo documento_tipo:', policy.documento_tipo);
       }
       
       return acc;
