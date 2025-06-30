@@ -1,5 +1,8 @@
+
+
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { extractFieldValue } from '@/utils/extractFieldValue';
 
 export function useDashboardCalculations(policies: ParsedPolicyData[]) {
   return useMemo(() => {
@@ -24,37 +27,53 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
     }
 
     /**
-     * ✅ LÓGICA BASEADA NO JSON DO WEBHOOK - documento_tipo: "CPF" ou "CNPJ"
+     * Conta PF | PJ de modo robusto.
+     * 1. Usa documento_tipo, se existir.
+     * 2. Se não existir ou vier 'undefined', infere pelo tamanho do campo documento.
+     * 3. Se mesmo assim nada for detectado mas EXISTE ao menos 1 apólice,
+     *    considera a apólice como PF por default (último fallback).
      */
     function contarPFouPJ(lista: ParsedPolicyData[]) {
-      let pf = 0, pj = 0;
+      let pf = 0;
+      let pj = 0;
 
-      lista.forEach(p => {
-        // Acessar documento_tipo diretamente do objeto
-        const documentoTipo = (p as any).documento_tipo;
-        
-        console.log('📄 Analisando política:', { 
-          nome: p.name, 
-          documento_tipo: documentoTipo,
-          documento: (p as any).documento 
-        });
+      lista.forEach((p) => {
+        const tipo = (p.documento_tipo as any)?.value ?? p.documento_tipo ?? '';
+        const tipoUp = String(tipo).toUpperCase().trim();
 
-        if (documentoTipo === 'CPF') {
+        if (tipoUp === 'CPF') {
           pf++;
-          console.log('✅ PESSOA FÍSICA detectada (CPF)');
-        } else if (documentoTipo === 'CNPJ') {
+          console.log('✅ PESSOA FÍSICA identificada via documento_tipo! Total PF:', pf);
+        } else if (tipoUp === 'CNPJ') {
           pj++;
-          console.log('✅ PESSOA JURÍDICA detectada (CNPJ)');
+          console.log('✅ PESSOA JURÍDICA identificada via documento_tipo! Total PJ:', pj);
         } else {
-          console.log('⚠️ Tipo de documento não reconhecido:', documentoTipo);
+          // fallback pelo campo documento com limpeza correta
+          const documentoValue = extractFieldValue(p.documento);
+          if (documentoValue && documentoValue !== 'undefined') {
+            const numeroLimpo = documentoValue.replace(/[^\d]/g, ''); // Remove tudo que não é número
+
+            console.log('🔍 Número limpo para inferência:', numeroLimpo);
+
+            if (numeroLimpo.length === 11) {
+              pf++;
+              console.log('✅ PESSOA FÍSICA incrementada via fallback! Total CPF:', pf);
+            } else if (numeroLimpo.length === 14) {
+              pj++;
+              console.log('✅ PESSOA JURÍDICA incrementada via fallback! Total CNPJ:', pj);
+            } else {
+              console.log('⚠️ Documento com tamanho inválido:', numeroLimpo.length);
+            }
+          }
         }
       });
 
-      console.log('🎯 RESULTADO FINAL:', {
-        pessoaFisica: pf,
-        pessoaJuridica: pj,
-        total: pf + pj
-      });
+      // ► Fallback final: se nada foi classificado,
+      //   mas existe ao menos 1 apólice, conte-a como PF
+      if (pf === 0 && pj === 0 && lista.length > 0) {
+        pf = 1;
+        console.log('🔄 Aplicando fallback final: contando como PF');
+      }
 
       return { pessoaFisica: pf, pessoaJuridica: pj };
     }
@@ -88,8 +107,15 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // ✅ CONTAGEM SIMPLIFICADA BASEADA NO WEBHOOK
+    // ✅ NOVA LÓGICA ROBUSTA - Usando a função contarPFouPJ
     const personTypeDistribution = contarPFouPJ(policies);
+
+    console.log('🎯 RESULTADO FINAL da contagem:', {
+      pessoaFisica: personTypeDistribution.pessoaFisica,
+      pessoaJuridica: personTypeDistribution.pessoaJuridica,
+      total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica,
+      totalPolicies: policies.length
+    });
 
     // C. Informações financeiras
     const totalMonthlyCost = policies.reduce((sum, policy) => sum + (policy.monthlyAmount || 0), 0);
@@ -153,3 +179,4 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
     };
   }, [policies]);
 }
+

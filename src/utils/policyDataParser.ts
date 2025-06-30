@@ -34,9 +34,9 @@ export interface ParsedPolicyData {
   insuredPersonType?: 'PF' | 'PJ';
   insuredCpfCnpj?: string;
   
-  // ✅ Campos de documento do N8N - PRESERVADOS como string para compatibilidade
+  // Campos de documento do N8N - principais campos a serem usados
   documento?: string;
-  documento_tipo?: string;
+  documento_tipo?: 'CPF' | 'CNPJ';
   
   vehicleDetails?: {
     brand?: string;
@@ -137,10 +137,6 @@ export function parsePolicyData(data: DynamicPDFData, file?: File): ParsedPolicy
   }
 
   console.log('✅ Parcelas processadas:', installments.length, 'parcelas criadas');
-  console.log('✅ Dados de documento preservados:', { 
-    documento: data.documento, 
-    documento_tipo: data.documento_tipo 
-  });
 
   return {
     id: data.informacoes_gerais.numero_apolice || `policy-${Date.now()}`,
@@ -165,7 +161,7 @@ export function parsePolicyData(data: DynamicPDFData, file?: File): ParsedPolicy
     insuredCpfCnpj: data.segurado?.cpf_cnpj,
     broker: data.seguradora.entidade,
     
-    // ✅ Campos de documento do N8N - PRESERVADOS diretamente como string
+    // Campos de documento do N8N - prioritários
     documento: data.documento,
     documento_tipo: data.documento_tipo,
     

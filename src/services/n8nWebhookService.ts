@@ -16,9 +16,6 @@ interface N8NDirectResponse {
   // Policy number fields from N8N
   numero_apolice?: string;
   apolice?: string;
-  // ✅ Campos de documento preservados - using string type to match webhook data
-  documento?: string;
-  documento_tipo?: string;
 }
 
 interface N8NWebhookResponse {
@@ -56,7 +53,6 @@ export class N8NWebhookService {
       
       console.log('✅ Resposta recebida do N8N:', result);
       console.log('📅 Vencimentos futuros recebidos:', result.vencimentos_futuros);
-      console.log('📋 Documento recebido:', result.documento, 'Tipo:', result.documento_tipo);
       
       // Log specifically the policy number received
       if (result.numero_apolice || result.apolice) {
@@ -147,9 +143,6 @@ export class N8NWebhookService {
       segurado: n8nData.segurado ? {
         nome: n8nData.segurado
       } : undefined,
-      // ✅ PRESERVAR os dados de documento EXATAMENTE como chegam - sem type casting
-      documento: n8nData.documento,
-      documento_tipo: n8nData.documento_tipo,
       // Adicionar as parcelas como propriedade adicional
       parcelas_detalhadas: parcelas
     };
