@@ -6,6 +6,7 @@ import { FileText, DollarSign, Shield, AlertTriangle, TrendingUp, Users, Buildin
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { formatCurrency } from '@/utils/currencyFormatter';
+import { DocumentValidator } from '@/utils/documentValidator';
 
 interface DynamicDashboardProps {
   policies: ParsedPolicyData[];
@@ -62,29 +63,79 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
       return acc;
     }, {} as Record<string, number>);
 
-    // Distribuição por tipo de pessoa baseada em CPF/CNPJ
+    // 🔥 NOVA LÓGICA: Distribuição por tipo de pessoa usando DocumentValidator
+    console.log('🔍 Iniciando contagem de CPF/CNPJ usando DocumentValidator...');
+    
     const personTypeDistribution = policies.reduce((acc, policy) => {
-      const extractValue = (field: any): string | null => {
-        if (!field) return null;
-        if (typeof field === 'string') return field;
-        if (typeof field === 'object' && field.value) return field.value;
-        return null;
+      console.log(`📋 Analisando política: ${policy.name || policy.id}`);
+      
+      // Função para extrair possíveis documentos de vários campos
+      const extractPossibleDocuments = (policy: ParsedPolicyData): string[] => {
+        const documents: string[] = [];
+        
+        // Verificar vários campos que podem conter documentos
+        const fieldsToCheck = [
+          policy.documento,
+          policy.documento_tipo,
+          policy.clientName,
+          policy.name,
+          policy.rawText
+        ];
+        
+        fieldsToCheck.forEach(field => {
+          if (field) {
+            const fieldValue = typeof field === 'object' && field.value ? field.value : field;
+            if (typeof fieldValue === 'string') {
+              documents.push(fieldValue);
+            }
+          }
+        });
+        
+        return documents;
       };
 
-      const documentoTipo = extractValue(policy.documento_tipo);
+      const possibleDocuments = extractPossibleDocuments(policy);
+      console.log(`📄 Campos para análise na política "${policy.name}":`, possibleDocuments);
       
-      if (documentoTipo && documentoTipo !== 'undefined') {
-        const tipoDocumento = documentoTipo.toString().toUpperCase().trim();
-        
-        if (tipoDocumento === 'CPF') {
-          acc.pessoaFisica++;
-        } else if (tipoDocumento === 'CNPJ') {
-          acc.pessoaJuridica++;
+      let foundValidDocument = false;
+      
+      // Analisar cada campo em busca de CPF ou CNPJ válidos
+      for (const docText of possibleDocuments) {
+        if (docText && docText.length > 0) {
+          console.log(`🔍 Analisando texto: "${docText}"`);
+          
+          const documentInfo = DocumentValidator.detectDocument(docText);
+          
+          if (documentInfo && documentInfo.type !== 'INVALID') {
+            console.log(`✅ Documento detectado: ${documentInfo.type} - ${documentInfo.formatted}`);
+            
+            if (documentInfo.type === 'CPF') {
+              acc.pessoaFisica++;
+              console.log('✅ PESSOA FÍSICA incrementada (CPF válido detectado)');
+            } else if (documentInfo.type === 'CNPJ') {
+              acc.pessoaJuridica++;
+              console.log('✅ PESSOA JURÍDICA incrementada (CNPJ válido detectado)');
+            }
+            
+            foundValidDocument = true;
+            break; // Parar na primeira detecção válida
+          }
         }
+      }
+      
+      if (!foundValidDocument) {
+        console.log(`⚠️ Nenhum documento válido encontrado na política "${policy.name}"`);
       }
       
       return acc;
     }, { pessoaFisica: 0, pessoaJuridica: 0 });
+
+    console.log('🎯 RESULTADO FINAL da contagem por CPF/CNPJ:', {
+      pessoaFisica: personTypeDistribution.pessoaFisica,
+      pessoaJuridica: personTypeDistribution.pessoaJuridica,
+      total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica,
+      totalPolicies: policies.length
+    });
 
     // C. Informações financeiras
     const totalMonthlyCost = policies.reduce((sum, policy) => sum + (policy.monthlyAmount || 0), 0);
@@ -289,25 +340,25 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 gap-4 h-80">
+            <div className="space-y-4">
               {/* Card Pessoa Física */}
-              <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-                <CardContent className="p-4">
+              <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-blue-500 rounded-lg">
-                        <Users className="h-6 w-6 text-white" />
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 bg-blue-500 rounded-xl shadow-lg">
+                        <Users className="h-8 w-8 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-blue-900">Pessoa Física</h3>
-                        <p className="text-sm text-blue-600">CPF</p>
+                        <h3 className="text-xl font-bold text-blue-900">Pessoa Física</h3>
+                        <p className="text-sm text-blue-600 font-medium">CPF</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-blue-700">
+                      <div className="text-4xl font-bold text-blue-700">
                         {dashboardData.personTypeDistribution.pessoaFisica}
                       </div>
-                      <p className="text-sm text-blue-600">
+                      <p className="text-sm text-blue-600 font-medium">
                         {dashboardData.personTypeDistribution.pessoaFisica === 1 ? 'apólice' : 'apólices'}
                       </p>
                     </div>
@@ -316,23 +367,23 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
               </Card>
 
               {/* Card Pessoa Jurídica */}
-              <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
-                <CardContent className="p-4">
+              <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-purple-500 rounded-lg">
-                        <Building className="h-6 w-6 text-white" />
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 bg-purple-500 rounded-xl shadow-lg">
+                        <Building className="h-8 w-8 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-purple-900">Pessoa Jurídica</h3>
-                        <p className="text-sm text-purple-600">CNPJ</p>
+                        <h3 className="text-xl font-bold text-purple-900">Pessoa Jurídica</h3>
+                        <p className="text-sm text-purple-600 font-medium">CNPJ</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-purple-700">
+                      <div className="text-4xl font-bold text-purple-700">
                         {dashboardData.personTypeDistribution.pessoaJuridica}
                       </div>
-                      <p className="text-sm text-purple-600">
+                      <p className="text-sm text-purple-600 font-medium">
                         {dashboardData.personTypeDistribution.pessoaJuridica === 1 ? 'apólice' : 'apólices'}
                       </p>
                     </div>
