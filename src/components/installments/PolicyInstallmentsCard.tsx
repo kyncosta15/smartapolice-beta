@@ -87,7 +87,7 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
             // Determinar cor e status baseado na lógica atual
             let bgColor = 'bg-gray-50 border-gray-200';
             let textColor = 'text-gray-600';
-            let badgeVariant = 'secondary';
+            let badgeVariant: "default" | "secondary" | "destructive" | "outline" = 'secondary';
             let statusText = 'Pendente';
             
             if (isPaid) {
