@@ -16,7 +16,11 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16'];
 
   const dashboardData = useMemo(() => {
+    console.log('🔍 DynamicDashboard: Recebendo políticas:', policies);
+    console.log('🔍 Total de políticas recebidas:', policies?.length || 0);
+    
     if (!policies || policies.length === 0) {
+      console.log('❌ Nenhuma política encontrada');
       return {
         totalPolicies: 0,
         totalMonthlyCost: 0,
@@ -62,71 +66,70 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
       return acc;
     }, {} as Record<string, number>);
 
-    // 🔥 NOVA LÓGICA: Distribuição por tipo de pessoa usando campos do N8N
+    // 🔥 LÓGICA CORRIGIDA: Distribuição por tipo de pessoa
     console.log('🔍 Iniciando contagem de CPF/CNPJ...');
+    console.log('📊 Políticas a serem analisadas:', policies.map(p => ({
+      id: p.id,
+      name: p.name,
+      documento_tipo: p.documento_tipo,
+      documento: p.documento
+    })));
     
     const personTypeDistribution = policies.reduce((acc, policy) => {
-      console.log(`📋 Analisando política: ${policy.name || policy.id}`);
+      console.log(`\n📋 === Analisando política ${policy.id || 'sem ID'} ===`);
+      console.log('📄 Dados da política:', {
+        name: policy.name,
+        documento_tipo: policy.documento_tipo,
+        documento: policy.documento,
+        allKeys: Object.keys(policy)
+      });
       
-      // Priorizar campos diretos do N8N
-      if (policy.documento_tipo) {
-        console.log(`✅ Campo documento_tipo encontrado: ${policy.documento_tipo}`);
-        if (policy.documento_tipo === 'CPF') {
+      // Verificar se documento_tipo existe e é válido
+      const documentoTipo = policy.documento_tipo;
+      console.log('🔍 Valor de documento_tipo:', documentoTipo, 'Tipo:', typeof documentoTipo);
+      
+      if (documentoTipo) {
+        const tipoStr = String(documentoTipo).toUpperCase().trim();
+        console.log('📝 Tipo de documento processado:', tipoStr);
+        
+        if (tipoStr === 'CPF') {
           acc.pessoaFisica++;
-          console.log('✅ PESSOA FÍSICA incrementada (documento_tipo = CPF)');
+          console.log('✅ PESSOA FÍSICA incrementada! Total atual:', acc.pessoaFisica);
           return acc;
-        } else if (policy.documento_tipo === 'CNPJ') {
+        } else if (tipoStr === 'CNPJ') {
           acc.pessoaJuridica++;
-          console.log('✅ PESSOA JURÍDICA incrementada (documento_tipo = CNPJ)');
+          console.log('✅ PESSOA JURÍDICA incrementada! Total atual:', acc.pessoaJuridica);
           return acc;
+        } else {
+          console.log('⚠️ Tipo de documento não reconhecido:', tipoStr);
         }
-      }
-      
-      // Campos alternativos para análise
-      const fieldsToCheck = [
-        policy.documento,
-        policy.insuredDocument,
-        policy.insuredCpfCnpj,
-        policy.insuredName,
-        policy.name
-      ];
-      
-      console.log(`📄 Campos para análise na política "${policy.name}":`, fieldsToCheck);
-      
-      let foundValidDocument = false;
-      
-      // Analisar cada campo em busca de CPF ou CNPJ válidos
-      for (const docText of fieldsToCheck) {
-        if (docText && typeof docText === 'string' && docText.length > 0) {
-          console.log(`🔍 Analisando texto: "${docText}"`);
-          
-          const documentInfo = DocumentValidator.detectDocument(docText);
+      } else {
+        console.log('❌ Campo documento_tipo não encontrado ou vazio');
+        
+        // Fallback: tentar analisar o campo documento diretamente
+        if (policy.documento) {
+          console.log('🔍 Tentando analisar campo documento:', policy.documento);
+          const documentInfo = DocumentValidator.detectDocument(String(policy.documento));
           
           if (documentInfo && documentInfo.type !== 'INVALID') {
-            console.log(`✅ Documento detectado: ${documentInfo.type} - ${documentInfo.formatted}`);
-            
+            console.log('✅ Documento detectado via fallback:', documentInfo.type);
             if (documentInfo.type === 'CPF') {
               acc.pessoaFisica++;
-              console.log('✅ PESSOA FÍSICA incrementada (CPF válido detectado)');
+              console.log('✅ PESSOA FÍSICA incrementada via fallback! Total atual:', acc.pessoaFisica);
             } else if (documentInfo.type === 'CNPJ') {
               acc.pessoaJuridica++;
-              console.log('✅ PESSOA JURÍDICA incrementada (CNPJ válido detectado)');
+              console.log('✅ PESSOA JURÍDICA incrementada via fallback! Total atual:', acc.pessoaJuridica);
             }
-            
-            foundValidDocument = true;
-            break; // Parar na primeira detecção válida
+          } else {
+            console.log('❌ Documento não válido via fallback');
           }
         }
-      }
-      
-      if (!foundValidDocument) {
-        console.log(`⚠️ Nenhum documento válido encontrado na política "${policy.name}"`);
       }
       
       return acc;
     }, { pessoaFisica: 0, pessoaJuridica: 0 });
 
-    console.log('🎯 RESULTADO FINAL da contagem por CPF/CNPJ:', {
+    console.log('🎯 RESULTADO FINAL da contagem:', {
       pessoaFisica: personTypeDistribution.pessoaFisica,
       pessoaJuridica: personTypeDistribution.pessoaJuridica,
       total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica,
