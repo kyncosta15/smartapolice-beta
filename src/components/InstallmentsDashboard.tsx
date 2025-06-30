@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
@@ -6,7 +5,6 @@ import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { InstallmentsSummaryCards } from '@/components/installments/InstallmentsSummaryCards';
 import { PolicyInstallmentsCard } from '@/components/installments/PolicyInstallmentsCard';
 import { UpcomingInstallmentsList } from '@/components/installments/UpcomingInstallmentsList';
-import { OverdueInstallmentsList } from '@/components/installments/OverdueInstallmentsList';
 import { 
   generateSimulatedInstallments, 
   createExtendedInstallments,
@@ -103,9 +101,6 @@ function renderInstallmentsDashboard(policiesWithInstallments: ParsedPolicyData[
 
       {/* Lista de Próximas Parcelas */}
       <UpcomingInstallmentsList upcomingInstallments={upcomingInstallments} />
-
-      {/* Lista de Parcelas Vencidas */}
-      <OverdueInstallmentsList overdueInstallments={overdueInstallments} />
     </div>
   );
 }
