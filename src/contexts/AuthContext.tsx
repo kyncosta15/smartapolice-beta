@@ -48,6 +48,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      console.log('Fetching user profile for:', userId);
+      const { data: userProfile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+
+      if (userProfile) {
+        console.log('User profile loaded:', userProfile);
+        return {
+          id: userProfile.id,
+          email: userProfile.email,
+          name: userProfile.name,
+          role: userProfile.role as UserRole,
+          company: userProfile.company,
+          phone: userProfile.phone,
+          avatar: userProfile.avatar
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Exception loading user profile:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -57,33 +90,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user) {
           // Fetch user profile from our users table
-          setTimeout(async () => {
-            try {
-              const { data: userProfile, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-
-              if (error) {
-                console.error('Error fetching user profile:', error);
-                setUser(null);
-              } else if (userProfile) {
-                setUser({
-                  id: userProfile.id,
-                  email: userProfile.email,
-                  name: userProfile.name,
-                  role: userProfile.role as UserRole,
-                  company: userProfile.company,
-                  phone: userProfile.phone,
-                  avatar: userProfile.avatar
-                });
-              }
-            } catch (error) {
-              console.error('Error loading user profile:', error);
-              setUser(null);
-            }
-          }, 0);
+          const userProfile = await fetchUserProfile(session.user.id);
+          setUser(userProfile);
         } else {
           setUser(null);
         }
@@ -93,12 +101,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.id);
-      if (!session) {
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session check:', session?.user?.id);
+        
+        if (session?.user) {
+          const userProfile = await fetchUserProfile(session.user.id);
+          setUser(userProfile);
+          setSession(session);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
         setIsLoading(false);
       }
-    });
+    };
+
+    initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);
