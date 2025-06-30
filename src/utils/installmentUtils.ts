@@ -122,3 +122,29 @@ export function filterOverdueInstallments(allInstallments: ExtendedInstallment[]
     return installmentDate < today && installment.status === 'pendente';
   });
 }
+
+// Nova função para calcular parcelas que vencem nos próximos 30 dias
+export function calculateDuingNext30Days(allInstallments: ExtendedInstallment[]): number {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  
+  const daqui30 = new Date();
+  daqui30.setDate(hoje.getDate() + 30);
+  daqui30.setHours(0, 0, 0, 0);
+
+  let vencendoProximos30Dias = 0;
+
+  for (const installment of allInstallments) {
+    if (installment.status !== 'pendente') continue; // Só contar pendentes
+    
+    const venc = new Date(installment.data + "T00:00:00");
+
+    if (venc >= hoje && venc <= daqui30) {
+      vencendoProximos30Dias++;
+    }
+  }
+
+  console.log(`📅 Parcelas vencendo nos próximos 30 dias: ${vencendoProximos30Dias}`);
+  
+  return vencendoProximos30Dias;
+}

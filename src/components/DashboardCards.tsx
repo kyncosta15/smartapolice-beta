@@ -11,6 +11,8 @@ interface DashboardCardsProps {
     activeAlerts: number;
     expiringPolicies: number;
     totalInstallments: number;
+    overdueInstallments: number; // Nova propriedade para parcelas vencidas
+    duingNext30Days: number; // Nova propriedade para parcelas vencendo nos próximos 30 dias
   };
 }
 
@@ -21,7 +23,9 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
     totalInsured: 0,
     activeAlerts: 0,
     expiringPolicies: 0,
-    totalInstallments: 0
+    totalInstallments: 0,
+    overdueInstallments: 0,
+    duingNext30Days: 0
   };
 
   const currentStats = stats || defaultStats;
@@ -63,19 +67,19 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
     },
     {
       title: 'Vencendo (30 dias)',
-      value: currentStats.expiringPolicies.toString(),
+      value: currentStats.duingNext30Days.toString(),
       icon: Calendar,
-      change: currentStats.expiringPolicies > 0 ? 'Atenção' : 'OK',
-      changeType: currentStats.expiringPolicies > 0 ? 'warning' : 'positive',
-      description: 'Requerem renovação'
+      change: currentStats.duingNext30Days > 0 ? 'Próximos 30 dias' : 'Nenhuma',
+      changeType: currentStats.duingNext30Days > 0 ? 'warning' : 'positive',
+      description: 'Parcelas a vencer'
     },
     {
-      title: 'Seguradoras Ativas',
-      value: currentStats.totalPolicies > 0 ? Math.max(1, Math.floor(currentStats.totalPolicies / 2)).toString() : '0',
-      icon: Users,
-      change: currentStats.totalPolicies > 0 ? 'Diversificado' : 'Vazio',
-      changeType: currentStats.totalPolicies > 0 ? 'positive' : 'neutral',
-      description: 'Parceiros ativos'
+      title: 'Parcelas Vencidas',
+      value: currentStats.overdueInstallments.toString(),
+      icon: AlertTriangle,
+      change: currentStats.overdueInstallments > 0 ? 'Em atraso' : 'Em dia',
+      changeType: currentStats.overdueInstallments > 0 ? 'warning' : 'positive',
+      description: 'Requerem atenção'
     }
   ];
 

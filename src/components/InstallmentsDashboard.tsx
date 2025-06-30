@@ -11,7 +11,8 @@ import {
   generateSimulatedInstallments, 
   createExtendedInstallments,
   filterUpcomingInstallments,
-  filterOverdueInstallments
+  filterOverdueInstallments,
+  calculateDuingNext30Days
 } from '@/utils/installmentUtils';
 
 interface InstallmentsDashboardProps {
@@ -60,6 +61,9 @@ function renderInstallmentsDashboard(policiesWithInstallments: ParsedPolicyData[
   const upcomingInstallments = filterUpcomingInstallments(allInstallments);
   const overdueInstallments = filterOverdueInstallments(allInstallments);
   
+  // Calcular parcelas que vencem nos próximos 30 dias
+  const duingNext30Days = calculateDuingNext30Days(allInstallments);
+  
   // Calcular totais gerais
   const totalInstallments = allInstallments.length;
   const totalValue = allInstallments.reduce((sum, installment) => sum + installment.valor, 0);
@@ -72,6 +76,7 @@ function renderInstallmentsDashboard(policiesWithInstallments: ParsedPolicyData[
     totalInstallments,
     upcomingCount: upcomingInstallments.length,
     overdueCount: overdueInstallments.length,
+    duingNext30Days,
     totalValue,
     totalUpcoming,
     totalOverdue

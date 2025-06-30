@@ -9,6 +9,11 @@ import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { 
+  createExtendedInstallments,
+  filterOverdueInstallments,
+  calculateDuingNext30Days
+} from '@/utils/installmentUtils';
 
 export function DashboardContent() {
   const { user } = useAuth();
@@ -42,6 +47,18 @@ export function DashboardContent() {
 
   // Usar o hook de dashboard data
   const { dashboardData } = useDashboardData(extractedPolicies);
+
+  // Calcular estatísticas de parcelas
+  const allInstallments = createExtendedInstallments(extractedPolicies);
+  const overdueInstallments = filterOverdueInstallments(allInstallments);
+  const duingNext30Days = calculateDuingNext30Days(allInstallments);
+
+  // Criar estatísticas atualizadas para o dashboard
+  const enhancedDashboardStats = {
+    ...dashboardData,
+    overdueInstallments: overdueInstallments.length,
+    duingNext30Days: duingNext30Days
+  };
 
   const handlePolicyExtracted = (policy: any) => {
     console.log('Nova apólice extraída:', policy);
@@ -168,7 +185,7 @@ export function DashboardContent() {
           <Navbar 
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            notificationCount={dashboardData.expiringPolicies}
+            notificationCount={enhancedDashboardStats.duingNext30Days}
             policies={normalizedPolicies}
           />
 
