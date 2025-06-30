@@ -26,11 +26,18 @@ export interface DynamicPDFData {
     tipo_pessoa?: 'PF' | 'PJ';
     cpf_cnpj?: string;
   };
-  
-  // ✅ Campos de documento do N8N - usando string para compatibilidade total
-  documento?: string;
-  documento_tipo?: string;
-  
-  parcelas_detalhadas?: any[];
-  vencimentos_futuros?: any[];
+
+  // ✅ Campos aceitos diretamente do N8N
+  documento?: string; // pode vir com ou sem pontuação
+  documento_tipo?: string; // agora aceita qualquer string: "CPF", "CNPJ", "Desconhecido", etc.
+
+  // ✅ Melhor tipagem nas parcelas
+  parcelas_detalhadas?: {
+    numero: number;
+    valor: number;
+    data: string;
+    status: 'paga' | 'pendente';
+  }[];
+
+  vencimentos_futuros?: string[]; // caso você queira validar a data diretamente
 }
