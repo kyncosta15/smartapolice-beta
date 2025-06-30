@@ -1,8 +1,6 @@
 
-
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
-import { extractFieldValue } from '@/utils/extractFieldValue';
 
 export function useDashboardCalculations(policies: ParsedPolicyData[]) {
   return useMemo(() => {
@@ -27,53 +25,66 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
     }
 
     /**
-     * Conta PF | PJ de modo robusto.
-     * 1. Usa documento_tipo, se existir.
-     * 2. Se não existir ou vier 'undefined', infere pelo tamanho do campo documento.
-     * 3. Se mesmo assim nada for detectado mas EXISTE ao menos 1 apólice,
-     *    considera a apólice como PF por default (último fallback).
+     * ✅ NOVA FUNÇÃO SIMPLIFICADA - Aceita snake_case OU camelCase
+     * Sem dependência do extractFieldValue, leitura direta dos campos
      */
     function contarPFouPJ(lista: ParsedPolicyData[]) {
-      let pf = 0;
-      let pj = 0;
+      let pf = 0, pj = 0;
 
-      lista.forEach((p) => {
-        const tipo = (p.documento_tipo as any)?.value ?? p.documento_tipo ?? '';
-        const tipoUp = String(tipo).toUpperCase().trim();
+      // Verificação rápida dos dados
+      console.table(
+        lista.map(p => ({
+          docTipo: (p as any).documento_tipo ?? (p as any).documentoTipo,
+          doc: (p as any).documento
+        }))
+      );
 
-        if (tipoUp === 'CPF') {
-          pf++;
+      lista.forEach(p => {
+        // ← 1. usa documento_tipo OU documentoTipo
+        const tipoBruto = (p as any).documento_tipo ?? (p as any).documentoTipo ?? '';
+        const tipo = String(tipoBruto).toUpperCase().trim();
+
+        console.log('🔍 Analisando política:', { tipoBruto, tipo });
+
+        // ← 2. se vier CPF/CNPJ explícito
+        if (tipo === 'CPF') { 
+          pf++; 
           console.log('✅ PESSOA FÍSICA identificada via documento_tipo! Total PF:', pf);
-        } else if (tipoUp === 'CNPJ') {
-          pj++;
+          return; 
+        }
+        if (tipo === 'CNPJ') { 
+          pj++; 
           console.log('✅ PESSOA JURÍDICA identificada via documento_tipo! Total PJ:', pj);
-        } else {
-          // fallback pelo campo documento com limpeza correta
-          const documentoValue = extractFieldValue(p.documento);
-          if (documentoValue && documentoValue !== 'undefined') {
-            const numeroLimpo = documentoValue.replace(/[^\d]/g, ''); // Remove tudo que não é número
+          return; 
+        }
 
-            console.log('🔍 Número limpo para inferência:', numeroLimpo);
-
-            if (numeroLimpo.length === 11) {
-              pf++;
-              console.log('✅ PESSOA FÍSICA incrementada via fallback! Total CPF:', pf);
-            } else if (numeroLimpo.length === 14) {
-              pj++;
-              console.log('✅ PESSOA JURÍDICA incrementada via fallback! Total CNPJ:', pj);
-            } else {
-              console.log('⚠️ Documento com tamanho inválido:', numeroLimpo.length);
-            }
-          }
+        // ← 3. fallback pelo campo documento (com ou sem pontuação)
+        const doc = (p as any).documento ?? '';
+        const dig = String(doc).replace(/\D/g, '');
+        
+        console.log('🔍 Fallback por documento:', { doc, dig, length: dig.length });
+        
+        if (dig.length === 11) {
+          pf++;
+          console.log('✅ PESSOA FÍSICA identificada via documento (11 dígitos)! Total PF:', pf);
+        } else if (dig.length === 14) {
+          pj++;
+          console.log('✅ PESSOA JURÍDICA identificada via documento (14 dígitos)! Total PJ:', pj);
         }
       });
 
-      // ► Fallback final: se nada foi classificado,
-      //   mas existe ao menos 1 apólice, conte-a como PF
-      if (pf === 0 && pj === 0 && lista.length > 0) {
+      // fallback final
+      if (pf === 0 && pj === 0 && lista.length) {
         pf = 1;
         console.log('🔄 Aplicando fallback final: contando como PF');
       }
+
+      console.log('🎯 RESULTADO FINAL da contagem:', {
+        pessoaFisica: pf,
+        pessoaJuridica: pj,
+        total: pf + pj,
+        totalPolicies: lista.length
+      });
 
       return { pessoaFisica: pf, pessoaJuridica: pj };
     }
@@ -107,15 +118,8 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // ✅ NOVA LÓGICA ROBUSTA - Usando a função contarPFouPJ
+    // ✅ NOVA LÓGICA SIMPLIFICADA - Usando a função contarPFouPJ otimizada
     const personTypeDistribution = contarPFouPJ(policies);
-
-    console.log('🎯 RESULTADO FINAL da contagem:', {
-      pessoaFisica: personTypeDistribution.pessoaFisica,
-      pessoaJuridica: personTypeDistribution.pessoaJuridica,
-      total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica,
-      totalPolicies: policies.length
-    });
 
     // C. Informações financeiras
     const totalMonthlyCost = policies.reduce((sum, policy) => sum + (policy.monthlyAmount || 0), 0);
@@ -179,4 +183,3 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
     };
   }, [policies]);
 }
-
