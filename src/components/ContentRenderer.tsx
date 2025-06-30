@@ -12,6 +12,7 @@ import { ChartsSection } from './ChartsSection';
 import { InstallmentsDashboard } from './InstallmentsDashboard';
 import { PolicyInstallmentsCard } from './installments/PolicyInstallmentsCard';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { PolicyData } from './charts/chartData';
 
 interface ContentRendererProps {
   activeSection: string;
@@ -49,10 +50,29 @@ export function ContentRenderer({
   const { user } = useAuth();
 
   // Convert ParsedPolicyData to PolicyData format for ChartsSection
-  const convertToChartData = (policies: ParsedPolicyData[]) => {
+  const convertToChartData = (policies: ParsedPolicyData[]): PolicyData[] => {
     return policies.map(policy => ({
-      ...policy,
-      paymentFrequency: policy.paymentFrequency.toLowerCase() as 'mensal' | 'anual' | 'semestral' | 'trimestral'
+      id: policy.id,
+      name: policy.name,
+      type: policy.type,
+      insurer: policy.insurer,
+      premium: policy.premium,
+      monthlyAmount: policy.monthlyAmount,
+      startDate: policy.startDate,
+      endDate: policy.endDate,
+      policyNumber: policy.policyNumber,
+      paymentFrequency: policy.paymentFrequency.toLowerCase() as 'mensal' | 'anual' | 'semestral' | 'trimestral',
+      documento_tipo: policy.documento_tipo,
+      documento: policy.documento,
+      // Fix installments type compatibility
+      installments: Array.isArray(policy.installments) 
+        ? policy.installments.map(inst => ({
+            numero: inst.numero,
+            valor: inst.valor,
+            data: inst.data,
+            status: inst.status
+          }))
+        : [] // Default to empty array if installments is a number
     }));
   };
 
