@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
@@ -25,25 +26,42 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
       monthlyMap[key] = { custo: 0, apolices: 0 };
     }
 
-    // Processa cada apólice
+    // Processa cada apólice baseando-se nas parcelas reais
     policies.forEach(policy => {
-      const startDate = new Date(policy.startDate);
-      const endDate = new Date(policy.endDate);
-      const monthlyAmount = policy.monthlyAmount || (policy.premium / 12);
-      
-      // Distribui custos pelos meses ativos da apólice
-      const current = new Date(Math.max(startDate.getTime(), new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime()));
-      const endLimit = new Date(Math.min(endDate.getTime(), now.getTime()));
-      
-      while (current <= endLimit) {
-        const key = current.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      // Verifica se a apólice tem parcelas detalhadas
+      if (Array.isArray(policy.installments)) {
+        // Usa dados reais das parcelas
+        policy.installments.forEach(installment => {
+          const installmentDate = new Date(installment.data);
+          const key = installmentDate.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+          
+          // Só adiciona se a parcela está dentro do período de 12 meses e se está no mapa
+          if (monthlyMap[key]) {
+            // Soma o valor real da parcela, independente do status
+            monthlyMap[key].custo += installment.valor;
+            monthlyMap[key].apolices += 1;
+          }
+        });
+      } else {
+        // Fallback: usar distribuição mensal baseada no prêmio anual
+        const startDate = new Date(policy.startDate);
+        const endDate = new Date(policy.endDate);
+        const monthlyAmount = policy.monthlyAmount || (policy.premium / 12);
         
-        if (monthlyMap[key]) {
-          monthlyMap[key].custo += monthlyAmount;
-          monthlyMap[key].apolices += 1;
+        // Distribui custos pelos meses ativos da apólice
+        const current = new Date(Math.max(startDate.getTime(), new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime()));
+        const endLimit = new Date(Math.min(endDate.getTime(), now.getTime()));
+        
+        while (current <= endLimit) {
+          const key = current.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+          
+          if (monthlyMap[key]) {
+            monthlyMap[key].custo += monthlyAmount;
+            monthlyMap[key].apolices += 1;
+          }
+          
+          current.setMonth(current.getMonth() + 1);
         }
-        
-        current.setMonth(current.getMonth() + 1);
       }
     });
 
@@ -90,6 +108,9 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
   const maxCusto = Math.max(...chartData.map(item => item.custo));
   const avgCusto = chartData.length > 0 ? totalCusto / chartData.length : 0;
 
+  // Verificar se há dados reais de parcelas
+  const hasRealInstallmentData = policies.some(policy => Array.isArray(policy.installments));
+
   return (
     <Card className="bg-white border-0 shadow-none">
       <CardHeader className="pb-6">
@@ -100,11 +121,11 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
             </div>
             <div>
               <CardTitle className="text-xl font-semibold text-gray-900">
-                Tendências de Custos Mensais
+                Evolução de Custos Mensais
               </CardTitle>
               <p className="text-sm text-gray-600 mt-1">
                 {hasData 
-                  ? `Evolução baseada em ${policies.length} apólice${policies.length !== 1 ? 's' : ''} ativa${policies.length !== 1 ? 's' : ''}`
+                  ? `${hasRealInstallmentData ? 'Baseado em dados reais de parcelas' : 'Estimativa baseada em prêmios'} - ${policies.length} apólice${policies.length !== 1 ? 's' : ''}`
                   : 'Aguardando dados de apólices para análise'
                 }
               </p>
@@ -201,10 +222,14 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
             <div className="flex items-start space-x-3">
               <TrendingUp className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
-                <h4 className="font-medium text-blue-900">Análise Automática</h4>
+                <h4 className="font-medium text-blue-900">
+                  {hasRealInstallmentData ? 'Dados Reais de Parcelas' : 'Análise Estimada'}
+                </h4>
                 <p className="text-sm text-blue-700 mt-1">
-                  Os custos são calculados com base nas datas de vigência de cada apólice. 
-                  Apólices mensais são distribuídas mês a mês, enquanto anuais são divididas proporcionalmente.
+                  {hasRealInstallmentData 
+                    ? 'Os custos são calculados com base nos valores reais das parcelas extraídas das apólices, considerando as datas de vencimento específicas de cada parcela.'
+                    : 'Os custos são estimados com base nas datas de vigência de cada apólice. Apólices mensais são distribuídas mês a mês, enquanto anuais são divididas proporcionalmente.'
+                  }
                   Total de {policies.length} apólice{policies.length !== 1 ? 's' : ''} processada{policies.length !== 1 ? 's' : ''}.
                 </p>
               </div>

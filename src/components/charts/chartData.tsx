@@ -17,6 +17,14 @@ export interface PolicyData {
   // Add documento_tipo field for person type classification
   documento_tipo?: 'CPF' | 'CNPJ' | string;
   documento?: string;
+  
+  // Add installments field to support real installment data
+  installments?: Array<{
+    numero: number;
+    valor: number;
+    data: string;
+    status: 'paga' | 'pendente';
+  }>;
 }
 
 // Function to normalize policy types - residencial becomes patrimonial
