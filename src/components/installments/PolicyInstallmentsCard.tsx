@@ -21,11 +21,11 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
   // Check if installments is an array
   const installmentsArray = Array.isArray(policy.installments) ? policy.installments : [];
 
-  // Calcular estatísticas das parcelas com base na data atual
+  // Calcular estatísticas das parcelas com base na data atual (todas as parcelas, não só pendentes)
   const overdueInstallments = installmentsArray.filter(inst => {
     const installmentDate = new Date(inst.data);
     installmentDate.setHours(0, 0, 0, 0);
-    return installmentDate < today && inst.status === 'pendente';
+    return installmentDate < today;
   });
 
   const paidInstallments = installmentsArray.filter(inst => inst.status === 'paga');
@@ -33,13 +33,13 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
   const dueNext30DaysInstallments = installmentsArray.filter(inst => {
     const installmentDate = new Date(inst.data);
     installmentDate.setHours(0, 0, 0, 0);
-    return installmentDate >= today && installmentDate <= next30Days && inst.status === 'pendente';
+    return installmentDate >= today && installmentDate <= next30Days;
   });
 
   const futureInstallments = installmentsArray.filter(inst => {
     const installmentDate = new Date(inst.data);
     installmentDate.setHours(0, 0, 0, 0);
-    return installmentDate > next30Days && inst.status === 'pendente';
+    return installmentDate > next30Days;
   });
 
   // Calcular valor total correto baseado no valor segurado ou prêmio
@@ -74,13 +74,12 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
       <CardContent>
         <div className="space-y-2 max-h-60 overflow-y-auto">
           {installmentsArray
-            .filter(installment => installment.status === 'pendente') // Só parcelas pendentes
             .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
             .map((installment, instIndex) => {
             const installmentDate = new Date(installment.data);
             installmentDate.setHours(0, 0, 0, 0);
             
-            // Determinar se está vencida ou a vencer
+            // Determinar se está vencida ou a vencer baseado apenas na data
             const isOverdue = installmentDate < today;
             
             // Determinar cor e status
