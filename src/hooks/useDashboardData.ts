@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
@@ -96,44 +95,36 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       value: Math.round(value)
     }));
 
-    // Calcular distribuição pessoa física/jurídica usando dados do N8N - CORRIGIDO
+    // Calcular distribuição pessoa física/jurídica usando APENAS o campo documento_tipo do N8N
     const personTypeDistribution = policies.reduce((acc, policy) => {
       console.log('Analisando política:', {
         id: policy.id,
-        documento: policy.documento,
-        documento_tipo: policy.documento_tipo,
-        name: policy.name
+        name: policy.name,
+        documento_tipo: policy.documento_tipo
       });
 
-      // Usar dados do N8N como prioridade - LÓGICA CORRIGIDA
+      // Usar APENAS o campo documento_tipo fornecido pela IA do N8N
       if (policy.documento_tipo) {
-        console.log(`Política ${policy.name}: documento_tipo = ${policy.documento_tipo}`);
-        if (policy.documento_tipo.toUpperCase() === 'CPF') {
+        const tipoDocumento = policy.documento_tipo.toUpperCase();
+        console.log(`Política ${policy.name}: documento_tipo = ${tipoDocumento}`);
+        
+        if (tipoDocumento === 'CPF') {
           acc.pessoaFisica++;
-          console.log('Incrementando Pessoa Física');
-        } else if (policy.documento_tipo.toUpperCase() === 'CNPJ') {
+          console.log('✅ Incrementando Pessoa Física');
+        } else if (tipoDocumento === 'CNPJ') {
           acc.pessoaJuridica++;
-          console.log('Incrementando Pessoa Jurídica');
-        }
-      } else if (policy.documento) {
-        // Fallback: tentar detectar pelo documento se disponível
-        const cleanDoc = policy.documento.replace(/\D/g, '');
-        console.log(`Política ${policy.name}: documento limpo = ${cleanDoc} (${cleanDoc.length} dígitos)`);
-        if (cleanDoc.length === 11) {
-          acc.pessoaFisica++;
-          console.log('Incrementando Pessoa Física (fallback CPF)');
-        } else if (cleanDoc.length === 14) {
-          acc.pessoaJuridica++;
-          console.log('Incrementando Pessoa Jurídica (fallback CNPJ)');
+          console.log('✅ Incrementando Pessoa Jurídica');
+        } else {
+          console.log('⚠️ Tipo de documento não reconhecido:', tipoDocumento);
         }
       } else {
-        console.log(`Política ${policy.name}: sem documento detectado`);
+        console.log(`⚠️ Política ${policy.name}: campo documento_tipo não encontrado`);
       }
       
       return acc;
     }, { pessoaFisica: 0, pessoaJuridica: 0 });
 
-    console.log('Distribuição pessoa física/jurídica calculada:', personTypeDistribution);
+    console.log('✅ Distribuição pessoa física/jurídica final:', personTypeDistribution);
 
     // Evolução mensal
     const monthlyEvolution = generateMonthlyEvolution(policies);
