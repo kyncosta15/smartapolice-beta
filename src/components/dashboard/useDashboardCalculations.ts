@@ -1,6 +1,6 @@
-
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { extractFieldValue, inferTipoPorDocumento } from '@/utils/extractFieldValue';
 
 export function useDashboardCalculations(policies: ParsedPolicyData[]) {
   return useMemo(() => {
@@ -53,35 +53,9 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // ✅ LÓGICA CORRIGIDA - Função para extrair valores de campos do N8N
-    console.log('🔍 Iniciando contagem de CPF/CNPJ com extração de valores do N8N...');
+    // ✅ LÓGICA CORRIGIDA - Contagem com função utilitária
+    console.log('🔍 Iniciando contagem de CPF/CNPJ com função utilitária...');
     
-    const extractFieldValue = (field: any): string | null => {
-      console.log('🔍 Extraindo valor do campo:', field);
-      
-      // Se é uma string simples
-      if (typeof field === 'string') {
-        console.log('✅ Campo é string simples:', field);
-        return field;
-      }
-      
-      // Se é um objeto do N8N com propriedade 'value'
-      if (field && typeof field === 'object' && 'value' in field) {
-        console.log('✅ Campo é objeto N8N com value:', field.value);
-        return field.value;
-      }
-      
-      // Se é undefined ou null
-      if (!field) {
-        console.log('❌ Campo é null/undefined');
-        return null;
-      }
-      
-      console.log('⚠️ Campo tem estrutura desconhecida:', typeof field, field);
-      return null;
-    };
-
-    // Contar políticas por tipo de documento
     let totalCPF = 0;
     let totalCNPJ = 0;
     
@@ -90,11 +64,14 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       console.log('📄 Nome da política:', policy.name);
       console.log('📄 ID da política:', policy.id);
       
-      // Extrair valor do documento_tipo
-      const documentoTipoValue = extractFieldValue(policy.documento_tipo);
-      console.log('📝 Valor extraído do documento_tipo:', documentoTipoValue);
+      // Usar a função utilitária com fallback
+      const documentoTipoValue = 
+        extractFieldValue(policy.documento_tipo) ??
+        inferTipoPorDocumento(extractFieldValue(policy.documento));
       
-      if (documentoTipoValue && documentoTipoValue !== 'undefined') {
+      console.log('📝 Valor final extraído:', documentoTipoValue);
+      
+      if (documentoTipoValue) {
         const tipoDocumento = documentoTipoValue.toString().toUpperCase().trim();
         console.log('📝 Tipo de documento normalizado:', tipoDocumento);
         
@@ -108,28 +85,9 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
           console.log('⚠️ Tipo de documento não reconhecido:', tipoDocumento);
         }
       } else {
-        console.log('❌ Não foi possível extrair documento_tipo válido');
-        console.log('❌ Valor original do campo:', policy.documento_tipo);
-        
-        // Tentar extrair do campo documento como fallback
-        const documentoValue = extractFieldValue(policy.documento);
-        console.log('🔍 Tentando fallback com campo documento:', documentoValue);
-        
-        if (documentoValue && documentoValue !== 'undefined') {
-          // Inferir tipo baseado no tamanho (CPF: 11 dígitos, CNPJ: 14 dígitos)
-          const numeroLimpo = documentoValue.replace(/\D/g, '');
-          console.log('🔍 Número limpo para inferência:', numeroLimpo);
-          
-          if (numeroLimpo.length === 11) {
-            totalCPF++;
-            console.log('✅ PESSOA FÍSICA incrementada via fallback! Total CPF:', totalCPF);
-          } else if (numeroLimpo.length === 14) {
-            totalCNPJ++;
-            console.log('✅ PESSOA JURÍDICA incrementada via fallback! Total CNPJ:', totalCNPJ);
-          } else {
-            console.log('⚠️ Documento com tamanho inválido:', numeroLimpo.length);
-          }
-        }
+        console.log('❌ Não foi possível determinar o tipo do documento');
+        console.log('❌ documento_tipo:', policy.documento_tipo);
+        console.log('❌ documento:', policy.documento);
       }
     });
 
