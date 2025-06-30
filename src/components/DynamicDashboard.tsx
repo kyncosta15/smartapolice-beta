@@ -37,7 +37,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
         expiringPolicies={dashboardData.expiringPolicies}
       />
 
-      {/* A. Classificação e identificação */}
+      {/* A. Classificação e identificação - Um embaixo do outro */}
       <ClassificationCharts
         typeDistribution={dashboardData.typeDistribution}
         insurerDistribution={dashboardData.insurerDistribution}
@@ -45,15 +45,10 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
         colors={COLORS}
       />
 
-      {/* Categoria e Vínculo */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="lg:col-span-1">
-          {/* Categories chart is already included in ClassificationCharts */}
-        </div>
-        <PersonTypeDistribution
-          personTypeDistribution={dashboardData.personTypeDistribution}
-        />
-      </div>
+      {/* Vínculo - Pessoa Física/Jurídica */}
+      <PersonTypeDistribution
+        personTypeDistribution={dashboardData.personTypeDistribution}
+      />
 
       {/* C. Informações financeiras */}
       <FinancialCharts financialData={dashboardData.financialData} />

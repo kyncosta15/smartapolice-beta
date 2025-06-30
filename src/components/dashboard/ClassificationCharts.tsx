@@ -13,7 +13,8 @@ interface ClassificationChartsProps {
 
 export function ClassificationCharts({ typeDistribution, insurerDistribution, categoryDistribution, colors }: ClassificationChartsProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      {/* Tipos de Seguro */}
       <Card>
         <CardHeader className="border-b border-gray-100">
           <CardTitle className="flex items-center text-lg">
@@ -45,6 +46,7 @@ export function ClassificationCharts({ typeDistribution, insurerDistribution, ca
         </CardContent>
       </Card>
 
+      {/* Seguradoras */}
       <Card>
         <CardHeader className="border-b border-gray-100">
           <CardTitle className="flex items-center text-lg">
@@ -67,6 +69,7 @@ export function ClassificationCharts({ typeDistribution, insurerDistribution, ca
         </CardContent>
       </Card>
 
+      {/* Categorias */}
       <Card>
         <CardHeader className="border-b border-gray-100">
           <CardTitle className="flex items-center text-lg">
