@@ -41,7 +41,7 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       };
     }
 
-    console.log('Recalculando métricas do dashboard para', policies.length, 'apólices');
+    console.log('🔍 Recalculando métricas do dashboard para', policies.length, 'apólices');
 
     const totalPolicies = policies.length;
     const totalMonthlyCost = policies.reduce((sum, p) => sum + (p.monthlyAmount || 0), 0);
@@ -95,36 +95,46 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       value: Math.round(value)
     }));
 
-    // Calcular distribuição pessoa física/jurídica usando APENAS o campo documento_tipo do N8N
+    // 🚨 LÓGICA CORRIGIDA - Distribuição pessoa física/jurídica
+    console.log('🔍 Iniciando classificação de pessoa física/jurídica...');
+    
     const personTypeDistribution = policies.reduce((acc, policy) => {
-      console.log('Analisando política:', {
+      console.log('📋 Analisando política:', {
         id: policy.id,
         name: policy.name,
-        documento_tipo: policy.documento_tipo
+        documento_tipo: policy.documento_tipo,
+        documento: policy.documento
       });
 
-      // Usar APENAS o campo documento_tipo fornecido pela IA do N8N
+      // Verificar se temos o campo documento_tipo do N8N
       if (policy.documento_tipo) {
-        const tipoDocumento = policy.documento_tipo.toUpperCase();
-        console.log(`Política ${policy.name}: documento_tipo = ${tipoDocumento}`);
+        const tipoDocumento = policy.documento_tipo.toString().toUpperCase().trim();
+        console.log(`📄 Política "${policy.name}": documento_tipo = "${tipoDocumento}"`);
         
+        // ✅ LÓGICA CORRIGIDA: CPF = Pessoa Física, CNPJ = Pessoa Jurídica
         if (tipoDocumento === 'CPF') {
           acc.pessoaFisica++;
-          console.log('✅ Incrementando Pessoa Física');
+          console.log('✅ PESSOA FÍSICA incrementada (CPF detectado)');
         } else if (tipoDocumento === 'CNPJ') {
           acc.pessoaJuridica++;
-          console.log('✅ Incrementando Pessoa Jurídica');
+          console.log('✅ PESSOA JURÍDICA incrementada (CNPJ detectado)');
         } else {
           console.log('⚠️ Tipo de documento não reconhecido:', tipoDocumento);
+          console.log('⚠️ Valores aceitos: "CPF" ou "CNPJ"');
         }
       } else {
-        console.log(`⚠️ Política ${policy.name}: campo documento_tipo não encontrado`);
+        console.log(`⚠️ Política "${policy.name}": campo documento_tipo não encontrado ou vazio`);
+        console.log('⚠️ Dados disponíveis:', Object.keys(policy));
       }
       
       return acc;
     }, { pessoaFisica: 0, pessoaJuridica: 0 });
 
-    console.log('✅ Distribuição pessoa física/jurídica final:', personTypeDistribution);
+    console.log('🎯 RESULTADO FINAL da classificação:', {
+      pessoaFisica: personTypeDistribution.pessoaFisica,
+      pessoaJuridica: personTypeDistribution.pessoaJuridica,
+      total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica
+    });
 
     // Evolução mensal
     const monthlyEvolution = generateMonthlyEvolution(policies);
@@ -132,7 +142,7 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     // Insights
     const insights = generateBasicInsights(policies);
 
-    return {
+    const result = {
       totalPolicies,
       totalMonthlyCost,
       totalInsuredValue,
@@ -144,6 +154,9 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       insights,
       personTypeDistribution
     };
+
+    console.log('📊 Dashboard data final:', result);
+    return result;
   }, [policies]);
 
   const refreshDashboard = async () => {
