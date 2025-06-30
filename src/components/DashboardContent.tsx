@@ -78,12 +78,12 @@ export function DashboardContent() {
       limits: 'R$ 100.000 por sinistro',
       // Manter installments como array se já for, senão gerar array de parcelas
       installments: Array.isArray(policy.installments) ? policy.installments : 
-                   policy.installments ? this.generateInstallmentsFromNumber(policy.installments, policy.monthlyAmount, policy.startDate) :
-                   this.generateDefaultInstallments(policy.monthlyAmount, policy.startDate),
+                   policy.installments ? generateInstallmentsFromNumber(policy.installments, policy.monthlyAmount, policy.startDate) :
+                   generateDefaultInstallments(policy.monthlyAmount, policy.startDate),
       totalCoverage: policy.totalCoverage || policy.premium || 0,
       startDate: policy.startDate || new Date().toISOString().split('T')[0],
       endDate: policy.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      // Preservar dados de documento do N8N
+      // Preservar dados de documento do N8N - campos principais
       documento: policy.documento,
       documento_tipo: policy.documento_tipo,
       segurado: policy.segurado,
@@ -120,7 +120,7 @@ export function DashboardContent() {
 
   // Função auxiliar para gerar parcelas padrão
   const generateDefaultInstallments = (monthlyAmount: number, startDate: string) => {
-    return this.generateInstallmentsFromNumber(12, monthlyAmount || 100, startDate);
+    return generateInstallmentsFromNumber(12, monthlyAmount || 100, startDate);
   };
 
   const handlePolicySelect = (policy: any) => {

@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -55,7 +56,7 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
     return types[type] || type;
   };
 
-  // Usar dados de documento do N8N se disponíveis, caso contrário detectar
+  // Função para obter informações do documento do N8N
   const getDocumentInfo = () => {
     // Priorizar dados vindos do N8N
     if (policy.documento && policy.documento_tipo) {
@@ -134,9 +135,9 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
               {documentInfo && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">
-                    {documentInfo.type === 'CPF' ? 'CPF' : 'CNPJ'}
+                    {documentInfo.type}
                   </label>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-2">
                     <p className="font-mono text-sm">{documentInfo.formatted}</p>
                     <Badge 
                       className={`w-fit ${

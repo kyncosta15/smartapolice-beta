@@ -34,7 +34,7 @@ export interface ParsedPolicyData {
   insuredPersonType?: 'PF' | 'PJ';
   insuredCpfCnpj?: string;
   
-  // Campos de documento do N8N
+  // Campos de documento do N8N - principais campos a serem usados
   documento?: string;
   documento_tipo?: 'CPF' | 'CNPJ';
   
@@ -160,6 +160,10 @@ export function parsePolicyData(data: DynamicPDFData, file?: File): ParsedPolicy
     insuredPersonType: data.segurado?.tipo_pessoa,
     insuredCpfCnpj: data.segurado?.cpf_cnpj,
     broker: data.seguradora.entidade,
+    
+    // Campos de documento do N8N - prioritários
+    documento: data.documento,
+    documento_tipo: data.documento_tipo,
     
     // Legacy compatibility
     entity: data.seguradora.entidade,
