@@ -1,3 +1,4 @@
+
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 interface N8NDirectResponse {
@@ -15,7 +16,7 @@ interface N8NDirectResponse {
   // Policy number fields from N8N
   numero_apolice?: string;
   apolice?: string;
-  // ✅ Campos de documento preservados
+  // ✅ Campos de documento preservados - using string type to match webhook data
   documento?: string;
   documento_tipo?: string;
 }
@@ -146,7 +147,7 @@ export class N8NWebhookService {
       segurado: n8nData.segurado ? {
         nome: n8nData.segurado
       } : undefined,
-      // ✅ PRESERVAR os dados de documento EXATAMENTE como chegam
+      // ✅ PRESERVAR os dados de documento EXATAMENTE como chegam - sem type casting
       documento: n8nData.documento,
       documento_tipo: n8nData.documento_tipo,
       // Adicionar as parcelas como propriedade adicional
