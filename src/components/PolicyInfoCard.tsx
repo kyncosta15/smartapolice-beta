@@ -11,14 +11,30 @@ interface PolicyInfoCardProps {
 }
 
 export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
-  // Detectar documento no número da apólice ou outros campos de texto
-  const detectDocumentFromPolicy = () => {
+  // Usar dados de documento do N8N se disponíveis, caso contrário detectar
+  const getDocumentInfo = () => {
+    // Priorizar dados vindos do N8N
+    if (policy.documento && policy.documento_tipo) {
+      const documentType = policy.documento_tipo === 'CPF' ? 'PF' : 'PJ';
+      const formatted = policy.documento_tipo === 'CPF' 
+        ? policy.documento.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+        : policy.documento.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      
+      return {
+        type: policy.documento_tipo,
+        personType: documentType,
+        formatted: formatted,
+        rawValue: policy.documento
+      };
+    }
+    
+    // Fallback para detecção automática no número da apólice ou outros campos de texto
     const textToAnalyze = `${policy.policyNumber} ${policy.name} ${policy.insurer}`;
     const docInfo = DocumentValidator.detectDocument(textToAnalyze);
     return docInfo;
   };
 
-  const documentInfo = detectDocumentFromPolicy();
+  const documentInfo = getDocumentInfo();
 
   const getStatusBadge = (status: string) => {
     switch (status) {

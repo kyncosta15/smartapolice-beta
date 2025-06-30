@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -56,9 +55,24 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
     return types[type] || type;
   };
 
-  // Detectar documento a partir dos dados da apólice
+  // Usar dados de documento do N8N se disponíveis, caso contrário detectar
   const getDocumentInfo = () => {
-    // Verificar se há documento específico nos campos
+    // Priorizar dados vindos do N8N
+    if (policy.documento && policy.documento_tipo) {
+      const documentType = policy.documento_tipo === 'CPF' ? 'PF' : 'PJ';
+      const formatted = policy.documento_tipo === 'CPF' 
+        ? policy.documento.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+        : policy.documento.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      
+      return {
+        type: policy.documento_tipo,
+        personType: documentType,
+        formatted: formatted,
+        rawValue: policy.documento
+      };
+    }
+    
+    // Fallback para detecção automática
     if (policy.insuredDocument) {
       return DocumentValidator.detectDocument(policy.insuredDocument);
     }
@@ -112,14 +126,16 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                 <label className="text-sm font-medium text-gray-500">Nome completo</label>
                 <p className="flex items-center">
                   <User className="h-4 w-4 mr-2 text-blue-600" />
-                  {policy.insuredName || 'Não informado'}
+                  {policy.insuredName || policy.segurado || 'Não informado'}
                 </p>
               </div>
 
               {/* CPF ou CNPJ logo abaixo do nome completo */}
               {documentInfo && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">CPF ou CNPJ</label>
+                  <label className="text-sm font-medium text-gray-500">
+                    {documentInfo.type === 'CPF' ? 'CPF' : 'CNPJ'}
+                  </label>
                   <div className="flex flex-col gap-1">
                     <p className="font-mono text-sm">{documentInfo.formatted}</p>
                     <Badge 

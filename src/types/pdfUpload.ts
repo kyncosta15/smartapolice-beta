@@ -68,6 +68,9 @@ export interface DynamicPDFData {
     data: string;
     status: 'paga' | 'pendente';
   }>;
+  // Novos campos de documento diretos do N8N
+  documento?: string;
+  documento_tipo?: 'CPF' | 'CNPJ';
 }
 
 // Interface legada mantida para compatibilidade
@@ -146,4 +149,8 @@ export interface ExtractedPDFData {
     susep?: string;
     observacoes?: string;
   };
+
+  // Novos campos de documento diretos do N8N
+  documento?: string;
+  documento_tipo?: 'CPF' | 'CNPJ';
 }
