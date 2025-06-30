@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
 export type UserRole = 'cliente' | 'administrador' | 'corretora';
 
@@ -15,9 +17,10 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: RegisterData) => Promise<boolean>;
-  logout: () => void;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (userData: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -42,108 +45,162 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simula verificação de token no localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Erro ao recuperar usuário:', error);
-        localStorage.removeItem('user');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
+        setSession(session);
+        
+        if (session?.user) {
+          // Fetch user profile from our users table
+          setTimeout(async () => {
+            try {
+              const { data: userProfile, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+              if (error) {
+                console.error('Error fetching user profile:', error);
+                setUser(null);
+              } else if (userProfile) {
+                setUser({
+                  id: userProfile.id,
+                  email: userProfile.email,
+                  name: userProfile.name,
+                  role: userProfile.role as UserRole,
+                  company: userProfile.company,
+                  phone: userProfile.phone,
+                  avatar: userProfile.avatar
+                });
+              }
+            } catch (error) {
+              console.error('Error loading user profile:', error);
+              setUser(null);
+            }
+          }, 0);
+        } else {
+          setUser(null);
+        }
+        
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id);
+      if (!session) {
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     
     try {
-      // Simula chamada de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock de usuários para demonstração
-      const mockUsers = [
-        {
-          id: '1',
-          email: 'admin@empresa.com',
-          name: 'João Silva',
-          role: 'administrador' as UserRole,
-          company: 'Empresa ABC',
-          phone: '(11) 99999-9999'
-        },
-        {
-          id: '2',
-          email: 'cliente@exemplo.com',
-          name: 'Maria Santos',
-          role: 'cliente' as UserRole,
-          company: 'Consultoria XYZ',
-          phone: '(11) 88888-8888'
-        },
-        {
-          id: '3',
-          email: 'corretora@seguro.com',
-          name: 'Carlos Ferreira',
-          role: 'corretora' as UserRole,
-          company: 'Corretora Seguros Pro',
-          phone: '(11) 77777-7777'
-        }
-      ];
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      const foundUser = mockUsers.find(u => u.email === email);
-      
-      if (foundUser && password === '123456') {
-        setUser(foundUser);
-        localStorage.setItem('user', JSON.stringify(foundUser));
-        return true;
+      if (error) {
+        console.error('Login error:', error);
+        return { success: false, error: error.message };
       }
-      
-      return false;
+
+      if (data.user) {
+        console.log('Login successful:', data.user.id);
+        return { success: true };
+      }
+
+      return { success: false, error: 'Login failed' };
     } catch (error) {
-      console.error('Erro no login:', error);
-      return false;
+      console.error('Login exception:', error);
+      return { success: false, error: 'Erro inesperado no login' };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (userData: RegisterData): Promise<boolean> => {
+  const register = async (userData: RegisterData): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     
     try {
-      // Simula chamada de API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const newUser: User = {
-        id: Date.now().toString(),
+      // Sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
-        name: userData.name,
-        role: userData.role,
-        company: userData.company,
-        phone: userData.phone
-      };
-      
-      setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
-      return true;
+        password: userData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            name: userData.name,
+            role: userData.role,
+            company: userData.company,
+            phone: userData.phone
+          }
+        }
+      });
+
+      if (authError) {
+        console.error('Auth signup error:', authError);
+        return { success: false, error: authError.message };
+      }
+
+      if (authData.user) {
+        // Create user profile in our users table
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email: userData.email,
+            name: userData.name,
+            role: userData.role,
+            company: userData.company,
+            phone: userData.phone,
+            password_hash: 'handled_by_auth' // Placeholder since auth handles password
+          });
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          // Try to clean up the auth user if profile creation failed
+          await supabase.auth.signOut();
+          return { success: false, error: 'Erro ao criar perfil do usuário' };
+        }
+
+        console.log('Registration successful:', authData.user.id);
+        return { success: true };
+      }
+
+      return { success: false, error: 'Falha no registro' };
     } catch (error) {
-      console.error('Erro no registro:', error);
-      return false;
+      console.error('Registration exception:', error);
+      return { success: false, error: 'Erro inesperado no registro' };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, session, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield, Mail, Lock, User, Building, Phone, Loader2 } from 'lucide-react';
@@ -42,9 +41,9 @@ export const AuthPage = () => {
       return;
     }
 
-    const success = await login(loginData.email, loginData.password);
+    const result = await login(loginData.email, loginData.password);
     
-    if (success) {
+    if (result.success) {
       toast({
         title: "Sucesso",
         description: "Login realizado com sucesso!",
@@ -52,7 +51,7 @@ export const AuthPage = () => {
     } else {
       toast({
         title: "Erro",
-        description: "Email ou senha incorretos",
+        description: result.error || "Erro no login",
         variant: "destructive"
       });
     }
@@ -79,17 +78,36 @@ export const AuthPage = () => {
       return;
     }
 
-    const success = await register(registerData);
+    if (registerData.password.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter pelo menos 6 caracteres",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const result = await register(registerData);
     
-    if (success) {
+    if (result.success) {
       toast({
         title: "Sucesso",
-        description: "Conta criada com sucesso!",
+        description: "Conta criada com sucesso! Verifique seu email para confirmar.",
+      });
+      // Reset form
+      setRegisterData({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        name: '',
+        company: '',
+        phone: '',
+        role: 'cliente'
       });
     } else {
       toast({
         title: "Erro",
-        description: "Erro ao criar conta",
+        description: result.error || "Erro ao criar conta",
         variant: "destructive"
       });
     }
@@ -134,6 +152,7 @@ export const AuthPage = () => {
                         value={loginData.email}
                         onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
                         className="pl-10"
+                        required
                       />
                     </div>
                   </div>
@@ -149,6 +168,7 @@ export const AuthPage = () => {
                         value={loginData.password}
                         onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                         className="pl-10"
+                        required
                       />
                     </div>
                   </div>
@@ -167,17 +187,6 @@ export const AuthPage = () => {
                       'Entrar'
                     )}
                   </Button>
-
-                  {/* Demo credentials */}
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm font-medium text-blue-800 mb-2">Credenciais de Demonstração:</p>
-                    <div className="space-y-1 text-xs text-blue-700">
-                      <p><strong>Admin:</strong> admin@empresa.com</p>
-                      <p><strong>Cliente:</strong> cliente@exemplo.com</p>
-                      <p><strong>Corretora:</strong> corretora@seguro.com</p>
-                      <p><strong>Senha:</strong> 123456</p>
-                    </div>
-                  </div>
                 </form>
               </TabsContent>
 
@@ -196,12 +205,13 @@ export const AuthPage = () => {
                           value={registerData.name}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, name: e.target.value }))}
                           className="pl-10"
+                          required
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-role">Tipo de Conta</Label>
+                      <Label htmlFor="register-role">Tipo de Conta *</Label>
                       <Select
                         value={registerData.role}
                         onValueChange={(value: UserRole) => setRegisterData(prev => ({ ...prev, role: value }))}
@@ -229,6 +239,7 @@ export const AuthPage = () => {
                         value={registerData.email}
                         onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
                         className="pl-10"
+                        required
                       />
                     </div>
                   </div>
@@ -241,10 +252,12 @@ export const AuthPage = () => {
                         <Input
                           id="register-password"
                           type="password"
-                          placeholder="Senha"
+                          placeholder="Min. 6 caracteres"
                           value={registerData.password}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
                           className="pl-10"
+                          required
+                          minLength={6}
                         />
                       </div>
                     </div>
@@ -256,10 +269,11 @@ export const AuthPage = () => {
                         <Input
                           id="register-confirm"
                           type="password"
-                          placeholder="Confirmar"
+                          placeholder="Confirmar senha"
                           value={registerData.confirmPassword}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                           className="pl-10"
+                          required
                         />
                       </div>
                     </div>
