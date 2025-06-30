@@ -1,4 +1,5 @@
 
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -137,18 +138,7 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                   <label className="text-sm font-medium text-gray-500">
                     {documentInfo.type}
                   </label>
-                  <div className="flex flex-col gap-2">
-                    <p className="font-mono text-sm">{documentInfo.formatted}</p>
-                    <Badge 
-                      className={`w-fit ${
-                        documentInfo.personType === 'PF' 
-                          ? 'bg-blue-50 text-blue-600 border-blue-200' 
-                          : 'bg-purple-50 text-purple-600 border-purple-200'
-                      }`}
-                    >
-                      {documentInfo.personType === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
-                    </Badge>
-                  </div>
+                  <p className="font-mono text-sm">{documentInfo.formatted}</p>
                 </div>
               )}
               
@@ -286,3 +276,4 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
     </Dialog>
   );
 };
+
