@@ -4,6 +4,7 @@ import { InsuranceTypesChart } from './charts/InsuranceTypesChart';
 import { CostEvolutionChart } from './charts/CostEvolutionChart';
 import { ExpirationTimelineChart } from './charts/ExpirationTimelineChart';
 import { ComparativeAnalysisChart } from './charts/ComparativeAnalysisChart';
+import { PersonTypeChart } from './charts/PersonTypeChart';
 import { PolicyData } from './charts/chartData';
 import { Card, CardContent } from '@/components/ui/card';
 import { BarChart3, TrendingUp, AlertCircle } from 'lucide-react';
@@ -69,6 +70,10 @@ export const ChartsSection = ({ detailed = false, policies = [] }: ChartsSection
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1">
+          <PersonTypeChart policies={policies} />
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1">
           <InsurerDistributionChart policies={policies} />
         </div>
 
@@ -95,7 +100,7 @@ export const ChartsSection = ({ detailed = false, policies = [] }: ChartsSection
               <h4 className="font-medium text-blue-900">Análise Inteligente</h4>
               <p className="text-sm text-blue-700 mt-1">
                 Os dados são processados automaticamente e os gráficos são atualizados em tempo real conforme você adiciona novas apólices.
-                Apólices com o tipo "residencial" são automaticamente categorizadas como "Patrimonial".
+                A classificação de pessoa física/jurídica é baseada no tipo de documento extraído das apólices.
               </p>
             </div>
           </div>
