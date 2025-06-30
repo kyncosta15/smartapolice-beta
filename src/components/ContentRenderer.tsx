@@ -78,10 +78,9 @@ export function ContentRenderer({
           <EnhancedPolicyViewer 
             policies={extractedPolicies}
             onPolicySelect={onPolicySelect}
-            onPolicyUpdate={onPolicyUpdate}
+            onPolicyEdit={onPolicyUpdate}
             onPolicyDelete={onPolicyDelete}
-            searchTerm={searchTerm}
-            filterType={filterType}
+            viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
           />
         </div>
       );
