@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
@@ -11,6 +12,11 @@ interface DashboardMetrics {
   typeDistribution: Array<{ name: string; value: number }>;
   monthlyEvolution: Array<{ month: string; cost: number }>;
   insights: Array<{ type: string; category: string; message: string }>;
+  // Novas métricas para pessoa física/jurídica
+  personTypeDistribution: {
+    pessoaFisica: number;
+    pessoaJuridica: number;
+  };
 }
 
 export function useDashboardData(policies: ParsedPolicyData[]) {
@@ -28,7 +34,11 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
         insurerDistribution: [],
         typeDistribution: [],
         monthlyEvolution: [],
-        insights: []
+        insights: [],
+        personTypeDistribution: {
+          pessoaFisica: 0,
+          pessoaJuridica: 0
+        }
       };
     }
 
@@ -50,7 +60,6 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
 
     // Calcular total de parcelas - corrigindo o erro TypeScript
     const totalInstallments = policies.reduce((sum, p) => {
-      // Se installments for um array, usar o length, senão usar o valor numérico ou 12 como padrão
       const installmentCount = Array.isArray(p.installments) 
         ? p.installments.length 
         : (typeof p.installments === 'number' ? p.installments : 12);
@@ -87,6 +96,38 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       value: Math.round(value)
     }));
 
+    // Calcular distribuição pessoa física/jurídica usando dados do N8N
+    const personTypeDistribution = policies.reduce((acc, policy) => {
+      console.log('Analisando política:', {
+        id: policy.id,
+        documento: policy.documento,
+        documento_tipo: policy.documento_tipo
+      });
+
+      // Usar dados do N8N como prioridade
+      if (policy.documento_tipo) {
+        if (policy.documento_tipo === 'CPF') {
+          acc.pessoaFisica++;
+        } else if (policy.documento_tipo === 'CNPJ') {
+          acc.pessoaJuridica++;
+        }
+      } else {
+        // Fallback: tentar detectar pelo documento se disponível
+        if (policy.documento) {
+          const cleanDoc = policy.documento.replace(/\D/g, '');
+          if (cleanDoc.length === 11) {
+            acc.pessoaFisica++;
+          } else if (cleanDoc.length === 14) {
+            acc.pessoaJuridica++;
+          }
+        }
+      }
+      
+      return acc;
+    }, { pessoaFisica: 0, pessoaJuridica: 0 });
+
+    console.log('Distribuição pessoa física/jurídica calculada:', personTypeDistribution);
+
     // Evolução mensal
     const monthlyEvolution = generateMonthlyEvolution(policies);
 
@@ -102,7 +143,8 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       insurerDistribution,
       typeDistribution,
       monthlyEvolution,
-      insights
+      insights,
+      personTypeDistribution
     };
   }, [policies]);
 

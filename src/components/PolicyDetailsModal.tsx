@@ -1,5 +1,4 @@
 
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -59,6 +58,11 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
 
   // Função para obter informações do documento do N8N
   const getDocumentInfo = () => {
+    console.log('Policy data for document detection:', {
+      documento: policy.documento,
+      documento_tipo: policy.documento_tipo
+    });
+
     // Priorizar dados vindos do N8N
     if (policy.documento && policy.documento_tipo) {
       const documentType = policy.documento_tipo === 'CPF' ? 'PF' : 'PJ';
@@ -83,12 +87,11 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
       return DocumentValidator.detectDocument(policy.insuredCpfCnpj);
     }
     
-    // Tentar detectar documento no número da apólice ou outros campos de texto
-    const textToAnalyze = `${policy.policyNumber} ${policy.name} ${policy.insurer}`;
-    return DocumentValidator.detectDocument(textToAnalyze);
+    return null;
   };
 
   const documentInfo = getDocumentInfo();
+  console.log('Document info calculated:', documentInfo);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -138,7 +141,9 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                   <label className="text-sm font-medium text-gray-500">
                     {documentInfo.type}
                   </label>
-                  <p className="font-mono text-sm">{documentInfo.formatted}</p>
+                  <p className="font-mono text-sm bg-gray-50 p-2 rounded border">
+                    {documentInfo.formatted}
+                  </p>
                 </div>
               )}
               
@@ -276,4 +281,3 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
     </Dialog>
   );
 };
-
