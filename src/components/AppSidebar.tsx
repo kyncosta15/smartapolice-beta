@@ -9,7 +9,6 @@ import {
   Contact2,
   FileText,
   Gauge,
-  Home,
   Settings,
   Users2
 } from "lucide-react"
@@ -28,40 +27,16 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   const adminNavigation = [
     {
-      title: "Dashboard",
-      icon: Home,
-      id: "home",
-      description: "Visão geral"
-    },
-    {
-      title: "Apólices",
-      icon: FileText,
-      id: "policies",
-      description: "Gerenciar apólices"
-    },
-    {
-      title: "Upload",
-      icon: FileText,
-      id: "upload",
-      description: "Importar PDFs"
-    },
-    {
-      title: "Clientes",
-      icon: Users2,
-      id: "clients",
-      description: "Gerenciar clientes"
-    },
-    {
       title: "Relatórios",
       icon: BarChart3,
       id: "reports",
       description: "Análises e métricas"
     },
     {
-      title: "Contatos",
-      icon: Contact2,
-      id: "contact",
-      description: "Informações de contato"
+      title: "Clientes",
+      icon: Users2,
+      id: "clients",
+      description: "Gerenciar clientes"
     },
     {
       title: "Configurações",

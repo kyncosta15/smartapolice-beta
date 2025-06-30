@@ -1,21 +1,25 @@
 
-import { PDFUpload } from '@/components/PDFUpload';
-import { EnhancedPDFUpload } from '@/components/EnhancedPDFUpload';
-import { PolicyViewer } from '@/components/PolicyViewer';
-import { UserManagement } from '@/components/UserManagement';
-import { ClientRegister } from '@/components/ClientRegister';
-import { ContactSection } from '@/components/ContactSection';
-import { EnhancedDashboard } from '@/components/EnhancedDashboard';
-import { DynamicDashboard } from '@/components/DynamicDashboard';
-import { InstallmentsDashboard } from '@/components/InstallmentsDashboard';
-import { RegionalDashboard } from '@/components/RegionalDashboard';
+import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { DynamicDashboard } from './DynamicDashboard';
+import { AdminDashboardNew } from './AdminDashboardNew';
+import { EnhancedPDFUpload } from './EnhancedPDFUpload';
+import { EnhancedPolicyViewer } from './EnhancedPolicyViewer';
+import { UserManagement } from './UserManagement';
+import { ClientRegister } from './ClientRegister';
+import { ContactSection } from './ContactSection';
+import { OptimizedSettings } from './OptimizedSettings';
+import { ChartsSection } from './ChartsSection';
+import { InstallmentsDashboard } from './InstallmentsDashboard';
+import { PolicyInstallmentsCard } from './installments/PolicyInstallmentsCard';
+import { ParsedPolicyData } from '@/utils/policyDataParser';
 
 interface ContentRendererProps {
   activeSection: string;
   searchTerm: string;
   filterType: string;
-  allPolicies: any[];
-  extractedPolicies: any[];
+  allPolicies: ParsedPolicyData[];
+  extractedPolicies: ParsedPolicyData[];
   allUsers: any[];
   onPolicySelect: (policy: any) => void;
   onPolicyUpdate: (policy: any) => void;
@@ -43,81 +47,125 @@ export function ContentRenderer({
   onClientRegister,
   onSectionChange
 }: ContentRendererProps) {
+  const { user } = useAuth();
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'home':
-        return (
-          <div className="p-6 space-y-6">
-            <DynamicDashboard policies={allPolicies} />
-            <InstallmentsDashboard policies={allPolicies} />
-          </div>
-        );
+  // Para administradores, mostrar dashboard administrativo na seção de relatórios
+  if (user?.role === 'administrador' && activeSection === 'reports') {
+    return (
+      <AdminDashboardNew 
+        policies={extractedPolicies}
+        allUsers={allUsers}
+      />
+    );
+  }
 
-      case 'upload':
+  // Para clientes, mostrar dashboard normal na home
+  if (activeSection === 'home') {
+    return (
+      <div className="p-6">
+        <DynamicDashboard 
+          policies={extractedPolicies}
+          viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
+        />
+      </div>
+    );
+  }
+
+  switch (activeSection) {
+    case 'policies':
+      return (
+        <div className="p-6">
+          <EnhancedPolicyViewer 
+            policies={extractedPolicies}
+            onPolicySelect={onPolicySelect}
+            onPolicyUpdate={onPolicyUpdate}
+            onPolicyDelete={onPolicyDelete}
+            searchTerm={searchTerm}
+            filterType={filterType}
+          />
+        </div>
+      );
+
+    case 'upload':
+      return (
+        <div className="p-6">
+          <EnhancedPDFUpload onPolicyExtracted={onPolicyExtracted} />
+        </div>
+      );
+
+    case 'clients':
+      if (user?.role === 'administrador') {
         return (
           <div className="p-6">
-            <EnhancedPDFUpload onPolicyExtracted={onPolicyExtracted} />
-          </div>
-        );
-
-      case 'policies':
-        return (
-          <div className="p-6">
-            <PolicyViewer
-              policies={extractedPolicies}
-              onPolicySelect={onPolicySelect}
-              onPolicyEdit={onPolicyUpdate}
-              onPolicyDelete={onPolicyDelete}
-            />
-          </div>
-        );
-
-      case 'users':
-        return (
-          <div className="p-6">
-            <UserManagement
+            <UserManagement 
               users={allUsers}
               onUserUpdate={onUserUpdate}
               onUserDelete={onUserDelete}
             />
+            <div className="mt-8">
+              <ClientRegister onClientRegister={onClientRegister} />
+            </div>
           </div>
         );
-
-      case 'register':
-        return (
-          <div className="p-6">
-            <ClientRegister onClientRegister={onClientRegister} />
+      }
+      return (
+        <div className="p-6">
+          <div className="text-center py-12">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Acesso Restrito
+            </h3>
+            <p className="text-gray-600">
+              Esta seção é disponível apenas para administradores.
+            </p>
           </div>
-        );
+        </div>
+      );
 
-      case 'contact':
-        return (
-          <div className="p-6">
-            <ContactSection />
+    case 'contact':
+      return (
+        <div className="p-6">
+          <ContactSection />
+        </div>
+      );
+
+    case 'settings':
+      return (
+        <div className="p-6">
+          <OptimizedSettings />
+        </div>
+      );
+
+    case 'installments':
+      return (
+        <div className="p-6">
+          <InstallmentsDashboard policies={extractedPolicies} />
+          <div className="mt-8 grid gap-6">
+            {extractedPolicies.map((policy, index) => (
+              <PolicyInstallmentsCard 
+                key={policy.id || index}
+                policy={policy}
+                index={index}
+              />
+            ))}
           </div>
-        );
+        </div>
+      );
 
-      case 'reports':
-        return (
-          <div className="p-6">
-            <RegionalDashboard policies={allPolicies} />
-          </div>
-        );
+    case 'charts':
+      return (
+        <div className="p-6">
+          <ChartsSection detailed={true} policies={extractedPolicies} />
+        </div>
+      );
 
-      default:
-        return (
-          <div className="p-6">
-            <h2>Seção não encontrada</h2>
-            <p>Selecione uma opção no menu lateral.</p>
-          </div>
-        );
-    }
-  };
-
-  return (
-    <div className="flex-1 bg-gray-50">
-      {renderContent()}
-    </div>
-  );
+    default:
+      return (
+        <div className="p-6">
+          <DynamicDashboard 
+            policies={extractedPolicies}
+            viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
+          />
+        </div>
+      );
+  }
 }
