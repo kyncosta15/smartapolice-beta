@@ -34,6 +34,10 @@ export interface ParsedPolicyData {
   insuredPersonType?: 'PF' | 'PJ';
   insuredCpfCnpj?: string;
   
+  // Campos de documento do N8N
+  documento?: string;
+  documento_tipo?: 'CPF' | 'CNPJ';
+  
   vehicleDetails?: {
     brand?: string;
     model?: string;
