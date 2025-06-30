@@ -106,25 +106,8 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                 <label className="text-sm font-medium text-gray-500">Nome da Apólice</label>
                 <p className="text-lg font-semibold">{policy.name}</p>
               </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-500">Tipo</label>
-                <p>{getTypeLabel(policy.type)}</p>
-              </div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-500">Status</label>
-                <div className="mt-1">
-                  {getStatusBadge(policy.status)}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-500">Número da Apólice</label>
-                <p className="font-mono text-sm">{policy.policyNumber}</p>
-              </div>
-
-              {/* Novos campos adicionados */}
+              {/* Nome completo logo abaixo do nome da apólice */}
               <div>
                 <label className="text-sm font-medium text-gray-500">Nome completo</label>
                 <p className="flex items-center">
@@ -133,6 +116,7 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                 </p>
               </div>
 
+              {/* CPF ou CNPJ logo abaixo do nome completo */}
               {documentInfo && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">CPF ou CNPJ</label>
@@ -150,6 +134,23 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                   </div>
                 </div>
               )}
+              
+              <div>
+                <label className="text-sm font-medium text-gray-500">Tipo</label>
+                <p>{getTypeLabel(policy.type)}</p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-500">Status</label>
+                <div className="mt-1">
+                  {getStatusBadge(policy.status)}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-500">Número da Apólice</label>
+                <p className="font-mono text-sm">{policy.policyNumber}</p>
+              </div>
             </CardContent>
           </Card>
 
