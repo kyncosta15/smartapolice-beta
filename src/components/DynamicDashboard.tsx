@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -63,45 +62,42 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
       return acc;
     }, {} as Record<string, number>);
 
-    // 🔥 NOVA LÓGICA: Distribuição por tipo de pessoa usando DocumentValidator
-    console.log('🔍 Iniciando contagem de CPF/CNPJ usando DocumentValidator...');
+    // 🔥 NOVA LÓGICA: Distribuição por tipo de pessoa usando campos do N8N
+    console.log('🔍 Iniciando contagem de CPF/CNPJ...');
     
     const personTypeDistribution = policies.reduce((acc, policy) => {
       console.log(`📋 Analisando política: ${policy.name || policy.id}`);
       
-      // Função para extrair possíveis documentos de vários campos
-      const extractPossibleDocuments = (policy: ParsedPolicyData): string[] => {
-        const documents: string[] = [];
-        
-        // Verificar vários campos que podem conter documentos
-        const fieldsToCheck = [
-          policy.documento,
-          policy.documento_tipo,
-          policy.clientName,
-          policy.name,
-          policy.rawText
-        ];
-        
-        fieldsToCheck.forEach(field => {
-          if (field) {
-            const fieldValue = typeof field === 'object' && field.value ? field.value : field;
-            if (typeof fieldValue === 'string') {
-              documents.push(fieldValue);
-            }
-          }
-        });
-        
-        return documents;
-      };
-
-      const possibleDocuments = extractPossibleDocuments(policy);
-      console.log(`📄 Campos para análise na política "${policy.name}":`, possibleDocuments);
+      // Priorizar campos diretos do N8N
+      if (policy.documento_tipo) {
+        console.log(`✅ Campo documento_tipo encontrado: ${policy.documento_tipo}`);
+        if (policy.documento_tipo === 'CPF') {
+          acc.pessoaFisica++;
+          console.log('✅ PESSOA FÍSICA incrementada (documento_tipo = CPF)');
+          return acc;
+        } else if (policy.documento_tipo === 'CNPJ') {
+          acc.pessoaJuridica++;
+          console.log('✅ PESSOA JURÍDICA incrementada (documento_tipo = CNPJ)');
+          return acc;
+        }
+      }
+      
+      // Campos alternativos para análise
+      const fieldsToCheck = [
+        policy.documento,
+        policy.insuredDocument,
+        policy.insuredCpfCnpj,
+        policy.insuredName,
+        policy.name
+      ];
+      
+      console.log(`📄 Campos para análise na política "${policy.name}":`, fieldsToCheck);
       
       let foundValidDocument = false;
       
       // Analisar cada campo em busca de CPF ou CNPJ válidos
-      for (const docText of possibleDocuments) {
-        if (docText && docText.length > 0) {
+      for (const docText of fieldsToCheck) {
+        if (docText && typeof docText === 'string' && docText.length > 0) {
           console.log(`🔍 Analisando texto: "${docText}"`);
           
           const documentInfo = DocumentValidator.detectDocument(docText);
