@@ -86,14 +86,13 @@ export function DashboardContent() {
       // Preservar dados de documento do N8N - GARANTIR QUE SEJAM MANTIDOS
       documento: policy.documento,
       documento_tipo: policy.documento_tipo,
-      segurado: policy.segurado,
       insuredName: policy.segurado || policy.insuredName
     };
 
     console.log('Política processada com dados N8N:', {
       documento: newPolicy.documento,
       documento_tipo: newPolicy.documento_tipo,
-      segurado: newPolicy.segurado
+      insuredName: newPolicy.insuredName
     });
     
     setExtractedPolicies(prev => [...prev, newPolicy]);
