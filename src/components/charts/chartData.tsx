@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { formatCurrency } from '@/utils/currencyFormatter';
 
@@ -14,6 +13,10 @@ export interface PolicyData {
   endDate: string;
   policyNumber: string;
   paymentFrequency?: 'mensal' | 'anual' | 'semestral' | 'trimestral';
+  
+  // Add documento_tipo field for person type classification
+  documento_tipo?: 'CPF' | 'CNPJ' | string;
+  documento?: string;
 }
 
 // Function to normalize policy types - residencial becomes patrimonial
