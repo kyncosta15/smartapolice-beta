@@ -79,37 +79,36 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
             const installmentDate = new Date(installment.data);
             installmentDate.setHours(0, 0, 0, 0);
             
+            // Lógica corrigida baseada na data atual
             const isOverdue = installmentDate < today && installment.status === 'pendente';
             const isDueNext30Days = installmentDate >= today && installmentDate <= next30Days && installment.status === 'pendente';
-            const isFuture = installmentDate > next30Days && installment.status === 'pendente';
             const isPaid = installment.status === 'paga';
             
-            // Determinar cor e status baseado na lógica atual
+            // Determinar cor e status
             let bgColor = 'bg-gray-50 border-gray-200';
-            let textColor = 'text-gray-600';
             let badgeVariant: "default" | "secondary" | "destructive" | "outline" = 'secondary';
-            let statusText = 'Pendente';
+            let statusText = '';
             
             if (isPaid) {
               bgColor = 'bg-green-50 border-green-200';
-              textColor = 'text-green-600';
               badgeVariant = 'default';
               statusText = 'Paga';
             } else if (isOverdue) {
               bgColor = 'bg-red-50 border-red-200';
-              textColor = 'text-red-600';
               badgeVariant = 'destructive';
               statusText = 'Vencida';
             } else if (isDueNext30Days) {
               bgColor = 'bg-orange-50 border-orange-200';
-              textColor = 'text-orange-600';
               badgeVariant = 'secondary';
-              statusText = 'A Vencer';
-            } else if (isFuture) {
-              bgColor = 'bg-blue-50 border-blue-200';
-              textColor = 'text-blue-600';
-              badgeVariant = 'secondary';
-              statusText = 'Futura';
+              statusText = 'A vencer';
+            } else {
+              // Parcelas futuras (mais de 30 dias) não mostram status especial
+              return null;
+            }
+            
+            // Só mostrar parcelas pagas, vencidas ou a vencer
+            if (!isPaid && !isOverdue && !isDueNext30Days) {
+              return null;
             }
             
             return (
@@ -131,7 +130,7 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
                   </Badge>
                 </div>
                 <div className="text-right">
-                  <div className={`font-semibold text-sm ${textColor}`}>
+                  <div className="font-semibold text-sm">
                     {formatCurrency(installment.valor)}
                   </div>
                   <div className="text-xs text-gray-600">
