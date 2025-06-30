@@ -44,7 +44,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       // Processar arquivos em lote (método otimizado)
       const allResults = await fileProcessor.processMultipleFiles(acceptedFiles);
       
-      console.log(`🎉 Processamento em lote completo! ${allResults.length} apólices extraídas`);
+      console.log(`🎉 Processamento completo! ${allResults.length} apólices extraídas`);
       
       toast({
         title: "🎉 Processamento em Lote Concluído",
