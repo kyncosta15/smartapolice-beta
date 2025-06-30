@@ -82,12 +82,6 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
             
             // Determinar se está vencida ou a vencer
             const isOverdue = installmentDate < today;
-            const isDueNext30Days = installmentDate >= today && installmentDate <= next30Days;
-            
-            // Só mostrar parcelas vencidas ou a vencer nos próximos 30 dias
-            if (!isOverdue && !isDueNext30Days) {
-              return null;
-            }
             
             // Determinar cor e status
             let bgColor = '';
@@ -98,7 +92,7 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
               bgColor = 'bg-red-50 border-red-200';
               badgeVariant = 'destructive';
               statusText = 'Vencida';
-            } else if (isDueNext30Days) {
+            } else {
               bgColor = 'bg-orange-50 border-orange-200';
               badgeVariant = 'secondary';
               statusText = 'A vencer';
@@ -116,7 +110,7 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
                   <Badge 
                     variant={badgeVariant}
                     className={`text-xs ${
-                      isDueNext30Days ? 'bg-orange-100 text-orange-700 hover:bg-orange-100' : ''
+                      !isOverdue ? 'bg-orange-100 text-orange-700 hover:bg-orange-100' : ''
                     }`}
                   >
                     {statusText}
