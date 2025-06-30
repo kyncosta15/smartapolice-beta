@@ -21,14 +21,12 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
   // Check if installments is an array
   const installmentsArray = Array.isArray(policy.installments) ? policy.installments : [];
 
-  // Calcular estatísticas das parcelas com base na data atual (todas as parcelas, não só pendentes)
+  // Calcular estatísticas baseadas apenas na data (sem considerar status pago)
   const overdueInstallments = installmentsArray.filter(inst => {
     const installmentDate = new Date(inst.data);
     installmentDate.setHours(0, 0, 0, 0);
     return installmentDate < today;
   });
-
-  const paidInstallments = installmentsArray.filter(inst => inst.status === 'paga');
   
   const dueNext30DaysInstallments = installmentsArray.filter(inst => {
     const installmentDate = new Date(inst.data);

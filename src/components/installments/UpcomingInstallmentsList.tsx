@@ -8,7 +8,7 @@ interface ExtendedInstallment {
   numero: number;
   valor: number;
   data: string;
-  status: 'paga' | 'pendente';
+  status: 'pendente'; // Removido 'paga'
   policyName: string;
   policyType: string;
   insurer: string;
