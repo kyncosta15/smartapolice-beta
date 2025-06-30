@@ -1,7 +1,6 @@
 
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
-import { DocumentValidator } from '@/utils/documentValidator';
 
 export function useDashboardCalculations(policies: ParsedPolicyData[]) {
   return useMemo(() => {
@@ -54,57 +53,25 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // Distribuição por tipo de pessoa - lógica simplificada e direta
-    console.log('🔍 Iniciando contagem de CPF/CNPJ...');
+    // ✅ LÓGICA CORRIGIDA - Contagem exclusiva por documento_tipo
+    console.log('🔍 Iniciando contagem de CPF/CNPJ usando documento_tipo...');
     
-    const personTypeDistribution = policies.reduce((acc, policy) => {
-      console.log(`\n📋 === Analisando política ${policy.id || 'sem ID'} ===`);
-      console.log('📄 Dados da política:', {
-        name: policy.name,
-        documento_tipo: policy.documento_tipo,
-        documento: policy.documento,
-        allKeys: Object.keys(policy)
-      });
-      
-      // Lógica direta: verificar o campo documento_tipo
-      if (policy.documento_tipo) {
-        const tipoStr = String(policy.documento_tipo).toUpperCase().trim();
-        console.log('📝 Tipo de documento processado:', tipoStr);
-        
-        if (tipoStr === 'CPF') {
-          acc.pessoaFisica++;
-          console.log('✅ PESSOA FÍSICA incrementada! Total atual:', acc.pessoaFisica);
-        } else if (tipoStr === 'CNPJ') {
-          acc.pessoaJuridica++;
-          console.log('✅ PESSOA JURÍDICA incrementada! Total atual:', acc.pessoaJuridica);
-        } else {
-          console.log('⚠️ Tipo de documento não reconhecido:', tipoStr);
-        }
-      } else {
-        console.log('❌ Campo documento_tipo não encontrado ou vazio');
-        
-        // Fallback: tentar analisar o campo documento diretamente
-        if (policy.documento) {
-          console.log('🔍 Tentando analisar campo documento:', policy.documento);
-          const documentInfo = DocumentValidator.detectDocument(String(policy.documento));
-          
-          if (documentInfo && documentInfo.type !== 'INVALID') {
-            console.log('✅ Documento detectado via fallback:', documentInfo.type);
-            if (documentInfo.type === 'CPF') {
-              acc.pessoaFisica++;
-              console.log('✅ PESSOA FÍSICA incrementada via fallback! Total atual:', acc.pessoaFisica);
-            } else if (documentInfo.type === 'CNPJ') {
-              acc.pessoaJuridica++;
-              console.log('✅ PESSOA JURÍDICA incrementada via fallback! Total atual:', acc.pessoaJuridica);
-            }
-          } else {
-            console.log('❌ Documento não válido via fallback');
-          }
-        }
-      }
-      
-      return acc;
-    }, { pessoaFisica: 0, pessoaJuridica: 0 });
+    // Usar filtro direto conforme solicitado
+    const totalCPF = policies.filter(policy => {
+      const documentoTipo = String(policy.documento_tipo || '').toUpperCase().trim();
+      console.log(`📋 Política "${policy.name}": documento_tipo = "${documentoTipo}"`);
+      return documentoTipo === 'CPF';
+    }).length;
+
+    const totalCNPJ = policies.filter(policy => {
+      const documentoTipo = String(policy.documento_tipo || '').toUpperCase().trim();
+      return documentoTipo === 'CNPJ';
+    }).length;
+
+    const personTypeDistribution = {
+      pessoaFisica: totalCPF,
+      pessoaJuridica: totalCNPJ
+    };
 
     console.log('🎯 RESULTADO FINAL da contagem:', {
       pessoaFisica: personTypeDistribution.pessoaFisica,
