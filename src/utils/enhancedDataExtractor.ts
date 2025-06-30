@@ -377,7 +377,8 @@ export class EnhancedDataExtractor {
       },
       segurado: enhancedData.nomeSegurado !== "Nome não identificado" ? {
         nome: enhancedData.nomeSegurado,
-        cpf: enhancedData.cpf
+        documento: enhancedData.cpf,
+        tipo_pessoa: "Física"
       } : undefined,
       veiculo: enhancedData.veiculo ? {
         marca: enhancedData.veiculo.split(' ')[0],

@@ -1,3 +1,4 @@
+
 export interface DynamicPDFData {
   informacoes_gerais: {
     nome_apolice: string;
@@ -40,4 +41,34 @@ export interface DynamicPDFData {
   }[];
 
   vencimentos_futuros?: string[]; // caso você queira validar a data diretamente
+
+  // ✅ Adding missing properties
+  veiculo?: {
+    marca?: string;
+    modelo?: string;
+    ano_modelo?: string;
+    placa?: string;
+    chassi?: string;
+    uso?: string;
+  };
+
+  coberturas?: {
+    tipo?: string;
+    franquia?: number;
+    danos_materiais?: number;
+    danos_corporais?: number;
+  };
+}
+
+// ✅ Adding missing exported types
+export interface FileProcessingStatus {
+  [fileName: string]: {
+    progress: number;
+    status: 'uploading' | 'processing' | 'completed' | 'failed';
+    message: string;
+  };
+}
+
+export interface EnhancedPDFUploadProps {
+  onPolicyExtracted: (policy: any) => void;
 }
