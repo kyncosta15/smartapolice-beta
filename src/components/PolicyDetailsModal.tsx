@@ -4,8 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, DollarSign, FileText, Building, Clock, Trash2 } from 'lucide-react';
+import { Calendar, DollarSign, FileText, Building, Clock, Trash2, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { DocumentValidator } from '@/utils/documentValidator';
 
 interface PolicyDetailsModalProps {
   isOpen: boolean;
@@ -54,6 +55,24 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
     };
     return types[type] || type;
   };
+
+  // Detectar documento a partir dos dados da apólice
+  const getDocumentInfo = () => {
+    // Verificar se há documento específico nos campos
+    if (policy.insuredDocument) {
+      return DocumentValidator.detectDocument(policy.insuredDocument);
+    }
+    
+    if (policy.insuredCpfCnpj) {
+      return DocumentValidator.detectDocument(policy.insuredCpfCnpj);
+    }
+    
+    // Tentar detectar documento no número da apólice ou outros campos de texto
+    const textToAnalyze = `${policy.policyNumber} ${policy.name} ${policy.insurer}`;
+    return DocumentValidator.detectDocument(textToAnalyze);
+  };
+
+  const documentInfo = getDocumentInfo();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -104,6 +123,33 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                 <label className="text-sm font-medium text-gray-500">Número da Apólice</label>
                 <p className="font-mono text-sm">{policy.policyNumber}</p>
               </div>
+
+              {/* Novos campos adicionados */}
+              <div>
+                <label className="text-sm font-medium text-gray-500">Nome completo</label>
+                <p className="flex items-center">
+                  <User className="h-4 w-4 mr-2 text-blue-600" />
+                  {policy.insuredName || 'Não informado'}
+                </p>
+              </div>
+
+              {documentInfo && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">CPF ou CNPJ</label>
+                  <div className="flex flex-col gap-1">
+                    <p className="font-mono text-sm">{documentInfo.formatted}</p>
+                    <Badge 
+                      className={`w-fit ${
+                        documentInfo.personType === 'PF' 
+                          ? 'bg-blue-50 text-blue-600 border-blue-200' 
+                          : 'bg-purple-50 text-purple-600 border-purple-200'
+                      }`}
+                    >
+                      {documentInfo.personType === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                    </Badge>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
