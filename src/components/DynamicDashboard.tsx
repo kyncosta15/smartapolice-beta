@@ -25,7 +25,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
         typeDistribution: [],
         insurerDistribution: [],
         categoryDistribution: [],
-        bindingDistribution: [],
+        personTypeDistribution: { pessoaFisica: 0, pessoaJuridica: 0 },
         coverageData: [],
         financialData: [],
         statusDistribution: [],
@@ -62,11 +62,29 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
       return acc;
     }, {} as Record<string, number>);
 
-    // Vínculo (simulado - seria baseado em dados reais)
-    const bindingDistribution = {
-      'Pessoa Física': Math.floor(policies.length * 0.7),
-      'Pessoa Jurídica': Math.ceil(policies.length * 0.3)
-    };
+    // Distribuição por tipo de pessoa baseada em CPF/CNPJ
+    const personTypeDistribution = policies.reduce((acc, policy) => {
+      const extractValue = (field: any): string | null => {
+        if (!field) return null;
+        if (typeof field === 'string') return field;
+        if (typeof field === 'object' && field.value) return field.value;
+        return null;
+      };
+
+      const documentoTipo = extractValue(policy.documento_tipo);
+      
+      if (documentoTipo && documentoTipo !== 'undefined') {
+        const tipoDocumento = documentoTipo.toString().toUpperCase().trim();
+        
+        if (tipoDocumento === 'CPF') {
+          acc.pessoaFisica++;
+        } else if (tipoDocumento === 'CNPJ') {
+          acc.pessoaJuridica++;
+        }
+      }
+      
+      return acc;
+    }, { pessoaFisica: 0, pessoaJuridica: 0 });
 
     // C. Informações financeiras
     const totalMonthlyCost = policies.reduce((sum, policy) => sum + (policy.monthlyAmount || 0), 0);
@@ -123,7 +141,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
       typeDistribution: Object.entries(typeDistribution).map(([name, value]) => ({ name, value })),
       insurerDistribution: Object.entries(insurerDistribution).map(([name, value]) => ({ name, value })),
       categoryDistribution: Object.entries(categoryDistribution).map(([name, value]) => ({ name, value })),
-      bindingDistribution: Object.entries(bindingDistribution).map(([name, value]) => ({ name, value })),
+      personTypeDistribution,
       financialData,
       statusDistribution: Object.entries(statusDistribution).map(([name, value]) => ({ name, value })),
       monthlyEvolution
@@ -271,26 +289,56 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={dashboardData.bindingDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                  >
-                    {dashboardData.bindingDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="grid grid-cols-1 gap-4 h-80">
+              {/* Card Pessoa Física */}
+              <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-blue-500 rounded-lg">
+                        <Users className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-blue-900">Pessoa Física</h3>
+                        <p className="text-sm text-blue-600">CPF</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-blue-700">
+                        {dashboardData.personTypeDistribution.pessoaFisica}
+                      </div>
+                      <p className="text-sm text-blue-600">
+                        {dashboardData.personTypeDistribution.pessoaFisica === 1 ? 'apólice' : 'apólices'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card Pessoa Jurídica */}
+              <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-purple-500 rounded-lg">
+                        <Building className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-purple-900">Pessoa Jurídica</h3>
+                        <p className="text-sm text-purple-600">CNPJ</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-purple-700">
+                        {dashboardData.personTypeDistribution.pessoaJuridica}
+                      </div>
+                      <p className="text-sm text-purple-600">
+                        {dashboardData.personTypeDistribution.pessoaJuridica === 1 ? 'apólice' : 'apólices'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </CardContent>
         </Card>
