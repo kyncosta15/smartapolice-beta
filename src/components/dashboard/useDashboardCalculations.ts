@@ -1,6 +1,8 @@
 
+
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { extractFieldValue } from '@/utils/extractFieldValue';
 
 export function useDashboardCalculations(policies: ParsedPolicyData[]) {
   return useMemo(() => {
@@ -39,20 +41,39 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
         const tipo = (p.documento_tipo as any)?.value ?? p.documento_tipo ?? '';
         const tipoUp = String(tipo).toUpperCase().trim();
 
-        if (tipoUp === 'CPF') pf++;
-        else if (tipoUp === 'CNPJ') pj++;
-        else {
-          // fallback pelo campo documento
-          const doc = (p.documento as any)?.value ?? p.documento ?? '';
-          const digitos = String(doc).replace(/\D/g, '');
-          if (digitos.length === 11) pf++;
-          else if (digitos.length === 14) pj++;
+        if (tipoUp === 'CPF') {
+          pf++;
+          console.log('✅ PESSOA FÍSICA identificada via documento_tipo! Total PF:', pf);
+        } else if (tipoUp === 'CNPJ') {
+          pj++;
+          console.log('✅ PESSOA JURÍDICA identificada via documento_tipo! Total PJ:', pj);
+        } else {
+          // fallback pelo campo documento com limpeza correta
+          const documentoValue = extractFieldValue(p.documento);
+          if (documentoValue && documentoValue !== 'undefined') {
+            const numeroLimpo = documentoValue.replace(/[^\d]/g, ''); // Remove tudo que não é número
+
+            console.log('🔍 Número limpo para inferência:', numeroLimpo);
+
+            if (numeroLimpo.length === 11) {
+              pf++;
+              console.log('✅ PESSOA FÍSICA incrementada via fallback! Total CPF:', pf);
+            } else if (numeroLimpo.length === 14) {
+              pj++;
+              console.log('✅ PESSOA JURÍDICA incrementada via fallback! Total CNPJ:', pj);
+            } else {
+              console.log('⚠️ Documento com tamanho inválido:', numeroLimpo.length);
+            }
+          }
         }
       });
 
       // ► Fallback final: se nada foi classificado,
       //   mas existe ao menos 1 apólice, conte-a como PF
-      if (pf === 0 && pj === 0 && lista.length > 0) pf = 1;
+      if (pf === 0 && pj === 0 && lista.length > 0) {
+        pf = 1;
+        console.log('🔄 Aplicando fallback final: contando como PF');
+      }
 
       return { pessoaFisica: pf, pessoaJuridica: pj };
     }
@@ -158,3 +179,4 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
     };
   }, [policies]);
 }
+
