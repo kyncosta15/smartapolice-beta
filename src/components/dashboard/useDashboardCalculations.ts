@@ -25,65 +25,32 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
     }
 
     /**
-     * ✅ NOVA FUNÇÃO SIMPLIFICADA - Aceita snake_case OU camelCase
-     * Sem dependência do extractFieldValue, leitura direta dos campos
+     * ✅ LÓGICA SUPER SIMPLES - CPF = Pessoa Física, CNPJ = Pessoa Jurídica
      */
     function contarPFouPJ(lista: ParsedPolicyData[]) {
       let pf = 0, pj = 0;
 
-      // Verificação rápida dos dados
-      console.table(
-        lista.map(p => ({
-          docTipo: (p as any).documento_tipo ?? (p as any).documentoTipo,
-          doc: (p as any).documento
-        }))
-      );
-
       lista.forEach(p => {
-        // ← 1. usa documento_tipo OU documentoTipo
         const tipoBruto = (p as any).documento_tipo ?? (p as any).documentoTipo ?? '';
         const tipo = String(tipoBruto).toUpperCase().trim();
 
-        console.log('🔍 Analisando política:', { tipoBruto, tipo });
+        console.log('📄 Analisando política:', { nome: p.name, tipo });
 
-        // ← 2. se vier CPF/CNPJ explícito
-        if (tipo === 'CPF') { 
-          pf++; 
-          console.log('✅ PESSOA FÍSICA identificada via documento_tipo! Total PF:', pf);
-          return; 
-        }
-        if (tipo === 'CNPJ') { 
-          pj++; 
-          console.log('✅ PESSOA JURÍDICA identificada via documento_tipo! Total PJ:', pj);
-          return; 
-        }
-
-        // ← 3. fallback pelo campo documento (com ou sem pontuação)
-        const doc = (p as any).documento ?? '';
-        const dig = String(doc).replace(/\D/g, '');
-        
-        console.log('🔍 Fallback por documento:', { doc, dig, length: dig.length });
-        
-        if (dig.length === 11) {
+        if (tipo === 'CPF') {
           pf++;
-          console.log('✅ PESSOA FÍSICA identificada via documento (11 dígitos)! Total PF:', pf);
-        } else if (dig.length === 14) {
+          console.log('✅ PESSOA FÍSICA detectada (CPF)');
+        } else if (tipo === 'CNPJ') {
           pj++;
-          console.log('✅ PESSOA JURÍDICA identificada via documento (14 dígitos)! Total PJ:', pj);
+          console.log('✅ PESSOA JURÍDICA detectada (CNPJ)');
+        } else {
+          console.log('⚠️ Tipo não reconhecido:', tipo);
         }
       });
 
-      // fallback final
-      if (pf === 0 && pj === 0 && lista.length) {
-        pf = 1;
-        console.log('🔄 Aplicando fallback final: contando como PF');
-      }
-
-      console.log('🎯 RESULTADO FINAL da contagem:', {
+      console.log('🎯 RESULTADO FINAL:', {
         pessoaFisica: pf,
         pessoaJuridica: pj,
-        total: pf + pj,
-        totalPolicies: lista.length
+        total: pf + pj
       });
 
       return { pessoaFisica: pf, pessoaJuridica: pj };
@@ -118,7 +85,7 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // ✅ NOVA LÓGICA SIMPLIFICADA - Usando a função contarPFouPJ otimizada
+    // ✅ CONTAGEM SIMPLIFICADA
     const personTypeDistribution = contarPFouPJ(policies);
 
     // C. Informações financeiras
