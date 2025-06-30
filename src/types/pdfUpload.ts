@@ -33,6 +33,8 @@ export interface DynamicPDFData {
     fim: string;
     extraido_em: string;
   };
+  // Added vencimentos_futuros property
+  vencimentos_futuros?: string[];
   // Campos expandidos opcionais
   segurado?: {
     nome?: string;
