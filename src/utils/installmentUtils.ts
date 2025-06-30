@@ -37,28 +37,29 @@ export function generateSimulatedInstallments(policy: ParsedPolicyData): Install
       installmentValue = remainingValue;
     }
     
-    // Lógica mais realista para determinar o status
+    // Lógica mais realista para determinar o status baseada na data atual
     let status: 'paga' | 'pendente' = 'pendente';
     
     // Se a data da parcela é anterior a hoje
     if (installmentDate < today) {
-      // Determinar se foi paga ou não baseado em uma lógica mais realista
+      // Determinar se foi paga baseado em uma lógica mais realista
       const daysDifference = Math.floor((today.getTime() - installmentDate.getTime()) / (1000 * 60 * 60 * 24));
       
-      if (daysDifference > 60) {
-        // Parcelas com mais de 60 dias de atraso têm 80% de chance de estarem pagas
-        status = Math.random() > 0.2 ? 'paga' : 'pendente';
+      if (daysDifference > 90) {
+        // Parcelas com mais de 90 dias têm 85% de chance de estarem pagas
+        status = Math.random() > 0.15 ? 'paga' : 'pendente';
+      } else if (daysDifference > 60) {
+        // Parcelas com 60-90 dias têm 70% de chance de estarem pagas
+        status = Math.random() > 0.3 ? 'paga' : 'pendente';
       } else if (daysDifference > 30) {
-        // Parcelas com 30-60 dias têm 60% de chance de estarem pagas
-        status = Math.random() > 0.4 ? 'paga' : 'pendente';
+        // Parcelas com 30-60 dias têm 50% de chance de estarem pagas
+        status = Math.random() > 0.5 ? 'paga' : 'pendente';
       } else {
-        // Parcelas recentemente vencidas têm 30% de chance de estarem pagas
-        status = Math.random() > 0.7 ? 'paga' : 'pendente';
+        // Parcelas recentemente vencidas têm 25% de chance de estarem pagas
+        status = Math.random() > 0.75 ? 'paga' : 'pendente';
       }
-    } else {
-      // Se a data da parcela é hoje ou no futuro, está sempre pendente
-      status = 'pendente';
     }
+    // Se a data da parcela é hoje ou no futuro, permanece pendente
     
     installments.push({
       numero: i + 1,
@@ -101,13 +102,17 @@ export function createExtendedInstallments(policies: ParsedPolicyData[]): Extend
 
 export function filterUpcomingInstallments(allInstallments: ExtendedInstallment[]): ExtendedInstallment[] {
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Zerar horas para comparação precisa de datas
+  today.setHours(0, 0, 0, 0);
+  
+  const next30Days = new Date();
+  next30Days.setDate(today.getDate() + 30);
+  next30Days.setHours(0, 0, 0, 0);
   
   return allInstallments.filter(installment => {
     const installmentDate = new Date(installment.data);
     installmentDate.setHours(0, 0, 0, 0);
-    // Próximas parcelas: data >= hoje E status pendente
-    return installmentDate >= today && installment.status === 'pendente';
+    // Próximas parcelas: data entre hoje e 30 dias E status pendente
+    return installmentDate >= today && installmentDate <= next30Days && installment.status === 'pendente';
   });
 }
 
