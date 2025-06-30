@@ -1,6 +1,6 @@
+
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
-import { extractFieldValue, inferTipoPorDocumento } from '@/utils/extractFieldValue';
 
 export function useDashboardCalculations(policies: ParsedPolicyData[]) {
   return useMemo(() => {
@@ -22,6 +22,39 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
         statusDistribution: [],
         monthlyEvolution: []
       };
+    }
+
+    /**
+     * Conta PF | PJ de modo robusto.
+     * 1. Usa documento_tipo, se existir.
+     * 2. Se não existir ou vier 'undefined', infere pelo tamanho do campo documento.
+     * 3. Se mesmo assim nada for detectado mas EXISTE ao menos 1 apólice,
+     *    considera a apólice como PF por default (último fallback).
+     */
+    function contarPFouPJ(lista: ParsedPolicyData[]) {
+      let pf = 0;
+      let pj = 0;
+
+      lista.forEach((p) => {
+        const tipo = (p.documento_tipo as any)?.value ?? p.documento_tipo ?? '';
+        const tipoUp = String(tipo).toUpperCase().trim();
+
+        if (tipoUp === 'CPF') pf++;
+        else if (tipoUp === 'CNPJ') pj++;
+        else {
+          // fallback pelo campo documento
+          const doc = (p.documento as any)?.value ?? p.documento ?? '';
+          const digitos = String(doc).replace(/\D/g, '');
+          if (digitos.length === 11) pf++;
+          else if (digitos.length === 14) pj++;
+        }
+      });
+
+      // ► Fallback final: se nada foi classificado,
+      //   mas existe ao menos 1 apólice, conte-a como PF
+      if (pf === 0 && pj === 0 && lista.length > 0) pf = 1;
+
+      return { pessoaFisica: pf, pessoaJuridica: pj };
     }
 
     // A. Classificação e identificação
@@ -53,48 +86,8 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // ✅ LÓGICA CORRIGIDA - Contagem com função utilitária
-    console.log('🔍 Iniciando contagem de CPF/CNPJ com função utilitária...');
-    
-    let totalCPF = 0;
-    let totalCNPJ = 0;
-    
-    policies.forEach((policy, index) => {
-      console.log(`\n📋 === Analisando política ${index + 1}/${policies.length} ===`);
-      console.log('📄 Nome da política:', policy.name);
-      console.log('📄 ID da política:', policy.id);
-      
-      // Usar a função utilitária com fallback
-      const documentoTipoValue = 
-        extractFieldValue(policy.documento_tipo) ??
-        inferTipoPorDocumento(extractFieldValue(policy.documento));
-      
-      console.log('📝 Valor final extraído:', documentoTipoValue);
-      
-      if (documentoTipoValue) {
-        const tipoDocumento = documentoTipoValue.toString().toUpperCase().trim();
-        console.log('📝 Tipo de documento normalizado:', tipoDocumento);
-        
-        if (tipoDocumento === 'CPF') {
-          totalCPF++;
-          console.log('✅ PESSOA FÍSICA incrementada! Total CPF:', totalCPF);
-        } else if (tipoDocumento === 'CNPJ') {
-          totalCNPJ++;
-          console.log('✅ PESSOA JURÍDICA incrementada! Total CNPJ:', totalCNPJ);
-        } else {
-          console.log('⚠️ Tipo de documento não reconhecido:', tipoDocumento);
-        }
-      } else {
-        console.log('❌ Não foi possível determinar o tipo do documento');
-        console.log('❌ documento_tipo:', policy.documento_tipo);
-        console.log('❌ documento:', policy.documento);
-      }
-    });
-
-    const personTypeDistribution = {
-      pessoaFisica: totalCPF,
-      pessoaJuridica: totalCNPJ
-    };
+    // ✅ NOVA LÓGICA ROBUSTA - Usando a função contarPFouPJ
+    const personTypeDistribution = contarPFouPJ(policies);
 
     console.log('🎯 RESULTADO FINAL da contagem:', {
       pessoaFisica: personTypeDistribution.pessoaFisica,
