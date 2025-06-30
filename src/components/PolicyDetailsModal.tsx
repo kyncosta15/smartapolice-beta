@@ -56,23 +56,36 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
     return types[type] || type;
   };
 
-  // Função para obter informações do documento do N8N
+  // Função para obter informações do documento do N8N - CORRIGIDA
   const getDocumentInfo = () => {
     console.log('Policy data for document detection:', {
       documento: policy.documento,
-      documento_tipo: policy.documento_tipo
+      documento_tipo: policy.documento_tipo,
+      policy: policy
     });
 
     // Priorizar dados vindos do N8N
     if (policy.documento && policy.documento_tipo) {
-      const documentType = policy.documento_tipo === 'CPF' ? 'PF' : 'PJ';
-      const formatted = policy.documento_tipo === 'CPF' 
-        ? policy.documento.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-        : policy.documento.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      const documentType = policy.documento_tipo;
+      const personType = policy.documento_tipo === 'CPF' ? 'PF' : 'PJ';
+      
+      // Formatação correta do documento
+      let formatted = policy.documento;
+      if (policy.documento_tipo === 'CPF' && policy.documento.length >= 11) {
+        const cleanDoc = policy.documento.replace(/\D/g, '');
+        if (cleanDoc.length === 11) {
+          formatted = cleanDoc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        }
+      } else if (policy.documento_tipo === 'CNPJ' && policy.documento.length >= 14) {
+        const cleanDoc = policy.documento.replace(/\D/g, '');
+        if (cleanDoc.length === 14) {
+          formatted = cleanDoc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        }
+      }
       
       return {
-        type: policy.documento_tipo,
-        personType: documentType,
+        type: documentType,
+        personType: personType,
         formatted: formatted,
         rawValue: policy.documento
       };
@@ -135,7 +148,7 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                 </p>
               </div>
 
-              {/* CPF ou CNPJ logo abaixo do nome completo */}
+              {/* CPF ou CNPJ logo abaixo do nome completo - CORRIGIDO */}
               {documentInfo && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">
@@ -143,6 +156,9 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                   </label>
                   <p className="font-mono text-sm bg-gray-50 p-2 rounded border">
                     {documentInfo.formatted}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Tipo: {documentInfo.personType === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
                   </p>
                 </div>
               )}

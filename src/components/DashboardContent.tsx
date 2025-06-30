@@ -61,7 +61,7 @@ export function DashboardContent() {
   };
 
   const handlePolicyExtracted = (policy: any) => {
-    console.log('Nova apólice extraída:', policy);
+    console.log('Nova apólice extraída com dados do N8N:', policy);
     
     const newPolicy: ParsedPolicyData = {
       ...policy,
@@ -83,12 +83,18 @@ export function DashboardContent() {
       totalCoverage: policy.totalCoverage || policy.premium || 0,
       startDate: policy.startDate || new Date().toISOString().split('T')[0],
       endDate: policy.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      // Preservar dados de documento do N8N - campos principais
+      // Preservar dados de documento do N8N - GARANTIR QUE SEJAM MANTIDOS
       documento: policy.documento,
       documento_tipo: policy.documento_tipo,
       segurado: policy.segurado,
       insuredName: policy.segurado || policy.insuredName
     };
+
+    console.log('Política processada com dados N8N:', {
+      documento: newPolicy.documento,
+      documento_tipo: newPolicy.documento_tipo,
+      segurado: newPolicy.segurado
+    });
     
     setExtractedPolicies(prev => [...prev, newPolicy]);
     

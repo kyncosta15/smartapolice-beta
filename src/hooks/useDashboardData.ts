@@ -96,31 +96,38 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       value: Math.round(value)
     }));
 
-    // Calcular distribuição pessoa física/jurídica usando dados do N8N
+    // Calcular distribuição pessoa física/jurídica usando dados do N8N - CORRIGIDO
     const personTypeDistribution = policies.reduce((acc, policy) => {
       console.log('Analisando política:', {
         id: policy.id,
         documento: policy.documento,
-        documento_tipo: policy.documento_tipo
+        documento_tipo: policy.documento_tipo,
+        name: policy.name
       });
 
-      // Usar dados do N8N como prioridade
+      // Usar dados do N8N como prioridade - LÓGICA CORRIGIDA
       if (policy.documento_tipo) {
-        if (policy.documento_tipo === 'CPF') {
+        console.log(`Política ${policy.name}: documento_tipo = ${policy.documento_tipo}`);
+        if (policy.documento_tipo.toUpperCase() === 'CPF') {
           acc.pessoaFisica++;
-        } else if (policy.documento_tipo === 'CNPJ') {
+          console.log('Incrementando Pessoa Física');
+        } else if (policy.documento_tipo.toUpperCase() === 'CNPJ') {
           acc.pessoaJuridica++;
+          console.log('Incrementando Pessoa Jurídica');
+        }
+      } else if (policy.documento) {
+        // Fallback: tentar detectar pelo documento se disponível
+        const cleanDoc = policy.documento.replace(/\D/g, '');
+        console.log(`Política ${policy.name}: documento limpo = ${cleanDoc} (${cleanDoc.length} dígitos)`);
+        if (cleanDoc.length === 11) {
+          acc.pessoaFisica++;
+          console.log('Incrementando Pessoa Física (fallback CPF)');
+        } else if (cleanDoc.length === 14) {
+          acc.pessoaJuridica++;
+          console.log('Incrementando Pessoa Jurídica (fallback CNPJ)');
         }
       } else {
-        // Fallback: tentar detectar pelo documento se disponível
-        if (policy.documento) {
-          const cleanDoc = policy.documento.replace(/\D/g, '');
-          if (cleanDoc.length === 11) {
-            acc.pessoaFisica++;
-          } else if (cleanDoc.length === 14) {
-            acc.pessoaJuridica++;
-          }
-        }
+        console.log(`Política ${policy.name}: sem documento detectado`);
       }
       
       return acc;
