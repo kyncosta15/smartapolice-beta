@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
@@ -25,25 +24,29 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
     }
 
     /**
-     * ✅ LÓGICA SUPER SIMPLES - CPF = Pessoa Física, CNPJ = Pessoa Jurídica
+     * ✅ LÓGICA BASEADA NO JSON DO WEBHOOK - documento_tipo: "CPF" ou "CNPJ"
      */
     function contarPFouPJ(lista: ParsedPolicyData[]) {
       let pf = 0, pj = 0;
 
       lista.forEach(p => {
-        const tipoBruto = (p as any).documento_tipo ?? (p as any).documentoTipo ?? '';
-        const tipo = String(tipoBruto).toUpperCase().trim();
+        // Acessar documento_tipo diretamente do objeto
+        const documentoTipo = (p as any).documento_tipo;
+        
+        console.log('📄 Analisando política:', { 
+          nome: p.name, 
+          documento_tipo: documentoTipo,
+          documento: (p as any).documento 
+        });
 
-        console.log('📄 Analisando política:', { nome: p.name, tipo });
-
-        if (tipo === 'CPF') {
+        if (documentoTipo === 'CPF') {
           pf++;
           console.log('✅ PESSOA FÍSICA detectada (CPF)');
-        } else if (tipo === 'CNPJ') {
+        } else if (documentoTipo === 'CNPJ') {
           pj++;
           console.log('✅ PESSOA JURÍDICA detectada (CNPJ)');
         } else {
-          console.log('⚠️ Tipo não reconhecido:', tipo);
+          console.log('⚠️ Tipo de documento não reconhecido:', documentoTipo);
         }
       });
 
@@ -85,7 +88,7 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // ✅ CONTAGEM SIMPLIFICADA
+    // ✅ CONTAGEM SIMPLIFICADA BASEADA NO WEBHOOK
     const personTypeDistribution = contarPFouPJ(policies);
 
     // C. Informações financeiras
