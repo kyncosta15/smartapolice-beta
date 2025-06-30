@@ -1,4 +1,3 @@
-
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 export interface InstallmentData {
@@ -34,7 +33,7 @@ export interface ParsedPolicyData {
   insuredPersonType?: 'PF' | 'PJ';
   insuredCpfCnpj?: string;
   
-  // Campos de documento do N8N - principais campos a serem usados
+  // ✅ Campos de documento do N8N - principais campos a serem usados PRESERVADOS
   documento?: string;
   documento_tipo?: 'CPF' | 'CNPJ';
   
@@ -137,6 +136,10 @@ export function parsePolicyData(data: DynamicPDFData, file?: File): ParsedPolicy
   }
 
   console.log('✅ Parcelas processadas:', installments.length, 'parcelas criadas');
+  console.log('✅ Dados de documento preservados:', { 
+    documento: data.documento, 
+    documento_tipo: data.documento_tipo 
+  });
 
   return {
     id: data.informacoes_gerais.numero_apolice || `policy-${Date.now()}`,
@@ -161,7 +164,7 @@ export function parsePolicyData(data: DynamicPDFData, file?: File): ParsedPolicy
     insuredCpfCnpj: data.segurado?.cpf_cnpj,
     broker: data.seguradora.entidade,
     
-    // Campos de documento do N8N - prioritários
+    // ✅ Campos de documento do N8N - PRESERVADOS diretamente
     documento: data.documento,
     documento_tipo: data.documento_tipo,
     
