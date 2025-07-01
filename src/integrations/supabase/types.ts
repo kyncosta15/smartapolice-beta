@@ -35,6 +35,54 @@ export type Database = {
           },
         ]
       }
+      installments: {
+        Row: {
+          created_at: string | null
+          data_vencimento: string | null
+          id: string
+          numero_parcela: number | null
+          policy_id: string | null
+          status: string | null
+          user_id: string | null
+          valor: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_vencimento?: string | null
+          id?: string
+          numero_parcela?: number | null
+          policy_id?: string | null
+          status?: string | null
+          user_id?: string | null
+          valor?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          data_vencimento?: string | null
+          id?: string
+          numero_parcela?: number | null
+          policy_id?: string | null
+          status?: string | null
+          user_id?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installments_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parcelas: {
         Row: {
           created_at: string | null

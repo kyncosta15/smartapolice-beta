@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
@@ -65,6 +64,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (userProfile) {
         console.log('User profile loaded:', userProfile);
+        console.log('USER_ID ATUAL:', userProfile.id);
+        console.log('USER EMAIL ATUAL:', userProfile.email);
+        console.log('USER ROLE ATUAL:', userProfile.role);
         return {
           id: userProfile.id,
           email: userProfile.email,
@@ -101,7 +103,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
-        console.log('Initial session:', initialSession?.user?.id || 'no session');
+        console.log('Initial session user ID:', initialSession?.user?.id || 'no session');
+        console.log('AUTH UID from supabase:', initialSession?.user?.id);
 
         if (initialSession?.user && mounted) {
           // Fetch user profile with timeout to prevent hanging
@@ -110,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           );
           
           try {
-            const userProfile = await Promise.race([
+            const userProfile: User | null = await Promise.race([
               fetchUserProfile(initialSession.user.id),
               timeoutPromise
             ]);
@@ -144,7 +147,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.id);
+        console.log('Auth state change:', event);
+        console.log('Session user ID:', session?.user?.id || 'no session');
+        console.log('AUTH UID CHANGED TO:', session?.user?.id);
         
         if (!mounted) return;
 
