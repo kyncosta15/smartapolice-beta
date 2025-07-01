@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FilePlus, Cloud, Clock } from 'lucide-react';
@@ -10,6 +9,7 @@ import { useFileStatusManager } from '@/hooks/useFileStatusManager';
 import { FileProcessor } from '@/services/fileProcessor';
 import { FileStatusList } from './FileStatusList';
 import { EnhancedPDFUploadProps } from '@/types/pdfUpload';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps) {
   const { 
@@ -21,12 +21,13 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   } = useFileStatusManager();
   
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
 
   const fileProcessor = new FileProcessor(
     updateFileStatus,
     removeFileStatus,
-    null,
+    user?.id || null, // Passar o userId para o FileProcessor
     onPolicyExtracted,
     toast
   );
@@ -37,7 +38,17 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "Erro de Autenticação",
+        description: "Usuário não autenticado. Faça login para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     console.log(`📤 Iniciando processamento em lote de ${acceptedFiles.length} arquivo(s)`);
+    console.log(`👤 User ID para processamento:`, user.id);
     setIsProcessingBatch(true);
 
     try {
@@ -63,7 +74,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       setIsProcessingBatch(false);
     }
 
-  }, [fileProcessor, toast]);
+  }, [fileProcessor, toast, user?.id]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -94,6 +105,11 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           </CardTitle>
           <CardDescription>
             Sistema otimizado processa múltiplos PDFs simultaneamente para máxima eficiência.
+            {user?.id && (
+              <div className="mt-1 text-xs text-blue-600">
+                👤 Usuário: {user.email} (ID: {user.id.slice(0, 8)}...)
+              </div>
+            )}
             {isProcessingBatch && (
               <div className="mt-2 text-sm text-orange-600">
                 ⏳ Enviando todos os arquivos juntos para o N8N para processamento simultâneo.

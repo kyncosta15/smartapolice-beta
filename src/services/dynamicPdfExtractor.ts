@@ -4,8 +4,9 @@ export class DynamicPDFExtractor {
   private static readonly TIMEOUT = 60000; // 60 segundos para múltiplos arquivos
   private static readonly MAX_RETRIES = 3;
 
-  static async extractFromPDF(file: File): Promise<any> {
+  static async extractFromPDF(file: File, userId?: string): Promise<any> {
     console.log(`🔄 Enviando arquivo individual: ${file.name} (${file.size} bytes)`);
+    console.log(`👤 User ID para arquivo individual:`, userId);
 
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {
@@ -14,6 +15,12 @@ export class DynamicPDFExtractor {
         formData.append('fileName', file.name);
         formData.append('timestamp', new Date().toISOString());
         formData.append('fileSize', file.size.toString());
+        
+        // Adicionar userId se fornecido
+        if (userId) {
+          formData.append('userId', userId);
+          console.log(`✅ UserId adicionado ao FormData individual:`, userId);
+        }
 
         console.log(`🔄 Tentativa ${attempt}/${this.MAX_RETRIES} para ${file.name}`);
 
@@ -82,8 +89,9 @@ export class DynamicPDFExtractor {
   }
 
   // Novo método para enviar múltiplos arquivos de uma vez
-  static async extractFromMultiplePDFs(files: File[]): Promise<any[]> {
+  static async extractFromMultiplePDFs(files: File[], userId?: string): Promise<any[]> {
     console.log(`🔄 Enviando ${files.length} arquivos de uma vez para o N8N`);
+    console.log(`👤 User ID para batch:`, userId);
 
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {
@@ -100,6 +108,12 @@ export class DynamicPDFExtractor {
         formData.append('totalFiles', files.length.toString());
         formData.append('timestamp', new Date().toISOString());
         formData.append('batchUpload', 'true');
+        
+        // Adicionar userId se fornecido
+        if (userId) {
+          formData.append('userId', userId);
+          console.log(`✅ UserId adicionado ao FormData batch:`, userId);
+        }
 
         console.log(`🔄 Tentativa ${attempt}/${this.MAX_RETRIES} para batch de ${files.length} arquivos`);
 
@@ -171,7 +185,7 @@ export class DynamicPDFExtractor {
           console.log(`❌ Batch falhou após ${this.MAX_RETRIES} tentativas, tentando individualmente`);
           
           // Fallback: tentar processar arquivos individualmente
-          return await this.fallbackToIndividualProcessing(files);
+          return await this.fallbackToIndividualProcessing(files, userId);
         }
         
         const retryDelay = 2000 * attempt;
@@ -184,8 +198,9 @@ export class DynamicPDFExtractor {
   }
 
   // Método de fallback para processamento individual
-  private static async fallbackToIndividualProcessing(files: File[]): Promise<any[]> {
+  private static async fallbackToIndividualProcessing(files: File[], userId?: string): Promise<any[]> {
     console.log(`🔄 Iniciando processamento individual como fallback para ${files.length} arquivos`);
+    console.log(`👤 User ID para fallback individual:`, userId);
     const resultados = [];
 
     for (let i = 0; i < files.length; i++) {
@@ -193,7 +208,7 @@ export class DynamicPDFExtractor {
       console.log(`📤 Processando individualmente arquivo ${i + 1}/${files.length}: ${arquivo.name}`);
       
       try {
-        const data = await this.extractFromPDF(arquivo);
+        const data = await this.extractFromPDF(arquivo, userId);
         resultados.push(...data);
         
         // Pausa entre arquivos individuais
