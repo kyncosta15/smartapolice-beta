@@ -1,4 +1,3 @@
-
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 interface N8NDirectResponse {
@@ -28,8 +27,9 @@ interface N8NWebhookResponse {
 export class N8NWebhookService {
   private static readonly WEBHOOK_URL = 'https://beneficiosagente.app.n8n.cloud/webhook-test/a2c01401-91f5-4652-a2b7-4faadbf93745';
   
-  static async processarPdfComN8n(file: File): Promise<N8NWebhookResponse> {
+  static async processarPdfComN8n(file: File, userId?: string): Promise<N8NWebhookResponse> {
     console.log(`🌐 Enviando PDF para processamento N8N: ${file.name}`);
+    console.log('👤 User ID enviado para N8N:', userId);
     
     try {
       // Criar FormData para envio do arquivo
@@ -37,6 +37,14 @@ export class N8NWebhookService {
       formData.append('arquivo', file);
       formData.append('fileName', file.name);
       formData.append('timestamp', new Date().toISOString());
+      
+      // Adicionar userId ao FormData se disponível
+      if (userId) {
+        formData.append('userId', userId);
+        console.log('✅ UserId adicionado ao FormData:', userId);
+      } else {
+        console.warn('⚠️ UserId não fornecido para o webhook N8N');
+      }
 
       console.log('📤 Enviando arquivo para webhook N8N...');
       
