@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string): Promise<User | null> => {
     try {
       console.log('Fetching user profile for:', userId);
       const { data: userProfile, error } = await supabase
@@ -105,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (initialSession?.user && mounted) {
           // Fetch user profile with timeout to prevent hanging
-          const timeoutPromise = new Promise((_, reject) => 
+          const timeoutPromise: Promise<User | null> = new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
           );
           
