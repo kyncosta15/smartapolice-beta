@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Bell, Search, Menu, X, LogOut, ChevronDown, PanelLeft, AlertCircle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/components/ui/sidebar';
+import { useToast } from '@/hooks/use-toast';
 
 interface NavbarProps {
   searchTerm: string;
@@ -20,6 +20,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
   const { toggleSidebar } = useSidebar();
+  const { toast } = useToast();
 
   const getRoleLabel = (role: string) => {
     const roles = {
@@ -37,6 +38,27 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
       corretora: 'bg-green-50 text-green-600 border-green-200'
     };
     return colors[role] || 'bg-gray-50 text-gray-600 border-gray-200';
+  };
+
+  const handleLogout = async () => {
+    try {
+      console.log('Navbar: Starting logout process...');
+      setShowUserMenu(false);
+      
+      toast({
+        title: "Saindo...",
+        description: "Fazendo logout da sua conta.",
+      });
+      
+      await logout();
+    } catch (error) {
+      console.error('Navbar: Logout failed:', error);
+      toast({
+        title: "Erro no logout",
+        description: "Ocorreu um erro ao sair. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Gerar notificações baseadas nas apólices
@@ -191,10 +213,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
                     </Badge>
                   </div>
                   <button
-                    onClick={() => {
-                      logout();
-                      setShowUserMenu(false);
-                    }}
+                    onClick={handleLogout}
                     className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
