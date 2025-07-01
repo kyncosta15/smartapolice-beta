@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
 import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
@@ -23,8 +22,8 @@ export class BatchFileProcessor {
     this.toast = toast;
   }
 
-  async processMultipleFiles(files: File[]): Promise<ParsedPolicyData[]> {
-    console.log(`📤 Iniciando processamento de ${files.length} arquivos com método otimizado`);
+  async processMultipleFiles(files: File[], userId: string | null): Promise<ParsedPolicyData[]> {
+    console.log(`📤 BatchFileProcessor: Iniciando processamento de ${files.length} arquivos com userId: ${userId}`);
     
     // Initialize status for all files
     files.forEach(file => {
@@ -40,6 +39,7 @@ export class BatchFileProcessor {
     try {
       // Usar o método otimizado para múltiplos arquivos
       console.log('🚀 Usando método extractFromMultiplePDFs otimizado');
+      console.log(`👤 Garantindo que userId ${userId} será enviado no FormData`);
       
       // Atualizar status para processamento
       files.forEach(file => {
@@ -50,8 +50,8 @@ export class BatchFileProcessor {
         });
       });
 
-      // Chamar o método otimizado que já trata múltiplos PDFs
-      const extractedDataArray = await DynamicPDFExtractor.extractFromMultiplePDFs(files);
+      // Chamar o método otimizado que já trata múltiplos PDFs com userId
+      const extractedDataArray = await DynamicPDFExtractor.extractFromMultiplePDFs(files, userId);
 
       console.log(`📦 Dados extraídos de todos os arquivos (${extractedDataArray.length} itens):`, extractedDataArray);
 

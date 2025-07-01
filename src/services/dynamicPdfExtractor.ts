@@ -6,7 +6,7 @@ export class DynamicPDFExtractor {
 
   static async extractFromPDF(file: File, userId?: string): Promise<any> {
     console.log(`🔄 Enviando arquivo individual: ${file.name} (${file.size} bytes)`);
-    console.log(`👤 User ID para arquivo individual:`, userId);
+    console.log(`👤 GARANTINDO: userId ${userId} será incluído no FormData individual`);
 
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {
@@ -16,10 +16,12 @@ export class DynamicPDFExtractor {
         formData.append('timestamp', new Date().toISOString());
         formData.append('fileSize', file.size.toString());
         
-        // Adicionar userId se fornecido
+        // ✅ GARANTIR que userId seja incluído no FormData
         if (userId) {
           formData.append('userId', userId);
-          console.log(`✅ UserId adicionado ao FormData individual:`, userId);
+          console.log(`✅ ✅ CONFIRMADO: userId ${userId} adicionado ao FormData individual`);
+        } else {
+          console.warn(`⚠️ ATENÇÃO: userId não fornecido para arquivo individual ${file.name}`);
         }
 
         console.log(`🔄 Tentativa ${attempt}/${this.MAX_RETRIES} para ${file.name}`);
@@ -91,7 +93,7 @@ export class DynamicPDFExtractor {
   // Novo método para enviar múltiplos arquivos de uma vez
   static async extractFromMultiplePDFs(files: File[], userId?: string): Promise<any[]> {
     console.log(`🔄 Enviando ${files.length} arquivos de uma vez para o N8N`);
-    console.log(`👤 User ID para batch:`, userId);
+    console.log(`👤 GARANTINDO: userId ${userId} será incluído no FormData batch`);
 
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {
@@ -109,10 +111,12 @@ export class DynamicPDFExtractor {
         formData.append('timestamp', new Date().toISOString());
         formData.append('batchUpload', 'true');
         
-        // Adicionar userId se fornecido
+        // ✅ GARANTIR que userId seja incluído no FormData
         if (userId) {
           formData.append('userId', userId);
-          console.log(`✅ UserId adicionado ao FormData batch:`, userId);
+          console.log(`✅ ✅ CONFIRMADO: userId ${userId} adicionado ao FormData batch`);
+        } else {
+          console.warn(`⚠️ ATENÇÃO: userId não fornecido para batch de ${files.length} arquivos`);
         }
 
         console.log(`🔄 Tentativa ${attempt}/${this.MAX_RETRIES} para batch de ${files.length} arquivos`);
@@ -200,7 +204,7 @@ export class DynamicPDFExtractor {
   // Método de fallback para processamento individual
   private static async fallbackToIndividualProcessing(files: File[], userId?: string): Promise<any[]> {
     console.log(`🔄 Iniciando processamento individual como fallback para ${files.length} arquivos`);
-    console.log(`👤 User ID para fallback individual:`, userId);
+    console.log(`👤 GARANTINDO: userId ${userId} será incluído em cada FormData individual do fallback`);
     const resultados = [];
 
     for (let i = 0; i < files.length; i++) {

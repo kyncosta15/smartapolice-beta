@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
 import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
@@ -17,8 +16,9 @@ export class SingleFileProcessor {
     this.removeFileStatus = removeFileStatus;
   }
 
-  async processFile(file: File): Promise<ParsedPolicyData> {
+  async processFile(file: File, userId: string | null): Promise<ParsedPolicyData> {
     const fileName = file.name;
+    console.log(`📤 SingleFileProcessor: Processando arquivo ${fileName} com userId: ${userId}`);
     
     // Inicializar status do arquivo
     this.updateFileStatus(fileName, {
@@ -51,7 +51,8 @@ export class SingleFileProcessor {
       message: 'Extraindo dados com IA dinâmica...'
     });
 
-    const dynamicData = await DynamicPDFExtractor.extractFromPDF(file);
+    console.log(`👤 Garantindo que userId ${userId} será enviado no FormData para arquivo individual`);
+    const dynamicData = await DynamicPDFExtractor.extractFromPDF(file, userId);
 
     // 3. Converter para formato do dashboard
     this.updateFileStatus(fileName, {

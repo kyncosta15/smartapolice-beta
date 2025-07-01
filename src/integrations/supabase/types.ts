@@ -124,6 +124,7 @@ export type Database = {
       policies: {
         Row: {
           ano_modelo: string | null
+          arquivo_url: string | null
           cidade: string | null
           condutor_principal: string | null
           corretora: string | null
@@ -155,6 +156,7 @@ export type Database = {
         }
         Insert: {
           ano_modelo?: string | null
+          arquivo_url?: string | null
           cidade?: string | null
           condutor_principal?: string | null
           corretora?: string | null
@@ -186,6 +188,7 @@ export type Database = {
         }
         Update: {
           ano_modelo?: string | null
+          arquivo_url?: string | null
           cidade?: string | null
           condutor_principal?: string | null
           corretora?: string | null

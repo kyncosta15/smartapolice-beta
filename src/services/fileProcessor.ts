@@ -6,14 +6,17 @@ import { SingleFileProcessor } from './processors/singleFileProcessor';
 export class FileProcessor {
   private batchProcessor: BatchFileProcessor;
   private singleProcessor: SingleFileProcessor;
+  private userId: string | null;
 
   constructor(
     updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
     removeFileStatus: (fileName: string) => void,
-    fetchPolicyData: any, // Não usado mais, mantido para compatibilidade
+    userId: string | null, // Corrigido: agora recebe userId como parâmetro
     onPolicyExtracted: (policy: ParsedPolicyData) => void,
     toast: any
   ) {
+    this.userId = userId;
+    
     this.batchProcessor = new BatchFileProcessor(
       updateFileStatus,
       removeFileStatus,
@@ -29,13 +32,15 @@ export class FileProcessor {
 
   // Método para processar múltiplos arquivos sequencialmente
   async processMultipleFiles(files: File[]): Promise<ParsedPolicyData[]> {
-    return this.batchProcessor.processMultipleFiles(files);
+    console.log(`📤 FileProcessor: Passando userId ${this.userId} para BatchFileProcessor`);
+    return this.batchProcessor.processMultipleFiles(files, this.userId);
   }
 
   // Keep existing single file processing method
   async processFile(file: File): Promise<void> {
     try {
-      await this.singleProcessor.processFile(file);
+      console.log(`📤 FileProcessor: Passando userId ${this.userId} para SingleFileProcessor`);
+      await this.singleProcessor.processFile(file, this.userId);
     } catch (error) {
       // Erro já tratado no SingleFileProcessor
     }
