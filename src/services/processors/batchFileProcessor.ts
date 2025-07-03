@@ -3,6 +3,7 @@ import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
 import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
 import { StructuredDataConverter } from '@/utils/parsers/structuredDataConverter';
 import { FileProcessingStatus } from '@/types/pdfUpload';
+import { PolicyPersistenceService } from '../policyPersistenceService';
 
 export class BatchFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
@@ -60,7 +61,8 @@ export class BatchFileProcessor {
       }
 
       // Processar cada item de dados extraído individualmente
-      extractedDataArray.forEach((singleData, index) => {
+      for (let index = 0; index < extractedDataArray.length; index++) {
+        const singleData = extractedDataArray[index];
         console.log(`🔄 Processando apólice ${index + 1}/${extractedDataArray.length}:`, singleData);
         
         // Determinar qual arquivo esta apólice pertence
@@ -77,6 +79,13 @@ export class BatchFileProcessor {
         const parsedPolicy = this.convertToParsedPolicy(singleData, relatedFileName, files[index] || files[0]);
         allResults.push(parsedPolicy);
         
+        // Salvar arquivo e dados no banco de dados
+        const relatedFile = files.find(f => f.name === relatedFileName) || files[index] || files[0];
+        if (relatedFile && userId) {
+          console.log(`💾 Salvando persistência para: ${parsedPolicy.name}`);
+          await PolicyPersistenceService.savePolicyComplete(relatedFile, parsedPolicy, userId);
+        }
+        
         // Add to dashboard immediately
         this.onPolicyExtracted(parsedPolicy);
         console.log(`✅ Apólice ${index + 1} adicionada: ${parsedPolicy.name} - ${parsedPolicy.insurer}`);
@@ -85,10 +94,10 @@ export class BatchFileProcessor {
           this.updateFileStatus(relatedFileName, {
             progress: 90 + (index * 2),
             status: 'processing',
-            message: `✅ Processando: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
+            message: `✅ Salvando: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
           });
         }
-      });
+      }
 
       // Marcar todos os arquivos como concluídos
       files.forEach((file, index) => {

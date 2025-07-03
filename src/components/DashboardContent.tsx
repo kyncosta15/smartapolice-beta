@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
@@ -8,6 +8,7 @@ import { ContentRenderer } from '@/components/ContentRenderer';
 import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { 
   createExtendedInstallments,
@@ -45,8 +46,21 @@ export function DashboardContent() {
   const [activeSection, setActiveSection] = useState('home');
   const { toast } = useToast();
 
-  // Usar o hook de dashboard data
-  const { dashboardData } = useDashboardData(extractedPolicies);
+  // Hook para persistência de apólices
+  const { 
+    policies: persistedPolicies, 
+    addPolicy: addPersistedPolicy, 
+    downloadPDF,
+    hasPersistedData 
+  } = usePersistedPolicies();
+
+  // Combinar apólices extraídas e persistidas, evitando duplicatas
+  const allPolicies = [...extractedPolicies, ...persistedPolicies.filter(
+    pp => !extractedPolicies.some(ep => ep.id === pp.id)
+  )];
+
+  // Usar o hook de dashboard data com todas as apólices
+  const { dashboardData } = useDashboardData(allPolicies);
 
   // Calcular estatísticas de parcelas
   const allInstallments = createExtendedInstallments(extractedPolicies);
@@ -76,14 +90,12 @@ export function DashboardContent() {
       premium: policy.premium || 0,
       deductible: Math.floor(Math.random() * 5000) + 1000,
       limits: 'R$ 100.000 por sinistro',
-      // Manter installments como array se já for, senão gerar array de parcelas
       installments: Array.isArray(policy.installments) ? policy.installments : 
                    policy.installments ? generateInstallmentsFromNumber(policy.installments, policy.monthlyAmount, policy.startDate) :
                    generateDefaultInstallments(policy.monthlyAmount, policy.startDate),
       totalCoverage: policy.totalCoverage || policy.premium || 0,
       startDate: policy.startDate || new Date().toISOString().split('T')[0],
       endDate: policy.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      // Preservar dados de documento do N8N - GARANTIR QUE SEJAM MANTIDOS
       documento: policy.documento,
       documento_tipo: policy.documento_tipo,
       insuredName: policy.segurado || policy.insuredName
@@ -96,6 +108,9 @@ export function DashboardContent() {
     });
     
     setExtractedPolicies(prev => [...prev, newPolicy]);
+    
+    // Adicionar também à lista de persistidas
+    addPersistedPolicy(newPolicy);
     
     toast({
       title: "Apólice Adicionada",

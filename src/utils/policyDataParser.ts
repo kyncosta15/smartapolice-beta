@@ -21,6 +21,7 @@ export interface ParsedPolicyData {
   paymentFrequency: string;
   status: string;
   file?: File;
+  pdfPath?: string; // Caminho do PDF no storage
   extractedAt: string;
   
   // Updated to use proper InstallmentData type

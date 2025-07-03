@@ -3,6 +3,7 @@ import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
 import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
 import { StructuredDataConverter } from '@/utils/parsers/structuredDataConverter';
 import { FileProcessingStatus } from '@/types/pdfUpload';
+import { PolicyPersistenceService } from '../policyPersistenceService';
 
 export class SingleFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
@@ -63,7 +64,19 @@ export class SingleFileProcessor {
 
     const parsedPolicy = this.convertToParsedPolicy(dynamicData, fileName, file);
 
-    // 4. Finalizar processamento
+    // 4. Salvar arquivo e dados no banco de dados
+    this.updateFileStatus(fileName, {
+      progress: 90,
+      status: 'processing',
+      message: 'Salvando dados no banco...'
+    });
+
+    if (userId) {
+      console.log(`💾 Salvando persistência para arquivo individual: ${parsedPolicy.name}`);
+      await PolicyPersistenceService.savePolicyComplete(file, parsedPolicy, userId);
+    }
+
+    // 5. Finalizar processamento
     this.updateFileStatus(fileName, {
       progress: 100,
       status: 'completed',
