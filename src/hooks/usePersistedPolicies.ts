@@ -37,10 +37,8 @@ export function usePersistedPolicies() {
       if (loadedPolicies.length > 0) {
         console.log(`✅ ${loadedPolicies.length} apólices carregadas com sucesso`);
         
-        toast({
-          title: "📚 Dados Restaurados",
-          description: `${loadedPolicies.length} apólice(s) carregadas do seu histórico`,
-        });
+        // Não mostrar toast se não há dados novos para evitar confusão
+        console.log('📚 Dados históricos carregados silenciosamente');
       } else {
         console.log('📭 Nenhuma apólice encontrada no histórico');
       }

@@ -103,7 +103,7 @@ export class PolicyPersistenceService {
         numero_parcela: installment.numero,
         valor: installment.valor,
         data_vencimento: installment.data,
-        status: installment.status || 'pendente'
+        status: installment.status === 'paga' ? 'paga' : 'pendente' // Garantir apenas valores válidos
       }));
 
       const { error } = await supabase
