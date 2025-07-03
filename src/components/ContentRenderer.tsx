@@ -22,6 +22,7 @@ interface ContentRendererProps {
   allPolicies: ParsedPolicyData[];
   extractedPolicies: ParsedPolicyData[];
   allUsers: any[];
+  usersLoading?: boolean;
   onPolicySelect: (policy: any) => void;
   onPolicyUpdate: (policy: any) => void;
   onPolicyDelete: (policyId: string) => void;
@@ -40,6 +41,7 @@ export function ContentRenderer({
   allPolicies,
   extractedPolicies,
   allUsers,
+  usersLoading = false,
   onPolicySelect,
   onPolicyUpdate,
   onPolicyDelete,
@@ -133,6 +135,7 @@ export function ContentRenderer({
               users={allUsers}
               onUserUpdate={onUserUpdate}
               onUserDelete={onUserDelete}
+              isLoading={usersLoading}
             />
             <div className="mt-8">
               <ClientRegister onClientRegister={onClientRegister} />

@@ -44,7 +44,8 @@ export function DashboardContent() {
     updateUser, 
     deleteUser, 
     addUser,
-    canManageUsers
+    canManageUsers,
+    isLoading: usersLoading
   } = usePersistedUsers();
 
   // Combinar apólices extraídas e persistidas, evitando duplicatas
@@ -246,6 +247,7 @@ export function DashboardContent() {
               allPolicies={normalizedPolicies}
               extractedPolicies={normalizedPolicies}
               allUsers={persistedUsers}
+              usersLoading={usersLoading}
               onPolicySelect={handlePolicySelect}
               onPolicyUpdate={handlePolicyUpdate}
               onPolicyDelete={handleDeletePolicy}

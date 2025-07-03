@@ -52,6 +52,10 @@ export function usePersistedUsers() {
                     const exists = prev.some(u => u.id === payload.new.id);
                     if (!exists) {
                       console.log('➕ Adicionando novo usuário:', payload.new);
+                      toast({
+                        title: "👤 Novo Usuário",
+                        description: `${payload.new.name} foi adicionado ao sistema`,
+                      });
                       return [payload.new as User, ...prev];
                     }
                     return prev;
@@ -68,6 +72,10 @@ export function usePersistedUsers() {
                     )
                   );
                   console.log('✏️ Usuário atualizado:', payload.new);
+                  toast({
+                    title: "✏️ Usuário Atualizado",
+                    description: `${payload.new.name} foi atualizado`,
+                  });
                 }
                 break;
                 
@@ -76,6 +84,10 @@ export function usePersistedUsers() {
                 if (payload.old) {
                   setUsers(prev => prev.filter(u => u.id !== payload.old.id));
                   console.log('🗑️ Usuário removido:', payload.old);
+                  toast({
+                    title: "🗑️ Usuário Removido",
+                    description: `${payload.old.name} foi removido do sistema`,
+                  });
                 }
                 break;
             }

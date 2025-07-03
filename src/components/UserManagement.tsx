@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Users, Search, Edit, Trash2, Plus } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Users, Search, Edit, Trash2, Plus, Wifi } from 'lucide-react';
 
 interface User {
   id: string;
@@ -19,9 +20,10 @@ interface UserManagementProps {
   users: User[];
   onUserUpdate: (user: User) => void;
   onUserDelete: (userId: string) => void;
+  isLoading?: boolean;
 }
 
-export function UserManagement({ users, onUserUpdate, onUserDelete }: UserManagementProps) {
+export function UserManagement({ users, onUserUpdate, onUserDelete, isLoading = false }: UserManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredUsers = users.filter(user =>
@@ -34,9 +36,20 @@ export function UserManagement({ users, onUserUpdate, onUserDelete }: UserManage
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Users className="h-5 w-5 mr-2" />
-            Gerenciamento de Usuários
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Users className="h-5 w-5 mr-2" />
+              Gerenciamento de Usuários
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
+                <Wifi className="h-4 w-4 text-green-500" />
+                <span className="text-xs text-green-600">Sincronizado</span>
+              </div>
+              {isLoading && (
+                <span className="text-xs text-gray-500">Carregando...</span>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -57,40 +70,62 @@ export function UserManagement({ users, onUserUpdate, onUserDelete }: UserManage
           </div>
 
           <div className="space-y-4">
-            {filteredUsers.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-semibold">
-                      {user.name.charAt(0).toUpperCase()}
-                    </span>
+            {isLoading ? (
+              // Skeleton loading
+              [...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-48" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{user.name}</h3>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                    <p className="text-sm text-gray-500">{user.company}</p>
+                  <div className="flex items-center space-x-3">
+                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-6 w-20" />
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-8 w-8" />
                   </div>
                 </div>
-                
-                <div className="flex items-center space-x-3">
-                  <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                    {user.status === 'active' ? 'Ativo' : 'Inativo'}
-                  </Badge>
-                  <Badge variant="outline">
-                    {user.role}
-                  </Badge>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onUserDelete(user.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+              ))
+            ) : (
+              filteredUsers.map((user) => (
+                <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold">
+                        {user.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">{user.name}</h3>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <p className="text-sm text-gray-500">{user.company}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                      {user.status === 'active' ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                    <Badge variant="outline">
+                      {user.role}
+                    </Badge>
+                    <Button variant="ghost" size="sm">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => onUserDelete(user.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
-          {filteredUsers.length === 0 && (
+          {!isLoading && filteredUsers.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               Nenhum usuário encontrado
             </div>
