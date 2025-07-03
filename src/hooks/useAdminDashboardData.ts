@@ -293,8 +293,8 @@ export function useAdminDashboardData() {
     }
     
     console.log('🚀 useEffect: Carregando dados iniciais para:', user.email);
-
-    // Carregar dados iniciais
+    
+    // Carregar dados iniciais imediatamente
     fetchAdminMetrics();
 
     // Configurar realtime para tabela policies
