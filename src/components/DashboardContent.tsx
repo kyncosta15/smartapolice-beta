@@ -67,6 +67,7 @@ export function DashboardContent() {
   };
 
   const handlePolicyExtracted = async (policy: any) => {
+    console.log('🚀 handlePolicyExtracted CHAMADO!');
     console.log('Nova apólice extraída:', policy);
     
     const newPolicy: ParsedPolicyData = {
@@ -96,9 +97,22 @@ export function DashboardContent() {
     console.log('✅ Adicionando apólice ao dashboard local primeiro');
     setExtractedPolicies(prev => [...prev, newPolicy]);
     
-    // IMPORTANTE: A persistência já é feita automaticamente nos processadores
-    // Não precisamos fazer aqui pois os BatchFileProcessor e SingleFileProcessor
-    // já chamam PolicyPersistenceService.savePolicyComplete()
+    // CORREÇÃO: Chamar persistência DIRETAMENTE aqui
+    if (user?.id && policy.file) {
+      console.log('💾 Chamando persistência diretamente do handlePolicyExtracted');
+      try {
+        const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
+        const success = await PolicyPersistenceService.savePolicyComplete(policy.file, newPolicy, user.id);
+        console.log(`✅ Persistência direta resultado: ${success}`);
+      } catch (error) {
+        console.error('❌ Erro na persistência direta:', error);
+      }
+    } else {
+      console.warn('⚠️ Persistência pulada - userId ou file não disponível:', {
+        userId: user?.id,
+        hasFile: !!policy.file
+      });
+    }
     
     toast({
       title: "Apólice Adicionada",
