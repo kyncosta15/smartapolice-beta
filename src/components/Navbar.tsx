@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Search, Menu, X, LogOut, ChevronDown, PanelLeft, AlertCircle, Calendar } from 'lucide-react';
+import { Bell, Search, Menu, LogOut, ChevronDown, PanelLeft, AlertCircle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ searchTerm, onSearchChange, notificationCount, policies }: NavbarProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
@@ -98,10 +98,10 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
 
             {/* Mobile Menu Toggle */}
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={toggleSidebar}
               className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 md:hidden transition-colors"
             >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <Menu className="w-5 h-5" />
             </button>
           </div>
 
@@ -225,23 +225,6 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
           </div>
         </div>
 
-        {/* Mobile Search */}
-        {isMobileMenuOpen && (
-          <div className="pb-4 md:hidden">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="w-4 h-4 text-gray-400" />
-              </div>
-              <Input
-                type="text"
-                placeholder="Buscar apólice, CPF/CNPJ..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 pr-4 h-9 bg-gray-50 border-gray-200 text-sm placeholder-gray-500 focus:bg-white focus:border-blue-300 focus:ring-1 focus:ring-blue-200 transition-all"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );
