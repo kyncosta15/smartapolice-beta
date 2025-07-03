@@ -368,7 +368,7 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
                 </div>
                 <div>
                   <p className="text-gray-500">Tipo</p>
-                  <p className="font-medium capitalize">{policy.type}</p>
+                  <p className="font-medium">{getTypeLabel(policy.type)}</p>
                 </div>
               </div>
 
@@ -450,6 +450,18 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
       )}
     </div>
   );
+}
+
+function getTypeLabel(type: string) {
+  const types = {
+    auto: 'Auto',
+    vida: 'Vida', 
+    saude: 'Saúde',
+    patrimonial: 'Patrimonial',
+    empresarial: 'Empresarial',
+    acidentes_pessoais: 'Acidentes Pessoais'
+  };
+  return types[type] || type;
 }
 
 function generateOptimizationData(policies: ParsedPolicyData[]) {

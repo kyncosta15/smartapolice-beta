@@ -61,6 +61,18 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
     }
   };
 
+  const getTypeLabel = (type: string) => {
+    const types = {
+      auto: 'Auto',
+      vida: 'Vida',
+      saude: 'Saúde',
+      patrimonial: 'Patrimonial',
+      empresarial: 'Empresarial',
+      acidentes_pessoais: 'Acidentes Pessoais'
+    };
+    return types[type] || type;
+  };
+
   const getPersonTypeBadge = () => {
     if (!documentInfo) return null;
     
@@ -95,7 +107,7 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
 
         <div>
           <p className="text-sm text-gray-500 mb-1">Tipo</p>
-          <p className="text-gray-900 capitalize">{policy.type}</p>
+          <p className="text-gray-900">{getTypeLabel(policy.type)}</p>
         </div>
 
         <div>
