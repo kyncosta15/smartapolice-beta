@@ -202,7 +202,8 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
       vida: 'bg-purple-50 text-purple-600 border-purple-200',
       saude: 'bg-green-50 text-green-600 border-green-200',
       patrimonial: 'bg-orange-50 text-orange-600 border-orange-200',
-      empresarial: 'bg-indigo-50 text-indigo-600 border-indigo-200'
+      empresarial: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+      acidentes_pessoais: 'bg-red-50 text-red-600 border-red-200'
     };
     
     const colorClass = typeColors[type] || 'bg-gray-50 text-gray-600 border-gray-200';
@@ -211,7 +212,8 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
       vida: 'Vida',
       saude: 'Saúde',
       patrimonial: 'Patrimonial',
-      empresarial: 'Empresarial'
+      empresarial: 'Empresarial',
+      acidentes_pessoais: 'Acidentes Pessoais'
     }[type] || 'Outros';
 
     return <Badge className={colorClass}>{label}</Badge>;
@@ -245,6 +247,7 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
                   <SelectItem value="saude">Saúde</SelectItem>
                   <SelectItem value="patrimonial">Patrimonial</SelectItem>
                   <SelectItem value="empresarial">Empresarial</SelectItem>
+                  <SelectItem value="acidentes_pessoais">Acidentes Pessoais</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={filterUF} onValueChange={setFilterUF}>

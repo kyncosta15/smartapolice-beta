@@ -255,14 +255,15 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Tipos</SelectItem>
-                <SelectItem value="auto">Auto</SelectItem>
-                <SelectItem value="vida">Vida</SelectItem>
-                <SelectItem value="saude">Saúde</SelectItem>
-                <SelectItem value="patrimonial">Patrimonial</SelectItem>
-                <SelectItem value="empresarial">Empresarial</SelectItem>
-              </SelectContent>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Tipos</SelectItem>
+                  <SelectItem value="auto">Auto</SelectItem>
+                  <SelectItem value="vida">Vida</SelectItem>
+                  <SelectItem value="saude">Saúde</SelectItem>
+                  <SelectItem value="patrimonial">Patrimonial</SelectItem>
+                  <SelectItem value="empresarial">Empresarial</SelectItem>
+                  <SelectItem value="acidentes_pessoais">Acidentes Pessoais</SelectItem>
+                </SelectContent>
             </Select>
 
             <Select value={filterInsurer} onValueChange={setFilterInsurer}>
