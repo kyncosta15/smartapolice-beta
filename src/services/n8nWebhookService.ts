@@ -25,7 +25,7 @@ interface N8NWebhookResponse {
 }
 
 export class N8NWebhookService {
-  private static readonly WEBHOOK_URL = 'https://beneficiosagente.app.n8n.cloud/webhook-test/a2c01401-91f5-4652-a2b7-4faadbf93745';
+  private static readonly WEBHOOK_URL = 'https://smartapolice.app.n8n.cloud/webhook-test/a2c01401-91f5-4652-a2b7-4faadbf93745';
   
   static async processarPdfComN8n(file: File, userId?: string): Promise<N8NWebhookResponse> {
     console.log(`🌐 Enviando PDF para processamento N8N: ${file.name}`);
