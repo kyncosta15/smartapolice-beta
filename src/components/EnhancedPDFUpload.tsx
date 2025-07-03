@@ -98,25 +98,9 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           <CardTitle className="flex items-center space-x-2">
             <Cloud className="h-5 w-5 text-blue-600" />
             <span>Upload de Apólices</span>
-            {isProcessingBatch && (
-              <div className="flex items-center space-x-2 ml-4">
-                <Clock className="h-4 w-4 text-orange-500 animate-pulse" />
-                <span className="text-sm text-orange-600 font-medium">Processamento em lote...</span>
-              </div>
-            )}
           </CardTitle>
           <CardDescription>
             Sistema otimizado processa múltiplos PDFs simultaneamente para máxima eficiência.
-            {user?.id && (
-              <div className="mt-1 text-xs text-blue-600">
-                👤 Usuário: {user.email} (ID: {user.id.slice(0, 8)}...)
-              </div>
-            )}
-            {isProcessingBatch && (
-              <div className="mt-2 text-sm text-orange-600">
-                ⏳ Enviando todos os arquivos juntos para o N8N para processamento simultâneo.
-              </div>
-            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -139,11 +123,6 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
                     : 'Arraste e solte os PDFs ou clique para selecionar (máx. 10 arquivos)'
                 }
               </p>
-              {isProcessingBatch && (
-                <p className="text-xs text-orange-500 mt-2">
-                  Todos os arquivos são enviados juntos para processamento simultâneo no N8N
-                </p>
-              )}
             </div>
           </div>
 
@@ -153,21 +132,6 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           />
         </CardContent>
         <CardFooter className="justify-between">
-          {processingCount > 0 && (
-            <div className="text-right">
-              <p className="text-sm text-blue-600 font-medium">
-                Processando {processingCount} arquivo(s) em lote...
-              </p>
-            </div>
-          )}
-          
-          {isProcessingBatch && (
-            <div className="text-right">
-              <p className="text-sm text-orange-600 font-medium">
-                🔄 Processamento em lote otimizado em andamento...
-              </p>
-            </div>
-          )}
         </CardFooter>
       </Card>
     </div>
