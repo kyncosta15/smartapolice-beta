@@ -150,21 +150,41 @@ export function usePersistedPolicies() {
     }
 
     try {
-      console.log(`✏️ Atualizando apólice: ${policyId}`);
+      console.log(`✏️ Atualizando apólice: ${policyId}`, updates);
       
-      // Converter dados para formato do banco
-      const dbUpdates = {
-        segurado: updates.name,
-        seguradora: updates.insurer,
-        tipo_seguro: updates.type,
-        numero_apolice: updates.policyNumber,
-        valor_premio: updates.premium,
-        custo_mensal: updates.monthlyAmount,
-        inicio_vigencia: updates.startDate,
-        fim_vigencia: updates.endDate,
-        forma_pagamento: updates.paymentFrequency,
-        status: updates.status,
-      };
+      // Converter dados para formato do banco - mapeando TODOS os campos editáveis
+      const dbUpdates: any = {};
+      
+      // Campos básicos
+      if (updates.name !== undefined) dbUpdates.segurado = updates.name;
+      if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
+      if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
+      if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = updates.policyNumber;
+      if (updates.premium !== undefined) dbUpdates.valor_premio = updates.premium;
+      if (updates.monthlyAmount !== undefined) dbUpdates.custo_mensal = updates.monthlyAmount;
+      if (updates.startDate !== undefined) dbUpdates.inicio_vigencia = updates.startDate;
+      if (updates.endDate !== undefined) dbUpdates.fim_vigencia = updates.endDate;
+      if (updates.status !== undefined) dbUpdates.status = updates.status;
+      if (updates.category !== undefined) dbUpdates.forma_pagamento = updates.category;
+      if (updates.entity !== undefined) dbUpdates.corretora = updates.entity;
+      
+      // Campos específicos do N8N
+      if (updates.insuredName !== undefined) dbUpdates.segurado = updates.insuredName; // Priorizar insuredName sobre name
+      if (updates.documento !== undefined) dbUpdates.documento = updates.documento;
+      if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = updates.documento_tipo;
+      if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = updates.vehicleModel;
+      if (updates.uf !== undefined) dbUpdates.uf = updates.uf;
+      if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
+      
+      // Coverage - se for array, converter para string separada por vírgula
+      if (updates.coverage !== undefined) {
+        const coverageString = Array.isArray(updates.coverage) 
+          ? updates.coverage.join(', ') 
+          : updates.coverage;
+        // Não há campo específico na DB para coverage, pode adicionar se necessário
+      }
+
+      console.log('📝 Dados preparados para atualização:', dbUpdates);
 
       const { error } = await supabase
         .from('policies')
