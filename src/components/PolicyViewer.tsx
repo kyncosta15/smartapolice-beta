@@ -35,27 +35,26 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } else if (policy.pdfPath) {
-      // For persisted policies, use Edge Function proxy to bypass browser blocking
+      // For Opera: Use multiple fallback strategies
+      console.log('🔄 Iniciando download para Opera/browsers restritivos');
+      
       try {
-        console.log('🔄 Usando Edge Function proxy para download:', policy.pdfPath);
-        
+        // Estratégia 1: Tentar download direto via storage.download()
+        console.log('📥 Tentativa 1: Download direto via storage');
         const { supabase } = await import('@/integrations/supabase/client');
         
-        // Chamar edge function que funciona como proxy
-        const { data, error } = await supabase.functions.invoke('download-pdf', {
-          body: { pdfPath: policy.pdfPath }
-        });
-        
-        if (error) {
-          console.error('❌ Erro na edge function:', error);
-          throw error;
+        const { data: fileBlob, error: downloadError } = await supabase.storage
+          .from('pdfs')
+          .download(policy.pdfPath);
+          
+        if (downloadError) {
+          console.warn('⚠️ Download direto falhou:', downloadError);
+          throw downloadError;
         }
         
-        if (data) {
-          // Converter resposta para blob e fazer download
-          const blob = new Blob([data], { type: 'application/pdf' });
-          const blobUrl = URL.createObjectURL(blob);
-          
+        if (fileBlob) {
+          console.log('✅ Arquivo obtido via download direto');
+          const blobUrl = URL.createObjectURL(fileBlob);
           const link = document.createElement('a');
           link.href = blobUrl;
           link.download = `${policy.name || 'apolice'}.pdf`;
@@ -64,42 +63,79 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          
           URL.revokeObjectURL(blobUrl);
-          console.log('✅ Download via proxy concluído');
-        }
-      } catch (error) {
-        console.error('❌ Erro no download via proxy:', error);
-        
-        // Fallback: tentar download direto como última opção
-        try {
-          console.log('🔄 Tentando fallback - download direto...');
-          const { supabase } = await import('@/integrations/supabase/client');
           
-          const { data: fileBlob, error: downloadError } = await supabase.storage
-            .from('pdfs')
-            .download(policy.pdfPath);
-            
-          if (downloadError) throw downloadError;
-          
-          if (fileBlob) {
-            const blobUrl = URL.createObjectURL(fileBlob);
-            const link = document.createElement('a');
-            link.href = blobUrl;
-            link.download = `${policy.name || 'apolice'}.pdf`;
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(blobUrl);
-            
-            console.log('✅ Download direto concluído como fallback');
-          }
-        } catch (fallbackError) {
-          console.error('❌ Todos os métodos de download falharam:', fallbackError);
-          alert('Erro ao baixar arquivo. O navegador está bloqueando downloads do Supabase. Tente usar Chrome ou Firefox.');
+          console.log('✅ Download concluído com sucesso (método direto)');
+          return;
         }
+      } catch (directError) {
+        console.warn('⚠️ Falha no download direto:', directError);
       }
+      
+      try {
+        // Estratégia 2: Usar Edge Function como proxy
+        console.log('📥 Tentativa 2: Download via Edge Function proxy');
+        const { supabase } = await import('@/integrations/supabase/client');
+        
+        const response = await fetch(`https://jhvbfvqhuemuvwgqpskz.supabase.co/functions/v1/download-pdf`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ pdfPath: policy.pdfPath })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Edge Function error: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        console.log('✅ Arquivo obtido via Edge Function proxy');
+        
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${policy.name || 'apolice'}.pdf`;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+        
+        console.log('✅ Download concluído via proxy');
+        return;
+        
+      } catch (proxyError) {
+        console.warn('⚠️ Falha no proxy:', proxyError);
+      }
+      
+      try {
+        // Estratégia 3: Abrir em nova aba como último recurso
+        console.log('📥 Tentativa 3: Abrir em nova aba');
+        const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
+        const downloadUrl = await PolicyPersistenceService.getPDFDownloadUrl(policy.pdfPath);
+        
+        if (downloadUrl) {
+          console.log('✅ Abrindo em nova aba');
+          window.open(downloadUrl, '_blank');
+          return;
+        }
+      } catch (urlError) {
+        console.error('❌ Falha ao gerar URL:', urlError);
+      }
+      
+      // Se todas as estratégias falharam
+      console.error('❌ Todas as estratégias de download falharam');
+      alert(`Download bloqueado pelo navegador Opera.
+
+Soluções recomendadas:
+1. Use Chrome, Firefox ou Edge para downloads
+2. Desative o bloqueador de anúncios do Opera temporariamente
+3. Adicione *.supabase.co às exceções do Opera
+
+O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegador.`);
+      
     } else {
       console.warn('Arquivo não disponível para download:', policy.name);
       alert('Arquivo não disponível para download');
