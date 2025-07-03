@@ -123,8 +123,11 @@ export function useAdminDashboardData() {
         // Usuários ativos
         supabase.from('users').select('*', { count: 'exact', head: true }).eq('status', 'active'),
         
-        // Dados de seguradoras
-        supabase.from('policies').select('seguradora').not('seguradora', 'is', null),
+        // Dados de seguradoras - melhorar query para não incluir valores nulos/vazios
+        supabase.from('policies')
+          .select('seguradora')
+          .not('seguradora', 'is', null)
+          .neq('seguradora', ''),
         
         // Dados de UF
         supabase.from('policies').select('uf').not('uf', 'is', null),
@@ -146,13 +149,19 @@ export function useAdminDashboardData() {
       ]);
 
       // Processar seguradoras únicas
+      console.log('🏢 Dados brutos das seguradoras:', insurersData);
+      
       const insurerCounts = insurersData?.reduce((acc, item) => {
         const insurer = item.seguradora?.trim();
-        if (insurer) {
+        console.log('🔍 Processando seguradora:', { original: item.seguradora, trimmed: insurer });
+        if (insurer && insurer !== '') {
           acc[insurer] = (acc[insurer] || 0) + 1;
         }
         return acc;
       }, {} as Record<string, number>) || {};
+      
+      console.log('📊 Contagem final de seguradoras:', insurerCounts);
+      console.log('🔢 Total de seguradoras únicas:', Object.keys(insurerCounts).length);
       
       const totalInsurerPolicies = Object.values(insurerCounts).reduce((sum, count) => sum + count, 0);
       const insurerDistribution = Object.entries(insurerCounts).map(([name, value]) => ({
@@ -247,12 +256,14 @@ export function useAdminDashboardData() {
         newPoliciesLast30Days,
       });
 
-      console.log('📊 Admin metrics loaded:', {
-        totalPolicies,
-        totalUsers,
+      console.log('📊 Métricas finais calculadas:', {
+        totalPolicies: totalPolicies || 0,
+        totalUsers: totalUsers || 0,
         totalInsurers: Object.keys(insurerCounts).length,
-        activeUsers,
+        activeUsers: activeUsers || 0,
         newPoliciesLast30Days,
+        insurerDistribution: insurerDistribution.length,
+        insurerCounts: Object.keys(insurerCounts)
       });
 
     } catch (err) {
