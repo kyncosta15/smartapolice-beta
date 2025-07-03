@@ -51,7 +51,8 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
       vida: 'Seguro de Vida',
       saude: 'Seguro Saúde',
       empresarial: 'Empresarial',
-      patrimonial: 'Patrimonial'
+      patrimonial: 'Patrimonial',
+      acidentes_pessoais: 'Acidentes Pessoais'
     };
     return types[type] || type;
   };
@@ -174,6 +175,14 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                 <p>{getTypeLabel(policy.type)}</p>
               </div>
 
+              {/* Estado (UF) - movido para informações gerais */}
+              {policy.uf && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Estado (UF)</label>
+                  <p className="text-lg font-semibold">{policy.uf}</p>
+                </div>
+              )}
+
               <div>
                 <label className="text-sm font-medium text-gray-500">Status</label>
                 <div className="mt-1">
@@ -221,13 +230,13 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
             </CardContent>
           </Card>
 
-          {/* Informações do Veículo e Localização - NOVO */}
-          {(policy.type === 'auto' || policy.vehicleModel || policy.uf) && (
+          {/* Informações do Veículo - APENAS para seguros Auto */}
+          {policy.type === 'auto' && (policy.vehicleModel || policy.deductible) && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <FileText className="h-5 w-5 mr-2" />
-                  {policy.type === 'auto' ? 'Informações do Veículo' : 'Informações Adicionais'}
+                  Informações do Veículo
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -237,15 +246,8 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                     <p className="text-lg font-semibold">{policy.vehicleModel}</p>
                   </div>
                 )}
-                
-                {policy.uf && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Estado (UF)</label>
-                    <p className="text-lg font-semibold">{policy.uf}</p>
-                  </div>
-                )}
 
-                {policy.deductible && (
+                {policy.deductible && policy.deductible > 0 && (
                   <div>
                     <label className="text-sm font-medium text-gray-500">Franquia</label>
                     <p className="text-lg font-semibold">
