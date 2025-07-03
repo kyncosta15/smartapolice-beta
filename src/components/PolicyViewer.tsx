@@ -23,7 +23,7 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
   const [editingPolicy, setEditingPolicy] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const handleDownload = (policy: any) => {
+  const handleDownload = async (policy: any) => {
     if (policy.file) {
       // Create a blob URL for the file and trigger download
       const url = URL.createObjectURL(policy.file);
@@ -34,8 +34,37 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+    } else if (policy.pdfPath) {
+      // For persisted policies, try to fetch the file as blob to bypass browser blocking
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        
+        const { data, error } = await supabase.storage
+          .from('pdfs')
+          .download(policy.pdfPath);
+          
+        if (error) throw error;
+        
+        if (data) {
+          const url = URL.createObjectURL(data);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${policy.name}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+      } catch (error) {
+        console.error('Erro no download direto:', error);
+        // Fallback: open in new tab if direct download fails
+        const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
+        const downloadUrl = await PolicyPersistenceService.getPDFDownloadUrl(policy.pdfPath);
+        if (downloadUrl) {
+          window.open(downloadUrl, '_blank');
+        }
+      }
     } else {
-      // Fallback for policies without file object
       console.warn('Arquivo não disponível para download:', policy.name);
     }
   };
