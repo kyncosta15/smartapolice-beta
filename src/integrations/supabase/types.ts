@@ -43,7 +43,7 @@ export type Database = {
           numero_parcela: number | null
           policy_id: string | null
           status: string | null
-          user_id: string | null
+          user_id: string
           valor: number | null
         }
         Insert: {
@@ -53,7 +53,7 @@ export type Database = {
           numero_parcela?: number | null
           policy_id?: string | null
           status?: string | null
-          user_id?: string | null
+          user_id: string
           valor?: number | null
         }
         Update: {
@@ -63,10 +63,17 @@ export type Database = {
           numero_parcela?: number | null
           policy_id?: string | null
           status?: string | null
-          user_id?: string | null
+          user_id?: string
           valor?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_installments_policy_id"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "installments_policy_id_fkey"
             columns: ["policy_id"]
@@ -150,7 +157,7 @@ export type Database = {
           telefone: string | null
           tipo_seguro: string | null
           uf: string | null
-          user_id: string | null
+          user_id: string
           valor_parcela: number | null
           valor_premio: number | null
         }
@@ -182,7 +189,7 @@ export type Database = {
           telefone?: string | null
           tipo_seguro?: string | null
           uf?: string | null
-          user_id?: string | null
+          user_id: string
           valor_parcela?: number | null
           valor_premio?: number | null
         }
@@ -214,7 +221,7 @@ export type Database = {
           telefone?: string | null
           tipo_seguro?: string | null
           uf?: string | null
-          user_id?: string | null
+          user_id?: string
           valor_parcela?: number | null
           valor_premio?: number | null
         }
