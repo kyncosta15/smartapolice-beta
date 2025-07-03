@@ -154,8 +154,19 @@ export class PolicyPersistenceService {
 
       if (policiesError) {
         console.error('❌ Erro ao carregar apólices:', policiesError);
+        console.error('📋 Detalhes do erro:', {
+          message: policiesError.message,
+          details: policiesError.details,
+          code: policiesError.code
+        });
         return [];
       }
+
+      console.log(`🔍 Resultado da consulta:`, {
+        totalRecords: policies?.length || 0,
+        userId: userId,
+        policies: policies
+      });
 
       if (!policies || policies.length === 0) {
         console.log('📭 Nenhuma apólice encontrada para o usuário');
@@ -166,7 +177,11 @@ export class PolicyPersistenceService {
 
       // Converter dados do banco para formato ParsedPolicyData
       const parsedPolicies: ParsedPolicyData[] = policies.map(policy => {
-        console.log(`🔍 Carregando apólice do banco - arquivo_url: ${policy.arquivo_url}`);
+        console.log(`🔍 Processando apólice do banco:`, {
+          id: policy.id,
+          segurado: policy.segurado,
+          arquivo_url: policy.arquivo_url
+        });
         return {
           id: policy.id,
           name: policy.segurado || 'Apólice',
@@ -190,10 +205,16 @@ export class PolicyPersistenceService {
         };
       });
 
+      console.log(`✅ Apólices convertidas com sucesso:`, {
+        total: parsedPolicies.length,
+        nomes: parsedPolicies.map(p => p.name)
+      });
+
       return parsedPolicies;
 
     } catch (error) {
       console.error('❌ Erro inesperado ao carregar apólices:', error);
+      console.error('📋 Stack trace:', error instanceof Error ? error.stack : 'Erro desconhecido');
       return [];
     }
   }

@@ -14,17 +14,28 @@ export function usePersistedPolicies() {
 
   // Carregar apólices quando usuário faz login
   useEffect(() => {
+    console.log(`🔍 usePersistedPolicies - Verificando estado do usuário:`, {
+      userId: user?.id,
+      userExists: !!user
+    });
+    
     if (user?.id) {
+      console.log(`🔄 Usuário logado detectado - Iniciando carregamento de apólices para: ${user.id}`);
       loadPersistedPolicies();
     } else {
+      console.log(`🚪 Usuário não logado - Limpando dados das apólices`);
       // Limpar dados quando usuário faz logout
       setPolicies([]);
     }
   }, [user?.id]);
 
   const loadPersistedPolicies = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log(`⚠️ loadPersistedPolicies chamado sem userId válido`);
+      return;
+    }
 
+    console.log(`🚀 Iniciando loadPersistedPolicies para userId: ${user.id}`);
     setIsLoading(true);
     setError(null);
 
@@ -33,13 +44,16 @@ export function usePersistedPolicies() {
       
       const loadedPolicies = await PolicyPersistenceService.loadUserPolicies(user.id);
       
+      console.log(`🔍 Resultado do PolicyPersistenceService.loadUserPolicies:`, {
+        length: loadedPolicies.length,
+        policies: loadedPolicies
+      });
+      
       setPolicies(loadedPolicies);
       
       if (loadedPolicies.length > 0) {
         console.log(`✅ ${loadedPolicies.length} apólices carregadas com sucesso`);
-        
-        // Não mostrar toast se não há dados novos para evitar confusão
-        console.log('📚 Dados históricos carregados silenciosamente');
+        console.log(`📚 Apólices carregadas:`, loadedPolicies.map(p => ({ id: p.id, name: p.name, pdfPath: p.pdfPath })));
       } else {
         console.log('📭 Nenhuma apólice encontrada no histórico');
       }
@@ -56,6 +70,7 @@ export function usePersistedPolicies() {
       });
     } finally {
       setIsLoading(false);
+      console.log(`🏁 loadPersistedPolicies finalizado para userId: ${user.id}`);
     }
   };
 
