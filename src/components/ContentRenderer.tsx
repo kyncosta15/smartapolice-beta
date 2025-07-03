@@ -11,6 +11,7 @@ import { OptimizedSettings } from './OptimizedSettings';
 import { ChartsSection } from './ChartsSection';
 import { InstallmentsDashboard } from './InstallmentsDashboard';
 import { PolicyInstallmentsCard } from './installments/PolicyInstallmentsCard';
+import { RegionalMetrics } from './dashboard/RegionalMetrics';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 
@@ -184,6 +185,13 @@ export function ContentRenderer({
       return (
         <div className="p-6">
           <ChartsSection detailed={true} policies={convertToChartData(extractedPolicies)} />
+        </div>
+      );
+
+    case 'regions':
+      return (
+        <div className="p-6">
+          <RegionalMetrics />
         </div>
       );
 

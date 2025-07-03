@@ -8,6 +8,7 @@ import { ContentRenderer } from '@/components/ContentRenderer';
 import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { usePersistedUsers } from '@/hooks/usePersistedUsers';
 import { ParsedPolicyData } from '@/utils/policyDataParser';

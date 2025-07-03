@@ -9,6 +9,7 @@ import {
   Contact2,
   FileText,
   Gauge,
+  Map,
   Settings,
   Users2
 } from "lucide-react"
@@ -31,6 +32,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       icon: BarChart3,
       id: "reports",
       description: "Análises e métricas"
+    },
+    {
+      title: "Regiões",
+      icon: Map,
+      id: "regions",
+      description: "Distribuição regional"
     },
     {
       title: "Clientes",
