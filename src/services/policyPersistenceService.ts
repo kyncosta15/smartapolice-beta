@@ -56,6 +56,27 @@ export class PolicyPersistenceService {
 
       console.log(`💾 Salvando apólice no banco para usuário ${userId}:`, policyData.name);
 
+      // VERIFICAÇÃO DE DUPLICAÇÃO: Verificar se já existe uma apólice com o mesmo número
+      if (policyData.policyNumber) {
+        console.log(`🔍 Verificando duplicação para apólice: ${policyData.policyNumber}`);
+        
+        const { data: existingPolicies, error: checkError } = await supabase
+          .from('policies')
+          .select('id, numero_apolice')
+          .eq('user_id', userId)
+          .eq('numero_apolice', policyData.policyNumber);
+
+        if (checkError) {
+          console.warn('⚠️ Erro ao verificar duplicação:', checkError);
+        } else if (existingPolicies && existingPolicies.length > 0) {
+          console.log(`🚫 DUPLICAÇÃO DETECTADA: Apólice ${policyData.policyNumber} já existe para o usuário ${userId}`);
+          console.log(`📋 Apólices existentes:`, existingPolicies.map(p => ({ id: p.id, numero: p.numero_apolice })));
+          
+          // Retornar o ID da apólice existente ao invés de criar uma nova
+          return existingPolicies[0].id;
+        }
+      }
+
       // Preparar dados da apólice com mapeamento completo
       const policyInsert: PolicyInsert = {
         user_id: userId,
@@ -373,6 +394,73 @@ export class PolicyPersistenceService {
     } catch (error) {
       console.error('❌ Erro crítico na persistência completa:', error);
       return false;
+    }
+  }
+
+  // Método para limpar apólices duplicadas (utilitário de manutenção)
+  static async cleanupDuplicatePolicies(userId: string): Promise<number> {
+    try {
+      console.log(`🧹 Iniciando limpeza de duplicatas para usuário: ${userId}`);
+      
+      const { data: policies, error } = await supabase
+        .from('policies')
+        .select('id, numero_apolice, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('❌ Erro ao buscar apólices para limpeza:', error);
+        return 0;
+      }
+
+      if (!policies || policies.length === 0) {
+        console.log('📭 Nenhuma apólice encontrada para limpeza');
+        return 0;
+      }
+
+      // Agrupar por número da apólice
+      const groupedPolicies = policies.reduce((acc, policy) => {
+        const key = policy.numero_apolice || 'sem_numero';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(policy);
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      let deletedCount = 0;
+
+      // Para cada grupo, manter apenas a primeira (mais antiga) e deletar as demais
+      for (const [policyNumber, policyGroup] of Object.entries(groupedPolicies)) {
+        if (policyGroup.length > 1) {
+          console.log(`🔍 Encontradas ${policyGroup.length} duplicatas para apólice: ${policyNumber}`);
+          
+          // Manter a primeira (mais antiga) e deletar as demais
+          const [keep, ...toDelete] = policyGroup;
+          console.log(`✅ Mantendo apólice: ${keep.id} (${keep.created_at})`);
+          
+          for (const duplicate of toDelete) {
+            console.log(`🗑️ Deletando duplicata: ${duplicate.id} (${duplicate.created_at})`);
+            
+            const { error: deleteError } = await supabase
+              .from('policies')
+              .delete()
+              .eq('id', duplicate.id)
+              .eq('user_id', userId);
+
+            if (deleteError) {
+              console.error(`❌ Erro ao deletar duplicata ${duplicate.id}:`, deleteError);
+            } else {
+              deletedCount++;
+            }
+          }
+        }
+      }
+
+      console.log(`✅ Limpeza concluída: ${deletedCount} duplicatas removidas`);
+      return deletedCount;
+      
+    } catch (error) {
+      console.error('❌ Erro na limpeza de duplicatas:', error);
+      return 0;
     }
   }
 }
