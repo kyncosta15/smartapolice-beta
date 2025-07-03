@@ -39,6 +39,10 @@ export interface ParsedPolicyData {
   documento?: string;
   documento_tipo?: 'CPF' | 'CNPJ';
   
+  // Campos específicos de veículo
+  vehicleModel?: string;
+  uf?: string;
+  
   vehicleDetails?: {
     brand?: string;
     model?: string;

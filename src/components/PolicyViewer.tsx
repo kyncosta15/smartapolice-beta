@@ -18,6 +18,7 @@ interface PolicyViewerProps {
 export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyDelete }: PolicyViewerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [filterUF, setFilterUF] = useState('all');
   const [locationFilters, setLocationFilters] = useState({ states: [], cities: [] });
   const [showFilters, setShowFilters] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState(null);
@@ -165,11 +166,13 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
     
     const matchesType = filterType === 'all' || policy.type === filterType;
     
+    const matchesUF = filterUF === 'all' || policy.uf === filterUF;
+    
     const matchesLocation = locationFilters.states.length === 0 && locationFilters.cities.length === 0 ||
                            locationFilters.states.some(state => policy.location?.state === state) ||
                            locationFilters.cities.some(city => policy.location?.city === city);
     
-    return matchesSearch && matchesType && matchesLocation;
+    return matchesSearch && matchesType && matchesUF && matchesLocation;
   });
 
   const getStatusBadge = (status: string) => {
@@ -238,6 +241,41 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
                   <SelectItem value="empresarial">Empresarial</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={filterUF} onValueChange={setFilterUF}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="UF" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="AC">AC</SelectItem>
+                  <SelectItem value="AL">AL</SelectItem>
+                  <SelectItem value="AP">AP</SelectItem>
+                  <SelectItem value="AM">AM</SelectItem>
+                  <SelectItem value="BA">BA</SelectItem>
+                  <SelectItem value="CE">CE</SelectItem>
+                  <SelectItem value="DF">DF</SelectItem>
+                  <SelectItem value="ES">ES</SelectItem>
+                  <SelectItem value="GO">GO</SelectItem>
+                  <SelectItem value="MA">MA</SelectItem>
+                  <SelectItem value="MT">MT</SelectItem>
+                  <SelectItem value="MS">MS</SelectItem>
+                  <SelectItem value="MG">MG</SelectItem>
+                  <SelectItem value="PA">PA</SelectItem>
+                  <SelectItem value="PB">PB</SelectItem>
+                  <SelectItem value="PR">PR</SelectItem>
+                  <SelectItem value="PE">PE</SelectItem>
+                  <SelectItem value="PI">PI</SelectItem>
+                  <SelectItem value="RJ">RJ</SelectItem>
+                  <SelectItem value="RN">RN</SelectItem>
+                  <SelectItem value="RS">RS</SelectItem>
+                  <SelectItem value="RO">RO</SelectItem>
+                  <SelectItem value="RR">RR</SelectItem>
+                  <SelectItem value="SC">SC</SelectItem>
+                  <SelectItem value="SP">SP</SelectItem>
+                  <SelectItem value="SE">SE</SelectItem>
+                  <SelectItem value="TO">TO</SelectItem>
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 size="sm"
@@ -288,6 +326,22 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
                   </p>
                 </div>
               </div>
+
+              {/* Modelo do carro para seguros Auto */}
+              {policy.type === 'auto' && policy.vehicleModel && (
+                <div className="text-sm">
+                  <p className="text-gray-500">Modelo do Veículo</p>
+                  <p className="font-medium text-gray-900">{policy.vehicleModel}</p>
+                </div>
+              )}
+
+              {/* Estado (UF) */}
+              {policy.uf && (
+                <div className="text-sm">
+                  <p className="text-gray-500">Estado</p>
+                  <p className="font-medium text-gray-900">{policy.uf}</p>
+                </div>
+              )}
               
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>

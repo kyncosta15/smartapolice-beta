@@ -228,6 +228,10 @@ export class PolicyPersistenceService {
           documento_tipo: cleanedData.documento_tipo,
           deductible: Number(policy.franquia) || undefined,
           
+          // Campos específicos de veículo (para seguros Auto)
+          vehicleModel: policy.modelo_veiculo,
+          uf: policy.uf,
+          
           // Campos de compatibilidade legacy
           entity: policy.corretora || 'Não informado',
           category: policy.tipo_seguro === 'auto' ? 'Veicular' : 
