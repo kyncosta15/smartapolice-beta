@@ -96,39 +96,44 @@ export function useAdminDashboardData() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAdminMetrics = async () => {
-    if (!user?.id || user.role !== 'administrador') return;
+    if (!user?.id) {
+      console.log('❌ Usuário não autenticado, abortando fetch');
+      return;
+    }
+    
+    console.log('🚀 Iniciando fetchAdminMetrics para usuário:', user.email, 'role:', user.role);
     
     setIsLoading(true);
     setError(null);
     
     try {
-      // 1. Métricas básicas
+      console.log('🔍 Executando consultas paralelas...');
+      
+      // 1. Métricas básicas - com logs individuais
+      const policiesResult = await supabase.from('policies').select('*', { count: 'exact', head: true });
+      console.log('📊 Resultado consulta policies:', policiesResult);
+      
+      const usersResult = await supabase.from('users').select('*', { count: 'exact', head: true });
+      console.log('👥 Resultado consulta users:', usersResult);
+      
+      const activeUsersResult = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('status', 'active');
+      console.log('✅ Resultado consulta active users:', activeUsersResult);
+      
+      // Dados de seguradoras
+      const insurersResult = await supabase.from('policies')
+        .select('seguradora')
+        .not('seguradora', 'is', null)
+        .neq('seguradora', '');
+      console.log('🏢 Resultado consulta seguradoras:', insurersResult);
+      
+      // Resto das consultas
       const [
-        { count: totalPolicies },
-        { count: totalUsers },
-        { count: activeUsers },
-        { data: insurersData },
         { data: ufData },
         { data: personTypeData },
         { data: financialData },
         { data: recentPoliciesData },
         { data: monthlyData },
       ] = await Promise.all([
-        // Total de apólices
-        supabase.from('policies').select('*', { count: 'exact', head: true }),
-        
-        // Total de usuários
-        supabase.from('users').select('*', { count: 'exact', head: true }),
-        
-        // Usuários ativos
-        supabase.from('users').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        
-        // Dados de seguradoras - melhorar query para não incluir valores nulos/vazios
-        supabase.from('policies')
-          .select('seguradora')
-          .not('seguradora', 'is', null)
-          .neq('seguradora', ''),
-        
         // Dados de UF
         supabase.from('policies').select('uf').not('uf', 'is', null),
         
@@ -147,6 +152,12 @@ export function useAdminDashboardData() {
         // Dados mensais para crescimento
         supabase.from('policies').select('created_at').order('created_at', { ascending: false }),
       ]);
+      
+      // Extrair valores das consultas individuais
+      const totalPolicies = policiesResult.count;
+      const totalUsers = usersResult.count;
+      const activeUsers = activeUsersResult.count;
+      const insurersData = insurersResult.data;
 
       // Processar seguradoras únicas
       console.log('🏢 Dados brutos das seguradoras:', insurersData);
@@ -276,7 +287,12 @@ export function useAdminDashboardData() {
 
   // Configurar realtime para atualizações automáticas
   useEffect(() => {
-    if (user?.role !== 'administrador') return;
+    if (!user?.id) {
+      console.log('❌ useEffect: Usuário não autenticado');
+      return;
+    }
+    
+    console.log('🚀 useEffect: Carregando dados iniciais para:', user.email);
 
     // Carregar dados iniciais
     fetchAdminMetrics();

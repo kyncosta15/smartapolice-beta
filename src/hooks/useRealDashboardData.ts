@@ -77,17 +77,24 @@ export function useRealDashboardData() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = async () => {
-    if (!user?.id) return;
+    console.log('🚀 fetchDashboardData iniciado. User ID:', user?.id);
+    
+    if (!user?.id) {
+      console.log('❌ Usuário não autenticado, abortando');
+      return;
+    }
     
     setIsLoading(true);
     setError(null);
     
     try {
+      console.log('🔍 Executando consulta de apólices...');
       // 1. Total de apólices
       const { count: totalPolicies, error: policiesError } = await supabase
         .from('policies')
         .select('*', { count: 'exact', head: true });
 
+      console.log('📊 Resultado total de apólices:', { totalPolicies, policiesError });
       if (policiesError) throw policiesError;
 
       // 2. Clientes únicos (total de usuários)
