@@ -42,7 +42,13 @@ export class PolicyPersistenceService {
     pdfPath?: string
   ): Promise<string | null> {
     try {
-      console.log(`💾 Salvando apólice no banco:`, policyData.name);
+      // Validar que userId não é null/undefined
+      if (!userId) {
+        console.error('❌ ERRO CRÍTICO: userId é obrigatório para salvar apólice');
+        throw new Error('userId é obrigatório para salvar apólice');
+      }
+
+      console.log(`💾 Salvando apólice no banco para usuário ${userId}:`, policyData.name);
 
       // Preparar dados da apólice
       const policyInsert: PolicyInsert = {
@@ -62,6 +68,12 @@ export class PolicyPersistenceService {
         arquivo_url: pdfPath,
         extraido_em: new Date().toISOString()
       };
+
+      console.log(`🔍 Dados da apólice preparados para usuário ${userId}:`, {
+        user_id: policyInsert.user_id,
+        segurado: policyInsert.segurado,
+        seguradora: policyInsert.seguradora
+      });
 
       // Inserir apólice
       const { data: policy, error: policyError } = await supabase
@@ -130,7 +142,7 @@ export class PolicyPersistenceService {
         .from('policies')
         .select(`
           *,
-          installments (
+          installments!fk_installments_policy_id (
             numero_parcela,
             valor,
             data_vencimento,
@@ -203,6 +215,11 @@ export class PolicyPersistenceService {
     policyData: ParsedPolicyData,
     userId: string
   ): Promise<boolean> {
+    // Validar que userId não é null/undefined
+    if (!userId) {
+      console.error('❌ ERRO CRÍTICO: userId é obrigatório para persistência completa');
+      return false;
+    }
     try {
       console.log(`🔄 Salvando arquivo e dados completos para: ${policyData.name}`);
 
