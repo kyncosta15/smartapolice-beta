@@ -54,6 +54,10 @@ export class N8NDataConverter {
       // Campos expandidos
       insuredName: n8nData.segurado,
       
+      // Campos de documento do N8N
+      documento: n8nData.documento,
+      documento_tipo: n8nData.documento_tipo,
+      
       // Análise de vencimentos
       overdueInstallments: installmentAnalysis.vencidas,
       upcomingInstallments: installmentAnalysis.aVencer,

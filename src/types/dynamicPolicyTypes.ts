@@ -13,6 +13,8 @@ export interface N8NDirectData {
   custo_mensal: number;
   vencimentos_futuros: string[];
   status: string;
+  documento?: string;
+  documento_tipo?: 'CPF' | 'CNPJ';
 }
 
 export interface InstallmentData {

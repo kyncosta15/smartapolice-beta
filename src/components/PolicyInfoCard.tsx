@@ -16,14 +16,27 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
     // Priorizar dados vindos do N8N
     if (policy.documento && policy.documento_tipo) {
       const documentType = policy.documento_tipo === 'CPF' ? 'PF' : 'PJ';
-      // O campo 'documento' contém o NOME COMPLETO, não o número do documento
-      const nomeCompleto = policy.documento;
+      
+      // Formatar o número do documento
+      let formatted = policy.documento;
+      if (policy.documento_tipo === 'CPF' && policy.documento.length >= 11) {
+        const cleanDoc = policy.documento.replace(/\D/g, '');
+        if (cleanDoc.length === 11) {
+          formatted = cleanDoc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        }
+      } else if (policy.documento_tipo === 'CNPJ' && policy.documento.length >= 14) {
+        const cleanDoc = policy.documento.replace(/\D/g, '');
+        if (cleanDoc.length === 14) {
+          formatted = cleanDoc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        }
+      }
       
       return {
         type: policy.documento_tipo,
         personType: documentType,
-        formatted: nomeCompleto, // Exibir nome completo
-        rawValue: policy.documento
+        formatted: formatted,
+        rawValue: policy.documento,
+        nomeCompleto: policy.insuredName // Nome do segurado
       };
     }
     
@@ -95,9 +108,18 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
           <p className="font-mono text-gray-900">{policy.policyNumber}</p>
         </div>
 
+        {/* Nome do Segurado */}
+        {policy.insuredName && (
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Nome do Segurado</p>
+            <p className="text-gray-900">{policy.insuredName}</p>
+          </div>
+        )}
+
+        {/* Documento (CPF/CNPJ) */}
         {documentInfo && (
           <div>
-            <p className="text-sm text-gray-500 mb-2">Tipo de Cliente</p>
+            <p className="text-sm text-gray-500 mb-2">Documento</p>
             <div className="flex flex-col gap-2">
               {getPersonTypeBadge()}
               <div className="text-xs text-gray-600">
