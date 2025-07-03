@@ -56,7 +56,7 @@ export class PolicyPersistenceService {
 
       console.log(`💾 Salvando apólice no banco para usuário ${userId}:`, policyData.name);
 
-      // Preparar dados da apólice
+      // Preparar dados da apólice com mapeamento completo
       const policyInsert: PolicyInsert = {
         user_id: userId,
         segurado: policyData.name,
@@ -72,7 +72,11 @@ export class PolicyPersistenceService {
         valor_parcela: policyData.monthlyAmount,
         status: policyData.status,
         arquivo_url: pdfPath,
-        extraido_em: new Date().toISOString()
+        extraido_em: new Date().toISOString(),
+        // Mapear dados adicionais da IA
+        documento: policyData.documento || policyData.insuredName,
+        documento_tipo: policyData.documento_tipo || (policyData.documento?.length === 11 ? 'CPF' : 'CNPJ'),
+        franquia: policyData.deductible || null
       };
 
       console.log(`🔍 Dados da apólice preparados para usuário ${userId}:`, {
