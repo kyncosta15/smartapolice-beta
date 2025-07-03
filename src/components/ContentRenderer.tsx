@@ -79,13 +79,15 @@ export function ContentRenderer({
     }));
   };
 
-  // Para administradores, mostrar dashboard administrativo na seção de relatórios
-  if (user?.role === 'administrador' && activeSection === 'reports') {
+  // Para administradores, sempre mostrar dashboard administrativo na home e relatórios
+  if (user?.role === 'administrador' && (activeSection === 'home' || activeSection === 'reports')) {
     return (
-      <AdminDashboardNew 
-        policies={extractedPolicies}
-        allUsers={allUsers}
-      />
+      <div className="p-6">
+        <AdminDashboardNew 
+          policies={extractedPolicies}
+          allUsers={allUsers}
+        />
+      </div>
     );
   }
 
@@ -95,7 +97,7 @@ export function ContentRenderer({
       <div className="p-6">
         <DynamicDashboard 
           policies={extractedPolicies}
-          viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
+          viewMode="client"
         />
       </div>
     );
