@@ -15,6 +15,9 @@ interface N8NDirectResponse {
   // Policy number fields from N8N
   numero_apolice?: string;
   apolice?: string;
+  // Campos de documento
+  documento?: string;
+  documento_tipo?: 'CPF' | 'CNPJ';
 }
 
 interface N8NWebhookResponse {
@@ -151,6 +154,9 @@ export class N8NWebhookService {
       segurado: n8nData.segurado ? {
         nome: n8nData.segurado
       } : undefined,
+      // Campos de documento do N8N
+      documento: n8nData.documento,
+      documento_tipo: n8nData.documento_tipo,
       // Adicionar as parcelas como propriedade adicional
       parcelas_detalhadas: parcelas
     };

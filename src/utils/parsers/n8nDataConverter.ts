@@ -12,10 +12,17 @@ export class N8NDataConverter {
     const type = PolicyTypeNormalizer.normalizeType(n8nData.tipo);
     const status = PolicyTypeNormalizer.determineStatus(n8nData.fim);
     
-    // Criar nome mais descritivo
+    // Criar nome mais descritivo usando o primeiro nome do segurado
     const policyName = n8nData.segurado ? 
       `Apólice ${n8nData.segurado.split(' ')[0]}` : 
       `Apólice ${n8nData.seguradora}`;
+    
+    console.log('📋 Mapeando dados N8N:', {
+      segurado: n8nData.segurado,
+      documento: n8nData.documento, 
+      documento_tipo: n8nData.documento_tipo,
+      policyName
+    });
     
     // Analisar vencimentos para obter estatísticas
     const installmentAnalysis = InstallmentAnalyzer.analyzeInstallments(n8nData.vencimentos_futuros);

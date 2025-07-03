@@ -59,7 +59,7 @@ export class PolicyPersistenceService {
       // Preparar dados da apólice com mapeamento completo
       const policyInsert: PolicyInsert = {
         user_id: userId,
-        segurado: policyData.name,
+        segurado: policyData.insuredName || policyData.name,
         seguradora: policyData.insurer,
         tipo_seguro: policyData.type,
         numero_apolice: policyData.policyNumber,
@@ -73,9 +73,9 @@ export class PolicyPersistenceService {
         status: policyData.status,
         arquivo_url: pdfPath,
         extraido_em: new Date().toISOString(),
-        // Mapear dados adicionais da IA
-        documento: policyData.documento || policyData.insuredName,
-        documento_tipo: policyData.documento_tipo || (policyData.documento?.length === 11 ? 'CPF' : 'CNPJ'),
+        // Documento e tipo de documento separados
+        documento: policyData.documento, // Número do documento
+        documento_tipo: policyData.documento_tipo, // Tipo do documento
         franquia: policyData.deductible || null,
         corretora: policyData.entity || policyData.broker || 'Não informado'
       };
@@ -83,7 +83,9 @@ export class PolicyPersistenceService {
       console.log(`🔍 Dados da apólice preparados para usuário ${userId}:`, {
         user_id: policyInsert.user_id,
         segurado: policyInsert.segurado,
-        seguradora: policyInsert.seguradora
+        seguradora: policyInsert.seguradora,
+        documento: policyInsert.documento,
+        documento_tipo: policyInsert.documento_tipo
       });
 
       // Inserir apólice
