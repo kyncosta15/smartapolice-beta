@@ -76,7 +76,8 @@ export class PolicyPersistenceService {
         // Mapear dados adicionais da IA
         documento: policyData.documento || policyData.insuredName,
         documento_tipo: policyData.documento_tipo || (policyData.documento?.length === 11 ? 'CPF' : 'CNPJ'),
-        franquia: policyData.deductible || null
+        franquia: policyData.deductible || null,
+        corretora: policyData.entity || policyData.broker || 'Não informado'
       };
 
       console.log(`🔍 Dados da apólice preparados para usuário ${userId}:`, {
@@ -211,7 +212,22 @@ export class PolicyPersistenceService {
             valor: Number(inst.valor),
             data: inst.data_vencimento,
             status: inst.status
-          })) || []
+          })) || [],
+          
+          // Mapear campos adicionais extraídos pela IA
+          insuredName: policy.segurado,
+          documento: policy.documento,
+          documento_tipo: policy.documento_tipo as 'CPF' | 'CNPJ',
+          deductible: Number(policy.franquia) || undefined,
+          
+          // Campos de compatibilidade legacy
+          entity: policy.corretora || 'Não informado',
+          category: policy.tipo_seguro === 'auto' ? 'Veicular' : 
+                   policy.tipo_seguro === 'vida' ? 'Pessoal' : 
+                   policy.tipo_seguro === 'saude' ? 'Saúde' : 'Geral',
+          coverage: ['Cobertura Básica', 'Responsabilidade Civil'],
+          totalCoverage: Number(policy.valor_premio) || 0,
+          limits: 'R$ 100.000 por sinistro'
         };
       });
 
