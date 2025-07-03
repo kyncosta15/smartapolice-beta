@@ -10,7 +10,13 @@ export class PolicyPersistenceService {
   // Salvar arquivo PDF no storage
   static async uploadPDFToStorage(file: File, userId: string): Promise<string | null> {
     try {
-      const fileName = `${userId}/${Date.now()}_${file.name}`;
+      // Sanitizar nome do arquivo - remover espaços e caracteres especiais
+      const sanitizedFileName = file.name
+        .replace(/\s+/g, '_') // Substituir espaços por underscores
+        .replace(/[^a-zA-Z0-9._-]/g, '') // Remover caracteres especiais
+        .toLowerCase(); // Converter para minúsculas
+      
+      const fileName = `${userId}/${Date.now()}_${sanitizedFileName}`;
       
       console.log(`📤 Enviando PDF para storage: ${fileName}`);
       
