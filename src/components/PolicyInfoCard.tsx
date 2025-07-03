@@ -16,14 +16,13 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
     // Priorizar dados vindos do N8N
     if (policy.documento && policy.documento_tipo) {
       const documentType = policy.documento_tipo === 'CPF' ? 'PF' : 'PJ';
-      const formatted = policy.documento_tipo === 'CPF' 
-        ? policy.documento.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-        : policy.documento.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      // O campo 'documento' contém o NOME COMPLETO, não o número do documento
+      const nomeCompleto = policy.documento;
       
       return {
         type: policy.documento_tipo,
         personType: documentType,
-        formatted: formatted,
+        formatted: nomeCompleto, // Exibir nome completo
         rawValue: policy.documento
       };
     }

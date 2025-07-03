@@ -69,24 +69,14 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
       const documentType = policy.documento_tipo;
       const personType = policy.documento_tipo === 'CPF' ? 'PF' : 'PJ';
       
-      // Formatação correta do documento
-      let formatted = policy.documento;
-      if (policy.documento_tipo === 'CPF' && policy.documento.length >= 11) {
-        const cleanDoc = policy.documento.replace(/\D/g, '');
-        if (cleanDoc.length === 11) {
-          formatted = cleanDoc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-        }
-      } else if (policy.documento_tipo === 'CNPJ' && policy.documento.length >= 14) {
-        const cleanDoc = policy.documento.replace(/\D/g, '');
-        if (cleanDoc.length === 14) {
-          formatted = cleanDoc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-        }
-      }
+      // O campo 'documento' contém o NOME COMPLETO, não o número do documento
+      // Não tentar formatar como CPF/CNPJ
+      const nomeCompleto = policy.documento;
       
       return {
         type: documentType,
         personType: personType,
-        formatted: formatted,
+        formatted: nomeCompleto, // Exibir o nome completo sem formatação
         rawValue: policy.documento
       };
     }
@@ -139,26 +129,18 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                 <p className="text-lg font-semibold">{policy.name}</p>
               </div>
 
-              {/* Nome completo logo abaixo do nome da apólice */}
-              <div>
-                <label className="text-sm font-medium text-gray-500">Nome completo</label>
-                <p className="flex items-center">
-                  <User className="h-4 w-4 mr-2 text-blue-600" />
-                  {policy.insuredName || policy.segurado || 'Não informado'}
-                </p>
-              </div>
-
-              {/* CPF ou CNPJ logo abaixo do nome completo - CORRIGIDO */}
+              {/* Nome completo da pessoa segurada */}
               {documentInfo && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">
-                    {documentInfo.type}
+                    Nome Completo do Segurado
                   </label>
-                  <p className="font-mono text-sm bg-gray-50 p-2 rounded border">
+                  <p className="flex items-center bg-gray-50 p-2 rounded border">
+                    <User className="h-4 w-4 mr-2 text-blue-600" />
                     {documentInfo.formatted}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Tipo: {documentInfo.personType === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                    Tipo: {documentInfo.personType === 'PF' ? 'Pessoa Física (CPF)' : 'Pessoa Jurídica (CNPJ)'}
                   </p>
                 </div>
               )}
