@@ -23,10 +23,71 @@ export function usePersistedUsers() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Carregar usuários quando usuário admin faz login
+  // Carregar usuários quando usuário admin faz login e configurar sincronização em tempo real
   useEffect(() => {
     if (user?.role === 'administrador') {
       loadUsers();
+      
+      // Configurar sincronização em tempo real para mudanças na tabela users
+      console.log('🔄 Configurando sincronização em tempo real para usuários...');
+      
+      const channel = supabase
+        .channel('users-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Escutar INSERT, UPDATE, DELETE
+            schema: 'public',
+            table: 'users'
+          },
+          (payload) => {
+            console.log('📡 Mudança detectada na tabela users:', payload);
+            
+            switch (payload.eventType) {
+              case 'INSERT':
+                // Adicionar novo usuário
+                if (payload.new) {
+                  setUsers(prev => {
+                    // Verificar se o usuário já existe para evitar duplicatas
+                    const exists = prev.some(u => u.id === payload.new.id);
+                    if (!exists) {
+                      console.log('➕ Adicionando novo usuário:', payload.new);
+                      return [payload.new as User, ...prev];
+                    }
+                    return prev;
+                  });
+                }
+                break;
+                
+              case 'UPDATE':
+                // Atualizar usuário existente
+                if (payload.new) {
+                  setUsers(prev => 
+                    prev.map(u => 
+                      u.id === payload.new.id ? payload.new as User : u
+                    )
+                  );
+                  console.log('✏️ Usuário atualizado:', payload.new);
+                }
+                break;
+                
+              case 'DELETE':
+                // Remover usuário deletado
+                if (payload.old) {
+                  setUsers(prev => prev.filter(u => u.id !== payload.old.id));
+                  console.log('🗑️ Usuário removido:', payload.old);
+                }
+                break;
+            }
+          }
+        )
+        .subscribe();
+
+      // Cleanup da subscription
+      return () => {
+        console.log('🔌 Desconectando sincronização em tempo real para usuários');
+        supabase.removeChannel(channel);
+      };
     } else {
       // Para não-admins, mostrar apenas dados básicos mockados
       setUsers([
@@ -127,7 +188,7 @@ export function usePersistedUsers() {
     }
   };
 
-  // Deletar usuário (soft delete - mudar status)
+  // Deletar usuário permanentemente do banco de dados
   const deleteUser = async (userId: string) => {
     if (!user?.id || user.role !== 'administrador') {
       toast({
@@ -138,10 +199,21 @@ export function usePersistedUsers() {
       return false;
     }
 
+    // Confirmar antes de deletar permanentemente
+    const confirmed = window.confirm(
+      'Tem certeza que deseja deletar este usuário permanentemente? Esta ação não pode ser desfeita.'
+    );
+    
+    if (!confirmed) {
+      return false;
+    }
+
     try {
+      console.log(`🗑️ Deletando usuário ${userId} do banco de dados...`);
+      
       const { error: deleteError } = await supabase
         .from('users')
-        .update({ status: 'inactive' })
+        .delete()
         .eq('id', userId);
 
       if (deleteError) {
@@ -152,16 +224,17 @@ export function usePersistedUsers() {
       setUsers(prev => prev.filter(u => u.id !== userId));
 
       toast({
-        title: "✅ Usuário Removido",
-        description: "O usuário foi desativado com sucesso",
+        title: "✅ Usuário Deletado",
+        description: "O usuário foi removido permanentemente do banco de dados",
       });
 
+      console.log(`✅ Usuário ${userId} deletado com sucesso`);
       return true;
     } catch (err) {
       console.error('❌ Erro ao deletar usuário:', err);
       toast({
-        title: "❌ Erro ao Remover",
-        description: "Não foi possível remover o usuário",
+        title: "❌ Erro ao Deletar",
+        description: "Não foi possível deletar o usuário do banco de dados",
         variant: "destructive",
       });
       return false;
