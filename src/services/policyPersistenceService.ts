@@ -165,27 +165,30 @@ export class PolicyPersistenceService {
       console.log(`✅ ${policies.length} apólices carregadas do banco`);
 
       // Converter dados do banco para formato ParsedPolicyData
-      const parsedPolicies: ParsedPolicyData[] = policies.map(policy => ({
-        id: policy.id,
-        name: policy.segurado || 'Apólice',
-        type: policy.tipo_seguro || 'auto',
-        insurer: policy.seguradora || 'Seguradora',
-        premium: Number(policy.valor_premio) || 0,
-        monthlyAmount: Number(policy.custo_mensal) || 0,
-        startDate: policy.inicio_vigencia || new Date().toISOString().split('T')[0],
-        endDate: policy.fim_vigencia || new Date().toISOString().split('T')[0],
-        policyNumber: policy.numero_apolice || 'N/A',
-        paymentFrequency: policy.forma_pagamento || 'mensal',
-        status: policy.status || 'active',
-        pdfPath: policy.arquivo_url,
-        extractedAt: policy.extraido_em || policy.created_at || new Date().toISOString(),
-        installments: (policy.installments as any[])?.map(inst => ({
-          numero: inst.numero_parcela,
-          valor: Number(inst.valor),
-          data: inst.data_vencimento,
-          status: inst.status
-        })) || []
-      }));
+      const parsedPolicies: ParsedPolicyData[] = policies.map(policy => {
+        console.log(`🔍 Carregando apólice do banco - arquivo_url: ${policy.arquivo_url}`);
+        return {
+          id: policy.id,
+          name: policy.segurado || 'Apólice',
+          type: policy.tipo_seguro || 'auto',
+          insurer: policy.seguradora || 'Seguradora',
+          premium: Number(policy.valor_premio) || 0,
+          monthlyAmount: Number(policy.custo_mensal) || 0,
+          startDate: policy.inicio_vigencia || new Date().toISOString().split('T')[0],
+          endDate: policy.fim_vigencia || new Date().toISOString().split('T')[0],
+          policyNumber: policy.numero_apolice || 'N/A',
+          paymentFrequency: policy.forma_pagamento || 'mensal',
+          status: policy.status || 'active',
+          pdfPath: policy.arquivo_url,
+          extractedAt: policy.extraido_em || policy.created_at || new Date().toISOString(),
+          installments: (policy.installments as any[])?.map(inst => ({
+            numero: inst.numero_parcela,
+            valor: Number(inst.valor),
+            data: inst.data_vencimento,
+            status: inst.status
+          })) || []
+        };
+      });
 
       return parsedPolicies;
 
@@ -224,13 +227,21 @@ export class PolicyPersistenceService {
       console.log(`🔄 Salvando arquivo e dados completos para: ${policyData.name}`);
 
       // 1. Fazer upload do PDF
+      console.log(`📤 Iniciando upload do PDF: ${file.name} (${file.size} bytes)`);
       const pdfPath = await this.uploadPDFToStorage(file, userId);
       
+      if (!pdfPath) {
+        console.error(`❌ ERRO: Falha no upload do PDF para ${file.name}`);
+      } else {
+        console.log(`✅ PDF salvo no caminho: ${pdfPath}`);
+      }
+      
       // 2. Salvar dados no banco (com ou sem PDF path)
+      console.log(`💾 Salvando dados da apólice no banco com pdfPath: ${pdfPath}`);
       const policyId = await this.savePolicyToDatabase(policyData, userId, pdfPath || undefined);
 
       if (policyId) {
-        console.log(`✅ Persistência completa realizada para apólice: ${policyId}`);
+        console.log(`✅ Persistência completa realizada para apólice: ${policyId} com PDF: ${pdfPath}`);
         return true;
       } else {
         console.error('❌ Falha ao salvar dados da apólice');

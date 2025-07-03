@@ -177,7 +177,12 @@ export function usePersistedPolicies() {
   const getPDFDownloadUrl = async (policyId: string): Promise<string | null> => {
     const policy = policies.find(p => p.id === policyId);
     
+    console.log(`🔍 Tentativa de download - Policy ID: ${policyId}`);
+    console.log(`🔍 Policy encontrada:`, policy);
+    console.log(`🔍 PDF Path da policy: ${policy?.pdfPath}`);
+    
     if (!policy?.pdfPath) {
+      console.log(`❌ Policy sem pdfPath: ${policy?.name}`);
       toast({
         title: "❌ Arquivo não encontrado",
         description: "PDF não está disponível para download",
@@ -187,9 +192,11 @@ export function usePersistedPolicies() {
     }
 
     try {
+      console.log(`📥 Solicitando URL de download para: ${policy.pdfPath}`);
       const downloadUrl = await PolicyPersistenceService.getPDFDownloadUrl(policy.pdfPath);
       
       if (!downloadUrl) {
+        console.log(`❌ URL de download não gerada para: ${policy.pdfPath}`);
         toast({
           title: "❌ Erro no Download",
           description: "Não foi possível gerar o link de download",
@@ -198,6 +205,7 @@ export function usePersistedPolicies() {
         return null;
       }
 
+      console.log(`✅ URL de download gerada: ${downloadUrl}`);
       return downloadUrl;
     } catch (error) {
       console.error('❌ Erro ao obter URL de download:', error);
