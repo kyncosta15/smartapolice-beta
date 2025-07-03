@@ -47,11 +47,13 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       return;
     }
 
+    console.log(`🚀 EnhancedPDFUpload.onDrop CHAMADO!`);
     console.log(`📤 Iniciando processamento em lote de ${acceptedFiles.length} arquivo(s)`);
     console.log(`👤 User ID para processamento:`, user.id);
     setIsProcessingBatch(true);
 
     try {
+      console.log(`🚀 Chamando fileProcessor.processMultipleFiles...`);
       // Processar arquivos em lote (método otimizado)
       const allResults = await fileProcessor.processMultipleFiles(acceptedFiles);
       

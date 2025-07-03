@@ -24,7 +24,9 @@ export class BatchFileProcessor {
   }
 
   async processMultipleFiles(files: File[], userId: string | null): Promise<ParsedPolicyData[]> {
+    console.log(`🚀 BatchFileProcessor.processMultipleFiles CHAMADO!`);
     console.log(`📤 BatchFileProcessor: Iniciando processamento de ${files.length} arquivos com userId: ${userId}`);
+    console.log(`📋 Arquivos para processar:`, files.map(f => f.name));
     
     // Initialize status for all files
     files.forEach(file => {
