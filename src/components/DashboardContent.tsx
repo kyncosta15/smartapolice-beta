@@ -74,8 +74,8 @@ export function DashboardContent() {
     duingNext30Days: duingNext30Days
   };
 
-  const handlePolicyExtracted = (policy: any) => {
-    console.log('Nova apólice extraída com dados do N8N:', policy);
+  const handlePolicyExtracted = async (policy: any) => {
+    console.log('Nova apólice extraída:', policy);
     
     const newPolicy: ParsedPolicyData = {
       ...policy,
@@ -101,20 +101,16 @@ export function DashboardContent() {
       insuredName: policy.segurado || policy.insuredName
     };
 
-    console.log('Política processada com dados N8N:', {
-      documento: newPolicy.documento,
-      documento_tipo: newPolicy.documento_tipo,
-      insuredName: newPolicy.insuredName
-    });
-    
+    console.log('✅ Adicionando apólice ao dashboard local primeiro');
     setExtractedPolicies(prev => [...prev, newPolicy]);
     
-    // Adicionar também à lista de persistidas
-    addPersistedPolicy(newPolicy);
+    // IMPORTANTE: A persistência já é feita automaticamente nos processadores
+    // Não precisamos fazer aqui pois os BatchFileProcessor e SingleFileProcessor
+    // já chamam PolicyPersistenceService.savePolicyComplete()
     
     toast({
       title: "Apólice Adicionada",
-      description: `${policy.name || 'Nova apólice'} foi adicionada ao sistema`,
+      description: `${policy.name || 'Nova apólice'} foi processada e salva`,
     });
   };
 
