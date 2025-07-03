@@ -9,6 +9,7 @@ import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
+import { usePersistedUsers } from '@/hooks/usePersistedUsers';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { 
   createExtendedInstallments,
@@ -23,26 +24,6 @@ export function DashboardContent() {
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [extractedPolicies, setExtractedPolicies] = useState<ParsedPolicyData[]>([]);
-  const [allUsers, setAllUsers] = useState([
-    {
-      id: '1',
-      name: 'João Silva',
-      email: 'admin@empresa.com',
-      role: 'administrador',
-      company: 'Empresa ABC',
-      phone: '(11) 99999-9999',
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Maria Santos',
-      email: 'cliente@exemplo.com',
-      role: 'cliente',
-      company: 'Consultoria XYZ',
-      phone: '(11) 88888-8888',
-      status: 'active'
-    }
-  ]);
   const [activeSection, setActiveSection] = useState('home');
   const { toast } = useToast();
 
@@ -54,6 +35,15 @@ export function DashboardContent() {
     hasPersistedData 
   } = usePersistedPolicies();
 
+  // Hook para persistência de usuários baseado em role
+  const { 
+    users: persistedUsers, 
+    updateUser, 
+    deleteUser, 
+    addUser,
+    canManageUsers
+  } = usePersistedUsers();
+
   // Combinar apólices extraídas e persistidas, evitando duplicatas
   const allPolicies = [...extractedPolicies, ...persistedPolicies.filter(
     pp => !extractedPolicies.some(ep => ep.id === pp.id)
@@ -62,8 +52,8 @@ export function DashboardContent() {
   // Usar o hook de dashboard data com todas as apólices
   const { dashboardData } = useDashboardData(allPolicies);
 
-  // Calcular estatísticas de parcelas
-  const allInstallments = createExtendedInstallments(extractedPolicies);
+  // Calcular estatísticas de parcelas com TODAS as apólices (incluindo persistidas)
+  const allInstallments = createExtendedInstallments(allPolicies);
   const overdueInstallments = filterOverdueInstallments(allInstallments);
   const duingNext30Days = calculateDuingNext30Days(allInstallments);
 
@@ -169,34 +159,35 @@ export function DashboardContent() {
     }
   };
 
-  const handleUserUpdate = (updatedUser: any) => {
-    setAllUsers(prev => 
-      prev.map(user => 
-        user.id === updatedUser.id ? updatedUser : user
-      )
-    );
-    
-    toast({
-      title: "Usuário Atualizado",
-      description: "As informações foram salvas com sucesso",
-    });
+  const handleUserUpdate = async (updatedUser: any) => {
+    const success = await updateUser(updatedUser.id, updatedUser);
+    // O toast já é mostrado no hook usePersistedUsers
+    if (!success) {
+      // Toast de erro já foi mostrado no hook
+    }
   };
 
-  const handleUserDelete = (userId: string) => {
-    setAllUsers(prev => prev.filter(u => u.id !== userId));
+  const handleUserDelete = async (userId: string) => {
+    await deleteUser(userId);
+    // O toast já é mostrado no hook usePersistedUsers
   };
 
-  const handleClientRegister = (client: any) => {
-    setAllUsers(prev => [...prev, client]);
+  const handleClientRegister = async (client: any) => {
+    await addUser(client);
+    // O toast já é mostrado no hook usePersistedUsers
   };
 
   // Normalizar dados das apólices para garantir compatibilidade com todos os componentes
-  const normalizedPolicies = extractedPolicies.map(policy => ({
+  // IMPORTANTE: Usar allPolicies (que inclui persistidas) e não apenas extractedPolicies
+  const normalizedPolicies = allPolicies.map(policy => ({
     ...policy,
     // Garantir que installments seja sempre um número para evitar erros nos componentes filhos
     installments: typeof policy.installments === 'number' ? policy.installments : 
                  Array.isArray(policy.installments) ? policy.installments.length : 12
   }));
+
+  console.log(`🔍 DashboardContent: Total de apólices (incluindo persistidas): ${allPolicies.length}`);
+  console.log(`📊 Apólices persistidas: ${persistedPolicies.length}, Extraídas: ${extractedPolicies.length}`);
 
   return (
     <SidebarProvider>
@@ -219,7 +210,7 @@ export function DashboardContent() {
               filterType={filterType}
               allPolicies={normalizedPolicies}
               extractedPolicies={normalizedPolicies}
-              allUsers={allUsers}
+              allUsers={persistedUsers}
               onPolicySelect={handlePolicySelect}
               onPolicyUpdate={handlePolicyUpdate}
               onPolicyDelete={handleDeletePolicy}
