@@ -69,13 +69,9 @@ export function EnhancedPolicyViewer({
 
   const uniqueInsurers = [...new Set(policies.map(p => p.insurer))];
 
-  const handleDownload = (policy: ParsedPolicyData) => {
-    // Se temos callback de download e a apólice tem pdfPath (persistida), usar o callback
-    if (onPolicyDownload && policy.pdfPath) {
-      onPolicyDownload(policy.id, policy.name);
-    } 
-    // Senão, tentar download do arquivo local
-    else if (policy.file) {
+  const handleDownload = async (policy: ParsedPolicyData) => {
+    if (policy.file) {
+      // Para arquivos locais (recém extraídos)
       const url = URL.createObjectURL(policy.file);
       const link = document.createElement('a');
       link.href = url;
@@ -84,8 +80,110 @@ export function EnhancedPolicyViewer({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+    } else if (policy.pdfPath) {
+      // Para apólices persistidas - usar múltiplas estratégias para contornar bloqueio do Opera
+      console.log('🔄 Iniciando download para apólice persistida:', policy.pdfPath);
+      
+      try {
+        // Estratégia 1: Download direto via storage.download()
+        console.log('📥 Tentativa 1: Download direto via storage');
+        const { supabase } = await import('@/integrations/supabase/client');
+        
+        const { data: fileBlob, error: downloadError } = await supabase.storage
+          .from('pdfs')
+          .download(policy.pdfPath);
+          
+        if (downloadError) {
+          console.warn('⚠️ Download direto falhou:', downloadError);
+          throw downloadError;
+        }
+        
+        if (fileBlob) {
+          console.log('✅ Arquivo obtido via download direto');
+          const blobUrl = URL.createObjectURL(fileBlob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `${policy.name || 'apolice'}.pdf`;
+          link.style.display = 'none';
+          
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+          
+          console.log('✅ Download concluído com sucesso (método direto)');
+          return;
+        }
+      } catch (directError) {
+        console.warn('⚠️ Falha no download direto:', directError);
+      }
+      
+      try {
+        // Estratégia 2: Edge Function proxy
+        console.log('📥 Tentativa 2: Download via Edge Function proxy');
+        
+        const response = await fetch(`https://jhvbfvqhuemuvwgqpskz.supabase.co/functions/v1/download-pdf`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ pdfPath: policy.pdfPath })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Edge Function error: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        console.log('✅ Arquivo obtido via Edge Function proxy');
+        
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${policy.name || 'apolice'}.pdf`;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+        
+        console.log('✅ Download concluído via proxy');
+        return;
+        
+      } catch (proxyError) {
+        console.warn('⚠️ Falha no proxy:', proxyError);
+      }
+      
+      try {
+        // Estratégia 3: URL assinada como último recurso
+        console.log('📥 Tentativa 3: URL assinada');
+        const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
+        const downloadUrl = await PolicyPersistenceService.getPDFDownloadUrl(policy.pdfPath);
+        
+        if (downloadUrl) {
+          console.log('✅ Abrindo em nova aba');
+          window.open(downloadUrl, '_blank');
+          return;
+        }
+      } catch (urlError) {
+        console.error('❌ Falha ao gerar URL:', urlError);
+      }
+      
+      // Se todas as estratégias falharam
+      console.error('❌ Todas as estratégias de download falharam');
+      alert(`Download bloqueado pelo navegador Opera.
+
+Soluções recomendadas:
+1. Use Chrome, Firefox ou Edge para downloads
+2. Desative o bloqueador de anúncios do Opera temporariamente
+3. Adicione *.supabase.co às exceções do Opera
+
+O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegador.`);
+      
     } else {
       console.warn('Arquivo não disponível para download:', policy.name);
+      alert('Arquivo não disponível para download');
     }
   };
 
