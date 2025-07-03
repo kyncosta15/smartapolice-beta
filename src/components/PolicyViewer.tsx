@@ -35,37 +35,51 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } else if (policy.pdfPath) {
-      // For persisted policies, try to fetch the file as blob to bypass browser blocking
+      // For persisted policies, use direct blob download to bypass browser blocking
       try {
+        console.log('🔄 Iniciando download direto via blob para:', policy.pdfPath);
+        
         const { supabase } = await import('@/integrations/supabase/client');
         
-        const { data, error } = await supabase.storage
+        // Download file as blob directly from storage
+        const { data: fileBlob, error } = await supabase.storage
           .from('pdfs')
           .download(policy.pdfPath);
           
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro no download blob:', error);
+          throw error;
+        }
         
-        if (data) {
-          const url = URL.createObjectURL(data);
+        if (fileBlob) {
+          console.log('✅ Blob obtido com sucesso, iniciando download...');
+          
+          // Create blob URL and download
+          const blobUrl = URL.createObjectURL(fileBlob);
           const link = document.createElement('a');
-          link.href = url;
-          link.download = `${policy.name}.pdf`;
+          link.href = blobUrl;
+          link.download = `${policy.name || 'apolice'}.pdf`;
+          link.style.display = 'none';
+          
+          // Add to DOM, click, and remove
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          URL.revokeObjectURL(url);
+          
+          // Clean up blob URL
+          URL.revokeObjectURL(blobUrl);
+          
+          console.log('✅ Download concluído com sucesso');
+        } else {
+          throw new Error('Arquivo não encontrado');
         }
       } catch (error) {
-        console.error('Erro no download direto:', error);
-        // Fallback: open in new tab if direct download fails
-        const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
-        const downloadUrl = await PolicyPersistenceService.getPDFDownloadUrl(policy.pdfPath);
-        if (downloadUrl) {
-          window.open(downloadUrl, '_blank');
-        }
+        console.error('❌ Erro no download direto:', error);
+        alert('Erro ao baixar arquivo. Tente novamente ou use outro navegador.');
       }
     } else {
       console.warn('Arquivo não disponível para download:', policy.name);
+      alert('Arquivo não disponível para download');
     }
   };
 
@@ -250,7 +264,7 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
                     size="sm"
                     onClick={() => handleDownload(policy)}
                     className="hover:bg-purple-50 hover:text-purple-600 h-8 w-8 p-0"
-                    disabled={!policy.file}
+                    disabled={!policy.file && !policy.pdfPath}
                   >
                     <Download className="h-4 w-4" />
                   </Button>
