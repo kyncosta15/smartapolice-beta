@@ -77,7 +77,10 @@ export class PolicyPersistenceService {
         documento: policyData.documento, // Número do documento
         documento_tipo: policyData.documento_tipo, // Tipo do documento
         franquia: policyData.deductible || null,
-        corretora: policyData.entity || policyData.broker || 'Não informado'
+        corretora: policyData.entity || policyData.broker || 'Não informado',
+        // Campos de veículo e localização
+        modelo_veiculo: policyData.vehicleModel,
+        uf: policyData.uf
       };
 
       console.log(`🔍 Dados da apólice preparados para usuário ${userId}:`, {
@@ -195,6 +198,9 @@ export class PolicyPersistenceService {
           segurado: policy.segurado,
           documento: policy.documento,
           documento_tipo: policy.documento_tipo,
+          modelo_veiculo: policy.modelo_veiculo,
+          uf: policy.uf,
+          franquia: policy.franquia,
           arquivo_url: policy.arquivo_url
         });
 

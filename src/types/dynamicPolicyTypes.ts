@@ -15,6 +15,17 @@ export interface N8NDirectData {
   status: string;
   documento?: string;
   documento_tipo?: 'CPF' | 'CNPJ';
+  modelo_veiculo?: string;
+  uf?: string;
+  franquia?: number;
+  cidade?: string;
+  placa?: string;
+  ano_modelo?: number;
+  condutor?: string;
+  email?: string;
+  telefone?: string;
+  corretora?: string;
+  coberturas?: string[];
 }
 
 export interface InstallmentData {

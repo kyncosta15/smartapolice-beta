@@ -65,6 +65,11 @@ export class N8NDataConverter {
       documento: n8nData.documento,
       documento_tipo: n8nData.documento_tipo,
       
+      // Campos específicos de veículo e localização
+      vehicleModel: n8nData.modelo_veiculo,
+      uf: n8nData.uf,
+      deductible: n8nData.franquia,
+      
       // Análise de vencimentos
       overdueInstallments: installmentAnalysis.vencidas,
       upcomingInstallments: installmentAnalysis.aVencer,
