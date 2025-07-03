@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SmartApóliceLogo } from "@/components/SmartApoliceLogo"
 import {
@@ -22,8 +22,14 @@ interface AppSidebarProps {
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
   const { user } = useAuth();
 
+  const { toggleSidebar, isMobile } = useSidebar();
+
   const handleNavigation = (section: string) => {
     onSectionChange(section);
+    // Fechar sidebar no mobile após selecionar uma opção
+    if (isMobile) {
+      toggleSidebar();
+    }
   };
 
   const adminNavigation = [
