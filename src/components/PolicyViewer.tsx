@@ -35,47 +35,70 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } else if (policy.pdfPath) {
-      // For persisted policies, use direct blob download to bypass browser blocking
+      // For persisted policies, use Edge Function proxy to bypass browser blocking
       try {
-        console.log('🔄 Iniciando download direto via blob para:', policy.pdfPath);
+        console.log('🔄 Usando Edge Function proxy para download:', policy.pdfPath);
         
         const { supabase } = await import('@/integrations/supabase/client');
         
-        // Download file as blob directly from storage
-        const { data: fileBlob, error } = await supabase.storage
-          .from('pdfs')
-          .download(policy.pdfPath);
-          
+        // Chamar edge function que funciona como proxy
+        const { data, error } = await supabase.functions.invoke('download-pdf', {
+          body: { pdfPath: policy.pdfPath }
+        });
+        
         if (error) {
-          console.error('❌ Erro no download blob:', error);
+          console.error('❌ Erro na edge function:', error);
           throw error;
         }
         
-        if (fileBlob) {
-          console.log('✅ Blob obtido com sucesso, iniciando download...');
+        if (data) {
+          // Converter resposta para blob e fazer download
+          const blob = new Blob([data], { type: 'application/pdf' });
+          const blobUrl = URL.createObjectURL(blob);
           
-          // Create blob URL and download
-          const blobUrl = URL.createObjectURL(fileBlob);
           const link = document.createElement('a');
           link.href = blobUrl;
           link.download = `${policy.name || 'apolice'}.pdf`;
           link.style.display = 'none';
           
-          // Add to DOM, click, and remove
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           
-          // Clean up blob URL
           URL.revokeObjectURL(blobUrl);
-          
-          console.log('✅ Download concluído com sucesso');
-        } else {
-          throw new Error('Arquivo não encontrado');
+          console.log('✅ Download via proxy concluído');
         }
       } catch (error) {
-        console.error('❌ Erro no download direto:', error);
-        alert('Erro ao baixar arquivo. Tente novamente ou use outro navegador.');
+        console.error('❌ Erro no download via proxy:', error);
+        
+        // Fallback: tentar download direto como última opção
+        try {
+          console.log('🔄 Tentando fallback - download direto...');
+          const { supabase } = await import('@/integrations/supabase/client');
+          
+          const { data: fileBlob, error: downloadError } = await supabase.storage
+            .from('pdfs')
+            .download(policy.pdfPath);
+            
+          if (downloadError) throw downloadError;
+          
+          if (fileBlob) {
+            const blobUrl = URL.createObjectURL(fileBlob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `${policy.name || 'apolice'}.pdf`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
+            
+            console.log('✅ Download direto concluído como fallback');
+          }
+        } catch (fallbackError) {
+          console.error('❌ Todos os métodos de download falharam:', fallbackError);
+          alert('Erro ao baixar arquivo. O navegador está bloqueando downloads do Supabase. Tente usar Chrome ou Firefox.');
+        }
       }
     } else {
       console.warn('Arquivo não disponível para download:', policy.name);
