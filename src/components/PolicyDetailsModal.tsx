@@ -113,15 +113,15 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between pr-12">
+          <DialogTitle className="flex items-center justify-between pr-16">
             <span>Detalhes da Apólice</span>
             <Button 
               variant="destructive" 
               size="sm"
               onClick={handleDelete}
-              className="mr-4"
+              className="mr-6 px-2 py-1 text-xs"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-3 w-3 mr-1" />
               Excluir
             </Button>
           </DialogTitle>
