@@ -19,6 +19,7 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterUF, setFilterUF] = useState('all');
+  const [filterInsurer, setFilterInsurer] = useState('all');
   const [locationFilters, setLocationFilters] = useState({ states: [], cities: [] });
   const [showFilters, setShowFilters] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState(null);
@@ -159,6 +160,9 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
     setEditingPolicy(null);
   };
 
+  // Extrair seguradoras únicas para o filtro
+  const uniqueInsurers = [...new Set(policies.map(policy => policy.insurer))].sort();
+
   const filteredPolicies = policies.filter(policy => {
     const matchesSearch = policy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          policy.insurer.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -168,11 +172,13 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
     
     const matchesUF = filterUF === 'all' || policy.uf === filterUF;
     
+    const matchesInsurer = filterInsurer === 'all' || policy.insurer === filterInsurer;
+    
     const matchesLocation = locationFilters.states.length === 0 && locationFilters.cities.length === 0 ||
                            locationFilters.states.some(state => policy.location?.state === state) ||
                            locationFilters.cities.some(city => policy.location?.city === city);
     
-    return matchesSearch && matchesType && matchesUF && matchesLocation;
+    return matchesSearch && matchesType && matchesUF && matchesInsurer && matchesLocation;
   });
 
   const getStatusBadge = (status: string) => {
@@ -274,6 +280,19 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
                   <SelectItem value="SP">SP</SelectItem>
                   <SelectItem value="SE">SE</SelectItem>
                   <SelectItem value="TO">TO</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterInsurer} onValueChange={setFilterInsurer}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Seguradora" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas Seguradoras</SelectItem>
+                  {uniqueInsurers.map((insurer) => (
+                    <SelectItem key={insurer} value={insurer}>
+                      {insurer}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Button
