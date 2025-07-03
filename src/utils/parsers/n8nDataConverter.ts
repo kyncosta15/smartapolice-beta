@@ -8,8 +8,10 @@ import { InstallmentAnalyzer } from './installmentAnalyzer';
 export class N8NDataConverter {
   static convertN8NDirectData(n8nData: N8NDirectData, fileName: string, file?: File): ParsedPolicyData {
     console.log('📦 Processando dados diretos do N8N');
+    console.log('📋 Tipo original recebido:', n8nData.tipo);
     
     const type = PolicyTypeNormalizer.normalizeType(n8nData.tipo);
+    console.log('📋 Tipo normalizado:', type);
     const status = PolicyTypeNormalizer.determineStatus(n8nData.fim);
     
     // Criar nome mais descritivo usando o primeiro nome do segurado
@@ -76,8 +78,11 @@ export class N8NDataConverter {
       nextDueDate: installmentAnalysis.proximoVencimento,
       
       // Legacy fields for compatibility
-      entity: n8nData.seguradora,
-      category: type === 'auto' ? 'Veicular' : 'Geral',
+      entity: n8nData.corretora || n8nData.seguradora,
+      category: type === 'auto' ? 'Veicular' : 
+               type === 'vida' ? 'Pessoal' : 
+               type === 'saude' ? 'Saúde' : 
+               type === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
       coverage: ['Cobertura Básica'],
       totalCoverage: n8nData.premio
     };

@@ -242,7 +242,8 @@ export class PolicyPersistenceService {
           entity: policy.corretora || 'Não informado',
           category: policy.tipo_seguro === 'auto' ? 'Veicular' : 
                    policy.tipo_seguro === 'vida' ? 'Pessoal' : 
-                   policy.tipo_seguro === 'saude' ? 'Saúde' : 'Geral',
+                   policy.tipo_seguro === 'saude' ? 'Saúde' : 
+                   policy.tipo_seguro === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
           coverage: ['Cobertura Básica', 'Responsabilidade Civil'],
           totalCoverage: Number(policy.valor_premio) || 0,
           limits: 'R$ 100.000 por sinistro'

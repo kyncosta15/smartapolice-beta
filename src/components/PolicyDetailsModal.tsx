@@ -210,20 +210,15 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
                 <label className="text-sm font-medium text-gray-500">Empresa</label>
                 <p className="text-lg font-semibold">{policy.insurer}</p>
               </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-500">Categoria</label>
-                <p>{policy.category}</p>
-              </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-500">Cobertura</label>
                 <p>{policy.coverage}</p>
               </div>
 
-              {policy.entity && (
+              {policy.entity && policy.entity !== policy.insurer && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Entidade</label>
+                  <label className="text-sm font-medium text-gray-500">Corretora</label>
                   <p>{policy.entity}</p>
                 </div>
               )}
