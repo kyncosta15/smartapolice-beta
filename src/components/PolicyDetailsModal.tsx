@@ -221,6 +221,42 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
             </CardContent>
           </Card>
 
+          {/* Informações do Veículo e Localização - NOVO */}
+          {(policy.type === 'auto' || policy.vehicleModel || policy.uf) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  {policy.type === 'auto' ? 'Informações do Veículo' : 'Informações Adicionais'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {policy.vehicleModel && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Modelo do Veículo</label>
+                    <p className="text-lg font-semibold">{policy.vehicleModel}</p>
+                  </div>
+                )}
+                
+                {policy.uf && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Estado (UF)</label>
+                    <p className="text-lg font-semibold">{policy.uf}</p>
+                  </div>
+                )}
+
+                {policy.deductible && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Franquia</label>
+                    <p className="text-lg font-semibold">
+                      R$ {policy.deductible.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Informações Financeiras */}
           <Card>
             <CardHeader>
