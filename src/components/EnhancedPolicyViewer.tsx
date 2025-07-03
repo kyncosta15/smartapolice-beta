@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Eye, Edit, Trash2, Search, Filter, Download, TrendingUp, AlertTriangle } from 'lucide-react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { formatCurrency } from '@/utils/currencyFormatter';
+import { PolicyEditModal } from './PolicyEditModal';
 
 interface EnhancedPolicyViewerProps {
   policies: ParsedPolicyData[];
@@ -32,6 +33,8 @@ export function EnhancedPolicyViewer({
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterClaimRate, setFilterClaimRate] = useState('all');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [editingPolicy, setEditingPolicy] = useState<ParsedPolicyData | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const { filteredPolicies, optimizationData } = useMemo(() => {
     let filtered = policies.filter(policy => {
@@ -412,7 +415,10 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onPolicyEdit(policy)}
+                    onClick={() => {
+                      setEditingPolicy(policy);
+                      setIsEditModalOpen(true);
+                    }}
                     className="hover:bg-green-50 hover:text-green-600"
                   >
                     <Edit className="h-4 w-4" />
@@ -448,6 +454,21 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
           </CardContent>
         </Card>
       )}
+
+      {/* Modal de Edição */}
+      <PolicyEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingPolicy(null);
+        }}
+        policy={editingPolicy}
+        onSave={(updatedPolicy) => {
+          onPolicyEdit(updatedPolicy);
+          setIsEditModalOpen(false);
+          setEditingPolicy(null);
+        }}
+      />
     </div>
   );
 }

@@ -33,7 +33,13 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
     paymentForm: '',
     installments: '',
     deductible: '',
-    limits: ''
+    limits: '',
+    // Campos específicos do N8N
+    insuredName: '',
+    documento: '',
+    documento_tipo: '',
+    vehicleModel: '',
+    uf: ''
   });
 
   useEffect(() => {
@@ -54,7 +60,13 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
         paymentForm: policy.paymentForm || '',
         installments: policy.installments?.toString() || '',
         deductible: policy.deductible?.toString() || '',
-        limits: policy.limits || ''
+        limits: policy.limits || '',
+        // Campos específicos do N8N
+        insuredName: policy.insuredName || '',
+        documento: policy.documento || '',
+        documento_tipo: policy.documento_tipo || '',
+        vehicleModel: policy.vehicleModel || '',
+        uf: policy.uf || ''
       });
     }
   }, [policy]);
@@ -77,7 +89,13 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       paymentForm: formData.paymentForm,
       installments: parseInt(formData.installments) || 0,
       deductible: parseFloat(formData.deductible) || 0,
-      limits: formData.limits
+      limits: formData.limits,
+      // Campos específicos do N8N
+      insuredName: formData.insuredName,
+      documento: formData.documento,
+      documento_tipo: formData.documento_tipo,
+      vehicleModel: formData.vehicleModel,
+      uf: formData.uf
     };
 
     onSave(updatedPolicy);
@@ -120,6 +138,7 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
                   <SelectItem value="saude">Saúde</SelectItem>
                   <SelectItem value="empresarial">Empresarial</SelectItem>
                   <SelectItem value="patrimonial">Patrimonial</SelectItem>
+                  <SelectItem value="acidentes_pessoais">Acidentes Pessoais</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -211,12 +230,108 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
             </div>
 
             <div>
-              <Label htmlFor="entity">Entidade</Label>
+              <Label htmlFor="entity">Corretora</Label>
               <Input
                 id="entity"
                 value={formData.entity}
                 onChange={(e) => setFormData({...formData, entity: e.target.value})}
               />
+            </div>
+
+            {/* Campos específicos para N8N */}
+            <div>
+              <Label htmlFor="insuredName">Nome do Segurado</Label>
+              <Input
+                id="insuredName"
+                value={formData.insuredName}
+                onChange={(e) => setFormData({...formData, insuredName: e.target.value})}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="documento">Documento</Label>
+                <Input
+                  id="documento"
+                  value={formData.documento}
+                  onChange={(e) => setFormData({...formData, documento: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="documento_tipo">Tipo</Label>
+                <Select value={formData.documento_tipo} onValueChange={(value) => setFormData({...formData, documento_tipo: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CPF">CPF</SelectItem>
+                    <SelectItem value="CNPJ">CNPJ</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Campos específicos para Auto */}
+            {formData.type === 'auto' && (
+              <>
+                <div>
+                  <Label htmlFor="vehicleModel">Modelo do Veículo</Label>
+                  <Input
+                    id="vehicleModel"
+                    value={formData.vehicleModel}
+                    onChange={(e) => setFormData({...formData, vehicleModel: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="deductible">Franquia (R$)</Label>
+                  <Input
+                    id="deductible"
+                    type="number"
+                    step="0.01"
+                    value={formData.deductible}
+                    onChange={(e) => setFormData({...formData, deductible: e.target.value})}
+                  />
+                </div>
+              </>
+            )}
+
+            <div>
+              <Label htmlFor="uf">Estado (UF)</Label>
+              <Select value={formData.uf} onValueChange={(value) => setFormData({...formData, uf: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AC">AC</SelectItem>
+                  <SelectItem value="AL">AL</SelectItem>
+                  <SelectItem value="AP">AP</SelectItem>
+                  <SelectItem value="AM">AM</SelectItem>
+                  <SelectItem value="BA">BA</SelectItem>
+                  <SelectItem value="CE">CE</SelectItem>
+                  <SelectItem value="DF">DF</SelectItem>
+                  <SelectItem value="ES">ES</SelectItem>
+                  <SelectItem value="GO">GO</SelectItem>
+                  <SelectItem value="MA">MA</SelectItem>
+                  <SelectItem value="MT">MT</SelectItem>
+                  <SelectItem value="MS">MS</SelectItem>
+                  <SelectItem value="MG">MG</SelectItem>
+                  <SelectItem value="PA">PA</SelectItem>
+                  <SelectItem value="PB">PB</SelectItem>
+                  <SelectItem value="PR">PR</SelectItem>
+                  <SelectItem value="PE">PE</SelectItem>
+                  <SelectItem value="PI">PI</SelectItem>
+                  <SelectItem value="RJ">RJ</SelectItem>
+                  <SelectItem value="RN">RN</SelectItem>
+                  <SelectItem value="RS">RS</SelectItem>
+                  <SelectItem value="RO">RO</SelectItem>
+                  <SelectItem value="RR">RR</SelectItem>
+                  <SelectItem value="SC">SC</SelectItem>
+                  <SelectItem value="SP">SP</SelectItem>
+                  <SelectItem value="SE">SE</SelectItem>
+                  <SelectItem value="TO">TO</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
