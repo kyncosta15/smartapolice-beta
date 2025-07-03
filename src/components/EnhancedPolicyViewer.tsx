@@ -14,6 +14,7 @@ interface EnhancedPolicyViewerProps {
   onPolicySelect: (policy: ParsedPolicyData) => void;
   onPolicyEdit: (policy: ParsedPolicyData) => void;
   onPolicyDelete: (policyId: string) => void;
+  onPolicyDownload?: (policyId: string, policyName: string) => void;
   viewMode?: 'client' | 'admin';
 }
 
@@ -22,6 +23,7 @@ export function EnhancedPolicyViewer({
   onPolicySelect, 
   onPolicyEdit, 
   onPolicyDelete,
+  onPolicyDownload,
   viewMode = 'client'
 }: EnhancedPolicyViewerProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,7 +70,12 @@ export function EnhancedPolicyViewer({
   const uniqueInsurers = [...new Set(policies.map(p => p.insurer))];
 
   const handleDownload = (policy: ParsedPolicyData) => {
-    if (policy.file) {
+    // Se temos callback de download e a apólice tem pdfPath (persistida), usar o callback
+    if (onPolicyDownload && policy.pdfPath) {
+      onPolicyDownload(policy.id, policy.name);
+    } 
+    // Senão, tentar download do arquivo local
+    else if (policy.file) {
       const url = URL.createObjectURL(policy.file);
       const link = document.createElement('a');
       link.href = url;
@@ -316,7 +323,7 @@ export function EnhancedPolicyViewer({
                     size="sm"
                     onClick={() => handleDownload(policy)}
                     className="hover:bg-purple-50 hover:text-purple-600"
-                    disabled={!policy.file}
+                    disabled={!policy.file && !policy.pdfPath}
                   >
                     <Download className="h-4 w-4" />
                   </Button>

@@ -31,7 +31,9 @@ export function DashboardContent() {
   const { 
     policies: persistedPolicies, 
     addPolicy: addPersistedPolicy, 
-    downloadPDF,
+    deletePolicy: deletePersistedPolicy,
+    updatePolicy: updatePersistedPolicy,
+    downloadPDF: downloadPersistedPDF,
     hasPersistedData 
   } = usePersistedPolicies();
 
@@ -134,28 +136,46 @@ export function DashboardContent() {
     setIsDetailsModalOpen(true);
   };
 
-  const handlePolicyUpdate = (updatedPolicy: any) => {
-    setExtractedPolicies(prev => 
-      prev.map(policy => 
-        policy.id === updatedPolicy.id ? updatedPolicy : policy
-      )
-    );
+  const handlePolicyUpdate = async (updatedPolicy: any) => {
+    // Tentar atualizar no banco primeiro (se for persistida)
+    const isPersistedPolicy = persistedPolicies.some(p => p.id === updatedPolicy.id);
     
-    toast({
-      title: "Apólice Atualizada",
-      description: "As informações foram salvas com sucesso",
-    });
-  };
-
-  const handleDeletePolicy = (policyId: string) => {
-    const policyToDelete = extractedPolicies.find(p => p.id === policyId);
-    if (policyToDelete) {
-      setExtractedPolicies(prev => prev.filter(p => p.id !== policyId));
+    if (isPersistedPolicy) {
+      const success = await updatePersistedPolicy(updatedPolicy.id, updatedPolicy);
+      if (!success) return; // Erro já mostrado no hook
+    } else {
+      // Atualizar apenas no estado local (apólices extraídas)
+      setExtractedPolicies(prev => 
+        prev.map(policy => 
+          policy.id === updatedPolicy.id ? updatedPolicy : policy
+        )
+      );
       
       toast({
-        title: "Apólice Removida",
-        description: "A apólice foi removida com sucesso",
+        title: "Apólice Atualizada",
+        description: "As informações foram salvas com sucesso",
       });
+    }
+  };
+
+  const handleDeletePolicy = async (policyId: string) => {
+    // Tentar deletar do banco primeiro (se for persistida)
+    const isPersistedPolicy = persistedPolicies.some(p => p.id === policyId);
+    
+    if (isPersistedPolicy) {
+      await deletePersistedPolicy(policyId);
+      // Toast já mostrado no hook
+    } else {
+      // Deletar apenas do estado local (apólices extraídas)
+      const policyToDelete = extractedPolicies.find(p => p.id === policyId);
+      if (policyToDelete) {
+        setExtractedPolicies(prev => prev.filter(p => p.id !== policyId));
+        
+        toast({
+          title: "Apólice Removida",
+          description: "A apólice foi removida com sucesso",
+        });
+      }
     }
   };
 
@@ -214,6 +234,7 @@ export function DashboardContent() {
               onPolicySelect={handlePolicySelect}
               onPolicyUpdate={handlePolicyUpdate}
               onPolicyDelete={handleDeletePolicy}
+              onPolicyDownload={downloadPersistedPDF}
               onPolicyExtracted={handlePolicyExtracted}
               onUserUpdate={handleUserUpdate}
               onUserDelete={handleUserDelete}

@@ -24,6 +24,7 @@ interface ContentRendererProps {
   onPolicySelect: (policy: any) => void;
   onPolicyUpdate: (policy: any) => void;
   onPolicyDelete: (policyId: string) => void;
+  onPolicyDownload?: (policyId: string, policyName: string) => void;
   onPolicyExtracted: (policy: any) => void;
   onUserUpdate: (user: any) => void;
   onUserDelete: (userId: string) => void;
@@ -41,6 +42,7 @@ export function ContentRenderer({
   onPolicySelect,
   onPolicyUpdate,
   onPolicyDelete,
+  onPolicyDownload,
   onPolicyExtracted,
   onUserUpdate,
   onUserDelete,
@@ -107,6 +109,7 @@ export function ContentRenderer({
             onPolicySelect={onPolicySelect}
             onPolicyEdit={onPolicyUpdate}
             onPolicyDelete={onPolicyDelete}
+            onPolicyDownload={onPolicyDownload}
             viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
           />
         </div>

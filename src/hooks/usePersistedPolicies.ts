@@ -3,6 +3,7 @@ import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyPersistenceService } from '@/services/policyPersistenceService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export function usePersistedPolicies() {
   const [policies, setPolicies] = useState<ParsedPolicyData[]>([]);
@@ -66,6 +67,110 @@ export function usePersistedPolicies() {
   // Remover apólice da lista
   const removePolicy = (policyId: string) => {
     setPolicies(prev => prev.filter(p => p.id !== policyId));
+  };
+
+  // Deletar apólice do banco de dados
+  const deletePolicy = async (policyId: string): Promise<boolean> => {
+    if (!user?.id) {
+      toast({
+        title: "❌ Erro de Autenticação",
+        description: "Usuário não autenticado",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      console.log(`🗑️ Deletando apólice: ${policyId}`);
+      
+      const { error } = await supabase
+        .from('policies')
+        .delete()
+        .eq('id', policyId)
+        .eq('user_id', user.id); // Garantir que só delete as próprias
+
+      if (error) {
+        throw error;
+      }
+
+      // Remover do estado local
+      removePolicy(policyId);
+      
+      toast({
+        title: "✅ Apólice Deletada",
+        description: "A apólice foi removida com sucesso",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao deletar apólice:', error);
+      toast({
+        title: "❌ Erro ao Deletar",
+        description: "Não foi possível remover a apólice",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Atualizar apólice no banco de dados
+  const updatePolicy = async (policyId: string, updates: Partial<ParsedPolicyData>): Promise<boolean> => {
+    if (!user?.id) {
+      toast({
+        title: "❌ Erro de Autenticação",
+        description: "Usuário não autenticado",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      console.log(`✏️ Atualizando apólice: ${policyId}`);
+      
+      // Converter dados para formato do banco
+      const dbUpdates = {
+        segurado: updates.name,
+        seguradora: updates.insurer,
+        tipo_seguro: updates.type,
+        numero_apolice: updates.policyNumber,
+        valor_premio: updates.premium,
+        custo_mensal: updates.monthlyAmount,
+        inicio_vigencia: updates.startDate,
+        fim_vigencia: updates.endDate,
+        forma_pagamento: updates.paymentFrequency,
+        status: updates.status,
+      };
+
+      const { error } = await supabase
+        .from('policies')
+        .update(dbUpdates)
+        .eq('id', policyId)
+        .eq('user_id', user.id); // Garantir que só edite as próprias
+
+      if (error) {
+        throw error;
+      }
+
+      // Atualizar estado local
+      setPolicies(prev => 
+        prev.map(p => p.id === policyId ? { ...p, ...updates } : p)
+      );
+      
+      toast({
+        title: "✅ Apólice Atualizada",
+        description: "As alterações foram salvas com sucesso",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao atualizar apólice:', error);
+      toast({
+        title: "❌ Erro ao Atualizar",
+        description: "Não foi possível salvar as alterações",
+        variant: "destructive",
+      });
+      return false;
+    }
   };
 
   // Obter URL de download para um PDF
@@ -138,6 +243,8 @@ export function usePersistedPolicies() {
     error,
     addPolicy,
     removePolicy,
+    deletePolicy,
+    updatePolicy,
     downloadPDF,
     refreshPolicies,
     hasPersistedData: policies.length > 0
