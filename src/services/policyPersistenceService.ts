@@ -226,30 +226,34 @@ export class PolicyPersistenceService {
     try {
       console.log(`🔄 Salvando arquivo e dados completos para: ${policyData.name}`);
 
-      // 1. Fazer upload do PDF
+      // 1. Fazer upload do PDF PRIMEIRO
       console.log(`📤 Iniciando upload do PDF: ${file.name} (${file.size} bytes)`);
       const pdfPath = await this.uploadPDFToStorage(file, userId);
       
       if (!pdfPath) {
-        console.error(`❌ ERRO: Falha no upload do PDF para ${file.name}`);
-      } else {
-        console.log(`✅ PDF salvo no caminho: ${pdfPath}`);
-      }
+        console.error(`❌ ERRO CRÍTICO: Falha no upload do PDF para ${file.name} - Abortando persistência`);
+        return false; // Não prosseguir sem o PDF
+      } 
       
-      // 2. Salvar dados no banco (com ou sem PDF path)
-      console.log(`💾 Salvando dados da apólice no banco com pdfPath: ${pdfPath}`);
-      const policyId = await this.savePolicyToDatabase(policyData, userId, pdfPath || undefined);
+      console.log(`✅ PDF salvo com sucesso no caminho: ${pdfPath}`);
+      
+      // 2. Salvar dados no banco COM o PDF path
+      console.log(`💾 Salvando dados da apólice no banco com pdfPath confirmado: ${pdfPath}`);
+      const policyId = await this.savePolicyToDatabase(policyData, userId, pdfPath);
 
       if (policyId) {
-        console.log(`✅ Persistência completa realizada para apólice: ${policyId} com PDF: ${pdfPath}`);
+        console.log(`✅ Persistência completa realizada com SUCESSO:
+          - Policy ID: ${policyId} 
+          - PDF Path: ${pdfPath}
+          - File: ${file.name}`);
         return true;
       } else {
-        console.error('❌ Falha ao salvar dados da apólice');
+        console.error('❌ ERRO: Falha ao salvar dados da apólice no banco');
         return false;
       }
 
     } catch (error) {
-      console.error('❌ Erro na persistência completa:', error);
+      console.error('❌ Erro crítico na persistência completa:', error);
       return false;
     }
   }
