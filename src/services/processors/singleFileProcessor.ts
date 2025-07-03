@@ -72,8 +72,16 @@ export class SingleFileProcessor {
     });
 
     if (userId) {
-      console.log(`💾 Salvando persistência para arquivo individual: ${parsedPolicy.name}`);
-      await PolicyPersistenceService.savePolicyComplete(file, parsedPolicy, userId);
+      console.log(`💾 SingleFileProcessor: Iniciando persistência para ${parsedPolicy.name} com userId: ${userId}`);
+      try {
+        const persistenceResult = await PolicyPersistenceService.savePolicyComplete(file, parsedPolicy, userId);
+        console.log(`✅ SingleFileProcessor: Persistência concluída com sucesso: ${persistenceResult}`);
+      } catch (persistenceError) {
+        console.error(`❌ SingleFileProcessor: Erro na persistência:`, persistenceError);
+        throw persistenceError; // Re-throw para não mascarar o erro
+      }
+    } else {
+      console.error(`❌ SingleFileProcessor: UserId não fornecido - saltando persistência`);
     }
 
     // 5. Finalizar processamento

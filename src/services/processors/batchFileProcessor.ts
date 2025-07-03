@@ -82,15 +82,16 @@ export class BatchFileProcessor {
         // Salvar arquivo e dados no banco de dados
         const relatedFile = files.find(f => f.name === relatedFileName) || files[index] || files[0];
         if (relatedFile && userId) {
-          console.log(`💾 Salvando persistência para: ${parsedPolicy.name}`);
+          console.log(`💾 BatchFileProcessor: Iniciando persistência para ${parsedPolicy.name} com userId: ${userId}`);
           try {
             const persistenceResult = await PolicyPersistenceService.savePolicyComplete(relatedFile, parsedPolicy, userId);
-            console.log(`💾 Resultado da persistência: ${persistenceResult}`);
+            console.log(`✅ BatchFileProcessor: Persistência concluída com sucesso: ${persistenceResult}`);
           } catch (persistenceError) {
-            console.error(`❌ Erro na persistência:`, persistenceError);
+            console.error(`❌ BatchFileProcessor: Erro na persistência:`, persistenceError);
+            // Continuar processamento mesmo com erro de persistência
           }
         } else {
-          console.warn(`⚠️ Não salvando persistência - userId: ${userId}, arquivo: ${relatedFile?.name}`);
+          console.error(`❌ BatchFileProcessor: Não salvando persistência - userId: ${userId}, arquivo: ${relatedFile?.name}`);
         }
         
         // Add to dashboard immediately
