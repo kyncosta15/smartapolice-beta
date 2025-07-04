@@ -57,11 +57,11 @@ export function ClassificationCharts({ typeDistribution, insurerDistribution, ca
         <CardContent className="pt-6">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={insurerDistribution}>
+              <BarChart data={insurerDistribution} maxBarSize={60}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip formatter={(value) => [value, 'Valor']} />
                 <Bar dataKey="value" fill="#10B981" />
               </BarChart>
             </ResponsiveContainer>
