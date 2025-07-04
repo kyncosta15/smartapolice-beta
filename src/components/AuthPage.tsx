@@ -121,7 +121,7 @@ export const AuthPage = () => {
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Shield className="h-12 w-12 text-blue-600" />
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              SecureHub
+              SmartApólice
             </h1>
           </div>
           <p className="text-gray-600">Gestão Inteligente de Apólices</p>
