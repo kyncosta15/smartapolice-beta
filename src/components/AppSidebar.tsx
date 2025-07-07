@@ -88,6 +88,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       description: "Distribuição regional"
     },
     {
+      title: "Upload",
+      icon: FileText,
+      id: "upload",
+      description: "Importar PDFs"
+    },
+    {
       title: "Exportar Dashboard",
       icon: Download,
       id: "export",
