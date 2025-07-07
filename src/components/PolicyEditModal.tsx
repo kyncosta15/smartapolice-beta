@@ -39,7 +39,8 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
     documento: '',
     documento_tipo: '',
     vehicleModel: '',
-    uf: ''
+    uf: '',
+    responsavel_nome: ''
   });
 
   useEffect(() => {
@@ -66,7 +67,8 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
         documento: policy.documento || '',
         documento_tipo: policy.documento_tipo || '',
         vehicleModel: policy.vehicleModel || '',
-        uf: policy.uf || ''
+        uf: policy.uf || '',
+        responsavel_nome: policy.responsavel_nome || ''
       });
     }
   }, [policy]);
@@ -95,7 +97,8 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       documento: formData.documento,
       documento_tipo: formData.documento_tipo,
       vehicleModel: formData.vehicleModel,
-      uf: formData.uf
+      uf: formData.uf,
+      responsavel_nome: formData.responsavel_nome
     };
 
     onSave(updatedPolicy);
@@ -187,6 +190,16 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
                   <SelectItem value="under_review">Em Análise</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="responsavel_nome">Responsável</Label>
+              <Input
+                id="responsavel_nome"
+                placeholder="Nome do responsável"
+                value={formData.responsavel_nome}
+                onChange={(e) => setFormData({...formData, responsavel_nome: e.target.value})}
+              />
             </div>
           </div>
 
