@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, Edit, Trash2, Search, Filter, FileText, Download, Building2, Calendar, DollarSign } from 'lucide-react';
+import { Eye, Edit, Trash2, Search, Filter, FileText, Download, Building2, Calendar, DollarSign, SlidersHorizontal } from 'lucide-react';
 import { LocationFilter } from './LocationFilter';
 import { PolicyEditModal } from './PolicyEditModal';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -315,7 +315,7 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
                   onClick={() => setShowFilters(!showFilters)}
                   className={`flex items-center space-x-2 border-gray-200 hover:bg-gray-50 font-sf-pro ${isMobile ? 'w-full justify-center' : ''}`}
                 >
-                  <Filter className="h-4 w-4" />
+                  <SlidersHorizontal className="h-4 w-4" />
                   <span>Filtros</span>
                 </Button>
               </div>
@@ -333,11 +333,11 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
       {/* Lista de Apólices */}
       <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'} gap-6`}>
         {filteredPolicies.map((policy) => (
-          <Card key={policy.id} className="group bg-white border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden h-full flex flex-col">
+          <Card key={policy.id} className="group bg-white border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden">
             {/* Header com gradiente */}
             <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
             
-            <CardHeader className="pb-3 flex-shrink-0">
+            <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -349,7 +349,7 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
                   <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-gray-900 mb-2 font-sf-pro leading-tight line-clamp-2`} title={policy.name}>
                     {policy.name}
                   </h3>
-                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-3 font-mono font-sf-pro truncate`} title={policy.policyNumber}>
+                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-2 font-mono font-sf-pro truncate`} title={policy.policyNumber}>
                     {truncateText(policy.policyNumber, 20)}
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -360,9 +360,9 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
               </div>
             </CardHeader>
             
-            <CardContent className="space-y-4 flex-1 flex flex-col">
+            <CardContent className="space-y-3">
               {/* Valor em destaque */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 flex-shrink-0">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <DollarSign className="h-4 w-4 text-green-600" />
                   <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-700 font-medium font-sf-pro`}>Valor Mensal</p>
@@ -373,7 +373,7 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
               </div>
 
               {/* Informações adicionais */}
-              <div className="space-y-3 flex-1">
+              <div className="space-y-2">
                 {/* Modelo do carro para seguros Auto */}
                 {policy.type === 'auto' && policy.vehicleModel && (
                   <div className="flex items-center gap-2">
@@ -411,7 +411,7 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
               </div>
 
               {/* Ações */}
-              <div className={`flex items-center justify-between pt-4 border-t border-gray-100 flex-shrink-0 ${isMobile ? 'flex-col space-y-3' : ''}`}>
+              <div className={`flex items-center justify-between pt-3 border-t border-gray-100 ${isMobile ? 'flex-col space-y-3' : ''}`}>
                 <div className={`flex ${isMobile ? 'w-full justify-center space-x-3' : 'space-x-2'}`}>
                   <Button
                     variant="ghost"
