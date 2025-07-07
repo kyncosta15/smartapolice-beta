@@ -8,9 +8,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface PDFExportButtonProps {
   targetElementId?: string;
+  onExportComplete?: (fileName: string) => void;
 }
 
-export function PDFExportButton({ targetElementId = 'dashboard-content' }: PDFExportButtonProps) {
+export function PDFExportButton({ targetElementId = 'dashboard-content', onExportComplete }: PDFExportButtonProps) {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -123,6 +124,11 @@ export function PDFExportButton({ targetElementId = 'dashboard-content' }: PDFEx
       const fileName = `dashboard-relatorio-${timestamp}.pdf`;
       
       pdf.save(fileName);
+
+      // Notificar sobre a exportação completa
+      if (onExportComplete) {
+        onExportComplete(fileName);
+      }
 
       // Toast de sucesso
       toast({

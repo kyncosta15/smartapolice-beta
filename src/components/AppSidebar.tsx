@@ -11,7 +11,8 @@ import {
   Gauge,
   Map,
   Settings,
-  Users2
+  Users2,
+  Download
 } from "lucide-react"
 
 interface AppSidebarProps {
@@ -77,6 +78,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       icon: FileText,
       id: "upload",
       description: "Importar PDFs"
+    },
+    {
+      title: "Exportar Dashboard",
+      icon: Download,
+      id: "export",
+      description: "Histórico de exportações"
     },
     {
       title: "Contatos",
