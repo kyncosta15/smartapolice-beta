@@ -12,6 +12,15 @@ interface StatusEvolutionChartsProps {
 }
 
 export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, colors }: StatusEvolutionChartsProps) {
+  
+  console.log('📊 StatusEvolutionCharts - Dados recebidos:', {
+    statusDistribution: statusDistribution?.length,
+    statusData: statusDistribution,
+    monthlyEvolution: monthlyEvolution?.length,
+    monthlyData: monthlyEvolution,
+    colors: colors?.length
+  });
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print-status-charts">
       <Card className="print-chart-card bg-white border border-gray-200 shadow-sm">

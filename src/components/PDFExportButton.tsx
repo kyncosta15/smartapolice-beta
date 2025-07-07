@@ -29,20 +29,49 @@ export function PDFExportButton({ targetElementId = 'dashboard-pdf-content', onE
       // Encontrar especificamente o conteúdo do dashboard pelo ID
       let targetElement = document.getElementById(targetElementId) as HTMLElement;
       
+      console.log('🎯 PDFExportButton - Procurando elemento:', targetElementId);
+      console.log('📍 Elemento encontrado pelo ID:', targetElement?.id, targetElement?.className);
+      
       // Se não encontrar pelo ID, tentar o seletor específico do dashboard
       if (!targetElement) {
+        console.log('⚠️ Elemento não encontrado pelo ID, tentando seletor direto');
         targetElement = document.querySelector('#dashboard-pdf-content') as HTMLElement;
+        console.log('📍 Elemento encontrado por seletor:', targetElement?.id);
       }
 
       // Fallback para o conteúdo principal, removendo elementos indesejados
       if (!targetElement) {
+        console.log('⚠️ Tentando fallback com print-container');
         const dashboardContent = document.querySelector('.print-container') as HTMLElement;
         if (dashboardContent) {
           targetElement = dashboardContent;
+          console.log('📍 Elemento encontrado via print-container');
         }
       }
 
-      console.log('Elemento capturado para PDF:', targetElement);
+      // Último fallback: pegar o conteúdo principal do dashboard sem o header
+      if (!targetElement) {
+        console.log('⚠️ Último fallback: procurando conteúdo do dashboard');
+        const allDashboardElements = document.querySelectorAll('.space-y-6');
+        console.log('📊 Elementos .space-y-6 encontrados:', allDashboardElements.length);
+        
+        // Pegar o segundo elemento (primeiro é o container geral, segundo é o conteúdo)
+        if (allDashboardElements.length > 1) {
+          targetElement = allDashboardElements[1] as HTMLElement;
+          console.log('📍 Usando segundo elemento .space-y-6');
+        } else if (allDashboardElements.length === 1) {
+          targetElement = allDashboardElements[0] as HTMLElement;
+          console.log('📍 Usando primeiro elemento .space-y-6');
+        }
+      }
+
+      console.log('✅ Elemento final selecionado:', {
+        id: targetElement?.id,
+        className: targetElement?.className,
+        children: targetElement?.children.length,
+        width: targetElement?.scrollWidth,
+        height: targetElement?.scrollHeight
+      });
 
       if (!targetElement) {
         throw new Error('Não foi possível encontrar o conteúdo do dashboard');
@@ -61,37 +90,66 @@ export function PDFExportButton({ targetElementId = 'dashboard-pdf-content', onE
         height: targetElement.scrollHeight,
         scrollX: 0,
         scrollY: 0,
-        logging: false,
+        logging: true, // Ativar logs para debug
         removeContainer: false,
-        onclone: (clonedDoc) => {
+        foreignObjectRendering: false, // Evitar problemas com elementos externos
+        onclone: (clonedDoc, element) => {
+          console.log('🖨️ Clonando documento para PDF...');
+          
           // Garantir que todos os elementos estejam visíveis e bem formatados
-          const clonedElement = clonedDoc.querySelector('#dashboard-pdf-content') || clonedDoc.body;
+          const clonedElement = element;
+          
+          console.log('📋 Elemento clonado:', {
+            id: clonedElement.id,
+            className: clonedElement.className,
+            children: clonedElement.children.length
+          });
+          
           if (clonedElement) {
             // Aplicar estilos de impressão
             clonedElement.classList.add('print-container');
             
             // Forçar visibilidade e estilo de todos os elementos
             const allElements = clonedElement.querySelectorAll('*');
-            allElements.forEach((el: any) => {
+            console.log('📊 Total de elementos no clone:', allElements.length);
+            
+            allElements.forEach((el: any, index) => {
               if (el.style) {
                 el.style.opacity = '1';
                 el.style.visibility = 'visible';
                 el.style.display = el.style.display === 'none' ? 'block' : el.style.display;
+                el.style.backgroundColor = el.style.backgroundColor || 'white';
               }
               
               // Adicionar classes específicas para cards
-              if (el.classList && el.classList.contains('card')) {
+              if (el.classList && (el.classList.contains('card') || el.tagName.toLowerCase() === 'div')) {
                 el.classList.add('print-chart-card');
               }
             });
 
-            // Aguardar renderização de gráficos
-            const charts = clonedElement.querySelectorAll('.recharts-wrapper');
-            charts.forEach((chart: any) => {
+            // Garantir renderização correta dos gráficos recharts
+            const charts = clonedElement.querySelectorAll('.recharts-wrapper, .recharts-surface');
+            console.log('📈 Gráficos encontrados:', charts.length);
+            
+            charts.forEach((chart: any, index) => {
+              console.log(`📈 Processando gráfico ${index + 1}`);
               if (chart.style) {
                 chart.style.width = '100%';
                 chart.style.height = 'auto';
                 chart.style.minHeight = '300px';
+                chart.style.backgroundColor = 'white';
+              }
+            });
+
+            // Verificar se StatusEvolutionCharts está presente
+            const statusCharts = clonedElement.querySelectorAll('.print-status-section, .print-status-charts');
+            console.log('📊 Status charts encontrados:', statusCharts.length);
+            
+            statusCharts.forEach((statusChart: any) => {
+              if (statusChart.style) {
+                statusChart.style.display = 'block';
+                statusChart.style.visibility = 'visible';
+                statusChart.style.opacity = '1';
               }
             });
           }

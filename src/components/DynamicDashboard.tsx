@@ -87,11 +87,13 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
         <FinancialCharts financialData={dashboardData.financialData} />
 
         {/* D. Gestão e ciclo de vida da apólice */}
-        <StatusEvolutionCharts
-          statusDistribution={dashboardData.statusDistribution}
-          monthlyEvolution={dashboardData.monthlyEvolution}
-          colors={COLORS}
-        />
+        <div className="print-status-section">
+          <StatusEvolutionCharts
+            statusDistribution={dashboardData.statusDistribution}
+            monthlyEvolution={dashboardData.monthlyEvolution}
+            colors={COLORS}
+          />
+        </div>
       </div>
     </div>
   );

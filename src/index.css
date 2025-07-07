@@ -230,6 +230,7 @@
 .print-container {
   font-size: 12px;
   line-height: 1.4;
+  background: white !important;
 }
 
 .print-chart-card {
@@ -237,23 +238,35 @@
   break-inside: avoid;
   border: 1px solid #e5e7eb !important;
   background: white !important;
+  margin-bottom: 16px !important;
 }
 
 .print-status-charts {
   page-break-inside: avoid;
 }
 
+.print-status-section {
+  margin-top: 24px !important;
+  page-break-inside: avoid;
+}
+
 /* Garantir que gráficos sejam renderizados corretamente */
 .recharts-wrapper {
   font-size: 12px !important;
+  background: white !important;
 }
 
 .recharts-cartesian-axis-tick text {
   font-size: 11px !important;
+  fill: #374151 !important;
 }
 
 .recharts-legend-item-text {
   font-size: 12px !important;
+}
+
+.recharts-surface {
+  background: white !important;
 }
 
 /* Forçar visibilidade de todos os elementos para PDF */
@@ -261,13 +274,20 @@
   .print-container * {
     visibility: visible !important;
     opacity: 1 !important;
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
   }
   
   .print-chart-card {
     margin-bottom: 20px !important;
+    box-shadow: none !important;
   }
   
   .recharts-surface {
     background: white !important;
+  }
+  
+  .space-y-6 > * {
+    margin-bottom: 24px !important;
   }
 }
