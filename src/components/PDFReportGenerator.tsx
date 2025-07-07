@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import jsPDF from 'jspdf';
-import { Download, Mail } from 'lucide-react';
+import { Download, Mail, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -356,7 +356,11 @@ export function PDFReportGenerator({ policies, dashboardData }: PDFReportGenerat
         size="sm"
       >
         <Mail className="h-4 w-4" />
+        <Clock className="h-3 w-3 text-blue-200" />
         {isEmailLoading ? 'Enviando...' : 'Enviar por Email'}
+        <span className="text-xs bg-blue-500 px-1.5 py-0.5 rounded-full ml-1">
+          em breve
+        </span>
       </Button>
     </div>
   );
