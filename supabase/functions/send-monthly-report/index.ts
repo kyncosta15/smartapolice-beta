@@ -276,7 +276,7 @@ async function sendReportEmail(email: string, name: string, pdfBuffer: Uint8Arra
   const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   
   await resend.emails.send({
-    from: "SmartApólice <noreply@resend.dev>",
+    from: "SmartApólice <onboarding@resend.dev>", // Domínio de teste do Resend
     to: [email],
     subject: `Relatório Mensal de Apólices - ${currentMonth}`,
     html: `
