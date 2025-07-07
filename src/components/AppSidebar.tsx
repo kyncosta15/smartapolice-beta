@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { SmartApóliceLogo } from "@/components/SmartApoliceLogo"
 import {
   BarChart3,
@@ -35,6 +36,15 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     if (isMobile) {
       toggleSidebar();
     }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   // Navegação para clientes
@@ -131,8 +141,9 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       <SidebarFooter className="p-4">
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+              {user?.name ? getInitials(user.name) : 'U'}
+            </AvatarFallback>
           </Avatar>
           <p className="text-sm text-gray-700 font-medium">{user?.name || 'Nome do Usuário'}</p>
         </div>
