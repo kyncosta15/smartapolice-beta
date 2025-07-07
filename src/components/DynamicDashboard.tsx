@@ -40,63 +40,71 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
 
   if (policies.length === 0 && !shouldUseRealData) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         <EmptyState />
       </div>
     );
   }
 
   return (
-    <div className={`space-y-${isMobile ? '2' : '6'} ${isMobile ? 'px-2' : ''}`}>
+    <div className={`w-full ${isMobile ? 'space-y-2 px-1' : 'space-y-6'} overflow-x-hidden`}>
       {/* Cabeçalho com título e botão de exportar */}
-      <div className="bg-white border border-gray-200 p-3 md:p-6 rounded-md shadow-sm" data-exclude-pdf="true">
-        <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center justify-between'}`}>
-          <div>
-            <h1 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-gray-900 mb-1`}>
-              Dashboard de Apólices
-            </h1>
-            <p className={`${isMobile ? 'text-xs' : 'text-base'} text-gray-600`}>
-              Visão geral das suas apólices e métricas
-            </p>
-          </div>
-          
-          {/* Botão de exportação */}
-          <div className="flex items-center gap-3">
-            <PDFReportGenerator 
-              policies={policies} 
-              dashboardData={dashboardData}
-            />
+      <div className="bg-white border border-gray-200 rounded-md shadow-sm" data-exclude-pdf="true">
+        <div className={`${isMobile ? 'p-3' : 'p-6'}`}>
+          <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center justify-between'}`}>
+            <div>
+              <h1 className={`${isMobile ? 'text-base' : 'text-2xl'} font-bold text-gray-900 mb-1`}>
+                Dashboard de Apólices
+              </h1>
+              <p className={`${isMobile ? 'text-xs' : 'text-base'} text-gray-600`}>
+                Visão geral das suas apólices e métricas
+              </p>
+            </div>
+            
+            {/* Botão de exportação */}
+            <div className="flex items-center gap-3">
+              <PDFReportGenerator 
+                policies={policies} 
+                dashboardData={dashboardData}
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Container principal do dashboard */}
-      <div id="dashboard-pdf-content" className={`space-y-${isMobile ? '2' : '6'} bg-white p-${isMobile ? '2' : '6'} print-container`}>
+      <div id="dashboard-pdf-content" className={`w-full ${isMobile ? 'space-y-2' : 'space-y-6'} bg-white ${isMobile ? 'p-2' : 'p-6'} print-container overflow-x-hidden`}>
         {/* KPIs principais - com dados reais para admin */}
-        <KPICards
-          totalPolicies={displayMetrics.totalPolicies}
-          totalMonthlyCost={displayMetrics.totalMonthlyCost}
-          totalInsuredValue={displayMetrics.totalInsuredValue}
-          expiringPolicies={displayMetrics.expiringPolicies}
-          expiredPolicies={dashboardData.expiredPolicies}
-          activePolicies={dashboardData.activePolicies}
-        />
+        <div className="w-full overflow-x-hidden">
+          <KPICards
+            totalPolicies={displayMetrics.totalPolicies}
+            totalMonthlyCost={displayMetrics.totalMonthlyCost}
+            totalInsuredValue={displayMetrics.totalInsuredValue}
+            expiringPolicies={displayMetrics.expiringPolicies}
+            expiredPolicies={dashboardData.expiredPolicies}
+            activePolicies={dashboardData.activePolicies}
+          />
+        </div>
 
         {/* A. Classificação e identificação - Um embaixo do outro */}
-        <ClassificationCharts
-          typeDistribution={dashboardData.typeDistribution}
-          insurerDistribution={dashboardData.insurerDistribution}
-          recentPolicies={dashboardData.recentPolicies}
-          colors={COLORS}
-        />
+        <div className="w-full overflow-x-hidden">
+          <ClassificationCharts
+            typeDistribution={dashboardData.typeDistribution}
+            insurerDistribution={dashboardData.insurerDistribution}
+            recentPolicies={dashboardData.recentPolicies}
+            colors={COLORS}
+          />
+        </div>
 
         {/* Vínculo - Pessoa Física/Jurídica */}
-        <PersonTypeDistribution
-          personTypeDistribution={dashboardData.personTypeDistribution}
-        />
+        <div className="w-full overflow-x-hidden">
+          <PersonTypeDistribution
+            personTypeDistribution={dashboardData.personTypeDistribution}
+          />
+        </div>
 
         {/* D. Gestão e ciclo de vida da apólice */}
-        <div className="print-status-section">
+        <div className="print-status-section w-full overflow-x-hidden">
           <StatusEvolutionCharts
             statusDistribution={dashboardData.statusDistribution}
             monthlyEvolution={dashboardData.monthlyEvolution}
