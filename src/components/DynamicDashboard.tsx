@@ -58,7 +58,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
       <ClassificationCharts
         typeDistribution={dashboardData.typeDistribution}
         insurerDistribution={dashboardData.insurerDistribution}
-        categoryDistribution={dashboardData.categoryDistribution}
+        recentPolicies={dashboardData.recentPolicies}
         colors={COLORS}
       />
 

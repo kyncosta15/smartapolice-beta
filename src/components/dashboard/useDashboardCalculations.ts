@@ -19,6 +19,7 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
         typeDistribution: [],
         insurerDistribution: [],
         categoryDistribution: [],
+        recentPolicies: [],
         personTypeDistribution: { pessoaFisica: 0, pessoaJuridica: 0 },
         financialData: [],
         statusDistribution: [],
@@ -164,6 +165,28 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       });
     }
 
+    // Apólices inseridas nos últimos 30 dias
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const recentPolicies = policies
+      .filter(policy => {
+        if (!policy.extractedAt) return false;
+        const extractedDate = new Date(policy.extractedAt);
+        return extractedDate >= thirtyDaysAgo;
+      })
+      .sort((a, b) => new Date(b.extractedAt).getTime() - new Date(a.extractedAt).getTime())
+      .slice(0, 10)
+      .map(policy => ({
+        id: policy.id,
+        name: policy.name,
+        extractedAt: policy.extractedAt,
+        monthlyAmount: policy.monthlyAmount,
+        premium: policy.premium,
+        endDate: policy.endDate,
+        insurer: policy.insurer
+      }));
+
     return {
       totalPolicies: policies.length,
       totalMonthlyCost,
@@ -172,6 +195,7 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       typeDistribution: Object.entries(typeDistribution).map(([name, value]) => ({ name, value })),
       insurerDistribution: Object.entries(insurerDistribution).map(([name, value]) => ({ name, value })),
       categoryDistribution: Object.entries(categoryDistribution).map(([name, value]) => ({ name, value })),
+      recentPolicies,
       personTypeDistribution,
       financialData,
       statusDistribution: Object.entries(statusDistribution).map(([name, value]) => ({ name, value })),
