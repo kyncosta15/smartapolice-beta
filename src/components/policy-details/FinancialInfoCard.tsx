@@ -1,0 +1,52 @@
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DollarSign, CreditCard } from 'lucide-react';
+
+interface FinancialInfoCardProps {
+  policy: any;
+}
+
+export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
+  return (
+    <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 overflow-hidden">
+      <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-amber-200 pb-4">
+        <CardTitle className="flex items-center text-xl font-bold text-amber-900 font-sf-pro">
+          <DollarSign className="h-6 w-6 mr-3 text-amber-600" />
+          Informações Financeiras
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6 space-y-5">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-6 shadow-md">
+          <label className="text-sm font-medium text-white/90 font-sf-pro block mb-2">Prêmio Anual</label>
+          <p className="text-3xl font-bold text-white font-sf-pro">
+            R$ {policy.premium?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+        
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
+          <label className="text-sm font-medium text-amber-700 font-sf-pro block mb-1">Prêmio Mensal</label>
+          <p className="text-2xl font-bold text-gray-900 font-sf-pro">
+            R$ {(policy.premium / 12)?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+
+        {policy.paymentForm && (
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
+            <label className="text-sm font-medium text-amber-700 font-sf-pro flex items-center gap-2 mb-1">
+              <CreditCard className="h-4 w-4" />
+              Forma de Pagamento
+            </label>
+            <p className="text-base font-medium text-gray-900 font-sf-pro">{policy.paymentForm}</p>
+          </div>
+        )}
+
+        {policy.installments && (
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
+            <label className="text-sm font-medium text-amber-700 font-sf-pro block mb-1">Parcelas</label>
+            <p className="text-lg font-bold text-gray-900 font-sf-pro">{policy.installments}x</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
