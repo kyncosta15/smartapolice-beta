@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import jsPDF from 'jspdf';
-import { Download } from 'lucide-react';
+import { Download, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { formatCurrency } from '@/utils/currencyFormatter';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PDFReportGeneratorProps {
   policies: ParsedPolicyData[];
@@ -15,6 +16,7 @@ interface PDFReportGeneratorProps {
 export function PDFReportGenerator({ policies, dashboardData }: PDFReportGeneratorProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
 
   const generateCustomPDF = async () => {
     try {
@@ -291,14 +293,71 @@ export function PDFReportGenerator({ policies, dashboardData }: PDFReportGenerat
     }
   };
 
+  const sendReportByEmail = async () => {
+    if (!user?.email) {
+      toast({
+        title: "Email não encontrado",
+        description: "Não foi possível identificar seu email para envio.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsEmailLoading(true);
+    
+    try {
+      toast({
+        title: "Enviando relatório por email...",
+        description: "Gerando e enviando documento para seu email.",
+      });
+
+      const { error } = await supabase.functions.invoke('send-monthly-report', {
+        body: { 
+          userEmail: user.email,
+          userName: user.name || 'Usuário'
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Relatório enviado com sucesso!",
+        description: `O relatório foi enviado para ${user.email}`,
+      });
+
+    } catch (error) {
+      console.error('Erro ao enviar relatório por email:', error);
+      
+      toast({
+        title: "Erro ao enviar relatório",
+        description: error instanceof Error ? error.message : "Ocorreu um erro durante o envio do email.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsEmailLoading(false);
+    }
+  };
+
   return (
-    <Button 
-      onClick={generateCustomPDF}
-      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white shadow-sm"
-      size="sm"
-    >
-      <Download className="h-4 w-4" />
-      Gerar Relatório PDF
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button 
+        onClick={generateCustomPDF}
+        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white shadow-sm"
+        size="sm"
+      >
+        <Download className="h-4 w-4" />
+        Gerar Relatório PDF
+      </Button>
+      
+      <Button 
+        onClick={sendReportByEmail}
+        disabled={isEmailLoading}
+        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+        size="sm"
+      >
+        <Mail className="h-4 w-4" />
+        {isEmailLoading ? 'Enviando...' : 'Enviar por Email'}
+      </Button>
+    </div>
   );
 }
