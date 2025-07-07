@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -21,8 +21,13 @@ interface AppSidebarProps {
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
   const { user } = useAuth();
-
   const { toggleSidebar, isMobile } = useSidebar();
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  // Force re-render to ensure the sidebar updates
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [user?.role]);
 
   const handleNavigation = (section: string) => {
     console.log('🔄 Navegando para:', section);
