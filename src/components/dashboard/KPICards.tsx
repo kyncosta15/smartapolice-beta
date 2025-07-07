@@ -18,23 +18,23 @@ interface KPICardsProps {
 export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, expiringPolicies, expiredPolicies, activePolicies }: KPICardsProps) {
   const isMobile = useIsMobile();
 
-  // Função para formatar valores de forma adaptativa
+  // Função para formatar valores de forma mais inteligente
   const formatValue = (value: number, isCurrency = false) => {
     if (isCurrency) {
       if (isMobile) {
-        if (value >= 1000000) {
+        // Para valores muito grandes, usar abreviação
+        if (value >= 10000000) {
           return `R$ ${(value / 1000000).toFixed(1)}M`;
-        } else if (value >= 1000) {
+        } else if (value >= 100000) {
           return `R$ ${(value / 1000).toFixed(0)}k`;
         }
-        return formatCurrency(value);
+        // Para valores menores, mostrar completo mas formatado
+        return formatCurrency(value, { maximumFractionDigits: 0 });
       }
       return formatCurrency(value);
     }
     
-    if (isMobile && value >= 1000) {
-      return `${(value / 1000).toFixed(0)}k`;
-    }
+    // Para números simples, mostrar sempre o valor original
     return value.toString();
   };
 
@@ -98,7 +98,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
         <card.icon className={`${isMobile ? 'h-3 w-3' : 'h-5 w-5'} opacity-80`} />
       </CardHeader>
       <CardContent className={`${isMobile ? 'pb-2 px-3' : 'pb-4'}`}>
-        <div className={`${isMobile ? 'text-base' : 'text-3xl'} font-bold mb-1 break-words`}>
+        <div className={`${isMobile ? 'text-sm' : 'text-3xl'} font-bold mb-1 break-words leading-tight`}>
           {card.displayValue}
         </div>
         <p className={`${isMobile ? 'text-xs' : 'text-xs'} opacity-80`}>
