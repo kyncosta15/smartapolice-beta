@@ -331,6 +331,19 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
               )}
             </CardContent>
           </Card>
+
+          {/* Card do Responsável */}
+          <Card>
+            <CardHeader>
+              <h1 className="text-lg font-semibold">Responsável</h1>
+            </CardHeader>
+            <CardContent className="text-center space-y-2">
+              <User className="h-8 w-8 mx-auto text-blue-600" />
+              <p className="text-sm font-medium">
+                {policy.responsavel_nome || 'Não definido'}
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </DialogContent>
     </Dialog>

@@ -156,6 +156,8 @@ export type Database = {
           numero_apolice: string | null
           placa: string | null
           quantidade_parcelas: number | null
+          responsavel_nome: string | null
+          responsavel_user_id: string | null
           segurado: string | null
           seguradora: string | null
           status: string | null
@@ -188,6 +190,8 @@ export type Database = {
           numero_apolice?: string | null
           placa?: string | null
           quantidade_parcelas?: number | null
+          responsavel_nome?: string | null
+          responsavel_user_id?: string | null
           segurado?: string | null
           seguradora?: string | null
           status?: string | null
@@ -220,6 +224,8 @@ export type Database = {
           numero_apolice?: string | null
           placa?: string | null
           quantidade_parcelas?: number | null
+          responsavel_nome?: string | null
+          responsavel_user_id?: string | null
           segurado?: string | null
           seguradora?: string | null
           status?: string | null
@@ -231,6 +237,13 @@ export type Database = {
           valor_premio?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "policies_responsavel_user_id_fkey"
+            columns: ["responsavel_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "policies_user_id_fkey"
             columns: ["user_id"]
