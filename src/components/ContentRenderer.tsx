@@ -194,12 +194,6 @@ export function ContentRenderer({
         </div>
       );
 
-    case 'export':
-      return (
-        <div className="p-6">
-          <ExportDashboard />
-        </div>
-      );
 
     case 'regions':
       return (

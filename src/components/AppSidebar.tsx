@@ -10,8 +10,7 @@ import {
   Gauge,
   Map,
   Settings,
-  Users2,
-  Download
+  Users2
 } from "lucide-react"
 
 interface AppSidebarProps {
@@ -59,12 +58,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       description: "Importar PDFs"
     },
     {
-      title: "Exportar Dashboard",
-      icon: Download,
-      id: "export",
-      description: "Histórico de exportações"
-    },
-    {
       title: "Contatos",
       icon: Contact2,
       id: "contact",
@@ -99,12 +92,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       description: "Importar PDFs"
     },
     {
-      title: "Exportar Dashboard",
-      icon: Download,
-      id: "export",
-      description: "Histórico de exportações"
-    },
-    {
       title: "Clientes",
       icon: Users2,
       id: "clients",
@@ -120,17 +107,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
   
-  // Debug logs detalhados
-  console.log('🔍 AppSidebar Renderização:', {
-    timestamp: new Date().toISOString(),
-    userRole: user?.role,
-    navigationLength: navigation.length,
-    navigationItems: navigation.map(item => ({ title: item.title, id: item.id })),
-    hasExportItem: navigation.some(item => item.id === 'export'),
-    exportItemIndex: navigation.findIndex(item => item.id === 'export'),
-    activeSection
-  });
-
   return (
     <Sidebar className="bg-white border-r">
       <SidebarHeader className="space-y-4 p-4">
@@ -138,26 +114,18 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navigation.map((item, index) => {
-            const isExportItem = item.id === 'export';
-            if (isExportItem) {
-              console.log('✅ Renderizando "Exportar Dashboard" no índice:', index);
-            }
-            
-            return (
-              <SidebarMenuItem key={`${item.id}-${index}`}>
-                <SidebarMenuButton
-                  onClick={() => handleNavigation(item.id)}
-                  isActive={activeSection === item.id}
-                  className={`w-full justify-start ${isExportItem ? 'bg-blue-50 border-l-2 border-blue-500' : ''}`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  <span className={isExportItem ? 'font-medium text-blue-700' : ''}>{item.title}</span>
-                  {isExportItem && <span className="ml-2 text-xs bg-blue-200 text-blue-800 px-1 rounded">Novo</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+          {navigation.map((item, index) => (
+            <SidebarMenuItem key={`${item.id}-${index}`}>
+              <SidebarMenuButton
+                onClick={() => handleNavigation(item.id)}
+                isActive={activeSection === item.id}
+                className="w-full justify-start"
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4">
