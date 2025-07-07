@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { PDFExportButton } from '@/components/PDFExportButton';
 
 export function WelcomeSection() {
   const { user } = useAuth();
@@ -24,11 +23,6 @@ export function WelcomeSection() {
         <div className="flex-1">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Bem-vindo, {user?.name}!</h2>
           <p className="text-gray-600">{getRoleMessage(user?.role || '')}</p>
-        </div>
-        
-        {/* Botão para gerar PDF */}
-        <div className="ml-4">
-          <PDFExportButton />
         </div>
       </div>
     </div>
