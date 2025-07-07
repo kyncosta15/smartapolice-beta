@@ -34,17 +34,14 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Buscar todas as apólices com informações dos usuários
+    // Buscar todas as apólices
     const { data: policies, error: policiesError } = await supabase
       .from('policies')
-      .select(`
-        *,
-        users!inner(name, email, role)
-      `);
+      .select('*');
 
     if (policiesError) {
       console.error('Error fetching policies:', policiesError);
-      throw new Error('Failed to fetch policies');
+      throw new Error(`Failed to fetch policies: ${policiesError.message}`);
     }
 
     console.log(`Found ${policies?.length || 0} policies`);
