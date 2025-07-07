@@ -3,6 +3,8 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 export function WelcomeSection() {
   const { user } = useAuth();
@@ -20,18 +22,58 @@ export function WelcomeSection() {
     }
   };
 
+  const getRoleLabel = (role: string) => {
+    const roles = {
+      cliente: 'Cliente',
+      administrador: 'Administrador',
+      corretora: 'Corretora'
+    };
+    return roles[role] || role;
+  };
+
+  const getRoleBadgeVariant = (role: string) => {
+    const variants = {
+      cliente: 'default',
+      administrador: 'destructive',
+      corretora: 'secondary'
+    };
+    return variants[role] || 'outline';
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
-    <div className="sticky top-16 z-40 bg-gray-50 border-b border-gray-200 shadow-sm">
+    <div className="sticky top-16 z-40 bg-gradient-to-r from-slate-50 to-blue-50 border-b border-gray-200 shadow-sm">
       <div className="p-6">
-        <Card className="bg-white shadow-sm border border-gray-200">
+        <Card className="bg-white/95 backdrop-blur-sm shadow-lg border border-gray-200/50">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Bem-vindo, {user?.name}!
-                </h2>
-                <Separator className="my-3" />
-                <p className="text-gray-600 text-sm">
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-16 w-16 border-2 border-blue-100">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-lg">
+                  {user?.name ? getInitials(user.name) : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center space-x-3">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Bem-vindo, {user?.name}!
+                  </h2>
+                  <Badge variant={getRoleBadgeVariant(user?.role || '')} className="font-medium">
+                    {getRoleLabel(user?.role || '')}
+                  </Badge>
+                </div>
+                
+                <Separator className="bg-gradient-to-r from-blue-200 to-purple-200" />
+                
+                <p className="text-gray-600 text-sm leading-relaxed">
                   {getRoleMessage(user?.role || '')}
                 </p>
               </div>
