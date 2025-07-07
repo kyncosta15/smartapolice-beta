@@ -40,6 +40,42 @@ export type Database = {
           },
         ]
       }
+      dashboard_exports: {
+        Row: {
+          created_at: string
+          dashboard_type: string | null
+          export_date: string
+          export_time: string
+          file_name: string
+          file_size_kb: number | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dashboard_type?: string | null
+          export_date?: string
+          export_time?: string
+          file_name: string
+          file_size_kb?: number | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dashboard_type?: string | null
+          export_date?: string
+          export_time?: string
+          file_name?: string
+          file_size_kb?: number | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       installments: {
         Row: {
           created_at: string | null

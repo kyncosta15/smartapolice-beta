@@ -107,6 +107,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     }
   ];
 
+  const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
+
   return (
     <Sidebar className="bg-white border-r">
       <SidebarHeader className="space-y-4 p-4">
