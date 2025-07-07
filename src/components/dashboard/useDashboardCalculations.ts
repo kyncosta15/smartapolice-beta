@@ -16,6 +16,8 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
         totalMonthlyCost: 0,
         totalInsuredValue: 0,
         expiringPolicies: 0,
+        expiredPolicies: 0,
+        activePolicies: 0,
         typeDistribution: [],
         insurerDistribution: [],
         categoryDistribution: [],
@@ -130,12 +132,37 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
 
     // D. Gestão e ciclo de vida
     const now = new Date();
-    const expiringPolicies = policies.filter(policy => {
+    
+    // Calcular apólices vencidas, vencendo e ativas
+    let expiredPolicies = 0;
+    let expiringPolicies = 0; 
+    let activePolicies = 0;
+    
+    policies.forEach(policy => {
+      if (!policy.endDate) {
+        activePolicies++; // Se não tem data fim, considera ativa
+        return;
+      }
+      
       const endDate = new Date(policy.endDate);
       const diffTime = endDate.getTime() - now.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 30 && diffDays > 0;
-    }).length;
+      
+      if (diffDays < 0) {
+        expiredPolicies++; // Já venceu
+      } else if (diffDays <= 30) {
+        expiringPolicies++; // Vence nos próximos 30 dias
+      } else {
+        activePolicies++; // Ainda tem mais de 30 dias
+      }
+    });
+    
+    console.log('📊 Status das apólices:', {
+      total: policies.length,
+      ativas: activePolicies,
+      vencendo: expiringPolicies,
+      vencidas: expiredPolicies
+    });
 
     // Status das apólices
     const statusDistribution = policies.reduce((acc, policy) => {
@@ -208,6 +235,8 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       totalMonthlyCost,
       totalInsuredValue,
       expiringPolicies,
+      expiredPolicies,
+      activePolicies,
       typeDistribution: Object.entries(typeDistribution).map(([name, value]) => ({ name, value })),
       insurerDistribution: Object.entries(insurerDistribution).map(([name, value]) => ({ name, value })),
       categoryDistribution: Object.entries(categoryDistribution).map(([name, value]) => ({ name, value })),

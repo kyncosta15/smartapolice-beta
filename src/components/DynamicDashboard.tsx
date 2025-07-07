@@ -73,6 +73,8 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
           totalMonthlyCost={displayMetrics.totalMonthlyCost}
           totalInsuredValue={displayMetrics.totalInsuredValue}
           expiringPolicies={displayMetrics.expiringPolicies}
+          expiredPolicies={dashboardData.expiredPolicies}
+          activePolicies={dashboardData.activePolicies}
         />
 
         {/* A. Classificação e identificação - Um embaixo do outro */}
