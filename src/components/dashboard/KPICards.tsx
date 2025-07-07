@@ -171,7 +171,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
         </CarouselContent>
         <CarouselPrevious />
         <CarouselNext />
-      </CarouselContent>
+      </Carousel>
     </div>
   );
 }
