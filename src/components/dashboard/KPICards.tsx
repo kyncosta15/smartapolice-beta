@@ -18,24 +18,37 @@ interface KPICardsProps {
 export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, expiringPolicies, expiredPolicies, activePolicies }: KPICardsProps) {
   const isMobile = useIsMobile();
 
-  // Função para formatar valores de forma mais inteligente
+  // Função para formatar valores de forma mais segura
   const formatValue = (value: number, isCurrency = false) => {
+    // Garantir que value é um número válido
+    const numValue = isNaN(value) ? 0 : value;
+    
     if (isCurrency) {
       if (isMobile) {
         // Para valores muito grandes, usar abreviação
-        if (value >= 10000000) {
-          return `R$ ${(value / 1000000).toFixed(1)}M`;
-        } else if (value >= 100000) {
-          return `R$ ${(value / 1000).toFixed(0)}k`;
+        if (numValue >= 10000000) {
+          return `R$ ${(numValue / 1000000).toFixed(1)}M`;
+        } else if (numValue >= 100000) {
+          return `R$ ${(numValue / 1000).toFixed(0)}k`;
         }
         // Para valores menores, mostrar completo mas formatado
-        return formatCurrency(value, { maximumFractionDigits: 0 });
+        try {
+          return formatCurrency(numValue, { maximumFractionDigits: 0, minimumFractionDigits: 0 });
+        } catch (error) {
+          console.error('Erro ao formatar moeda:', error);
+          return `R$ ${numValue.toFixed(0)}`;
+        }
       }
-      return formatCurrency(value);
+      try {
+        return formatCurrency(numValue);
+      } catch (error) {
+        console.error('Erro ao formatar moeda:', error);
+        return `R$ ${numValue.toFixed(2)}`;
+      }
     }
     
     // Para números simples, mostrar sempre o valor original
-    return value.toString();
+    return numValue.toString();
   };
 
   const allCards = [
@@ -158,7 +171,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
         </CarouselContent>
         <CarouselPrevious />
         <CarouselNext />
-      </Carousel>
+      </CarouselContent>
     </div>
   );
 }

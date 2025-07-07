@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
@@ -111,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('✅ Auth initialized with user:', userProfile?.name || 'Unknown');
           }
         } else if (mounted) {
-          // No session found, ensure states are cleared
+          // No session found, clear states
           setSession(null);
           setUser(null);
         }
@@ -135,29 +134,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (!mounted) return;
 
-        setSession(session);
-        
-        if (session?.user && event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' && session?.user) {
           console.log('🔑 User signed in, fetching profile...');
-          // Use setTimeout to prevent potential blocking and ensure clean state update
-          setTimeout(async () => {
-            if (mounted) {
-              const userProfile = await fetchUserProfile(session.user.id);
-              if (mounted) {
-                setUser(userProfile);
-                setIsLoading(false);
-                console.log('✅ User profile set after signin:', userProfile?.name || 'Unknown');
-              }
-            }
-          }, 100);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('👋 User signed out');
+          setSession(session);
+          setIsLoading(true);
+          
+          const userProfile = await fetchUserProfile(session.user.id);
+          if (mounted) {
+            setUser(userProfile);
+            setIsLoading(false);
+            console.log('✅ User profile set after signin:', userProfile?.name || 'Unknown');
+          }
+        } else if (event === 'SIGNED_OUT' || !session) {
+          console.log('👋 User signed out or no session');
+          setSession(null);
           setUser(null);
           setIsLoading(false);
-        } else if (!session) {
-          // No session, ensure clean state
-          setUser(null);
-          setIsLoading(false);
+        } else {
+          setSession(session);
         }
       }
     );
@@ -170,11 +164,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array to prevent re-running
+  }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     console.log('🔐 Starting login for:', email);
-    setIsLoading(true);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -184,21 +177,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('❌ Login error:', error);
-        setIsLoading(false);
         return { success: false, error: error.message };
       }
 
       if (data.user && data.session) {
         console.log('✅ Login successful for user:', data.user.id);
-        // Auth state change handler will manage the rest
         return { success: true };
       }
 
-      setIsLoading(false);
       return { success: false, error: 'Login failed' };
     } catch (error) {
       console.error('💥 Login exception:', error);
-      setIsLoading(false);
       return { success: false, error: 'Erro inesperado no login' };
     }
   };

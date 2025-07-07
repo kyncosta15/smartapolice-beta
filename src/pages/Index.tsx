@@ -56,16 +56,55 @@ const AppContent = () => {
   }
 
   console.log('✅ User authenticated, showing dashboard for:', user.name);
-  return <DashboardContent />;
+  
+  // Adicionar try-catch para capturar erros de renderização
+  try {
+    return <DashboardContent />;
+  } catch (error) {
+    console.error('💥 Error rendering dashboard:', error);
+    return (
+      <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-red-800 mb-2">Erro ao carregar dashboard</h2>
+          <p className="text-red-600 mb-4">Ocorreu um erro inesperado. Tente recarregar a página.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            Recarregar
+          </button>
+        </div>
+      </div>
+    );
+  }
 };
 
 const Index = () => {
   console.log('🚀 Index component mounted');
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
+  
+  try {
+    return (
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    );
+  } catch (error) {
+    console.error('💥 Critical error in Index:', error);
+    return (
+      <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-800 mb-2">Erro crítico</h1>
+          <p className="text-red-600 mb-4">Falha ao inicializar a aplicação.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            Recarregar Página
+          </button>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default Index;
