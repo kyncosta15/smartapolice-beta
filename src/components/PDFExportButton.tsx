@@ -11,7 +11,7 @@ interface PDFExportButtonProps {
   onExportComplete?: (fileName: string) => void;
 }
 
-export function PDFExportButton({ targetElementId = 'dashboard-content', onExportComplete }: PDFExportButtonProps) {
+export function PDFExportButton({ targetElementId = 'dashboard-pdf-content', onExportComplete }: PDFExportButtonProps) {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -23,18 +23,23 @@ export function PDFExportButton({ targetElementId = 'dashboard-content', onExpor
         description: "Aguarde enquanto o relatório é processado.",
       });
 
-      // Encontrar o elemento do dashboard
-      let targetElement = document.getElementById(targetElementId);
+      // Aguardar um pouco para garantir que os gráficos estejam carregados
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Encontrar especificamente o conteúdo do dashboard pelo ID
+      let targetElement = document.getElementById(targetElementId) as HTMLElement;
       
-      // Se não encontrar pelo ID, tentar capturar o dashboard visível
+      // Se não encontrar pelo ID, tentar o seletor específico do dashboard
       if (!targetElement) {
-        const dashboardElements = document.querySelectorAll('[data-dashboard="true"], .dashboard-content, main');
-        targetElement = dashboardElements[0] as HTMLElement;
+        targetElement = document.querySelector('#dashboard-pdf-content') as HTMLElement;
       }
 
-      // Se ainda não encontrar, capturar o body principal
+      // Fallback para o conteúdo principal, removendo elementos indesejados
       if (!targetElement) {
-        targetElement = document.querySelector('main') || document.body;
+        const dashboardContent = document.querySelector('.print-container') as HTMLElement;
+        if (dashboardContent) {
+          targetElement = dashboardContent;
+        }
       }
 
       console.log('Elemento capturado para PDF:', targetElement);
@@ -43,16 +48,54 @@ export function PDFExportButton({ targetElementId = 'dashboard-content', onExpor
         throw new Error('Não foi possível encontrar o conteúdo do dashboard');
       }
 
+      // Aguardar mais um tempo para garantir que todos os gráficos estejam totalmente renderizados
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Configurações para captura de alta qualidade
       const canvas = await html2canvas(targetElement, {
-        scale: 2, // Melhor qualidade
+        scale: 2, // Qualidade otimizada
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         width: targetElement.scrollWidth,
         height: targetElement.scrollHeight,
         scrollX: 0,
-        scrollY: 0
+        scrollY: 0,
+        logging: false,
+        removeContainer: false,
+        onclone: (clonedDoc) => {
+          // Garantir que todos os elementos estejam visíveis e bem formatados
+          const clonedElement = clonedDoc.querySelector('#dashboard-pdf-content') || clonedDoc.body;
+          if (clonedElement) {
+            // Aplicar estilos de impressão
+            clonedElement.classList.add('print-container');
+            
+            // Forçar visibilidade e estilo de todos os elementos
+            const allElements = clonedElement.querySelectorAll('*');
+            allElements.forEach((el: any) => {
+              if (el.style) {
+                el.style.opacity = '1';
+                el.style.visibility = 'visible';
+                el.style.display = el.style.display === 'none' ? 'block' : el.style.display;
+              }
+              
+              // Adicionar classes específicas para cards
+              if (el.classList && el.classList.contains('card')) {
+                el.classList.add('print-chart-card');
+              }
+            });
+
+            // Aguardar renderização de gráficos
+            const charts = clonedElement.querySelectorAll('.recharts-wrapper');
+            charts.forEach((chart: any) => {
+              if (chart.style) {
+                chart.style.width = '100%';
+                chart.style.height = 'auto';
+                chart.style.minHeight = '300px';
+              }
+            });
+          }
+        }
       });
 
       console.log('Canvas criado:', canvas.width, 'x', canvas.height);

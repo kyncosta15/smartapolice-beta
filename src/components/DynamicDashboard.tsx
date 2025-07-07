@@ -48,7 +48,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
   return (
     <div className="space-y-6">
       {/* Cabeçalho com título e botão de exportar */}
-      <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+      <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm" data-exclude-pdf="true">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">Dashboard de Apólices</h1>
@@ -56,12 +56,12 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
           </div>
           
           {/* Botão de exportar PDF */}
-          <PDFExportButton />
+          <PDFExportButton targetElementId="dashboard-pdf-content" />
         </div>
       </div>
 
       {/* Container principal do dashboard */}
-      <div className="space-y-6 bg-white p-6">
+      <div id="dashboard-pdf-content" className="space-y-6 bg-white p-6 print-container">
         {/* KPIs principais - com dados reais para admin */}
         <KPICards
           totalPolicies={displayMetrics.totalPolicies}

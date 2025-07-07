@@ -19,7 +19,7 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
       return extractedDate >= thirtyDaysAgo;
     })
     .sort((a, b) => new Date(b.extractedAt).getTime() - new Date(a.extractedAt).getTime())
-    .slice(0, 10); // Mostrar apenas as 10 mais recentes
+    .slice(0, 15); // Mostrar mais apólices para o PDF
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {

@@ -103,7 +103,7 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
   });
 
   return (
-    <Card className="bg-white border-0 shadow-none">
+    <Card className="bg-white border border-gray-200 shadow-sm print-chart-card">
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -135,6 +135,12 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
                 <p className="text-gray-500">Pico</p>
                 <p className="font-semibold text-green-600">
                   {formatCurrency(maxCusto)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-gray-500">Total</p>
+                <p className="font-semibold text-orange-600">
+                  {formatCurrency(totalCusto)}
                 </p>
               </div>
             </div>

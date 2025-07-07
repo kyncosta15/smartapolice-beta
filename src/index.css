@@ -225,3 +225,49 @@
   top: 50%;
   left: 50%;
 }
+
+/* Estilos específicos para PDF */
+.print-container {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.print-chart-card {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  border: 1px solid #e5e7eb !important;
+  background: white !important;
+}
+
+.print-status-charts {
+  page-break-inside: avoid;
+}
+
+/* Garantir que gráficos sejam renderizados corretamente */
+.recharts-wrapper {
+  font-size: 12px !important;
+}
+
+.recharts-cartesian-axis-tick text {
+  font-size: 11px !important;
+}
+
+.recharts-legend-item-text {
+  font-size: 12px !important;
+}
+
+/* Forçar visibilidade de todos os elementos para PDF */
+@media print {
+  .print-container * {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .print-chart-card {
+    margin-bottom: 20px !important;
+  }
+  
+  .recharts-surface {
+    background: white !important;
+  }
+}
