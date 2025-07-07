@@ -97,17 +97,17 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
   ];
 
   return (
-    <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4'}`}>
+    <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4'} font-sans`}>
       {dashboardData.map((item, index) => (
-        <Card key={index} className="bg-white/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 h-full">
+        <Card key={index} className="bg-white/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 h-full font-sans">
           <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-2' : 'pb-2'}`}>
-            <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-gray-600 leading-tight`}>
+            <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-gray-600 leading-tight font-sans`}>
               {item.title}
             </CardTitle>
             <item.icon className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600 flex-shrink-0`} />
           </CardHeader>
           <CardContent className={`${isMobile ? 'pt-0' : 'pt-0'}`}>
-            <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-gray-900 mb-1 break-words`}>
+            <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-gray-900 mb-1 break-words font-sans`}>
               {item.value}
             </div>
             <div className="flex items-center space-x-2">
@@ -120,11 +120,11 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
                   item.changeType === 'positive' ? 'bg-green-100 text-green-700 hover:bg-green-100' :
                   item.changeType === 'warning' ? 'bg-orange-100 text-orange-700 hover:bg-orange-100' :
                   'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                } ${isMobile ? 'text-xs px-2 py-1' : 'text-sm'}`}
+                } ${isMobile ? 'text-xs px-2 py-1' : 'text-sm'} font-sans`}
               >
                 {item.change}
               </Badge>
-              <span className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500 break-words`}>
+              <span className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500 break-words font-sans`}>
                 {item.description}
               </span>
             </div>
