@@ -35,7 +35,7 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
   const personTypeLabel = getPersonTypeLabel();
 
   return (
-    <div className={`flex items-center space-x-2 ${className}`} data-tour="logo">
+    <div className={`flex items-center space-x-2 ${className}`}>
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md blur-sm opacity-75"></div>
         <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md p-1.5">

@@ -339,7 +339,7 @@ export function PDFReportGenerator({ policies, dashboardData }: PDFReportGenerat
   };
 
   return (
-    <div className="flex items-center gap-2" data-tour="reports">
+    <div className="flex items-center gap-2">
       <Button 
         onClick={generateCustomPDF}
         className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white shadow-sm"
