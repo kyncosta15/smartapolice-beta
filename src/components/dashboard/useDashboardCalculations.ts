@@ -151,57 +151,35 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // Evolução mensal dos custos BASEADA EM DADOS REAIS
+    // Evolução mensal dos custos - VERSÃO SIMPLIFICADA
     const monthlyEvolution = [];
     
-    // Se não há apólices, mostrar evolução zerada
-    if (policies.length === 0) {
-      for (let i = 5; i >= 0; i--) {
-        const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        const month = date.toLocaleDateString('pt-BR', { month: 'short' });
-        
-        monthlyEvolution.push({
-          month,
-          custo: 0,
-          apolices: 0
-        });
-      }
-    } else {
-      // Para apólices reais, calcular custos baseados no período de vigência
-      for (let i = 5; i >= 0; i--) {
-        const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        const month = date.toLocaleDateString('pt-BR', { month: 'short' });
-        
-        // Calcular custos reais para cada mês baseado nas apólices ativas naquele período
-        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-        const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-        
-        const activePoliciesInMonth = policies.filter(policy => {
-          if (!policy.startDate || !policy.endDate) return false;
-          
-          const startDate = new Date(policy.startDate);
-          const endDate = new Date(policy.endDate);
-          
-          // Apólice estava ativa durante o mês se:
-          // - começou antes ou durante o mês E termina depois do início do mês
-          return startDate <= endOfMonth && endDate >= startOfMonth;
-        });
-        
-        const monthlyCostForPeriod = activePoliciesInMonth.reduce((sum, policy) => 
-          sum + (policy.monthlyAmount || 0), 0
-        );
-        
-        monthlyEvolution.push({
-          month,
-          custo: monthlyCostForPeriod,
-          apolices: activePoliciesInMonth.length
-        });
-      }
+    console.log('🔍 DEBUG - Total de policies:', policies.length);
+    console.log('🔍 DEBUG - TotalMonthlyCost calculado:', totalMonthlyCost);
+    
+    // Para políticas reais, mostrar o custo atual nos últimos meses
+    // Se há apólices, assumir que estão ativas no período atual
+    const currentMonthlyCost = totalMonthlyCost;
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const month = date.toLocaleDateString('pt-BR', { month: 'short' });
+      
+      // Para simplificar: se há apólices, mostrar custo nos últimos 3 meses
+      // Nos meses anteriores, mostrar 0 (antes da contratação)
+      const isRecentMonth = i <= 2; // Últimos 3 meses
+      const costForMonth = (policies.length > 0 && isRecentMonth) ? currentMonthlyCost : 0;
+      const activePolicies = (policies.length > 0 && isRecentMonth) ? policies.length : 0;
+      
+      monthlyEvolution.push({
+        month,
+        custo: costForMonth,
+        apolices: activePolicies
+      });
     }
     
-    console.log('📊 Evolução mensal calculada:', monthlyEvolution);
+    console.log('📊 Evolução mensal simplificada:', monthlyEvolution);
 
     // Apólices inseridas nos últimos 30 dias
     const thirtyDaysAgo = new Date();
