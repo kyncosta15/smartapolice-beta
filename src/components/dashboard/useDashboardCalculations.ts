@@ -151,19 +151,57 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // Evolução mensal dos custos
+    // Evolução mensal dos custos BASEADA EM DADOS REAIS
     const monthlyEvolution = [];
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
-      const month = date.toLocaleDateString('pt-BR', { month: 'short' });
-      
-      monthlyEvolution.push({
-        month,
-        custo: totalMonthlyCost + (Math.random() - 0.5) * totalMonthlyCost * 0.1,
-        apolices: policies.length + Math.floor((Math.random() - 0.5) * 3)
-      });
+    
+    // Se não há apólices, mostrar evolução zerada
+    if (policies.length === 0) {
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const month = date.toLocaleDateString('pt-BR', { month: 'short' });
+        
+        monthlyEvolution.push({
+          month,
+          custo: 0,
+          apolices: 0
+        });
+      }
+    } else {
+      // Para apólices reais, calcular custos baseados no período de vigência
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const month = date.toLocaleDateString('pt-BR', { month: 'short' });
+        
+        // Calcular custos reais para cada mês baseado nas apólices ativas naquele período
+        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+        const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        
+        const activePoliciesInMonth = policies.filter(policy => {
+          if (!policy.startDate || !policy.endDate) return false;
+          
+          const startDate = new Date(policy.startDate);
+          const endDate = new Date(policy.endDate);
+          
+          // Apólice estava ativa durante o mês se:
+          // - começou antes ou durante o mês E termina depois do início do mês
+          return startDate <= endOfMonth && endDate >= startOfMonth;
+        });
+        
+        const monthlyCostForPeriod = activePoliciesInMonth.reduce((sum, policy) => 
+          sum + (policy.monthlyAmount || 0), 0
+        );
+        
+        monthlyEvolution.push({
+          month,
+          custo: monthlyCostForPeriod,
+          apolices: activePoliciesInMonth.length
+        });
+      }
     }
+    
+    console.log('📊 Evolução mensal calculada:', monthlyEvolution);
 
     // Apólices inseridas nos últimos 30 dias
     const thirtyDaysAgo = new Date();

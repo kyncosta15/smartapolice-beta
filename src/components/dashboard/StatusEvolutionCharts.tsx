@@ -80,7 +80,7 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
             Evolução de Custos Mensais
           </CardTitle>
           <div className="text-sm text-gray-600 mt-2">
-            Projeção baseada nas apólices ativas
+            Evolução baseada em dados reais das apólices
           </div>
         </CardHeader>
         <CardContent className="pt-6">
@@ -117,19 +117,28 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
             <div>
               <p className="text-xs text-gray-500">Custo Médio</p>
               <p className="font-semibold text-blue-600">
-                {formatCurrency(monthlyEvolution.reduce((sum, item) => sum + item.custo, 0) / monthlyEvolution.length)}
+                {monthlyEvolution.length > 0 ? 
+                  formatCurrency(monthlyEvolution.reduce((sum, item) => sum + item.custo, 0) / monthlyEvolution.length) : 
+                  formatCurrency(0)
+                }
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Maior Custo</p>
               <p className="font-semibold text-green-600">
-                {formatCurrency(Math.max(...monthlyEvolution.map(item => item.custo)))}
+                {monthlyEvolution.length > 0 ? 
+                  formatCurrency(Math.max(...monthlyEvolution.map(item => item.custo))) : 
+                  formatCurrency(0)
+                }
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Total Acumulado</p>
+              <p className="text-xs text-gray-500">Custo Atual</p>
               <p className="font-semibold text-orange-600">
-                {formatCurrency(monthlyEvolution.reduce((sum, item) => sum + item.custo, 0))}
+                {monthlyEvolution.length > 0 ? 
+                  formatCurrency(monthlyEvolution[monthlyEvolution.length - 1].custo) : 
+                  formatCurrency(0)
+                }
               </p>
             </div>
           </div>
