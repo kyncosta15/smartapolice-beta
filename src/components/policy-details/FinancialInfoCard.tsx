@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, CreditCard, Calendar } from 'lucide-react';
+import { DollarSign, CreditCard, Calendar, Hash } from 'lucide-react';
 
 interface FinancialInfoCardProps {
   policy: any;
@@ -33,11 +33,11 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
         {policy.installments && policy.installments > 0 && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 shadow-sm border border-blue-100">
             <label className="text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-2">
-              <Calendar className="h-4 w-4" />
+              <Hash className="h-4 w-4" />
               Parcelamento
             </label>
             <div className="flex items-center gap-3">
-              <div className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
+              <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl shadow-md">
                 {policy.installments}
               </div>
               <div>
