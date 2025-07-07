@@ -10,6 +10,7 @@ import { EmptyState } from './dashboard/EmptyState';
 import { useDashboardCalculations } from './dashboard/useDashboardCalculations';
 import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { PDFExportButton } from './PDFExportButton';
+import { PDFReportGenerator } from './PDFReportGenerator';
 
 interface DynamicDashboardProps {
   policies: ParsedPolicyData[];
@@ -55,8 +56,14 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
             <p className="text-gray-600">Visão geral das suas apólices e métricas</p>
           </div>
           
-          {/* Botão de exportar PDF */}
-          <PDFExportButton targetElementId="dashboard-pdf-content" />
+          {/* Botões de exportação */}
+          <div className="flex items-center gap-3">
+            <PDFExportButton targetElementId="dashboard-pdf-content" />
+            <PDFReportGenerator 
+              policies={policies} 
+              dashboardData={dashboardData}
+            />
+          </div>
         </div>
       </div>
 
