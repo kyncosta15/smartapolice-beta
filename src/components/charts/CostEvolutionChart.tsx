@@ -116,7 +116,7 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
               </CardTitle>
               <p className="text-sm text-gray-600 mt-1">
                 {hasData 
-                  ? `Baseado no custo mensal real das apólices - ${policies.length} apólice${policies.length !== 1 ? 's' : ''}`
+                  ? `Calculado baseado no valor total dividido pelas parcelas - ${policies.length} apólice${policies.length !== 1 ? 's' : ''}`
                   : 'Aguardando dados de apólices para análise'
                 }
               </p>
@@ -168,7 +168,7 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
               <Tooltip 
                 formatter={(value: number, name: string) => [
                   hasData ? formatCurrency(value) : 'Sem dados',
-                  'Custo Mensal Real'
+                  'Valor Calculado (Total ÷ Parcelas)'
                 ]}
                 labelFormatter={(label) => `Período: ${label}`}
                 contentStyle={{
@@ -213,10 +213,10 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
             <div className="flex items-start space-x-3">
               <TrendingUp className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
-                <h4 className="font-medium text-blue-900">Custos Mensais Reais</h4>
+                <h4 className="font-medium text-blue-900">Algoritmo de Evolução de Custos</h4>
                 <p className="text-sm text-blue-700 mt-1">
-                  Os valores mostrados são baseados no campo "custo_mensal" extraído diretamente das apólices processadas.
-                  Cada apólice contribui com seu custo mensal real para o período em que está ativa.
+                  Os valores são calculados dividindo o valor total das apólices pelo número de parcelas, 
+                  distribuindo o custo mensal pelos meses de vigência. 
                   Total de {policies.length} apólice{policies.length !== 1 ? 's' : ''} processada{policies.length !== 1 ? 's' : ''}.
                 </p>
               </div>
