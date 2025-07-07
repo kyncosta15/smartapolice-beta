@@ -47,13 +47,13 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
   }
 
   return (
-    <div className={`w-full ${isMobile ? 'space-y-2 px-1' : 'space-y-6'} overflow-x-hidden`}>
+    <div className={`w-full ${isMobile ? 'space-y-2 px-0' : 'space-y-6'} overflow-hidden max-w-full`}>
       {/* Cabeçalho com título e botão de exportar */}
       <div className="bg-white border border-gray-200 rounded-md shadow-sm" data-exclude-pdf="true">
-        <div className={`${isMobile ? 'p-3' : 'p-6'}`}>
+        <div className={`${isMobile ? 'p-2' : 'p-6'}`}>
           <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center justify-between'}`}>
             <div>
-              <h1 className={`${isMobile ? 'text-base' : 'text-2xl'} font-bold text-gray-900 mb-1`}>
+              <h1 className={`${isMobile ? 'text-sm' : 'text-2xl'} font-bold text-gray-900 mb-1`}>
                 Dashboard de Apólices
               </h1>
               <p className={`${isMobile ? 'text-xs' : 'text-base'} text-gray-600`}>
@@ -62,20 +62,22 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
             </div>
             
             {/* Botão de exportação */}
-            <div className="flex items-center gap-3">
-              <PDFReportGenerator 
-                policies={policies} 
-                dashboardData={dashboardData}
-              />
-            </div>
+            {!isMobile && (
+              <div className="flex items-center gap-3">
+                <PDFReportGenerator 
+                  policies={policies} 
+                  dashboardData={dashboardData}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Container principal do dashboard */}
-      <div id="dashboard-pdf-content" className={`w-full ${isMobile ? 'space-y-2' : 'space-y-6'} bg-white ${isMobile ? 'p-2' : 'p-6'} print-container overflow-x-hidden`}>
+      <div id="dashboard-pdf-content" className={`w-full ${isMobile ? 'space-y-2' : 'space-y-6'} bg-white ${isMobile ? 'p-1' : 'p-6'} print-container overflow-hidden max-w-full`}>
         {/* KPIs principais - com dados reais para admin */}
-        <div className="w-full overflow-x-hidden">
+        <div className="w-full overflow-hidden">
           <KPICards
             totalPolicies={displayMetrics.totalPolicies}
             totalMonthlyCost={displayMetrics.totalMonthlyCost}
@@ -87,7 +89,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
         </div>
 
         {/* A. Classificação e identificação - Um embaixo do outro */}
-        <div className="w-full overflow-x-hidden">
+        <div className="w-full overflow-hidden">
           <ClassificationCharts
             typeDistribution={dashboardData.typeDistribution}
             insurerDistribution={dashboardData.insurerDistribution}
@@ -97,14 +99,14 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
         </div>
 
         {/* Vínculo - Pessoa Física/Jurídica */}
-        <div className="w-full overflow-x-hidden">
+        <div className="w-full overflow-hidden">
           <PersonTypeDistribution
             personTypeDistribution={dashboardData.personTypeDistribution}
           />
         </div>
 
         {/* D. Gestão e ciclo de vida da apólice */}
-        <div className="print-status-section w-full overflow-x-hidden">
+        <div className="print-status-section w-full overflow-hidden">
           <StatusEvolutionCharts
             statusDistribution={dashboardData.statusDistribution}
             monthlyEvolution={dashboardData.monthlyEvolution}
