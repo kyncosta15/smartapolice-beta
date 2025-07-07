@@ -120,9 +120,14 @@ export const AuthPage = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Shield className="h-12 w-12 text-blue-600" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              SmartApólice
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                SmartApólice
+              </h1>
+              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md tracking-wider">
+                BETA
+              </span>
+            </div>
           </div>
           <p className="text-gray-600">Gestão Inteligente de Apólices</p>
         </div>

@@ -44,20 +44,25 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
       </div>
       {showText && (
         <div className="flex flex-col">
-          <h1 className={`${textSizeClasses[size]} font-bold text-gray-900 leading-tight relative`}>
-            <span className="relative">
-              Smart
-              <span className="text-blue-600 relative overflow-hidden">
-                Apólice
-                <span className="absolute inset-0 -top-0 h-full w-full bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-[shimmer_2s_ease-in-out_infinite] skew-x-12"></span>
+          <div className="flex items-center gap-2">
+            <h1 className={`${textSizeClasses[size]} font-bold text-gray-900 leading-tight relative`}>
+              <span className="relative">
+                Smart
+                <span className="text-blue-600 relative overflow-hidden">
+                  Apólice
+                  <span className="absolute inset-0 -top-0 h-full w-full bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-[shimmer_2s_ease-in-out_infinite] skew-x-12"></span>
+                </span>
               </span>
+            </h1>
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md tracking-wider">
+              BETA
             </span>
             {personTypeLabel && (
               <span className="text-xs font-normal text-gray-500 ml-2">
                 {personTypeLabel}
               </span>
             )}
-          </h1>
+          </div>
           {size !== 'sm' && (
             <p className="text-xs text-gray-500 leading-none">Centralize todas suas apólices em um só lugar</p>
           )}

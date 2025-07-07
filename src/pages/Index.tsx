@@ -19,7 +19,12 @@ const AppContent = () => {
           </div>
           
           <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-800 animate-fade-in">SmartApólice</h2>
+            <div className="flex items-center justify-center gap-2">
+              <h2 className="text-xl font-semibold text-gray-800 animate-fade-in">SmartApólice</h2>
+              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md tracking-wider animate-fade-in">
+                BETA
+              </span>
+            </div>
             <p className="text-gray-600 animate-fade-in" style={{ animationDelay: '0.2s' }}>
               Carregando sua central inteligente...
             </p>
