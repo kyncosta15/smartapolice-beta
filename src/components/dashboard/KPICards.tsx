@@ -71,14 +71,14 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
 
   const renderCard = (card: any, index: number) => (
     <Card key={index} className={`bg-gradient-to-r ${card.bgColor} text-white border-0 shadow-lg`}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1 px-3 pt-2' : 'pb-2'}`}>
         <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium opacity-90`}>
           {card.title}
         </CardTitle>
-        <card.icon className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} opacity-80`} />
+        <card.icon className={`${isMobile ? 'h-3 w-3' : 'h-5 w-5'} opacity-80`} />
       </CardHeader>
-      <CardContent className="pb-4">
-        <div className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold mb-1`}>
+      <CardContent className={`${isMobile ? 'pb-2 px-3' : 'pb-4'}`}>
+        <div className={`${isMobile ? 'text-lg' : 'text-3xl'} font-bold mb-1`}>
           {card.displayValue}
         </div>
         <p className={`${isMobile ? 'text-xs' : 'text-xs'} opacity-80`}>
@@ -96,12 +96,12 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
     }
 
     return (
-      <div className="w-full">
+      <div className="w-full px-1">
         <Carousel className="w-full">
-          <CarouselContent className="-ml-2 md:-ml-4">
+          <CarouselContent className="-ml-1">
             {cardPairs.map((pair, index) => (
-              <CarouselItem key={index} className="pl-2 md:pl-4">
-                <div className="grid grid-cols-2 gap-3">
+              <CarouselItem key={index} className="pl-1">
+                <div className="grid grid-cols-2 gap-2">
                   {pair.map((card, cardIndex) => 
                     renderCard(card, index * 2 + cardIndex)
                   )}
@@ -109,8 +109,8 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="left-2" />
-          <CarouselNext className="right-2" />
+          <CarouselPrevious className="left-1 h-6 w-6" />
+          <CarouselNext className="right-1 h-6 w-6" />
         </Carousel>
       </div>
     );

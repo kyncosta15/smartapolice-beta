@@ -40,22 +40,22 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
 
   if (policies.length === 0 && !shouldUseRealData) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-3">
         <EmptyState />
       </div>
     );
   }
 
   return (
-    <div className={`space-y-${isMobile ? '4' : '6'}`}>
+    <div className={`space-y-${isMobile ? '2' : '6'} ${isMobile ? 'px-2' : ''}`}>
       {/* Cabeçalho com título e botão de exportar */}
-      <div className="bg-white border border-gray-200 p-4 md:p-6 rounded-md shadow-sm" data-exclude-pdf="true">
-        <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'items-center justify-between'}`}>
+      <div className="bg-white border border-gray-200 p-3 md:p-6 rounded-md shadow-sm" data-exclude-pdf="true">
+        <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center justify-between'}`}>
           <div>
-            <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 mb-1`}>
+            <h1 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-gray-900 mb-1`}>
               Dashboard de Apólices
             </h1>
-            <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-600`}>
+            <p className={`${isMobile ? 'text-xs' : 'text-base'} text-gray-600`}>
               Visão geral das suas apólices e métricas
             </p>
           </div>
@@ -71,7 +71,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
       </div>
 
       {/* Container principal do dashboard */}
-      <div id="dashboard-pdf-content" className={`space-y-${isMobile ? '4' : '6'} bg-white p-${isMobile ? '4' : '6'} print-container`}>
+      <div id="dashboard-pdf-content" className={`space-y-${isMobile ? '2' : '6'} bg-white p-${isMobile ? '2' : '6'} print-container`}>
         {/* KPIs principais - com dados reais para admin */}
         <KPICards
           totalPolicies={displayMetrics.totalPolicies}
