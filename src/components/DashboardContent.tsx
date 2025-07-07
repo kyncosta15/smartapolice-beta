@@ -239,9 +239,9 @@ export function DashboardContent() {
           />
 
           <div className="flex-1">
-            <WelcomeSection dashboardRef={dashboardRef} />
+            <WelcomeSection />
             
-            <div ref={dashboardRef}>
+            <div id="dashboard-content" className="dashboard-content">
               <ContentRenderer
                 activeSection={activeSection}
                 searchTerm={searchTerm}
