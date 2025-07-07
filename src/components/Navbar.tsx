@@ -202,9 +202,6 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
                   <p className="text-sm font-medium text-gray-900 truncate max-w-32 break-words">
                     {user?.name}
                   </p>
-                  <Badge variant={getRoleBadgeVariant(user?.role || '')} className="text-xs font-medium">
-                    {getRoleLabel(user?.role || '')}
-                  </Badge>
                 </div>
                 <ChevronDown className="w-4 h-4 text-gray-400" />
               </Button>
