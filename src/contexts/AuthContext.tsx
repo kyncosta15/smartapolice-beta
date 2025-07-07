@@ -110,6 +110,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(userProfile);
             console.log('✅ Auth initialized with user:', userProfile?.name || 'Unknown');
           }
+        } else if (mounted) {
+          // No session found, ensure states are cleared
+          setSession(null);
+          setUser(null);
         }
 
         if (mounted) {
@@ -135,22 +139,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user && event === 'SIGNED_IN') {
           console.log('🔑 User signed in, fetching profile...');
-          // Use setTimeout to prevent potential blocking
+          // Use setTimeout to prevent potential blocking and ensure clean state update
           setTimeout(async () => {
             if (mounted) {
               const userProfile = await fetchUserProfile(session.user.id);
               if (mounted) {
                 setUser(userProfile);
-                console.log('✅ User profile set:', userProfile?.name || 'Unknown');
+                setIsLoading(false);
+                console.log('✅ User profile set after signin:', userProfile?.name || 'Unknown');
               }
             }
           }, 100);
         } else if (event === 'SIGNED_OUT') {
           console.log('👋 User signed out');
           setUser(null);
-        }
-        
-        if (mounted) {
+          setIsLoading(false);
+        } else if (!session) {
+          // No session, ensure clean state
+          setUser(null);
           setIsLoading(false);
         }
       }
@@ -164,7 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Empty dependency array to prevent re-running
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     console.log('🔐 Starting login for:', email);
@@ -182,9 +188,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: error.message };
       }
 
-      if (data.user) {
+      if (data.user && data.session) {
         console.log('✅ Login successful for user:', data.user.id);
-        // Don't set loading to false here - let onAuthStateChange handle it
+        // Auth state change handler will manage the rest
         return { success: true };
       }
 
