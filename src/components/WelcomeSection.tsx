@@ -100,22 +100,28 @@ export function WelcomeSection({ dashboardRef }: WelcomeSectionProps) {
     }
   };
 
+  console.log('WelcomeSection rendered with dashboardRef:', !!dashboardRef);
+
   return (
-    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex items-center justify-between">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Bem-vindo, {user?.name}!</h2>
-        <p className="text-gray-600">{getRoleMessage(user?.role || '')}</p>
+    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Bem-vindo, {user?.name}!</h2>
+          <p className="text-gray-600">{getRoleMessage(user?.role || '')}</p>
+        </div>
+        
+        {/* Botão para gerar PDF */}
+        <div className="ml-4">
+          <Button 
+            onClick={generatePDF}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            size="sm"
+          >
+            <Download className="h-4 w-4" />
+            Exportar Dashboard
+          </Button>
+        </div>
       </div>
-      
-      {/* Botão para gerar PDF */}
-      <Button 
-        onClick={generatePDF}
-        className="flex items-center gap-2"
-        variant="outline"
-      >
-        <Download className="h-4 w-4" />
-        Exportar Dashboard
-      </Button>
     </div>
   );
 }
