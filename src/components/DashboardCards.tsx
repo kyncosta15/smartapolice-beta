@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield, DollarSign, CreditCard } from 'lucide-react';
+import { FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield, DollarSign, CreditCard, User } from 'lucide-react';
 
 interface DashboardCardsProps {
   stats?: {
@@ -13,6 +13,7 @@ interface DashboardCardsProps {
     totalInstallments: number;
     overdueInstallments: number; // Nova propriedade para parcelas vencidas
     duingNext30Days: number; // Nova propriedade para parcelas vencendo nos próximos 30 dias
+    responsibleUser?: string; // Nome do responsável
   };
 }
 
@@ -25,7 +26,8 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
     expiringPolicies: 0,
     totalInstallments: 0,
     overdueInstallments: 0,
-    duingNext30Days: 0
+    duingNext30Days: 0,
+    responsibleUser: 'Não definido'
   };
 
   const currentStats = stats || defaultStats;
@@ -80,11 +82,19 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
       change: currentStats.overdueInstallments > 0 ? 'Em atraso' : 'Em dia',
       changeType: currentStats.overdueInstallments > 0 ? 'warning' : 'positive',
       description: 'Requerem atenção'
+    },
+    {
+      title: 'Responsável',
+      value: currentStats.responsibleUser || 'Não definido',
+      icon: User,
+      change: currentStats.responsibleUser ? 'Definido' : 'Não definido',
+      changeType: currentStats.responsibleUser ? 'positive' : 'neutral',
+      description: 'Responsável pelas apólices'
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
       {dashboardData.map((item, index) => (
         <Card key={index} className="bg-white/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
