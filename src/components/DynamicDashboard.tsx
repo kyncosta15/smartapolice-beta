@@ -48,7 +48,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
   return (
     <div className="space-y-6">
       {/* Cabeçalho com título e botão de exportar */}
-      <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm" data-exclude-pdf="true">
+      <div className="bg-white border border-gray-200 p-6 rounded-md shadow-sm" data-exclude-pdf="true">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">Dashboard de Apólices</h1>

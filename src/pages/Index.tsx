@@ -21,7 +21,7 @@ const AppContent = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-center gap-2">
               <h2 className="text-xl font-semibold text-gray-800 animate-fade-in">SmartApólice</h2>
-              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md tracking-wider animate-fade-in">
+              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded tracking-wider animate-fade-in">
                 BETA
               </span>
             </div>

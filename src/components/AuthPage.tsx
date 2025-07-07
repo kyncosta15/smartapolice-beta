@@ -124,7 +124,7 @@ export const AuthPage = () => {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 SmartApólice
               </h1>
-              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md tracking-wider">
+              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded tracking-wider">
                 BETA
               </span>
             </div>

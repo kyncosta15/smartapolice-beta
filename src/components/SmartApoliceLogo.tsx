@@ -37,8 +37,8 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg blur-sm opacity-75"></div>
-        <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg p-1.5">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md blur-sm opacity-75"></div>
+        <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md p-1.5">
           <Shield className={`${sizeClasses[size]} text-white`} />
         </div>
       </div>
@@ -54,7 +54,7 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
                 </span>
               </span>
             </h1>
-            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md tracking-wider">
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded tracking-wider">
               BETA
             </span>
             {personTypeLabel && (
