@@ -69,12 +69,12 @@ export function ClassificationCharts({ typeDistribution, insurerDistribution, ca
         </CardContent>
       </Card>
 
-      {/* Categorias */}
+      {/* Novas Apólices (Últimos 30 dias) */}
       <Card>
         <CardHeader className="border-b border-gray-100">
           <CardTitle className="flex items-center text-lg">
-            <Shield className="h-5 w-5 mr-2 text-purple-600" />
-            Categorias
+            <Shield className="h-5 w-5 mr-2 text-green-600" />
+            Novas Apólices (Últimos 30 dias)
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -85,7 +85,7 @@ export function ClassificationCharts({ typeDistribution, insurerDistribution, ca
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Area type="monotone" dataKey="value" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.6} />
+                <Area type="monotone" dataKey="value" stroke="#10B981" fill="#10B981" fillOpacity={0.6} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
