@@ -1,10 +1,11 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, Edit, Trash2, Search, Filter, FileText, Download } from 'lucide-react';
+import { Eye, Edit, Trash2, Search, Filter, FileText, Download, Building2, Calendar, DollarSign } from 'lucide-react';
 import { LocationFilter } from './LocationFilter';
 import { PolicyEditModal } from './PolicyEditModal';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -185,29 +186,29 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-50 text-green-600 border-green-200 hover:bg-green-50">Ativa</Badge>;
+        return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-medium">Ativa</Badge>;
       case 'expiring':
-        return <Badge className="bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-50">Vencendo</Badge>;
+        return <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50 font-medium">Vencendo</Badge>;
       case 'expired':
-        return <Badge className="bg-red-50 text-red-600 border-red-200 hover:bg-red-50">Vencida</Badge>;
+        return <Badge className="bg-red-50 text-red-700 border-red-200 hover:bg-red-50 font-medium">Vencida</Badge>;
       case 'under_review':
-        return <Badge className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-50">Em Análise</Badge>;
+        return <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 font-medium">Em Análise</Badge>;
       default:
-        return <Badge variant="secondary">Desconhecido</Badge>;
+        return <Badge variant="secondary" className="font-medium">Desconhecido</Badge>;
     }
   };
 
   const getTypeBadge = (type: string) => {
     const typeColors = {
-      auto: 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-50',
-      vida: 'bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-50',
-      saude: 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50',
-      patrimonial: 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-50',
-      empresarial: 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-50',
-      acidentes_pessoais: 'bg-red-50 text-red-600 border-red-200 hover:bg-red-50'
+      auto: 'bg-blue-50 text-blue-700 border-blue-200',
+      vida: 'bg-purple-50 text-purple-700 border-purple-200',
+      saude: 'bg-green-50 text-green-700 border-green-200',
+      patrimonial: 'bg-orange-50 text-orange-700 border-orange-200',
+      empresarial: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      acidentes_pessoais: 'bg-pink-50 text-pink-700 border-pink-200'
     };
     
-    const colorClass = typeColors[type] || 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-50';
+    const colorClass = typeColors[type] || 'bg-gray-50 text-gray-700 border-gray-200';
     const label = {
       auto: 'Auto',
       vida: 'Vida',
@@ -217,34 +218,34 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
       acidentes_pessoais: 'Acidentes Pessoais'
     }[type] || 'Outros';
 
-    return <Badge className={`${colorClass} ${isMobile ? 'text-xs' : 'text-sm'}`}>{label}</Badge>;
+    return <Badge className={`${colorClass} font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{label}</Badge>;
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Filtros e Busca */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader className={`${isMobile ? 'pb-3' : 'pb-4'}`}>
+      <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
+        <CardHeader className={`${isMobile ? 'pb-4' : 'pb-6'}`}>
           <div className="flex flex-col gap-4">
-            <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold text-gray-900`}>
+            <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-gray-900 font-sf-pro`}>
               Minhas Apólices
             </CardTitle>
-            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} ${isMobile ? 'space-y-3' : 'items-center space-x-2'}`}>
+            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} ${isMobile ? 'space-y-3' : 'items-center space-x-3'}`}>
               <div className={`relative ${isMobile ? 'w-full' : 'flex-1 lg:w-80'}`}>
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Buscar por nome, seguradora ou número..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 border-gray-200 focus:border-blue-300 focus:ring-blue-100 font-sf-pro"
                 />
               </div>
               <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'space-x-2'}`}>
                 <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className={`${isMobile ? 'w-full' : 'w-40'}`}>
+                  <SelectTrigger className={`${isMobile ? 'w-full' : 'w-40'} border-gray-200 font-sf-pro`}>
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="font-sf-pro">
                     <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="auto">Auto</SelectItem>
                     <SelectItem value="vida">Vida</SelectItem>
@@ -306,7 +307,7 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
                   variant="outline"
                   size="sm"
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center space-x-1 ${isMobile ? 'w-full justify-center' : ''}`}
+                  className={`flex items-center space-x-2 border-gray-200 hover:bg-gray-50 font-sf-pro ${isMobile ? 'w-full justify-center' : ''}`}
                 >
                   <Filter className="h-4 w-4" />
                   <span>Filtros</span>
@@ -324,19 +325,28 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
       </Card>
 
       {/* Lista de Apólices */}
-      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'} gap-4`}>
+      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'} gap-6`}>
         {filteredPolicies.map((policy) => (
-          <Card key={policy.id} className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-200 hover:border-blue-300 h-full">
-            <CardHeader className={`${isMobile ? 'pb-2' : 'pb-3'}`}>
+          <Card key={policy.id} className="group bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden">
+            {/* Header com gradiente */}
+            <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+            
+            <CardHeader className={`${isMobile ? 'pb-3' : 'pb-4'} relative`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <h3 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-gray-900 mb-1 truncate`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Building2 className="h-4 w-4 text-gray-500" />
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 font-medium font-sf-pro`}>
+                      {policy.insurer}
+                    </p>
+                  </div>
+                  <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-gray-900 mb-2 font-sf-pro leading-tight`}>
                     {policy.name}
                   </h3>
-                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-2 truncate`}>
+                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-3 font-mono font-sf-pro`}>
                     {policy.policyNumber}
                   </p>
-                  <div className={`flex ${isMobile ? 'flex-col space-y-1' : 'items-center space-x-2'}`}>
+                  <div className="flex flex-wrap gap-2">
                     {getStatusBadge(policy.status)}
                     {getTypeBadge(policy.type)}
                   </div>
@@ -344,86 +354,99 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
               </div>
             </CardHeader>
             
-            <CardContent className={`space-y-${isMobile ? '2' : '3'}`}>
-              <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-4'} ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                <div>
-                  <p className="text-gray-500 font-medium">Seguradora</p>
-                  <p className="font-medium text-gray-900 truncate">{policy.insurer}</p>
+            <CardContent className="space-y-4">
+              {/* Valor em destaque */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-700 font-medium font-sf-pro`}>Valor Mensal</p>
                 </div>
-                <div>
-                  <p className="text-gray-500 font-medium">Valor Mensal</p>
-                  <p className="font-semibold text-green-600">
-                    R$ {policy.monthlyAmount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
+                <p className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-green-700 font-sf-pro`}>
+                  R$ {policy.monthlyAmount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+
+              {/* Informações adicionais */}
+              <div className="space-y-3">
+                {/* Modelo do carro para seguros Auto */}
+                {policy.type === 'auto' && policy.vehicleModel && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+                    <div>
+                      <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 font-medium font-sf-pro`}>Veículo</p>
+                      <p className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-gray-900 font-sf-pro`}>{policy.vehicleModel}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Estado (UF) */}
+                {policy.uf && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+                    <div>
+                      <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 font-medium font-sf-pro`}>Estado</p>
+                      <p className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-gray-900 font-sf-pro`}>{policy.uf}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Vigência */}
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <div className="flex-1">
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 font-medium font-sf-pro`}>Vigência</p>
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-700 font-sf-pro`}>
+                      {new Date(policy.startDate).toLocaleDateString('pt-BR')} - {new Date(policy.endDate).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {/* Modelo do carro para seguros Auto */}
-              {policy.type === 'auto' && policy.vehicleModel && (
-                <div className={`${isMobile ? 'text-xs' : 'text-sm'}`}>
-                  <p className="text-gray-500 font-medium">Modelo do Veículo</p>
-                  <p className="font-medium text-gray-900 truncate">{policy.vehicleModel}</p>
-                </div>
-              )}
-
-              {/* Estado (UF) */}
-              {policy.uf && (
-                <div className={`${isMobile ? 'text-xs' : 'text-sm'}`}>
-                  <p className="text-gray-500 font-medium">Estado</p>
-                  <p className="font-medium text-gray-900">{policy.uf}</p>
-                </div>
-              )}
-              
-              <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-4'} ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                <div>
-                  <p className="text-gray-500 font-medium">Início</p>
-                  <p className="text-gray-900">{new Date(policy.startDate).toLocaleDateString('pt-BR')}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 font-medium">Vencimento</p>
-                  <p className="text-gray-900">{new Date(policy.endDate).toLocaleDateString('pt-BR')}</p>
-                </div>
-              </div>
-
-              <div className={`flex items-center justify-between pt-3 border-t border-gray-100 ${isMobile ? 'flex-col space-y-2' : ''}`}>
-                <div className={`flex ${isMobile ? 'w-full justify-center' : 'space-x-1'}`}>
+              {/* Ações */}
+              <div className={`flex items-center justify-between pt-4 border-t border-gray-100 ${isMobile ? 'flex-col space-y-3' : ''}`}>
+                <div className={`flex ${isMobile ? 'w-full justify-center space-x-3' : 'space-x-2'}`}>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => onPolicySelect(policy)}
-                    className="hover:bg-blue-50 hover:text-blue-600 h-8 w-8 p-0"
+                    className="hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200 font-sf-pro"
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4 mr-1" />
+                    {!isMobile && 'Ver'}
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleEditClick(policy)}
-                    className="hover:bg-green-50 hover:text-green-600 h-8 w-8 p-0"
+                    className="hover:bg-green-50 hover:text-green-600 transition-colors duration-200 font-sf-pro"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4 mr-1" />
+                    {!isMobile && 'Editar'}
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDownload(policy)}
-                    className="hover:bg-purple-50 hover:text-purple-600 h-8 w-8 p-0"
+                    className="hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200 font-sf-pro"
                     disabled={!policy.file && !policy.pdfPath}
                   >
-                    <Download className="h-4 w-4" />
+                    <Download className="h-4 w-4 mr-1" />
+                    {!isMobile && 'Baixar'}
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => onPolicyDelete(policy.id)}
-                    className="hover:bg-red-50 hover:text-red-600 h-8 w-8 p-0"
+                    className="hover:bg-red-50 hover:text-red-600 transition-colors duration-200 font-sf-pro"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    {!isMobile && 'Excluir'}
                   </Button>
                 </div>
                 
                 {policy.status === 'expiring' && (
-                  <Badge className={`bg-orange-100 text-orange-700 ${isMobile ? 'text-xs w-full justify-center' : 'text-xs'}`}>
+                  <Badge className={`bg-amber-100 text-amber-800 font-medium font-sf-pro ${isMobile ? 'text-xs w-full justify-center' : 'text-xs'}`}>
+                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1.5 animate-pulse"></div>
                     Ação necessária
                   </Badge>
                 )}
