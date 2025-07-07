@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
@@ -26,6 +26,7 @@ export function DashboardContent() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [extractedPolicies, setExtractedPolicies] = useState<ParsedPolicyData[]>([]);
   const [activeSection, setActiveSection] = useState('home');
+  const dashboardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   // Hook para persistência de apólices
@@ -238,26 +239,28 @@ export function DashboardContent() {
           />
 
           <div className="flex-1">
-            <WelcomeSection />
+            <WelcomeSection dashboardRef={dashboardRef} />
             
-            <ContentRenderer
-              activeSection={activeSection}
-              searchTerm={searchTerm}
-              filterType={filterType}
-              allPolicies={normalizedPolicies}
-              extractedPolicies={normalizedPolicies}
-              allUsers={persistedUsers}
-              usersLoading={usersLoading}
-              onPolicySelect={handlePolicySelect}
-              onPolicyUpdate={handlePolicyUpdate}
-              onPolicyDelete={handleDeletePolicy}
-              onPolicyDownload={downloadPersistedPDF}
-              onPolicyExtracted={handlePolicyExtracted}
-              onUserUpdate={handleUserUpdate}
-              onUserDelete={handleUserDelete}
-              onClientRegister={handleClientRegister}
-              onSectionChange={setActiveSection}
-            />
+            <div ref={dashboardRef}>
+              <ContentRenderer
+                activeSection={activeSection}
+                searchTerm={searchTerm}
+                filterType={filterType}
+                allPolicies={normalizedPolicies}
+                extractedPolicies={normalizedPolicies}
+                allUsers={persistedUsers}
+                usersLoading={usersLoading}
+                onPolicySelect={handlePolicySelect}
+                onPolicyUpdate={handlePolicyUpdate}
+                onPolicyDelete={handleDeletePolicy}
+                onPolicyDownload={downloadPersistedPDF}
+                onPolicyExtracted={handlePolicyExtracted}
+                onUserUpdate={handleUserUpdate}
+                onUserDelete={handleUserDelete}
+                onClientRegister={handleClientRegister}
+                onSectionChange={setActiveSection}
+              />
+            </div>
           </div>
 
           <PolicyDetailsModal 

@@ -117,20 +117,8 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
 
   return (
     <div className="space-y-6">
-      {/* Botão para gerar PDF */}
-      <div className="flex justify-end">
-        <Button 
-          onClick={generatePDF}
-          className="flex items-center gap-2"
-          variant="outline"
-        >
-          <Download className="h-4 w-4" />
-          Exportar para PDF
-        </Button>
-      </div>
-
       {/* Container principal do dashboard */}
-      <div ref={dashboardRef} className="space-y-6 bg-white p-6">
+      <div className="space-y-6 bg-white p-6">
         {/* KPIs principais - com dados reais para admin */}
         <KPICards
           totalPolicies={displayMetrics.totalPolicies}
