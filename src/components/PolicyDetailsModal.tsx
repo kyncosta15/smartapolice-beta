@@ -34,34 +34,34 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
     switch (status) {
       case 'active':
         return (
-          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 font-medium font-sf-pro">
-            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5"></div>
+          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold font-sf-pro px-3 py-1.5 shadow-sm">
+            <div className="w-2 h-2 bg-emerald-600 rounded-full mr-2"></div>
             Ativa
           </Badge>
         );
       case 'expiring':
         return (
-          <Badge className="bg-amber-50 text-amber-700 border-amber-200 font-medium font-sf-pro">
-            <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1.5 animate-pulse"></div>
+          <Badge className="bg-amber-100 text-amber-800 border-amber-300 font-semibold font-sf-pro px-3 py-1.5 shadow-sm">
+            <div className="w-2 h-2 bg-amber-600 rounded-full mr-2 animate-pulse"></div>
             Vencendo
           </Badge>
         );
       case 'expired':
         return (
-          <Badge className="bg-red-50 text-red-700 border-red-200 font-medium font-sf-pro">
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></div>
+          <Badge className="bg-red-100 text-red-800 border-red-300 font-semibold font-sf-pro px-3 py-1.5 shadow-sm">
+            <div className="w-2 h-2 bg-red-600 rounded-full mr-2"></div>
             Vencida
           </Badge>
         );
       case 'under_review':
         return (
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200 font-medium font-sf-pro">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5"></div>
+          <Badge className="bg-blue-100 text-blue-800 border-blue-300 font-semibold font-sf-pro px-3 py-1.5 shadow-sm">
+            <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
             Em Análise
           </Badge>
         );
       default:
-        return <Badge variant="secondary" className="font-sf-pro">Desconhecido</Badge>;
+        return <Badge variant="secondary" className="font-sf-pro px-3 py-1.5 shadow-sm">Desconhecido</Badge>;
     }
   };
 
@@ -130,16 +130,16 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-sm font-sf-pro">
-        <DialogHeader className="border-b border-gray-100 pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-2xl font-bold text-gray-900 mb-2 font-sf-pro">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto bg-white border-0 shadow-2xl rounded-2xl font-sf-pro">
+        <DialogHeader className="border-b border-gray-200 pb-6 px-8 pt-8">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <DialogTitle className="text-3xl font-bold text-gray-900 mb-4 font-sf-pro leading-tight">
                 {policy.name}
               </DialogTitle>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 {getStatusBadge(policy.status)}
-                <Badge className="bg-blue-50 text-blue-700 border-blue-200 font-medium font-sf-pro">
+                <Badge className="bg-slate-100 text-slate-800 border-slate-300 font-semibold font-sf-pro px-3 py-1.5 shadow-sm">
                   {getTypeLabel(policy.type)}
                 </Badge>
               </div>
@@ -148,7 +148,7 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
               variant="destructive" 
               size="sm"
               onClick={handleDelete}
-              className="font-sf-pro hover:bg-red-600 transition-colors duration-200"
+              className="font-sf-pro font-medium hover:bg-red-600 transition-all duration-200 shadow-md hover:shadow-lg px-4 py-2"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Excluir
@@ -156,224 +156,229 @@ export const PolicyDetailsModal = ({ isOpen, onClose, policy, onDelete }: Policy
           </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          {/* Informações Básicas */}
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-lg font-semibold text-gray-900 font-sf-pro">
-                <FileText className="h-5 w-5 mr-2 text-blue-600" />
-                Informações Gerais
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-white/60 rounded-lg p-3">
-                <label className="text-sm font-medium text-gray-600 font-sf-pro">Nome da Apólice</label>
-                <p className="text-lg font-bold text-gray-900 font-sf-pro">{policy.name}</p>
-              </div>
-
-              {/* Nome completo da pessoa segurada */}
-              {policy.insuredName && (
-                <div className="bg-white/60 rounded-lg p-3">
-                  <label className="text-sm font-medium text-gray-600 font-sf-pro flex items-center gap-1">
-                    <User className="h-4 w-4" />
-                    Nome Completo do Segurado
-                  </label>
-                  <p className="text-base font-semibold text-gray-900 font-sf-pro">{policy.insuredName}</p>
-                </div>
-              )}
-
-              {/* CPF/CNPJ */}
-              {documentInfo && (
-                <div className="bg-white/60 rounded-lg p-3">
-                  <label className="text-sm font-medium text-gray-600 font-sf-pro">
-                    {documentInfo.type}
-                  </label>
-                  <p className="font-mono text-base font-semibold text-gray-900 font-sf-pro">
-                    {documentInfo.formatted}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1 font-sf-pro">
-                    {documentInfo.personType === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
-                  </p>
-                </div>
-              )}
-
-              {/* Estado (UF) */}
-              {policy.uf && (
-                <div className="bg-white/60 rounded-lg p-3">
-                  <label className="text-sm font-medium text-gray-600 font-sf-pro flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    Estado (UF)
-                  </label>
-                  <p className="text-lg font-semibold text-gray-900 font-sf-pro">{policy.uf}</p>
-                </div>
-              )}
-
-              <div className="bg-white/60 rounded-lg p-3">
-                <label className="text-sm font-medium text-gray-600 font-sf-pro">Número da Apólice</label>
-                <p className="font-mono text-sm text-gray-900 font-sf-pro">{policy.policyNumber}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Informações da Seguradora */}
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-lg font-semibold text-gray-900 font-sf-pro">
-                <Building className="h-5 w-5 mr-2 text-green-600" />
-                Seguradora
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-white/60 rounded-lg p-3">
-                <label className="text-sm font-medium text-gray-600 font-sf-pro">Empresa</label>
-                <p className="text-lg font-bold text-gray-900 font-sf-pro">{policy.insurer}</p>
-              </div>
-
-              <div className="bg-white/60 rounded-lg p-3">
-                <label className="text-sm font-medium text-gray-600 font-sf-pro">Cobertura</label>
-                <p className="text-base text-gray-900 font-sf-pro">{policy.coverage}</p>
-              </div>
-
-              {policy.entity && policy.entity !== policy.insurer && (
-                <div className="bg-white/60 rounded-lg p-3">
-                  <label className="text-sm font-medium text-gray-600 font-sf-pro">Corretora</label>
-                  <p className="text-base text-gray-900 font-sf-pro">{policy.entity}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Informações do Veículo - APENAS para seguros Auto */}
-          {policy.type === 'auto' && (policy.vehicleModel || policy.deductible) && (
-            <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-md">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-lg font-semibold text-gray-900 font-sf-pro">
-                  <Car className="h-5 w-5 mr-2 text-purple-600" />
-                  Informações do Veículo
+        <div className="p-8 space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Informações Gerais */}
+            <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
+              <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-blue-200 pb-4">
+                <CardTitle className="flex items-center text-xl font-bold text-blue-900 font-sf-pro">
+                  <FileText className="h-6 w-6 mr-3 text-blue-600" />
+                  Informações Gerais
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {policy.vehicleModel && (
-                  <div className="bg-white/60 rounded-lg p-3">
-                    <label className="text-sm font-medium text-gray-600 font-sf-pro">Modelo do Veículo</label>
-                    <p className="text-lg font-bold text-gray-900 font-sf-pro">{policy.vehicleModel}</p>
+              <CardContent className="p-6 space-y-5">
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+                  <label className="text-sm font-medium text-blue-700 font-sf-pro block mb-1">Nome da Apólice</label>
+                  <p className="text-xl font-bold text-gray-900 font-sf-pro">{policy.name}</p>
+                </div>
+
+                {policy.insuredName && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+                    <label className="text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-1">
+                      <User className="h-4 w-4" />
+                      Nome Completo do Segurado
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 font-sf-pro">{policy.insuredName}</p>
                   </div>
                 )}
 
-                {policy.deductible && policy.deductible > 0 && (
-                  <div className="bg-white/60 rounded-lg p-3">
-                    <label className="text-sm font-medium text-gray-600 font-sf-pro">Franquia</label>
-                    <p className="text-lg font-bold text-gray-900 font-sf-pro">
-                      R$ {policy.deductible.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {documentInfo && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+                    <label className="text-sm font-medium text-blue-700 font-sf-pro block mb-1">
+                      {documentInfo.type}
+                    </label>
+                    <p className="font-mono text-lg font-bold text-gray-900 font-sf-pro">
+                      {documentInfo.formatted}
                     </p>
+                    <p className="text-xs text-blue-600 mt-2 font-sf-pro font-medium">
+                      {documentInfo.personType === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                    </p>
+                  </div>
+                )}
+
+                {policy.uf && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+                    <label className="text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-1">
+                      <MapPin className="h-4 w-4" />
+                      Estado (UF)
+                    </label>
+                    <p className="text-xl font-bold text-gray-900 font-sf-pro">{policy.uf}</p>
+                  </div>
+                )}
+
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+                  <label className="text-sm font-medium text-blue-700 font-sf-pro block mb-1">Número da Apólice</label>
+                  <p className="font-mono text-base font-semibold text-gray-900 font-sf-pro">{policy.policyNumber}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Informações da Seguradora */}
+            <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 overflow-hidden">
+              <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-emerald-200 pb-4">
+                <CardTitle className="flex items-center text-xl font-bold text-emerald-900 font-sf-pro">
+                  <Building className="h-6 w-6 mr-3 text-emerald-600" />
+                  Seguradora
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-5">
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
+                  <label className="text-sm font-medium text-emerald-700 font-sf-pro block mb-1">Empresa</label>
+                  <p className="text-xl font-bold text-gray-900 font-sf-pro">{policy.insurer}</p>
+                </div>
+
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
+                  <label className="text-sm font-medium text-emerald-700 font-sf-pro block mb-1">Cobertura</label>
+                  <p className="text-base font-medium text-gray-900 font-sf-pro leading-relaxed">{policy.coverage}</p>
+                </div>
+
+                {policy.entity && policy.entity !== policy.insurer && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
+                    <label className="text-sm font-medium text-emerald-700 font-sf-pro block mb-1">Corretora</label>
+                    <p className="text-base font-medium text-gray-900 font-sf-pro">{policy.entity}</p>
                   </div>
                 )}
               </CardContent>
             </Card>
-          )}
+          </div>
 
-          {/* Informações Financeiras */}
-          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-0 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-lg font-semibold text-gray-900 font-sf-pro">
-                <DollarSign className="h-5 w-5 mr-2 text-orange-600" />
-                Informações Financeiras
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg p-4">
-                <label className="text-sm font-medium text-green-700 font-sf-pro">Prêmio Anual</label>
-                <p className="text-3xl font-bold text-green-700 font-sf-pro">
-                  R$ {policy.premium?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-              
-              <div className="bg-white/60 rounded-lg p-3">
-                <label className="text-sm font-medium text-gray-600 font-sf-pro">Prêmio Mensal</label>
-                <p className="text-xl font-bold text-gray-900 font-sf-pro">
-                  R$ {(policy.premium / 12)?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
+          {/* Segunda linha de cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Informações do Veículo - APENAS para seguros Auto */}
+            {policy.type === 'auto' && (policy.vehicleModel || policy.deductible) && (
+              <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 overflow-hidden">
+                <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-purple-200 pb-4">
+                  <CardTitle className="flex items-center text-xl font-bold text-purple-900 font-sf-pro">
+                    <Car className="h-6 w-6 mr-3 text-purple-600" />
+                    Informações do Veículo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-5">
+                  {policy.vehicleModel && (
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
+                      <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">Modelo do Veículo</label>
+                      <p className="text-xl font-bold text-gray-900 font-sf-pro">{policy.vehicleModel}</p>
+                    </div>
+                  )}
 
-              {policy.paymentForm && (
-                <div className="bg-white/60 rounded-lg p-3">
-                  <label className="text-sm font-medium text-gray-600 font-sf-pro flex items-center gap-1">
-                    <CreditCard className="h-4 w-4" />
-                    Forma de Pagamento
-                  </label>
-                  <p className="text-base text-gray-900 font-sf-pro">{policy.paymentForm}</p>
-                </div>
-              )}
+                  {policy.deductible && policy.deductible > 0 && (
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
+                      <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">Franquia</label>
+                      <p className="text-xl font-bold text-gray-900 font-sf-pro">
+                        R$ {policy.deductible.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
-              {policy.installments && (
-                <div className="bg-white/60 rounded-lg p-3">
-                  <label className="text-sm font-medium text-gray-600 font-sf-pro">Parcelas</label>
-                  <p className="text-base font-semibold text-gray-900 font-sf-pro">{policy.installments}x</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Informações de Vigência */}
-          <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-0 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-lg font-semibold text-gray-900 font-sf-pro">
-                <Calendar className="h-5 w-5 mr-2 text-indigo-600" />
-                Vigência & Histórico
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/60 rounded-lg p-3">
-                  <label className="text-sm font-medium text-gray-600 font-sf-pro">Data de Início</label>
-                  <p className="text-base font-semibold text-gray-900 font-sf-pro">{new Date(policy.startDate).toLocaleDateString('pt-BR')}</p>
-                </div>
-                
-                <div className="bg-white/60 rounded-lg p-3">
-                  <label className="text-sm font-medium text-gray-600 font-sf-pro">Data de Fim</label>
-                  <p className="text-base font-semibold text-gray-900 font-sf-pro">{new Date(policy.endDate).toLocaleDateString('pt-BR')}</p>
-                </div>
-              </div>
-
-              {policy.extractedAt && (
-                <div className="bg-white/60 rounded-lg p-3">
-                  <label className="text-sm font-medium text-gray-600 font-sf-pro flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    Extraído em
-                  </label>
-                  <p className="text-sm text-gray-900 font-sf-pro">
-                    {new Date(policy.extractedAt).toLocaleDateString('pt-BR')} às{' '}
-                    {new Date(policy.extractedAt).toLocaleTimeString('pt-BR')}
+            {/* Informações Financeiras */}
+            <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 overflow-hidden">
+              <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-amber-200 pb-4">
+                <CardTitle className="flex items-center text-xl font-bold text-amber-900 font-sf-pro">
+                  <DollarSign className="h-6 w-6 mr-3 text-amber-600" />
+                  Informações Financeiras
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-5">
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-6 shadow-md">
+                  <label className="text-sm font-medium text-white/90 font-sf-pro block mb-2">Prêmio Anual</label>
+                  <p className="text-3xl font-bold text-white font-sf-pro">
+                    R$ {policy.premium?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-              )}
-
-              {policy.fileName && (
-                <div className="bg-white/60 rounded-lg p-3">
-                  <label className="text-sm font-medium text-gray-600 font-sf-pro">Arquivo Original</label>
-                  <p className="text-sm bg-gray-100 p-2 rounded border font-sf-pro">{policy.fileName}</p>
+                
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
+                  <label className="text-sm font-medium text-amber-700 font-sf-pro block mb-1">Prêmio Mensal</label>
+                  <p className="text-2xl font-bold text-gray-900 font-sf-pro">
+                    R$ {(policy.premium / 12)?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Card do Responsável */}
-          <Card className="bg-gradient-to-br from-gray-50 to-slate-50 border-0 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-lg font-semibold text-gray-900 font-sf-pro">
-                <Shield className="h-5 w-5 mr-2 text-gray-600" />
-                Responsável
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-3">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto">
-                <User className="h-8 w-8 text-blue-600" />
-              </div>
-              <p className="text-base font-semibold text-gray-900 font-sf-pro">
-                {policy.responsavel_nome || 'Não definido'}
-              </p>
-            </CardContent>
-          </Card>
+                {policy.paymentForm && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
+                    <label className="text-sm font-medium text-amber-700 font-sf-pro flex items-center gap-2 mb-1">
+                      <CreditCard className="h-4 w-4" />
+                      Forma de Pagamento
+                    </label>
+                    <p className="text-base font-medium text-gray-900 font-sf-pro">{policy.paymentForm}</p>
+                  </div>
+                )}
+
+                {policy.installments && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
+                    <label className="text-sm font-medium text-amber-700 font-sf-pro block mb-1">Parcelas</label>
+                    <p className="text-lg font-bold text-gray-900 font-sf-pro">{policy.installments}x</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Terceira linha de cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Informações de Vigência */}
+            <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 overflow-hidden">
+              <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-indigo-200 pb-4">
+                <CardTitle className="flex items-center text-xl font-bold text-indigo-900 font-sf-pro">
+                  <Calendar className="h-6 w-6 mr-3 text-indigo-600" />
+                  Vigência & Histórico
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
+                    <label className="text-sm font-medium text-indigo-700 font-sf-pro block mb-1">Data de Início</label>
+                    <p className="text-base font-bold text-gray-900 font-sf-pro">{new Date(policy.startDate).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
+                    <label className="text-sm font-medium text-indigo-700 font-sf-pro block mb-1">Data de Fim</label>
+                    <p className="text-base font-bold text-gray-900 font-sf-pro">{new Date(policy.endDate).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                </div>
+
+                {policy.extractedAt && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
+                    <label className="text-sm font-medium text-indigo-700 font-sf-pro flex items-center gap-2 mb-1">
+                      <Clock className="h-4 w-4" />
+                      Extraído em
+                    </label>
+                    <p className="text-sm font-medium text-gray-900 font-sf-pro">
+                      {new Date(policy.extractedAt).toLocaleDateString('pt-BR')} às{' '}
+                      {new Date(policy.extractedAt).toLocaleTimeString('pt-BR')}
+                    </p>
+                  </div>
+                )}
+
+                {policy.fileName && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
+                    <label className="text-sm font-medium text-indigo-700 font-sf-pro block mb-1">Arquivo Original</label>
+                    <p className="text-sm bg-gray-50 p-3 rounded-lg border font-sf-pro font-medium text-gray-700 break-all">{policy.fileName}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Card do Responsável */}
+            <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+              <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-slate-200 pb-4">
+                <CardTitle className="flex items-center text-xl font-bold text-slate-900 font-sf-pro">
+                  <Shield className="h-6 w-6 mr-3 text-slate-600" />
+                  Responsável
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                  <User className="h-10 w-10 text-white" />
+                </div>
+                <p className="text-xl font-bold text-slate-900 font-sf-pro">
+                  {policy.responsavel_nome || 'Não definido'}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
