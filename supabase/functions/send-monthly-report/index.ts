@@ -34,56 +34,116 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Buscar todas as apólices
-    const { data: policies, error: policiesError } = await supabase
-      .from('policies')
-      .select('*');
+    // Verificar se é chamada manual (com email específico) ou automática
+    const requestBody = await req.json().catch(() => ({}));
+    const isManualCall = requestBody.userEmail && requestBody.userName;
 
-    if (policiesError) {
-      console.error('Error fetching policies:', policiesError);
-      throw new Error(`Failed to fetch policies: ${policiesError.message}`);
-    }
+    console.log("Request type:", isManualCall ? "Manual" : "Automatic");
 
-    console.log(`Found ${policies?.length || 0} policies`);
+    if (isManualCall) {
+      // Para chamadas manuais, enviar apenas para o usuário específico
+      console.log(`Manual call for user: ${requestBody.userEmail}`);
+      
+      // Para chamadas manuais, buscar policies do usuário usando o header de autorização
+      const authHeader = req.headers.get('authorization');
+      if (!authHeader) {
+        throw new Error('Missing authorization header');
+      }
 
-    // Buscar usuários administradores
-    const { data: admins, error: adminsError } = await supabase
-      .from('users')
-      .select('email, name')
-      .eq('role', 'administrador');
+      // Criar cliente com o token do usuário para respeitar RLS
+      const userSupabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        {
+          global: {
+            headers: {
+              authorization: authHeader
+            }
+          }
+        }
+      );
 
-    if (adminsError) {
-      console.error('Error fetching admins:', adminsError);
-      throw new Error('Failed to fetch administrators');
-    }
+      const { data: userPolicies, error: userPoliciesError } = await userSupabase
+        .from('policies')
+        .select('*');
 
-    console.log(`Found ${admins?.length || 0} administrators`);
+      if (userPoliciesError) {
+        console.error('Error fetching user policies:', userPoliciesError);
+        throw new Error(`Failed to fetch user policies: ${userPoliciesError.message}`);
+      }
 
-    if (!admins || admins.length === 0) {
-      console.log('No administrators found, skipping email');
-      return new Response(JSON.stringify({ message: 'No administrators found' }), {
+      console.log(`Found ${userPolicies?.length || 0} policies for user`);
+
+      // Gerar PDF
+      const pdfBuffer = await generatePDFReport(userPolicies || []);
+
+      // Enviar email para o usuário
+      await sendReportEmail(requestBody.userEmail, requestBody.userName, pdfBuffer);
+
+      return new Response(JSON.stringify({ 
+        message: 'Report sent successfully',
+        recipientCount: 1,
+        policyCount: userPolicies?.length || 0
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+
+    } else {
+      // Para chamadas automáticas, buscar todas as policies e enviar para admins
+      console.log("Automatic monthly report call");
+
+      // Buscar todas as apólices usando service role key para ignorar RLS
+      const { data: policies, error: policiesError } = await supabase
+        .from('policies')
+        .select('*');
+
+      if (policiesError) {
+        console.error('Error fetching policies:', policiesError);
+        throw new Error(`Failed to fetch policies: ${policiesError.message}`);
+      }
+
+      console.log(`Found ${policies?.length || 0} policies`);
+
+      // Buscar usuários administradores
+      const { data: admins, error: adminsError } = await supabase
+        .from('users')
+        .select('email, name')
+        .eq('role', 'administrador');
+
+      if (adminsError) {
+        console.error('Error fetching admins:', adminsError);
+        throw new Error(`Failed to fetch administrators: ${adminsError.message}`);
+      }
+
+      console.log(`Found ${admins?.length || 0} administrators`);
+
+      if (!admins || admins.length === 0) {
+        console.log('No administrators found, skipping email');
+        return new Response(JSON.stringify({ message: 'No administrators found' }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      // Gerar PDF
+      const pdfBuffer = await generatePDFReport(policies || []);
+
+      // Enviar email para cada administrador
+      const emailPromises = admins.map(admin => sendReportEmail(admin.email, admin.name, pdfBuffer));
+      await Promise.all(emailPromises);
+
+      console.log('Monthly reports sent successfully');
+
+      return new Response(JSON.stringify({ 
+        message: 'Monthly reports sent successfully',
+        recipientCount: admins.length,
+        policyCount: policies?.length || 0
+      }), {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
-
-    // Gerar PDF
-    const pdfBuffer = await generatePDFReport(policies || []);
-
-    // Enviar email para cada administrador
-    const emailPromises = admins.map(admin => sendReportEmail(admin.email, admin.name, pdfBuffer));
-    await Promise.all(emailPromises);
-
-    console.log('Monthly reports sent successfully');
-
-    return new Response(JSON.stringify({ 
-      message: 'Monthly reports sent successfully',
-      recipientCount: admins.length,
-      policyCount: policies?.length || 0
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
 
   } catch (error: any) {
     console.error("Error in send-monthly-report function:", error);
