@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Shield, Mail, Lock, User, Building, Phone, Loader2 } from 'lucide-react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +29,8 @@ export const AuthPage = () => {
     phone: '',
     role: 'cliente' as UserRole
   });
+
+  const [personType, setPersonType] = useState<'pf' | 'pj'>('pf');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,6 +107,7 @@ export const AuthPage = () => {
         phone: '',
         role: 'cliente'
       });
+      setPersonType('pf');
     } else {
       toast({
         title: "Erro",
@@ -198,15 +202,34 @@ export const AuthPage = () => {
               {/* Register Tab */}
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
+                  {/* Person Type Selection */}
+                  <div className="space-y-3">
+                    <Label>Tipo de Pessoa</Label>
+                    <RadioGroup
+                      value={personType}
+                      onValueChange={(value: 'pf' | 'pj') => setPersonType(value)}
+                      className="flex space-x-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pf" id="pf" />
+                        <Label htmlFor="pf" className="font-normal">Pessoa Física</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pj" id="pj" />
+                        <Label htmlFor="pj" className="font-normal">Pessoa Jurídica</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="register-name">Nome *</Label>
+                      <Label htmlFor="register-name">{personType === 'pf' ? 'Nome' : 'Razão Social'} *</Label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                         <Input
                           id="register-name"
                           type="text"
-                          placeholder="Seu nome"
+                          placeholder={personType === 'pf' ? 'Seu nome' : 'Nome da empresa'}
                           value={registerData.name}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, name: e.target.value }))}
                           className="pl-10"
@@ -227,7 +250,6 @@ export const AuthPage = () => {
                         <SelectContent>
                           <SelectItem value="cliente">Cliente</SelectItem>
                           <SelectItem value="administrador">Administrador</SelectItem>
-                          <SelectItem value="corretora">Corretora</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -284,20 +306,22 @@ export const AuthPage = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="register-company">Empresa</Label>
-                    <div className="relative">
-                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input
-                        id="register-company"
-                        type="text"
-                        placeholder="Nome da empresa"
-                        value={registerData.company}
-                        onChange={(e) => setRegisterData(prev => ({ ...prev, company: e.target.value }))}
-                        className="pl-10"
-                      />
+                  {personType === 'pj' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="register-company">Nome Fantasia</Label>
+                      <div className="relative">
+                        <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Input
+                          id="register-company"
+                          type="text"
+                          placeholder="Nome fantasia da empresa"
+                          value={registerData.company}
+                          onChange={(e) => setRegisterData(prev => ({ ...prev, company: e.target.value }))}
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="register-phone">Telefone</Label>
