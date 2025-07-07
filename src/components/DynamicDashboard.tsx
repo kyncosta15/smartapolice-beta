@@ -4,7 +4,7 @@ import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { KPICards } from './dashboard/KPICards';
 import { ClassificationCharts } from './dashboard/ClassificationCharts';
 import { PersonTypeDistribution } from './dashboard/PersonTypeDistribution';
-import { FinancialCharts } from './dashboard/FinancialCharts';
+
 import { StatusEvolutionCharts } from './dashboard/StatusEvolutionCharts';
 import { EmptyState } from './dashboard/EmptyState';
 import { useDashboardCalculations } from './dashboard/useDashboardCalculations';
@@ -88,8 +88,6 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
           personTypeDistribution={dashboardData.personTypeDistribution}
         />
 
-        {/* C. Informações financeiras */}
-        <FinancialCharts financialData={dashboardData.financialData} />
 
         {/* D. Gestão e ciclo de vida da apólice */}
         <div className="print-status-section">
