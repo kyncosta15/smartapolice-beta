@@ -1,9 +1,16 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.2';
-import { Resend } from "npm:resend@2.0.0";
+import nodemailer from 'npm:nodemailer@6.9.7';
 import jsPDF from 'npm:jspdf@2.5.1';
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Configurar transporter do Nodemailer
+const transporter = nodemailer.createTransporter({
+  service: 'gmail', // ou 'outlook', 'yahoo', etc.
+  auth: {
+    user: Deno.env.get("SMTP_USER"), // exemplo: seuemail@gmail.com
+    pass: Deno.env.get("SMTP_PASS"), // senha de app do Gmail
+  },
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -275,9 +282,9 @@ async function generatePDFReport(policies: any[]): Promise<Uint8Array> {
 async function sendReportEmail(email: string, name: string, pdfBuffer: Uint8Array): Promise<void> {
   const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   
-  await resend.emails.send({
-    from: "SmartApólice <onboarding@resend.dev>", // Domínio de teste do Resend
-    to: [email],
+  const mailOptions = {
+    from: '"RCaldas Seguros" <' + Deno.env.get("SMTP_USER") + '>',
+    to: email,
     subject: `Relatório Mensal de Apólices - ${currentMonth}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -310,10 +317,12 @@ async function sendReportEmail(email: string, name: string, pdfBuffer: Uint8Arra
     attachments: [
       {
         filename: `relatorio-mensal-${new Date().toISOString().slice(0, 7)}.pdf`,
-        content: Array.from(pdfBuffer),
+        content: Buffer.from(pdfBuffer),
       }
     ],
-  });
+  };
+
+  await transporter.sendMail(mailOptions);
 }
 
 serve(handler);
