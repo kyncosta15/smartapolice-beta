@@ -18,188 +18,123 @@ interface KPICardsProps {
 export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, expiringPolicies, expiredPolicies, activePolicies }: KPICardsProps) {
   const isMobile = useIsMobile();
 
-  // Se for mobile, dividir em grupos de 2 cards
+  const allCards = [
+    {
+      title: "Total",
+      value: totalPolicies,
+      displayValue: totalPolicies.toString(),
+      subtitle: "Apólices",
+      icon: FileText,
+      bgColor: "from-blue-500 to-blue-600"
+    },
+    {
+      title: "Custo Mensal",
+      value: totalMonthlyCost,
+      displayValue: formatCurrency(totalMonthlyCost),
+      subtitle: "Total mensal",
+      icon: DollarSign,
+      bgColor: "from-green-500 to-green-600"
+    },
+    {
+      title: "Valor Segurado",
+      value: totalInsuredValue,
+      displayValue: formatCurrency(totalInsuredValue),
+      subtitle: "Cobertura total",
+      icon: Shield,
+      bgColor: "from-purple-500 to-purple-600"
+    },
+    {
+      title: "Ativas",
+      value: activePolicies,
+      displayValue: activePolicies.toString(),
+      subtitle: "Em vigor",
+      icon: Shield,
+      bgColor: "from-emerald-500 to-emerald-600"
+    },
+    {
+      title: "Vencidas",
+      value: expiredPolicies,
+      displayValue: expiredPolicies.toString(),
+      subtitle: "Expiradas",
+      icon: XCircle,
+      bgColor: "from-red-500 to-red-600"
+    },
+    {
+      title: "Vencendo",
+      value: expiringPolicies,
+      displayValue: expiringPolicies.toString(),
+      subtitle: "Próximos 30 dias",
+      icon: AlertTriangle,
+      bgColor: "from-orange-500 to-orange-600"
+    }
+  ];
+
+  const renderCard = (card: any, index: number) => (
+    <Card key={index} className={`bg-gradient-to-r ${card.bgColor} text-white border-0 shadow-lg`}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium opacity-90`}>
+          {card.title}
+        </CardTitle>
+        <card.icon className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} opacity-80`} />
+      </CardHeader>
+      <CardContent className="pb-4">
+        <div className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold mb-1`}>
+          {card.displayValue}
+        </div>
+        <p className={`${isMobile ? 'text-xs' : 'text-xs'} opacity-80`}>
+          {card.subtitle}
+        </p>
+      </CardContent>
+    </Card>
+  );
+
   if (isMobile) {
+    // Mobile: 2 cards per slide
+    const cardPairs = [];
+    for (let i = 0; i < allCards.length; i += 2) {
+      cardPairs.push(allCards.slice(i, i + 2));
+    }
+
     return (
       <div className="w-full">
         <Carousel className="w-full">
-          <CarouselContent>
-            {/* Primeiro grupo mobile: Total e Custo Mensal */}
-            <CarouselItem>
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-xs font-medium opacity-90">Total</CardTitle>
-                    <FileText className="h-4 w-4 opacity-80" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{totalPolicies}</div>
-                    <p className="text-xs opacity-80 mt-1">Apólices</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-xs font-medium opacity-90">Custo Mensal</CardTitle>
-                    <DollarSign className="h-4 w-4 opacity-80" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-xl font-bold">
-                      {formatCurrency(totalMonthlyCost)}
-                    </div>
-                    <p className="text-xs opacity-80 mt-1">Total mensal</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </CarouselItem>
-
-            {/* Segundo grupo mobile: Valor Segurado e Ativas */}
-            <CarouselItem>
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-xs font-medium opacity-90">Valor Segurado</CardTitle>
-                    <Shield className="h-4 w-4 opacity-80" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-xl font-bold">
-                      {formatCurrency(totalInsuredValue)}
-                    </div>
-                    <p className="text-xs opacity-80 mt-1">Cobertura total</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-xs font-medium opacity-90">Ativas</CardTitle>
-                    <Shield className="h-4 w-4 opacity-80" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{activePolicies}</div>
-                    <p className="text-xs opacity-80 mt-1">Em vigor</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </CarouselItem>
-
-            {/* Terceiro grupo mobile: Vencidas e Vencendo */}
-            <CarouselItem>
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-xs font-medium opacity-90">Vencidas</CardTitle>
-                    <XCircle className="h-4 w-4 opacity-80" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{expiredPolicies}</div>
-                    <p className="text-xs opacity-80 mt-1">Expiradas</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-xs font-medium opacity-90">Vencendo</CardTitle>
-                    <AlertTriangle className="h-4 w-4 opacity-80" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{expiringPolicies}</div>
-                    <p className="text-xs opacity-80 mt-1">Próximos 30 dias</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </CarouselItem>
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {cardPairs.map((pair, index) => (
+              <CarouselItem key={index} className="pl-2 md:pl-4">
+                <div className="grid grid-cols-2 gap-3">
+                  {pair.map((card, cardIndex) => 
+                    renderCard(card, index * 2 + cardIndex)
+                  )}
+                </div>
+              </CarouselItem>
+            ))}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          <CarouselPrevious className="left-2" />
+          <CarouselNext className="right-2" />
         </Carousel>
       </div>
     );
   }
 
-  // Layout para desktop (mantém o mesmo)
+  // Desktop: 3 cards per slide
+  const cardGroups = [];
+  for (let i = 0; i < allCards.length; i += 3) {
+    cardGroups.push(allCards.slice(i, i + 3));
+  }
+
   return (
     <div className="w-full">
       <Carousel className="w-full">
         <CarouselContent>
-          {/* Primeiro grupo: Total, Custo Mensal e Valor Segurado */}
-          <CarouselItem>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium opacity-90">Total</CardTitle>
-                  <FileText className="h-5 w-5 opacity-80" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{totalPolicies}</div>
-                  <p className="text-xs opacity-80 mt-1">Apólices</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium opacity-90">Custo Mensal</CardTitle>
-                  <DollarSign className="h-5 w-5 opacity-80" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">
-                    {formatCurrency(totalMonthlyCost)}
-                  </div>
-                  <p className="text-xs opacity-80 mt-1">Total mensal</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium opacity-90">Valor Segurado</CardTitle>
-                  <Shield className="h-5 w-5 opacity-80" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">
-                    {formatCurrency(totalInsuredValue)}
-                  </div>
-                  <p className="text-xs opacity-80 mt-1">Cobertura total</p>
-                </CardContent>
-              </Card>
-            </div>
-          </CarouselItem>
-
-          {/* Segundo grupo: Ativas, Vencidas e Vencendo */}
-          <CarouselItem>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium opacity-90">Ativas</CardTitle>
-                  <Shield className="h-5 w-5 opacity-80" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{activePolicies}</div>
-                  <p className="text-xs opacity-80 mt-1">Em vigor</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium opacity-90">Vencidas</CardTitle>
-                  <XCircle className="h-5 w-5 opacity-80" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{expiredPolicies}</div>
-                  <p className="text-xs opacity-80 mt-1">Expiradas</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium opacity-90">Vencendo</CardTitle>
-                  <AlertTriangle className="h-5 w-5 opacity-80" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{expiringPolicies}</div>
-                  <p className="text-xs opacity-80 mt-1">Próximos 30 dias</p>
-                </CardContent>
-              </Card>
-            </div>
-          </CarouselItem>
+          {cardGroups.map((group, index) => (
+            <CarouselItem key={index}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {group.map((card, cardIndex) => 
+                  renderCard(card, index * 3 + cardIndex)
+                )}
+              </div>
+            </CarouselItem>
+          ))}
         </CarouselContent>
         <CarouselPrevious />
         <CarouselNext />

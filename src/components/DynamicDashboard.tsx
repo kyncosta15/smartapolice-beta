@@ -4,12 +4,12 @@ import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { KPICards } from './dashboard/KPICards';
 import { ClassificationCharts } from './dashboard/ClassificationCharts';
 import { PersonTypeDistribution } from './dashboard/PersonTypeDistribution';
-
 import { StatusEvolutionCharts } from './dashboard/StatusEvolutionCharts';
 import { EmptyState } from './dashboard/EmptyState';
 import { useDashboardCalculations } from './dashboard/useDashboardCalculations';
 import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { PDFReportGenerator } from './PDFReportGenerator';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DynamicDashboardProps {
   policies: ParsedPolicyData[];
@@ -18,6 +18,7 @@ interface DynamicDashboardProps {
 
 export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashboardProps) {
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16'];
+  const isMobile = useIsMobile();
 
   const dashboardData = useDashboardCalculations(policies);
   const { metrics: realMetrics, isLoading: realDataLoading } = useRealDashboardData();
@@ -46,13 +47,17 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-${isMobile ? '4' : '6'}`}>
       {/* Cabeçalho com título e botão de exportar */}
-      <div className="bg-white border border-gray-200 p-6 rounded-md shadow-sm" data-exclude-pdf="true">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border border-gray-200 p-4 md:p-6 rounded-md shadow-sm" data-exclude-pdf="true">
+        <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'items-center justify-between'}`}>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Dashboard de Apólices</h1>
-            <p className="text-gray-600">Visão geral das suas apólices e métricas</p>
+            <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 mb-1`}>
+              Dashboard de Apólices
+            </h1>
+            <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-600`}>
+              Visão geral das suas apólices e métricas
+            </p>
           </div>
           
           {/* Botão de exportação */}
@@ -66,7 +71,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
       </div>
 
       {/* Container principal do dashboard */}
-      <div id="dashboard-pdf-content" className="space-y-6 bg-white p-6 print-container">
+      <div id="dashboard-pdf-content" className={`space-y-${isMobile ? '4' : '6'} bg-white p-${isMobile ? '4' : '6'} print-container`}>
         {/* KPIs principais - com dados reais para admin */}
         <KPICards
           totalPolicies={displayMetrics.totalPolicies}
@@ -89,7 +94,6 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
         <PersonTypeDistribution
           personTypeDistribution={dashboardData.personTypeDistribution}
         />
-
 
         {/* D. Gestão e ciclo de vida da apólice */}
         <div className="print-status-section">
