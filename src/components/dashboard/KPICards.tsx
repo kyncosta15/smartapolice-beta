@@ -18,11 +18,31 @@ interface KPICardsProps {
 export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, expiringPolicies, expiredPolicies, activePolicies }: KPICardsProps) {
   const isMobile = useIsMobile();
 
+  // Função para formatar valores de forma adaptativa
+  const formatValue = (value: number, isCurrency = false) => {
+    if (isCurrency) {
+      if (isMobile) {
+        if (value >= 1000000) {
+          return `R$ ${(value / 1000000).toFixed(1)}M`;
+        } else if (value >= 1000) {
+          return `R$ ${(value / 1000).toFixed(0)}k`;
+        }
+        return formatCurrency(value);
+      }
+      return formatCurrency(value);
+    }
+    
+    if (isMobile && value >= 1000) {
+      return `${(value / 1000).toFixed(0)}k`;
+    }
+    return value.toString();
+  };
+
   const allCards = [
     {
       title: "Total",
       value: totalPolicies,
-      displayValue: totalPolicies.toString(),
+      displayValue: formatValue(totalPolicies),
       subtitle: "Apólices",
       icon: FileText,
       bgColor: "from-blue-500 to-blue-600"
@@ -30,7 +50,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
     {
       title: "Custo Mensal",
       value: totalMonthlyCost,
-      displayValue: formatCurrency(totalMonthlyCost),
+      displayValue: formatValue(totalMonthlyCost, true),
       subtitle: "Total mensal",
       icon: DollarSign,
       bgColor: "from-green-500 to-green-600"
@@ -38,7 +58,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
     {
       title: "Valor Segurado",
       value: totalInsuredValue,
-      displayValue: formatCurrency(totalInsuredValue),
+      displayValue: formatValue(totalInsuredValue, true),
       subtitle: "Cobertura total",
       icon: Shield,
       bgColor: "from-purple-500 to-purple-600"
@@ -46,7 +66,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
     {
       title: "Ativas",
       value: activePolicies,
-      displayValue: activePolicies.toString(),
+      displayValue: formatValue(activePolicies),
       subtitle: "Em vigor",
       icon: Shield,
       bgColor: "from-emerald-500 to-emerald-600"
@@ -54,7 +74,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
     {
       title: "Vencidas",
       value: expiredPolicies,
-      displayValue: expiredPolicies.toString(),
+      displayValue: formatValue(expiredPolicies),
       subtitle: "Expiradas",
       icon: XCircle,
       bgColor: "from-red-500 to-red-600"
@@ -62,7 +82,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
     {
       title: "Vencendo",
       value: expiringPolicies,
-      displayValue: expiringPolicies.toString(),
+      displayValue: formatValue(expiringPolicies),
       subtitle: "Próximos 30 dias",
       icon: AlertTriangle,
       bgColor: "from-orange-500 to-orange-600"
@@ -78,7 +98,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
         <card.icon className={`${isMobile ? 'h-3 w-3' : 'h-5 w-5'} opacity-80`} />
       </CardHeader>
       <CardContent className={`${isMobile ? 'pb-2 px-3' : 'pb-4'}`}>
-        <div className={`${isMobile ? 'text-lg' : 'text-3xl'} font-bold mb-1`}>
+        <div className={`${isMobile ? 'text-base' : 'text-3xl'} font-bold mb-1 break-words`}>
           {card.displayValue}
         </div>
         <p className={`${isMobile ? 'text-xs' : 'text-xs'} opacity-80`}>
@@ -96,11 +116,11 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
     }
 
     return (
-      <div className="w-full px-1">
+      <div className="w-full px-4 relative">
         <Carousel className="w-full">
-          <CarouselContent className="-ml-1">
+          <CarouselContent className="-ml-2">
             {cardPairs.map((pair, index) => (
-              <CarouselItem key={index} className="pl-1">
+              <CarouselItem key={index} className="pl-2">
                 <div className="grid grid-cols-2 gap-2">
                   {pair.map((card, cardIndex) => 
                     renderCard(card, index * 2 + cardIndex)
@@ -109,8 +129,8 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="left-1 h-6 w-6" />
-          <CarouselNext className="right-1 h-6 w-6" />
+          <CarouselPrevious className="left-0 h-8 w-8 -ml-4" />
+          <CarouselNext className="right-0 h-8 w-8 -mr-4" />
         </Carousel>
       </div>
     );
@@ -123,7 +143,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full px-4">
       <Carousel className="w-full">
         <CarouselContent>
           {cardGroups.map((group, index) => (
