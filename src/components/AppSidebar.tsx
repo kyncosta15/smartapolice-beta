@@ -33,32 +33,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     }
   };
 
-  const adminNavigation = [
-    {
-      title: "Relatórios",
-      icon: BarChart3,
-      id: "reports",
-      description: "Análises e métricas"
-    },
-    {
-      title: "Regiões",
-      icon: Map,
-      id: "regions",
-      description: "Distribuição regional"
-    },
-    {
-      title: "Clientes",
-      icon: Users2,
-      id: "clients",
-      description: "Gerenciar clientes"
-    },
-    {
-      title: "Configurações",
-      icon: Settings,
-      id: "settings",
-      description: "Ajustes do sistema"
-    }
-  ];
 
   const clientNavigation = [
     {
@@ -99,7 +73,39 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     }
   ];
 
-  const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
+  // Adicionar também para administradores
+  const adminNavigation = [
+    {
+      title: "Relatórios",
+      icon: BarChart3,
+      id: "reports",
+      description: "Análises e métricas"
+    },
+    {
+      title: "Regiões",
+      icon: Map,
+      id: "regions",
+      description: "Distribuição regional"
+    },
+    {
+      title: "Exportar Dashboard",
+      icon: Download,
+      id: "export",
+      description: "Histórico de exportações"
+    },
+    {
+      title: "Clientes",
+      icon: Users2,
+      id: "clients",
+      description: "Gerenciar clientes"
+    },
+    {
+      title: "Configurações",
+      icon: Settings,
+      id: "settings",
+      description: "Ajustes do sistema"
+    }
+  ];
 
   return (
     <Sidebar className="bg-white border-r">
