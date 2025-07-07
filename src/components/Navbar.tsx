@@ -1,7 +1,7 @@
+
 import { useState } from 'react';
-import { Bell, Search, Menu, LogOut, ChevronDown, PanelLeft, AlertCircle, Calendar } from 'lucide-react';
+import { Bell, Menu, LogOut, ChevronDown, PanelLeft, AlertCircle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/components/ui/sidebar';
@@ -103,22 +103,6 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             >
               <Menu className="w-5 h-5" />
             </button>
-          </div>
-
-          {/* Center - Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-8">
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="w-4 h-4 text-gray-400" />
-              </div>
-              <Input
-                type="text"
-                placeholder="Buscar apólice, CPF/CNPJ..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 pr-4 h-9 bg-gray-50 border-gray-200 text-sm placeholder-gray-500 focus:bg-white focus:border-blue-300 focus:ring-1 focus:ring-blue-200 transition-all"
-              />
-            </div>
           </div>
 
           {/* Right side - Notifications and User Menu */}
