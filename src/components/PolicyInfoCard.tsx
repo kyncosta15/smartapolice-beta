@@ -1,16 +1,18 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, User } from 'lucide-react';
 import { DocumentValidator } from '@/utils/documentValidator';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PolicyInfoCardProps {
   policy: ParsedPolicyData;
 }
 
 export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
+  const isMobile = useIsMobile();
+
   // Usar dados de documento do N8N se disponíveis, caso contrário detectar
   const getDocumentInfo = () => {
     // Priorizar dados vindos do N8N
@@ -46,16 +48,14 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
     return docInfo;
   };
 
-  const documentInfo = getDocumentInfo();
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-50 text-green-600 border-green-200">Ativa</Badge>;
+        return <Badge className="bg-green-50 text-green-600 border-green-200 hover:bg-green-50">Ativa</Badge>;
       case 'expiring':
-        return <Badge className="bg-orange-50 text-orange-600 border-orange-200">Vencendo</Badge>;
+        return <Badge className="bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-50">Vencendo</Badge>;
       case 'expired':
-        return <Badge className="bg-red-50 text-red-600 border-red-200">Vencida</Badge>;
+        return <Badge className="bg-red-50 text-red-600 border-red-200 hover:bg-red-50">Vencida</Badge>;
       default:
         return <Badge variant="secondary">Desconhecido</Badge>;
     }
@@ -81,60 +81,64 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
       <Badge 
         className={`${
           isPersonaFisica 
-            ? 'bg-blue-50 text-blue-600 border-blue-200' 
-            : 'bg-purple-50 text-purple-600 border-purple-200'
-        }`}
+            ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-50' 
+            : 'bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-50'
+        } ${isMobile ? 'text-xs' : 'text-sm'}`}
       >
-        <User className="h-3 w-3 mr-1" />
+        <User className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} mr-1`} />
         {isPersonaFisica ? 'Pessoa Física' : 'Pessoa Jurídica'}
       </Badge>
     );
   };
 
+  const documentInfo = getDocumentInfo();
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
+    <Card className="h-full shadow-md border-gray-200 hover:shadow-lg transition-all duration-200">
+      <CardHeader className={`${isMobile ? 'pb-3' : 'pb-4'}`}>
+        <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-base' : 'text-lg'}`}>
+          <FileText className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
           Informações Gerais
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={`space-y-${isMobile ? '3' : '4'}`}>
         <div>
-          <p className="text-sm text-gray-500 mb-1">Nome da Apólice</p>
-          <p className="font-semibold text-gray-900">{policy.name}</p>
+          <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium`}>Nome da Apólice</p>
+          <p className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-gray-900 break-words`}>{policy.name}</p>
+        </div>
+
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
+          <div>
+            <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium`}>Tipo</p>
+            <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900`}>{getTypeLabel(policy.type)}</p>
+          </div>
+
+          <div>
+            <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium`}>Status</p>
+            {getStatusBadge(policy.status)}
+          </div>
         </div>
 
         <div>
-          <p className="text-sm text-gray-500 mb-1">Tipo</p>
-          <p className="text-gray-900">{getTypeLabel(policy.type)}</p>
-        </div>
-
-        <div>
-          <p className="text-sm text-gray-500 mb-2">Status</p>
-          {getStatusBadge(policy.status)}
-        </div>
-
-        <div>
-          <p className="text-sm text-gray-500 mb-1">Número da Apólice</p>
-          <p className="font-mono text-gray-900">{policy.policyNumber}</p>
+          <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium`}>Número da Apólice</p>
+          <p className={`${isMobile ? 'text-sm' : 'text-base'} font-mono text-gray-900 break-all`}>{policy.policyNumber}</p>
         </div>
 
         {/* Nome do Segurado */}
         {policy.insuredName && (
           <div>
-            <p className="text-sm text-gray-500 mb-1">Nome do Segurado</p>
-            <p className="text-gray-900">{policy.insuredName}</p>
+            <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium`}>Nome do Segurado</p>
+            <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 break-words`}>{policy.insuredName}</p>
           </div>
         )}
 
         {/* Documento (CPF/CNPJ) */}
         {documentInfo && (
           <div>
-            <p className="text-sm text-gray-500 mb-2">Documento</p>
+            <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-2 font-medium`}>Documento</p>
             <div className="flex flex-col gap-2">
               {getPersonTypeBadge()}
-              <div className="text-xs text-gray-600">
+              <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>
                 <span className="font-medium">{documentInfo.type}:</span> {documentInfo.formatted}
               </div>
             </div>
@@ -142,8 +146,8 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
         )}
 
         <div>
-          <p className="text-sm text-gray-500 mb-1">Seguradora</p>
-          <p className="text-gray-900">{policy.insurer}</p>
+          <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium`}>Seguradora</p>
+          <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 break-words`}>{policy.insurer}</p>
         </div>
       </CardContent>
     </Card>
