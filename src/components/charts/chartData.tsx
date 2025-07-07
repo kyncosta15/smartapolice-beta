@@ -17,6 +17,7 @@ export interface PolicyData {
   // Add documento_tipo field for person type classification
   documento_tipo?: 'CPF' | 'CNPJ' | string;
   documento?: string;
+  extractedAt?: string; // Data de inserção/extração
   
   // Add installments field to support real installment data
   installments?: Array<{

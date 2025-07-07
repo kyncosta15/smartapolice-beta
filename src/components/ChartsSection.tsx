@@ -4,7 +4,7 @@ import { InsuranceTypesChart } from './charts/InsuranceTypesChart';
 import { CostEvolutionChart } from './charts/CostEvolutionChart';
 import { ExpirationTimelineChart } from './charts/ExpirationTimelineChart';
 import { ComparativeAnalysisChart } from './charts/ComparativeAnalysisChart';
-import { PersonTypeChart } from './charts/PersonTypeChart';
+import { RecentPoliciesChart } from './charts/RecentPoliciesChart';
 import { PolicyData } from './charts/chartData';
 import { Card, CardContent } from '@/components/ui/card';
 import { BarChart3, TrendingUp, AlertCircle } from 'lucide-react';
@@ -70,7 +70,7 @@ export const ChartsSection = ({ detailed = false, policies = [] }: ChartsSection
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1">
-          <PersonTypeChart policies={policies} />
+          <RecentPoliciesChart policies={policies} />
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1">
