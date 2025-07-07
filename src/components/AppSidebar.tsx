@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar"
@@ -26,6 +25,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const { toggleSidebar, isMobile } = useSidebar();
 
   const handleNavigation = (section: string) => {
+    console.log('🔄 Navegando para:', section);
     onSectionChange(section);
     // Fechar sidebar no mobile após selecionar uma opção
     if (isMobile) {
@@ -33,7 +33,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     }
   };
 
-
+  // Navegação para clientes
   const clientNavigation = [
     {
       title: "Dashboard",
@@ -73,7 +73,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     }
   ];
 
-  // Adicionar também para administradores
+  // Navegação para administradores
   const adminNavigation = [
     {
       title: "Relatórios",
@@ -114,6 +114,17 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   ];
 
   const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
+  
+  // Debug logs detalhados
+  console.log('🔍 AppSidebar Renderização:', {
+    timestamp: new Date().toISOString(),
+    userRole: user?.role,
+    navigationLength: navigation.length,
+    navigationItems: navigation.map(item => ({ title: item.title, id: item.id })),
+    hasExportItem: navigation.some(item => item.id === 'export'),
+    exportItemIndex: navigation.findIndex(item => item.id === 'export'),
+    activeSection
+  });
 
   return (
     <Sidebar className="bg-white border-r">
@@ -122,18 +133,26 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navigation.map((item) => (
-            <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton
-                onClick={() => handleNavigation(item.id)}
-                isActive={activeSection === item.id}
-                className="w-full justify-start"
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {navigation.map((item, index) => {
+            const isExportItem = item.id === 'export';
+            if (isExportItem) {
+              console.log('✅ Renderizando "Exportar Dashboard" no índice:', index);
+            }
+            
+            return (
+              <SidebarMenuItem key={`${item.id}-${index}`}>
+                <SidebarMenuButton
+                  onClick={() => handleNavigation(item.id)}
+                  isActive={activeSection === item.id}
+                  className={`w-full justify-start ${isExportItem ? 'bg-blue-50 border-l-2 border-blue-500' : ''}`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span className={isExportItem ? 'font-medium text-blue-700' : ''}>{item.title}</span>
+                  {isExportItem && <span className="ml-2 text-xs bg-blue-200 text-blue-800 px-1 rounded">Novo</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4">
