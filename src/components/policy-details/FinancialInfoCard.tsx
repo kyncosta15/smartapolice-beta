@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, CreditCard } from 'lucide-react';
+import { DollarSign, CreditCard, Calendar } from 'lucide-react';
 
 interface FinancialInfoCardProps {
   policy: any;
@@ -30,6 +30,28 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
           </p>
         </div>
 
+        {policy.installments && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 shadow-sm border border-blue-100">
+            <label className="text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-2">
+              <Calendar className="h-4 w-4" />
+              Parcelamento
+            </label>
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
+                {policy.installments}
+              </div>
+              <div>
+                <p className="text-lg font-bold text-gray-900 font-sf-pro">
+                  {policy.installments}x parcelas
+                </p>
+                <p className="text-sm text-blue-600 font-sf-pro">
+                  Pagamento facilitado
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {policy.paymentForm && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
             <label className="text-sm font-medium text-amber-700 font-sf-pro flex items-center gap-2 mb-1">
@@ -37,13 +59,6 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
               Forma de Pagamento
             </label>
             <p className="text-base font-medium text-gray-900 font-sf-pro">{policy.paymentForm}</p>
-          </div>
-        )}
-
-        {policy.installments && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
-            <label className="text-sm font-medium text-amber-700 font-sf-pro block mb-1">Parcelas</label>
-            <p className="text-lg font-bold text-gray-900 font-sf-pro">{policy.installments}x</p>
           </div>
         )}
       </CardContent>
