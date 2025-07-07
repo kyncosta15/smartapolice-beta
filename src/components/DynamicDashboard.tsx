@@ -19,22 +19,22 @@ interface DynamicDashboardProps {
 export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashboardProps) {
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16'];
 
-  const DashboardData = useDashboardCalculations(policies);
+  const dashboardData = useDashboardCalculations(policies);
   const { metrics: realMetrics, isLoading: realDataLoading } = useRealDashboardData();
 
   // Para administradores, usar dados reais quando disponíveis
   const shouldUseRealData = viewMode === 'admin' && !realDataLoading;
   
-  const DisplayMetrics = shouldUseRealData ? {
-    TotalPolicies: realMetrics.totalPolicies,
-    TotalMonthlyCost: realMetrics.monthlyPremium,
-    TotalInsuredValue: DashboardData.TotalInsuredValue, // Manter calculado pois não temos no real
-    ExpiringPolicies: DashboardData.ExpiringPolicies, // Manter calculado pois não temos no real
+  const displayMetrics = shouldUseRealData ? {
+    totalPolicies: realMetrics.totalPolicies,
+    totalMonthlyCost: realMetrics.monthlyPremium,
+    totalInsuredValue: dashboardData.totalInsuredValue, // Manter calculado pois não temos no real
+    expiringPolicies: dashboardData.expiringPolicies, // Manter calculado pois não temos no real
   } : {
-    TotalPolicies: DashboardData.TotalPolicies,
-    TotalMonthlyCost: DashboardData.TotalMonthlyCost,
-    TotalInsuredValue: DashboardData.TotalInsuredValue,
-    ExpiringPolicies: DashboardData.ExpiringPolicies,
+    totalPolicies: dashboardData.totalPolicies,
+    totalMonthlyCost: dashboardData.totalMonthlyCost,
+    totalInsuredValue: dashboardData.totalInsuredValue,
+    expiringPolicies: dashboardData.expiringPolicies,
   };
 
   if (policies.length === 0 && !shouldUseRealData) {
@@ -59,7 +59,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
           <div className="flex items-center gap-3">
             <PDFReportGenerator 
               policies={policies} 
-              dashboardData={DashboardData}
+              dashboardData={dashboardData}
             />
           </div>
         </div>
@@ -69,33 +69,33 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
       <div id="dashboard-pdf-content" className="space-y-6 bg-white p-6 print-container">
         {/* KPIs principais - com dados reais para admin */}
         <KPICards
-          TotalPolicies={DisplayMetrics.TotalPolicies}
-          TotalMonthlyCost={DisplayMetrics.TotalMonthlyCost}
-          TotalInsuredValue={DisplayMetrics.TotalInsuredValue}
-          ExpiringPolicies={DisplayMetrics.ExpiringPolicies}
-          ExpiredPolicies={DashboardData.ExpiredPolicies}
-          ActivePolicies={DashboardData.ActivePolicies}
+          totalPolicies={displayMetrics.totalPolicies}
+          totalMonthlyCost={displayMetrics.totalMonthlyCost}
+          totalInsuredValue={displayMetrics.totalInsuredValue}
+          expiringPolicies={displayMetrics.expiringPolicies}
+          expiredPolicies={dashboardData.expiredPolicies}
+          activePolicies={dashboardData.activePolicies}
         />
 
         {/* A. Classificação e identificação - Um embaixo do outro */}
         <ClassificationCharts
-          TypeDistribution={DashboardData.TypeDistribution}
-          InsurerDistribution={DashboardData.InsurerDistribution}
-          RecentPolicies={DashboardData.RecentPolicies}
+          typeDistribution={dashboardData.typeDistribution}
+          insurerDistribution={dashboardData.insurerDistribution}
+          recentPolicies={dashboardData.recentPolicies}
           colors={COLORS}
         />
 
         {/* Vínculo - Pessoa Física/Jurídica */}
         <PersonTypeDistribution
-          PersonTypeDistribution={DashboardData.PersonTypeDistribution}
+          personTypeDistribution={dashboardData.personTypeDistribution}
         />
 
 
         {/* D. Gestão e ciclo de vida da apólice */}
         <div className="print-status-section">
           <StatusEvolutionCharts
-            StatusDistribution={DashboardData.StatusDistribution}
-            MonthlyEvolution={DashboardData.MonthlyEvolution}
+            statusDistribution={dashboardData.statusDistribution}
+            monthlyEvolution={dashboardData.monthlyEvolution}
             colors={COLORS}
           />
         </div>

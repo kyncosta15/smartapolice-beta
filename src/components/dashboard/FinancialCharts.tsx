@@ -6,10 +6,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { formatCurrency } from '@/utils/currencyFormatter';
 
 interface FinancialChartsProps {
-  FinancialData: Array<{ name: string; valor: number; cobertura: number }>;
+  financialData: Array<{ name: string; valor: number; cobertura: number }>;
 }
 
-export function FinancialCharts({ FinancialData }: FinancialChartsProps) {
+export function FinancialCharts({ financialData }: FinancialChartsProps) {
   return (
     <Card>
       <CardHeader className="border-b border-gray-100">
@@ -21,7 +21,7 @@ export function FinancialCharts({ FinancialData }: FinancialChartsProps) {
       <CardContent className="pt-6">
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={FinancialData} layout="horizontal">
+            <BarChart data={financialData} layout="horizontal">
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
               <YAxis dataKey="name" type="category" width={120} />

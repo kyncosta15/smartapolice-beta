@@ -7,15 +7,15 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface KPICardsProps {
-  TotalPolicies: number;
-  TotalMonthlyCost: number;
-  TotalInsuredValue: number;
-  ExpiringPolicies: number;
-  ExpiredPolicies: number;
-  ActivePolicies: number;
+  totalPolicies: number;
+  totalMonthlyCost: number;
+  totalInsuredValue: number;
+  expiringPolicies: number;
+  expiredPolicies: number;
+  activePolicies: number;
 }
 
-export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, ExpiringPolicies, ExpiredPolicies, ActivePolicies }: KPICardsProps) {
+export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, expiringPolicies, expiredPolicies, activePolicies }: KPICardsProps) {
   const isMobile = useIsMobile();
 
   // Se for mobile, dividir em grupos de 2 cards
@@ -33,7 +33,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                     <FileText className="h-4 w-4 opacity-80" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{TotalPolicies}</div>
+                    <div className="text-2xl font-bold">{totalPolicies}</div>
                     <p className="text-xs opacity-80 mt-1">Apólices</p>
                   </CardContent>
                 </Card>
@@ -45,7 +45,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                   </CardHeader>
                   <CardContent>
                     <div className="text-xl font-bold">
-                      {formatCurrency(TotalMonthlyCost)}
+                      {formatCurrency(totalMonthlyCost)}
                     </div>
                     <p className="text-xs opacity-80 mt-1">Total mensal</p>
                   </CardContent>
@@ -63,7 +63,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                   </CardHeader>
                   <CardContent>
                     <div className="text-xl font-bold">
-                      {formatCurrency(TotalInsuredValue)}
+                      {formatCurrency(totalInsuredValue)}
                     </div>
                     <p className="text-xs opacity-80 mt-1">Cobertura total</p>
                   </CardContent>
@@ -75,7 +75,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                     <Shield className="h-4 w-4 opacity-80" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{ActivePolicies}</div>
+                    <div className="text-2xl font-bold">{activePolicies}</div>
                     <p className="text-xs opacity-80 mt-1">Em vigor</p>
                   </CardContent>
                 </Card>
@@ -91,7 +91,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                     <XCircle className="h-4 w-4 opacity-80" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{ExpiredPolicies}</div>
+                    <div className="text-2xl font-bold">{expiredPolicies}</div>
                     <p className="text-xs opacity-80 mt-1">Expiradas</p>
                   </CardContent>
                 </Card>
@@ -102,7 +102,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                     <AlertTriangle className="h-4 w-4 opacity-80" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{ExpiringPolicies}</div>
+                    <div className="text-2xl font-bold">{expiringPolicies}</div>
                     <p className="text-xs opacity-80 mt-1">Próximos 30 dias</p>
                   </CardContent>
                 </Card>
@@ -130,7 +130,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                   <FileText className="h-5 w-5 opacity-80" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">{TotalPolicies}</div>
+                  <div className="text-3xl font-bold">{totalPolicies}</div>
                   <p className="text-xs opacity-80 mt-1">Apólices</p>
                 </CardContent>
               </Card>
@@ -142,7 +142,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">
-                    {formatCurrency(TotalMonthlyCost)}
+                    {formatCurrency(totalMonthlyCost)}
                   </div>
                   <p className="text-xs opacity-80 mt-1">Total mensal</p>
                 </CardContent>
@@ -155,7 +155,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">
-                    {formatCurrency(TotalInsuredValue)}
+                    {formatCurrency(totalInsuredValue)}
                   </div>
                   <p className="text-xs opacity-80 mt-1">Cobertura total</p>
                 </CardContent>
@@ -172,7 +172,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                   <Shield className="h-5 w-5 opacity-80" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">{ActivePolicies}</div>
+                  <div className="text-3xl font-bold">{activePolicies}</div>
                   <p className="text-xs opacity-80 mt-1">Em vigor</p>
                 </CardContent>
               </Card>
@@ -183,7 +183,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                   <XCircle className="h-5 w-5 opacity-80" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">{ExpiredPolicies}</div>
+                  <div className="text-3xl font-bold">{expiredPolicies}</div>
                   <p className="text-xs opacity-80 mt-1">Expiradas</p>
                 </CardContent>
               </Card>
@@ -194,7 +194,7 @@ export function KPICards({ TotalPolicies, TotalMonthlyCost, TotalInsuredValue, E
                   <AlertTriangle className="h-5 w-5 opacity-80" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">{ExpiringPolicies}</div>
+                  <div className="text-3xl font-bold">{expiringPolicies}</div>
                   <p className="text-xs opacity-80 mt-1">Próximos 30 dias</p>
                 </CardContent>
               </Card>
