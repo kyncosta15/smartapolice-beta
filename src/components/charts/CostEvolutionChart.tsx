@@ -15,58 +15,57 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
       return getEmptyMonthlyData();
     }
 
-    // Gera os últimos 12 meses
-    const monthlyMap: { [key: string]: { custo: number; apolices: number } } = {};
-    const now = new Date();
+    // Algoritmo baseado nas especificações do usuário
+    const custosMensais: { [key: string]: number } = {};
     
-    // Inicializa 12 meses
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-      monthlyMap[key] = { custo: 0, apolices: 0 };
-    }
-
-    // 🎯 USAR DADOS REAIS: Processar cada apólice usando custo_mensal
+    // Para cada apólice, calcular parcelas mensais
     policies.forEach(policy => {
-      const startDate = new Date(policy.startDate);
-      const endDate = new Date(policy.endDate);
+      // Usar os campos reais da política
+      const valorTotal = policy.premium || 0;
+      const quantidadeParcelas = (policy as any).quantidade_parcelas || 12; // Fallback para 12 parcelas
+      const dataInicio = new Date(policy.startDate);
       
-      // 🔥 USAR O CAMPO custo_mensal DOS DADOS REAIS
-      const custoMensalReal = policy.monthlyAmount || 0;
-      
-      console.log(`💰 Processando ${policy.name}: custo mensal = R$ ${custoMensalReal}`);
-
-      // Distribui o custo mensal pelos meses ativos da apólice
-      const current = new Date(Math.max(startDate.getTime(), new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime()));
-      const endLimit = new Date(Math.min(endDate.getTime(), now.getTime()));
-      
-      while (current <= endLimit) {
-        const key = current.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      if (valorTotal > 0 && quantidadeParcelas > 0) {
+        const valorMensal = valorTotal / quantidadeParcelas;
         
-        if (monthlyMap[key]) {
-          // ✅ USAR VALOR REAL ao invés de estimativa
-          monthlyMap[key].custo += custoMensalReal;
-          monthlyMap[key].apolices += 1;
+        console.log(`💰 Processando ${policy.name}: valor total = R$ ${valorTotal}, parcelas = ${quantidadeParcelas}, valor mensal = R$ ${valorMensal}`);
+        
+        // Gerar parcelas mensais
+        for (let i = 0; i < quantidadeParcelas; i++) {
+          const dataParcela = new Date(dataInicio);
+          dataParcela.setMonth(dataParcela.getMonth() + i);
+          
+          const key = `${dataParcela.getFullYear()}-${(dataParcela.getMonth() + 1).toString().padStart(2, '0')}`;
+          
+          custosMensais[key] = (custosMensais[key] || 0) + valorMensal;
         }
-        
-        current.setMonth(current.getMonth() + 1);
       }
     });
 
-    // Converte para array ordenado
-    return Object.entries(monthlyMap)
-      .map(([month, data]) => ({
-        month,
-        custo: Math.round(data.custo * 100) / 100, // Manter 2 casas decimais
-        apolices: data.apolices
-      }))
-      .sort((a, b) => {
-        const [monthA, yearA] = a.month.split('/');
-        const [monthB, yearB] = b.month.split('/');
-        const dateA = new Date(2000 + parseInt(yearA), getMonthNumber(monthA));
-        const dateB = new Date(2000 + parseInt(yearB), getMonthNumber(monthB));
-        return dateA.getTime() - dateB.getTime();
-      });
+    // Gerar os últimos 12 meses para garantir continuidade no gráfico
+    const now = new Date();
+    const mesesDesejados: string[] = [];
+    
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+      mesesDesejados.push(key);
+    }
+
+    // Transformar para o formato do gráfico
+    const resultado = mesesDesejados.map(mesKey => {
+      const [year, month] = mesKey.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const displayMonth = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      
+      return {
+        month: displayMonth,
+        custo: Math.round((custosMensais[mesKey] || 0) * 100) / 100,
+        apolices: Object.keys(custosMensais).includes(mesKey) ? 1 : 0
+      };
+    });
+
+    return resultado;
   };
 
   const getMonthNumber = (monthStr: string): number => {
