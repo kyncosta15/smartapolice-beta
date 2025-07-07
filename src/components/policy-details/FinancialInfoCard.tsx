@@ -30,7 +30,7 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
           </p>
         </div>
 
-        {policy.installments && (
+        {policy.installments && policy.installments > 0 && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 shadow-sm border border-blue-100">
             <label className="text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-2">
               <Calendar className="h-4 w-4" />
