@@ -66,7 +66,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
       </div>
 
       {/* Container principal do dashboard */}
-      <div id="dashboard-pdf-content" className="space-y-6 bg-white p-6 print-container">
+      <div id="dashboard-pdf-content" className="space-y-6 bg-white p-6 print-container" data-tour="dashboard">
         {/* KPIs principais - com dados reais para admin */}
         <KPICards
           totalPolicies={displayMetrics.totalPolicies}
@@ -76,12 +76,14 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
         />
 
         {/* A. Classificação e identificação - Um embaixo do outro */}
-        <ClassificationCharts
-          typeDistribution={dashboardData.typeDistribution}
-          insurerDistribution={dashboardData.insurerDistribution}
-          recentPolicies={dashboardData.recentPolicies}
-          colors={COLORS}
-        />
+        <div data-tour="charts">
+          <ClassificationCharts
+            typeDistribution={dashboardData.typeDistribution}
+            insurerDistribution={dashboardData.insurerDistribution}
+            recentPolicies={dashboardData.recentPolicies}
+            colors={COLORS}
+          />
+        </div>
 
         {/* Vínculo - Pessoa Física/Jurídica */}
         <PersonTypeDistribution

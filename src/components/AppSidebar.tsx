@@ -120,6 +120,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 onClick={() => handleNavigation(item.id)}
                 isActive={activeSection === item.id}
                 className="w-full justify-start"
+                data-tour={item.id}
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.title}</span>

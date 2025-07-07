@@ -6,6 +6,7 @@ import { Navbar } from '@/components/Navbar';
 import { WelcomeSection } from '@/components/WelcomeSection';
 import { ContentRenderer } from '@/components/ContentRenderer';
 import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
+import { TourManager } from '@/components/TourManager';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useRealDashboardData } from '@/hooks/useRealDashboardData';
@@ -269,6 +270,9 @@ export function DashboardContent() {
             policy={selectedPolicy}
             onDelete={handleDeletePolicy}
           />
+          
+          {/* Tour Manager - aparece automaticamente para novos usuários */}
+          <TourManager />
         </SidebarInset>
       </div>
     </SidebarProvider>

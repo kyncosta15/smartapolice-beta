@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
+import { TourTrigger } from '@/components/InteractiveTour';
 
 interface NavbarProps {
   searchTerm: string;
@@ -121,8 +122,11 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             </div>
           </div>
 
-          {/* Right side - Notifications and User Menu */}
+          {/* Right side - Tour, Notifications and User Menu */}
           <div className="flex items-center space-x-2">
+            {/* Tour Trigger */}
+            <TourTrigger />
+            
             {/* Notifications */}
             <div className="relative">
               <Button 
@@ -187,7 +191,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             </div>
 
             {/* User Menu */}
-            <div className="relative">
+            <div className="relative" data-tour="profile">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
