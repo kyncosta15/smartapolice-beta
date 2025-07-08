@@ -25,7 +25,6 @@ export function DashboardContent() {
   const [filterType, setFilterType] = useState('all');
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [extractedPolicies, setExtractedPolicies] = useState<ParsedPolicyData[]>([]);
   const [activeSection, setActiveSection] = useState('home');
   const dashboardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -51,7 +50,7 @@ export function DashboardContent() {
     isLoading: usersLoading
   } = usePersistedUsers();
 
-  // ✅ CORREÇÃO: Usar APENAS as apólices persistidas, eliminando duplicação
+  // ✅ Usar APENAS as apólices persistidas
   const allPolicies = persistedPolicies;
 
   // Usar o hook de dashboard data com todas as apólices
@@ -72,14 +71,17 @@ export function DashboardContent() {
   const handlePolicyExtracted = async (policy: any) => {
     console.log('🚀 handlePolicyExtracted CHAMADO! Nova apólice extraída:', policy);
     
-    // ✅ CORREÇÃO: Não adicionar às extractedPolicies, apenas refresh das persistidas
-    console.log('✅ Refreshing apólices persistidas após extração');
-    refreshPolicies();
+    // ✅ Refresh imediato das apólices persistidas
+    console.log('✅ Executando refresh das apólices persistidas');
+    await refreshPolicies();
     
+    // ✅ Toast de sucesso
     toast({
-      title: "Apólice Adicionada",
-      description: `${policy.name || 'Nova apólice'} foi processada e salva`,
+      title: "✅ Apólice Adicionada",
+      description: `${policy.name || 'Nova apólice'} foi processada e salva com sucesso`,
     });
+    
+    console.log('✅ handlePolicyExtracted concluído');
   };
 
   const handlePolicySelect = (policy: any) => {
@@ -88,20 +90,28 @@ export function DashboardContent() {
   };
 
   const handlePolicyUpdate = async (updatedPolicy: any) => {
-    // ✅ CORREÇÃO: Sempre atualizar via hook persistido
+    // ✅ Sempre atualizar via hook persistido
     const success = await updatePersistedPolicy(updatedPolicy.id, updatedPolicy);
     if (success) {
       // Refresh para garantir sincronização
-      refreshPolicies();
+      await refreshPolicies();
+      toast({
+        title: "✅ Apólice Atualizada",
+        description: "As alterações foram salvas com sucesso",
+      });
     }
   };
 
   const handleDeletePolicy = async (policyId: string) => {
-    // ✅ CORREÇÃO: Sempre deletar via hook persistido
+    // ✅ Sempre deletar via hook persistido
     const success = await deletePersistedPolicy(policyId);
     if (success) {
       // Refresh para garantir sincronização
-      refreshPolicies();
+      await refreshPolicies();
+      toast({
+        title: "✅ Apólice Deletada",
+        description: "A apólice foi removida com sucesso",
+      });
     }
   };
 
@@ -123,7 +133,7 @@ export function DashboardContent() {
     // O toast já é mostrado no hook usePersistedUsers
   };
 
-  // ✅ CORREÇÃO: Normalizar apenas as apólices persistidas
+  // ✅ Normalizar apenas as apólices persistidas
   const normalizedPolicies = allPolicies.map(policy => ({
     ...policy,
     // Manter installments como array - já é o formato correto

@@ -31,8 +31,8 @@ export class BatchFileProcessor {
         const result = await this.processFile(file, userId);
         results.push(result);
         
-        // ✅ CORREÇÃO PRINCIPAL: Chamar onPolicyExtracted APÓS processamento completo
-        console.log(`📤 BatchFileProcessor: Chamando onPolicyExtracted para ${result.name} após persistência`);
+        // ✅ Chamar onPolicyExtracted para cada arquivo processado com sucesso
+        console.log(`📤 BatchFileProcessor: Chamando onPolicyExtracted para ${result.name}`);
         this.onPolicyExtracted(result);
         
       } catch (error) {
@@ -96,7 +96,6 @@ export class BatchFileProcessor {
       } catch (persistenceError) {
         console.error(`❌ BatchFileProcessor: Erro na persistência:`, persistenceError);
         
-        // Fornecer mais detalhes do erro para debug
         this.updateFileStatus(fileName, {
           progress: 100,
           status: 'failed',
@@ -126,16 +125,13 @@ export class BatchFileProcessor {
   private convertToParsedPolicy(data: any, fileName: string, file: File): ParsedPolicyData {
     console.log('🔍 Analisando estrutura dos dados recebidos:', data);
     
-    // Verificar se é um array e pegar o primeiro item
     const policyData = Array.isArray(data) ? data[0] : data;
     console.log('📋 Dados da apólice para conversão:', policyData);
     
-    // Verificar se tem os campos principais do N8N (estrutura direta)
     if (policyData && (policyData.segurado || policyData.seguradora || policyData.numero_apolice)) {
       console.log('✅ Reconhecendo como dados diretos do N8N');
       return N8NDataConverter.convertN8NDirectData(policyData, fileName, file);
     } 
-    // Verificar se é estruturado (formato antigo)
     else if (policyData && policyData.informacoes_gerais && policyData.seguradora && policyData.vigencia) {
       console.log('✅ Reconhecendo como dados estruturados');
       return StructuredDataConverter.convertStructuredData(policyData, fileName, file);

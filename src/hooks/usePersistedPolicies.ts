@@ -87,11 +87,13 @@ export function usePersistedPolicies() {
 
   // Adicionar nova apólice à lista
   const addPolicy = (policy: ParsedPolicyData) => {
+    console.log('➕ Adicionando nova apólice ao estado local:', policy.name);
     setPolicies(prev => [policy, ...prev]);
   };
 
   // Remover apólice da lista
   const removePolicy = (policyId: string) => {
+    console.log('➖ Removendo apólice do estado local:', policyId);
     setPolicies(prev => prev.filter(p => p.id !== policyId));
   };
 
@@ -155,12 +157,9 @@ export function usePersistedPolicies() {
       // Remover do estado local
       removePolicy(policyId);
       
-      toast({
-        title: "✅ Apólice Deletada",
-        description: "A apólice foi removida com sucesso",
-      });
-      
+      console.log(`✅ Apólice ${policyId} deletada com sucesso`);
       return true;
+      
     } catch (error) {
       console.error('❌ Erro ao deletar apólice:', error);
       toast({
@@ -227,12 +226,9 @@ export function usePersistedPolicies() {
         prev.map(p => p.id === policyId ? { ...p, ...updates } : p)
       );
       
-      toast({
-        title: "✅ Apólice Atualizada",
-        description: "As alterações foram salvas com sucesso",
-      });
-      
+      console.log(`✅ Apólice ${policyId} atualizada com sucesso`);
       return true;
+      
     } catch (error) {
       console.error('❌ Erro ao atualizar apólice:', error);
       toast({
@@ -306,10 +302,12 @@ export function usePersistedPolicies() {
     }
   };
 
-  // Recarregar dados
-  const refreshPolicies = () => {
+  // Recarregar dados com promise para aguardar conclusão
+  const refreshPolicies = async (): Promise<void> => {
     if (user?.id) {
-      loadPersistedPolicies();
+      console.log('🔄 Refresh de apólices solicitado');
+      await loadPersistedPolicies();
+      console.log('✅ Refresh de apólices concluído');
     }
   };
 

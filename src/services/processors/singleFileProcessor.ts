@@ -84,7 +84,6 @@ export class SingleFileProcessor {
       } catch (persistenceError) {
         console.error(`❌ SingleFileProcessor: Erro na persistência:`, persistenceError);
         
-        // Fornecer mais detalhes do erro para debug
         this.updateFileStatus(fileName, {
           progress: 100,
           status: 'failed',
@@ -105,7 +104,7 @@ export class SingleFileProcessor {
       message: `✅ Processado: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
     });
 
-    // ✅ CORREÇÃO PRINCIPAL: Chamar onPolicyExtracted APÓS persistência bem-sucedida
+    // ✅ Chamar onPolicyExtracted IMEDIATAMENTE após persistência bem-sucedida
     console.log(`📤 SingleFileProcessor: Chamando onPolicyExtracted para ${parsedPolicy.name} após persistência`);
     this.onPolicyExtracted(parsedPolicy);
 
