@@ -5,8 +5,8 @@ export const formatCurrency = (value: number, options?: {
   showSymbol?: boolean;
 }): string => {
   const {
-    minimumFractionDigits = 2,
-    maximumFractionDigits = 2,
+    minimumFractionDigits = 0,
+    maximumFractionDigits = 0,
     showSymbol = true
   } = options || {};
 

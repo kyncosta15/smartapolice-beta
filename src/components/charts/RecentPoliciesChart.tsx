@@ -26,21 +26,12 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
     .slice(0, 15); // Mostrar mais apólices para o PDF
 
   const formatCurrency = (value: number) => {
-    if (isMobile) {
-      // No mobile, sempre mostrar o valor completo formatado
-      return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(value);
-    }
-    
-    // No desktop, manter formatação original
+    // SEMPRE mostrar valor completo no mobile e desktop
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-      minimumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value);
   };
 
