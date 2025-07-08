@@ -49,34 +49,20 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
           </div>
         </DialogHeader>
 
-        {/* DUAS COLUNAS DE CARDS */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 p-6 items-start">
-          {/* Coluna da esquerda */}
-          <div className="flex flex-col gap-6">
-            <GeneralInfoCard policy={policy} />
-            <InsurerInfoCard policy={policy} />
+        {/* GRID DE CARDS: 2 POR LINHA EM TELAS GRANDES */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 p-6 items-stretch">
+          <GeneralInfoCard policy={policy} />
+          <InsurerInfoCard policy={policy} />
 
-            {/* Vigência & Veículo lado a lado com altura igualada */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full items-stretch">
-              <div className="h-full">
-                <ValidityInfoCard policy={policy} />
-              </div>
-              {policy.vehicleModel && (
-                <div className="h-full">
-                  <VehicleInfoCard policy={policy} />
-                </div>
-              )}
-            </div>
-          </div>
+          <ValidityInfoCard policy={policy} />
+          {policy.vehicleModel && <VehicleInfoCard policy={policy} />}
 
-          {/* Coluna da direita */}
-          <div className="flex flex-col h-full gap-6">
-            <FinancialInfoCard policy={policy} />
-            <CoveragesCard coverages={coverages} />
-            {(policy.insuredName || policy.documento) && (
-              <ResponsiblePersonCard policy={policy} />
-            )}
-          </div>
+          <FinancialInfoCard policy={policy} />
+          <CoveragesCard coverages={coverages} />
+
+          {(policy.insuredName || policy.documento) && (
+            <ResponsiblePersonCard policy={policy} />
+          )}
         </div>
       </DialogContent>
     </Dialog>
