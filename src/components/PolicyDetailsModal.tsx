@@ -70,7 +70,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
           </div>
 
           {/* Coluna da direita */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-row gap-6">
             <FinancialInfoCard policy={policy} />
             <CoveragesCard coverages={coverages} />
             {(policy.insuredName || policy.documento) && (
