@@ -4,6 +4,7 @@ import { Database } from '@/integrations/supabase/types';
 
 type PolicyInsert = Database['public']['Tables']['policies']['Insert'];
 type InstallmentInsert = Database['public']['Tables']['installments']['Insert'];
+type CoberturaInsert = Database['public']['Tables']['coberturas']['Insert'];
 
 export class PolicyPersistenceService {
   
@@ -126,6 +127,11 @@ export class PolicyPersistenceService {
 
       console.log(`✅ Apólice salva com ID: ${policy.id}`);
 
+      // Salvar coberturas se existirem
+      if (policyData.coberturas && Array.isArray(policyData.coberturas) && policyData.coberturas.length > 0) {
+        await this.saveCoverages(policy.id, policyData.coberturas);
+      }
+
       // Salvar parcelas se existirem
       if (Array.isArray(policyData.installments) && policyData.installments.length > 0) {
         await this.saveInstallments(policy.id, policyData.installments, userId);
@@ -136,6 +142,32 @@ export class PolicyPersistenceService {
     } catch (error) {
       console.error('❌ Erro inesperado ao salvar apólice:', error);
       return null;
+    }
+  }
+
+  // Salvar coberturas no banco
+  private static async saveCoverages(
+    policyId: string, 
+    coberturas: Array<{ descricao: string; lmi?: number }>
+  ): Promise<void> {
+    try {
+      const coberturaInserts: CoberturaInsert[] = coberturas.map(cobertura => ({
+        policy_id: policyId,
+        descricao: cobertura.descricao
+      }));
+
+      const { error } = await supabase
+        .from('coberturas')
+        .insert(coberturaInserts);
+
+      if (error) {
+        console.error('❌ Erro ao salvar coberturas:', error);
+      } else {
+        console.log(`✅ ${coberturas.length} coberturas salvas para apólice ${policyId}`);
+      }
+
+    } catch (error) {
+      console.error('❌ Erro inesperado ao salvar coberturas:', error);
     }
   }
 
@@ -184,6 +216,9 @@ export class PolicyPersistenceService {
             valor,
             data_vencimento,
             status
+          ),
+          coberturas (
+            descricao
           )
         `)
         .eq('user_id', userId)
@@ -222,7 +257,8 @@ export class PolicyPersistenceService {
           modelo_veiculo: policy.modelo_veiculo,
           uf: policy.uf,
           franquia: policy.franquia,
-          arquivo_url: policy.arquivo_url
+          arquivo_url: policy.arquivo_url,
+          coberturas: policy.coberturas
         });
 
         // Detectar e corrigir dados misturados (legacy fix)
@@ -249,6 +285,12 @@ export class PolicyPersistenceService {
             status: inst.status
           })) || [],
           
+          // Mapear coberturas do banco
+          coberturas: (policy.coberturas as any[])?.map(cob => ({
+            descricao: cob.descricao,
+            lmi: undefined // LMI será recuperado de outra forma se necessário
+          })) || [],
+          
           // Mapear campos corrigidos
           insuredName: cleanedData.insuredName,
           documento: cleanedData.documento,
@@ -265,7 +307,7 @@ export class PolicyPersistenceService {
                    policy.tipo_seguro === 'vida' ? 'Pessoal' : 
                    policy.tipo_seguro === 'saude' ? 'Saúde' : 
                    policy.tipo_seguro === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
-          coverage: ['Cobertura Básica', 'Responsabilidade Civil'],
+          coverage: (policy.coberturas as any[])?.map(cob => cob.descricao) || ['Cobertura Básica', 'Responsabilidade Civil'],
           totalCoverage: Number(policy.valor_premio) || 0,
           limits: 'R$ 100.000 por sinistro'
         };
