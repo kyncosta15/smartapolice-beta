@@ -62,4 +62,11 @@ export interface ParsedPolicyData {
     plate?: string;
     usage?: string;
   };
+  
+  // Coverage details structure
+  coverageDetails?: {
+    materialDamage?: number;
+    bodilyInjury?: number;
+    comprehensive?: boolean;
+  };
 }

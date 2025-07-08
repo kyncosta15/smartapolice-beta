@@ -1,3 +1,4 @@
+
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 interface N8NDirectResponse {
@@ -161,7 +162,7 @@ export class N8NWebhookService {
       documento: n8nData.documento,
       documento_tipo: n8nData.documento_tipo,
       // Coberturas do N8N - Passando diretamente o array de strings
-      coberturas: n8nData.coberturas,
+      coberturas: n8nData.coberturas || [],
       // Adicionar as parcelas como propriedade adicional
       parcelas_detalhadas: parcelas
     };
