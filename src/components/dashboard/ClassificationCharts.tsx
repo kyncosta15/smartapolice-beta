@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { PolicyDetailsModal } from '../PolicyDetailsModal';
-import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
+import { NewPolicyModal } from '../NewPolicyModal';
 
 interface ClassificationChartsProps {
   typeDistribution: Array<{ name: string; value: number; color: string }>;
@@ -28,37 +27,17 @@ export function ClassificationCharts({
   colors 
 }: ClassificationChartsProps) {
   const isMobile = useIsMobile();
-  const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const { deletePolicy } = usePersistedPolicies();
+  const [selectedPolicy, setSelectedPolicy] = useState<typeof recentPolicies[0] | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handlePolicyClick = (policy: typeof recentPolicies[0]) => {
-    // Convert the simple policy data to full policy format for details modal
-    const fullPolicy = {
-      id: policy.name, // Using name as ID for now
-      name: policy.name,
-      insurer: policy.insurer,
-      premium: policy.value,
-      endDate: policy.dueDate,
-      startDate: policy.insertDate,
-      type: policy.type,
-      status: policy.status,
-      coberturas: [], // Empty for now, will be populated from database
-      extractedAt: policy.insertDate
-    };
-    
-    setSelectedPolicy(fullPolicy);
-    setIsDetailsModalOpen(true);
+    setSelectedPolicy(policy);
+    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    setIsDetailsModalOpen(false);
+    setIsModalOpen(false);
     setSelectedPolicy(null);
-  };
-
-  const handleDeletePolicy = async (policyId: string) => {
-    await deletePolicy(policyId);
-    handleCloseModal();
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -209,12 +188,11 @@ export function ClassificationCharts({
         </Card>
       </div>
 
-      {/* Modal para exibir detalhes da apólice */}
-      <PolicyDetailsModal
-        isOpen={isDetailsModalOpen}
+      {/* Modal para exibir detalhes da nova apólice */}
+      <NewPolicyModal
+        isOpen={isModalOpen}
         onClose={handleCloseModal}
         policy={selectedPolicy}
-        onDelete={handleDeletePolicy}
       />
     </>
   );

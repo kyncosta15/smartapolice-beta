@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyPersistenceService } from '@/services/policyPersistenceService';
@@ -87,13 +86,11 @@ export function usePersistedPolicies() {
 
   // Adicionar nova apólice à lista
   const addPolicy = (policy: ParsedPolicyData) => {
-    console.log('➕ Adicionando nova apólice ao estado local:', policy.name);
     setPolicies(prev => [policy, ...prev]);
   };
 
   // Remover apólice da lista
   const removePolicy = (policyId: string) => {
-    console.log('➖ Removendo apólice do estado local:', policyId);
     setPolicies(prev => prev.filter(p => p.id !== policyId));
   };
 
@@ -111,39 +108,6 @@ export function usePersistedPolicies() {
     try {
       console.log(`🗑️ Deletando apólice: ${policyId}`);
       
-      // Primeiro, deletar o arquivo PDF do storage se existir
-      const policy = policies.find(p => p.id === policyId);
-      if (policy?.pdfPath) {
-        const { error: storageError } = await supabase.storage
-          .from('pdfs')
-          .remove([policy.pdfPath]);
-        
-        if (storageError) {
-          console.warn('⚠️ Erro ao remover PDF do storage:', storageError);
-        }
-      }
-      
-      // Deletar coberturas relacionadas
-      const { error: coverageError } = await supabase
-        .from('coberturas')
-        .delete()
-        .eq('policy_id', policyId);
-      
-      if (coverageError) {
-        console.warn('⚠️ Erro ao remover coberturas:', coverageError);
-      }
-      
-      // Deletar parcelas relacionadas
-      const { error: installmentError } = await supabase
-        .from('parcelas')
-        .delete()
-        .eq('policy_id', policyId);
-      
-      if (installmentError) {
-        console.warn('⚠️ Erro ao remover parcelas:', installmentError);
-      }
-      
-      // Deletar a apólice
       const { error } = await supabase
         .from('policies')
         .delete()
@@ -157,9 +121,12 @@ export function usePersistedPolicies() {
       // Remover do estado local
       removePolicy(policyId);
       
-      console.log(`✅ Apólice ${policyId} deletada com sucesso`);
-      return true;
+      toast({
+        title: "✅ Apólice Deletada",
+        description: "A apólice foi removida com sucesso",
+      });
       
+      return true;
     } catch (error) {
       console.error('❌ Erro ao deletar apólice:', error);
       toast({
@@ -208,6 +175,14 @@ export function usePersistedPolicies() {
       if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = updates.vehicleModel;
       if (updates.uf !== undefined) dbUpdates.uf = updates.uf;
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
+      
+      // Coverage - se for array, converter para string separada por vírgula
+      if (updates.coverage !== undefined) {
+        const coverageString = Array.isArray(updates.coverage) 
+          ? updates.coverage.join(', ') 
+          : updates.coverage;
+        // Não há campo específico na DB para coverage, pode adicionar se necessário
+      }
 
       console.log('📝 Dados preparados para atualização:', dbUpdates);
 
@@ -226,9 +201,12 @@ export function usePersistedPolicies() {
         prev.map(p => p.id === policyId ? { ...p, ...updates } : p)
       );
       
-      console.log(`✅ Apólice ${policyId} atualizada com sucesso`);
-      return true;
+      toast({
+        title: "✅ Apólice Atualizada",
+        description: "As alterações foram salvas com sucesso",
+      });
       
+      return true;
     } catch (error) {
       console.error('❌ Erro ao atualizar apólice:', error);
       toast({
@@ -240,8 +218,8 @@ export function usePersistedPolicies() {
     }
   };
 
-  // Baixar PDF de uma apólice
-  const downloadPDF = async (policyId: string, policyName: string) => {
+  // Obter URL de download para um PDF
+  const getPDFDownloadUrl = async (policyId: string): Promise<string | null> => {
     const policy = policies.find(p => p.id === policyId);
     
     console.log(`🔍 Tentativa de download - Policy ID: ${policyId}`);
@@ -255,59 +233,60 @@ export function usePersistedPolicies() {
         description: "PDF não está disponível para download",
         variant: "destructive",
       });
-      return;
+      return null;
     }
 
     try {
-      console.log(`📥 Solicitando download do arquivo: ${policy.pdfPath}`);
+      console.log(`📥 Solicitando URL de download para: ${policy.pdfPath}`);
+      const downloadUrl = await PolicyPersistenceService.getPDFDownloadUrl(policy.pdfPath);
       
-      // Tentar download direto via storage.download()
-      const { data: fileBlob, error: downloadError } = await supabase.storage
-        .from('pdfs')
-        .download(policy.pdfPath);
-        
-      if (downloadError) {
-        console.warn('⚠️ Download direto falhou:', downloadError);
-        throw downloadError;
-      }
-      
-      if (fileBlob) {
-        console.log('✅ Arquivo obtido via download direto');
-        const blobUrl = URL.createObjectURL(fileBlob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `${policyName || 'apolice'}.pdf`;
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-        
+      if (!downloadUrl) {
+        console.log(`❌ URL de download não gerada para: ${policy.pdfPath}`);
         toast({
-          title: "📥 Download Concluído",
-          description: `Arquivo ${policyName}.pdf baixado com sucesso`,
+          title: "❌ Erro no Download",
+          description: "Não foi possível gerar o link de download",
+          variant: "destructive",
         });
-        
-        console.log('✅ Download concluído com sucesso');
-        return;
+        return null;
       }
+
+      console.log(`✅ URL de download gerada: ${downloadUrl}`);
+      return downloadUrl;
     } catch (error) {
-      console.error('❌ Erro ao baixar PDF:', error);
+      console.error('❌ Erro ao obter URL de download:', error);
       toast({
         title: "❌ Erro no Download",
-        description: "Não foi possível baixar o arquivo PDF",
+        description: "Falha ao acessar o arquivo PDF",
         variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  // Baixar PDF de uma apólice
+  const downloadPDF = async (policyId: string, policyName: string) => {
+    const downloadUrl = await getPDFDownloadUrl(policyId);
+    
+    if (downloadUrl) {
+      // Criar link temporário para download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${policyName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "📥 Download Iniciado",
+        description: `Baixando arquivo: ${policyName}.pdf`,
       });
     }
   };
 
-  // Recarregar dados com promise para aguardar conclusão
-  const refreshPolicies = async (): Promise<void> => {
+  // Recarregar dados
+  const refreshPolicies = () => {
     if (user?.id) {
-      console.log('🔄 Refresh de apólices solicitado');
-      await loadPersistedPolicies();
-      console.log('✅ Refresh de apólices concluído');
+      loadPersistedPolicies();
     }
   };
 

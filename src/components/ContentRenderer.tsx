@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DynamicDashboard } from './DynamicDashboard';
@@ -114,7 +113,11 @@ export function ContentRenderer({
         <div className="p-6">
           <EnhancedPolicyViewer 
             policies={extractedPolicies}
-            onPolicyClick={onPolicySelect}
+            onPolicySelect={onPolicySelect}
+            onPolicyEdit={onPolicyUpdate}
+            onPolicyDelete={onPolicyDelete}
+            onPolicyDownload={onPolicyDownload}
+            viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
           />
         </div>
       );

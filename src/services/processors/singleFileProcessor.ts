@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
 import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
@@ -9,146 +8,110 @@ import { PolicyPersistenceService } from '../policyPersistenceService';
 export class SingleFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
   private removeFileStatus: (fileName: string) => void;
-  private onPolicyExtracted: (policy: ParsedPolicyData) => void;
 
   constructor(
     updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
-    removeFileStatus: (fileName: string) => void,
-    onPolicyExtracted: (policy: ParsedPolicyData) => void
+    removeFileStatus: (fileName: string) => void
   ) {
     this.updateFileStatus = updateFileStatus;
     this.removeFileStatus = removeFileStatus;
-    this.onPolicyExtracted = onPolicyExtracted;
   }
 
   async processFile(file: File, userId: string | null): Promise<ParsedPolicyData> {
     const fileName = file.name;
-    console.log(`📤 SingleFileProcessor: Processando ${fileName}`);
+    console.log(`📤 SingleFileProcessor: Processando arquivo ${fileName} com userId: ${userId}`);
     
-    if (!userId) {
-      console.error('❌ SingleFileProcessor: userId é obrigatório');
-      throw new Error('Usuário não autenticado');
-    }
-    
+    // Inicializar status do arquivo
     this.updateFileStatus(fileName, {
       progress: 0,
       status: 'uploading',
       message: 'Iniciando processamento...'
     });
 
-    try {
-      // 1. Extrair dados do PDF
-      this.updateFileStatus(fileName, {
-        progress: 30,
-        status: 'processing',
-        message: 'Extraindo dados do PDF...'
-      });
+    // 1. Simular carregamento do arquivo
+    this.updateFileStatus(fileName, {
+      progress: 20,
+      status: 'processing',
+      message: 'Carregando arquivo PDF...'
+    });
 
-      const extractedData = await DynamicPDFExtractor.extractFromPDF(file, userId);
-      console.log(`📋 Dados extraídos:`, extractedData);
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (!extractedData || (Array.isArray(extractedData) && extractedData.length === 0)) {
-        throw new Error('Nenhum dado foi extraído do PDF');
+    // 2. Extrair dados do PDF usando extração dinâmica
+    this.updateFileStatus(fileName, {
+      progress: 40,
+      status: 'processing',
+      message: 'Identificando seguradora e layout...'
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    this.updateFileStatus(fileName, {
+      progress: 65,
+      status: 'processing',
+      message: 'Extraindo dados com IA dinâmica...'
+    });
+
+    console.log(`👤 Garantindo que userId ${userId} será enviado no FormData para arquivo individual`);
+    const dynamicData = await DynamicPDFExtractor.extractFromPDF(file, userId);
+
+    // 3. Converter para formato do dashboard
+    this.updateFileStatus(fileName, {
+      progress: 85,
+      status: 'processing',
+      message: 'Processando dados extraídos...'
+    });
+
+    const parsedPolicy = this.convertToParsedPolicy(dynamicData, fileName, file);
+
+    // 4. Salvar arquivo e dados no banco de dados
+    this.updateFileStatus(fileName, {
+      progress: 90,
+      status: 'processing',
+      message: 'Salvando dados no banco...'
+    });
+
+    if (userId) {
+      console.log(`💾 SingleFileProcessor: Iniciando persistência para ${parsedPolicy.name} com userId: ${userId}`);
+      try {
+        const persistenceResult = await PolicyPersistenceService.savePolicyComplete(file, parsedPolicy, userId);
+        console.log(`✅ SingleFileProcessor: Persistência concluída com sucesso: ${persistenceResult}`);
+      } catch (persistenceError) {
+        console.error(`❌ SingleFileProcessor: Erro na persistência:`, persistenceError);
+        throw persistenceError; // Re-throw para não mascarar o erro
       }
-
-      // 2. Converter dados
-      this.updateFileStatus(fileName, {
-        progress: 60,
-        status: 'processing',
-        message: 'Processando dados extraídos...'
-      });
-
-      const parsedPolicy = this.convertToParsedPolicy(extractedData, fileName, file);
-      console.log(`📄 Apólice convertida:`, parsedPolicy);
-
-      // 3. Salvar no banco
-      this.updateFileStatus(fileName, {
-        progress: 85,
-        status: 'processing',
-        message: 'Salvando no banco...'
-      });
-
-      await PolicyPersistenceService.savePolicyComplete(file, parsedPolicy, userId);
-      console.log(`💾 Apólice salva com sucesso`);
-
-      // 4. Finalizar
-      this.updateFileStatus(fileName, {
-        progress: 100,
-        status: 'completed',
-        message: `✅ ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
-      });
-
-      // 5. Chamar callback
-      this.onPolicyExtracted(parsedPolicy);
-
-      setTimeout(() => {
-        this.removeFileStatus(fileName);
-      }, 3000);
-
-      return parsedPolicy;
-
-    } catch (error) {
-      console.error(`❌ Erro no processamento:`, error);
-      
-      this.updateFileStatus(fileName, {
-        progress: 100,
-        status: 'failed',
-        message: `❌ ${error instanceof Error ? error.message : 'Erro desconhecido'}`
-      });
-
-      setTimeout(() => {
-        this.removeFileStatus(fileName);
-      }, 5000);
-
-      throw error;
+    } else {
+      console.error(`❌ SingleFileProcessor: UserId não fornecido - saltando persistência`);
     }
+
+    // 5. Finalizar processamento
+    this.updateFileStatus(fileName, {
+      progress: 100,
+      status: 'completed',
+      message: `✅ Processado: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
+    });
+
+    // Remover da lista após 3 segundos
+    setTimeout(() => {
+      this.removeFileStatus(fileName);
+    }, 3000);
+
+    return parsedPolicy;
   }
 
   private convertToParsedPolicy(data: any, fileName: string, file: File): ParsedPolicyData {
-    console.log('🔍 Convertendo dados extraídos:', data);
-    
-    if (!data) {
-      throw new Error('Dados extraídos estão vazios');
+    // Verificar se é dado direto do N8N ou estruturado
+    if (data.numero_apolice && data.segurado && data.seguradora) {
+      // É dado direto do N8N
+      return N8NDataConverter.convertN8NDirectData(data, fileName, file);
+    } else if (data.informacoes_gerais && data.seguradora && data.vigencia) {
+      // É dado estruturado
+      return StructuredDataConverter.convertStructuredData(data, fileName, file);
+    } else {
+      // Fallback para dados não estruturados
+      console.warn('Dados não estruturados recebidos, usando fallback');
+      return this.createFallbackPolicy(data, fileName, file);
     }
-
-    const policyData = Array.isArray(data) ? data[0] : data;
-    
-    if (!policyData) {
-      throw new Error('Dados da apólice estão vazios');
-    }
-    
-    // Verificar formato N8N direto
-    if (this.isN8NDirectData(policyData)) {
-      console.log('✅ Convertendo como dados diretos do N8N');
-      return N8NDataConverter.convertN8NDirectData(policyData, fileName, file);
-    }
-    
-    // Verificar formato estruturado
-    if (this.isStructuredData(policyData)) {
-      console.log('✅ Convertendo como dados estruturados');
-      return StructuredDataConverter.convertStructuredData(policyData, fileName, file);
-    }
-    
-    // Fallback
-    console.warn('⚠️ Usando fallback para conversão');
-    return this.createFallbackPolicy(policyData, fileName, file);
-  }
-
-  private isN8NDirectData(data: any): boolean {
-    return data && (
-      data.segurado || 
-      data.seguradora || 
-      data.numero_apolice ||
-      data.documento ||
-      data.custo_mensal
-    );
-  }
-
-  private isStructuredData(data: any): boolean {
-    return data && 
-      data.informacoes_gerais && 
-      data.seguradora && 
-      data.vigencia;
   }
 
   private createFallbackPolicy(data: any, fileName: string, file: File): ParsedPolicyData {
@@ -156,18 +119,17 @@ export class SingleFileProcessor {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       name: fileName.replace('.pdf', ''),
       type: 'auto',
-      insurer: data.seguradora || 'Seguradora Não Identificada',
-      premium: Number(data.premio) || Number(data.valor_premio) || 0,
-      monthlyAmount: Number(data.custo_mensal) || Number(data.valor_parcela) || 0,
-      startDate: data.inicio || data.inicio_vigencia || new Date().toISOString().split('T')[0],
-      endDate: data.fim || data.fim_vigencia || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      policyNumber: data.numero_apolice || 'N/A',
+      insurer: 'Seguradora Não Identificada',
+      premium: 0,
+      monthlyAmount: 0,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      policyNumber: 'N/A',
       paymentFrequency: 'mensal',
       status: 'active',
       file,
       extractedAt: new Date().toISOString().split('T')[0],
-      installments: [],
-      insuredName: data.segurado || 'Segurado não informado'
+      installments: []
     };
   }
 }

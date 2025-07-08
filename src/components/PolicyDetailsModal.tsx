@@ -2,7 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { GeneralInfoCard } from './policy-details/GeneralInfoCard';
 import { InsurerInfoCard } from './policy-details/InsurerInfoCard';
 import { FinancialInfoCard } from './policy-details/FinancialInfoCard';
@@ -39,15 +39,20 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
             <DialogTitle className="text-2xl font-bold text-gray-900 font-sf-pro">
               Detalhes da Apólice
             </DialogTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDelete}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Excluir
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDelete}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 

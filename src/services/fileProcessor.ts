@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { FileProcessingStatus } from '@/types/pdfUpload';
 import { BatchFileProcessor } from './processors/batchFileProcessor';
@@ -8,28 +7,26 @@ export class FileProcessor {
   private batchProcessor: BatchFileProcessor;
   private singleProcessor: SingleFileProcessor;
   private userId: string | null;
-  private onPolicyExtracted: (policy: ParsedPolicyData) => void;
 
   constructor(
     updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
     removeFileStatus: (fileName: string) => void,
-    userId: string | null,
+    userId: string | null, // Corrigido: agora recebe userId como parâmetro
     onPolicyExtracted: (policy: ParsedPolicyData) => void,
     toast: any
   ) {
     this.userId = userId;
-    this.onPolicyExtracted = onPolicyExtracted;
     
     this.batchProcessor = new BatchFileProcessor(
       updateFileStatus,
       removeFileStatus,
-      onPolicyExtracted // Passar callback para o batch processor
+      onPolicyExtracted,
+      toast
     );
 
     this.singleProcessor = new SingleFileProcessor(
       updateFileStatus,
-      removeFileStatus,
-      onPolicyExtracted // Passar callback para o single processor
+      removeFileStatus
     );
   }
 
@@ -37,7 +34,7 @@ export class FileProcessor {
   async processMultipleFiles(files: File[]): Promise<ParsedPolicyData[]> {
     console.log(`🚀 FileProcessor.processMultipleFiles CHAMADO!`);
     console.log(`📤 FileProcessor: Passando userId ${this.userId} para BatchFileProcessor`);
-    const result = await this.batchProcessor.processBatch(files, this.userId);
+    const result = await this.batchProcessor.processMultipleFiles(files, this.userId);
     console.log(`✅ FileProcessor: Resultado do BatchFileProcessor:`, result.length);
     return result;
   }
