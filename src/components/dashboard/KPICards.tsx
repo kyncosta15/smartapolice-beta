@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -25,13 +24,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
     
     if (isCurrency) {
       if (isMobile) {
-        // Para valores muito grandes, usar abreviação
-        if (numValue >= 10000000) {
-          return `R$ ${(numValue / 1000000).toFixed(1)}M`;
-        } else if (numValue >= 100000) {
-          return `R$ ${(numValue / 1000).toFixed(0)}k`;
-        }
-        // Para valores menores, mostrar completo mas formatado
+        // No mobile, sempre mostrar o valor completo formatado (sem abreviações)
         try {
           return formatCurrency(numValue, { maximumFractionDigits: 0, minimumFractionDigits: 0 });
         } catch (error) {
@@ -39,6 +32,7 @@ export function KPICards({ totalPolicies, totalMonthlyCost, totalInsuredValue, e
           return `R$ ${numValue.toFixed(0)}`;
         }
       }
+      // No desktop, manter formatação original
       try {
         return formatCurrency(numValue);
       } catch (error) {
