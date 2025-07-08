@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, TrendingUp } from 'lucide-react';
@@ -174,12 +175,12 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
                 />
                 <YAxis 
                   tick={{ fontSize: isMobile ? 8 : 12, fill: '#64748b', fontWeight: 500 }}
-                  tickFormatter={(value) => isMobile ? `${(value/1000).toFixed(0)}k` : formatCurrency(value, { showSymbol: false })}
+                  tickFormatter={(value) => formatCurrency(value, { showSymbol: false, minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   tickLine={{ stroke: '#e2e8f0', strokeWidth: 1 }}
-                  width={isMobile ? 35 : 80}
+                  width={isMobile ? 60 : 80}
                 />
                 <Tooltip 
-                  formatter={(value) => [formatCurrency(Number(value)), 'Custo Mensal']} 
+                  formatter={(value) => [formatCurrency(Number(value), { minimumFractionDigits: 2, maximumFractionDigits: 2 }), 'Custo Mensal']} 
                   labelFormatter={(label) => `${label}`}
                   contentStyle={{
                     backgroundColor: 'rgba(255, 255, 255, 0.98)',
@@ -210,19 +211,19 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
               </LineChart>
             </ResponsiveContainer>
           </div>
-          {/* Resumo compacto para mobile */}
+          {/* Resumo compacto com valores completos */}
           <div className={`${isMobile ? 'mt-2 grid grid-cols-3 gap-1' : 'mt-4 grid grid-cols-3 gap-4'} text-center`}>
             <div className={`bg-gradient-to-br from-blue-50 to-indigo-50 ${isMobile ? 'p-1' : 'p-4'} rounded-xl border border-blue-100 shadow-sm`}>
               <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-blue-600 font-semibold uppercase tracking-wide`}>
                 {isMobile ? 'Médio' : 'Custo Médio'}
               </p>
-              <p className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-blue-700 mt-1`}>
+              <p className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-blue-700 mt-1 break-words`}>
                 {monthlyEvolution.length > 0 ? 
-                  (isMobile ? 
-                    `${(monthlyEvolution.reduce((sum, item) => sum + item.custo, 0) / monthlyEvolution.length / 1000).toFixed(0)}k` :
-                    formatCurrency(monthlyEvolution.reduce((sum, item) => sum + item.custo, 0) / monthlyEvolution.length)
-                  ) : 
-                  formatCurrency(0)
+                  formatCurrency(monthlyEvolution.reduce((sum, item) => sum + item.custo, 0) / monthlyEvolution.length, { 
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  }) :
+                  formatCurrency(0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 }
               </p>
             </div>
@@ -230,13 +231,13 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
               <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-green-600 font-semibold uppercase tracking-wide`}>
                 {isMobile ? 'Maior' : 'Maior Custo'}
               </p>
-              <p className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-green-700 mt-1`}>
+              <p className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-green-700 mt-1 break-words`}>
                 {monthlyEvolution.length > 0 ? 
-                  (isMobile ?
-                    `${(Math.max(...monthlyEvolution.map(item => item.custo)) / 1000).toFixed(0)}k` :
-                    formatCurrency(Math.max(...monthlyEvolution.map(item => item.custo)))
-                  ) : 
-                  formatCurrency(0)
+                  formatCurrency(Math.max(...monthlyEvolution.map(item => item.custo)), { 
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  }) :
+                  formatCurrency(0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 }
               </p>
             </div>
@@ -244,13 +245,13 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
               <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-orange-600 font-semibold uppercase tracking-wide`}>
                 {isMobile ? 'Atual' : 'Custo Atual'}
               </p>
-              <p className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-orange-700 mt-1`}>
+              <p className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-orange-700 mt-1 break-words`}>
                 {monthlyEvolution.length > 0 ? 
-                  (isMobile ?
-                    `${(monthlyEvolution[monthlyEvolution.length - 1].custo / 1000).toFixed(0)}k` :
-                    formatCurrency(monthlyEvolution[monthlyEvolution.length - 1].custo)
-                  ) : 
-                  formatCurrency(0)
+                  formatCurrency(monthlyEvolution[monthlyEvolution.length - 1].custo, { 
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  }) :
+                  formatCurrency(0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 }
               </p>
             </div>
