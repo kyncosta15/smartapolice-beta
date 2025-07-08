@@ -3,7 +3,7 @@ import React, { useRef } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { KPICards } from './dashboard/KPICards';
 import { ClassificationCharts } from './dashboard/ClassificationCharts';
-import { PersonTypeDistribution } from './dashboard/PersonTypeDistribution';
+import { PersonTypeDistribution } from './dashboard/PersonTypeDistribution';  
 import { StatusEvolutionCharts } from './dashboard/StatusEvolutionCharts';
 import { EmptyState } from './dashboard/EmptyState';
 import { useDashboardCalculations } from './dashboard/useDashboardCalculations';
@@ -14,9 +14,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface DynamicDashboardProps {
   policies: ParsedPolicyData[];
   viewMode?: 'client' | 'admin';
+  onSectionChange?: (section: string) => void;
 }
 
-export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashboardProps) {
+export function DynamicDashboard({ policies, viewMode = 'client', onSectionChange }: DynamicDashboardProps) {
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16'];
   const isMobile = useIsMobile();
 
@@ -36,6 +37,12 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
     totalMonthlyCost: dashboardData.totalMonthlyCost,
     totalInsuredValue: dashboardData.totalInsuredValue,
     expiringPolicies: dashboardData.expiringPolicies,
+  };
+
+  const handleTotalClick = () => {
+    if (onSectionChange) {
+      onSectionChange('policies');
+    }
   };
 
   if (policies.length === 0 && !shouldUseRealData) {
@@ -85,6 +92,7 @@ export function DynamicDashboard({ policies, viewMode = 'client' }: DynamicDashb
             expiringPolicies={displayMetrics.expiringPolicies}
             expiredPolicies={dashboardData.expiredPolicies}
             activePolicies={dashboardData.activePolicies}
+            onTotalClick={handleTotalClick}
           />
         </div>
 

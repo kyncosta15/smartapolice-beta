@@ -101,6 +101,7 @@ export function ContentRenderer({
         <DynamicDashboard 
           policies={extractedPolicies}
           viewMode="client"
+          onSectionChange={onSectionChange}
         />
       </div>
     );
@@ -208,6 +209,7 @@ export function ContentRenderer({
           <DynamicDashboard 
             policies={extractedPolicies}
             viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
+            onSectionChange={onSectionChange}
           />
         </div>
       );

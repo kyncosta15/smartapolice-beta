@@ -1,11 +1,8 @@
+
 import React, { useMemo } from 'react';
 import {
   Card, CardContent, CardHeader, CardTitle
 } from '@/components/ui/card';
-import {
-  Carousel, CarouselContent, CarouselItem,
-  CarouselNext, CarouselPrevious
-} from '@/components/ui/carousel';
 import {
   FileText, DollarSign, Shield,
   AlertTriangle, XCircle
@@ -21,6 +18,7 @@ interface KPICardsProps {
   expiringPolicies: number;
   expiredPolicies: number;
   activePolicies: number;
+  onTotalClick?: () => void;
 }
 
 // Utilitário interno para formatar valores – sempre valor completo
@@ -52,7 +50,9 @@ export function KPICards(props: KPICardsProps) {
       subtitle: 'Apólices',
       icon: FileText,
       bg: 'from-blue-500 to-blue-600',
-      isCurrency: false
+      isCurrency: false,
+      isClickable: true,
+      onClick: props.onTotalClick
     },
     {
       title: 'Custo Mensal',
@@ -101,13 +101,16 @@ export function KPICards(props: KPICardsProps) {
   /* ------------------------------------------------------------------ */
   const renderCard = (
     {
-      title, value, subtitle, icon: Icon, bg, isCurrency
+      title, value, subtitle, icon: Icon, bg, isCurrency, isClickable, onClick
     }: (typeof cards)[number],
     key: React.Key
   ) => (
     <Card
       key={key}
-      className={`bg-gradient-to-r ${bg} text-white border-0 shadow-lg`}
+      className={`bg-gradient-to-r ${bg} text-white border-0 shadow-lg ${
+        isClickable ? 'cursor-pointer hover:scale-105 transition-transform' : ''
+      }`}
+      onClick={isClickable ? onClick : undefined}
     >
       <CardHeader
         className={`flex flex-row items-center justify-between space-y-0 ${
@@ -132,54 +135,26 @@ export function KPICards(props: KPICardsProps) {
   );
 
   /* ------------------------------------------------------------------ */
-  /*  Mobile → 2 cards por slide                                         */
+  /*  Mobile → 2 cards per row                                          */
   /* ------------------------------------------------------------------ */
   if (isMobile) {
-    const pairs = Array.from({ length: Math.ceil(cards.length / 2) },
-      (_, i) => cards.slice(i * 2, i * 2 + 2));
-
     return (
       <div className="w-full px-4">
-        <Carousel className="w-full">
-          <CarouselContent className="-ml-2">
-            {pairs.map((pair, idx) => (
-              <CarouselItem key={idx} className="pl-2">
-                <div className="grid grid-cols-2 gap-2">
-                  {pair.map(renderCard)}
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-
-          <CarouselPrevious className="left-0 h-8 w-8 -ml-4" />
-          <CarouselNext className="right-0 h-8 w-8 -mr-4" />
-        </Carousel>
+        <div className="grid grid-cols-2 gap-2">
+          {cards.map(renderCard)}
+        </div>
       </div>
     );
   }
 
   /* ------------------------------------------------------------------ */
-  /*  Desktop → 3 cards por slide                                        */
+  /*  Desktop → 3 cards per row (2 rows)                               */
   /* ------------------------------------------------------------------ */
-  const groups = Array.from({ length: Math.ceil(cards.length / 3) },
-    (_, i) => cards.slice(i * 3, i * 3 + 3));
-
   return (
     <div className="w-full px-4">
-      <Carousel className="w-full">
-        <CarouselContent>
-          {groups.map((group, idx) => (
-            <CarouselItem key={idx}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {group.map(renderCard)}
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {cards.map(renderCard)}
+      </div>
     </div>
   );
 }
