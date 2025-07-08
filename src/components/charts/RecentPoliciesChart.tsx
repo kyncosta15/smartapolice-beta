@@ -1,13 +1,17 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Calendar, DollarSign, Clock } from 'lucide-react';
 import { PolicyData } from './chartData';
 import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RecentPoliciesChartProps {
   policies: PolicyData[];
 }
 
 export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
+  const isMobile = useIsMobile();
+
   // Filtrar apólices dos últimos 30 dias
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -22,6 +26,17 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
     .slice(0, 15); // Mostrar mais apólices para o PDF
 
   const formatCurrency = (value: number) => {
+    if (isMobile) {
+      // No mobile, sempre mostrar o valor completo formatado
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(value);
+    }
+    
+    // No desktop, manter formatação original
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
@@ -90,7 +105,7 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
                     </div>
 
                     {/* Informações principais */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-4 gap-4 md:gap-6'}`}>
                       {/* Data de Inserção */}
                       <div className="text-center">
                         <div className="flex items-center justify-center gap-1 mb-1">
@@ -108,7 +123,7 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
                           <DollarSign className="h-4 w-4 text-gray-400" />
                           <span className="text-xs text-gray-500">Valor</span>
                         </div>
-                        <p className="text-sm font-medium text-green-600">
+                        <p className={`text-sm font-medium text-green-600 ${isMobile ? 'break-words' : ''}`}>
                           {formatCurrency(policy.monthlyAmount || policy.premium || 0)}
                         </p>
                       </div>
