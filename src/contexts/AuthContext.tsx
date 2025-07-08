@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
@@ -82,50 +83,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        console.log('🚀 Initializing auth...');
-        
-        // Get initial session
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('❌ Error getting initial session:', error);
-          if (mounted) {
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        console.log('📋 Initial session:', initialSession ? 'Found' : 'None');
-
-        if (initialSession?.user && mounted) {
-          console.log('👤 Loading user profile for session user:', initialSession.user.id);
-          const userProfile = await fetchUserProfile(initialSession.user.id);
-          
-          if (mounted) {
-            setSession(initialSession);
-            setUser(userProfile);
-            console.log('✅ Auth initialized with user:', userProfile?.name || 'Unknown');
-          }
-        } else if (mounted) {
-          // No session found, clear states
-          setSession(null);
-          setUser(null);
-        }
-
-        if (mounted) {
-          setIsLoading(false);
-          console.log('🏁 Auth initialization complete');
-        }
-      } catch (error) {
-        console.error('💥 Auth initialization error:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
+    
+    console.log('🚀 Setting up auth state listener...');
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -134,42 +93,103 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (!mounted) return;
 
+        // Update session immediately
+        setSession(session);
+
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log('🔑 User signed in, fetching profile...');
-          setSession(session);
-          setIsLoading(true);
+          console.log('🔑 User signed in, loading profile...');
           
-          const userProfile = await fetchUserProfile(session.user.id);
-          if (mounted) {
-            setUser(userProfile);
-            setIsLoading(false);
-            console.log('✅ User profile set after signin:', userProfile?.name || 'Unknown');
-          }
+          // Defer the profile loading to avoid blocking the auth state change
+          setTimeout(async () => {
+            if (!mounted) return;
+            
+            const userProfile = await fetchUserProfile(session.user.id);
+            
+            if (mounted) {
+              setUser(userProfile);
+              setIsLoading(false);
+              console.log('✅ User profile set after signin:', userProfile?.name || 'Unknown');
+            }
+          }, 100);
+          
         } else if (event === 'SIGNED_OUT' || !session) {
           console.log('👋 User signed out or no session');
-          setSession(null);
           setUser(null);
           setIsLoading(false);
+        } else if (session?.user) {
+          // For existing sessions, load profile
+          setTimeout(async () => {
+            if (!mounted) return;
+            
+            const userProfile = await fetchUserProfile(session.user.id);
+            
+            if (mounted) {
+              setUser(userProfile);
+              setIsLoading(false);
+            }
+          }, 100);
         } else {
-          setSession(session);
+          setIsLoading(false);
         }
       }
     );
+
+    // Get initial session
+    const initializeAuth = async () => {
+      try {
+        console.log('🔍 Getting initial session...');
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Error getting initial session:', error);
+          if (mounted) setIsLoading(false);
+          return;
+        }
+
+        if (!mounted) return;
+
+        console.log('📋 Initial session:', initialSession ? 'Found' : 'None');
+        
+        if (initialSession?.user) {
+          setSession(initialSession);
+          
+          // Load user profile for initial session
+          const userProfile = await fetchUserProfile(initialSession.user.id);
+          
+          if (mounted) {
+            setUser(userProfile);
+            setIsLoading(false);
+            console.log('✅ Initial auth complete with user:', userProfile?.name || 'Unknown');
+          }
+        } else {
+          // No initial session
+          setSession(null);
+          setUser(null);
+          setIsLoading(false);
+          console.log('🏁 No initial session found');
+        }
+      } catch (error) {
+        console.error('💥 Auth initialization error:', error);
+        if (mounted) setIsLoading(false);
+      }
+    };
 
     // Initialize auth
     initializeAuth();
 
     return () => {
-      console.log('🧹 Cleaning up auth listener');
+      console.log('🧹 Cleaning up auth');
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Empty dependency array to prevent re-runs
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     console.log('🔐 Starting login for:', email);
     
     try {
+      setIsLoading(true);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -177,17 +197,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('❌ Login error:', error);
+        setIsLoading(false);
         return { success: false, error: error.message };
       }
 
       if (data.user && data.session) {
         console.log('✅ Login successful for user:', data.user.id);
+        // Loading state will be managed by the auth state listener
         return { success: true };
       }
 
+      setIsLoading(false);
       return { success: false, error: 'Login failed' };
     } catch (error) {
       console.error('💥 Login exception:', error);
+      setIsLoading(false);
       return { success: false, error: 'Erro inesperado no login' };
     }
   };
@@ -265,29 +289,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('❌ Logout error:', error);
-        throw error;
       }
       
       console.log('✅ Logout successful');
       
-      // Clear local state
+      // Clear local state (will also be handled by auth state change)
       setUser(null);
       setSession(null);
+      setIsLoading(false);
       
-      // Force page reload to ensure clean state
-      window.location.href = '/';
     } catch (error) {
       console.error('💥 Logout error:', error);
-      // Even if there's an error, clear local state and redirect
+      // Even if there's an error, clear local state
       setUser(null);
       setSession(null);
-      window.location.href = '/';
-    } finally {
       setIsLoading(false);
     }
   };
 
-  console.log('🎯 Auth context state:', { user: user?.name || 'None', isLoading, hasSession: !!session });
+  console.log('🎯 Auth context render:', { 
+    user: user?.name || 'None', 
+    isLoading, 
+    hasSession: !!session 
+  });
 
   return (
     <AuthContext.Provider value={{ user, session, login, register, logout, isLoading }}>
