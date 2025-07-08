@@ -55,10 +55,14 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
           <div className="flex flex-col gap-6">
             <GeneralInfoCard policy={policy} />
             <InsurerInfoCard policy={policy} />
-            <ValidityInfoCard policy={policy} />
-            {policy.vehicleModel && (
-              <VehicleInfoCard policy={policy} />
-            )}
+
+            {/* Vigência e Veículo lado a lado */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <ValidityInfoCard policy={policy} />
+              {policy.vehicleModel && (
+                <VehicleInfoCard policy={policy} />
+              )}
+            </div>
           </div>
 
           {/* Coluna da direita */}
