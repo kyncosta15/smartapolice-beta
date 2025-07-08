@@ -1,3 +1,4 @@
+
 export interface FileProcessingStatus {
   [fileName: string]: {
     progress: number;
@@ -34,6 +35,18 @@ export interface DynamicPDFData {
   };
   segurado?: {
     nome: string;
+    cpf?: string;
+    data_nascimento?: string;
+    email?: string;
+    telefone?: string;
+  };
+  veiculo?: {
+    marca?: string;
+    modelo?: string;
+    ano_modelo?: string;
+    placa?: string;
+    chassi?: string;
+    uso?: string;
   };
   documento?: string;
   documento_tipo?: 'CPF' | 'CNPJ';
