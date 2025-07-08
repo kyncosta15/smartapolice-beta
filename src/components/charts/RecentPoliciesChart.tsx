@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Calendar, DollarSign, Clock } from 'lucide-react';
 import { PolicyData } from './chartData';
@@ -26,12 +25,12 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
     .slice(0, 15); // Mostrar mais apólices para o PDF
 
   const formatCurrency = (value: number) => {
-    // SEMPRE mostrar valor completo no mobile e desktop
+    // SEMPRE mostrar valor completo com casas decimais no mobile e desktop
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(value);
   };
 

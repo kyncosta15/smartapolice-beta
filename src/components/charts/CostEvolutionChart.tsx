@@ -128,19 +128,28 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
               <div className="text-center">
                 <p className="text-gray-500">Média Mensal</p>
                 <p className="font-semibold text-blue-600">
-                  {formatCurrency(avgCusto)}
+                  {formatCurrency(avgCusto, { 
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-gray-500">Pico</p>
                 <p className="font-semibold text-green-600">
-                  {formatCurrency(maxCusto)}
+                  {formatCurrency(maxCusto, { 
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-gray-500">Total</p>
                 <p className="font-semibold text-orange-600">
-                  {formatCurrency(totalCusto)}
+                  {formatCurrency(totalCusto, { 
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
                 </p>
               </div>
             </div>
@@ -166,14 +175,17 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
                 tickLine={{ stroke: '#e2e8f0' }}
                 axisLine={{ stroke: '#e2e8f0' }}
                 tickFormatter={(value) => hasData ? formatCurrency(value, { 
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
                   showSymbol: false
                 }) : '0'}
               />
               <Tooltip 
                 formatter={(value: number, name: string) => [
-                  hasData ? formatCurrency(value) : 'Sem dados',
+                  hasData ? formatCurrency(value, { 
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  }) : 'Sem dados',
                   'Valor Calculado (Total ÷ Parcelas)'
                 ]}
                 labelFormatter={(label) => `Período: ${label}`}
