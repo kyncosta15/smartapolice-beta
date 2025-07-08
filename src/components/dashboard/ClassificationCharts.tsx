@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { NewPolicyModal } from '../NewPolicyModal';
+import { PolicyDetailsModal } from '../PolicyDetailsModal';
+import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 
 interface ClassificationChartsProps {
   typeDistribution: Array<{ name: string; value: number; color: string }>;
@@ -27,22 +28,36 @@ export function ClassificationCharts({
   colors 
 }: ClassificationChartsProps) {
   const isMobile = useIsMobile();
-  const [selectedPolicy, setSelectedPolicy] = useState<typeof recentPolicies[0] | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const { deletePolicy } = usePersistedPolicies();
 
   const handlePolicyClick = (policy: typeof recentPolicies[0]) => {
-    setSelectedPolicy(policy);
-    setIsModalOpen(true);
+    // Convert the simple policy data to full policy format for details modal
+    const fullPolicy = {
+      id: policy.name, // Using name as ID for now
+      name: policy.name,
+      insurer: policy.insurer,
+      premium: policy.value,
+      endDate: policy.dueDate,
+      startDate: policy.insertDate,
+      type: policy.type,
+      status: policy.status,
+      coberturas: [], // Empty for now, will be populated from database
+      extractedAt: policy.insertDate
+    };
+    
+    setSelectedPolicy(fullPolicy);
+    setIsDetailsModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
+    setIsDetailsModalOpen(false);
     setSelectedPolicy(null);
   };
 
-  const handleViewDetails = (policy: any) => {
-    // Implementar lógica para ver detalhes completos da apólice
-    console.log('Ver detalhes da apólice:', policy);
+  const handleDeletePolicy = async (policyId: string) => {
+    await deletePolicy(policyId);
     handleCloseModal();
   };
 
@@ -194,12 +209,12 @@ export function ClassificationCharts({
         </Card>
       </div>
 
-      {/* Modal para exibir detalhes da nova apólice */}
-      <NewPolicyModal
-        isOpen={isModalOpen}
+      {/* Modal para exibir detalhes da apólice */}
+      <PolicyDetailsModal
+        isOpen={isDetailsModalOpen}
         onClose={handleCloseModal}
-        onViewDetails={handleViewDetails}
         policy={selectedPolicy}
+        onDelete={handleDeletePolicy}
       />
     </>
   );

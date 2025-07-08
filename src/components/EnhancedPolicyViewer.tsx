@@ -1,9 +1,9 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, DollarSign, AlertTriangle, TrendingUp, Eye, Download } from 'lucide-react';
-import { NewPolicyModal } from './NewPolicyModal';
+import { Calendar, DollarSign, AlertTriangle, TrendingUp, Eye, Download, Trash2 } from 'lucide-react';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
@@ -14,8 +14,6 @@ interface EnhancedPolicyViewerProps {
 }
 
 export function EnhancedPolicyViewer({ policies, onPolicyClick }: EnhancedPolicyViewerProps) {
-  const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
-  const [isNewPolicyModalOpen, setIsNewPolicyModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [detailsPolicy, setDetailsPolicy] = useState<any>(null);
   
@@ -47,29 +45,15 @@ export function EnhancedPolicyViewer({ policies, onPolicyClick }: EnhancedPolicy
     }
   };
 
-  const handleCardClick = (policy: any) => {
-    setSelectedPolicy({
-      name: policy.name,
-      insurer: policy.insurer,
-      value: policy.premium,
-      dueDate: policy.endDate,
-      insertDate: policy.extractedAt || policy.startDate,
-      type: policy.type,
-      status: policy.status,
-      coberturas: policy.coberturas || []
-    });
-    setIsNewPolicyModalOpen(true);
-  };
-
   const handleViewDetails = (policy: any) => {
-    // Converter os dados do modal simples para o formato completo
-    const fullPolicy = policies.find(p => p.name === policy.name) || policy;
-    setDetailsPolicy(fullPolicy);
+    setDetailsPolicy(policy);
     setIsDetailsModalOpen(true);
   };
 
   const handleDeletePolicy = async (policyId: string) => {
-    await deletePolicy(policyId);
+    if (window.confirm('Tem certeza que deseja excluir esta apólice?')) {
+      await deletePolicy(policyId);
+    }
   };
 
   const handleDownloadPDF = async (policyId: string, policyName: string) => {
@@ -81,20 +65,19 @@ export function EnhancedPolicyViewer({ policies, onPolicyClick }: EnhancedPolicy
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Apólices Recentes</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Apólices</h2>
           <p className="text-sm text-gray-600">
             {policies.length} apólice{policies.length !== 1 ? 's' : ''} encontrada{policies.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
 
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Cards Grid - Horizontal Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
         {policies.map((policy, index) => (
           <Card 
             key={policy.id || index} 
-            className="hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-blue-500 hover:border-l-blue-600"
-            onClick={() => handleCardClick(policy)}
+            className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500 hover:border-l-blue-600"
           >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
@@ -140,54 +123,42 @@ export function EnhancedPolicyViewer({ policies, onPolicyClick }: EnhancedPolicy
               </div>
 
               {/* Botões de ação */}
-              <div className="flex space-x-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewDetails({
-                      name: policy.name,
-                      insurer: policy.insurer,
-                      value: policy.premium,
-                      dueDate: policy.endDate,
-                      insertDate: policy.extractedAt || policy.startDate,
-                      type: policy.type,
-                      status: policy.status,
-                      coberturas: policy.coberturas || []
-                    });
-                  }}
+                  className="flex-1 min-w-0"
+                  onClick={() => handleViewDetails(policy)}
                 >
                   <Eye className="h-4 w-4 mr-1" />
                   Ver
                 </Button>
+                
                 {policy.pdfPath && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDownloadPDF(policy.id, policy.name);
-                    }}
+                    onClick={() => handleDownloadPDF(policy.id, policy.name)}
                   >
                     <Download className="h-4 w-4" />
                   </Button>
                 )}
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeletePolicy(policy.id)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Modals */}
-      <NewPolicyModal
-        isOpen={isNewPolicyModalOpen}
-        onClose={() => setIsNewPolicyModalOpen(false)}
-        onViewDetails={handleViewDetails}
-        policy={selectedPolicy}
-      />
-
+      {/* Details Modal */}
       <PolicyDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
