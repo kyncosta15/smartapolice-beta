@@ -50,7 +50,7 @@ export class StructuredDataConverter {
       vehicleDetails: dynamicData.veiculo ? {
         brand: dynamicData.veiculo.marca,
         model: dynamicData.veiculo.modelo,
-        year: dynamicData.veiculo.ano_modelo,
+        year: dynamicData.veiculo.ano_modelo ? parseInt(dynamicData.veiculo.ano_modelo.toString()) : undefined,
         plate: dynamicData.veiculo.placa,
         usage: dynamicData.veiculo.uso
       } : undefined,
