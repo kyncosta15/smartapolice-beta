@@ -1,4 +1,3 @@
-
 export interface FileProcessingStatus {
   [fileName: string]: {
     progress: number;
@@ -33,44 +32,22 @@ export interface DynamicPDFData {
     fim: string;
     extraido_em: string;
   };
-  // Added vencimentos_futuros property
-  vencimentos_futuros?: string[];
-  // Campos expandidos opcionais
   segurado?: {
-    nome?: string;
-    cpf?: string;
-    data_nascimento?: string;
-    email?: string;
-    telefone?: string;
-    // Novos campos de documento
-    documento?: string;
-    tipo_pessoa?: 'PF' | 'PJ';
-    cpf_cnpj?: string;
+    nome: string;
   };
-  veiculo?: {
-    marca?: string;
-    modelo?: string;
-    ano_modelo?: string;
-    placa?: string;
-    chassi?: string;
-    uso?: string;
-  };
-  coberturas?: {
-    tipo?: string;
-    franquia?: number;
-    danos_materiais?: number;
-    danos_corporais?: number;
-  };
-  // Adicionando parcelas detalhadas
+  documento?: string;
+  documento_tipo?: 'CPF' | 'CNPJ';
+  // Updated coberturas to match N8N structure
+  coberturas?: Array<{
+    descricao: string;
+    lmi?: number;
+  }>;
   parcelas_detalhadas?: Array<{
     numero: number;
     valor: number;
     data: string;
     status: 'paga' | 'pendente';
   }>;
-  // Novos campos de documento diretos do N8N
-  documento?: string;
-  documento_tipo?: 'CPF' | 'CNPJ';
 }
 
 // Interface legada mantida para compatibilidade
