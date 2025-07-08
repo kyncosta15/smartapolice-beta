@@ -11,7 +11,7 @@ export class FileProcessor {
   constructor(
     updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
     removeFileStatus: (fileName: string) => void,
-    userId: string | null, // Corrigido: agora recebe userId como parâmetro
+    userId: string | null,
     onPolicyExtracted: (policy: ParsedPolicyData) => void,
     toast: any
   ) {
@@ -19,9 +19,7 @@ export class FileProcessor {
     
     this.batchProcessor = new BatchFileProcessor(
       updateFileStatus,
-      removeFileStatus,
-      onPolicyExtracted,
-      toast
+      removeFileStatus
     );
 
     this.singleProcessor = new SingleFileProcessor(
@@ -34,7 +32,7 @@ export class FileProcessor {
   async processMultipleFiles(files: File[]): Promise<ParsedPolicyData[]> {
     console.log(`🚀 FileProcessor.processMultipleFiles CHAMADO!`);
     console.log(`📤 FileProcessor: Passando userId ${this.userId} para BatchFileProcessor`);
-    const result = await this.batchProcessor.processMultipleFiles(files, this.userId);
+    const result = await this.batchProcessor.processBatch(files, this.userId);
     console.log(`✅ FileProcessor: Resultado do BatchFileProcessor:`, result.length);
     return result;
   }

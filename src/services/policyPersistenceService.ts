@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
@@ -207,7 +208,9 @@ export class PolicyPersistenceService {
           category: policy.forma_pagamento || 'mensal',
           entity: policy.corretora || '',
           documento: policy.documento,
-          documento_tipo: policy.documento_tipo || 'cpf',
+          documento_tipo: (policy.documento_tipo === 'CPF' || policy.documento_tipo === 'CNPJ') 
+            ? policy.documento_tipo as 'CPF' | 'CNPJ'
+            : 'CPF' as const,
           vehicleModel: policy.modelo_veiculo,
           uf: policy.uf,
           deductible: policy.franquia || 0,

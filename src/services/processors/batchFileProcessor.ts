@@ -31,7 +31,7 @@ export class BatchFileProcessor {
         console.error(`❌ Erro ao processar arquivo ${file.name}:`, error);
         this.updateFileStatus(file.name, {
           progress: 100,
-          status: 'error',
+          status: 'failed',
           message: `❌ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
         });
         
