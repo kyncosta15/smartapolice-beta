@@ -45,6 +45,28 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     }
   };
 
+  // Add colors to distribution data
+  const typeDistributionWithColors = dashboardData.typeDistribution.map((item, index) => ({
+    ...item,
+    color: COLORS[index % COLORS.length]
+  }));
+
+  const insurerDistributionWithColors = dashboardData.insurerDistribution.map((item, index) => ({
+    ...item,
+    color: COLORS[index % COLORS.length]
+  }));
+
+  // Transform recent policies to match expected format
+  const recentPoliciesFormatted = dashboardData.recentPolicies.map(policy => ({
+    name: policy.name,
+    insurer: policy.insurer,
+    value: policy.premium || policy.monthlyAmount || 0,
+    dueDate: policy.endDate,
+    insertDate: policy.extractedAt,
+    type: policy.type,
+    status: policy.status
+  }));
+
   if (policies.length === 0 && !shouldUseRealData) {
     return (
       <div className="space-y-2">
@@ -99,9 +121,9 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
         {/* A. Classificação e identificação - Um embaixo do outro */}
         <div className="w-full overflow-hidden">
           <ClassificationCharts
-            typeDistribution={dashboardData.typeDistribution}
-            insurerDistribution={dashboardData.insurerDistribution}
-            recentPolicies={dashboardData.recentPolicies}
+            typeDistribution={typeDistributionWithColors}
+            insurerDistribution={insurerDistributionWithColors}
+            recentPolicies={recentPoliciesFormatted}
             colors={COLORS}
           />
         </div>
