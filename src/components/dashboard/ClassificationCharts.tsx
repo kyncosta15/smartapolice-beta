@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, Building, Calendar, DollarSign, Clock, FileText } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { formatCurrency } from '@/utils/currencyFormatter';
 
 interface ClassificationChartsProps {
   typeDistribution: Array<{ name: string; value: number }>;
@@ -157,14 +158,11 @@ export function ClassificationCharts({ typeDistribution, insurerDistribution, re
                         <DollarSign className={`${isMobile ? 'h-2 w-2' : 'h-4 w-4'} text-gray-400`} />
                         <span className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500`}>Valor</span>
                       </div>
-                      <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-green-600`}>
-                        {isMobile ? 
-                          `R$ ${((policy.monthlyAmount || policy.premium || 0) / 1000).toFixed(0)}k` :
-                          new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                          }).format(policy.monthlyAmount || policy.premium || 0)
-                        }
+                      <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-green-600 break-words`}>
+                        {formatCurrency(policy.monthlyAmount || policy.premium || 0, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
                       </p>
                     </div>
 

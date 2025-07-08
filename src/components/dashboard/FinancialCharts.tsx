@@ -25,7 +25,10 @@ export function FinancialCharts({ financialData }: FinancialChartsProps) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
               <YAxis dataKey="name" type="category" width={120} />
-              <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Valor Mensal']} />
+              <Tooltip formatter={(value) => [formatCurrency(Number(value), {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }), 'Valor Mensal']} />
               <Bar dataKey="valor" fill="#3B82F6" />
             </BarChart>
           </ResponsiveContainer>

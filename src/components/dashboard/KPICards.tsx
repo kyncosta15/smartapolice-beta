@@ -23,15 +23,15 @@ interface KPICardsProps {
   activePolicies: number;
 }
 
-// Utilitário interno para formatar valores – unificado:
+// Utilitário interno para formatar valores – sempre valor completo
 const formatValue = (value: number, isCurrency: boolean, isMobile: boolean) => {
   const safe = Number.isFinite(value) ? value : 0;
 
   if (isCurrency) {
-    // Sempre sem abreviações; no mobile tira centavos p/ caber melhor
+    // Sempre mostrar valor completo com casas decimais, sem abreviações
     return formatCurrency(safe, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: isMobile ? 0 : 0 // ajuste fácil se quiser 2 no desktop
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
   }
 
@@ -43,7 +43,7 @@ export function KPICards(props: KPICardsProps) {
   const isMobile = useIsMobile();
 
   /* ------------------------------------------------------------------ */
-  /*  Construção das “fichas” (cards)                                   */
+  /*  Construção das "fichas" (cards)                                   */
   /* ------------------------------------------------------------------ */
   const cards = useMemo(() => ([
     {

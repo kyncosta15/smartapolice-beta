@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield, DollarSign, CreditCard, User } from 'lucide-react';
@@ -36,23 +35,17 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
 
   const currentStats = stats || defaultStats;
 
-  // Função para formatar valores monetários respeitando mobile/desktop
+  // Função para formatar valores monetários - sempre valor completo
   const formatValue = (value: number, isCurrency = false) => {
     const numValue = isNaN(value) ? 0 : value;
     
     if (isCurrency) {
-      if (isMobile) {
-        // No mobile, sempre mostrar o valor completo formatado (sem abreviações)
-        try {
-          return formatCurrency(numValue, { maximumFractionDigits: 0, minimumFractionDigits: 0 });
-        } catch (error) {
-          console.error('Erro ao formatar moeda:', error);
-          return `R$ ${numValue.toFixed(0)}`;
-        }
-      }
-      // No desktop, usar formatação padrão
+      // Sempre mostrar valor completo com casas decimais, sem abreviações
       try {
-        return formatCurrency(numValue);
+        return formatCurrency(numValue, { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        });
       } catch (error) {
         console.error('Erro ao formatar moeda:', error);
         return `R$ ${numValue.toFixed(2)}`;
