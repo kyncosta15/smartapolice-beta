@@ -69,19 +69,29 @@ export function DashboardContent() {
   };
 
   const handlePolicyExtracted = async (policy: any) => {
-    console.log('🚀 handlePolicyExtracted CHAMADO! Nova apólice extraída:', policy);
+    console.log('🚀 handlePolicyExtracted: Nova apólice extraída:', policy.name);
     
-    // ✅ Refresh imediato das apólices persistidas
-    console.log('✅ Executando refresh das apólices persistidas');
-    await refreshPolicies();
-    
-    // ✅ Toast de sucesso
-    toast({
-      title: "✅ Apólice Adicionada",
-      description: `${policy.name || 'Nova apólice'} foi processada e salva com sucesso`,
-    });
-    
-    console.log('✅ handlePolicyExtracted concluído');
+    try {
+      // ✅ Refresh imediato das apólices persistidas
+      console.log('🔄 Executando refresh das apólices persistidas');
+      await refreshPolicies();
+      
+      console.log('✅ Refresh concluído - atualizando UI');
+      
+      // ✅ Toast de sucesso
+      toast({
+        title: "✅ Apólice Adicionada",
+        description: `${policy.name || 'Nova apólice'} foi processada e salva com sucesso`,
+      });
+      
+    } catch (error) {
+      console.error('❌ Erro no handlePolicyExtracted:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Falha ao atualizar a lista de apólices",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePolicySelect = (policy: any) => {
@@ -90,10 +100,9 @@ export function DashboardContent() {
   };
 
   const handlePolicyUpdate = async (updatedPolicy: any) => {
-    // ✅ Sempre atualizar via hook persistido
+    console.log('📝 Atualizando apólice:', updatedPolicy.id);
     const success = await updatePersistedPolicy(updatedPolicy.id, updatedPolicy);
     if (success) {
-      // Refresh para garantir sincronização
       await refreshPolicies();
       toast({
         title: "✅ Apólice Atualizada",
@@ -103,10 +112,9 @@ export function DashboardContent() {
   };
 
   const handleDeletePolicy = async (policyId: string) => {
-    // ✅ Sempre deletar via hook persistido
+    console.log('🗑️ Deletando apólice:', policyId);
     const success = await deletePersistedPolicy(policyId);
     if (success) {
-      // Refresh para garantir sincronização
       await refreshPolicies();
       toast({
         title: "✅ Apólice Deletada",
@@ -136,12 +144,10 @@ export function DashboardContent() {
   // ✅ Normalizar apenas as apólices persistidas
   const normalizedPolicies = allPolicies.map(policy => ({
     ...policy,
-    // Manter installments como array - já é o formato correto
     installments: policy.installments
   }));
 
   console.log(`🔍 DashboardContent: Total de apólices (persistidas): ${allPolicies.length}`);
-  console.log(`📊 Apólices persistidas: ${persistedPolicies.length}`);
 
   return (
     <SidebarProvider>

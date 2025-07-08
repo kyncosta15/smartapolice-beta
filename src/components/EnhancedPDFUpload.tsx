@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FilePlus, Cloud, Clock } from 'lucide-react';
@@ -27,7 +28,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   const fileProcessor = new FileProcessor(
     updateFileStatus,
     removeFileStatus,
-    user?.id || null, // Passar o userId para o FileProcessor
+    user?.id || null,
     onPolicyExtracted,
     toast
   );
@@ -40,43 +41,59 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
 
     if (!user?.id) {
       toast({
-        title: "Erro de Autenticação",
+        title: "❌ Erro de Autenticação",
         description: "Usuário não autenticado. Faça login para continuar.",
         variant: "destructive",
       });
       return;
     }
 
-    console.log(`🚀 EnhancedPDFUpload.onDrop CHAMADO!`);
-    console.log(`📤 Iniciando processamento em lote de ${acceptedFiles.length} arquivo(s)`);
-    console.log(`👤 User ID para processamento:`, user.id);
+    console.log(`🚀 Iniciando upload de ${acceptedFiles.length} arquivo(s)`);
     setIsProcessingBatch(true);
 
     try {
-      console.log(`🚀 Chamando fileProcessor.processMultipleFiles...`);
-      // Processar arquivos em lote (método otimizado)
-      const allResults = await fileProcessor.processMultipleFiles(acceptedFiles);
+      let processedCount = 0;
       
-      console.log(`🎉 Processamento completo! ${allResults.length} apólices extraídas`);
+      if (acceptedFiles.length === 1) {
+        // Processamento individual para um único arquivo
+        console.log(`📤 Processamento individual: ${acceptedFiles[0].name}`);
+        await fileProcessor.processFile(acceptedFiles[0]);
+        processedCount = 1;
+      } else {
+        // Processamento em lote para múltiplos arquivos
+        console.log(`📦 Processamento em lote: ${acceptedFiles.length} arquivos`);
+        const results = await fileProcessor.processMultipleFiles(acceptedFiles);
+        processedCount = results.length;
+      }
       
-      toast({
-        title: "🎉 Processamento em Lote Concluído",
-        description: `${allResults.length} apólices foram processadas e adicionadas ao dashboard`,
-      });
+      console.log(`🎉 Processamento concluído! ${processedCount} apólices processadas`);
+      
+      if (processedCount > 0) {
+        toast({
+          title: "🎉 Processamento Concluído",
+          description: `${processedCount} apólice(s) foram processadas e adicionadas ao dashboard`,
+        });
+      } else {
+        toast({
+          title: "⚠️ Processamento Concluído",
+          description: "Nenhuma apólice foi processada com sucesso",
+          variant: "destructive",
+        });
+      }
 
     } catch (error) {
-      console.error('❌ Erro no processamento em lote:', error);
+      console.error('❌ Erro no processamento:', error);
       
       toast({
-        title: "Erro no Processamento em Lote",
-        description: "Ocorreu um erro durante o processamento dos arquivos",
+        title: "❌ Erro no Processamento",
+        description: error instanceof Error ? error.message : "Ocorreu um erro durante o processamento dos arquivos",
         variant: "destructive",
       });
     } finally {
       setIsProcessingBatch(false);
     }
 
-  }, [fileProcessor, toast, user?.id]);
+  }, [fileProcessor, toast, user?.id, onPolicyExtracted]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -84,7 +101,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       'application/pdf': ['.pdf'],
     },
     maxFiles: 10,
-    multiple: true, // Garantir que múltiplos arquivos são aceitos
+    multiple: true,
     disabled: isProcessingBatch,
   });
 
@@ -117,7 +134,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
               <FilePlus className={`h-6 w-6 mx-auto mb-2 ${isProcessingBatch ? 'text-gray-400' : 'text-gray-400'}`} />
               <p className={`text-sm ${isProcessingBatch ? 'text-gray-400' : 'text-gray-500'}`}>
                 {isProcessingBatch 
-                  ? 'Processamento em lote em andamento...' 
+                  ? 'Processamento em andamento...' 
                   : isDragActive 
                     ? 'Solte os arquivos aqui...' 
                     : 'Arraste e solte os PDFs ou clique para selecionar (máx. 10 arquivos)'
@@ -132,6 +149,12 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           />
         </CardContent>
         <CardFooter className="justify-between">
+          {processingCount > 0 && (
+            <div className="flex items-center space-x-2 text-sm text-blue-600">
+              <Clock className="h-4 w-4" />
+              <span>{processingCount} arquivo(s) sendo processado(s)</span>
+            </div>
+          )}
         </CardFooter>
       </Card>
     </div>
