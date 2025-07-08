@@ -1,3 +1,4 @@
+
 // Interface para o formato direto do N8N
 export interface N8NDirectData {
   numero_apolice: string;
@@ -24,7 +25,10 @@ export interface N8NDirectData {
   email?: string;
   telefone?: string;
   corretora?: string;
-  coberturas?: string[];
+  coberturas?: Array<{
+    descricao: string;
+    lmi?: number;
+  }>;
 }
 
 export interface InstallmentData {

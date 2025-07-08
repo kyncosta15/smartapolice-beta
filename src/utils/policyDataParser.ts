@@ -37,8 +37,11 @@ export interface ParsedPolicyData {
   uf?: string;
   deductible?: number;
   
-  // Coberturas do N8N - ADICIONADO
-  coberturas?: string[];
+  // Coberturas do N8N com LMI - UPDATED
+  coberturas?: Array<{
+    descricao: string;
+    lmi?: number;
+  }>;
   
   // Análise de vencimentos
   overdueInstallments?: number;

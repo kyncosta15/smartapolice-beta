@@ -74,7 +74,7 @@ export class N8NDataConverter {
       uf: n8nData.uf,
       deductible: n8nData.franquia,
       
-      // Coberturas do N8N
+      // Coberturas do N8N com LMI
       coberturas: n8nData.coberturas,
       
       // Análise de vencimentos
@@ -88,7 +88,7 @@ export class N8NDataConverter {
                type === 'vida' ? 'Pessoal' : 
                type === 'saude' ? 'Saúde' : 
                type === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
-      coverage: n8nData.coberturas || ['Cobertura Básica'],
+      coverage: n8nData.coberturas?.map(c => c.descricao) || ['Cobertura Básica'],
       totalCoverage: n8nData.premio
     };
   }

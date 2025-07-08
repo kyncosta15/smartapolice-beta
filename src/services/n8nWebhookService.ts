@@ -18,8 +18,11 @@ interface N8NDirectResponse {
   // Campos de documento
   documento?: string;
   documento_tipo?: 'CPF' | 'CNPJ';
-  // Coberturas
-  coberturas?: string[];
+  // Coberturas with LMI
+  coberturas?: Array<{
+    descricao: string;
+    lmi?: number;
+  }>;
 }
 
 interface N8NWebhookResponse {
@@ -70,6 +73,11 @@ export class N8NWebhookService {
       // Log specifically the policy number received
       if (result.numero_apolice || result.apolice) {
         console.log('📋 Número da apólice recebido:', result.numero_apolice || result.apolice);
+      }
+      
+      // Log coverages with LMI
+      if (result.coberturas) {
+        console.log('🛡️ Coberturas com LMI recebidas:', result.coberturas);
       }
       
       // Verificar se temos dados válidos do N8N
@@ -160,6 +168,8 @@ export class N8NWebhookService {
       // Campos de documento do N8N
       documento: n8nData.documento,
       documento_tipo: n8nData.documento_tipo,
+      // Coberturas with LMI
+      coberturas: n8nData.coberturas,
       // Adicionar as parcelas como propriedade adicional
       parcelas_detalhadas: parcelas
     };

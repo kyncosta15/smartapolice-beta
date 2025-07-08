@@ -1,12 +1,26 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, CheckCircle } from 'lucide-react';
+import { formatCurrency } from '@/utils/currencyFormatter';
+
+interface Coverage {
+  descricao: string;
+  lmi?: number;
+}
 
 interface CoveragesCardProps {
-  coverages: string[];
+  coverages: Coverage[] | string[];
 }
 
 export const CoveragesCard = ({ coverages }: CoveragesCardProps) => {
+  // Normalize coverages to handle both string array and object array formats
+  const normalizedCoverages = coverages?.map(coverage => {
+    if (typeof coverage === 'string') {
+      return { descricao: coverage };
+    }
+    return coverage;
+  }) || [];
+
   return (
     <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
       <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-blue-200 pb-4">
@@ -16,17 +30,26 @@ export const CoveragesCard = ({ coverages }: CoveragesCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-4">
-        {coverages && coverages.length > 0 ? (
+        {normalizedCoverages && normalizedCoverages.length > 0 ? (
           <div className="space-y-3">
-            {coverages.map((coverage, index) => (
+            {normalizedCoverages.map((coverage, index) => (
               <div 
                 key={index}
                 className="bg-white rounded-lg p-4 shadow-sm border border-blue-100 flex items-start gap-3"
               >
                 <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                <span className="text-sm font-medium text-gray-800 font-sf-pro leading-relaxed">
-                  {coverage}
-                </span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-800 font-sf-pro leading-relaxed">
+                      {coverage.descricao}
+                    </span>
+                    {coverage.lmi && (
+                      <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full ml-2">
+                        LMI: {formatCurrency(coverage.lmi)}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
