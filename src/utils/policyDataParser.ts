@@ -1,4 +1,10 @@
-import { InstallmentData } from '@/types/dynamicPolicyTypes';
+
+export interface InstallmentData {
+  numero: number;
+  valor: number;
+  data: string;
+  status: 'paga' | 'pendente';
+}
 
 export interface ParsedPolicyData {
   id: string;
@@ -44,4 +50,16 @@ export interface ParsedPolicyData {
   category?: string;
   coverage?: string[];
   totalCoverage?: number;
+  
+  // Additional missing properties
+  claimRate?: number;
+  pdfPath?: string;
+  broker?: string;
+  vehicleDetails?: {
+    brand?: string;
+    model?: string;
+    year?: number;
+    plate?: string;
+    usage?: string;
+  };
 }

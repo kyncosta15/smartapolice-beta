@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -94,7 +95,8 @@ export function DashboardContent() {
       endDate: policy.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       documento: policy.documento,
       documento_tipo: policy.documento_tipo,
-      insuredName: policy.segurado || policy.insuredName
+      insuredName: policy.segurado || policy.insuredName,
+      coberturas: policy.coberturas
     };
 
     console.log('✅ Adicionando apólice ao dashboard local primeiro');
@@ -218,9 +220,8 @@ export function DashboardContent() {
   // IMPORTANTE: Usar allPolicies (que inclui persistidas) e não apenas extractedPolicies
   const normalizedPolicies = allPolicies.map(policy => ({
     ...policy,
-    // Garantir que installments seja sempre um número para evitar erros nos componentes filhos
-    installments: typeof policy.installments === 'number' ? policy.installments : 
-                 Array.isArray(policy.installments) ? policy.installments.length : 12
+    // Manter installments como array - já é o formato correto
+    installments: policy.installments
   }));
 
   console.log(`🔍 DashboardContent: Total de apólices (incluindo persistidas): ${allPolicies.length}`);
