@@ -43,7 +43,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
               onClick={handleDelete}
               className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
             >
-              <Trash2 className="h-2 w-2 mr-2" />
+              <Trash2 className="h-4 w-4 mr-2" />
               Excluir
             </Button>
           </div>
@@ -56,13 +56,13 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
             <GeneralInfoCard policy={policy} />
             <InsurerInfoCard policy={policy} />
 
-            {/* Vigência & Veículo lado a lado em telas grandes */}
+            {/* Vigência & Veículo lado a lado com altura igual */}
             <div className="flex flex-col xl:flex-row gap-6">
-              <div className="flex-1">
+              <div className="flex-1 flex flex-col h-full">
                 <ValidityInfoCard policy={policy} />
               </div>
               {policy.vehicleModel && (
-                <div className="flex-1">
+                <div className="flex-1 flex flex-col h-full">
                   <VehicleInfoCard policy={policy} />
                 </div>
               )}
