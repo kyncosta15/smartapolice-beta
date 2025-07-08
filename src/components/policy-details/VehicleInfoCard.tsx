@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Car } from 'lucide-react';
 
@@ -13,7 +12,7 @@ export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
   }
 
   return (
-    <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 overflow-hidden">
+    <Card className="h-full border-0 shadow-lg rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 overflow-hidden">
       <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-purple-200 pb-4">
         <CardTitle className="flex items-center text-xl font-bold text-purple-900 font-sf-pro">
           <Car className="h-6 w-6 mr-3 text-purple-600" />
