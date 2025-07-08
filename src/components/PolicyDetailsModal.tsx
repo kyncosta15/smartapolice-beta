@@ -43,7 +43,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
               onClick={handleDelete}
               className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-4 w-3 mr-2" />
               Excluir
             </Button>
           </div>
