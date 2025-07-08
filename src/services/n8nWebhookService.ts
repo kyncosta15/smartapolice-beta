@@ -169,7 +169,7 @@ export class N8NWebhookService {
       documento: n8nData.documento,
       documento_tipo: n8nData.documento_tipo,
       // Coberturas array - mantendo a estrutura original do N8N
-      coberturas: n8nData.coberturas,
+      coberturas: n8nData.coberturas || [],
       // Adicionar as parcelas como propriedade adicional
       parcelas_detalhadas: parcelas
     };
