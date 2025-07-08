@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { KPICards } from './dashboard/KPICards';
@@ -57,15 +56,20 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
   }));
 
   // Transform recent policies to match expected format
-  const recentPoliciesFormatted = dashboardData.recentPolicies.map(policy => ({
-    name: policy.name,
-    insurer: policy.insurer,
-    value: policy.premium || policy.monthlyAmount || 0,
-    dueDate: policy.endDate,
-    insertDate: policy.extractedAt,
-    type: policy.type,
-    status: policy.status
-  }));
+  const recentPoliciesFormatted = dashboardData.recentPolicies.map(policy => {
+    // Find the original policy to get additional data
+    const originalPolicy = policies.find(p => p.id === policy.id);
+    
+    return {
+      name: policy.name,
+      insurer: policy.insurer,
+      value: policy.premium || policy.monthlyAmount || 0,
+      dueDate: policy.endDate,
+      insertDate: policy.extractedAt,
+      type: originalPolicy?.type || 'Não informado',
+      status: originalPolicy?.status || 'Ativa'
+    };
+  });
 
   if (policies.length === 0 && !shouldUseRealData) {
     return (
