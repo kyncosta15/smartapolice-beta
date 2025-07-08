@@ -113,6 +113,38 @@ export class PolicyPersistenceService {
     }
   }
 
+  // New method to handle complete policy saving with file upload
+  static async savePolicyComplete(file: File, policy: ParsedPolicyData, userId: string): Promise<string> {
+    try {
+      console.log(`💾 Salvando apólice completa com arquivo para usuário: ${userId}`, policy);
+      
+      // Upload do arquivo PDF para o storage
+      const fileName = `${userId}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('pdfs')
+        .upload(fileName, file);
+      
+      if (uploadError) {
+        console.error('❌ Erro ao fazer upload do PDF:', uploadError);
+        throw uploadError;
+      }
+      
+      // Atualizar o policy com o caminho do arquivo
+      const policyWithFile = {
+        ...policy,
+        pdfPath: fileName,
+        arquivo_url: fileName
+      };
+      
+      // Salvar a apólice no banco
+      return await this.savePolicy(policyWithFile, userId);
+      
+    } catch (error) {
+      console.error('❌ Erro ao salvar apólice completa:', error);
+      throw error;
+    }
+  }
+
   static async loadUserPolicies(userId: string): Promise<ParsedPolicyData[]> {
     try {
       console.log(`🔍 Carregando apólices do usuário: ${userId}`);
@@ -186,7 +218,7 @@ export class PolicyPersistenceService {
           // Coberturas formatadas
           coberturas: policyCoverages.map(coverage => ({
             descricao: coverage.descricao || '',
-            lmi: (coverage as any).lmi || undefined
+            lmi: coverage.lmi || undefined
           })),
           
           // Parcelas formatadas com status tipado corretamente
