@@ -54,25 +54,22 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
           </div>
         </DialogHeader>
 
-        <div className="flex flex-col xl:flex-row gap-6 p-6 items-stretch">
-          {/* Coluna da esquerda */}
-          <div className="flex-1 flex flex-col gap-6">
+        {/* DUAS COLUNAS DE CARDS */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 p-6 items-start">
+          {/* Coluna da esquerda: informações básicas */}
+          <div className="flex flex-col gap-6">
             <GeneralInfoCard policy={policy} />
             <InsurerInfoCard policy={policy} />
             <ValidityInfoCard policy={policy} />
-          </div>
-
-          {/* Coluna da direita */}
-          <div className="flex-1 flex flex-col gap-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <FinancialInfoCard policy={policy} />
-              <CoveragesCard coverages={coverages} />
-            </div>
-
             {policy.vehicleModel && (
               <VehicleInfoCard policy={policy} />
             )}
+          </div>
 
+          {/* Coluna da direita: financeiro, coberturas e responsável */}
+          <div className="flex flex-col gap-6">
+            <FinancialInfoCard policy={policy} />
+            <CoveragesCard coverages={coverages} />
             {(policy.insuredName || policy.documento) && (
               <ResponsiblePersonCard policy={policy} />
             )}
