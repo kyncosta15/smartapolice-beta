@@ -40,6 +40,12 @@ export function ClassificationCharts({
     setSelectedPolicy(null);
   };
 
+  const handleViewDetails = (policy: any) => {
+    // Implementar lógica para ver detalhes completos da apólice
+    console.log('Ver detalhes da apólice:', policy);
+    handleCloseModal();
+  };
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -192,6 +198,7 @@ export function ClassificationCharts({
       <NewPolicyModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        onViewDetails={handleViewDetails}
         policy={selectedPolicy}
       />
     </>
