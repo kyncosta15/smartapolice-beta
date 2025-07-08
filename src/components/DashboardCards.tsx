@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Users, Calendar, TrendingUp, AlertTriangle, Shield, DollarSign, CreditCard, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { formatCurrency } from '@/utils/currencyFormatter';
 
 interface DashboardCardsProps {
   stats?: {
@@ -35,6 +36,32 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
 
   const currentStats = stats || defaultStats;
 
+  // Função para formatar valores monetários respeitando mobile/desktop
+  const formatValue = (value: number, isCurrency = false) => {
+    const numValue = isNaN(value) ? 0 : value;
+    
+    if (isCurrency) {
+      if (isMobile) {
+        // No mobile, sempre mostrar o valor completo formatado (sem abreviações)
+        try {
+          return formatCurrency(numValue, { maximumFractionDigits: 0, minimumFractionDigits: 0 });
+        } catch (error) {
+          console.error('Erro ao formatar moeda:', error);
+          return `R$ ${numValue.toFixed(0)}`;
+        }
+      }
+      // No desktop, usar formatação padrão
+      try {
+        return formatCurrency(numValue);
+      } catch (error) {
+        console.error('Erro ao formatar moeda:', error);
+        return `R$ ${numValue.toFixed(2)}`;
+      }
+    }
+    
+    return numValue.toString();
+  };
+
   const dashboardData = [
     {
       title: 'Apólices Ativas',
@@ -46,7 +73,7 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
     },
     {
       title: 'Custo Mensal Total',
-      value: `R$ ${currentStats.monthlyCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: formatValue(currentStats.monthlyCost, true),
       icon: DollarSign,
       change: currentStats.monthlyCost > 0 ? 'Ativo' : 'Vazio',
       changeType: currentStats.monthlyCost > 0 ? 'positive' : 'neutral',
@@ -54,9 +81,7 @@ export const DashboardCards = ({ stats }: DashboardCardsProps) => {
     },
     {
       title: 'Valor Segurado',
-      value: currentStats.totalInsured > 1000000 
-        ? `R$ ${(currentStats.totalInsured / 1000000).toFixed(1)}M`
-        : `R$ ${currentStats.totalInsured.toLocaleString('pt-BR')}`,
+      value: formatValue(currentStats.totalInsured, true),
       icon: TrendingUp,
       change: currentStats.totalInsured > 0 ? 'Protegido' : 'Sem dados',
       changeType: currentStats.totalInsured > 0 ? 'positive' : 'neutral',
