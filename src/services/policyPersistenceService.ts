@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
@@ -119,16 +118,9 @@ export class PolicyPersistenceService {
     try {
       console.log(`💾 Salvando apólice completa com arquivo para usuário: ${userId}`, policy);
       
-      // Sanitizar o nome do arquivo para remover caracteres especiais
-      const sanitizedFileName = file.name
-        .replace(/[()]/g, '') // Remove parênteses
-        .replace(/\s+/g, '_') // Substitui espaços por underscores
-        .replace(/[^a-zA-Z0-9._-]/g, '') // Remove outros caracteres especiais
-        .toLowerCase(); // Converte para minúsculas
-      
       // Upload do arquivo PDF para o storage
-      const fileName = `${userId}/${Date.now()}_${sanitizedFileName}`;
-      console.log(`📤 Fazendo upload do arquivo com nome sanitizado: ${fileName}`);
+      const fileName = `${userId}/${Date.now()}_${file.name}`;
+      console.log(`📤 Fazendo upload do arquivo: ${fileName}`);
       
       const { error: uploadError } = await supabase.storage
         .from('pdfs')
