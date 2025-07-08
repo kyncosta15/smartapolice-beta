@@ -124,13 +124,25 @@ export class BatchFileProcessor {
   }
 
   private convertToParsedPolicy(data: any, fileName: string, file: File): ParsedPolicyData {
-    if (data.numero_apolice && data.segurado && data.seguradora) {
-      return N8NDataConverter.convertN8NDirectData(data, fileName, file);
-    } else if (data.informacoes_gerais && data.seguradora && data.vigencia) {
-      return StructuredDataConverter.convertStructuredData(data, fileName, file);
-    } else {
-      console.warn('Dados não estruturados recebidos, usando fallback');
-      return this.createFallbackPolicy(data, fileName, file);
+    console.log('🔍 Analisando estrutura dos dados recebidos:', data);
+    
+    // Verificar se é um array e pegar o primeiro item
+    const policyData = Array.isArray(data) ? data[0] : data;
+    console.log('📋 Dados da apólice para conversão:', policyData);
+    
+    // Verificar se tem os campos principais do N8N (estrutura direta)
+    if (policyData && (policyData.segurado || policyData.seguradora || policyData.numero_apolice)) {
+      console.log('✅ Reconhecendo como dados diretos do N8N');
+      return N8NDataConverter.convertN8NDirectData(policyData, fileName, file);
+    } 
+    // Verificar se é estruturado (formato antigo)
+    else if (policyData && policyData.informacoes_gerais && policyData.seguradora && policyData.vigencia) {
+      console.log('✅ Reconhecendo como dados estruturados');
+      return StructuredDataConverter.convertStructuredData(policyData, fileName, file);
+    } 
+    else {
+      console.warn('⚠️ Estrutura não reconhecida, usando fallback. Dados:', policyData);
+      return this.createFallbackPolicy(policyData, fileName, file);
     }
   }
 
