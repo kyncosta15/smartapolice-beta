@@ -43,7 +43,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
               onClick={handleDelete}
               className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
             >
-              <Trash2 className="h-4 w-3 mr-2" />
+              <Trash2 className="h-4 w-4 mr-2" />
               Excluir
             </Button>
           </div>
@@ -56,11 +56,15 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
             <GeneralInfoCard policy={policy} />
             <InsurerInfoCard policy={policy} />
 
-            {/* Vigência e Veículo lado a lado */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <ValidityInfoCard policy={policy} />
+            {/* Vigência & Veículo lado a lado em telas grandes */}
+            <div className="flex flex-col xl:flex-row gap-6">
+              <div className="flex-1">
+                <ValidityInfoCard policy={policy} />
+              </div>
               {policy.vehicleModel && (
-                <VehicleInfoCard policy={policy} />
+                <div className="flex-1">
+                  <VehicleInfoCard policy={policy} />
+                </div>
               )}
             </div>
           </div>
