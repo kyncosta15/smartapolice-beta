@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,6 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
     }
   };
 
-  // Extrair coberturas dos dados da apólice (vindos do N8N ou outros dados)
   const coverages = policy.coberturas || policy.coverage || [];
 
   return (
@@ -56,25 +54,25 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
           </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
-          {/* Primeira coluna */}
-          <div className="space-y-6">
+        <div className="flex flex-col xl:flex-row gap-6 p-6 items-stretch">
+          {/* Coluna da esquerda */}
+          <div className="flex-1 flex flex-col gap-6">
             <GeneralInfoCard policy={policy} />
             <InsurerInfoCard policy={policy} />
             <ValidityInfoCard policy={policy} />
           </div>
 
-          {/* Segunda coluna */}
-          <div className="space-y-6">
+          {/* Coluna da direita */}
+          <div className="flex-1 flex flex-col gap-6">
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <FinancialInfoCard policy={policy} />
               <CoveragesCard coverages={coverages} />
             </div>
-            
+
             {policy.vehicleModel && (
               <VehicleInfoCard policy={policy} />
             )}
-            
+
             {(policy.insuredName || policy.documento) && (
               <ResponsiblePersonCard policy={policy} />
             )}
