@@ -75,18 +75,27 @@ export class SingleFileProcessor {
       message: 'Salvando dados no banco...'
     });
 
-    // ✅ CORREÇÃO: Usar savePolicyComplete para salvar arquivo + dados
+    // Usar savePolicyComplete para salvar arquivo + dados
     if (userId) {
-      console.log(`💾 SingleFileProcessor: Iniciando persistência para ${parsedPolicy.name} com userId: ${userId}`);
+      console.log(`💾 SingleFileProcessor: Iniciando savePolicyComplete para ${parsedPolicy.name} com userId: ${userId}`);
       try {
         await PolicyPersistenceService.savePolicyComplete(file, parsedPolicy, userId);
         console.log(`✅ SingleFileProcessor: Persistência concluída com sucesso`);
       } catch (persistenceError) {
         console.error(`❌ SingleFileProcessor: Erro na persistência:`, persistenceError);
+        
+        // Fornecer mais detalhes do erro para debug
+        this.updateFileStatus(fileName, {
+          progress: 100,
+          status: 'failed',
+          message: `❌ Erro na persistência: ${persistenceError instanceof Error ? persistenceError.message : 'Erro desconhecido'}`
+        });
+        
         throw persistenceError;
       }
     } else {
       console.error(`❌ SingleFileProcessor: UserId não fornecido - saltando persistência`);
+      throw new Error('UserId não fornecido para persistência');
     }
 
     // 5. Finalizar processamento
@@ -96,7 +105,7 @@ export class SingleFileProcessor {
       message: `✅ Processado: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
     });
 
-    // ✅ CORREÇÃO: Chamar onPolicyExtracted após processar
+    // Chamar onPolicyExtracted após processar
     console.log(`📤 SingleFileProcessor: Chamando onPolicyExtracted para ${parsedPolicy.name}`);
     this.onPolicyExtracted(parsedPolicy);
 

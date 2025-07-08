@@ -31,7 +31,7 @@ export class BatchFileProcessor {
         const result = await this.processFile(file, userId);
         results.push(result);
         
-        // ✅ CORREÇÃO: Chamar onPolicyExtracted para cada apólice processada
+        // Chamar onPolicyExtracted para cada apólice processada
         console.log(`📤 BatchFileProcessor: Chamando onPolicyExtracted para ${result.name}`);
         this.onPolicyExtracted(result);
         
@@ -87,17 +87,27 @@ export class BatchFileProcessor {
       message: 'Salvando no banco...'
     });
 
-    // ✅ CORREÇÃO: Usar savePolicyComplete para salvar arquivo + dados
+    // Usar savePolicyComplete para salvar arquivo + dados
     if (userId) {
       try {
+        console.log(`💾 BatchFileProcessor: Iniciando savePolicyComplete para ${parsedPolicy.name}`);
         await PolicyPersistenceService.savePolicyComplete(file, parsedPolicy, userId);
         console.log(`✅ BatchFileProcessor: Persistência concluída para ${parsedPolicy.name}`);
       } catch (persistenceError) {
         console.error(`❌ BatchFileProcessor: Erro na persistência:`, persistenceError);
+        
+        // Fornecer mais detalhes do erro para debug
+        this.updateFileStatus(fileName, {
+          progress: 100,
+          status: 'failed',
+          message: `❌ Erro na persistência: ${persistenceError instanceof Error ? persistenceError.message : 'Erro desconhecido'}`
+        });
+        
         throw persistenceError;
       }
     } else {
       console.warn(`⚠️ BatchFileProcessor: userId não fornecido - saltando persistência`);
+      throw new Error('UserId não fornecido para persistência');
     }
 
     this.updateFileStatus(fileName, {

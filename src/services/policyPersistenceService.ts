@@ -119,8 +119,17 @@ export class PolicyPersistenceService {
     try {
       console.log(`💾 Salvando apólice completa com arquivo para usuário: ${userId}`, policy);
       
+      // Sanitizar o nome do arquivo para remover caracteres especiais
+      const sanitizedFileName = file.name
+        .replace(/[()]/g, '') // Remove parênteses
+        .replace(/\s+/g, '_') // Substitui espaços por underscores
+        .replace(/[^a-zA-Z0-9._-]/g, '') // Remove outros caracteres especiais
+        .toLowerCase(); // Converte para minúsculas
+      
       // Upload do arquivo PDF para o storage
-      const fileName = `${userId}/${Date.now()}_${file.name}`;
+      const fileName = `${userId}/${Date.now()}_${sanitizedFileName}`;
+      console.log(`📤 Fazendo upload do arquivo com nome sanitizado: ${fileName}`);
+      
       const { error: uploadError } = await supabase.storage
         .from('pdfs')
         .upload(fileName, file);
@@ -129,6 +138,8 @@ export class PolicyPersistenceService {
         console.error('❌ Erro ao fazer upload do PDF:', uploadError);
         throw uploadError;
       }
+      
+      console.log(`✅ Upload do PDF concluído: ${fileName}`);
       
       // Atualizar o policy com o caminho do arquivo
       const policyWithFile = {
