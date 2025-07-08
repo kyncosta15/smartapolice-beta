@@ -19,13 +19,11 @@ export const formatCurrency = (value: number, options?: {
 };
 
 export const formatCurrencyCompact = (value: number): string => {
-  if (value >= 1000000) {
-    return `R$ ${(value / 1000000).toFixed(1)}M`;
-  }
-  if (value >= 1000) {
-    return `R$ ${(value / 1000).toFixed(1)}K`;
-  }
-  return formatCurrency(value);
+  // Sempre mostrar o valor completo sem abreviações
+  return formatCurrency(value, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
 };
 
 export const parseCurrency = (value: string): number => {
