@@ -29,7 +29,7 @@ export class PolicyPersistenceService {
         arquivo_url: policy.pdfPath,
         extraido_em: policy.extractedAt || new Date().toISOString(),
         quantidade_parcelas: Array.isArray(policy.installments) ? policy.installments.length : policy.installments,
-        valor_parcela: policy.installmentAmount
+        valor_parcela: policy.monthlyAmount
       };
 
       console.log('📝 Dados formatados para o banco:', policyData);
@@ -182,20 +182,21 @@ export class PolicyPersistenceService {
           pdfPath: policy.arquivo_url,
           extractedAt: policy.extraido_em || policy.created_at,
           paymentFrequency: 'mensal' as const,
-          installmentAmount: policy.valor_parcela || 0,
           
           // Coberturas formatadas
           coberturas: policyCoverages.map(coverage => ({
             descricao: coverage.descricao || '',
-            lmi: coverage.lmi || undefined
+            lmi: (coverage as any).lmi || undefined
           })),
           
-          // Parcelas formatadas
+          // Parcelas formatadas com status tipado corretamente
           installments: policyInstallments.map(installment => ({
             numero: installment.numero || 1,
             valor: installment.valor || 0,
             data: installment.data || new Date().toISOString(),
-            status: installment.status || 'pendente'
+            status: (installment.status === 'paga' || installment.status === 'pendente') 
+              ? installment.status as 'paga' | 'pendente'
+              : 'pendente' as const
           }))
         };
       });
@@ -209,7 +210,6 @@ export class PolicyPersistenceService {
     }
   }
 
-  
   static async cleanupDuplicatePolicies(userId: string): Promise<number> {
     try {
       console.log(`🧹 Iniciando limpeza de duplicatas para usuário: ${userId}`);

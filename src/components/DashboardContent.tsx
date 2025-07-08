@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -102,12 +101,12 @@ export function DashboardContent() {
     console.log('✅ Adicionando apólice ao dashboard local primeiro');
     setExtractedPolicies(prev => [...prev, newPolicy]);
     
-    // CORREÇÃO: Chamar persistência DIRETAMENTE aqui
+    // CORREÇÃO: Chamar persistência usando o método correto
     if (user?.id && policy.file) {
       console.log('💾 Chamando persistência diretamente do handlePolicyExtracted');
       try {
         const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
-        const success = await PolicyPersistenceService.savePolicyComplete(policy.file, newPolicy, user.id);
+        const success = await PolicyPersistenceService.savePolicy(newPolicy, user.id);
         console.log(`✅ Persistência direta resultado: ${success}`);
       } catch (error) {
         console.error('❌ Erro na persistência direta:', error);
