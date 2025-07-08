@@ -105,8 +105,8 @@ export class SingleFileProcessor {
       message: `✅ Processado: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
     });
 
-    // Chamar onPolicyExtracted após processar
-    console.log(`📤 SingleFileProcessor: Chamando onPolicyExtracted para ${parsedPolicy.name}`);
+    // ✅ CORREÇÃO PRINCIPAL: Chamar onPolicyExtracted APÓS persistência bem-sucedida
+    console.log(`📤 SingleFileProcessor: Chamando onPolicyExtracted para ${parsedPolicy.name} após persistência`);
     this.onPolicyExtracted(parsedPolicy);
 
     // Remover da lista após 3 segundos

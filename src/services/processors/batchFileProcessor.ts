@@ -31,8 +31,8 @@ export class BatchFileProcessor {
         const result = await this.processFile(file, userId);
         results.push(result);
         
-        // Chamar onPolicyExtracted para cada apólice processada
-        console.log(`📤 BatchFileProcessor: Chamando onPolicyExtracted para ${result.name}`);
+        // ✅ CORREÇÃO PRINCIPAL: Chamar onPolicyExtracted APÓS processamento completo
+        console.log(`📤 BatchFileProcessor: Chamando onPolicyExtracted para ${result.name} após persistência`);
         this.onPolicyExtracted(result);
         
       } catch (error) {

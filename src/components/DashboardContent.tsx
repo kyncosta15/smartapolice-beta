@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -36,7 +37,8 @@ export function DashboardContent() {
     deletePolicy: deletePersistedPolicy,
     updatePolicy: updatePersistedPolicy,
     downloadPDF: downloadPersistedPDF,
-    hasPersistedData 
+    hasPersistedData,
+    refreshPolicies 
   } = usePersistedPolicies();
 
   // Hook para persistência de usuários baseado em role
@@ -49,10 +51,8 @@ export function DashboardContent() {
     isLoading: usersLoading
   } = usePersistedUsers();
 
-  // Combinar apólices extraídas e persistidas, evitando duplicatas
-  const allPolicies = [...extractedPolicies, ...persistedPolicies.filter(
-    pp => !extractedPolicies.some(ep => ep.id === pp.id)
-  )];
+  // ✅ CORREÇÃO: Usar APENAS as apólices persistidas, eliminando duplicação
+  const allPolicies = persistedPolicies;
 
   // Usar o hook de dashboard data com todas as apólices
   const { dashboardData } = useDashboardData(allPolicies);
@@ -70,69 +70,16 @@ export function DashboardContent() {
   };
 
   const handlePolicyExtracted = async (policy: any) => {
-    console.log('🚀 handlePolicyExtracted CHAMADO!');
-    console.log('Nova apólice extraída:', policy);
+    console.log('🚀 handlePolicyExtracted CHAMADO! Nova apólice extraída:', policy);
     
-    const newPolicy: ParsedPolicyData = {
-      ...policy,
-      id: policy.id || `policy-${Date.now()}`, // Use existing ID if available
-      status: 'active',
-      entity: user?.company || 'Não informado',
-      category: policy.type === 'auto' ? 'Veicular' : 
-               policy.type === 'vida' ? 'Pessoal' : 
-               policy.type === 'saude' ? 'Saúde' : 'Geral',
-      coverage: ['Cobertura Básica', ' Responsabilidade Civil'],
-      monthlyAmount: policy.monthlyAmount || (parseFloat(policy.premium) / 12) || 0,
-      premium: policy.premium || 0,
-      deductible: Math.floor(Math.random() * 5000) + 1000,
-      limits: 'R$ 100.000 por sinistro',
-      installments: Array.isArray(policy.installments) ? policy.installments : 
-                   policy.installments ? generateInstallmentsFromNumber(policy.installments, policy.monthlyAmount, policy.startDate) :
-                   generateDefaultInstallments(policy.monthlyAmount, policy.startDate),
-      totalCoverage: policy.totalCoverage || policy.premium || 0,
-      startDate: policy.startDate || new Date().toISOString().split('T')[0],
-      endDate: policy.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      documento: policy.documento,
-      documento_tipo: policy.documento_tipo,
-      insuredName: policy.segurado || policy.insuredName,
-      coberturas: policy.coberturas
-    };
-
-    console.log('✅ Adicionando apólice ao dashboard local');
-    setExtractedPolicies(prev => [...prev, newPolicy]);
-    
-    // ✅ CORREÇÃO: Não chamar persistência aqui, pois já foi feita no processor
-    console.log('ℹ️ Persistência já foi realizada no FileProcessor - apenas atualizando UI');
+    // ✅ CORREÇÃO: Não adicionar às extractedPolicies, apenas refresh das persistidas
+    console.log('✅ Refreshing apólices persistidas após extração');
+    refreshPolicies();
     
     toast({
       title: "Apólice Adicionada",
       description: `${policy.name || 'Nova apólice'} foi processada e salva`,
     });
-  };
-
-  // Função auxiliar para gerar parcelas a partir de um número
-  const generateInstallmentsFromNumber = (numberOfInstallments: number, monthlyAmount: number, startDate: string) => {
-    const installments = [];
-    const baseDate = new Date(startDate);
-    
-    for (let i = 0; i < numberOfInstallments; i++) {
-      const installmentDate = new Date(baseDate);
-      installmentDate.setMonth(installmentDate.getMonth() + i);
-      
-      installments.push({
-        numero: i + 1,
-        valor: monthlyAmount,
-        data: installmentDate.toISOString().split('T')[0],
-        status: installmentDate < new Date() ? 'paga' : 'pendente'
-      });
-    }
-    
-    return installments;
-  };
-
-  // Função auxiliar para gerar parcelas padrão
-  const generateDefaultInstallments = (monthlyAmount: number, startDate: string) => {
-    return generateInstallmentsFromNumber(12, monthlyAmount || 100, startDate);
   };
 
   const handlePolicySelect = (policy: any) => {
@@ -141,45 +88,20 @@ export function DashboardContent() {
   };
 
   const handlePolicyUpdate = async (updatedPolicy: any) => {
-    // Tentar atualizar no banco primeiro (se for persistida)
-    const isPersistedPolicy = persistedPolicies.some(p => p.id === updatedPolicy.id);
-    
-    if (isPersistedPolicy) {
-      const success = await updatePersistedPolicy(updatedPolicy.id, updatedPolicy);
-      if (!success) return; // Erro já mostrado no hook
-    } else {
-      // Atualizar apenas no estado local (apólices extraídas)
-      setExtractedPolicies(prev => 
-        prev.map(policy => 
-          policy.id === updatedPolicy.id ? updatedPolicy : policy
-        )
-      );
-      
-      toast({
-        title: "Apólice Atualizada",
-        description: "As informações foram salvas com sucesso",
-      });
+    // ✅ CORREÇÃO: Sempre atualizar via hook persistido
+    const success = await updatePersistedPolicy(updatedPolicy.id, updatedPolicy);
+    if (success) {
+      // Refresh para garantir sincronização
+      refreshPolicies();
     }
   };
 
   const handleDeletePolicy = async (policyId: string) => {
-    // Tentar deletar do banco primeiro (se for persistida)
-    const isPersistedPolicy = persistedPolicies.some(p => p.id === policyId);
-    
-    if (isPersistedPolicy) {
-      await deletePersistedPolicy(policyId);
-      // Toast já mostrado no hook
-    } else {
-      // Deletar apenas do estado local (apólices extraídas)
-      const policyToDelete = extractedPolicies.find(p => p.id === policyId);
-      if (policyToDelete) {
-        setExtractedPolicies(prev => prev.filter(p => p.id !== policyId));
-        
-        toast({
-          title: "Apólice Removida",
-          description: "A apólice foi removida com sucesso",
-        });
-      }
+    // ✅ CORREÇÃO: Sempre deletar via hook persistido
+    const success = await deletePersistedPolicy(policyId);
+    if (success) {
+      // Refresh para garantir sincronização
+      refreshPolicies();
     }
   };
 
@@ -201,16 +123,15 @@ export function DashboardContent() {
     // O toast já é mostrado no hook usePersistedUsers
   };
 
-  // Normalizar dados das apólices para garantir compatibilidade com todos os componentes
-  // IMPORTANTE: Usar allPolicies (que inclui persistidas) e não apenas extractedPolicies
+  // ✅ CORREÇÃO: Normalizar apenas as apólices persistidas
   const normalizedPolicies = allPolicies.map(policy => ({
     ...policy,
     // Manter installments como array - já é o formato correto
     installments: policy.installments
   }));
 
-  console.log(`🔍 DashboardContent: Total de apólices (incluindo persistidas): ${allPolicies.length}`);
-  console.log(`📊 Apólices persistidas: ${persistedPolicies.length}, Extraídas: ${extractedPolicies.length}`);
+  console.log(`🔍 DashboardContent: Total de apólices (persistidas): ${allPolicies.length}`);
+  console.log(`📊 Apólices persistidas: ${persistedPolicies.length}`);
 
   return (
     <SidebarProvider>
