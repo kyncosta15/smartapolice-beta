@@ -75,7 +75,7 @@ export function DashboardContent() {
     
     const newPolicy: ParsedPolicyData = {
       ...policy,
-      id: `policy-${Date.now()}`,
+      id: policy.id || `policy-${Date.now()}`, // Use existing ID if available
       status: 'active',
       entity: user?.company || 'Não informado',
       category: policy.type === 'auto' ? 'Veicular' : 
@@ -98,25 +98,11 @@ export function DashboardContent() {
       coberturas: policy.coberturas
     };
 
-    console.log('✅ Adicionando apólice ao dashboard local primeiro');
+    console.log('✅ Adicionando apólice ao dashboard local');
     setExtractedPolicies(prev => [...prev, newPolicy]);
     
-    // CORREÇÃO: Chamar persistência usando o método correto
-    if (user?.id && policy.file) {
-      console.log('💾 Chamando persistência diretamente do handlePolicyExtracted');
-      try {
-        const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
-        const success = await PolicyPersistenceService.savePolicy(newPolicy, user.id);
-        console.log(`✅ Persistência direta resultado: ${success}`);
-      } catch (error) {
-        console.error('❌ Erro na persistência direta:', error);
-      }
-    } else {
-      console.warn('⚠️ Persistência pulada - userId ou file não disponível:', {
-        userId: user?.id,
-        hasFile: !!policy.file
-      });
-    }
+    // ✅ CORREÇÃO: Não chamar persistência aqui, pois já foi feita no processor
+    console.log('ℹ️ Persistência já foi realizada no FileProcessor - apenas atualizando UI');
     
     toast({
       title: "Apólice Adicionada",

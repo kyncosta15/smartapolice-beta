@@ -9,13 +9,16 @@ import { PolicyPersistenceService } from '../policyPersistenceService';
 export class SingleFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
   private removeFileStatus: (fileName: string) => void;
+  private onPolicyExtracted: (policy: ParsedPolicyData) => void;
 
   constructor(
     updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
-    removeFileStatus: (fileName: string) => void
+    removeFileStatus: (fileName: string) => void,
+    onPolicyExtracted: (policy: ParsedPolicyData) => void
   ) {
     this.updateFileStatus = updateFileStatus;
     this.removeFileStatus = removeFileStatus;
+    this.onPolicyExtracted = onPolicyExtracted;
   }
 
   async processFile(file: File, userId: string | null): Promise<ParsedPolicyData> {
@@ -72,14 +75,15 @@ export class SingleFileProcessor {
       message: 'Salvando dados no banco...'
     });
 
+    // ✅ CORREÇÃO: Usar savePolicyComplete para salvar arquivo + dados
     if (userId) {
       console.log(`💾 SingleFileProcessor: Iniciando persistência para ${parsedPolicy.name} com userId: ${userId}`);
       try {
-        const persistenceResult = await PolicyPersistenceService.savePolicyComplete(file, parsedPolicy, userId);
-        console.log(`✅ SingleFileProcessor: Persistência concluída com sucesso: ${persistenceResult}`);
+        await PolicyPersistenceService.savePolicyComplete(file, parsedPolicy, userId);
+        console.log(`✅ SingleFileProcessor: Persistência concluída com sucesso`);
       } catch (persistenceError) {
         console.error(`❌ SingleFileProcessor: Erro na persistência:`, persistenceError);
-        throw persistenceError; // Re-throw para não mascarar o erro
+        throw persistenceError;
       }
     } else {
       console.error(`❌ SingleFileProcessor: UserId não fornecido - saltando persistência`);
@@ -91,6 +95,10 @@ export class SingleFileProcessor {
       status: 'completed',
       message: `✅ Processado: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
     });
+
+    // ✅ CORREÇÃO: Chamar onPolicyExtracted após processar
+    console.log(`📤 SingleFileProcessor: Chamando onPolicyExtracted para ${parsedPolicy.name}`);
+    this.onPolicyExtracted(parsedPolicy);
 
     // Remover da lista após 3 segundos
     setTimeout(() => {

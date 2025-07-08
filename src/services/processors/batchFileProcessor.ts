@@ -9,13 +9,16 @@ import { PolicyPersistenceService } from '../policyPersistenceService';
 export class BatchFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
   private removeFileStatus: (fileName: string) => void;
+  private onPolicyExtracted: (policy: ParsedPolicyData) => void;
 
   constructor(
     updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
-    removeFileStatus: (fileName: string) => void
+    removeFileStatus: (fileName: string) => void,
+    onPolicyExtracted: (policy: ParsedPolicyData) => void
   ) {
     this.updateFileStatus = updateFileStatus;
     this.removeFileStatus = removeFileStatus;
+    this.onPolicyExtracted = onPolicyExtracted;
   }
 
   async processBatch(files: File[], userId: string | null): Promise<ParsedPolicyData[]> {
@@ -27,6 +30,11 @@ export class BatchFileProcessor {
       try {
         const result = await this.processFile(file, userId);
         results.push(result);
+        
+        // ✅ CORREÇÃO: Chamar onPolicyExtracted para cada apólice processada
+        console.log(`📤 BatchFileProcessor: Chamando onPolicyExtracted para ${result.name}`);
+        this.onPolicyExtracted(result);
+        
       } catch (error) {
         console.error(`❌ Erro ao processar arquivo ${file.name}:`, error);
         this.updateFileStatus(file.name, {
@@ -79,6 +87,7 @@ export class BatchFileProcessor {
       message: 'Salvando no banco...'
     });
 
+    // ✅ CORREÇÃO: Usar savePolicyComplete para salvar arquivo + dados
     if (userId) {
       try {
         await PolicyPersistenceService.savePolicyComplete(file, parsedPolicy, userId);
@@ -87,6 +96,8 @@ export class BatchFileProcessor {
         console.error(`❌ BatchFileProcessor: Erro na persistência:`, persistenceError);
         throw persistenceError;
       }
+    } else {
+      console.warn(`⚠️ BatchFileProcessor: userId não fornecido - saltando persistência`);
     }
 
     this.updateFileStatus(fileName, {

@@ -1,3 +1,4 @@
+
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { FileProcessingStatus } from '@/types/pdfUpload';
 import { BatchFileProcessor } from './processors/batchFileProcessor';
@@ -7,6 +8,7 @@ export class FileProcessor {
   private batchProcessor: BatchFileProcessor;
   private singleProcessor: SingleFileProcessor;
   private userId: string | null;
+  private onPolicyExtracted: (policy: ParsedPolicyData) => void;
 
   constructor(
     updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
@@ -16,15 +18,18 @@ export class FileProcessor {
     toast: any
   ) {
     this.userId = userId;
+    this.onPolicyExtracted = onPolicyExtracted;
     
     this.batchProcessor = new BatchFileProcessor(
       updateFileStatus,
-      removeFileStatus
+      removeFileStatus,
+      onPolicyExtracted // Passar callback para o batch processor
     );
 
     this.singleProcessor = new SingleFileProcessor(
       updateFileStatus,
-      removeFileStatus
+      removeFileStatus,
+      onPolicyExtracted // Passar callback para o single processor
     );
   }
 
