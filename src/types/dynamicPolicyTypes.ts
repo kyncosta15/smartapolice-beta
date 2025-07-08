@@ -1,4 +1,3 @@
-
 // Interface para o formato direto do N8N
 export interface N8NDirectData {
   numero_apolice: string;

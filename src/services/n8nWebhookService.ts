@@ -18,6 +18,8 @@ interface N8NDirectResponse {
   // Campos de documento
   documento?: string;
   documento_tipo?: 'CPF' | 'CNPJ';
+  // Coberturas
+  coberturas?: string[];
 }
 
 interface N8NWebhookResponse {
@@ -118,6 +120,7 @@ export class N8NWebhookService {
     }
     
     console.log('🔢 Número da apólice definido:', policyNumber);
+    console.log('🛡️ Coberturas recebidas:', n8nData.coberturas);
 
     // Usar vencimentos futuros do N8N se disponíveis
     let parcelas;
@@ -157,6 +160,8 @@ export class N8NWebhookService {
       // Campos de documento do N8N
       documento: n8nData.documento,
       documento_tipo: n8nData.documento_tipo,
+      // Coberturas do N8N
+      coberturas: n8nData.coberturas,
       // Adicionar as parcelas como propriedade adicional
       parcelas_detalhadas: parcelas
     };

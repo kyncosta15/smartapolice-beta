@@ -23,6 +23,7 @@ export class N8NDataConverter {
       segurado: n8nData.segurado,
       documento: n8nData.documento, 
       documento_tipo: n8nData.documento_tipo,
+      coberturas: n8nData.coberturas,
       policyName
     });
     
@@ -39,7 +40,8 @@ export class N8NDataConverter {
     console.log(`📊 Análise da apólice ${policyName}:`, {
       vencidas: installmentAnalysis.vencidas,
       aVencer: installmentAnalysis.aVencer,
-      proximoVencimento: installmentAnalysis.proximoVencimento
+      proximoVencimento: installmentAnalysis.proximoVencimento,
+      coberturas: n8nData.coberturas?.length || 0
     });
     
     return {
@@ -72,6 +74,9 @@ export class N8NDataConverter {
       uf: n8nData.uf,
       deductible: n8nData.franquia,
       
+      // Coberturas do N8N
+      coberturas: n8nData.coberturas,
+      
       // Análise de vencimentos
       overdueInstallments: installmentAnalysis.vencidas,
       upcomingInstallments: installmentAnalysis.aVencer,
@@ -83,7 +88,7 @@ export class N8NDataConverter {
                type === 'vida' ? 'Pessoal' : 
                type === 'saude' ? 'Saúde' : 
                type === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
-      coverage: ['Cobertura Básica'],
+      coverage: n8nData.coberturas || ['Cobertura Básica'],
       totalCoverage: n8nData.premio
     };
   }
