@@ -94,7 +94,7 @@ export function usePersistedPolicies() {
     setPolicies(prev => prev.filter(p => p.id !== policyId));
   };
 
- // Função para deletar apólice e seu PDF associado
+  // Função para deletar apólice e seu PDF associado
 const deletePolicy = async (policyId: string): Promise<boolean> => {
   if (!supabase.auth.getUser()) {
     toast({
@@ -114,6 +114,9 @@ const deletePolicy = async (policyId: string): Promise<boolean> => {
     if (!session) {
       throw new Error('Sessão não encontrada');
     }
+    
+    // Obter a URL do Supabase do próprio cliente
+    const supabaseUrl = supabase.supabaseUrl || 'https://jhvbfvqhuemuvwgqpskz.supabase.co';
     
     // Chamar a Edge Function para excluir a apólice e o arquivo
     const response = await fetch(`${supabaseUrl}/functions/v1/delete-policy-pdf`, {
@@ -163,7 +166,6 @@ const deletePolicy = async (policyId: string): Promise<boolean> => {
     return false;
   }
 };
-
   // Atualizar apólice no banco de dados
   const updatePolicy = async (policyId: string, updates: Partial<ParsedPolicyData>): Promise<boolean> => {
     if (!user?.id) {
