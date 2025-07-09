@@ -25,44 +25,70 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newCoverage, setNewCoverage] = useState<Coverage>({ descricao: '', lmi: 0 });
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
 
-  // Normalizar as coberturas iniciais
+  // Carregar coberturas do banco de dados sempre que o componente for montado
   useEffect(() => {
-    const normalizedCoverages = (initialCoverages || []).map((coverage, index) => {
-      if (typeof coverage === 'string') {
-        return { id: `temp-${index}`, descricao: coverage };
-      }
-      return coverage;
-    });
-    setCoverages(normalizedCoverages);
+    console.log('🔄 CoveragesCard montado - carregando dados do DB para policy:', policyId);
     loadCoveragesFromDB();
-  }, [initialCoverages, policyId]);
+  }, [policyId]);
 
   const loadCoveragesFromDB = async () => {
+    if (!policyId) {
+      console.log('⚠️ PolicyId não fornecido, não é possível carregar coberturas');
+      return;
+    }
+
     try {
+      console.log('🔍 Buscando coberturas no DB para policy:', policyId);
+      
       const { data, error } = await supabase
         .from('coberturas')
         .select('*')
         .eq('policy_id', policyId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao carregar coberturas:', error);
+        throw error;
+      }
+
+      console.log('📚 Coberturas encontradas no DB:', data);
 
       if (data && data.length > 0) {
-        setCoverages(data.map(item => ({
+        // Usar dados do banco se existirem
+        const dbCoverages = data.map(item => ({
           id: item.id,
           descricao: item.descricao || '',
           lmi: item.lmi || undefined
-        })));
+        }));
+        
+        console.log('✅ Usando coberturas do banco de dados:', dbCoverages);
+        setCoverages(dbCoverages);
+      } else {
+        // Se não houver dados no banco, usar os dados iniciais se fornecidos
+        console.log('📝 Nenhuma cobertura no DB, usando dados iniciais:', initialCoverages);
+        const normalizedCoverages = (initialCoverages || []).map((coverage, index) => {
+          if (typeof coverage === 'string') {
+            return { id: `temp-${index}`, descricao: coverage };
+          }
+          return coverage;
+        });
+        setCoverages(normalizedCoverages);
       }
+      
+      setIsLoaded(true);
     } catch (error) {
-      console.error('Erro ao carregar coberturas:', error);
+      console.error('❌ Erro ao carregar coberturas:', error);
+      setIsLoaded(true);
     }
   };
 
   const saveCoverage = async (coverage: Coverage) => {
     try {
+      console.log('💾 Salvando cobertura:', coverage);
+      
       if (coverage.id && !coverage.id.startsWith('temp-')) {
         // Atualizar cobertura existente
         const { error } = await supabase
@@ -74,6 +100,7 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
           .eq('id', coverage.id);
 
         if (error) throw error;
+        console.log('✅ Cobertura atualizada com sucesso');
       } else {
         // Inserir nova cobertura
         const { data, error } = await supabase
@@ -88,6 +115,8 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
 
         if (error) throw error;
 
+        console.log('✅ Nova cobertura inserida:', data);
+        
         // Atualizar o estado local com o ID real
         setCoverages(prev => prev.map(c => 
           c.id === coverage.id ? { ...coverage, id: data.id } : c
@@ -99,7 +128,7 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
         description: "As informações foram salvas com sucesso",
       });
     } catch (error) {
-      console.error('Erro ao salvar cobertura:', error);
+      console.error('❌ Erro ao salvar cobertura:', error);
       toast({
         title: "❌ Erro ao Salvar",
         description: "Não foi possível salvar a cobertura",
@@ -110,6 +139,8 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
 
   const deleteCoverage = async (coverageId: string) => {
     try {
+      console.log('🗑️ Deletando cobertura:', coverageId);
+      
       if (!coverageId.startsWith('temp-')) {
         const { error } = await supabase
           .from('coberturas')
@@ -126,7 +157,7 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
         description: "A cobertura foi removida com sucesso",
       });
     } catch (error) {
-      console.error('Erro ao deletar cobertura:', error);
+      console.error('❌ Erro ao deletar cobertura:', error);
       toast({
         title: "❌ Erro ao Remover",
         description: "Não foi possível remover a cobertura",
@@ -184,6 +215,26 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
       c.id === id ? { ...c, [field]: value } : c
     ));
   };
+
+  // Não renderizar até que os dados sejam carregados
+  if (!isLoaded) {
+    return (
+      <Card className="flex flex-col h-full border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
+        <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-blue-200 pb-4">
+          <CardTitle className="flex items-center text-xl font-bold text-blue-900 font-sf-pro">
+            <Shield className="h-6 w-6 mr-3 text-blue-600" />
+            Coberturas
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="text-center py-8">
+            <Shield className="h-12 w-12 text-blue-300 mx-auto mb-3 animate-pulse" />
+            <p className="text-blue-600 font-medium">Carregando coberturas...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="flex flex-col h-full border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
