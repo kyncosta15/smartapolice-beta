@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, CheckCircle, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
