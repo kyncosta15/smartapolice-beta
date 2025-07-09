@@ -94,9 +94,9 @@ export function usePersistedPolicies() {
     setPolicies(prev => prev.filter(p => p.id !== policyId));
   };
 
-  // Função para deletar apólice e seu PDF associado
+ // Função para deletar apólice e seu PDF associado
 const deletePolicy = async (policyId: string): Promise<boolean> => {
-  if (!user?.id) {
+  if (!supabase.auth.getUser()) {
     toast({
       title: "❌ Erro de Autenticação",
       description: "Usuário não autenticado",
@@ -116,7 +116,7 @@ const deletePolicy = async (policyId: string): Promise<boolean> => {
     }
     
     // Chamar a Edge Function para excluir a apólice e o arquivo
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-policy-pdf`, {
+    const response = await fetch(`${supabaseUrl}/functions/v1/delete-policy-pdf`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
