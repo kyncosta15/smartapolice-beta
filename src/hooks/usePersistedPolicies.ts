@@ -69,19 +69,19 @@ export function usePersistedPolicies() {
       }
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados';
-      setError(errorMessage);
-      console.error('❌ Erro ao carregar apólices persistidas:', err);
-      
-      toast({
-        title: "❌ Erro ao Carregar Dados",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-      console.log(`🏁 loadPersistedPolicies finalizado para userId: ${user.id}`);
-    }
+  console.error('🗑️ Supabase delete error:', {
+    policyId,
+    userId: user.id,
+    supabaseError: err
+  });
+  toast({
+    title: "❌ Erro ao Deletar",
+    description: "Não foi possível remover a apólice",
+    variant: "destructive",
+  });
+  return false;
+}
+
   };
 
   // Adicionar nova apólice à lista
@@ -127,15 +127,15 @@ export function usePersistedPolicies() {
       });
       
       return true;
-    } catch (err) {
-  console.error('🗑️ Supabase delete error:', {
-    policyId,
-    userId: user.id,
-    supabaseError: err
-  });
-  toast({ … })
-  return false;
-}
+    } catch (error) {
+      console.error('❌ Erro ao deletar apólice:', error);
+      toast({
+        title: "❌ Erro ao Deletar",
+        description: "Não foi possível remover a apólice",
+        variant: "destructive",
+      });
+      return false;
+    }
   };
 
   // Atualizar apólice no banco de dados
