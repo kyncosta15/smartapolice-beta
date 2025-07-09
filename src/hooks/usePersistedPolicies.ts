@@ -127,15 +127,15 @@ export function usePersistedPolicies() {
       });
       
       return true;
-    } catch (error) {
-      console.error('❌ Erro ao deletar apólice:', error);
-      toast({
-        title: "❌ Erro ao Deletar",
-        description: "Não foi possível remover a apólice",
-        variant: "destructive",
-      });
-      return false;
-    }
+    } catch (err) {
+  console.error('🗑️ Supabase delete error:', {
+    policyId,
+    userId: user.id,
+    supabaseError: err
+  });
+  toast({ … })
+  return false;
+}
   };
 
   // Atualizar apólice no banco de dados
