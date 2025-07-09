@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
           {policy.vehicleModel && <VehicleInfoCard policy={policy} />}
 
           <FinancialInfoCard policy={policy} />
-          <CoveragesCard coverages={coverages} />
+          <CoveragesCard coverages={coverages} policyId={policy.id} />
 
           {(policy.insuredName || policy.documento) && (
             <ResponsiblePersonCard policy={policy} />

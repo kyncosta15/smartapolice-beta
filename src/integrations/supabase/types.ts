@@ -18,16 +18,19 @@ export type Database = {
         Row: {
           descricao: string | null
           id: string
+          lmi: number | null
           policy_id: string | null
         }
         Insert: {
           descricao?: string | null
           id?: string
+          lmi?: number | null
           policy_id?: string | null
         }
         Update: {
           descricao?: string | null
           id?: string
+          lmi?: number | null
           policy_id?: string | null
         }
         Relationships: [
