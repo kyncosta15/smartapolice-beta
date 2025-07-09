@@ -94,7 +94,7 @@ export function usePersistedPolicies() {
     setPolicies(prev => prev.filter(p => p.id !== policyId));
   };
 
-  // Deletar apólice do banco de dados e o PDF do storage
+  // Função para deletar apólice e seu PDF associado
 const deletePolicy = async (policyId: string): Promise<boolean> => {
   if (!user?.id) {
     toast({
@@ -108,67 +108,48 @@ const deletePolicy = async (policyId: string): Promise<boolean> => {
   try {
     console.log(`🗑️ Iniciando exclusão da apólice: ${policyId}`);
     
-    // Primeiro, buscar a apólice para obter o caminho do PDF
-    const { data: policy, error: fetchError } = await supabase
-      .from('policies')
-      .select('id, pdfPath')
-      .eq('id', policyId)
-      .eq('user_id', user.id)
-      .single();
+    // Obter o token de acesso do usuário atual
+    const { data: { session } } = await supabase.auth.getSession();
     
-    if (fetchError || !policy) {
-      console.error('❌ Erro ao buscar apólice:', fetchError);
-      throw new Error('Apólice não encontrada ou você não tem permissão para excluí-la');
+    if (!session) {
+      throw new Error('Sessão não encontrada');
     }
     
-    console.log(`📄 Apólice encontrada com PDF path:`, policy.pdfPath);
+    // Chamar a Edge Function para excluir a apólice e o arquivo
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-policy-pdf`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ policyId })
+    });
     
-    // Se houver um PDF associado, deletá-lo do storage
-    if (policy.pdfPath) {
-      console.log(`🗑️ Tentando deletar arquivo PDF: ${policy.pdfPath}`);
-      
-      // Extrair o caminho do arquivo no bucket
-      // O formato típico é: 'policies/user_id/filename.pdf'
-      const { error: storageError } = await supabase
-        .storage
-        .from('policies') // Nome do bucket
-        .remove([policy.pdfPath.replace('policies/', '')]);
-      
-      if (storageError) {
-        console.error('⚠️ Erro ao deletar arquivo PDF:', storageError);
-        // Continuamos mesmo se falhar a exclusão do arquivo
-        toast({
-          title: "⚠️ Aviso",
-          description: "A apólice foi removida, mas houve um problema ao excluir o arquivo PDF",
-          variant: "warning",
-        });
-      } else {
-        console.log('✅ Arquivo PDF deletado com sucesso');
-      }
+    const result = await response.json();
+    
+    if (!response.ok) {
+      console.error('❌ Erro na resposta da Edge Function:', result);
+      throw new Error(result.error || 'Erro ao excluir apólice');
+    }
+    
+    console.log('✅ Resposta da Edge Function:', result);
+    
+    // Verificar se houve algum aviso sobre o arquivo
+    if (result.fileError) {
+      toast({
+        title: "⚠️ Aviso",
+        description: `A apólice foi removida, mas houve um problema ao excluir o arquivo: ${result.fileError}`,
+        variant: "warning",
+      });
     } else {
-      console.log('ℹ️ Apólice não possui arquivo PDF associado');
+      toast({
+        title: "✅ Apólice Deletada",
+        description: "A apólice e seus arquivos foram removidos com sucesso",
+      });
     }
     
-    // Agora deletar o registro da apólice no banco de dados
-    console.log('🗑️ Deletando registro da apólice no banco de dados');
-    const { error: deleteError } = await supabase
-      .from('policies')
-      .delete()
-      .eq('id', policyId)
-      .eq('user_id', user.id);
-    
-    if (deleteError) {
-      console.error('❌ Erro ao deletar registro da apólice:', deleteError);
-      throw deleteError;
-    }
-
     // Remover do estado local
     removePolicy(policyId);
-    
-    toast({
-      title: "✅ Apólice Deletada",
-      description: "A apólice e seus arquivos foram removidos com sucesso",
-    });
     
     return true;
   } catch (error) {
@@ -182,6 +163,7 @@ const deletePolicy = async (policyId: string): Promise<boolean> => {
     return false;
   }
 };
+
   // Atualizar apólice no banco de dados
   const updatePolicy = async (policyId: string, updates: Partial<ParsedPolicyData>): Promise<boolean> => {
     if (!user?.id) {
