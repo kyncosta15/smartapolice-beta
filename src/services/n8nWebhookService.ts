@@ -18,7 +18,7 @@ interface N8NDirectResponse {
   // Campos de documento
   documento?: string;
   documento_tipo?: 'CPF' | 'CNPJ';
-  // Coberturas with LMI
+  // Coberturas with LMI - processadas do texto original
   coberturas?: Array<{
     descricao: string;
     lmi?: number;
@@ -128,7 +128,18 @@ export class N8NWebhookService {
     }
     
     console.log('🔢 Número da apólice definido:', policyNumber);
-    console.log('🛡️ Coberturas recebidas:', n8nData.coberturas);
+    console.log('🛡️ Coberturas recebidas do N8N:', n8nData.coberturas);
+
+    // Processar coberturas - garantir que sejam processadas corretamente
+    let processedCoberturas = [];
+    if (n8nData.coberturas && Array.isArray(n8nData.coberturas)) {
+      processedCoberturas = n8nData.coberturas.map(cobertura => ({
+        descricao: cobertura.descricao || '',
+        lmi: cobertura.lmi ? Number(cobertura.lmi) : undefined
+      }));
+    }
+    
+    console.log('🔄 Coberturas processadas:', processedCoberturas);
 
     // Usar vencimentos futuros do N8N se disponíveis
     let parcelas;
@@ -168,8 +179,8 @@ export class N8NWebhookService {
       // Campos de documento do N8N
       documento: n8nData.documento,
       documento_tipo: n8nData.documento_tipo,
-      // Coberturas array - mantendo a estrutura original do N8N
-      coberturas: n8nData.coberturas || [],
+      // Coberturas array - mantendo a estrutura processada do N8N
+      coberturas: processedCoberturas,
       // Adicionar as parcelas como propriedade adicional
       parcelas_detalhadas: parcelas
     };

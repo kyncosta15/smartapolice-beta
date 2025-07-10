@@ -28,7 +28,25 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
     }
   };
 
-  const coverages = policy.coberturas || policy.coverage || [];
+  // Processar coberturas - dar preferência para coberturas do N8N se disponíveis
+  let coverages = [];
+  
+  if (policy.coberturas && Array.isArray(policy.coberturas)) {
+    // Coberturas do N8N com estrutura {descricao, lmi}
+    coverages = policy.coberturas;
+    console.log('📋 Usando coberturas do N8N:', coverages);
+  } else if (policy.coverage && Array.isArray(policy.coverage)) {
+    // Fallback para coverage legacy (apenas strings)
+    coverages = policy.coverage.map((desc: string) => ({ 
+      descricao: desc,
+      lmi: undefined 
+    }));
+    console.log('📋 Usando coberturas legacy:', coverages);
+  } else {
+    // Array vazio se não há coberturas
+    coverages = [];
+    console.log('📋 Nenhuma cobertura encontrada para a apólice');
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

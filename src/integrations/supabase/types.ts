@@ -134,6 +134,47 @@ export type Database = {
           },
         ]
       }
+      monthly_projections: {
+        Row: {
+          actual_cost: number | null
+          created_at: string
+          id: string
+          month: number
+          projected_cost: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          actual_cost?: number | null
+          created_at?: string
+          id?: string
+          month: number
+          projected_cost?: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          actual_cost?: number | null
+          created_at?: string
+          id?: string
+          month?: number
+          projected_cost?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_projections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parcelas: {
         Row: {
           created_at: string | null
@@ -342,6 +383,15 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      test_file_access: {
+        Args: { file_path: string }
+        Returns: {
+          can_access: boolean
+          user_id: string
+          file_owner: string
+          reason: string
+        }[]
       }
     }
     Enums: {

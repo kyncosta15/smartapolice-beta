@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, CheckCircle, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
@@ -67,20 +68,73 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
         setCoverages(dbCoverages);
       } else {
         // Se não houver dados no banco, usar os dados iniciais se fornecidos
-        console.log('📝 Nenhuma cobertura no DB, usando dados iniciais:', initialCoverages);
-        const normalizedCoverages = (initialCoverages || []).map((coverage, index) => {
-          if (typeof coverage === 'string') {
-            return { id: `temp-${index}`, descricao: coverage };
-          }
-          return coverage;
-        });
-        setCoverages(normalizedCoverages);
+        console.log('📝 Nenhuma cobertura no DB, processando dados iniciais:', initialCoverages);
+        
+        if (initialCoverages && initialCoverages.length > 0) {
+          // Se dados iniciais vieram do N8N, salvar no banco primeiro
+          const normalizedCoverages = normalizeInitialCoverages(initialCoverages);
+          console.log('🔄 Salvando coberturas iniciais no banco:', normalizedCoverages);
+          
+          await saveInitialCoverages(normalizedCoverages);
+          setCoverages(normalizedCoverages);
+        }
       }
       
       setIsLoaded(true);
     } catch (error) {
       console.error('❌ Erro ao carregar coberturas:', error);
       setIsLoaded(true);
+    }
+  };
+
+  const normalizeInitialCoverages = (initialCoverages: Coverage[] | string[]): Coverage[] => {
+    return initialCoverages.map((coverage, index) => {
+      if (typeof coverage === 'string') {
+        return { 
+          id: `temp-${index}`, 
+          descricao: coverage,
+          lmi: undefined
+        };
+      }
+      return {
+        ...coverage,
+        id: coverage.id || `temp-${index}`
+      };
+    });
+  };
+
+  const saveInitialCoverages = async (coverages: Coverage[]) => {
+    try {
+      const coberturasToInsert = coverages.map(coverage => ({
+        policy_id: policyId,
+        descricao: coverage.descricao,
+        lmi: coverage.lmi || null
+      }));
+
+      const { data, error } = await supabase
+        .from('coberturas')
+        .insert(coberturasToInsert)
+        .select();
+
+      if (error) {
+        console.error('❌ Erro ao salvar coberturas iniciais:', error);
+        return;
+      }
+
+      console.log('✅ Coberturas iniciais salvas no banco:', data);
+
+      // Atualizar IDs locais com os IDs reais do banco
+      if (data) {
+        const updatedCoverages = data.map(item => ({
+          id: item.id,
+          descricao: item.descricao || '',
+          lmi: item.lmi || undefined
+        }));
+
+        setCoverages(updatedCoverages);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao salvar coberturas iniciais:', error);
     }
   };
 
