@@ -94,6 +94,7 @@ export const N8nWebhookService = {
         policyNumber: data.numero_apolice || 'N/A',
         paymentFrequency: data.forma_pagamento || 'mensal',
         status: 'active',
+        extractedAt: new Date().toISOString(),
         
         // Campos específicos do N8N
         insuredName: data.segurado,
