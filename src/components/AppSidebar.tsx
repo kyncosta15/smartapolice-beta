@@ -9,14 +9,16 @@ import {
   TrendingUp
 } from 'lucide-react';
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useSidebar } from '@/components/ui/sidebar';
 
 interface NavItemProps {
   title: string;
@@ -42,22 +44,24 @@ const NavItem: React.FC<NavItemProps & { active: boolean }> = ({
   const { setOpenMobile } = useSidebar();
 
   return (
-    <Button
-      variant="ghost"
-      className={`justify-start px-4 ${active ? 'bg-secondary' : 'hover:bg-secondary'}`}
-      onClick={() => {
-        onSectionChange(section);
-        setOpenMobile(false);
-      }}
-    >
-      <div className="w-full">
-        <div className="flex items-center space-x-2">
-          <Icon className="h-4 w-4" />
-          <span className="text-sm font-medium">{title}</span>
-        </div>
-        <p className="pl-6 text-xs text-muted-foreground">{description}</p>
-      </div>
-    </Button>
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={active}
+        onClick={() => {
+          onSectionChange(section);
+          setOpenMobile(false);
+        }}
+      >
+        <Button variant="ghost" className="w-full justify-start">
+          <Icon className="mr-3 h-5 w-5" />
+          <div className="flex flex-col items-start">
+            <span className="text-sm font-medium">{title}</span>
+            <span className="text-xs text-muted-foreground">{description}</span>
+          </div>
+        </Button>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 };
 
@@ -101,35 +105,38 @@ const navigationItems = [
 ];
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
-  const { openMobile, setOpenMobile } = useSidebar();
-
   return (
-    <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="p-0 mr-2">
-          Abrir Menu
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="w-64 flex flex-col p-0">
-        <ScrollArea className="flex-1">
-          <div className="py-2">
-            {navigationItems.map((item) => (
-              <NavItem
-                key={item.section}
-                {...item}
-                active={activeSection === item.section}
-                onSectionChange={onSectionChange}
-              />
-            ))}
-            <Separator />
+    <Sidebar className="border-r">
+      <SidebarHeader className="border-b p-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">S</span>
           </div>
-        </ScrollArea>
-        <div className="py-4 px-3 flex items-center justify-center">
-          <p className="text-xs text-muted-foreground">
-            LovCode &copy; {new Date().getFullYear()}
-          </p>
+          <div>
+            <h1 className="text-lg font-semibold">SmartApólice</h1>
+            <p className="text-xs text-muted-foreground">Centralize todas suas apólices</p>
+          </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </SidebarHeader>
+      
+      <SidebarContent className="p-2">
+        <SidebarMenu>
+          {navigationItems.map((item) => (
+            <NavItem
+              key={item.section}
+              {...item}
+              active={activeSection === item.section}
+              onSectionChange={onSectionChange}
+            />
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+      
+      <SidebarFooter className="p-4 border-t">
+        <p className="text-xs text-muted-foreground text-center">
+          LovCode &copy; {new Date().getFullYear()}
+        </p>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

@@ -1,13 +1,12 @@
 
 import { useState } from 'react';
-import { Bell, Menu, LogOut, ChevronDown, PanelLeft, AlertCircle, Calendar } from 'lucide-react';
+import { Bell, LogOut, ChevronDown, AlertCircle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSidebar } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
 
 interface NavbarProps {
@@ -18,11 +17,9 @@ interface NavbarProps {
 }
 
 export function Navbar({ searchTerm, onSearchChange, notificationCount, policies }: NavbarProps) {
-  
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
-  const { toggleSidebar } = useSidebar();
   const { toast } = useToast();
 
   const getRoleLabel = (role: string) => {
@@ -96,27 +93,9 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Left side - Sidebar Toggle and Mobile Menu */}
+          {/* Left side - Sidebar Toggle */}
           <div className="flex items-center space-x-3">
-            {/* Sidebar Toggle for Desktop */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleSidebar}
-              className="hidden md:flex p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              <PanelLeft className="w-4 h-4" />
-            </Button>
-
-            {/* Mobile Menu Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleSidebar}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 md:hidden transition-colors"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
+            <SidebarTrigger className="md:hidden" />
           </div>
 
           {/* Right side - Notifications and User Menu */}
