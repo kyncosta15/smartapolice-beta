@@ -94,49 +94,63 @@ export function usePersistedPolicies() {
     setPolicies(prev => prev.filter(p => p.id !== policyId));
   };
 
-  // Deletar apólice do banco de dados
-  const deletePolicy = async (policyId: string): Promise<boolean> => {
-    if (!user?.id) {
-      toast({
-        title: "❌ Erro de Autenticação",
-        description: "Usuário não autenticado",
-        variant: "destructive",
-      });
-      return false;
+  // Substitua a função deletePolicy no hook usePersistedPolicies pelo código abaixo:
+
+const deletePolicy = async (policyId: string): Promise<boolean> => {
+  if (!user?.id) {
+    toast({
+      title: "❌ Erro de Autenticação",
+      description: "Usuário não autenticado",
+      variant: "destructive",
+    });
+    return false;
+  }
+
+  try {
+    console.log(`🗑️ Deletando apólice: ${policyId}`);
+    
+    // Obter token de autenticação atual
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error("Sessão de usuário inválida");
+    }
+    
+    // Chamar a Edge Function para deletar a apólice e todos os dados relacionados
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-policy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ policyId })
+    });
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.error || 'Erro ao deletar apólice');
     }
 
-    try {
-      console.log(`🗑️ Deletando apólice: ${policyId}`);
-      
-      const { error } = await supabase
-        .from('policies')
-        .delete()
-        .eq('id', policyId)
-        .eq('user_id', user.id); // Garantir que só delete as próprias
-
-      if (error) {
-        throw error;
-      }
-
-      // Remover do estado local
-      removePolicy(policyId);
-      
-      toast({
-        title: "✅ Apólice Deletada",
-        description: "A apólice foi removida com sucesso",
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Erro ao deletar apólice:', error);
-      toast({
-        title: "❌ Erro ao Deletar",
-        description: "Não foi possível remover a apólice",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
+    // Remover do estado local
+    removePolicy(policyId);
+    
+    toast({
+      title: "✅ Apólice Deletada",
+      description: "A apólice foi removida com sucesso",
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Erro ao deletar apólice:', error);
+    toast({
+      title: "❌ Erro ao Deletar",
+      description: error instanceof Error ? error.message : "Não foi possível remover a apólice",
+      variant: "destructive",
+    });
+    return false;
+  }
+};
 
   // Atualizar apólice no banco de dados
   const updatePolicy = async (policyId: string, updates: Partial<ParsedPolicyData>): Promise<boolean> => {
