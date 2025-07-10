@@ -94,78 +94,50 @@ export function usePersistedPolicies() {
     setPolicies(prev => prev.filter(p => p.id !== policyId));
   };
 
-  // Função para deletar apólice e seu PDF associado
-const deletePolicy = async (policyId: string): Promise<boolean> => {
-  if (!supabase.auth.getUser()) {
-    toast({
-      title: "❌ Erro de Autenticação",
-      description: "Usuário não autenticado",
-      variant: "destructive",
-    });
-    return false;
-  }
-
-  try {
-    console.log(`🗑️ Iniciando exclusão da apólice: ${policyId}`);
-    
-    // Obter o token de acesso do usuário atual
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error('Sessão não encontrada');
-    }
-    
-    // Obter a URL do Supabase do próprio cliente
-    const supabaseUrl = supabase.supabaseUrl || 'https://jhvbfvqhuemuvwgqpskz.supabase.co';
-    
-    // Chamar a Edge Function para excluir a apólice e o arquivo
-    const response = await fetch(`${supabaseUrl}/functions/v1/delete-policy-pdf`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({ policyId })
-    });
-    
-    const result = await response.json();
-    
-    if (!response.ok) {
-      console.error('❌ Erro na resposta da Edge Function:', result);
-      throw new Error(result.error || 'Erro ao excluir apólice');
-    }
-    
-    console.log('✅ Resposta da Edge Function:', result);
-    
-    // Verificar se houve algum aviso sobre o arquivo
-    if (result.fileError) {
+  // Deletar apólice do banco de dados
+  const deletePolicy = async (policyId: string): Promise<boolean> => {
+    if (!user?.id) {
       toast({
-        title: "⚠️ Aviso",
-        description: `A apólice foi removida, mas houve um problema ao excluir o arquivo: ${result.fileError}`,
-        variant: "warning",
+        title: "❌ Erro de Autenticação",
+        description: "Usuário não autenticado",
+        variant: "destructive",
       });
-    } else {
+      return false;
+    }
+
+    try {
+      console.log(`🗑️ Deletando apólice: ${policyId}`);
+      
+      const { error } = await supabase
+        .from('policies')
+        .delete()
+        .eq('id', policyId)
+        .eq('user_id', user.id); // Garantir que só delete as próprias
+
+      if (error) {
+        throw error;
+      }
+
+      // Remover do estado local
+      removePolicy(policyId);
+      
       toast({
         title: "✅ Apólice Deletada",
-        description: "A apólice e seus arquivos foram removidos com sucesso",
+        description: "A apólice foi removida com sucesso",
       });
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao deletar apólice:', error);
+      toast({
+        title: "❌ Erro ao Deletar",
+        description: "Não foi possível remover a apólice",
+        variant: "destructive",
+      });
+      return false;
     }
-    
-    // Remover do estado local
-    removePolicy(policyId);
-    
-    return true;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Não foi possível remover a apólice';
-    console.error('❌ Erro ao deletar apólice:', error);
-    toast({
-      title: "❌ Erro ao Deletar",
-      description: errorMessage,
-      variant: "destructive",
-    });
-    return false;
-  }
-};
+  };
+
   // Atualizar apólice no banco de dados
   const updatePolicy = async (policyId: string, updates: Partial<ParsedPolicyData>): Promise<boolean> => {
     if (!user?.id) {

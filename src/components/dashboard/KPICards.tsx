@@ -63,9 +63,9 @@ export function KPICards(props: KPICardsProps) {
       isCurrency: true
     },
     {
-      title: 'Prêmio Total',
+      title: 'Valor Segurado',
       value: props.totalInsuredValue,
-      subtitle: 'Custo anual',
+      subtitle: 'Cobertura total',
       icon: Shield,
       bg: 'from-purple-500 to-purple-600',
       isCurrency: true

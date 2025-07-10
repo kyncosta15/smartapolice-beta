@@ -33,12 +33,19 @@ export interface DynamicPDFData {
     fim: string;
     extraido_em: string;
   };
+  // Added vencimentos_futuros property
+  vencimentos_futuros?: string[];
+  // Campos expandidos opcionais
   segurado?: {
-    nome: string;
+    nome?: string;
     cpf?: string;
     data_nascimento?: string;
     email?: string;
     telefone?: string;
+    // Novos campos de documento
+    documento?: string;
+    tipo_pessoa?: 'PF' | 'PJ';
+    cpf_cnpj?: string;
   };
   veiculo?: {
     marca?: string;
@@ -48,19 +55,22 @@ export interface DynamicPDFData {
     chassi?: string;
     uso?: string;
   };
-  documento?: string;
-  documento_tipo?: 'CPF' | 'CNPJ';
-  // Updated coberturas to match N8N structure
-  coberturas?: Array<{
-    descricao: string;
-    lmi?: number;
-  }>;
+  coberturas?: {
+    tipo?: string;
+    franquia?: number;
+    danos_materiais?: number;
+    danos_corporais?: number;
+  };
+  // Adicionando parcelas detalhadas
   parcelas_detalhadas?: Array<{
     numero: number;
     valor: number;
     data: string;
     status: 'paga' | 'pendente';
   }>;
+  // Novos campos de documento diretos do N8N
+  documento?: string;
+  documento_tipo?: 'CPF' | 'CNPJ';
 }
 
 // Interface legada mantida para compatibilidade

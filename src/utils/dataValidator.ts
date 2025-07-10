@@ -1,3 +1,4 @@
+
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 export class DataValidator {
@@ -90,36 +91,15 @@ export class DataValidator {
     };
   }
 
-  private static validateCoverageInfo(data: any): Array<{descricao: string; lmi?: number}> | undefined {
+  private static validateCoverageInfo(data: any) {
     if (!data) return undefined;
     
-    // If data is already an array (new format), validate it
-    if (Array.isArray(data)) {
-      return data.map(coverage => ({
-        descricao: coverage.descricao || 'Cobertura não especificada',
-        lmi: coverage.lmi ? this.validateMonetaryValue(coverage.lmi) || undefined : undefined
-      }));
-    }
-    
-    // If data is object format (legacy), convert to array format
-    const coverages = [];
-    if (data.tipo) {
-      coverages.push({ descricao: data.tipo });
-    }
-    if (data.danos_materiais) {
-      coverages.push({ 
-        descricao: 'Danos Materiais', 
-        lmi: this.validateMonetaryValue(data.danos_materiais) || undefined 
-      });
-    }
-    if (data.danos_corporais) {
-      coverages.push({ 
-        descricao: 'Danos Corporais', 
-        lmi: this.validateMonetaryValue(data.danos_corporais) || undefined 
-      });
-    }
-    
-    return coverages.length > 0 ? coverages : undefined;
+    return {
+      tipo: data.tipo || undefined,
+      franquia: this.validateMonetaryValue(data.franquia) || undefined,
+      danos_materiais: this.validateMonetaryValue(data.danos_materiais) || undefined,
+      danos_corporais: this.validateMonetaryValue(data.danos_corporais) || undefined
+    };
   }
 
   private static validatePolicyNumber(policyNumber: string): string {

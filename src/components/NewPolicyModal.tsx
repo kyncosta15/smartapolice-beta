@@ -3,7 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, DollarSign, Building, User } from 'lucide-react';
+import { Calendar, DollarSign, Building, User, X } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
 
 interface NewPolicyModalProps {
@@ -53,9 +53,14 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader className="border-b border-gray-200 pb-4">
-          <DialogTitle className="text-xl font-bold text-gray-900">
-            Nova Apólice
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl font-bold text-gray-900">
+              Nova Apólice
+            </DialogTitle>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6 p-6">
