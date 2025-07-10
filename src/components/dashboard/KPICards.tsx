@@ -55,9 +55,9 @@ export function KPICards(props: KPICardsProps) {
       onClick: props.onTotalClick
     },
     {
-      title: 'Custo Mensal',
+      title: 'Prêmio Mensal',
       value: props.totalMonthlyCost,
-      subtitle: 'Total mensal',
+      subtitle: 'Prêmio Total',
       icon: DollarSign,
       bg: 'from-green-500 to-green-600',
       isCurrency: true
