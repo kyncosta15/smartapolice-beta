@@ -1,3 +1,4 @@
+
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
 // Função para normalizar o tipo de seguro
@@ -118,8 +119,7 @@ export const N8nWebhookService = {
                  data.tipo_seguro === 'vida' ? 'Pessoal' : 
                  data.tipo_seguro === 'saude' ? 'Saúde' : 'Geral',
         coverage: processedCoberturas.map(c => c.descricao),
-        totalCoverage: parseFloat(data.valor_premio) || 0,
-        limits: 'Conforme apólice'
+        totalCoverage: parseFloat(data.valor_premio) || 0
       };
 
       console.log('✅ N8N Webhook - Dados processados com sucesso:', processedData);

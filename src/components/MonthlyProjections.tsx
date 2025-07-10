@@ -124,7 +124,7 @@ export function MonthlyProjections({ policies }: MonthlyProjectionsProps) {
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => formatCurrency(value, { compact: true })} />
+                <YAxis tickFormatter={(value) => formatCurrency(value)} />
                 <Tooltip 
                   formatter={(value, name) => [
                     formatCurrency(Number(value)), 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Home,
@@ -15,7 +16,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ModeToggle } from "@/components/ModeToggle"
 import { useSidebar } from '@/components/ui/sidebar';
 
 interface NavItemProps {
@@ -23,6 +23,7 @@ interface NavItemProps {
   icon: React.ComponentType<React.ComponentProps<'svg'>>;
   section: 'home' | 'dashboard' | 'settings' | 'extract' | 'users' | 'projections';
   description: string;
+  onSectionChange: (section: string) => void;
 }
 
 interface AppSidebarProps {
@@ -35,25 +36,27 @@ const NavItem: React.FC<NavItemProps & { active: boolean }> = ({
   icon: Icon,
   section,
   description,
-  active
+  active,
+  onSectionChange
 }) => {
-  const { close } = useSidebar();
+  const { setOpenMobile } = useSidebar();
 
   return (
     <Button
       variant="ghost"
       className={`justify-start px-4 ${active ? 'bg-secondary' : 'hover:bg-secondary'}`}
       onClick={() => {
-        close();
+        onSectionChange(section);
+        setOpenMobile(false);
       }}
     >
-      <a href={`#${section}`} onClick={() => { }} className="w-full" >
+      <div className="w-full">
         <div className="flex items-center space-x-2">
           <Icon className="h-4 w-4" />
           <span className="text-sm font-medium">{title}</span>
         </div>
         <p className="pl-6 text-xs text-muted-foreground">{description}</p>
-      </a>
+      </div>
     </Button>
   );
 };
@@ -98,10 +101,10 @@ const navigationItems = [
 ];
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
-  const { isOpen, close } = useSidebar();
+  const { openMobile, setOpenMobile } = useSidebar();
 
   return (
-    <Sheet open={isOpen} onOpenChange={close}>
+    <Sheet open={openMobile} onOpenChange={setOpenMobile}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="sm" className="p-0 mr-2">
           Abrir Menu
@@ -115,16 +118,13 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 key={item.section}
                 {...item}
                 active={activeSection === item.section}
-                onClick={() => {
-                  onSectionChange(item.section);
-                }}
+                onSectionChange={onSectionChange}
               />
             ))}
             <Separator />
           </div>
         </ScrollArea>
-        <div className="py-4 px-3 flex items-center justify-between">
-          <ModeToggle />
+        <div className="py-4 px-3 flex items-center justify-center">
           <p className="text-xs text-muted-foreground">
             LovCode &copy; {new Date().getFullYear()}
           </p>
