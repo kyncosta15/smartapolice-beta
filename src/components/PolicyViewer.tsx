@@ -31,21 +31,35 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
   const handleDownload = async (policy: any) => {
     // 1) Forçar download no Safari via signed URL
     if (policy.pdfPath) {
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      if (isSafari) {
-        try {
-          const { data, error } = await supabase
-            .storage
-            .from('pdfs')
-            .createSignedUrl(policy.pdfPath, 60, { download: true });
-          if (error) throw error;
-          window.location.href = data.signedUrl;
-          return;
-        } catch (err) {
-          console.error('Erro ao criar signed URL para Safari:', err);
-        }
-      }
-    }
+      // dentro do bloco isSafari
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+if (isSafari) {
+  try {
+    const { data, error } = await supabase
+      .storage
+      .from('pdfs')
+      .createSignedUrl(policy.pdfPath, 60, { download: true });
+    if (error) throw error;
+
+    // 1) carrega o PDF como blob
+    const resp = await fetch(data.signedUrl);
+    const blob = await resp.blob();
+
+    // 2) dispara download sem navegar
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `${policy.name || 'apolice'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
+
+    return; // fim do fluxo Safari
+  } catch (err) {
+    console.warn('Falha download forçado Safari:', err);
+  }
+}
 
     // 2) Download normal via blob
     if (policy.file) {
