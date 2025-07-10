@@ -1,12 +1,13 @@
 
 import React from 'react';
 import {
-  Home,
   LayoutDashboard,
-  Settings,
-  FilePlus,
+  FileText,
+  Upload,
   Users,
-  TrendingUp
+  Settings,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import {
   Sidebar,
@@ -19,13 +20,14 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
+import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 
 interface NavItemProps {
   title: string;
   icon: React.ComponentType<React.ComponentProps<'svg'>>;
-  section: 'home' | 'dashboard' | 'settings' | 'extract' | 'users' | 'projections';
-  description: string;
+  section: 'home' | 'dashboard' | 'policies' | 'upload' | 'users' | 'settings';
   onSectionChange: (section: string) => void;
+  active: boolean;
 }
 
 interface AppSidebarProps {
@@ -33,11 +35,10 @@ interface AppSidebarProps {
   activeSection: string;
 }
 
-const NavItem: React.FC<NavItemProps & { active: boolean }> = ({
+const NavItem: React.FC<NavItemProps> = ({
   title,
   icon: Icon,
   section,
-  description,
   active,
   onSectionChange
 }) => {
@@ -46,20 +47,15 @@ const NavItem: React.FC<NavItemProps & { active: boolean }> = ({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        asChild
         isActive={active}
         onClick={() => {
           onSectionChange(section);
           setOpenMobile(false);
         }}
+        className="w-full justify-start"
       >
-        <Button variant="ghost" className="w-full justify-start">
-          <Icon className="mr-3 h-5 w-5" />
-          <div className="flex flex-col items-start">
-            <span className="text-sm font-medium">{title}</span>
-            <span className="text-xs text-muted-foreground">{description}</span>
-          </div>
-        </Button>
+        <Icon className="h-4 w-4" />
+        <span>{title}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
@@ -67,55 +63,57 @@ const NavItem: React.FC<NavItemProps & { active: boolean }> = ({
 
 const navigationItems = [
   {
-    title: "Início",
-    icon: Home,
-    section: "home" as const,
-    description: "Visão geral e boas vindas"
-  },
-  {
     title: "Dashboard",
     icon: LayoutDashboard,
     section: "dashboard" as const,
-    description: "Análise detalhada das apólices"
   },
   {
-    title: "Extrair Apólice",
-    icon: FilePlus,
-    section: "extract" as const,
-    description: "Extrair dados de um novo PDF"
+    title: "Minhas Apólices",
+    icon: FileText,
+    section: "policies" as const,
   },
   {
-    title: "Usuários",
+    title: "Upload",
+    icon: Upload,
+    section: "upload" as const,
+  },
+  {
+    title: "Contatos",
     icon: Users,
     section: "users" as const,
-    description: "Gerenciar usuários e permissões"
   },
   {
     title: "Configurações",
     icon: Settings,
     section: "settings" as const,
-    description: "Ajustes e preferências do sistema"
-  },
-  {
-    title: "Projeções",
-    icon: TrendingUp,
-    section: "projections" as const,
-    description: "Projeção anual de custos"
   },
 ];
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
+  const { state, toggleSidebar } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
   return (
-    <Sidebar className="border-r">
+    <Sidebar collapsible="icon" className="border-r bg-white">
       <SidebarHeader className="border-b p-4">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">S</span>
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold">SmartApólice</h1>
-            <p className="text-xs text-muted-foreground">Centralize todas suas apólices</p>
-          </div>
+        <div className="flex items-center justify-between">
+          <SmartApóliceLogo 
+            size={isCollapsed ? 'sm' : 'md'} 
+            showText={!isCollapsed}
+            className="flex-1"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleSidebar}
+            className="h-8 w-8 p-0"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </SidebarHeader>
       
@@ -133,9 +131,19 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       </SidebarContent>
       
       <SidebarFooter className="p-4 border-t">
-        <p className="text-xs text-muted-foreground text-center">
-          LovCode &copy; {new Date().getFullYear()}
-        </p>
+        <div className="flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">TC</span>
+            </div>
+            {!isCollapsed && (
+              <div>
+                <p className="text-sm font-medium">Thiago Costa</p>
+                <p className="text-xs text-gray-500">Admin</p>
+              </div>
+            )}
+          </div>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

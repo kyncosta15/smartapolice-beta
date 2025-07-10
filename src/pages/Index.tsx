@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AuthPage } from '@/components/AuthPage';
 import { Navbar } from '@/components/Navbar';
@@ -16,7 +16,7 @@ function AppContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const { policies, addPolicy, deletePolicy, updatePolicy, downloadPDF } = usePersistedPolicies();
-  const { users, loading: usersLoading, updateUser, deleteUser, addUser } = usePersistedUsers();
+  const { users, isLoading: usersLoading, updateUser, deleteUser, addUser } = usePersistedUsers();
 
   if (!user) {
     return <AuthPage />;

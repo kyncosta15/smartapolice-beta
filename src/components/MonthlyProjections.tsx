@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, TrendingUp, DollarSign } from 'lucide-react';
+import { Calendar, TrendingUp } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useMonthlyProjections } from '@/hooks/useMonthlyProjections';
 import { formatCurrency } from '@/utils/currencyFormatter';
@@ -28,7 +28,7 @@ export function MonthlyProjections({ policies }: MonthlyProjectionsProps) {
     const projection = projections.find(p => p.month === index + 1);
     return {
       month,
-      projetado: projection?.projected_cost || 0,
+      projetado: projection?.projected_cost || totalMonthlyCost,
       realizado: projection?.actual_cost || 0
     };
   });
@@ -45,8 +45,6 @@ export function MonthlyProjections({ policies }: MonthlyProjectionsProps) {
   }, [policies.length, projections.length, totalMonthlyCost]);
 
   const currentYear = new Date().getFullYear();
-  const totalProjected = projections.reduce((sum, p) => sum + p.projected_cost, 0);
-  const totalActual = projections.reduce((sum, p) => sum + p.actual_cost, 0);
 
   return (
     <div className="space-y-6">
@@ -65,63 +63,15 @@ export function MonthlyProjections({ policies }: MonthlyProjectionsProps) {
         </Button>
       </div>
 
-      {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Projetado</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(totalProjected)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Custo total estimado para {currentYear}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mensal Médio</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(totalMonthlyCost)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Baseado em {policies.length} apólices ativas
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Realizado</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {formatCurrency(totalActual)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Custos já realizados
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Gráfico de Projeção */}
       <Card>
         <CardHeader>
-          <CardTitle>Projeção vs Realizado - {currentYear}</CardTitle>
+          <CardTitle>Projeção Mensal de Custos - {currentYear}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
+          <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
+              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis tickFormatter={(value) => formatCurrency(value)} />
@@ -135,61 +85,24 @@ export function MonthlyProjections({ policies }: MonthlyProjectionsProps) {
                   type="monotone" 
                   dataKey="projetado" 
                   stroke="#3B82F6" 
-                  strokeWidth={2}
-                  dot={{ fill: '#3B82F6' }}
+                  strokeWidth={3}
+                  dot={{ fill: '#3B82F6', r: 6 }}
                   name="projetado"
                 />
                 <Line 
                   type="monotone" 
                   dataKey="realizado" 
                   stroke="#10B981" 
-                  strokeWidth={2}
-                  dot={{ fill: '#10B981' }}
+                  strokeWidth={3}
+                  dot={{ fill: '#10B981', r: 6 }}
                   name="realizado"
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Tabela Detalhada */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Detalhamento Mensal</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Mês</th>
-                  <th className="text-right p-2">Projetado</th>
-                  <th className="text-right p-2">Realizado</th>
-                  <th className="text-right p-2">Diferença</th>
-                </tr>
-              </thead>
-              <tbody>
-                {chartData.map((row, index) => {
-                  const diff = row.realizado - row.projetado;
-                  return (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="p-2 font-medium">{row.month}</td>
-                      <td className="p-2 text-right text-blue-600">
-                        {formatCurrency(row.projetado)}
-                      </td>
-                      <td className="p-2 text-right text-green-600">
-                        {formatCurrency(row.realizado)}
-                      </td>
-                      <td className={`p-2 text-right ${diff >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {formatCurrency(Math.abs(diff))}
-                        {diff !== 0 && (diff >= 0 ? ' ↑' : ' ↓')}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="mt-4 text-center text-sm text-gray-600">
+            <p>Projeção baseada em {policies.length} apólices ativas</p>
+            <p>Custo mensal médio: {formatCurrency(totalMonthlyCost)}</p>
           </div>
         </CardContent>
       </Card>
