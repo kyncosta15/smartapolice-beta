@@ -1,153 +1,135 @@
-
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { SmartApóliceLogo } from "@/components/SmartApoliceLogo"
+import React from 'react';
 import {
-  BarChart3,
-  Contact2,
-  FileText,
-  Gauge,
-  Map,
+  Home,
+  LayoutDashboard,
   Settings,
-  Users2
-} from "lucide-react"
+  FilePlus,
+  Users,
+  TrendingUp
+} from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { ModeToggle } from "@/components/ModeToggle"
+import { useSidebar } from '@/components/ui/sidebar';
+
+interface NavItemProps {
+  title: string;
+  icon: React.ComponentType<React.ComponentProps<'svg'>>;
+  section: 'home' | 'dashboard' | 'settings' | 'extract' | 'users' | 'projections';
+  description: string;
+}
 
 interface AppSidebarProps {
   onSectionChange: (section: string) => void;
   activeSection: string;
 }
 
-export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
-  const { user } = useAuth();
-  const { toggleSidebar, isMobile } = useSidebar();
-  const [forceUpdate, setForceUpdate] = useState(0);
+const NavItem: React.FC<NavItemProps & { active: boolean }> = ({
+  title,
+  icon: Icon,
+  section,
+  description,
+  active
+}) => {
+  const { close } = useSidebar();
 
-  // Force re-render to ensure the sidebar updates
-  useEffect(() => {
-    setForceUpdate(prev => prev + 1);
-  }, [user?.role]);
-
-  const handleNavigation = (section: string) => {
-    console.log('🔄 Navegando para:', section);
-    onSectionChange(section);
-    // Fechar sidebar no mobile após selecionar uma opção
-    if (isMobile) {
-      toggleSidebar();
-    }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  // Navegação para clientes
-  const clientNavigation = [
-    {
-      title: "Dashboard",
-      icon: Gauge,
-      id: "home",
-      description: "Visão geral"
-    },
-    {
-      title: "Minhas Apólices",
-      icon: FileText,
-      id: "policies",
-      description: "Gerenciar suas apólices"
-    },
-    {
-      title: "Upload",
-      icon: FileText,
-      id: "upload",
-      description: "Importar PDFs"
-    },
-    {
-      title: "Contatos",
-      icon: Contact2,
-      id: "contact",
-      description: "Informações de contato"
-    },
-    {
-      title: "Configurações",
-      icon: Settings,
-      id: "settings",
-      description: "Ajustes da conta"
-    }
-  ];
-
-  // Navegação para administradores
-  const adminNavigation = [
-    {
-      title: "Relatórios",
-      icon: BarChart3,
-      id: "reports",
-      description: "Análises e métricas"
-    },
-    {
-      title: "Regiões",
-      icon: Map,
-      id: "regions",
-      description: "Distribuição regional"
-    },
-    {
-      title: "Upload",
-      icon: FileText,
-      id: "upload",
-      description: "Importar PDFs"
-    },
-    {
-      title: "Clientes",
-      icon: Users2,
-      id: "clients",
-      description: "Gerenciar clientes"
-    },
-    {
-      title: "Configurações",
-      icon: Settings,
-      id: "settings",
-      description: "Ajustes do sistema"
-    }
-  ];
-
-  const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
-  
   return (
-    <Sidebar className="bg-white border-r">
-      <SidebarHeader className="space-y-4 p-4">
-        <SmartApóliceLogo size="md" showText={true} />
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {navigation.map((item, index) => (
-            <SidebarMenuItem key={`${item.id}-${index}`}>
-              <SidebarMenuButton
-                onClick={() => handleNavigation(item.id)}
-                isActive={activeSection === item.id}
-                className="w-full justify-start"
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter className="p-4">
-        <div className="flex items-center space-x-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
-              {user?.name ? getInitials(user.name) : 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <p className="text-sm text-gray-700 font-medium">{user?.name || 'Nome do Usuário'}</p>
+    <Button
+      variant="ghost"
+      className={`justify-start px-4 ${active ? 'bg-secondary' : 'hover:bg-secondary'}`}
+      onClick={() => {
+        close();
+      }}
+    >
+      <a href={`#${section}`} onClick={() => { }} className="w-full" >
+        <div className="flex items-center space-x-2">
+          <Icon className="h-4 w-4" />
+          <span className="text-sm font-medium">{title}</span>
         </div>
-      </SidebarFooter>
-    </Sidebar>
-  )
+        <p className="pl-6 text-xs text-muted-foreground">{description}</p>
+      </a>
+    </Button>
+  );
+};
+
+const navigationItems = [
+  {
+    title: "Início",
+    icon: Home,
+    section: "home" as const,
+    description: "Visão geral e boas vindas"
+  },
+  {
+    title: "Dashboard",
+    icon: LayoutDashboard,
+    section: "dashboard" as const,
+    description: "Análise detalhada das apólices"
+  },
+  {
+    title: "Extrair Apólice",
+    icon: FilePlus,
+    section: "extract" as const,
+    description: "Extrair dados de um novo PDF"
+  },
+  {
+    title: "Usuários",
+    icon: Users,
+    section: "users" as const,
+    description: "Gerenciar usuários e permissões"
+  },
+  {
+    title: "Configurações",
+    icon: Settings,
+    section: "settings" as const,
+    description: "Ajustes e preferências do sistema"
+  },
+  {
+    title: "Projeções",
+    icon: TrendingUp,
+    section: "projections" as const,
+    description: "Projeção anual de custos"
+  },
+];
+
+export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
+  const { isOpen, close } = useSidebar();
+
+  return (
+    <Sheet open={isOpen} onOpenChange={close}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="sm" className="p-0 mr-2">
+          Abrir Menu
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="w-64 flex flex-col p-0">
+        <ScrollArea className="flex-1">
+          <div className="py-2">
+            {navigationItems.map((item) => (
+              <NavItem
+                key={item.section}
+                {...item}
+                active={activeSection === item.section}
+                onClick={() => {
+                  onSectionChange(item.section);
+                }}
+              />
+            ))}
+            <Separator />
+          </div>
+        </ScrollArea>
+        <div className="py-4 px-3 flex items-center justify-between">
+          <ModeToggle />
+          <p className="text-xs text-muted-foreground">
+            LovCode &copy; {new Date().getFullYear()}
+          </p>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
 }
