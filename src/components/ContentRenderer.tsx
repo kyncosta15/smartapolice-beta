@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DynamicDashboard } from './DynamicDashboard';
@@ -16,7 +15,6 @@ import { RegionalMetrics } from './dashboard/RegionalMetrics';
 import { ExportDashboard } from './ExportDashboard';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
-import { MonthlyProjections } from '@/components/MonthlyProjections';
 
 interface ContentRendererProps {
   activeSection: string;
@@ -72,6 +70,7 @@ export function ContentRenderer({
       paymentFrequency: policy.paymentFrequency.toLowerCase() as 'mensal' | 'anual' | 'semestral' | 'trimestral',
       documento_tipo: policy.documento_tipo,
       documento: policy.documento,
+      // Fix installments type compatibility
       installments: Array.isArray(policy.installments) 
         ? policy.installments.map(inst => ({
             numero: inst.numero,
@@ -79,104 +78,140 @@ export function ContentRenderer({
             data: inst.data,
             status: inst.status
           }))
-        : []
+        : [] // Default to empty array if installments is a number
     }));
   };
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'dashboard':
-        if (user?.role === 'administrador') {
-          return (
-            <div className="p-6">
-              <AdminDashboardNew 
-                policies={extractedPolicies}
-                allUsers={allUsers}
-              />
+  // Para administradores, sempre mostrar dashboard administrativo na home e relatórios
+  if (user?.role === 'administrador' && (activeSection === 'home' || activeSection === 'reports')) {
+    return (
+      <div className="p-6">
+        <AdminDashboardNew 
+          policies={extractedPolicies}
+          allUsers={allUsers}
+        />
+      </div>
+    );
+  }
+
+  // Para clientes, mostrar dashboard normal na home
+  if (activeSection === 'home') {
+    return (
+      <div className="p-6">
+        <DynamicDashboard 
+          policies={extractedPolicies}
+          viewMode="client"
+          onSectionChange={onSectionChange}
+        />
+      </div>
+    );
+  }
+
+  switch (activeSection) {
+    case 'policies':
+      return (
+        <div className="p-6">
+          <EnhancedPolicyViewer 
+            policies={extractedPolicies}
+            onPolicySelect={onPolicySelect}
+            onPolicyEdit={onPolicyUpdate}
+            onPolicyDelete={onPolicyDelete}
+            onPolicyDownload={onPolicyDownload}
+            viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
+          />
+        </div>
+      );
+
+    case 'upload':
+      return (
+        <div className="p-6">
+          <EnhancedPDFUpload onPolicyExtracted={onPolicyExtracted} />
+        </div>
+      );
+
+    case 'clients':
+      if (user?.role === 'administrador') {
+        return (
+          <div className="p-6">
+            <UserManagement 
+              users={allUsers}
+              onUserUpdate={onUserUpdate}
+              onUserDelete={onUserDelete}
+              isLoading={usersLoading}
+            />
+            <div className="mt-8">
+              <ClientRegister onClientRegister={onClientRegister} />
             </div>
-          );
-        }
-        return (
-          <div className="p-6">
-            <DynamicDashboard 
-              policies={extractedPolicies}
-              viewMode="client"
-              onSectionChange={onSectionChange}
-            />
           </div>
         );
-
-      case 'policies':
-        return (
-          <div className="p-6">
-            <EnhancedPolicyViewer 
-              policies={extractedPolicies}
-              onPolicySelect={onPolicySelect}
-              onPolicyEdit={onPolicyUpdate}
-              onPolicyDelete={onPolicyDelete}
-              onPolicyDownload={onPolicyDownload}
-              viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
-            />
+      }
+      return (
+        <div className="p-6">
+          <div className="text-center py-12">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Acesso Restrito
+            </h3>
+            <p className="text-gray-600">
+              Esta seção é disponível apenas para administradores.
+            </p>
           </div>
-        );
+        </div>
+      );
 
-      case 'upload':
-        return (
-          <div className="p-6">
-            <EnhancedPDFUpload onPolicyExtracted={onPolicyExtracted} />
-          </div>
-        );
+    case 'contact':
+      return (
+        <div className="p-6">
+          <ContactSection />
+        </div>
+      );
 
-      case 'users':
-        if (user?.role === 'administrador') {
-          return (
-            <div className="p-6">
-              <UserManagement 
-                users={allUsers}
-                onUserUpdate={onUserUpdate}
-                onUserDelete={onUserDelete}
-                isLoading={usersLoading}
+    case 'settings':
+      return (
+        <div className="p-6">
+          <OptimizedSettings />
+        </div>
+      );
+
+    case 'installments':
+      return (
+        <div className="p-6">
+          <InstallmentsDashboard policies={extractedPolicies} />
+          <div className="mt-8 grid gap-6">
+            {extractedPolicies.map((policy, index) => (
+              <PolicyInstallmentsCard 
+                key={policy.id || index}
+                policy={policy}
+                index={index}
               />
-              <div className="mt-8">
-                <ClientRegister onClientRegister={onClientRegister} />
-              </div>
-            </div>
-          );
-        }
-        return (
-          <div className="p-6">
-            <ContactSection />
+            ))}
           </div>
-        );
+        </div>
+      );
 
-      case 'settings':
-        return (
-          <div className="p-6">
-            <OptimizedSettings />
-          </div>
-        );
+    case 'charts':
+      return (
+        <div className="p-6">
+          <ChartsSection detailed={true} policies={convertToChartData(extractedPolicies)} />
+        </div>
+      );
 
-      case 'projections':
-        return (
-          <MonthlyProjections policies={allPolicies} />
-        );
 
-      default:
-        return (
-          <div className="p-6">
-            <DynamicDashboard 
-              policies={extractedPolicies}
-              viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
-              onSectionChange={onSectionChange}
-            />
-          </div>
-        );
-    }
-  };
+    case 'regions':
+      return (
+        <div className="p-6">
+          <RegionalMetrics />
+        </div>
+      );
 
-  return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      {renderContent()}
-    </div>
-  );
+    default:
+      return (
+        <div className="p-6">
+          <DynamicDashboard 
+            policies={extractedPolicies}
+            viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
+            onSectionChange={onSectionChange}
+          />
+        </div>
+      );
+  }
 }

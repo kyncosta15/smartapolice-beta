@@ -56,10 +56,13 @@ export class StructuredDataConverter {
       } : undefined,
       broker: dynamicData.seguradora.entidade,
       
-      // Informações de cobertura
+      // Coberturas array - mantendo a estrutura original do N8N
+      coberturas: dynamicData.coberturas || [],
+      
+      // Informações de cobertura legacy (se disponível)
       coverageDetails: dynamicData.coberturas ? {
-        materialDamage: dynamicData.coberturas.danos_materiais,
-        bodilyInjury: dynamicData.coberturas.danos_corporais,
+        materialDamage: dynamicData.coberturas.find(c => c.descricao.toLowerCase().includes('material'))?.lmi,
+        bodilyInjury: dynamicData.coberturas.find(c => c.descricao.toLowerCase().includes('corporal'))?.lmi,
         comprehensive: dynamicData.seguradora.cobertura.toLowerCase().includes('compreensiva')
       } : undefined
     };
