@@ -37,80 +37,130 @@ const initialPolicies: PolicyWithStatus[] = [
   }
 ];
 
-// Função CORRIGIDA para determinar o status correto baseado na data de vencimento
+// CORREÇÃO PRINCIPAL: Função melhorada para determinar status baseado na data de vencimento
 const getCorrectStatus = (policy: PolicyWithStatus): PolicyStatus => {
   const expirationDateStr = policy.expirationDate || policy.endDate;
   
+  console.log(`🔍 Analisando status para apólice "${policy.name}":`, {
+    id: policy.id,
+    expirationDate: expirationDateStr,
+    currentStatus: policy.status,
+    endDate: policy.endDate
+  });
+  
   if (!expirationDateStr) {
-    return policy.status || 'vigente';
+    console.log(`⚠️ Sem data de vencimento para apólice ${policy.name} - usando status atual: ${policy.status}`);
+    return (policy.status as PolicyStatus) || 'vigente';
   }
   
   const now = new Date();
   const expirationDate = new Date(expirationDateStr);
+  
+  // Verificar se a data é válida
+  if (isNaN(expirationDate.getTime())) {
+    console.error(`❌ Data de vencimento inválida para apólice ${policy.name}: ${expirationDateStr}`);
+    return (policy.status as PolicyStatus) || 'vigente';
+  }
+  
   const diffTime = expirationDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  console.log(`📅 Política ${policy.name}:`, {
+  console.log(`📅 Análise de vencimento para "${policy.name}":`, {
     expirationDate: expirationDate.toLocaleDateString('pt-BR'),
     diffDays,
-    now: now.toLocaleDateString('pt-BR')
+    now: now.toLocaleDateString('pt-BR'),
+    diffTime
   });
   
-  // Se já venceu (mais de 0 dias atrás)
+  let determinedStatus: PolicyStatus;
+  
+  // Se já venceu há mais de 1 dia
   if (diffDays < -1) {
-    return 'nao_renovada';
+    determinedStatus = 'nao_renovada';
   }
-  
   // Se venceu hoje ou ontem
-  if (diffDays <= 0) {
-    return 'vencida';
+  else if (diffDays <= 0) {
+    determinedStatus = 'vencida';
   }
-  
   // Se está vencendo nos próximos 30 dias
-  if (diffDays <= 30) {
-    return 'vencendo';
+  else if (diffDays <= 30) {
+    determinedStatus = 'vencendo';
+  }
+  // Caso contrário, está vigente
+  else {
+    determinedStatus = 'vigente';
   }
   
-  // Caso contrário, está vigente
-  return 'vigente';
+  console.log(`✅ Status determinado para "${policy.name}": ${determinedStatus} (diff: ${diffDays} dias)`);
+  
+  return determinedStatus;
 };
 
 export function MyPolicies() {
-  const [policies, setPolicies] = useState<PolicyWithStatus[]>(() => {
-    // Inicializar com status corrigidos
-    return initialPolicies.map(policy => ({
-      ...policy,
-      status: getCorrectStatus(policy)
-    }));
-  });
+  // CORREÇÃO: Não inicializar com status corrigidos imediatamente
+  const [policies, setPolicies] = useState<PolicyWithStatus[]>(initialPolicies);
   const [showInfoModal, setShowInfoModal] = useState(false);
   
   // Hook para verificar renovações
   const renewalAlert = useRenewalChecker(policies);
 
-  // Atualizar status das apólices periodicamente
-  useEffect(() => {
-    const updatePolicyStatuses = () => {
-      setPolicies(prevPolicies => 
-        prevPolicies.map(policy => {
-          const newStatus = getCorrectStatus(policy);
-          console.log(`🔄 Atualizando status da apólice ${policy.name}: ${policy.status} -> ${newStatus}`);
-          return {
-            ...policy,
-            status: newStatus
-          };
-        })
+  // CORREÇÃO PRINCIPAL: Função para atualizar status de todas as apólices
+  const updateAllPolicyStatuses = () => {
+    console.log('🔄 Atualizando status de todas as apólices...');
+    
+    setPolicies(prevPolicies => {
+      const updatedPolicies = prevPolicies.map(policy => {
+        const newStatus = getCorrectStatus(policy);
+        
+        if (policy.status !== newStatus) {
+          console.log(`🔄 Status alterado para apólice ${policy.name}: ${policy.status} -> ${newStatus}`);
+        }
+        
+        return {
+          ...policy,
+          status: newStatus
+        };
+      });
+      
+      console.log('✅ Status de todas as apólices atualizados:', 
+        updatedPolicies.map(p => ({ id: p.id, name: p.name, status: p.status }))
       );
-    };
+      
+      return updatedPolicies;
+    });
+  };
 
+  // Atualizar status das apólices ao montar o componente e periodicamente
+  useEffect(() => {
+    console.log('🚀 MyPolicies montado - iniciando atualização de status');
+    
     // Executar imediatamente
-    updatePolicyStatuses();
+    updateAllPolicyStatuses();
     
-    // Executar a cada hora para manter atualizado
-    const interval = setInterval(updatePolicyStatuses, 60 * 60 * 1000);
+    // Executar a cada 5 minutos para manter atualizado
+    const interval = setInterval(updateAllPolicyStatuses, 5 * 60 * 1000);
     
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      console.log('🛑 MyPolicies desmontado - limpando interval');
+      clearInterval(interval);
+    };
+  }, []); // Só executa uma vez ao montar
+
+  // CORREÇÃO: Atualizar status quando as apólices mudarem (ex: após logout/login)
+  useEffect(() => {
+    console.log('📊 Dados das apólices mudaram - verificando se precisa atualizar status');
+    
+    // Verificar se há apólices com status que precisam ser corrigidos
+    const needsUpdate = policies.some(policy => {
+      const correctStatus = getCorrectStatus(policy);
+      return policy.status !== correctStatus;
+    });
+    
+    if (needsUpdate) {
+      console.log('🔄 Detectada necessidade de atualização de status');
+      updateAllPolicyStatuses();
+    }
+  }, [policies.length]); // Executa quando o número de apólices muda
 
   const handleRenewalDecision = async (policy: PolicyWithStatus, newStatus: PolicyStatus) => {
     console.log(`🔄 Atualizando status da apólice ${policy.id} para: ${newStatus}`);
@@ -143,6 +193,7 @@ export function MyPolicies() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {policies.map((policy) => {
+          // CORREÇÃO: Sempre usar o status correto baseado na data atual
           const currentStatus = getCorrectStatus(policy);
           
           return (

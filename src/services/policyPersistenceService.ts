@@ -8,17 +8,52 @@ type CoberturaInsert = Database['public']['Tables']['coberturas']['Insert'];
 
 export class PolicyPersistenceService {
   
-  // Mapeamento de status para compatibilidade
+  // CORREÇÃO: Função melhorada para mapear status corretamente
   private static mapLegacyStatus(status: string): string {
-    switch (status) {
+    console.log(`🔄 Mapeando status: "${status}"`);
+    
+    switch (status?.toLowerCase()) {
       case 'active':
+      case 'ativa':
+      case 'vigente':
         return 'vigente';
       case 'expiring':
-        return 'renovada_aguardando';
+      case 'vencendo':
+      case 'renovada_aguardando':
+        return 'vencendo';
       case 'expired':
-        return 'nao_renovada';
+      case 'vencida':
+      case 'nao_renovada':
+        return 'vencida';
+      case 'aguardando_emissao':
+        return 'aguardando_emissao';
+      case 'pendente_analise':
+        return 'pendente_analise';
       default:
-        return status;
+        console.warn(`⚠️ Status desconhecido: "${status}" - usando 'vigente' como padrão`);
+        return 'vigente';
+    }
+  }
+
+  // NOVA: Função para determinar status baseado na data de vencimento
+  private static getStatusFromExpirationDate(expirationDate: string): string {
+    if (!expirationDate) return 'vigente';
+    
+    const now = new Date();
+    const expDate = new Date(expirationDate);
+    const diffTime = expDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    console.log(`📅 Analisando vencimento: ${expirationDate}, dias até vencer: ${diffDays}`);
+    
+    if (diffDays < -1) {
+      return 'nao_renovada';
+    } else if (diffDays <= 0) {
+      return 'vencida';
+    } else if (diffDays <= 30) {
+      return 'vencendo';
+    } else {
+      return 'vigente';
     }
   }
 
@@ -91,6 +126,14 @@ export class PolicyPersistenceService {
         }
       }
 
+      // CORREÇÃO: Determinar status correto baseado na data de vencimento
+      const statusBasedOnDate = this.getStatusFromExpirationDate(
+        policyData.expirationDate || policyData.endDate
+      );
+      const finalStatus = this.mapLegacyStatus(statusBasedOnDate);
+
+      console.log(`🎯 Status final determinado: ${finalStatus} (baseado em data: ${statusBasedOnDate})`);
+
       // Preparar dados da apólice - GARANTIR QUE QUANTIDADE DE PARCELAS SEJA SALVA
       const installmentsCount = Array.isArray(policyData.installments) 
         ? policyData.installments.length 
@@ -100,16 +143,17 @@ export class PolicyPersistenceService {
         user_id: userId,
         segurado: policyData.insuredName || policyData.name,
         seguradora: policyData.insurer,
-        tipo_seguro: policyData.type, // CORREÇÃO: Manter o tipo normalizado
+        tipo_seguro: policyData.type,
         numero_apolice: policyData.policyNumber,
         valor_premio: policyData.premium,
         custo_mensal: policyData.monthlyAmount,
         inicio_vigencia: policyData.startDate,
         fim_vigencia: policyData.endDate,
+        expiration_date: policyData.expirationDate || policyData.endDate,
         forma_pagamento: policyData.paymentFrequency,
         quantidade_parcelas: installmentsCount,
         valor_parcela: policyData.monthlyAmount,
-        status: this.mapLegacyStatus(policyData.status),
+        status: finalStatus,
         arquivo_url: pdfPath,
         extraido_em: new Date().toISOString(),
         documento: policyData.documento,
@@ -122,7 +166,7 @@ export class PolicyPersistenceService {
         extraction_timestamp: new Date().toISOString()
       };
 
-      console.log(`🔍 Dados da apólice preparados (tipo: ${policyData.type}, parcelas: ${installmentsCount}):`, policyInsert);
+      console.log(`🔍 Dados da apólice preparados (status: ${finalStatus}):`, policyInsert);
 
       // Inserir apólice
       const { data: policy, error: policyError } = await supabase
@@ -291,6 +335,9 @@ export class PolicyPersistenceService {
           id: p.id,
           segurado: p.segurado,
           numero_apolice: p.numero_apolice,
+          status: p.status,
+          expiration_date: p.expiration_date,
+          fim_vigencia: p.fim_vigencia,
           created_at: p.created_at
         })) || []
       });
@@ -313,7 +360,9 @@ export class PolicyPersistenceService {
           id: policy.id,
           segurado: policy.segurado,
           numero_apolice: policy.numero_apolice,
-          quantidade_parcelas: policy.quantidade_parcelas,
+          status_db: policy.status,
+          expiration_date: policy.expiration_date,
+          fim_vigencia: policy.fim_vigencia,
           installments: policy.installments,
           installmentsCount: policy.installments?.length || 0,
           coberturas: policy.coberturas,
@@ -323,6 +372,18 @@ export class PolicyPersistenceService {
 
         // Detectar e corrigir dados misturados (legacy fix)
         let cleanedData = this.fixMixedData(policy);
+        
+        // CORREÇÃO: Determinar status baseado na data de vencimento mais recente
+        const expirationDate = policy.expiration_date || policy.fim_vigencia;
+        const statusFromDate = this.getStatusFromExpirationDate(expirationDate);
+        const finalStatus = this.mapLegacyStatus(policy.status || statusFromDate);
+
+        console.log(`🎯 [PolicyPersistenceService-${sessionId}] Status da apólice ${policy.id}:`, {
+          statusDB: policy.status,
+          expirationDate,
+          statusFromDate,
+          finalStatus
+        });
         
         // GARANTIR que as parcelas sejam carregadas corretamente
         const installmentsFromDB = (policy.installments as any[])?.map(inst => ({
@@ -360,13 +421,13 @@ export class PolicyPersistenceService {
           endDate: policy.fim_vigencia || new Date().toISOString().split('T')[0],
           policyNumber: policy.numero_apolice || 'N/A',
           paymentFrequency: policy.forma_pagamento || 'mensal',
-          status: policy.status || 'vigente',
+          status: finalStatus,
           pdfPath: policy.arquivo_url,
           extractedAt: policy.extraido_em || policy.created_at || new Date().toISOString(),
           
-          // NOVOS CAMPOS OBRIGATÓRIOS
-          expirationDate: policy.expiration_date || policy.fim_vigencia || new Date().toISOString().split('T')[0],
-          policyStatus: (policy.policy_status as any) || 'vigente',
+          // CORREÇÃO: Campos obrigatórios para status
+          expirationDate: expirationDate || policy.fim_vigencia || new Date().toISOString().split('T')[0],
+          policyStatus: (finalStatus as any) || 'vigente',
           
           // PARCELAS - usar as carregadas ou geradas
           installments: finalInstallments,
@@ -402,6 +463,8 @@ export class PolicyPersistenceService {
         console.log(`✅ [PolicyPersistenceService-${sessionId}] Apólice ${policy.id} convertida:`, {
           id: convertedPolicy.id,
           name: convertedPolicy.name,
+          status: convertedPolicy.status,
+          expirationDate: convertedPolicy.expirationDate,
           installmentsCount: convertedPolicy.installments?.length,
           coberturasCount: convertedPolicy.coberturas?.length,
           pdfPath: convertedPolicy.pdfPath
@@ -412,6 +475,10 @@ export class PolicyPersistenceService {
 
       console.log(`✅ [PolicyPersistenceService-${sessionId}] FINALIZADO - Apólices convertidas com sucesso:`, {
         total: parsedPolicies.length,
+        statusDistribution: parsedPolicies.reduce((acc, p) => {
+          acc[p.status] = (acc[p.status] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
         comCoberturas: parsedPolicies.filter(p => p.coberturas && p.coberturas.length > 0).length,
         comParcelas: parsedPolicies.filter(p => p.installments && p.installments.length > 0).length,
         idsRetornados: parsedPolicies.map(p => p.id),
