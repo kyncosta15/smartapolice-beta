@@ -16,22 +16,28 @@ export type Database = {
     Tables: {
       coberturas: {
         Row: {
+          created_at: string | null
           descricao: string | null
           id: string
           lmi: number | null
           policy_id: string | null
+          updated_at: string | null
         }
         Insert: {
+          created_at?: string | null
           descricao?: string | null
           id?: string
           lmi?: number | null
           policy_id?: string | null
+          updated_at?: string | null
         }
         Update: {
+          created_at?: string | null
           descricao?: string | null
           id?: string
           lmi?: number | null
           policy_id?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
