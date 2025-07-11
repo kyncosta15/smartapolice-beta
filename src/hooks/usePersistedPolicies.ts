@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyPersistenceService } from '@/services/policyPersistenceService';
@@ -93,11 +92,12 @@ export function usePersistedPolicies() {
   const removePolicy = (policyId: string) => {
     setPolicies(prev => {
       const newPolicies = prev.filter(p => p.id !== policyId);
+      console.log(`🗑️ Apólice ${policyId} removida do estado local. Restam: ${newPolicies.length}`);
       return newPolicies;
     });
   };
 
-  // Deletar apólice do banco de dados - FUNÇÃO CORRIGIDA
+  // CORREÇÃO PRINCIPAL: Deletar apólice do banco de dados com token atualizado
   const deletePolicy = async (policyId: string): Promise<boolean> => {
     if (!user?.id) {
       toast({
@@ -120,30 +120,51 @@ export function usePersistedPolicies() {
     }
 
     try {
-      // Obter token de autenticação atual
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log(`🗑️ Iniciando deleção da apólice: ${policyId}`);
       
-      if (!session) {
-        throw new Error("Sessão de usuário inválida");
+      // CORREÇÃO: Obter token de autenticação mais atual e robusto
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Erro ao obter sessão:', sessionError);
+        throw new Error("Erro na sessão de usuário");
       }
+      
+      if (!session?.access_token) {
+        console.error('Token de acesso não encontrado');
+        throw new Error("Token de acesso não encontrado - faça login novamente");
+      }
+
+      console.log(`🔑 Token obtido, fazendo chamada para Edge Function`);
       
       // Chamar a Edge Function para deletar a apólice e todos os dados relacionados
       const response = await fetch(`https://jhvbfvqhuemuvwgqpskz.supabase.co/functions/v1/delete-policy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpodmJmdnFodWVtdXZ3Z3Fwc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTI2MDEsImV4cCI6MjA2Njg4ODYwMX0.V8I0byW7xs0iMBEBc6C3h0lvPhgPZ4mGwjfm31XkEQg'
         },
         body: JSON.stringify({ policyId })
       });
       
-      const result = await response.json();
+      console.log(`📡 Response status: ${response.status}`);
       
       if (!response.ok) {
-        throw new Error(result.error || 'Erro ao deletar apólice');
+        const errorData = await response.json();
+        console.error('Erro na resposta da Edge Function:', errorData);
+        
+        if (response.status === 401) {
+          throw new Error('Sessão expirada - faça login novamente');
+        }
+        
+        throw new Error(errorData.error || `Erro ${response.status} ao deletar apólice`);
       }
+      
+      const result = await response.json();
+      console.log('✅ Resposta da Edge Function:', result);
 
-      // CORREÇÃO PRINCIPAL: Remover do estado local IMEDIATAMENTE após confirmação
+      // CORREÇÃO: Remover do estado local IMEDIATAMENTE após confirmação
       removePolicy(policyId);
       
       toast({
@@ -153,6 +174,8 @@ export function usePersistedPolicies() {
       
       return true;
     } catch (error) {
+      console.error('❌ Erro detalhado na deleção:', error);
+      
       toast({
         title: "❌ Erro ao Deletar",
         description: error instanceof Error ? error.message : "Não foi possível remover a apólice",

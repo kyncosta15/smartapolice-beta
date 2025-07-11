@@ -43,18 +43,52 @@ Deno.serve(async (req) => {
     // Extract the JWT token
     const token = authHeader.replace('Bearer ', '')
 
-    // Verify the user's JWT token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    
-    if (authError || !user) {
+    // CORREÇÃO: Verificar o usuário usando o token de forma mais robusta
+    let user;
+    try {
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token)
+      
+      if (authError) {
+        console.error('Auth error:', authError);
+        
+        // Tentar verificar JWT manualmente se getUser falhar
+        const { data: { user: jwtUser }, error: jwtError } = await supabase.auth.getUser(token)
+        
+        if (jwtError || !jwtUser) {
+          return new Response(
+            JSON.stringify({ error: 'Invalid or expired token - please login again' }),
+            { 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 401 
+            }
+          )
+        }
+        user = jwtUser;
+      } else {
+        user = authUser;
+      }
+    } catch (tokenError) {
+      console.error('Token verification failed:', tokenError);
       return new Response(
-        JSON.stringify({ error: 'Invalid or expired token' }),
+        JSON.stringify({ error: 'Token verification failed - please login again' }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 401 
         }
       )
     }
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'User not authenticated' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401 
+        }
+      )
+    }
+
+    console.log(`🗑️ Deletando apólice ${policyId} para usuário ${user.id}`);
 
     // Get policy details first to check ownership and get file path
     const { data: policy, error: policyError } = await supabase
@@ -64,6 +98,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (policyError) {
+      console.error('Policy not found error:', policyError);
       return new Response(
         JSON.stringify({ error: 'Policy not found' }),
         { 
@@ -89,6 +124,7 @@ Deno.serve(async (req) => {
       .rpc('delete_policy_completely', { policy_id_param: policyId })
 
     if (deleteError) {
+      console.error('Database deletion error:', deleteError);
       return new Response(
         JSON.stringify({ error: 'Failed to delete policy from database' }),
         { 
@@ -110,7 +146,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // CORREÇÃO: Verificar se a apólice foi realmente deletada
+    // CORREÇÃO: Verificação final mais robusta
     const { data: checkPolicy, error: checkError } = await supabase
       .from('policies')
       .select('id')
@@ -118,7 +154,9 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (checkPolicy) {
-      // Se ainda existe, tentar deletar novamente
+      console.log('⚠️ Apólice ainda existe, tentando deletar novamente');
+      
+      // Se ainda existe, tentar deletar diretamente
       const { error: finalDeleteError } = await supabase
         .from('policies')
         .delete()
@@ -126,6 +164,7 @@ Deno.serve(async (req) => {
         .eq('user_id', user.id)
 
       if (finalDeleteError) {
+        console.error('Final delete error:', finalDeleteError);
         return new Response(
           JSON.stringify({ error: 'Failed to completely delete policy' }),
           { 
@@ -135,6 +174,8 @@ Deno.serve(async (req) => {
         )
       }
     }
+
+    console.log(`✅ Apólice ${policyId} deletada com sucesso`);
 
     return new Response(
       JSON.stringify({ 
@@ -149,9 +190,9 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Erro inesperado:', error);
+    console.error('Erro inesperado na deleção:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 

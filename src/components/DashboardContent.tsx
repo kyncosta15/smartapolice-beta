@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -71,7 +70,7 @@ export function DashboardContent() {
   };
 
   const handlePolicyExtracted = async (policy: any) => {
-    console.log('🚀 handlePolicyExtracted CHAMADO!');
+    console.log('🚀 handlePolicyExtracted CHAMADO para persistência!');
     console.log('Nova apólice extraída:', policy);
     
     const newPolicy: ParsedPolicyData = {
@@ -102,27 +101,55 @@ export function DashboardContent() {
     console.log('✅ Adicionando apólice ao dashboard local primeiro');
     setExtractedPolicies(prev => [...prev, newPolicy]);
     
-    // CORREÇÃO: Chamar persistência DIRETAMENTE aqui
+    // CORREÇÃO CRÍTICA: Garantir que a persistência seja imediata e robusta
     if (user?.id && policy.file) {
-      console.log('💾 Chamando persistência diretamente do handlePolicyExtracted');
+      console.log('💾 INICIANDO persistência IMEDIATA para usuário:', user.id);
+      
       try {
         const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
         const success = await PolicyPersistenceService.savePolicyComplete(policy.file, newPolicy, user.id);
-        console.log(`✅ Persistência direta resultado: ${success}`);
+        
+        if (success) {
+          console.log('✅ PERSISTÊNCIA REALIZADA COM SUCESSO!');
+          
+          // Atualizar a lista de apólices persistidas
+          setTimeout(() => {
+            addPersistedPolicy(newPolicy);
+          }, 1000);
+          
+          toast({
+            title: "📄 Apólice Salva",
+            description: `${policy.name || 'Nova apólice'} foi processada e salva no banco de dados`,
+          });
+        } else {
+          console.error('❌ FALHA NA PERSISTÊNCIA');
+          toast({
+            title: "⚠️ Aviso",
+            description: `Apólice processada mas pode não ter sido salva. Verifique após fazer logout/login.`,
+            variant: "destructive",
+          });
+        }
+        
       } catch (error) {
-        console.error('❌ Erro na persistência direta:', error);
+        console.error('❌ Erro crítico na persistência:', error);
+        toast({
+          title: "❌ Erro na Persistência",
+          description: "A apólice foi processada mas pode não ter sido salva permanentemente",
+          variant: "destructive",
+        });
       }
     } else {
-      console.warn('⚠️ Persistência pulada - userId ou file não disponível:', {
+      console.warn('⚠️ Persistência pulada - dados insuficientes:', {
         userId: user?.id,
         hasFile: !!policy.file
       });
+      
+      toast({
+        title: "⚠️ Persistência Limitada",
+        description: "Apólice adicionada mas pode não persistir após logout",
+        variant: "destructive",
+      });
     }
-    
-    toast({
-      title: "Apólice Adicionada",
-      description: `${policy.name || 'Nova apólice'} foi processada e salva`,
-    });
   };
 
   // Função auxiliar para gerar parcelas a partir de um número
@@ -178,20 +205,26 @@ export function DashboardContent() {
   };
 
   const handleDeletePolicy = async (policyId: string) => {
+    console.log(`🗑️ Tentando deletar apólice: ${policyId}`);
+    
     // Tentar deletar do banco primeiro (se for persistida)
     const isPersistedPolicy = persistedPolicies.some(p => p.id === policyId);
     
     if (isPersistedPolicy) {
-      await deletePersistedPolicy(policyId);
-      // Toast já mostrado no hook
+      console.log('📝 Apólice persistida - usando deleção do banco');
+      const success = await deletePersistedPolicy(policyId);
+      if (!success) {
+        console.error('❌ Falha na deleção da apólice persistida');
+      }
     } else {
+      console.log('📝 Apólice local - removendo do estado');
       // Deletar apenas do estado local (apólices extraídas)
       const policyToDelete = extractedPolicies.find(p => p.id === policyId);
       if (policyToDelete) {
         setExtractedPolicies(prev => prev.filter(p => p.id !== policyId));
         
         toast({
-          title: "Apólice Removida",
+          title: "✅ Apólice Removida",
           description: "A apólice foi removida com sucesso",
         });
       }
