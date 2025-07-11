@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyPersistenceService } from '@/services/policyPersistenceService';
@@ -29,16 +28,17 @@ export function usePersistedPolicies() {
 
   // Carregar apólices quando usuário faz login
   useEffect(() => {
-    console.log(`🔍 usePersistedPolicies - Verificando estado do usuário:`, {
+    console.log(`🔍 [usePersistedPolicies] Verificando estado do usuário:`, {
       userId: user?.id,
-      userExists: !!user
+      userExists: !!user,
+      timestamp: new Date().toISOString()
     });
     
     if (user?.id) {
-      console.log(`🔄 Usuário logado detectado - Iniciando carregamento de apólices para: ${user.id}`);
+      console.log(`🔄 [usePersistedPolicies] Usuário logado detectado - Iniciando carregamento de apólices para: ${user.id}`);
       loadPersistedPolicies();
     } else {
-      console.log(`🚪 Usuário não logado - Limpando dados das apólices`);
+      console.log(`🚪 [usePersistedPolicies] Usuário não logado - Limpando dados das apólices`);
       // Limpar dados quando usuário faz logout
       setPolicies([]);
     }
@@ -46,21 +46,21 @@ export function usePersistedPolicies() {
 
   const loadPersistedPolicies = async () => {
     if (!user?.id) {
-      console.log(`⚠️ loadPersistedPolicies chamado sem userId válido`);
+      console.log(`⚠️ [loadPersistedPolicies] Chamado sem userId válido`);
       return;
     }
 
-    console.log(`🚀 Iniciando loadPersistedPolicies para userId: ${user.id}`);
+    console.log(`🚀 [loadPersistedPolicies] Iniciando para userId: ${user.id} às ${new Date().toISOString()}`);
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log(`🔄 Carregando apólices persistidas do usuário: ${user.id}`);
+      console.log(`🔄 [loadPersistedPolicies] Carregando apólices persistidas do usuário: ${user.id}`);
       
       // Primeiro, limpar duplicatas se existirem
       const cleanedCount = await PolicyPersistenceService.cleanupDuplicatePolicies(user.id);
       if (cleanedCount > 0) {
-        console.log(`🧹 ${cleanedCount} apólices duplicadas foram removidas`);
+        console.log(`🧹 [loadPersistedPolicies] ${cleanedCount} apólices duplicadas foram removidas`);
         toast({
           title: "🧹 Limpeza Realizada",
           description: `${cleanedCount} apólices duplicadas foram removidas`,
@@ -69,9 +69,10 @@ export function usePersistedPolicies() {
       
       const loadedPolicies = await PolicyPersistenceService.loadUserPolicies(user.id);
       
-      console.log(`🔍 Resultado do PolicyPersistenceService.loadUserPolicies:`, {
+      console.log(`🔍 [loadPersistedPolicies] Resultado do PolicyPersistenceService.loadUserPolicies:`, {
         length: loadedPolicies.length,
-        policies: loadedPolicies
+        policyIds: loadedPolicies.map(p => ({ id: p.id, name: p.name })),
+        timestamp: new Date().toISOString()
       });
       
       // Mapear status para novos valores
@@ -80,19 +81,20 @@ export function usePersistedPolicies() {
         status: mapLegacyStatus(policy.status)
       }));
       
+      console.log(`📊 [loadPersistedPolicies] Definindo ${mappedPolicies.length} apólices no estado local`);
       setPolicies(mappedPolicies);
       
       if (mappedPolicies.length > 0) {
-        console.log(`✅ ${mappedPolicies.length} apólices carregadas com sucesso`);
-        console.log(`📚 Apólices carregadas:`, mappedPolicies.map(p => ({ id: p.id, name: p.name, pdfPath: p.pdfPath })));
+        console.log(`✅ [loadPersistedPolicies] ${mappedPolicies.length} apólices carregadas com sucesso`);
+        console.log(`📚 [loadPersistedPolicies] IDs das apólices carregadas:`, mappedPolicies.map(p => p.id));
       } else {
-        console.log('📭 Nenhuma apólice encontrada no histórico');
+        console.log('📭 [loadPersistedPolicies] Nenhuma apólice encontrada no histórico');
       }
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados';
       setError(errorMessage);
-      console.error('❌ Erro ao carregar apólices persistidas:', err);
+      console.error('❌ [loadPersistedPolicies] Erro ao carregar apólices persistidas:', err);
       
       toast({
         title: "❌ Erro ao Carregar Dados",
@@ -101,27 +103,53 @@ export function usePersistedPolicies() {
       });
     } finally {
       setIsLoading(false);
-      console.log(`🏁 loadPersistedPolicies finalizado para userId: ${user.id}`);
+      console.log(`🏁 [loadPersistedPolicies] Finalizado para userId: ${user.id} às ${new Date().toISOString()}`);
     }
   };
 
   // Adicionar nova apólice à lista
   const addPolicy = (policy: ParsedPolicyData) => {
+    console.log(`➕ [addPolicy] Adicionando apólice ao estado local:`, {
+      policyId: policy.id,
+      policyName: policy.name,
+      currentPoliciesCount: policies.length,
+      timestamp: new Date().toISOString()
+    });
+    
     const mappedPolicy = {
       ...policy,
       status: mapLegacyStatus(policy.status)
     };
-    setPolicies(prev => [mappedPolicy, ...prev]);
+    
+    setPolicies(prev => {
+      const newPolicies = [mappedPolicy, ...prev];
+      console.log(`📊 [addPolicy] Estado atualizado - Total de apólices: ${newPolicies.length}`);
+      return newPolicies;
+    });
   };
 
   // Remover apólice da lista
   const removePolicy = (policyId: string) => {
-    setPolicies(prev => prev.filter(p => p.id !== policyId));
+    console.log(`➖ [removePolicy] Removendo apólice do estado local:`, {
+      policyId,
+      currentPoliciesCount: policies.length,
+      timestamp: new Date().toISOString()
+    });
+    
+    setPolicies(prev => {
+      const newPolicies = prev.filter(p => p.id !== policyId);
+      console.log(`📊 [removePolicy] Estado atualizado - Total de apólices: ${newPolicies.length}`);
+      console.log(`📊 [removePolicy] IDs restantes:`, newPolicies.map(p => p.id));
+      return newPolicies;
+    });
   };
 
   // Deletar apólice do banco de dados
   const deletePolicy = async (policyId: string): Promise<boolean> => {
+    console.log(`🗑️ [deletePolicy] INICIANDO deleção da apólice: ${policyId} às ${new Date().toISOString()}`);
+    
     if (!user?.id) {
+      console.log(`❌ [deletePolicy] Usuário não autenticado para deletar apólice: ${policyId}`);
       toast({
         title: "❌ Erro de Autenticação",
         description: "Usuário não autenticado",
@@ -130,8 +158,16 @@ export function usePersistedPolicies() {
       return false;
     }
 
+    // Verificar se a apólice existe no estado local antes de deletar
+    const policyExists = policies.find(p => p.id === policyId);
+    console.log(`🔍 [deletePolicy] Apólice existe no estado local:`, {
+      exists: !!policyExists,
+      policyName: policyExists?.name,
+      currentPoliciesCount: policies.length
+    });
+
     try {
-      console.log(`🗑️ Deletando apólice: ${policyId}`);
+      console.log(`🔄 [deletePolicy] Iniciando deleção no banco para apólice: ${policyId}`);
       
       // Obter token de autenticação atual
       const { data: { session } } = await supabase.auth.getSession();
@@ -139,6 +175,8 @@ export function usePersistedPolicies() {
       if (!session) {
         throw new Error("Sessão de usuário inválida");
       }
+      
+      console.log(`📡 [deletePolicy] Chamando Edge Function para deletar apólice: ${policyId}`);
       
       // Chamar a Edge Function para deletar a apólice e todos os dados relacionados
       const response = await fetch(`https://jhvbfvqhuemuvwgqpskz.supabase.co/functions/v1/delete-policy`, {
@@ -151,12 +189,20 @@ export function usePersistedPolicies() {
       });
       
       const result = await response.json();
+      console.log(`📡 [deletePolicy] Resposta da Edge Function:`, {
+        status: response.status,
+        result,
+        policyId
+      });
       
       if (!response.ok) {
         throw new Error(result.error || 'Erro ao deletar apólice');
       }
 
-      // Remover do estado local
+      console.log(`✅ [deletePolicy] Apólice deletada com sucesso no banco: ${policyId}`);
+      
+      // Remover do estado local APÓS confirmação do banco
+      console.log(`📊 [deletePolicy] Removendo do estado local após confirmação do banco`);
       removePolicy(policyId);
       
       toast({
@@ -164,9 +210,22 @@ export function usePersistedPolicies() {
         description: "A apólice foi removida com sucesso",
       });
       
+      // Verificar estado após deleção
+      console.log(`🔍 [deletePolicy] Estado após deleção:`, {
+        remainingPoliciesCount: policies.length - 1, // -1 porque removePolicy ainda não executou
+        deletedPolicyId: policyId,
+        timestamp: new Date().toISOString()
+      });
+      
       return true;
     } catch (error) {
-      console.error('❌ Erro ao deletar apólice:', error);
+      console.error('❌ [deletePolicy] ERRO CRÍTICO ao deletar apólice:', {
+        policyId,
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
+      
       toast({
         title: "❌ Erro ao Deletar",
         description: error instanceof Error ? error.message : "Não foi possível remover a apólice",
@@ -328,10 +387,24 @@ export function usePersistedPolicies() {
 
   // Recarregar dados
   const refreshPolicies = () => {
+    console.log(`🔄 [refreshPolicies] Solicitado recarregamento manual às ${new Date().toISOString()}`);
     if (user?.id) {
+      console.log(`🔄 [refreshPolicies] Chamando loadPersistedPolicies para userId: ${user.id}`);
       loadPersistedPolicies();
+    } else {
+      console.log(`⚠️ [refreshPolicies] Usuário não logado - não é possível recarregar`);
     }
   };
+
+  // Log do estado atual sempre que policies mudar
+  useEffect(() => {
+    console.log(`📊 [usePersistedPolicies] Estado atual das apólices:`, {
+      count: policies.length,
+      policyIds: policies.map(p => ({ id: p.id, name: p.name })),
+      userId: user?.id,
+      timestamp: new Date().toISOString()
+    });
+  }, [policies, user?.id]);
 
   return {
     policies,

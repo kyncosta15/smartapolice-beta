@@ -254,11 +254,13 @@ export class PolicyPersistenceService {
     }
   }
 
-  // Carregar apólices do usuário - MÉTODO MELHORADO
+  // Carregar apólices do usuário - MÉTODO MELHORADO COM LOGS DETALHADOS
   static async loadUserPolicies(userId: string): Promise<ParsedPolicyData[]> {
+    const sessionId = crypto.randomUUID();
     try {
-      console.log(`📖 Carregando apólices do usuário: ${userId}`);
+      console.log(`📖 [PolicyPersistenceService-${sessionId}] INICIANDO carregamento de apólices do usuário: ${userId} às ${new Date().toISOString()}`);
 
+      console.log(`🔍 [PolicyPersistenceService-${sessionId}] Executando query no banco...`);
       const { data: policies, error: policiesError } = await supabase
         .from('policies')
         .select(`
@@ -278,28 +280,42 @@ export class PolicyPersistenceService {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
+      console.log(`📊 [PolicyPersistenceService-${sessionId}] Resultado da query:`, {
+        success: !policiesError,
+        errorMessage: policiesError?.message,
+        policiesCount: policies?.length || 0,
+        policiesFound: policies?.map(p => ({
+          id: p.id,
+          segurado: p.segurado,
+          numero_apolice: p.numero_apolice,
+          created_at: p.created_at
+        })) || []
+      });
+
       if (policiesError) {
-        console.error('❌ Erro ao carregar apólices:', policiesError);
+        console.error(`❌ [PolicyPersistenceService-${sessionId}] Erro ao carregar apólices:`, policiesError);
         return [];
       }
 
       if (!policies || policies.length === 0) {
-        console.log('📭 Nenhuma apólice encontrada para o usuário');
+        console.log(`📭 [PolicyPersistenceService-${sessionId}] Nenhuma apólice encontrada para o usuário`);
         return [];
       }
 
-      console.log(`✅ ${policies.length} apólices carregadas do banco`);
+      console.log(`✅ [PolicyPersistenceService-${sessionId}] ${policies.length} apólices carregadas do banco`);
 
       // Converter dados do banco para formato ParsedPolicyData
-      const parsedPolicies: ParsedPolicyData[] = policies.map(policy => {
-        console.log(`🔍 Processando apólice:`, {
+      const parsedPolicies: ParsedPolicyData[] = policies.map((policy, index) => {
+        console.log(`🔍 [PolicyPersistenceService-${sessionId}] Processando apólice ${index + 1}/${policies.length}:`, {
           id: policy.id,
           segurado: policy.segurado,
+          numero_apolice: policy.numero_apolice,
           quantidade_parcelas: policy.quantidade_parcelas,
           installments: policy.installments,
           installmentsCount: policy.installments?.length || 0,
           coberturas: policy.coberturas,
-          coberturasCount: policy.coberturas?.length || 0
+          coberturasCount: policy.coberturas?.length || 0,
+          arquivo_url: policy.arquivo_url
         });
 
         // Detectar e corrigir dados misturados (legacy fix)
@@ -313,10 +329,16 @@ export class PolicyPersistenceService {
           status: inst.status
         })) || [];
 
+        console.log(`📊 [PolicyPersistenceService-${sessionId}] Parcelas da apólice ${policy.id}:`, {
+          installmentsFromDB: installmentsFromDB.length,
+          quantidade_parcelas: policy.quantidade_parcelas,
+          installmentsData: installmentsFromDB
+        });
+
         // Se não há parcelas no DB mas há quantidade_parcelas, gerar parcelas básicas
         let finalInstallments = installmentsFromDB;
         if (installmentsFromDB.length === 0 && policy.quantidade_parcelas && policy.quantidade_parcelas > 0) {
-          console.log(`🔄 Gerando ${policy.quantidade_parcelas} parcelas básicas para apólice ${policy.id}`);
+          console.log(`🔄 [PolicyPersistenceService-${sessionId}] Gerando ${policy.quantidade_parcelas} parcelas básicas para apólice ${policy.id}`);
           finalInstallments = this.generateBasicInstallments(
             policy.quantidade_parcelas, 
             Number(policy.custo_mensal) || 0,
@@ -324,7 +346,7 @@ export class PolicyPersistenceService {
           );
         }
         
-        return {
+        const convertedPolicy = {
           id: policy.id,
           name: cleanedData.policyName,
           type: policy.tipo_seguro || 'auto',
@@ -369,18 +391,35 @@ export class PolicyPersistenceService {
           totalCoverage: Number(policy.valor_premio) || 0,
           limits: 'R$ 100.000 por sinistro'
         };
+
+        console.log(`✅ [PolicyPersistenceService-${sessionId}] Apólice ${policy.id} convertida:`, {
+          id: convertedPolicy.id,
+          name: convertedPolicy.name,
+          installmentsCount: convertedPolicy.installments?.length,
+          coberturasCount: convertedPolicy.coberturas?.length,
+          pdfPath: convertedPolicy.pdfPath
+        });
+
+        return convertedPolicy;
       });
 
-      console.log(`✅ Apólices convertidas com sucesso:`, {
+      console.log(`✅ [PolicyPersistenceService-${sessionId}] FINALIZADO - Apólices convertidas com sucesso:`, {
         total: parsedPolicies.length,
         comCoberturas: parsedPolicies.filter(p => p.coberturas && p.coberturas.length > 0).length,
-        comParcelas: parsedPolicies.filter(p => p.installments && p.installments.length > 0).length
+        comParcelas: parsedPolicies.filter(p => p.installments && p.installments.length > 0).length,
+        idsRetornados: parsedPolicies.map(p => p.id),
+        timestamp: new Date().toISOString()
       });
 
       return parsedPolicies;
 
     } catch (error) {
-      console.error('❌ Erro inesperado ao carregar apólices:', error);
+      console.error(`❌ [PolicyPersistenceService-${sessionId}] Erro inesperado ao carregar apólices:`, {
+        error: error.message,
+        stack: error.stack,
+        userId,
+        timestamp: new Date().toISOString()
+      });
       return [];
     }
   }
