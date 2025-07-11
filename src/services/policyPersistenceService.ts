@@ -361,6 +361,10 @@ export class PolicyPersistenceService {
           pdfPath: policy.arquivo_url,
           extractedAt: policy.extraido_em || policy.created_at || new Date().toISOString(),
           
+          // NOVOS CAMPOS OBRIGATÓRIOS
+          expirationDate: policy.expiration_date || policy.fim_vigencia || new Date().toISOString().split('T')[0],
+          policyStatus: (policy.policy_status as any) || 'vigente',
+          
           // PARCELAS - usar as carregadas ou geradas
           installments: finalInstallments,
           

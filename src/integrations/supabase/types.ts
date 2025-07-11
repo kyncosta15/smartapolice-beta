@@ -227,6 +227,7 @@ export type Database = {
           documento: string | null
           documento_tipo: string | null
           email: string | null
+          expiration_date: string | null
           extraction_timestamp: string | null
           extraido_em: string | null
           fim_vigencia: string | null
@@ -237,6 +238,7 @@ export type Database = {
           modelo_veiculo: string | null
           numero_apolice: string | null
           placa: string | null
+          policy_status: Database["public"]["Enums"]["policy_status"] | null
           quantidade_parcelas: number | null
           responsavel_nome: string | null
           responsavel_user_id: string | null
@@ -263,6 +265,7 @@ export type Database = {
           documento?: string | null
           documento_tipo?: string | null
           email?: string | null
+          expiration_date?: string | null
           extraction_timestamp?: string | null
           extraido_em?: string | null
           fim_vigencia?: string | null
@@ -273,6 +276,7 @@ export type Database = {
           modelo_veiculo?: string | null
           numero_apolice?: string | null
           placa?: string | null
+          policy_status?: Database["public"]["Enums"]["policy_status"] | null
           quantidade_parcelas?: number | null
           responsavel_nome?: string | null
           responsavel_user_id?: string | null
@@ -299,6 +303,7 @@ export type Database = {
           documento?: string | null
           documento_tipo?: string | null
           email?: string | null
+          expiration_date?: string | null
           extraction_timestamp?: string | null
           extraido_em?: string | null
           fim_vigencia?: string | null
@@ -309,6 +314,7 @@ export type Database = {
           modelo_veiculo?: string | null
           numero_apolice?: string | null
           placa?: string | null
+          policy_status?: Database["public"]["Enums"]["policy_status"] | null
           quantidade_parcelas?: number | null
           responsavel_nome?: string | null
           responsavel_user_id?: string | null
@@ -421,7 +427,11 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      policy_status:
+        | "vigente"
+        | "aguardando_emissao"
+        | "nao_renovada"
+        | "pendente_analise"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -548,6 +558,13 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      policy_status: [
+        "vigente",
+        "aguardando_emissao",
+        "nao_renovada",
+        "pendente_analise",
+      ],
+    },
   },
 } as const
