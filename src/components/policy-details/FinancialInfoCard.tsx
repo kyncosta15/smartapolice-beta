@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, CreditCard, Calendar, Hash, FileText } from 'lucide-react';
+import { DollarSign, Hash } from 'lucide-react';
 
 interface FinancialInfoCardProps {
   policy: any;
@@ -25,17 +25,6 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-5">
-        {/* Número da Apólice */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
-          <label className="text-sm font-medium text-amber-700 font-sf-pro flex items-center gap-2 mb-1">
-            <FileText className="h-4 w-4" />
-            Número da Apólice
-          </label>
-          <p className="font-mono text-base font-semibold text-gray-900 font-sf-pro">
-            {policy.numero_apolice || policy.policyNumber || 'Não informado'}
-          </p>
-        </div>
-
         <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-6 shadow-md">
           <label className="text-sm font-medium text-white/90 font-sf-pro block mb-2">Prêmio Anual</label>
           <p className="text-3xl font-bold text-white font-sf-pro">
@@ -72,26 +61,9 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
           </div>
         )}
 
-        {/* Vigência */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
-          <label className="text-sm font-medium text-amber-700 font-sf-pro flex items-center gap-2 mb-1">
-            <Calendar className="h-4 w-4" />
-            Vigência
-          </label>
-          <div className="space-y-1">
-            <p className="text-sm text-gray-700 font-sf-pro">
-              <span className="font-semibold">Início:</span> {policy.inicio_vigencia ? new Date(policy.inicio_vigencia).toLocaleDateString('pt-BR') : policy.startDate ? new Date(policy.startDate).toLocaleDateString('pt-BR') : 'Não informado'}
-            </p>
-            <p className="text-sm text-gray-700 font-sf-pro">
-              <span className="font-semibold">Fim:</span> {policy.fim_vigencia ? new Date(policy.fim_vigencia).toLocaleDateString('pt-BR') : policy.endDate ? new Date(policy.endDate).toLocaleDateString('pt-BR') : 'Não informado'}
-            </p>
-          </div>
-        </div>
-
         {(policy.forma_pagamento || policy.paymentForm) && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
-            <label className="text-sm font-medium text-amber-700 font-sf-pro flex items-center gap-2 mb-1">
-              <CreditCard className="h-4 w-4" />
+            <label className="text-sm font-medium text-amber-700 font-sf-pro block mb-1">
               Forma de Pagamento
             </label>
             <p className="text-base font-medium text-gray-900 font-sf-pro capitalize">

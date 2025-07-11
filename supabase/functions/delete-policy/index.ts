@@ -1,117 +1,143 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.2'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('Autorização necessária');
-    }
-
-    // Verificar autenticação do usuário
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    const { policyId } = await req.json();
-
+    const { policyId } = await req.json()
+    
     if (!policyId) {
-      throw new Error('ID da apólice é obrigatório');
+      return new Response(
+        JSON.stringify({ error: 'Policy ID is required' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      )
     }
 
-    console.log(`🗑️ Iniciando deleção da apólice: ${policyId} para usuário: ${user.id}`);
+    // Create Supabase client with service role key for admin operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Verificar se a apólice pertence ao usuário
-    const { data: policy, error: policyError } = await supabaseClient
+    // Get the JWT token from the Authorization header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authorization header required' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401 
+        }
+      )
+    }
+
+    // Extract the JWT token
+    const token = authHeader.replace('Bearer ', '')
+
+    // Verify the user's JWT token
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired token' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401 
+        }
+      )
+    }
+
+    console.log(`🗑️ Deletando apólice ${policyId} para usuário ${user.id}`)
+
+    // Get policy details first to check ownership and get file path
+    const { data: policy, error: policyError } = await supabase
       .from('policies')
       .select('arquivo_url, user_id')
       .eq('id', policyId)
-      .single();
+      .single()
 
     if (policyError) {
-      console.error('Erro ao buscar apólice:', policyError);
-      throw new Error('Apólice não encontrada');
+      console.error('❌ Erro ao buscar apólice:', policyError)
+      return new Response(
+        JSON.stringify({ error: 'Policy not found' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404 
+        }
+      )
     }
 
+    // Check if user owns the policy
     if (policy.user_id !== user.id) {
-      throw new Error('Acesso negado: você não tem permissão para deletar esta apólice');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: You can only delete your own policies' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403 
+        }
+      )
     }
 
-    // Usar a função do banco de dados para deletar tudo
-    const { error: deleteError } = await supabaseClient
-      .rpc('delete_policy_completely', { policy_id_param: policyId });
+    // Use the database function to delete the policy completely
+    const { data: deleteResult, error: deleteError } = await supabase
+      .rpc('delete_policy_completely', { policy_id_param: policyId })
 
     if (deleteError) {
-      console.error('Erro ao deletar apólice completamente:', deleteError);
-      throw new Error(`Erro ao deletar apólice: ${deleteError.message}`);
+      console.error('❌ Erro ao deletar apólice:', deleteError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to delete policy from database' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      )
     }
 
-    // Se houver arquivo PDF, tentar deletar do storage
+    // Delete the PDF file from storage if it exists
     if (policy.arquivo_url) {
-      try {
-        console.log(`🗑️ Tentando deletar arquivo: ${policy.arquivo_url}`);
-        
-        // Extrair o caminho do arquivo da URL
-        const filePath = policy.arquivo_url.split('/').pop();
-        const fullPath = `${user.id}/${filePath}`;
-        
-        const { error: storageError } = await supabaseClient.storage
-          .from('pdfs')
-          .remove([fullPath]);
+      console.log(`🗑️ Deletando arquivo PDF: ${policy.arquivo_url}`)
+      const { error: storageError } = await supabase.storage
+        .from('pdfs')
+        .remove([policy.arquivo_url])
 
-        if (storageError) {
-          console.warn('Aviso: Erro ao deletar arquivo do storage:', storageError);
-          // Não falha a operação se o arquivo não puder ser deletado
-        } else {
-          console.log('✅ Arquivo deletado do storage com sucesso');
-        }
-      } catch (storageErr) {
-        console.warn('Aviso: Erro inesperado ao deletar arquivo:', storageErr);
-        // Continuar mesmo se houver erro no storage
+      if (storageError) {
+        console.error('⚠️ Erro ao deletar arquivo PDF (continuando):', storageError)
+        // Don't fail the whole operation if file deletion fails
+      } else {
+        console.log('✅ Arquivo PDF deletado com sucesso')
       }
     }
 
-    console.log('✅ Apólice deletada completamente com sucesso');
+    console.log('✅ Apólice deletada completamente')
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Apólice deletada com sucesso' }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Policy deleted successfully',
+        deletedPolicyId: policyId
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
       }
-    );
+    )
 
   } catch (error) {
-    console.error('❌ Erro na função delete-policy:', error);
-    
+    console.error('❌ Erro inesperado:', error)
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Erro interno do servidor' 
-      }),
+      JSON.stringify({ error: 'Internal server error' }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400 
+        status: 500 
       }
-    );
+    )
   }
-});
+})

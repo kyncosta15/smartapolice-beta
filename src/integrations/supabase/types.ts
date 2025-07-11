@@ -221,11 +221,13 @@ export type Database = {
           condutor_principal: string | null
           corretora: string | null
           created_at: string | null
+          created_by_extraction: boolean | null
           custo_mensal: number | null
           data_nascimento: string | null
           documento: string | null
           documento_tipo: string | null
           email: string | null
+          extraction_timestamp: string | null
           extraido_em: string | null
           fim_vigencia: string | null
           forma_pagamento: string | null
@@ -255,11 +257,13 @@ export type Database = {
           condutor_principal?: string | null
           corretora?: string | null
           created_at?: string | null
+          created_by_extraction?: boolean | null
           custo_mensal?: number | null
           data_nascimento?: string | null
           documento?: string | null
           documento_tipo?: string | null
           email?: string | null
+          extraction_timestamp?: string | null
           extraido_em?: string | null
           fim_vigencia?: string | null
           forma_pagamento?: string | null
@@ -289,11 +293,13 @@ export type Database = {
           condutor_principal?: string | null
           corretora?: string | null
           created_at?: string | null
+          created_by_extraction?: boolean | null
           custo_mensal?: number | null
           data_nascimento?: string | null
           documento?: string | null
           documento_tipo?: string | null
           email?: string | null
+          extraction_timestamp?: string | null
           extraido_em?: string | null
           fim_vigencia?: string | null
           forma_pagamento?: string | null
