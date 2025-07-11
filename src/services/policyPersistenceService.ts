@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { Database } from '@/integrations/supabase/types';
@@ -9,6 +8,20 @@ type CoberturaInsert = Database['public']['Tables']['coberturas']['Insert'];
 
 export class PolicyPersistenceService {
   
+  // Mapeamento de status para compatibilidade
+  private static mapLegacyStatus(status: string): string {
+    switch (status) {
+      case 'active':
+        return 'vigente';
+      case 'expiring':
+        return 'renovada_aguardando';
+      case 'expired':
+        return 'nao_renovada';
+      default:
+        return status;
+    }
+  }
+
   // Salvar arquivo PDF no storage
   static async uploadPDFToStorage(file: File, userId: string): Promise<string | null> {
     try {
@@ -93,7 +106,7 @@ export class PolicyPersistenceService {
         forma_pagamento: policyData.paymentFrequency,
         quantidade_parcelas: Array.isArray(policyData.installments) ? policyData.installments.length : 12,
         valor_parcela: policyData.monthlyAmount,
-        status: policyData.status,
+        status: this.mapLegacyStatus(policyData.status),
         arquivo_url: pdfPath,
         extraido_em: new Date().toISOString(),
         // Documento e tipo de documento separados
@@ -111,7 +124,8 @@ export class PolicyPersistenceService {
         segurado: policyInsert.segurado,
         seguradora: policyInsert.seguradora,
         documento: policyInsert.documento,
-        documento_tipo: policyInsert.documento_tipo
+        documento_tipo: policyInsert.documento_tipo,
+        status: policyInsert.status
       });
 
       // Inserir apólice
@@ -133,7 +147,7 @@ export class PolicyPersistenceService {
         await this.saveInstallments(policy.id, policyData.installments, userId);
       }
 
-      // NOVO: Salvar coberturas se existirem
+      // Salvar coberturas se existirem
       if (policyData.coberturas && Array.isArray(policyData.coberturas) && policyData.coberturas.length > 0) {
         console.log(`💾 Salvando ${policyData.coberturas.length} coberturas para apólice ${policy.id}`);
         await this.saveCoverages(policy.id, policyData.coberturas);
@@ -273,7 +287,8 @@ export class PolicyPersistenceService {
           uf: policy.uf,
           franquia: policy.franquia,
           arquivo_url: policy.arquivo_url,
-          coberturas: policy.coberturas
+          coberturas: policy.coberturas,
+          status: policy.status
         });
 
         // Detectar e corrigir dados misturados (legacy fix)
@@ -290,7 +305,7 @@ export class PolicyPersistenceService {
           endDate: policy.fim_vigencia || new Date().toISOString().split('T')[0],
           policyNumber: policy.numero_apolice || 'N/A',
           paymentFrequency: policy.forma_pagamento || 'mensal',
-          status: policy.status || 'active',
+          status: policy.status || 'vigente', // Usar status já mapeado do banco
           pdfPath: policy.arquivo_url,
           extractedAt: policy.extraido_em || policy.created_at || new Date().toISOString(),
           installments: (policy.installments as any[])?.map(inst => ({
@@ -300,7 +315,7 @@ export class PolicyPersistenceService {
             status: inst.status
           })) || [],
           
-          // NOVO: Mapear coberturas do banco
+          // Mapear coberturas do banco com LMI
           coberturas: (policy.coberturas as any[])?.map(cob => ({
             id: cob.id,
             descricao: cob.descricao,

@@ -380,6 +380,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_fix_policy_inconsistencies: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          issue_type: string
+          policy_id: string
+          fixed: boolean
+        }[]
+      }
+      delete_policy_completely: {
+        Args: { policy_id_param: string }
+        Returns: boolean
+      }
+      delete_user_and_related_data: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
+      delete_user_completely: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string

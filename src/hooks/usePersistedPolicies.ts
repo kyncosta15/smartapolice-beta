@@ -12,6 +12,20 @@ export function usePersistedPolicies() {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Mapeamento de status para compatibilidade com dados antigos
+  const mapLegacyStatus = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'vigente';
+      case 'expiring':
+        return 'renovada_aguardando';
+      case 'expired':
+        return 'nao_renovada';
+      default:
+        return status;
+    }
+  };
+
   // Carregar apólices quando usuário faz login
   useEffect(() => {
     console.log(`🔍 usePersistedPolicies - Verificando estado do usuário:`, {
@@ -59,11 +73,17 @@ export function usePersistedPolicies() {
         policies: loadedPolicies
       });
       
-      setPolicies(loadedPolicies);
+      // Mapear status para novos valores
+      const mappedPolicies = loadedPolicies.map(policy => ({
+        ...policy,
+        status: mapLegacyStatus(policy.status)
+      }));
       
-      if (loadedPolicies.length > 0) {
-        console.log(`✅ ${loadedPolicies.length} apólices carregadas com sucesso`);
-        console.log(`📚 Apólices carregadas:`, loadedPolicies.map(p => ({ id: p.id, name: p.name, pdfPath: p.pdfPath })));
+      setPolicies(mappedPolicies);
+      
+      if (mappedPolicies.length > 0) {
+        console.log(`✅ ${mappedPolicies.length} apólices carregadas com sucesso`);
+        console.log(`📚 Apólices carregadas:`, mappedPolicies.map(p => ({ id: p.id, name: p.name, pdfPath: p.pdfPath })));
       } else {
         console.log('📭 Nenhuma apólice encontrada no histórico');
       }
@@ -86,7 +106,11 @@ export function usePersistedPolicies() {
 
   // Adicionar nova apólice à lista
   const addPolicy = (policy: ParsedPolicyData) => {
-    setPolicies(prev => [policy, ...prev]);
+    const mappedPolicy = {
+      ...policy,
+      status: mapLegacyStatus(policy.status)
+    };
+    setPolicies(prev => [mappedPolicy, ...prev]);
   };
 
   // Remover apólice da lista
@@ -178,7 +202,7 @@ const deletePolicy = async (policyId: string): Promise<boolean> => {
       if (updates.monthlyAmount !== undefined) dbUpdates.custo_mensal = updates.monthlyAmount;
       if (updates.startDate !== undefined) dbUpdates.inicio_vigencia = updates.startDate;
       if (updates.endDate !== undefined) dbUpdates.fim_vigencia = updates.endDate;
-      if (updates.status !== undefined) dbUpdates.status = updates.status;
+      if (updates.status !== undefined) dbUpdates.status = mapLegacyStatus(updates.status);
       if (updates.category !== undefined) dbUpdates.forma_pagamento = updates.category;
       if (updates.entity !== undefined) dbUpdates.corretora = updates.entity;
       
@@ -210,9 +234,14 @@ const deletePolicy = async (policyId: string): Promise<boolean> => {
         throw error;
       }
 
-      // Atualizar estado local
+      // Atualizar estado local com mapeamento de status
+      const mappedUpdates = {
+        ...updates,
+        status: updates.status ? mapLegacyStatus(updates.status) : undefined
+      };
+      
       setPolicies(prev => 
-        prev.map(p => p.id === policyId ? { ...p, ...updates } : p)
+        prev.map(p => p.id === policyId ? { ...p, ...mappedUpdates } : p)
       );
       
       toast({
