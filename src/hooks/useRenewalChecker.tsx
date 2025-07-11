@@ -11,16 +11,31 @@ export function useRenewalChecker(policies: PolicyWithStatus[]): RenewalAlert | 
   const [renewalAlert, setRenewalAlert] = useState<RenewalAlert | null>(null);
 
   useEffect(() => {
-    // Encontrar a primeira apólice vigente que está vencida
-    const vigentePolicy = policies.find(policy => 
-      policy.status === "vigente" && 
-      new Date(policy.expirationDate) < new Date()
-    );
+    console.log('🔍 Verificando renovações para', policies.length, 'apólices');
+    
+    // Encontrar apólices que já venceram ou estão vencendo
+    const now = new Date();
+    const expiredPolicy = policies.find(policy => {
+      if (!policy.expirationDate && !policy.endDate) return false;
+      
+      // Usar expirationDate ou endDate como fallback
+      const expirationDate = new Date(policy.expirationDate || policy.endDate);
+      const isExpired = expirationDate < now;
+      
+      console.log(`📅 Apólice ${policy.name}: vencimento ${expirationDate.toLocaleDateString('pt-BR')}, vencida: ${isExpired}`);
+      
+      // Verificar se está vencida e ainda tem status vigente/ativa
+      return isExpired && (policy.status === "vigente" || policy.status === "ativa" || !policy.status);
+    });
 
-    if (vigentePolicy && !renewalAlert) {
+    if (expiredPolicy && !renewalAlert) {
+      console.log('⚠️ Apólice vencida encontrada:', expiredPolicy.name);
       setRenewalAlert({
-        toRenew: vigentePolicy,
-        clear: () => setRenewalAlert(null)
+        toRenew: expiredPolicy,
+        clear: () => {
+          console.log('🔄 Limpando alerta de renovação');
+          setRenewalAlert(null);
+        }
       });
     }
   }, [policies, renewalAlert]);

@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { KPICards } from './dashboard/KPICards';
@@ -9,6 +10,7 @@ import { useDashboardCalculations } from './dashboard/useDashboardCalculations';
 import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { PDFReportGenerator } from './PDFReportGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { calculateStatusChartData, calculateInsurerChartData } from '@/utils/dashboardChartCalculations';
 
 interface DynamicDashboardProps {
   policies: ParsedPolicyData[];
@@ -44,13 +46,12 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     }
   };
 
+  // Usar os novos cálculos com cores corretas
+  const statusChartData = calculateStatusChartData(policies as any);
+  const insurerChartData = calculateInsurerChartData(policies);
+
   // Add colors to distribution data
   const typeDistributionWithColors = dashboardData.typeDistribution.map((item, index) => ({
-    ...item,
-    color: COLORS[index % COLORS.length]
-  }));
-
-  const insurerDistributionWithColors = dashboardData.insurerDistribution.map((item, index) => ({
     ...item,
     color: COLORS[index % COLORS.length]
   }));
@@ -126,7 +127,7 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
         <div className="w-full overflow-hidden">
           <ClassificationCharts
             typeDistribution={typeDistributionWithColors}
-            insurerDistribution={insurerDistributionWithColors}
+            insurerDistribution={insurerChartData} // Usar dados com cores
             recentPolicies={recentPoliciesFormatted}
             colors={COLORS}
           />
@@ -142,7 +143,7 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
         {/* D. Gestão e ciclo de vida da apólice */}
         <div className="print-status-section w-full overflow-hidden">
           <StatusEvolutionCharts
-            statusDistribution={dashboardData.statusDistribution}
+            statusDistribution={statusChartData} // Usar dados com cores
             monthlyEvolution={dashboardData.monthlyEvolution}
             colors={COLORS}
           />

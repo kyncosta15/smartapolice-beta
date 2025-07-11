@@ -1,10 +1,14 @@
 
-// Tipos de status das apólices
+// Tipos de status das apólices (expandido)
 export type PolicyStatus = 
   | "vigente"
+  | "ativa"
   | "aguardando_emissao" 
   | "nao_renovada"
-  | "pendente_analise";
+  | "vencida"
+  | "pendente_analise"
+  | "vencendo"
+  | "desconhecido";
 
 // Interface estendida da apólice com novos campos
 export interface PolicyWithStatus {
