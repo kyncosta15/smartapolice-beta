@@ -18,8 +18,17 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
   next30Days.setDate(today.getDate() + 30);
   next30Days.setHours(0, 0, 0, 0);
 
-  // Check if installments is an array
-  const installmentsArray = Array.isArray(policy.installments) ? policy.installments : [];
+  // Garantir que installments seja sempre um array válido
+  const installmentsArray = Array.isArray(policy.installments) && policy.installments.length > 0 
+    ? policy.installments 
+    : [];
+
+  console.log(`🔍 PolicyInstallmentsCard - Policy: ${policy.name}`, {
+    installments: policy.installments,
+    installmentsArray,
+    installmentsLength: installmentsArray.length,
+    totalInstallments: policy.installments?.length || 0
+  });
 
   // Calcular estatísticas baseadas apenas na data (sem considerar status pago)
   const overdueInstallments = installmentsArray.filter(inst => {
@@ -44,6 +53,11 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
   const totalValue = policy.totalCoverage || policy.premium || 
     installmentsArray.reduce((sum, inst) => sum + inst.valor, 0);
 
+  // Se não há parcelas, mostrar informação alternativa baseada nos dados da apólice
+  const totalInstallments = installmentsArray.length > 0 
+    ? installmentsArray.length 
+    : (policy.installments?.length || 12); // Fallback para 12 parcelas padrão
+
   return (
     <Card key={policy.id || index}>
       <CardHeader>
@@ -55,7 +69,7 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
           <Badge variant="outline">{policy.insurer}</Badge>
         </CardTitle>
         <div className="flex flex-wrap gap-2 text-sm text-gray-600">
-          <span>{installmentsArray.length} parcelas totais</span>
+          <span>{totalInstallments} parcelas totais</span>
           <span>•</span>
           <span className="text-orange-600">{dueNext30DaysInstallments.length} a vencer</span>
           <span>•</span>
@@ -69,59 +83,66 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
       </CardHeader>
       <CardContent>
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          {installmentsArray
-            .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
-            .map((installment, instIndex) => {
-            const installmentDate = new Date(installment.data);
-            installmentDate.setHours(0, 0, 0, 0);
-            
-            // Determinar se está vencida ou a vencer baseado apenas na data
-            const isOverdue = installmentDate < today;
-            
-            // Determinar cor e status
-            let bgColor = '';
-            let badgeVariant: "default" | "secondary" | "destructive" | "outline" = 'secondary';
-            let statusText = '';
-            
-            if (isOverdue) {
-              bgColor = 'bg-red-50 border-red-200';
-              badgeVariant = 'destructive';
-              statusText = 'Vencida';
-            } else {
-              bgColor = 'bg-orange-50 border-orange-200';
-              badgeVariant = 'secondary';
-              statusText = 'A vencer';
-            }
-            
-            return (
-              <div 
-                key={`${policy.id}-${instIndex}`}
-                className={`flex items-center justify-between p-3 rounded-lg border ${bgColor}`}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="text-sm font-medium">
-                    Parcela {installment.numero || (instIndex + 1)}
+          {installmentsArray.length > 0 ? (
+            installmentsArray
+              .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
+              .map((installment, instIndex) => {
+              const installmentDate = new Date(installment.data);
+              installmentDate.setHours(0, 0, 0, 0);
+              
+              // Determinar se está vencida ou a vencer baseado apenas na data
+              const isOverdue = installmentDate < today;
+              
+              // Determinar cor e status
+              let bgColor = '';
+              let badgeVariant: "default" | "secondary" | "destructive" | "outline" = 'secondary';
+              let statusText = '';
+              
+              if (isOverdue) {
+                bgColor = 'bg-red-50 border-red-200';
+                badgeVariant = 'destructive';
+                statusText = 'Vencida';
+              } else {
+                bgColor = 'bg-orange-50 border-orange-200';
+                badgeVariant = 'secondary';
+                statusText = 'A vencer';
+              }
+              
+              return (
+                <div 
+                  key={`${policy.id}-${instIndex}`}
+                  className={`flex items-center justify-between p-3 rounded-lg border ${bgColor}`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-sm font-medium">
+                      Parcela {installment.numero || (instIndex + 1)}
+                    </div>
+                    <Badge 
+                      variant={badgeVariant}
+                      className={`text-xs ${
+                        !isOverdue ? 'bg-orange-100 text-orange-700 hover:bg-orange-100' : ''
+                      }`}
+                    >
+                      {statusText}
+                    </Badge>
                   </div>
-                  <Badge 
-                    variant={badgeVariant}
-                    className={`text-xs ${
-                      !isOverdue ? 'bg-orange-100 text-orange-700 hover:bg-orange-100' : ''
-                    }`}
-                  >
-                    {statusText}
-                  </Badge>
+                  <div className="text-right">
+                    <div className="font-semibold text-sm">
+                      {formatCurrency(installment.valor)}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {installmentDate.toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-semibold text-sm">
-                    {formatCurrency(installment.valor)}
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    {installmentDate.toLocaleDateString('pt-BR')}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              <p className="text-sm">Parcelas não carregadas</p>
+              <p className="text-xs">Total de {totalInstallments} parcelas configuradas</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

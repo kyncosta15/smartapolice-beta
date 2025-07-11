@@ -71,6 +71,7 @@ export class PolicyPersistenceService {
 
       console.log(`💾 Salvando apólice no banco para usuário ${userId}:`, policyData.name);
       console.log('📋 Coberturas da apólice:', policyData.coberturas);
+      console.log('📊 Parcelas da apólice:', policyData.installments);
 
       // VERIFICAÇÃO DE DUPLICAÇÃO
       if (policyData.policyNumber) {
@@ -90,7 +91,11 @@ export class PolicyPersistenceService {
         }
       }
 
-      // Preparar dados da apólice
+      // Preparar dados da apólice - GARANTIR QUE QUANTIDADE DE PARCELAS SEJA SALVA
+      const installmentsCount = Array.isArray(policyData.installments) 
+        ? policyData.installments.length 
+        : (policyData.installments || 12);
+
       const policyInsert: PolicyInsert = {
         user_id: userId,
         segurado: policyData.insuredName || policyData.name,
@@ -102,7 +107,7 @@ export class PolicyPersistenceService {
         inicio_vigencia: policyData.startDate,
         fim_vigencia: policyData.endDate,
         forma_pagamento: policyData.paymentFrequency,
-        quantidade_parcelas: Array.isArray(policyData.installments) ? policyData.installments.length : 12,
+        quantidade_parcelas: installmentsCount, // GARANTIR que seja salvo
         valor_parcela: policyData.monthlyAmount,
         status: this.mapLegacyStatus(policyData.status),
         arquivo_url: pdfPath,
@@ -117,7 +122,7 @@ export class PolicyPersistenceService {
         extraction_timestamp: new Date().toISOString()
       };
 
-      console.log(`🔍 Dados da apólice preparados:`, policyInsert);
+      console.log(`🔍 Dados da apólice preparados (parcelas: ${installmentsCount}):`, policyInsert);
 
       // Inserir apólice
       const { data: policy, error: policyError } = await supabase
@@ -133,13 +138,15 @@ export class PolicyPersistenceService {
 
       console.log(`✅ Apólice salva com ID: ${policy.id}`);
 
-      // Salvar parcelas se existirem
+      // Salvar parcelas se existirem - PRIORIDADE ALTA
       if (Array.isArray(policyData.installments) && policyData.installments.length > 0) {
-        console.log(`💾 Salvando ${policyData.installments.length} parcelas`);
+        console.log(`💾 Salvando ${policyData.installments.length} parcelas detalhadas`);
         await this.saveInstallments(policy.id, policyData.installments, userId);
+      } else {
+        console.log(`⚠️ Nenhuma parcela detalhada encontrada - só quantidade: ${installmentsCount}`);
       }
 
-      // Salvar coberturas - PRIORITÁRIO
+      // Salvar coberturas
       await this.saveCoverages(policy.id, policyData);
 
       return policy.id;
@@ -209,38 +216,45 @@ export class PolicyPersistenceService {
     }
   }
 
-  // Salvar parcelas no banco
+  // Salvar parcelas no banco - MÉTODO MELHORADO
   private static async saveInstallments(
     policyId: string, 
     installments: any[], 
     userId: string
   ): Promise<void> {
     try {
-      const installmentInserts: InstallmentInsert[] = installments.map(installment => ({
+      console.log(`💾 Iniciando salvamento de ${installments.length} parcelas para policy ${policyId}`);
+      
+      const installmentInserts: InstallmentInsert[] = installments.map((installment, index) => ({
         policy_id: policyId,
         user_id: userId,
-        numero_parcela: installment.numero,
-        valor: installment.valor,
+        numero_parcela: installment.numero || (index + 1),
+        valor: Number(installment.valor) || 0,
         data_vencimento: installment.data,
         status: installment.status === 'paga' ? 'paga' : 'pendente'
       }));
 
-      const { error } = await supabase
+      console.log(`📝 Dados das parcelas preparados:`, installmentInserts);
+
+      const { data, error } = await supabase
         .from('installments')
-        .insert(installmentInserts);
+        .insert(installmentInserts)
+        .select();
 
       if (error) {
         console.error('❌ Erro ao salvar parcelas:', error);
+        throw error;
       } else {
-        console.log(`✅ ${installments.length} parcelas salvas para apólice ${policyId}`);
+        console.log(`✅ ${installments.length} parcelas salvas com sucesso:`, data);
       }
 
     } catch (error) {
       console.error('❌ Erro inesperado ao salvar parcelas:', error);
+      throw error;
     }
   }
 
-  // Carregar apólices do usuário
+  // Carregar apólices do usuário - MÉTODO MELHORADO
   static async loadUserPolicies(userId: string): Promise<ParsedPolicyData[]> {
     try {
       console.log(`📖 Carregando apólices do usuário: ${userId}`);
@@ -281,12 +295,34 @@ export class PolicyPersistenceService {
         console.log(`🔍 Processando apólice:`, {
           id: policy.id,
           segurado: policy.segurado,
+          quantidade_parcelas: policy.quantidade_parcelas,
+          installments: policy.installments,
+          installmentsCount: policy.installments?.length || 0,
           coberturas: policy.coberturas,
           coberturasCount: policy.coberturas?.length || 0
         });
 
         // Detectar e corrigir dados misturados (legacy fix)
         let cleanedData = this.fixMixedData(policy);
+        
+        // GARANTIR que as parcelas sejam carregadas corretamente
+        const installmentsFromDB = (policy.installments as any[])?.map(inst => ({
+          numero: inst.numero_parcela,
+          valor: Number(inst.valor),
+          data: inst.data_vencimento,
+          status: inst.status
+        })) || [];
+
+        // Se não há parcelas no DB mas há quantidade_parcelas, gerar parcelas básicas
+        let finalInstallments = installmentsFromDB;
+        if (installmentsFromDB.length === 0 && policy.quantidade_parcelas && policy.quantidade_parcelas > 0) {
+          console.log(`🔄 Gerando ${policy.quantidade_parcelas} parcelas básicas para apólice ${policy.id}`);
+          finalInstallments = this.generateBasicInstallments(
+            policy.quantidade_parcelas, 
+            Number(policy.custo_mensal) || 0,
+            policy.inicio_vigencia || new Date().toISOString().split('T')[0]
+          );
+        }
         
         return {
           id: policy.id,
@@ -302,12 +338,9 @@ export class PolicyPersistenceService {
           status: policy.status || 'vigente',
           pdfPath: policy.arquivo_url,
           extractedAt: policy.extraido_em || policy.created_at || new Date().toISOString(),
-          installments: (policy.installments as any[])?.map(inst => ({
-            numero: inst.numero_parcela,
-            valor: Number(inst.valor),
-            data: inst.data_vencimento,
-            status: inst.status
-          })) || [],
+          
+          // PARCELAS - usar as carregadas ou geradas
+          installments: finalInstallments,
           
           // Mapear coberturas do banco com LMI
           coberturas: (policy.coberturas as any[])?.map(cob => ({
@@ -340,7 +373,8 @@ export class PolicyPersistenceService {
 
       console.log(`✅ Apólices convertidas com sucesso:`, {
         total: parsedPolicies.length,
-        comCoberturas: parsedPolicies.filter(p => p.coberturas && p.coberturas.length > 0).length
+        comCoberturas: parsedPolicies.filter(p => p.coberturas && p.coberturas.length > 0).length,
+        comParcelas: parsedPolicies.filter(p => p.installments && p.installments.length > 0).length
       });
 
       return parsedPolicies;
@@ -349,6 +383,31 @@ export class PolicyPersistenceService {
       console.error('❌ Erro inesperado ao carregar apólices:', error);
       return [];
     }
+  }
+
+  // NOVO: Gerar parcelas básicas quando não há dados detalhados
+  private static generateBasicInstallments(
+    numberOfInstallments: number, 
+    monthlyAmount: number, 
+    startDate: string
+  ) {
+    const installments = [];
+    const baseDate = new Date(startDate);
+    
+    for (let i = 0; i < numberOfInstallments; i++) {
+      const installmentDate = new Date(baseDate);
+      installmentDate.setMonth(installmentDate.getMonth() + i);
+      
+      installments.push({
+        numero: i + 1,
+        valor: monthlyAmount,
+        data: installmentDate.toISOString().split('T')[0],
+        status: 'pendente' as const
+      });
+    }
+    
+    console.log(`📊 Geradas ${numberOfInstallments} parcelas básicas`);
+    return installments;
   }
 
   private static fixMixedData(policy: any) {
