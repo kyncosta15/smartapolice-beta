@@ -26,7 +26,6 @@ export const useCoveragesData = (
   const loadCoveragesFromDB = async () => {
     if (!policyId) {
       console.log('⚠️ PolicyId não fornecido, processando dados iniciais apenas');
-      // Se não há policyId, processar dados iniciais
       if (initialCoverages && initialCoverages.length > 0) {
         const normalizedCoverages = normalizeInitialCoverages(initialCoverages);
         console.log('📝 Usando coberturas iniciais normalizadas:', normalizedCoverages);
@@ -53,6 +52,7 @@ export const useCoveragesData = (
       console.log('📚 Coberturas encontradas no DB:', data);
 
       if (data && data.length > 0) {
+        // PRIORIDADE: Usar coberturas do banco de dados
         const dbCoverages = data.map(item => ({
           id: item.id,
           descricao: item.descricao || '',
@@ -64,12 +64,12 @@ export const useCoveragesData = (
       } else {
         console.log('📝 Nenhuma cobertura no DB, verificando dados iniciais:', initialCoverages);
         
-        // Verificar se há coberturas iniciais válidas para salvar
+        // IMPORTANTE: Verificar se há coberturas iniciais válidas para salvar
         if (initialCoverages && initialCoverages.length > 0) {
           const normalizedCoverages = normalizeInitialCoverages(initialCoverages);
           console.log('🔄 Salvando coberturas iniciais no banco:', normalizedCoverages);
           
-          // Salvar coberturas iniciais no banco de dados
+          // CORREÇÃO PRINCIPAL: Salvar coberturas iniciais no banco de dados IMEDIATAMENTE
           const savedCoverages = await saveInitialCoverages(normalizedCoverages);
           setCoverages(savedCoverages || normalizedCoverages);
         } else {
@@ -81,7 +81,7 @@ export const useCoveragesData = (
       setIsLoaded(true);
     } catch (error) {
       console.error('❌ Erro ao carregar coberturas:', error);
-      // Em caso de erro, usar dados iniciais se disponíveis
+      // FALLBACK: Usar dados iniciais se disponíveis
       if (initialCoverages && initialCoverages.length > 0) {
         const normalizedCoverages = normalizeInitialCoverages(initialCoverages);
         console.log('🔄 Usando coberturas iniciais por fallback:', normalizedCoverages);

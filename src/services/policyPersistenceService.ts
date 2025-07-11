@@ -100,14 +100,14 @@ export class PolicyPersistenceService {
         user_id: userId,
         segurado: policyData.insuredName || policyData.name,
         seguradora: policyData.insurer,
-        tipo_seguro: policyData.type,
+        tipo_seguro: policyData.type, // CORREÇÃO: Manter o tipo normalizado
         numero_apolice: policyData.policyNumber,
         valor_premio: policyData.premium,
         custo_mensal: policyData.monthlyAmount,
         inicio_vigencia: policyData.startDate,
         fim_vigencia: policyData.endDate,
         forma_pagamento: policyData.paymentFrequency,
-        quantidade_parcelas: installmentsCount, // GARANTIR que seja salvo
+        quantidade_parcelas: installmentsCount,
         valor_parcela: policyData.monthlyAmount,
         status: this.mapLegacyStatus(policyData.status),
         arquivo_url: pdfPath,
@@ -122,7 +122,7 @@ export class PolicyPersistenceService {
         extraction_timestamp: new Date().toISOString()
       };
 
-      console.log(`🔍 Dados da apólice preparados (parcelas: ${installmentsCount}):`, policyInsert);
+      console.log(`🔍 Dados da apólice preparados (tipo: ${policyData.type}, parcelas: ${installmentsCount}):`, policyInsert);
 
       // Inserir apólice
       const { data: policy, error: policyError } = await supabase
@@ -138,16 +138,19 @@ export class PolicyPersistenceService {
 
       console.log(`✅ Apólice salva com ID: ${policy.id}`);
 
-      // Salvar parcelas se existirem - PRIORIDADE ALTA
+      // CORREÇÃO PRINCIPAL: Salvar coberturas IMEDIATAMENTE após salvar a apólice
+      if (policyData.coberturas && policyData.coberturas.length > 0) {
+        console.log(`💾 Salvando ${policyData.coberturas.length} coberturas IMEDIATAMENTE`);
+        await this.saveCoverages(policy.id, policyData);
+      }
+
+      // Salvar parcelas se existirem
       if (Array.isArray(policyData.installments) && policyData.installments.length > 0) {
         console.log(`💾 Salvando ${policyData.installments.length} parcelas detalhadas`);
         await this.saveInstallments(policy.id, policyData.installments, userId);
       } else {
         console.log(`⚠️ Nenhuma parcela detalhada encontrada - só quantidade: ${installmentsCount}`);
       }
-
-      // Salvar coberturas
-      await this.saveCoverages(policy.id, policyData);
 
       return policy.id;
 
@@ -157,10 +160,10 @@ export class PolicyPersistenceService {
     }
   }
 
-  // Salvar coberturas no banco - FUNÇÃO MELHORADA
+  // CORREÇÃO: Salvar coberturas no banco - FUNÇÃO MELHORADA E ROBUSTA
   private static async saveCoverages(policyId: string, policyData: ParsedPolicyData): Promise<void> {
     try {
-      console.log(`💾 Iniciando salvamento de coberturas para policy ${policyId}`);
+      console.log(`💾 INICIANDO salvamento de coberturas para policy ${policyId}`);
       console.log('📋 Dados de coberturas recebidos:', {
         coberturas: policyData.coberturas,
         coverage: policyData.coverage
@@ -168,7 +171,7 @@ export class PolicyPersistenceService {
 
       let coberturasToSave: Array<{ descricao: string; lmi?: number }> = [];
 
-      // Priorizar policyData.coberturas (formato completo)
+      // PRIORIDADE 1: Usar policyData.coberturas (formato completo com LMI)
       if (policyData.coberturas && Array.isArray(policyData.coberturas) && policyData.coberturas.length > 0) {
         console.log(`📝 Usando coberturas detalhadas (${policyData.coberturas.length} itens)`);
         coberturasToSave = policyData.coberturas.map(cobertura => ({
@@ -176,7 +179,7 @@ export class PolicyPersistenceService {
           lmi: cobertura.lmi
         }));
       } 
-      // Fallback para policyData.coverage (formato simplificado)
+      // FALLBACK: Usar policyData.coverage (formato simplificado)
       else if (policyData.coverage && Array.isArray(policyData.coverage) && policyData.coverage.length > 0) {
         console.log(`📝 Usando coverage simplificado (${policyData.coverage.length} itens)`);
         coberturasToSave = policyData.coverage.map(desc => ({
@@ -196,7 +199,7 @@ export class PolicyPersistenceService {
         lmi: cobertura.lmi || null
       }));
 
-      console.log(`📝 Dados preparados para inserção (${coberturasInserts.length} coberturas):`, coberturasInserts);
+      console.log(`📝 INSERINDO ${coberturasInserts.length} coberturas no banco:`, coberturasInserts);
 
       const { data, error } = await supabase
         .from('coberturas')
@@ -208,7 +211,7 @@ export class PolicyPersistenceService {
         throw error;
       }
 
-      console.log(`✅ ${coberturasToSave.length} coberturas salvas com sucesso:`, data);
+      console.log(`✅ ${coberturasToSave.length} coberturas salvas com SUCESSO no banco:`, data);
 
     } catch (error) {
       console.error('❌ Erro inesperado ao salvar coberturas:', error);

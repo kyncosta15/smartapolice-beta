@@ -1,26 +1,5 @@
-
 import { ParsedPolicyData } from '@/utils/policyDataParser';
-
-// Função auxiliar para normalizar o tipo de seguro
-const normalizeType = (type: string | undefined): string => {
-  if (!type) return 'auto';
-
-  const lowerType = type.toLowerCase();
-
-  if (lowerType.includes('auto') || lowerType.includes('carro') || lowerType.includes('veículo')) {
-    return 'auto';
-  } else if (lowerType.includes('vida')) {
-    return 'vida';
-  } else if (lowerType.includes('residencial') || lowerType.includes('casa')) {
-    return 'residencial';
-  } else if (lowerType.includes('saúde') || lowerType.includes('saude')) {
-    return 'saude';
-  } else if (lowerType.includes('acidentes pessoais') || lowerType.includes('acidentes')) {
-    return 'acidentes_pessoais';
-  } else {
-    return 'outros';
-  }
-};
+import { PolicyTypeNormalizer } from './policyTypeNormalizer';
 
 // Função auxiliar para mapear o status
 const mapStatus = (status: string | undefined): string => {
@@ -103,10 +82,13 @@ const generateInstallmentsFromN8NData = (data: any): Array<{numero: number, valo
 
 // Função para converter dados do N8N para o formato ParsedPolicyData
 export const convertN8NData = (data: any): ParsedPolicyData => {
+  // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
+  const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
+  
   return {
     id: crypto.randomUUID(),
     name: data.segurado || 'Segurado não informado',
-    type: normalizeType(data.tipo_seguro || data.tipo),
+    type: normalizedType, // CORREÇÃO: Usar tipo normalizado
     insurer: data.seguradora || 'Seguradora não informada',
     premium: Number(data.valor_premio || data.premio) || 0,
     monthlyAmount: Number(data.custo_mensal || data.valor_parcela) || 0,
@@ -132,7 +114,7 @@ export const convertN8NData = (data: any): ParsedPolicyData => {
     // Parcelas com tratamento adequado para diferentes formatos
     installments: generateInstallmentsFromN8NData(data),
 
-    // Coberturas com LMI
+    // CORREÇÃO PRINCIPAL: Coberturas com LMI - garantir formato correto
     coberturas: data.coberturas?.map((cobertura: any) => ({
       descricao: cobertura.descricao || cobertura.tipo,
       lmi: Number(cobertura.lmi) || undefined
@@ -140,7 +122,8 @@ export const convertN8NData = (data: any): ParsedPolicyData => {
 
     // Campos de compatibilidade
     entity: data.corretora || 'Não informado',
-    category: (data.tipo_seguro || data.tipo) === 'auto' ? 'Veicular' : 'Outros',
+    category: normalizedType === 'auto' ? 'Veicular' : 
+             normalizedType === 'empresarial' ? 'Empresarial' : 'Outros',
     coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo) || [],
     totalCoverage: Number(data.valor_premio || data.premio) || 0
   };
@@ -148,10 +131,13 @@ export const convertN8NData = (data: any): ParsedPolicyData => {
 
 // Função para converter dados diretos do N8N
 export const convertN8NDirectData = (data: any, fileName: string, file: File): ParsedPolicyData => {
+  // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
+  const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
+  
   return {
     id: crypto.randomUUID(),
     name: data.segurado || fileName.replace('.pdf', ''),
-    type: normalizeType(data.tipo_seguro || data.tipo),
+    type: normalizedType, // CORREÇÃO: Usar tipo normalizado
     insurer: data.seguradora || 'Seguradora não informada',
     premium: Number(data.valor_premio || data.premio) || 0,
     monthlyAmount: Number(data.custo_mensal || data.valor_parcela) || 0,
@@ -178,7 +164,7 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File): P
     // CORREÇÃO PRINCIPAL: Parcelas com tratamento robusto para diferentes formatos
     installments: generateInstallmentsFromN8NData(data),
 
-    // Coberturas com LMI
+    // CORREÇÃO PRINCIPAL: Coberturas com LMI - garantir formato correto
     coberturas: data.coberturas?.map((cobertura: any) => ({
       descricao: cobertura.descricao || cobertura.tipo,
       lmi: Number(cobertura.lmi) || undefined
@@ -186,7 +172,8 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File): P
 
     // Campos de compatibilidade
     entity: data.corretora || 'Não informado',
-    category: (data.tipo_seguro || data.tipo) === 'auto' ? 'Veicular' : 'Outros',
+    category: normalizedType === 'auto' ? 'Veicular' : 
+             normalizedType === 'empresarial' ? 'Empresarial' : 'Outros',
     coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo) || [],
     totalCoverage: Number(data.valor_premio || data.premio) || 0
   };

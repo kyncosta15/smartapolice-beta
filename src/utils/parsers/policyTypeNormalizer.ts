@@ -11,7 +11,7 @@ export class PolicyTypeNormalizer {
     'saude': 'saude',
     'residencial': 'patrimonial',
     'patrimonial': 'patrimonial',
-    'empresarial': 'empresarial',
+    'empresarial': 'empresarial', // CORREÇÃO: Adicionar mapeamento para empresarial
     'acidentes pessoais': 'acidentes_pessoais',
     'acidentes pessoais - estagiário': 'acidentes_pessoais',
     'acidentes pessoais - estagiario': 'acidentes_pessoais'
@@ -23,6 +23,11 @@ export class PolicyTypeNormalizer {
     // Verificar se contém "acidentes pessoais" em qualquer variação
     if (normalized.includes('acidentes pessoais')) {
       return 'acidentes_pessoais';
+    }
+    
+    // CORREÇÃO: Verificar se contém "empresarial" em qualquer variação
+    if (normalized.includes('empresarial')) {
+      return 'empresarial';
     }
     
     return this.TYPE_MAP[normalized] || 'auto';
