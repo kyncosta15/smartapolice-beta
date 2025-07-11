@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, TrendingUp } from 'lucide-react';
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getChartColor } from '@/utils/statusColors';
 
 interface StatusEvolutionChartsProps {
   statusDistribution: Array<{ name: string; value: number }>;
@@ -23,18 +23,24 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
     colors: colors?.length
   });
 
-  // Cores otimizadas com gradientes para cada status
-  const statusColors = {
-    'Ativo': '#10b981',      // Verde
-    'Vencido': '#ef4444',    // Vermelho
-    'A Vencer': '#f59e0b',   // Laranja
-    'Cancelado': '#6b7280',  // Cinza
-    'Renovado': '#3b82f6',   // Azul
-    'Suspenso': '#8b5cf6'    // Roxo
-  };
-
+  // Função para obter cor específica do status
   const getStatusColor = (statusName: string) => {
-    return statusColors[statusName as keyof typeof statusColors] || colors[0] || '#6b7280';
+    // Mapear nomes do gráfico para status internos
+    const statusMap: Record<string, string> = {
+      'ATIVA': 'ativa',
+      'VIGENTE': 'vigente', 
+      'VENCIDA': 'vencida',
+      'VENCENDO': 'vencendo',
+      'A VENCER': 'vencendo',
+      'NÃO RENOVADA': 'nao_renovada',
+      'CANCELADO': 'nao_renovada',
+      'SUSPENSO': 'pendente_analise',
+      'AGUARDANDO EMISSÃO': 'aguardando_emissao',
+      'RENOVADO': 'aguardando_emissao'
+    };
+    
+    const mappedStatus = statusMap[statusName.toUpperCase()] || statusName.toLowerCase();
+    return getChartColor(mappedStatus);
   };
 
   return (

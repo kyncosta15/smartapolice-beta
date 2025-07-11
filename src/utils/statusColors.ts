@@ -32,14 +32,14 @@ export const formatStatusText = (status: PolicyStatus | string): string => {
 // Função para obter a cor do gráfico (apenas a cor base)
 export const getChartColor = (status: PolicyStatus | string): string => {
   const colorMap: Record<string, string> = {
-    vigente: "#10b981",
-    ativa: "#10b981",
-    aguardando_emissao: "#3b82f6", 
-    nao_renovada: "#ef4444",
-    vencida: "#ef4444",
-    pendente_analise: "#f59e0b",
-    vencendo: "#f97316",
-    desconhecido: "#6b7280"
+    vigente: "#10b981",    // Verde
+    ativa: "#10b981",      // Verde  
+    aguardando_emissao: "#3b82f6",  // Azul
+    nao_renovada: "#ef4444",        // Vermelho
+    vencida: "#dc2626",             // Vermelho mais escuro
+    pendente_analise: "#f59e0b",    // Amarelo/Laranja
+    vencendo: "#f97316",            // Laranja
+    desconhecido: "#6b7280"         // Cinza
   };
   return colorMap[status] || "#6b7280";
 };

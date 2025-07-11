@@ -37,25 +37,38 @@ const initialPolicies: PolicyWithStatus[] = [
   }
 ];
 
-// Função para determinar o status correto baseado na data de vencimento
+// Função CORRIGIDA para determinar o status correto baseado na data de vencimento
 const getCorrectStatus = (policy: PolicyWithStatus): PolicyStatus => {
-  if (!policy.expirationDate && !policy.endDate) {
+  const expirationDateStr = policy.expirationDate || policy.endDate;
+  
+  if (!expirationDateStr) {
     return policy.status || 'vigente';
   }
   
   const now = new Date();
-  const expirationDate = new Date(policy.expirationDate || policy.endDate);
+  const expirationDate = new Date(expirationDateStr);
   const diffTime = expirationDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  // Se já venceu
-  if (diffDays < 0) {
-    return 'nao_renovada'; // ou manter o status atual se já foi processado
+  console.log(`📅 Política ${policy.name}:`, {
+    expirationDate: expirationDate.toLocaleDateString('pt-BR'),
+    diffDays,
+    now: now.toLocaleDateString('pt-BR')
+  });
+  
+  // Se já venceu (mais de 0 dias atrás)
+  if (diffDays < -1) {
+    return 'nao_renovada';
+  }
+  
+  // Se venceu hoje ou ontem
+  if (diffDays <= 0) {
+    return 'vencida';
   }
   
   // Se está vencendo nos próximos 30 dias
-  if (diffDays <= 30 && diffDays >= 0) {
-    return 'pendente_analise';
+  if (diffDays <= 30) {
+    return 'vencendo';
   }
   
   // Caso contrário, está vigente
@@ -79,10 +92,14 @@ export function MyPolicies() {
   useEffect(() => {
     const updatePolicyStatuses = () => {
       setPolicies(prevPolicies => 
-        prevPolicies.map(policy => ({
-          ...policy,
-          status: getCorrectStatus(policy)
-        }))
+        prevPolicies.map(policy => {
+          const newStatus = getCorrectStatus(policy);
+          console.log(`🔄 Atualizando status da apólice ${policy.name}: ${policy.status} -> ${newStatus}`);
+          return {
+            ...policy,
+            status: newStatus
+          };
+        })
       );
     };
 
@@ -133,7 +150,7 @@ export function MyPolicies() {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg">{policy.name}</CardTitle>
-                  <Badge className={STATUS_COLORS[currentStatus]}>
+                  <Badge className={STATUS_COLORS[currentStatus] || STATUS_COLORS.desconhecido}>
                     {formatStatusText(currentStatus)}
                   </Badge>
                 </div>
