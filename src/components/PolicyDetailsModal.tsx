@@ -71,7 +71,15 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
         {/* GRID DE CARDS: 2 POR LINHA EM TELAS GRANDES */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 p-6 items-stretch">
           <GeneralInfoCard policy={policy} />
-          <InsurerInfoCard policy={policy} />
+          <InsurerInfoCard 
+            insurer={policy.seguradora || policy.insurer || 'Não informado'}
+            policyNumber={policy.numero_apolice || policy.policyNumber || 'Não informado'}
+            premium={policy.valor_premio || policy.premium || 0}
+            startDate={policy.inicio_vigencia || policy.startDate || ''}
+            endDate={policy.fim_vigencia || policy.endDate || ''}
+            paymentFrequency={policy.forma_pagamento || policy.paymentFrequency || 'Não informado'}
+            type={policy.tipo_seguro || policy.type || 'Não informado'}
+          />
 
           <ValidityInfoCard policy={policy} />
           {policy.vehicleModel && <VehicleInfoCard policy={policy} />}
