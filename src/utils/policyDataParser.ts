@@ -1,10 +1,12 @@
-
 export interface InstallmentData {
   numero: number;
   valor: number;
   data: string;
   status: 'paga' | 'pendente';
 }
+
+// Importar os novos tipos
+import { PolicyStatus } from '@/types/policyStatus';
 
 export interface ParsedPolicyData {
   id: string;
@@ -20,6 +22,10 @@ export interface ParsedPolicyData {
   status: string;
   file?: File;
   extractedAt: string;
+  
+  // NOVOS CAMPOS ADICIONADOS
+  expirationDate: string;    // ISO date
+  policyStatus: PolicyStatus; // Status específico de renovação
   
   // Parcelas individuais
   installments: Array<{
