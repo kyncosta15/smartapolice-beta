@@ -1,18 +1,14 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface Coverage {
-  id?: string;
-  descricao: string;
-  lmi?: number;
-}
+import { Coverage, CoverageHookReturn } from './types';
+import { normalizeInitialCoverages } from './coverageNormalizer';
+import { CoverageDatabase } from './coverageDatabase';
 
 export const useCoveragesData = (
   initialCoverages: Coverage[] | string[],
   policyId: string
-) => {
+): CoverageHookReturn => {
   const [coverages, setCoverages] = useState<Coverage[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
@@ -36,41 +32,19 @@ export const useCoveragesData = (
     }
 
     try {
-      console.log('🔍 Buscando coberturas no DB para policy:', policyId);
-      
-      const { data, error } = await supabase
-        .from('coberturas')
-        .select('*')
-        .eq('policy_id', policyId)
-        .order('created_at', { ascending: true });
+      const dbCoverages = await CoverageDatabase.loadCoverages(policyId);
 
-      if (error) {
-        console.error('❌ Erro ao carregar coberturas:', error);
-        throw error;
-      }
-
-      console.log('📚 Coberturas encontradas no DB:', data);
-
-      if (data && data.length > 0) {
-        // PRIORIDADE: Usar coberturas do banco de dados
-        const dbCoverages = data.map(item => ({
-          id: item.id,
-          descricao: item.descricao || '',
-          lmi: item.lmi || undefined
-        }));
-        
+      if (dbCoverages.length > 0) {
         console.log('✅ Usando coberturas do banco de dados:', dbCoverages);
         setCoverages(dbCoverages);
       } else {
         console.log('📝 Nenhuma cobertura no DB, verificando dados iniciais:', initialCoverages);
         
-        // IMPORTANTE: Verificar se há coberturas iniciais válidas para salvar
         if (initialCoverages && initialCoverages.length > 0) {
           const normalizedCoverages = normalizeInitialCoverages(initialCoverages);
           console.log('🔄 Salvando coberturas iniciais no banco:', normalizedCoverages);
           
-          // CORREÇÃO PRINCIPAL: Salvar coberturas iniciais no banco de dados IMEDIATAMENTE
-          const savedCoverages = await saveInitialCoverages(normalizedCoverages);
+          const savedCoverages = await CoverageDatabase.saveCoverages(normalizedCoverages, policyId);
           setCoverages(savedCoverages || normalizedCoverages);
         } else {
           console.log('📭 Nenhuma cobertura inicial disponível');
@@ -81,7 +55,7 @@ export const useCoveragesData = (
       setIsLoaded(true);
     } catch (error) {
       console.error('❌ Erro ao carregar coberturas:', error);
-      // FALLBACK: Usar dados iniciais se disponíveis
+      
       if (initialCoverages && initialCoverages.length > 0) {
         const normalizedCoverages = normalizeInitialCoverages(initialCoverages);
         console.log('🔄 Usando coberturas iniciais por fallback:', normalizedCoverages);
@@ -90,64 +64,6 @@ export const useCoveragesData = (
         setCoverages([]);
       }
       setIsLoaded(true);
-    }
-  };
-
-  const normalizeInitialCoverages = (initialCoverages: Coverage[] | string[]): Coverage[] => {
-    return initialCoverages.map((coverage, index) => {
-      if (typeof coverage === 'string') {
-        return { 
-          id: `temp-${index}`, 
-          descricao: coverage,
-          lmi: undefined
-        };
-      }
-      return {
-        ...coverage,
-        id: coverage.id || `temp-${index}`
-      };
-    });
-  };
-
-  const saveInitialCoverages = async (coverages: Coverage[]): Promise<Coverage[] | null> => {
-    if (!policyId) {
-      console.log('⚠️ Não é possível salvar coberturas sem policyId');
-      return null;
-    }
-
-    try {
-      const coberturasToInsert = coverages.map(coverage => ({
-        policy_id: policyId,
-        descricao: coverage.descricao,
-        lmi: coverage.lmi || null
-      }));
-
-      console.log('💾 Inserindo coberturas iniciais no banco:', coberturasToInsert);
-
-      const { data, error } = await supabase
-        .from('coberturas')
-        .insert(coberturasToInsert)
-        .select();
-
-      if (error) {
-        console.error('❌ Erro ao salvar coberturas iniciais:', error);
-        return null;
-      }
-
-      console.log('✅ Coberturas iniciais salvas no banco:', data);
-
-      if (data) {
-        return data.map(item => ({
-          id: item.id,
-          descricao: item.descricao || '',
-          lmi: item.lmi || undefined
-        }));
-      }
-
-      return null;
-    } catch (error) {
-      console.error('❌ Erro ao salvar coberturas iniciais:', error);
-      return null;
     }
   };
 
@@ -166,36 +82,12 @@ export const useCoveragesData = (
       console.log('💾 Salvando cobertura:', coverage);
       
       if (coverage.id && !coverage.id.startsWith('temp-')) {
-        // Atualizar cobertura existente
-        const { error } = await supabase
-          .from('coberturas')
-          .update({
-            descricao: coverage.descricao,
-            lmi: coverage.lmi || null
-          })
-          .eq('id', coverage.id);
-
-        if (error) throw error;
-        console.log('✅ Cobertura atualizada com sucesso');
+        await CoverageDatabase.updateCoverage(coverage);
       } else {
-        // Inserir nova cobertura
-        const { data, error } = await supabase
-          .from('coberturas')
-          .insert({
-            policy_id: policyId,
-            descricao: coverage.descricao,
-            lmi: coverage.lmi || null
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        console.log('✅ Nova cobertura inserida:', data);
+        const newCoverage = await CoverageDatabase.insertCoverage(coverage, policyId);
         
-        // Atualizar o estado local com o ID real
         setCoverages(prev => prev.map(c => 
-          c.id === coverage.id ? { ...coverage, id: data.id } : c
+          c.id === coverage.id ? newCoverage : c
         ));
       }
 
@@ -217,15 +109,7 @@ export const useCoveragesData = (
     try {
       console.log('🗑️ Deletando cobertura:', coverageId);
       
-      if (!coverageId.startsWith('temp-')) {
-        const { error } = await supabase
-          .from('coberturas')
-          .delete()
-          .eq('id', coverageId);
-
-        if (error) throw error;
-      }
-
+      await CoverageDatabase.deleteCoverage(coverageId);
       setCoverages(prev => prev.filter(c => c.id !== coverageId));
       
       toast({
