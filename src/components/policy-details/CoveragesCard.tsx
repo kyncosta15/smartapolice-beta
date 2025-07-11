@@ -85,7 +85,10 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
     const tempId = `temp-${Date.now()}`;
     const coverageToAdd = { ...newCoverage, id: tempId };
     
+    // Adicionar ao estado local primeiro
     setCoverages(prev => [...prev, coverageToAdd]);
+    
+    // Salvar no banco de dados
     await saveCoverage(coverageToAdd);
     
     setIsAddingNew(false);

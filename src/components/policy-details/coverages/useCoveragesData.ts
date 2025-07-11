@@ -43,7 +43,7 @@ export const useCoveragesData = (
         .from('coberturas')
         .select('*')
         .eq('policy_id', policyId)
-        .order('id', { ascending: true });
+        .order('created_at', { ascending: true });
 
       if (error) {
         console.error('❌ Erro ao carregar coberturas:', error);
@@ -62,14 +62,16 @@ export const useCoveragesData = (
         console.log('✅ Usando coberturas do banco de dados:', dbCoverages);
         setCoverages(dbCoverages);
       } else {
-        console.log('📝 Nenhuma cobertura no DB, processando dados iniciais:', initialCoverages);
+        console.log('📝 Nenhuma cobertura no DB, verificando dados iniciais:', initialCoverages);
         
+        // Verificar se há coberturas iniciais válidas para salvar
         if (initialCoverages && initialCoverages.length > 0) {
           const normalizedCoverages = normalizeInitialCoverages(initialCoverages);
           console.log('🔄 Salvando coberturas iniciais no banco:', normalizedCoverages);
           
-          await saveInitialCoverages(normalizedCoverages);
-          setCoverages(normalizedCoverages);
+          // Salvar coberturas iniciais no banco de dados
+          const savedCoverages = await saveInitialCoverages(normalizedCoverages);
+          setCoverages(savedCoverages || normalizedCoverages);
         } else {
           console.log('📭 Nenhuma cobertura inicial disponível');
           setCoverages([]);
@@ -107,10 +109,10 @@ export const useCoveragesData = (
     });
   };
 
-  const saveInitialCoverages = async (coverages: Coverage[]) => {
+  const saveInitialCoverages = async (coverages: Coverage[]): Promise<Coverage[] | null> => {
     if (!policyId) {
       console.log('⚠️ Não é possível salvar coberturas sem policyId');
-      return;
+      return null;
     }
 
     try {
@@ -120,7 +122,7 @@ export const useCoveragesData = (
         lmi: coverage.lmi || null
       }));
 
-      console.log('💾 Inserindo coberturas no banco:', coberturasToInsert);
+      console.log('💾 Inserindo coberturas iniciais no banco:', coberturasToInsert);
 
       const { data, error } = await supabase
         .from('coberturas')
@@ -129,22 +131,23 @@ export const useCoveragesData = (
 
       if (error) {
         console.error('❌ Erro ao salvar coberturas iniciais:', error);
-        return;
+        return null;
       }
 
       console.log('✅ Coberturas iniciais salvas no banco:', data);
 
       if (data) {
-        const updatedCoverages = data.map(item => ({
+        return data.map(item => ({
           id: item.id,
           descricao: item.descricao || '',
           lmi: item.lmi || undefined
         }));
-
-        setCoverages(updatedCoverages);
       }
+
+      return null;
     } catch (error) {
       console.error('❌ Erro ao salvar coberturas iniciais:', error);
+      return null;
     }
   };
 
@@ -163,23 +166,25 @@ export const useCoveragesData = (
       console.log('💾 Salvando cobertura:', coverage);
       
       if (coverage.id && !coverage.id.startsWith('temp-')) {
+        // Atualizar cobertura existente
         const { error } = await supabase
           .from('coberturas')
           .update({
             descricao: coverage.descricao,
-            lmi: coverage.lmi
+            lmi: coverage.lmi || null
           })
           .eq('id', coverage.id);
 
         if (error) throw error;
         console.log('✅ Cobertura atualizada com sucesso');
       } else {
+        // Inserir nova cobertura
         const { data, error } = await supabase
           .from('coberturas')
           .insert({
             policy_id: policyId,
             descricao: coverage.descricao,
-            lmi: coverage.lmi
+            lmi: coverage.lmi || null
           })
           .select()
           .single();
@@ -188,6 +193,7 @@ export const useCoveragesData = (
 
         console.log('✅ Nova cobertura inserida:', data);
         
+        // Atualizar o estado local com o ID real
         setCoverages(prev => prev.map(c => 
           c.id === coverage.id ? { ...coverage, id: data.id } : c
         ));
