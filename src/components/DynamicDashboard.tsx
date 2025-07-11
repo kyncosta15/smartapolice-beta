@@ -56,6 +56,19 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     color: COLORS[index % COLORS.length]
   }));
 
+  // Transform insurer data to match expected format
+  const insurerDistributionFormatted = insurerChartData.map(item => ({
+    name: item.insurer,
+    value: item.count,
+    color: item.color
+  }));
+
+  // Transform status data to match expected format  
+  const statusDistributionFormatted = statusChartData.map(item => ({
+    name: item.name,
+    value: item.count
+  }));
+
   // Transform recent policies to match expected format
   const recentPoliciesFormatted = dashboardData.recentPolicies.map(policy => {
     // Find the original policy to get additional data
@@ -127,7 +140,7 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
         <div className="w-full overflow-hidden">
           <ClassificationCharts
             typeDistribution={typeDistributionWithColors}
-            insurerDistribution={insurerChartData} // Usar dados com cores
+            insurerDistribution={insurerDistributionFormatted}
             recentPolicies={recentPoliciesFormatted}
             colors={COLORS}
           />
@@ -143,7 +156,7 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
         {/* D. Gestão e ciclo de vida da apólice */}
         <div className="print-status-section w-full overflow-hidden">
           <StatusEvolutionCharts
-            statusDistribution={statusChartData} // Usar dados com cores
+            statusDistribution={statusDistributionFormatted}
             monthlyEvolution={dashboardData.monthlyEvolution}
             colors={COLORS}
           />
