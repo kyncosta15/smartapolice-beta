@@ -1,8 +1,10 @@
+
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as pdf from 'pdf-parse';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { extractStructuredData } from '@/utils/extractStructuredData';
+import { FileProcessingStatus } from '@/types/pdfUpload';
 
 export async function processSingleFile(file: File): Promise<ParsedPolicyData | null> {
   try {
@@ -54,5 +56,50 @@ export async function processSingleFile(file: File): Promise<ParsedPolicyData | 
   } catch (error: any) {
     console.error(`Erro ao processar o arquivo ${file.name}:`, error);
     return null;
+  }
+}
+
+export class SingleFileProcessor {
+  private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
+  private removeFileStatus: (fileName: string) => void;
+
+  constructor(
+    updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
+    removeFileStatus: (fileName: string) => void
+  ) {
+    this.updateFileStatus = updateFileStatus;
+    this.removeFileStatus = removeFileStatus;
+  }
+
+  async processFile(file: File, userId: string | null): Promise<void> {
+    try {
+      this.updateFileStatus(file.name, {
+        progress: 0,
+        status: 'processing',
+        message: 'Iniciando processamento...'
+      });
+
+      const result = await processSingleFile(file);
+      
+      if (result) {
+        this.updateFileStatus(file.name, {
+          progress: 100,
+          status: 'completed',
+          message: 'Processamento concluído'
+        });
+      } else {
+        this.updateFileStatus(file.name, {
+          progress: 100,
+          status: 'failed',
+          message: 'Falha no processamento'
+        });
+      }
+    } catch (error) {
+      this.updateFileStatus(file.name, {
+        progress: 100,
+        status: 'failed',
+        message: `Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      });
+    }
   }
 }
