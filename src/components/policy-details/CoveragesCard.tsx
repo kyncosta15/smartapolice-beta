@@ -28,6 +28,12 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
   const [isAddingNew, setIsAddingNew] = useState(false);
   const { toast } = useToast();
 
+  console.log('🔍 CoveragesCard: Recebendo dados:', {
+    initialCoverages,
+    policyId,
+    readOnly
+  });
+
   const {
     coverages,
     setCoverages,
@@ -36,6 +42,12 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
     saveCoverage,
     deleteCoverage
   } = useCoveragesData(initialCoverages, policyId);
+
+  console.log('📊 CoveragesCard: Estado atual das coberturas:', {
+    coverages,
+    isLoaded,
+    count: coverages.length
+  });
 
   if (!isLoaded) {
     return <LoadingState />;
@@ -95,6 +107,16 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
     setNewCoverage(prev => ({ ...prev, [field]: value }));
   };
 
+  // Verificar se temos coberturas para exibir
+  const hasCoverages = coverages && coverages.length > 0;
+
+  console.log('🎯 CoveragesCard: Renderizando com:', {
+    hasCoverages,
+    coveragesCount: coverages.length,
+    isAddingNew,
+    shouldShowContent: hasCoverages || isAddingNew
+  });
+
   return (
     <Card className="flex flex-col h-full border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
       <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-blue-200 pb-4">
@@ -118,9 +140,9 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
       </CardHeader>
 
       <CardContent className="p-6 space-y-4">
-        {coverages.length > 0 || isAddingNew ? (
+        {hasCoverages || isAddingNew ? (
           <div className="space-y-3">
-            {coverages.map((coverage) => (
+            {hasCoverages && coverages.map((coverage) => (
               <CoverageItem
                 key={coverage.id}
                 coverage={coverage}

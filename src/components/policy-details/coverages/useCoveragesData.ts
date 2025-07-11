@@ -18,13 +18,21 @@ export const useCoveragesData = (
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log('🔄 CoveragesCard montado - carregando dados do DB para policy:', policyId);
+    console.log('🔄 useCoveragesData: Iniciando carregamento para policy:', policyId);
+    console.log('📋 Coberturas iniciais recebidas:', initialCoverages);
     loadCoveragesFromDB();
   }, [policyId]);
 
   const loadCoveragesFromDB = async () => {
     if (!policyId) {
-      console.log('⚠️ PolicyId não fornecido, não é possível carregar coberturas');
+      console.log('⚠️ PolicyId não fornecido, processando dados iniciais apenas');
+      // Se não há policyId, processar dados iniciais
+      if (initialCoverages && initialCoverages.length > 0) {
+        const normalizedCoverages = normalizeInitialCoverages(initialCoverages);
+        console.log('📝 Usando coberturas iniciais normalizadas:', normalizedCoverages);
+        setCoverages(normalizedCoverages);
+      }
+      setIsLoaded(true);
       return;
     }
 
@@ -35,7 +43,7 @@ export const useCoveragesData = (
         .from('coberturas')
         .select('*')
         .eq('policy_id', policyId)
-        .order('created_at', { ascending: true });
+        .order('id', { ascending: true });
 
       if (error) {
         console.error('❌ Erro ao carregar coberturas:', error);
@@ -62,12 +70,23 @@ export const useCoveragesData = (
           
           await saveInitialCoverages(normalizedCoverages);
           setCoverages(normalizedCoverages);
+        } else {
+          console.log('📭 Nenhuma cobertura inicial disponível');
+          setCoverages([]);
         }
       }
       
       setIsLoaded(true);
     } catch (error) {
       console.error('❌ Erro ao carregar coberturas:', error);
+      // Em caso de erro, usar dados iniciais se disponíveis
+      if (initialCoverages && initialCoverages.length > 0) {
+        const normalizedCoverages = normalizeInitialCoverages(initialCoverages);
+        console.log('🔄 Usando coberturas iniciais por fallback:', normalizedCoverages);
+        setCoverages(normalizedCoverages);
+      } else {
+        setCoverages([]);
+      }
       setIsLoaded(true);
     }
   };
@@ -89,12 +108,19 @@ export const useCoveragesData = (
   };
 
   const saveInitialCoverages = async (coverages: Coverage[]) => {
+    if (!policyId) {
+      console.log('⚠️ Não é possível salvar coberturas sem policyId');
+      return;
+    }
+
     try {
       const coberturasToInsert = coverages.map(coverage => ({
         policy_id: policyId,
         descricao: coverage.descricao,
         lmi: coverage.lmi || null
       }));
+
+      console.log('💾 Inserindo coberturas no banco:', coberturasToInsert);
 
       const { data, error } = await supabase
         .from('coberturas')
@@ -123,6 +149,16 @@ export const useCoveragesData = (
   };
 
   const saveCoverage = async (coverage: Coverage) => {
+    if (!policyId) {
+      console.log('⚠️ Não é possível salvar cobertura sem policyId');
+      toast({
+        title: "❌ Erro",
+        description: "ID da apólice não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       console.log('💾 Salvando cobertura:', coverage);
       

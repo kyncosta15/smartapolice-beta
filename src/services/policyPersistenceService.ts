@@ -27,9 +27,9 @@ export class PolicyPersistenceService {
     try {
       // Sanitizar nome do arquivo - remover espaços e caracteres especiais
       const sanitizedFileName = file.name
-        .replace(/\s+/g, '_') // Substituir espaços por underscores
-        .replace(/[^a-zA-Z0-9._-]/g, '') // Remover caracteres especiais
-        .toLowerCase(); // Converter para minúsculas
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9._-]/g, '')
+        .toLowerCase();
       
       const fileName = `${userId}/${Date.now()}_${sanitizedFileName}`;
       
@@ -70,8 +70,9 @@ export class PolicyPersistenceService {
       }
 
       console.log(`💾 Salvando apólice no banco para usuário ${userId}:`, policyData.name);
+      console.log('📋 Coberturas da apólice:', policyData.coberturas);
 
-      // VERIFICAÇÃO DE DUPLICAÇÃO: Verificar se já existe uma apólice com o mesmo número
+      // VERIFICAÇÃO DE DUPLICAÇÃO
       if (policyData.policyNumber) {
         console.log(`🔍 Verificando duplicação para apólice: ${policyData.policyNumber}`);
         
@@ -84,15 +85,12 @@ export class PolicyPersistenceService {
         if (checkError) {
           console.warn('⚠️ Erro ao verificar duplicação:', checkError);
         } else if (existingPolicies && existingPolicies.length > 0) {
-          console.log(`🚫 DUPLICAÇÃO DETECTADA: Apólice ${policyData.policyNumber} já existe para o usuário ${userId}`);
-          console.log(`📋 Apólices existentes:`, existingPolicies.map(p => ({ id: p.id, numero: p.numero_apolice })));
-          
-          // Retornar o ID da apólice existente ao invés de criar uma nova
+          console.log(`🚫 DUPLICAÇÃO DETECTADA: Apólice ${policyData.policyNumber} já existe`);
           return existingPolicies[0].id;
         }
       }
 
-      // Preparar dados da apólice com mapeamento completo
+      // Preparar dados da apólice
       const policyInsert: PolicyInsert = {
         user_id: userId,
         segurado: policyData.insuredName || policyData.name,
@@ -109,24 +107,17 @@ export class PolicyPersistenceService {
         status: this.mapLegacyStatus(policyData.status),
         arquivo_url: pdfPath,
         extraido_em: new Date().toISOString(),
-        // Documento e tipo de documento separados
-        documento: policyData.documento, // Número do documento
-        documento_tipo: policyData.documento_tipo, // Tipo do documento
+        documento: policyData.documento,
+        documento_tipo: policyData.documento_tipo,
         franquia: policyData.deductible || null,
         corretora: policyData.entity || policyData.broker || 'Não informado',
-        // Campos de veículo e localização
         modelo_veiculo: policyData.vehicleModel,
-        uf: policyData.uf
+        uf: policyData.uf,
+        created_by_extraction: true,
+        extraction_timestamp: new Date().toISOString()
       };
 
-      console.log(`🔍 Dados da apólice preparados para usuário ${userId}:`, {
-        user_id: policyInsert.user_id,
-        segurado: policyInsert.segurado,
-        seguradora: policyInsert.seguradora,
-        documento: policyInsert.documento,
-        documento_tipo: policyInsert.documento_tipo,
-        status: policyInsert.status
-      });
+      console.log(`🔍 Dados da apólice preparados:`, policyInsert);
 
       // Inserir apólice
       const { data: policy, error: policyError } = await supabase
@@ -144,18 +135,12 @@ export class PolicyPersistenceService {
 
       // Salvar parcelas se existirem
       if (Array.isArray(policyData.installments) && policyData.installments.length > 0) {
+        console.log(`💾 Salvando ${policyData.installments.length} parcelas`);
         await this.saveInstallments(policy.id, policyData.installments, userId);
       }
 
-      // Salvar coberturas se existirem
-      if (policyData.coberturas && Array.isArray(policyData.coberturas) && policyData.coberturas.length > 0) {
-        console.log(`💾 Salvando ${policyData.coberturas.length} coberturas para apólice ${policy.id}`);
-        await this.saveCoverages(policy.id, policyData.coberturas);
-      } else if (policyData.coverage && Array.isArray(policyData.coverage)) {
-        // Fallback para coverage antigo
-        const legacyCoverages = policyData.coverage.map(desc => ({ descricao: desc }));
-        await this.saveCoverages(policy.id, legacyCoverages);
-      }
+      // Salvar coberturas - PRIORITÁRIO
+      await this.saveCoverages(policy.id, policyData);
 
       return policy.id;
 
@@ -165,32 +150,58 @@ export class PolicyPersistenceService {
     }
   }
 
-  // NOVO: Salvar coberturas no banco
-  private static async saveCoverages(
-    policyId: string, 
-    coberturas: Array<{ descricao: string; lmi?: number }>
-  ): Promise<void> {
+  // Salvar coberturas no banco - FUNÇÃO MELHORADA
+  private static async saveCoverages(policyId: string, policyData: ParsedPolicyData): Promise<void> {
     try {
-      console.log(`💾 Iniciando salvamento de coberturas para policy ${policyId}:`, coberturas);
+      console.log(`💾 Iniciando salvamento de coberturas para policy ${policyId}`);
+      console.log('📋 Dados de coberturas recebidos:', {
+        coberturas: policyData.coberturas,
+        coverage: policyData.coverage
+      });
 
-      const coberturasInserts: CoberturaInsert[] = coberturas.map(cobertura => ({
+      let coberturasToSave: Array<{ descricao: string; lmi?: number }> = [];
+
+      // Priorizar policyData.coberturas (formato completo)
+      if (policyData.coberturas && Array.isArray(policyData.coberturas) && policyData.coberturas.length > 0) {
+        console.log(`📝 Usando coberturas detalhadas (${policyData.coberturas.length} itens)`);
+        coberturasToSave = policyData.coberturas.map(cobertura => ({
+          descricao: cobertura.descricao,
+          lmi: cobertura.lmi
+        }));
+      } 
+      // Fallback para policyData.coverage (formato simplificado)
+      else if (policyData.coverage && Array.isArray(policyData.coverage) && policyData.coverage.length > 0) {
+        console.log(`📝 Usando coverage simplificado (${policyData.coverage.length} itens)`);
+        coberturasToSave = policyData.coverage.map(desc => ({
+          descricao: desc,
+          lmi: undefined
+        }));
+      }
+
+      if (coberturasToSave.length === 0) {
+        console.log('⚠️ Nenhuma cobertura encontrada para salvar');
+        return;
+      }
+
+      const coberturasInserts: CoberturaInsert[] = coberturasToSave.map(cobertura => ({
         policy_id: policyId,
         descricao: cobertura.descricao,
         lmi: cobertura.lmi || null
       }));
 
-      console.log(`📝 Dados preparados para inserção:`, coberturasInserts);
+      console.log(`📝 Dados preparados para inserção (${coberturasInserts.length} coberturas):`, coberturasInserts);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('coberturas')
-        .insert(coberturasInserts);
+        .insert(coberturasInserts)
+        .select();
 
       if (error) {
         console.error('❌ Erro ao salvar coberturas:', error);
         throw error;
-      } else {
-        console.log(`✅ ${coberturas.length} coberturas salvas com sucesso para apólice ${policyId}`);
       }
+
+      console.log(`✅ ${coberturasToSave.length} coberturas salvas com sucesso:`, data);
 
     } catch (error) {
       console.error('❌ Erro inesperado ao salvar coberturas:', error);
@@ -211,7 +222,7 @@ export class PolicyPersistenceService {
         numero_parcela: installment.numero,
         valor: installment.valor,
         data_vencimento: installment.data,
-        status: installment.status === 'paga' ? 'paga' : 'pendente' // Garantir apenas valores válidos
+        status: installment.status === 'paga' ? 'paga' : 'pendente'
       }));
 
       const { error } = await supabase
@@ -255,19 +266,8 @@ export class PolicyPersistenceService {
 
       if (policiesError) {
         console.error('❌ Erro ao carregar apólices:', policiesError);
-        console.error('📋 Detalhes do erro:', {
-          message: policiesError.message,
-          details: policiesError.details,
-          code: policiesError.code
-        });
         return [];
       }
-
-      console.log(`🔍 Resultado da consulta:`, {
-        totalRecords: policies?.length || 0,
-        userId: userId,
-        policies: policies
-      });
 
       if (!policies || policies.length === 0) {
         console.log('📭 Nenhuma apólice encontrada para o usuário');
@@ -278,17 +278,11 @@ export class PolicyPersistenceService {
 
       // Converter dados do banco para formato ParsedPolicyData
       const parsedPolicies: ParsedPolicyData[] = policies.map(policy => {
-        console.log(`🔍 Processando apólice do banco:`, {
+        console.log(`🔍 Processando apólice:`, {
           id: policy.id,
           segurado: policy.segurado,
-          documento: policy.documento,
-          documento_tipo: policy.documento_tipo,
-          modelo_veiculo: policy.modelo_veiculo,
-          uf: policy.uf,
-          franquia: policy.franquia,
-          arquivo_url: policy.arquivo_url,
           coberturas: policy.coberturas,
-          status: policy.status
+          coberturasCount: policy.coberturas?.length || 0
         });
 
         // Detectar e corrigir dados misturados (legacy fix)
@@ -305,7 +299,7 @@ export class PolicyPersistenceService {
           endDate: policy.fim_vigencia || new Date().toISOString().split('T')[0],
           policyNumber: policy.numero_apolice || 'N/A',
           paymentFrequency: policy.forma_pagamento || 'mensal',
-          status: policy.status || 'vigente', // Usar status já mapeado do banco
+          status: policy.status || 'vigente',
           pdfPath: policy.arquivo_url,
           extractedAt: policy.extraido_em || policy.created_at || new Date().toISOString(),
           installments: (policy.installments as any[])?.map(inst => ({
@@ -328,7 +322,7 @@ export class PolicyPersistenceService {
           documento_tipo: cleanedData.documento_tipo,
           deductible: Number(policy.franquia) || undefined,
           
-          // Campos específicos de veículo (para seguros Auto)
+          // Campos específicos de veículo
           vehicleModel: policy.modelo_veiculo,
           uf: policy.uf,
           
@@ -338,7 +332,7 @@ export class PolicyPersistenceService {
                    policy.tipo_seguro === 'vida' ? 'Pessoal' : 
                    policy.tipo_seguro === 'saude' ? 'Saúde' : 
                    policy.tipo_seguro === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
-          coverage: (policy.coberturas as any[])?.map(cob => cob.descricao) || ['Cobertura Básica', 'Responsabilidade Civil'],
+          coverage: (policy.coberturas as any[])?.map(cob => cob.descricao) || ['Cobertura Básica'],
           totalCoverage: Number(policy.valor_premio) || 0,
           limits: 'R$ 100.000 por sinistro'
         };
@@ -346,48 +340,29 @@ export class PolicyPersistenceService {
 
       console.log(`✅ Apólices convertidas com sucesso:`, {
         total: parsedPolicies.length,
-        nomes: parsedPolicies.map(p => p.name)
+        comCoberturas: parsedPolicies.filter(p => p.coberturas && p.coberturas.length > 0).length
       });
 
       return parsedPolicies;
 
     } catch (error) {
       console.error('❌ Erro inesperado ao carregar apólices:', error);
-      console.error('📋 Stack trace:', error instanceof Error ? error.stack : 'Erro desconhecido');
       return [];
     }
   }
 
-  // Método para corrigir dados misturados no banco (legacy fix)
   private static fixMixedData(policy: any) {
-    // Detectar se os dados estão misturados baseado em padrões conhecidos
     const isDataMixed = (
-      // Se documento contém um nome (TULIO VILASBOAS REIS) mas documento_tipo é CNPJ
       (policy.documento && policy.documento.includes(' ') && policy.documento_tipo === 'CNPJ') ||
-      // Se documento contém um nome mas documento_tipo é CPF
       (policy.documento && policy.documento.includes(' ') && policy.documento_tipo === 'CPF')
     );
 
-    console.log(`🔍 Verificando dados misturados para apólice ${policy.id}:`, {
-      documento: policy.documento,
-      documento_tipo: policy.documento_tipo,
-      segurado: policy.segurado,
-      isDataMixed
-    });
-
     if (isDataMixed) {
-      console.log('🔧 Corrigindo dados misturados...');
-      
-      // Se documento contém nome mas deveria ser um número
       if (policy.documento && policy.documento.includes(' ')) {
-        // O campo documento na verdade contém o nome
         const realName = policy.documento;
+        let realDocumentNumber = '80604005504';
+        let realDocumentType: 'CPF' | 'CNPJ' = 'CPF';
         
-        // Para este caso específico: TULIO VILASBOAS REIS com tipo CPF, usar o número correto
-        let realDocumentNumber = '80604005504'; // Número real do CPF do TULIO
-        let realDocumentType: 'CPF' | 'CNPJ' = 'CPF'; // Tipo correto
-        
-        // Se for CNPJ mas contém um nome de pessoa física, corrija para CPF
         if (policy.documento_tipo === 'CNPJ' && realName.includes('TULIO')) {
           realDocumentType = 'CPF';
         }
@@ -401,7 +376,6 @@ export class PolicyPersistenceService {
       }
     }
 
-    // Dados já estão corretos
     return {
       policyName: policy.segurado ? `Apólice ${policy.segurado.split(' ')[0]}` : 'Apólice',
       insuredName: policy.segurado,
@@ -410,12 +384,11 @@ export class PolicyPersistenceService {
     };
   }
 
-  // Obter URL para download do PDF
   static async getPDFDownloadUrl(pdfPath: string): Promise<string | null> {
     try {
       const { data } = await supabase.storage
         .from('pdfs')
-        .createSignedUrl(pdfPath, 3600); // URL válida por 1 hora
+        .createSignedUrl(pdfPath, 3600);
 
       return data?.signedUrl || null;
     } catch (error) {
@@ -424,40 +397,35 @@ export class PolicyPersistenceService {
     }
   }
 
-  // Método combinado: salvar arquivo e dados
   static async savePolicyComplete(
     file: File,
     policyData: ParsedPolicyData,
     userId: string
   ): Promise<boolean> {
-    // Validar que userId não é null/undefined
     if (!userId) {
       console.error('❌ ERRO CRÍTICO: userId é obrigatório para persistência completa');
       return false;
     }
+
     try {
       console.log(`🔄 Salvando arquivo e dados completos para: ${policyData.name}`);
+      console.log('📋 Coberturas que serão salvas:', policyData.coberturas);
 
-      // 1. Fazer upload do PDF PRIMEIRO
-      console.log(`📤 Iniciando upload do PDF: ${file.name} (${file.size} bytes)`);
+      // 1. Fazer upload do PDF
       const pdfPath = await this.uploadPDFToStorage(file, userId);
       
       if (!pdfPath) {
-        console.error(`❌ ERRO CRÍTICO: Falha no upload do PDF para ${file.name} - Abortando persistência`);
-        return false; // Não prosseguir sem o PDF
+        console.error(`❌ ERRO CRÍTICO: Falha no upload do PDF`);
+        return false;
       } 
       
-      console.log(`✅ PDF salvo com sucesso no caminho: ${pdfPath}`);
+      console.log(`✅ PDF salvo com sucesso: ${pdfPath}`);
       
-      // 2. Salvar dados no banco COM o PDF path
-      console.log(`💾 Salvando dados da apólice no banco com pdfPath confirmado: ${pdfPath}`);
+      // 2. Salvar dados no banco COM as coberturas
       const policyId = await this.savePolicyToDatabase(policyData, userId, pdfPath);
 
       if (policyId) {
-        console.log(`✅ Persistência completa realizada com SUCESSO:
-          - Policy ID: ${policyId} 
-          - PDF Path: ${pdfPath}
-          - File: ${file.name}`);
+        console.log(`✅ Persistência completa realizada com SUCESSO - Policy ID: ${policyId}`);
         return true;
       } else {
         console.error('❌ ERRO: Falha ao salvar dados da apólice no banco');
@@ -470,7 +438,6 @@ export class PolicyPersistenceService {
     }
   }
 
-  // Método para limpar apólices duplicadas (utilitário de manutenção)
   static async cleanupDuplicatePolicies(userId: string): Promise<number> {
     try {
       console.log(`🧹 Iniciando limpeza de duplicatas para usuário: ${userId}`);
@@ -491,7 +458,6 @@ export class PolicyPersistenceService {
         return 0;
       }
 
-      // Agrupar por número da apólice
       const groupedPolicies = policies.reduce((acc, policy) => {
         const key = policy.numero_apolice || 'sem_numero';
         if (!acc[key]) acc[key] = [];
@@ -501,17 +467,15 @@ export class PolicyPersistenceService {
 
       let deletedCount = 0;
 
-      // Para cada grupo, manter apenas a primeira (mais antiga) e deletar as demais
       for (const [policyNumber, policyGroup] of Object.entries(groupedPolicies)) {
         if (policyGroup.length > 1) {
           console.log(`🔍 Encontradas ${policyGroup.length} duplicatas para apólice: ${policyNumber}`);
           
-          // Manter a primeira (mais antiga) e deletar as demais
           const [keep, ...toDelete] = policyGroup;
-          console.log(`✅ Mantendo apólice: ${keep.id} (${keep.created_at})`);
+          console.log(`✅ Mantendo apólice: ${keep.id}`);
           
           for (const duplicate of toDelete) {
-            console.log(`🗑️ Deletando duplicata: ${duplicate.id} (${duplicate.created_at})`);
+            console.log(`🗑️ Deletando duplicata: ${duplicate.id}`);
             
             const { error: deleteError } = await supabase
               .from('policies')
