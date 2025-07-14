@@ -1,3 +1,4 @@
+
 import { ParsedPolicyData, InstallmentData, CoverageData } from '@/utils/policyDataParser';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -237,8 +238,8 @@ export class PolicyPersistenceService {
         seguradora: policyData.insurer,
         numero_apolice: policyData.policyNumber,
         tipo_seguro: policyData.type,
-        valor_premio: typeof policyData.premium === 'number' ? policyData.premium : parseFloat(policyData.premium?.toString() || '0'),
-        custo_mensal: typeof policyData.monthlyAmount === 'number' ? policyData.monthlyAmount : parseFloat(policyData.monthlyAmount?.toString() || '0'),
+        valor_premio: Number(policyData.premium) || 0,
+        custo_mensal: Number(policyData.monthlyAmount) || 0,
         inicio_vigencia: policyData.startDate,
         fim_vigencia: policyData.endDate,
         status: policyData.status || 'vigente',
@@ -250,7 +251,7 @@ export class PolicyPersistenceService {
         documento_tipo: policyData.documento_tipo,
         modelo_veiculo: policyData.vehicleModel,
         uf: policyData.uf,
-        franquia: typeof policyData.deductible === 'number' ? policyData.deductible : parseFloat(policyData.deductible?.toString() || '0'),
+        franquia: Number(policyData.deductible) || 0,
         forma_pagamento: policyData.category,
         corretora: policyData.entity,
         quantidade_parcelas: policyData.quantidade_parcelas,
