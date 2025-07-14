@@ -1,27 +1,27 @@
 
 import { PolicyStatus } from '@/types/policyStatus';
 
-// Mapeamento de cores para cada status (expandido)
+// Mapeamento de cores para cada status (atualizado com cores mais visuais)
 export const STATUS_COLORS: Record<string, string> = {
-  vigente: "bg-green-100 text-green-800 border-green-200",
-  ativa: "bg-green-100 text-green-800 border-green-200",
-  aguardando_emissao: "bg-blue-100 text-blue-800 border-blue-200", 
-  nao_renovada: "bg-red-100 text-red-800 border-red-200",
-  vencida: "bg-red-100 text-red-800 border-red-200",
-  pendente_analise: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  vencendo: "bg-orange-100 text-orange-800 border-orange-200",
-  desconhecido: "bg-gray-100 text-gray-800 border-gray-200"
+  vigente: "bg-green-100 text-green-800 border-green-200 hover:bg-green-50",
+  ativa: "bg-green-100 text-green-800 border-green-200 hover:bg-green-50",
+  aguardando_emissao: "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-50", 
+  nao_renovada: "bg-red-100 text-red-800 border-red-200 hover:bg-red-50",
+  vencida: "bg-red-100 text-red-800 border-red-200 hover:bg-red-50",
+  pendente_analise: "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-50",
+  vencendo: "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-50",
+  desconhecido: "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-50"
 };
 
 // Função para formatar o texto do status
 export const formatStatusText = (status: PolicyStatus | string): string => {
   const statusMap: Record<string, string> = {
-    vigente: "VIGENTE",
+    vigente: "ATIVA",
     ativa: "ATIVA", 
-    aguardando_emissao: "AGUARDANDO EMISSÃO",
+    aguardando_emissao: "EM RENOVAÇÃO",
     nao_renovada: "NÃO RENOVADA",
     vencida: "VENCIDA",
-    pendente_analise: "PENDENTE ANÁLISE",
+    pendente_analise: "EM ANÁLISE",
     vencendo: "VENCENDO",
     desconhecido: "DESCONHECIDO"
   };

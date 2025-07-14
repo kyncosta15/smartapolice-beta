@@ -8,35 +8,8 @@ import { useRenewalChecker } from '@/hooks/useRenewalChecker';
 import { RenewalModal } from '@/components/RenewalModal';
 import { InfoModal } from '@/components/InfoModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
-import { supabase } from '@/integrations/supabase/client';
-
-// Dados iniciais de exemplo (substitua pela sua fonte de dados)
-const initialPolicies: PolicyWithStatus[] = [
-  {
-    id: '1',
-    name: 'Seguro Auto - Honda Civic',
-    insurer: 'Porto Seguro',
-    policyNumber: 'PS-2024-001',
-    type: 'auto',
-    monthlyAmount: 450,
-    startDate: '2024-01-01',
-    endDate: '2024-12-31',
-    expirationDate: '2024-12-31', // Vencida para teste
-    status: 'vigente'
-  },
-  {
-    id: '2', 
-    name: 'Seguro Residencial',
-    insurer: 'Bradesco Seguros',
-    policyNumber: 'BS-2024-002',
-    type: 'residencial',
-    monthlyAmount: 120,
-    startDate: '2024-02-01',
-    endDate: '2025-02-01',
-    expirationDate: '2025-02-01',
-    status: 'aguardando_emissao'
-  }
-];
+import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
+import { useToast } from '@/hooks/use-toast';
 
 // FUNÇÃO PRINCIPAL: Determinar status correto baseado na data de vencimento
 const determineCorrectStatus = (policy: PolicyWithStatus): PolicyStatus => {
@@ -94,118 +67,61 @@ const determineCorrectStatus = (policy: PolicyWithStatus): PolicyStatus => {
   return determinedStatus;
 };
 
-// FUNÇÃO PARA ATUALIZAR STATUS NO SUPABASE
-const updatePolicyStatusInDatabase = async (policyId: string, newStatus: PolicyStatus) => {
-  try {
-    console.log(`💾 [updatePolicyStatusInDatabase] Atualizando status no banco: ${policyId} -> ${newStatus}`);
-    
-    const { error } = await supabase
-      .from('policies')
-      .update({ 
-        status: newStatus,
-        policy_status: newStatus as any
-      })
-      .eq('id', policyId);
-
-    if (error) {
-      console.error(`❌ [updatePolicyStatusInDatabase] Erro ao atualizar no banco:`, error);
-      throw error;
-    }
-
-    console.log(`✅ [updatePolicyStatusInDatabase] Status atualizado no banco com sucesso`);
-    return true;
-  } catch (error) {
-    console.error(`❌ [updatePolicyStatusInDatabase] Erro crítico:`, error);
-    return false;
-  }
-};
-
 export function MyPolicies() {
-  const [policies, setPolicies] = useState<PolicyWithStatus[]>(initialPolicies);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const { policies, updatePolicy } = usePersistedPolicies();
+  const { toast } = useToast();
+  
+  // Converter para formato PolicyWithStatus com status correto
+  const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
+    const policyWithStatus: PolicyWithStatus = {
+      id: policy.id,
+      name: policy.name,
+      insurer: policy.insurer,
+      policyNumber: policy.policyNumber,
+      type: policy.type,
+      monthlyAmount: policy.monthlyAmount,
+      startDate: policy.startDate,
+      endDate: policy.endDate,
+      expirationDate: policy.expirationDate || policy.endDate,
+      status: policy.status as PolicyStatus || 'vigente'
+    };
+    
+    // Determinar status correto baseado na data
+    const correctStatus = determineCorrectStatus(policyWithStatus);
+    
+    // Se o status mudou, atualizar no banco
+    if (policyWithStatus.status !== correctStatus) {
+      console.log(`🔄 Status da apólice ${policy.name} será atualizado: ${policyWithStatus.status} -> ${correctStatus}`);
+      
+      // Atualizar no banco de forma assíncrona
+      updatePolicy(policy.id, { status: correctStatus }).then(success => {
+        if (success) {
+          console.log(`✅ Status da apólice ${policy.name} atualizado com sucesso`);
+        }
+      });
+    }
+    
+    return {
+      ...policyWithStatus,
+      status: correctStatus // Usar sempre o status correto
+    };
+  });
   
   // Hook para verificar renovações
-  const renewalAlert = useRenewalChecker(policies);
-
-  // FUNÇÃO PRINCIPAL: Atualizar status de todas as apólices
-  const updateAllPolicyStatuses = async () => {
-    console.log('🔄 [updateAllPolicyStatuses] Iniciando atualização de status...');
-    
-    const updatedPolicies = await Promise.all(
-      policies.map(async (policy) => {
-        const correctStatus = determineCorrectStatus(policy);
-        
-        // Se o status mudou, atualizar no banco
-        if (policy.status !== correctStatus) {
-          console.log(`🔄 [updateAllPolicyStatuses] Status mudou para ${policy.name}: ${policy.status} -> ${correctStatus}`);
-          
-          const updateSuccess = await updatePolicyStatusInDatabase(policy.id, correctStatus);
-          
-          if (updateSuccess) {
-            return {
-              ...policy,
-              status: correctStatus
-            };
-          } else {
-            console.warn(`⚠️ [updateAllPolicyStatuses] Falha ao atualizar ${policy.name} no banco, mantendo status local`);
-            return {
-              ...policy,
-              status: correctStatus
-            };
-          }
-        }
-        
-        return policy;
-      })
-    );
-    
-    setPolicies(updatedPolicies);
-    
-    console.log('✅ [updateAllPolicyStatuses] Atualização concluída:', 
-      updatedPolicies.map(p => ({ id: p.id, name: p.name, status: p.status }))
-    );
-  };
-
-  // Atualizar status ao montar o componente
-  useEffect(() => {
-    console.log('🚀 [MyPolicies] Componente montado - iniciando atualização');
-    updateAllPolicyStatuses();
-    
-    // Atualizar a cada 5 minutos
-    const interval = setInterval(updateAllPolicyStatuses, 5 * 60 * 1000);
-    
-    return () => {
-      console.log('🛑 [MyPolicies] Componente desmontado - limpando interval');
-      clearInterval(interval);
-    };
-  }, []);
-
-  // Atualizar quando políticas mudarem
-  useEffect(() => {
-    console.log('📊 [MyPolicies] Dados mudaram - verificando necessidade de atualização');
-    
-    const needsUpdate = policies.some(policy => {
-      const correctStatus = determineCorrectStatus(policy);
-      return policy.status !== correctStatus;
-    });
-    
-    if (needsUpdate) {
-      console.log('🔄 [MyPolicies] Detectada necessidade de atualização');
-      updateAllPolicyStatuses();
-    }
-  }, [policies.length]);
+  const renewalAlert = useRenewalChecker(policiesWithStatus);
 
   const handleRenewalDecision = async (policy: PolicyWithStatus, newStatus: PolicyStatus) => {
     console.log(`🔄 [handleRenewalDecision] Atualizando status: ${policy.id} -> ${newStatus}`);
     
-    // Atualizar no banco primeiro
-    const updateSuccess = await updatePolicyStatusInDatabase(policy.id, newStatus);
+    // Atualizar no banco
+    const updateSuccess = await updatePolicy(policy.id, { status: newStatus });
     
     if (updateSuccess) {
-      // Atualizar estado local
-      setPolicies(ps => ps.map(p =>
-        p.id === policy.id ? { ...p, status: newStatus } : p
-      ));
+      toast({
+        title: "✅ Status Atualizado",
+        description: `Status da apólice alterado para: ${formatStatusText(newStatus)}`,
+      });
     }
 
     // Se escolheu renovar, mostrar modal de confirmação
@@ -222,12 +138,12 @@ export function MyPolicies() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Minhas Apólices</h2>
         <Badge variant="secondary">
-          {policies.length} apólice{policies.length !== 1 ? 's' : ''}
+          {policiesWithStatus.length} apólice{policiesWithStatus.length !== 1 ? 's' : ''}
         </Badge>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {policies.map((policy) => {
+        {policiesWithStatus.map((policy) => {
           // SEMPRE usar status correto e atualizado
           const currentStatus = determineCorrectStatus(policy);
           
