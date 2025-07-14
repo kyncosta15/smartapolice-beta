@@ -383,7 +383,7 @@ export class PolicyPersistenceService {
             .from('policies')
             .update({ 
               status: finalStatus,
-              policy_status: finalStatus 
+              policy_status: finalStatus as any
             })
             .eq('id', policy.id)
             .then(({ error }) => {

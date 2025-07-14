@@ -103,7 +103,7 @@ const updatePolicyStatusInDatabase = async (policyId: string, newStatus: PolicyS
       .from('policies')
       .update({ 
         status: newStatus,
-        policy_status: newStatus 
+        policy_status: newStatus as any
       })
       .eq('id', policyId);
 
