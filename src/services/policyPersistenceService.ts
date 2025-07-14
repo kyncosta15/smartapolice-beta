@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData, InstallmentData, CoverageData } from '@/utils/policyDataParser';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -24,28 +23,28 @@ export class PolicyPersistenceService {
         return [];
       }
 
-      // Mapear os resultados para o tipo ParsedPolicyData com conversões corretas
+      // Mapear os resultados para o tipo ParsedPolicyData com conversões seguras
       const parsedPolicies: ParsedPolicyData[] = policies.map(policy => ({
         id: policy.id,
         name: policy.segurado || 'Segurado não informado',
         type: policy.tipo_seguro || 'Tipo não informado',
         insurer: policy.seguradora || 'Seguradora não informada',
         policyNumber: policy.numero_apolice || 'Número não informado',
-        premium: Number(policy.valor_premio) || 0,
-        monthlyAmount: Number(policy.custo_mensal) || 0,
-        startDate: policy.inicio_vigencia || 'Início não informado',
-        endDate: policy.fim_vigencia || 'Fim não informado',
-        status: policy.status || 'desconhecido',
+        premium: parseFloat(policy.valor_premio?.toString() || '0'),
+        monthlyAmount: parseFloat(policy.custo_mensal?.toString() || '0'),
+        startDate: policy.inicio_vigencia || new Date().toISOString().split('T')[0],
+        endDate: policy.fim_vigencia || new Date().toISOString().split('T')[0],
+        status: policy.status || 'vigente',
         pdfPath: policy.arquivo_url || undefined,
         installments: [], // Carregar parcelas separadamente se necessário
         coverages: [],   // Carregar coberturas separadamente se necessário
         category: policy.forma_pagamento || 'Não informado',
         entity: policy.corretora || 'Não informado',
 
-        // Campos obrigatórios que estavam faltando
+        // Campos obrigatórios
         paymentFrequency: 'monthly',
         extractedAt: policy.created_at || new Date().toISOString(),
-        expirationDate: policy.fim_vigencia || new Date().toISOString(),
+        expirationDate: policy.fim_vigencia || new Date().toISOString().split('T')[0],
         policyStatus: 'vigente',
 
         // Campos específicos do N8N
@@ -54,7 +53,7 @@ export class PolicyPersistenceService {
         documento_tipo: policy.documento_tipo as 'CPF' | 'CNPJ' | undefined,
         vehicleModel: policy.modelo_veiculo,
         uf: policy.uf,
-        deductible: Number(policy.franquia) || undefined,
+        deductible: parseFloat(policy.franquia?.toString() || '0'),
         quantidade_parcelas: policy.quantidade_parcelas || undefined,
       }));
 
@@ -230,7 +229,7 @@ export class PolicyPersistenceService {
         pdfPath
       });
 
-      // Preparar dados para inserção com conversões corretas de tipo
+      // Preparar dados para inserção com conversões seguras
       const insertData = {
         id: policyData.id,
         user_id: userId,
@@ -238,8 +237,8 @@ export class PolicyPersistenceService {
         seguradora: policyData.insurer,
         numero_apolice: policyData.policyNumber,
         tipo_seguro: policyData.type,
-        valor_premio: Number(policyData.premium) || 0,
-        custo_mensal: Number(policyData.monthlyAmount) || 0,
+        valor_premio: parseFloat(policyData.premium?.toString() || '0'),
+        custo_mensal: parseFloat(policyData.monthlyAmount?.toString() || '0'),
         inicio_vigencia: policyData.startDate,
         fim_vigencia: policyData.endDate,
         status: policyData.status || 'vigente',
@@ -251,12 +250,10 @@ export class PolicyPersistenceService {
         documento_tipo: policyData.documento_tipo,
         modelo_veiculo: policyData.vehicleModel,
         uf: policyData.uf,
-        franquia: Number(policyData.deductible) || 0,
+        franquia: parseFloat(policyData.deductible?.toString() || '0'),
         forma_pagamento: policyData.category,
         corretora: policyData.entity,
         quantidade_parcelas: policyData.quantidade_parcelas,
-        // Metadados de senha (se necessário, adicionar campo na tabela)
-        // password_status: wasPasswordProtected ? 'Desbloqueado com senha' : 'Sem senha'
       };
 
       const { data, error } = await supabase
