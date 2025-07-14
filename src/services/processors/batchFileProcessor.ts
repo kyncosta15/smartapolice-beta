@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
 import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
@@ -25,18 +24,9 @@ export class BatchFileProcessor {
   }
 
   async processMultipleFiles(files: File[], userId: string | null): Promise<ParsedPolicyData[]> {
-    console.log(`🚀 [BatchFileProcessor] Iniciando processamento de ${files.length} arquivos`);
-    console.log(`👤 [BatchFileProcessor] UserId: ${userId}`);
-    
-    if (!userId) {
-      console.error('❌ [BatchFileProcessor] UserId não fornecido - não será possível persistir');
-      this.toast({
-        title: "❌ Erro de Autenticação",
-        description: "Usuário não autenticado. Faça login para continuar.",
-        variant: "destructive",
-      });
-      return [];
-    }
+    console.log(`🚀 BatchFileProcessor.processMultipleFiles CHAMADO!`);
+    console.log(`📤 BatchFileProcessor: Iniciando processamento de ${files.length} arquivos com userId: ${userId}`);
+    console.log(`📋 Arquivos para processar:`, files.map(f => f.name));
     
     // Initialize status for all files
     files.forEach(file => {
@@ -50,7 +40,9 @@ export class BatchFileProcessor {
     const allResults: ParsedPolicyData[] = [];
 
     try {
-      console.log('🚀 [BatchFileProcessor] Chamando DynamicPDFExtractor...');
+      // Usar o método otimizado para múltiplos arquivos
+      console.log('🚀 Usando método extractFromMultiplePDFs otimizado');
+      console.log(`👤 Garantindo que userId ${userId} será enviado no FormData`);
       
       // Atualizar status para processamento
       files.forEach(file => {
@@ -64,7 +56,7 @@ export class BatchFileProcessor {
       // Chamar o método otimizado que já trata múltiplos PDFs com userId
       const extractedDataArray = await DynamicPDFExtractor.extractFromMultiplePDFs(files, userId);
 
-      console.log(`📦 [BatchFileProcessor] Dados extraídos: ${extractedDataArray.length} itens`);
+      console.log(`📦 Dados extraídos de todos os arquivos (${extractedDataArray.length} itens):`, extractedDataArray);
 
       if (extractedDataArray.length === 0) {
         throw new Error('Nenhum dado foi extraído dos arquivos');
@@ -73,54 +65,46 @@ export class BatchFileProcessor {
       // Processar cada item de dados extraído individualmente
       for (let index = 0; index < extractedDataArray.length; index++) {
         const singleData = extractedDataArray[index];
-        console.log(`🔄 [BatchFileProcessor] Processando apólice ${index + 1}/${extractedDataArray.length}`);
+        console.log(`🔄 Processando apólice ${index + 1}/${extractedDataArray.length}:`, singleData);
         
+        // Determinar qual arquivo esta apólice pertence
         const relatedFileName = this.findRelatedFileName(singleData, files) || files[index]?.name || `Arquivo ${index + 1}`;
         
         if (relatedFileName && files.find(f => f.name === relatedFileName)) {
           this.updateFileStatus(relatedFileName, {
             progress: 60 + (index * 10),
             status: 'processing',
-            message: `Processando: ${singleData.segurado || 'Segurado não identificado'}...`
+            message: `Processando apólice: ${singleData.segurado || 'Não identificado'}...`
           });
         }
         
         const parsedPolicy = this.convertToParsedPolicy(singleData, relatedFileName, files[index] || files[0]);
-        
-        console.log(`✅ [BatchFileProcessor] Apólice convertida:`, {
-          id: parsedPolicy.id,
-          name: parsedPolicy.name,
-          insurer: parsedPolicy.insurer
-        });
-        
         allResults.push(parsedPolicy);
         
-        // Salvar no banco de dados
+        // Salvar arquivo e dados no banco de dados
         const relatedFile = files.find(f => f.name === relatedFileName) || files[index] || files[0];
         if (relatedFile && userId) {
-          console.log(`💾 [BatchFileProcessor] Salvando no banco: ${parsedPolicy.name}`);
+          console.log(`💾 BatchFileProcessor: Iniciando persistência para ${parsedPolicy.name} com userId: ${userId}`);
           try {
             const persistenceResult = await PolicyPersistenceService.savePolicyComplete(relatedFile, parsedPolicy, userId);
-            console.log(`✅ [BatchFileProcessor] Persistência resultado: ${persistenceResult}`);
-            
-            if (!persistenceResult) {
-              console.error(`❌ [BatchFileProcessor] Falha na persistência da apólice ${parsedPolicy.name}`);
-            }
+            console.log(`✅ BatchFileProcessor: Persistência concluída com sucesso: ${persistenceResult}`);
           } catch (persistenceError) {
-            console.error(`❌ [BatchFileProcessor] Erro na persistência:`, persistenceError);
+            console.error(`❌ BatchFileProcessor: Erro na persistência:`, persistenceError);
             // Continuar processamento mesmo com erro de persistência
           }
+        } else {
+          console.error(`❌ BatchFileProcessor: Não salvando persistência - userId: ${userId}, arquivo: ${relatedFile?.name}`);
         }
         
-        // CRÍTICO: Chamar onPolicyExtracted para adicionar ao dashboard
-        console.log(`📢 [BatchFileProcessor] Chamando onPolicyExtracted para: ${parsedPolicy.name}`);
+        // Add to dashboard immediately
         this.onPolicyExtracted(parsedPolicy);
+        console.log(`✅ Apólice ${index + 1} adicionada: ${parsedPolicy.name} - ${parsedPolicy.insurer}`);
 
         if (relatedFileName && files.find(f => f.name === relatedFileName)) {
           this.updateFileStatus(relatedFileName, {
             progress: 90 + (index * 2),
             status: 'processing',
-            message: `✅ Processado: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
+            message: `✅ Salvando: ${parsedPolicy.insurer} - R$ ${parsedPolicy.monthlyAmount.toFixed(2)}/mês`
           });
         }
       }
@@ -130,11 +114,11 @@ export class BatchFileProcessor {
         this.updateFileStatus(file.name, {
           progress: 100,
           status: 'completed',
-          message: `✅ Concluído (${index + 1}/${files.length})`
+          message: `✅ Processado com sucesso (${index + 1}/${files.length})`
         });
       });
 
-      console.log(`🎉 [BatchFileProcessor] Processamento completo! ${allResults.length} apólices processadas`);
+      console.log(`🎉 Processamento completo! ${allResults.length} apólices processadas no total`);
       
       // Show completion notification
       if (allResults.length > 0) {
@@ -154,7 +138,7 @@ export class BatchFileProcessor {
       return allResults;
 
     } catch (error) {
-      console.error('❌ [BatchFileProcessor] Erro geral no processamento:', error);
+      console.error('❌ Erro geral no processamento:', error);
       
       // Update all files with error status
       files.forEach(file => {
@@ -163,12 +147,6 @@ export class BatchFileProcessor {
           status: 'failed',
           message: `❌ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
         });
-      });
-
-      this.toast({
-        title: "❌ Erro no Processamento",
-        description: `Falha no processamento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        variant: "destructive",
       });
 
       // Clean up after 5 seconds
@@ -196,6 +174,12 @@ export class BatchFileProcessor {
     return null;
   }
 
+  private getFileStatus(fileName: string) {
+    // Este método precisaria acessar o status atual do arquivo
+    // Por simplicidade, vamos assumir que não existe
+    return null;
+  }
+
   private convertToParsedPolicy(data: any, fileName: string, file: File): ParsedPolicyData {
     // Verificar se é dado direto do N8N ou estruturado
     if (data.numero_apolice && data.segurado && data.seguradora) {
@@ -206,7 +190,7 @@ export class BatchFileProcessor {
       return StructuredDataConverter.convertStructuredData(data, fileName, file);
     } else {
       // Fallback para dados não estruturados
-      console.warn('[BatchFileProcessor] Dados não estruturados recebidos, usando fallback');
+      console.warn('Dados não estruturados recebidos, usando fallback');
       return this.createFallbackPolicy(data, fileName, file);
     }
   }
@@ -214,22 +198,22 @@ export class BatchFileProcessor {
   private createFallbackPolicy(data: any, fileName: string, file: File): ParsedPolicyData {
     const mockPolicyData: ParsedPolicyData = {
       id: crypto.randomUUID(),
-      name: data.segurado || `Apólice ${file.name}`,
+      name: `Apólice ${file.name}`,
       type: 'auto',
-      insurer: data.seguradora || 'Seguradora Exemplo',
-      premium: data.valor_premio || 1200,
-      monthlyAmount: data.custo_mensal || 150,
-      startDate: data.inicio_vigencia || new Date().toISOString().split('T')[0],
-      endDate: data.fim_vigencia || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      policyNumber: data.numero_apolice || `POL-${Date.now()}`,
+      insurer: 'Seguradora Exemplo',
+      premium: 1200,
+      monthlyAmount: 150,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      policyNumber: `POL-${Date.now()}`,
       paymentFrequency: 'monthly',
-      status: 'vigente',
+      status: 'active',
       file,
       extractedAt: new Date().toISOString(),
       installments: [],
       
       // NOVOS CAMPOS OBRIGATÓRIOS
-      expirationDate: data.fim_vigencia || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       policyStatus: 'vigente',
       
       // Campos opcionais
@@ -237,7 +221,7 @@ export class BatchFileProcessor {
       entity: 'Corretora Exemplo',
       category: 'Veicular',
       coverage: ['Cobertura Básica'],
-      totalCoverage: data.valor_premio || 1200
+      totalCoverage: 1200
     };
 
     return mockPolicyData;

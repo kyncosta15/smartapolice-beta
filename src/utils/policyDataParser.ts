@@ -6,11 +6,6 @@ export interface InstallmentData {
   status: 'paga' | 'pendente';
 }
 
-export interface CoverageData {
-  descricao: string;
-  lmi?: number;
-}
-
 // Importar os novos tipos
 import { PolicyStatus } from '@/types/policyStatus';
 
@@ -51,12 +46,6 @@ export interface ParsedPolicyData {
   
   // Coberturas do N8N com LMI - UPDATED
   coberturas?: Array<{
-    descricao: string;
-    lmi?: number;
-  }>;
-  
-  // ADDED: coverages property for compatibility
-  coverages?: Array<{
     descricao: string;
     lmi?: number;
   }>;
