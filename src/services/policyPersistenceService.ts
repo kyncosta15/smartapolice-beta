@@ -1,3 +1,4 @@
+
 import { ParsedPolicyData, InstallmentData, CoverageData } from '@/utils/policyDataParser';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,7 +27,7 @@ export class PolicyPersistenceService {
       // Mapear os resultados para o tipo ParsedPolicyData
       const parsedPolicies: ParsedPolicyData[] = policies.map(policy => ({
         id: policy.id,
-        name: policy.segurado || policy.insuredName || 'Segurado não informado',
+        name: policy.segurado || policy.segurado || 'Segurado não informado',
         type: policy.tipo_seguro || 'Tipo não informado',
         insurer: policy.seguradora || 'Seguradora não informada',
         policyNumber: policy.numero_apolice || 'Número não informado',
@@ -40,6 +41,12 @@ export class PolicyPersistenceService {
         coverages: [],   // Carregar coberturas separadamente se necessário
         category: policy.forma_pagamento || 'Não informado',
         entity: policy.corretora || 'Não informado',
+
+        // Campos obrigatórios que estavam faltando
+        paymentFrequency: 'monthly',
+        extractedAt: policy.created_at || new Date().toISOString(),
+        expirationDate: policy.fim_vigencia || new Date().toISOString(),
+        policyStatus: 'vigente',
 
         // Campos específicos do N8N
         insuredName: policy.segurado,
@@ -133,9 +140,9 @@ export class PolicyPersistenceService {
         policy_id: policyId,
         user_id: userId,
         numero_parcela: installment.numero,
-        valor_parcela: installment.valor,
+        valor: installment.valor,
         data_vencimento: installment.data,
-        status_pagamento: installment.status
+        status: installment.status
       }));
 
       // Inserir as parcelas no banco de dados
@@ -162,16 +169,16 @@ export class PolicyPersistenceService {
    */
   static async saveCoverages(policyId: string, coverages: CoverageData[]): Promise<boolean> {
     try {
-      // Preparar dados para inserção em lote
+      // Preparar dados para inserção em lote usando o nome correto da tabela
       const coveragesToInsert = coverages.map(coverage => ({
         policy_id: policyId,
-        tipo_cobertura: coverage.descricao,
-        valor_lmi: coverage.lmi
+        descricao: coverage.descricao,
+        lmi: coverage.lmi
       }));
 
-      // Inserir as coberturas no banco de dados
+      // Inserir as coberturas no banco de dados usando 'coberturas' (nome correto da tabela)
       const { data, error } = await supabase
-        .from('coverages')
+        .from('coberturas')
         .insert(coveragesToInsert);
 
       if (error) {
@@ -193,14 +200,9 @@ export class PolicyPersistenceService {
    */
   static async getPDFDownloadUrl(filePath: string): Promise<string | null> {
     try {
-      const { data, error } = await supabase.storage
-        .from('apolices')
+      const { data } = await supabase.storage
+        .from('pdfs')
         .getPublicUrl(filePath);
-
-      if (error) {
-        console.error('Erro ao obter URL de download:', error);
-        return null;
-      }
 
       console.log(`✅ URL de download obtida com sucesso: ${data.publicUrl}`);
       return data.publicUrl;
@@ -280,6 +282,42 @@ export class PolicyPersistenceService {
       return true;
     } catch (error) {
       console.error('❌ Erro ao salvar apólice com metadados:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Método completo para salvar apólice com arquivo PDF
+   */
+  static async savePolicyComplete(
+    file: File,
+    policyData: ParsedPolicyData,
+    userId: string,
+    wasPasswordProtected: boolean = false
+  ): Promise<boolean> {
+    try {
+      // Upload do arquivo PDF primeiro
+      const fileName = `${userId}/${Date.now()}_${file.name}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('pdfs')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        console.error('❌ Erro no upload do arquivo:', uploadError);
+        return false;
+      }
+
+      // Salvar a apólice com o caminho do arquivo
+      return await this.savePolicyWithPasswordMetadata(
+        userId,
+        policyData,
+        fileName,
+        wasPasswordProtected
+      );
+
+    } catch (error) {
+      console.error('❌ Erro ao salvar apólice completa:', error);
       return false;
     }
   }

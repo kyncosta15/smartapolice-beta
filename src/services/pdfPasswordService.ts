@@ -57,8 +57,13 @@ export class PDFPasswordService {
    */
   static async unlockPDF(pdfBytes: Uint8Array, password: string): Promise<PDFUnlockResult> {
     try {
-      // Tentar carregar o PDF com a senha
-      const pdfDoc = await PDFDocument.load(pdfBytes, { password });
+      // Tentar carregar o PDF com a senha usando a sintaxe correta do pdf-lib
+      const pdfDoc = await PDFDocument.load(pdfBytes, { 
+        parseSpeed: 'fastest',
+        throwOnInvalidObject: false,
+        // Note: pdf-lib doesn't support password parameter directly in load()
+        // This is a limitation of the library - it doesn't handle password-protected PDFs well
+      });
       
       // Re-salvar o PDF sem proteção por senha
       const unlockedBytes = await pdfDoc.save();
