@@ -316,7 +316,7 @@ export class PolicyPersistenceService {
     }
   }
 
-  // MÉTODO MELHORADO: Carregar e processar apólices do usuário
+  // MÉTODO MELHORADO: Carregar e processar apólices do usuário - PRESERVA STATUS DO BANCO
   static async loadUserPolicies(userId: string): Promise<ParsedPolicyData[]> {
     const sessionId = crypto.randomUUID();
     try {
@@ -353,7 +353,7 @@ export class PolicyPersistenceService {
 
       console.log(`✅ [loadUserPolicies-${sessionId}] ${policies.length} apólices carregadas`);
 
-      // Processar e corrigir status de cada apólice
+      // Processar apólices PRESERVANDO o status do banco
       const parsedPolicies: ParsedPolicyData[] = policies.map((policy, index) => {
         console.log(`🔍 [loadUserPolicies-${sessionId}] Processando apólice ${index + 1}:`, {
           id: policy.id,
@@ -362,38 +362,10 @@ export class PolicyPersistenceService {
           expiration_date: policy.expiration_date
         });
 
-        // DETERMINAR STATUS CORRETO baseado na data atual
-        const expirationDate = policy.expiration_date || policy.fim_vigencia;
-        const correctStatus = this.determineStatusFromDate(expirationDate);
-        const finalStatus = this.mapToValidStatus(correctStatus);
+        // PRESERVAR o status que está no banco - NÃO SOBRESCREVER
+        const finalStatus = this.mapToValidStatus(policy.status || 'vigente');
 
-        console.log(`🎯 [loadUserPolicies-${sessionId}] Status da apólice ${policy.id}:`, {
-          statusDB: policy.status,
-          correctStatus,
-          finalStatus,
-          expirationDate
-        });
-
-        // Se o status no banco está diferente do correto, atualize
-        if (policy.status !== finalStatus) {
-          console.log(`🔄 [loadUserPolicies-${sessionId}] Atualizando status no banco: ${policy.status} -> ${finalStatus}`);
-          
-          // Atualizar de forma assíncrona (não bloquear o carregamento)
-          supabase
-            .from('policies')
-            .update({ 
-              status: finalStatus,
-              policy_status: finalStatus as any
-            })
-            .eq('id', policy.id)
-            .then(({ error }) => {
-              if (error) {
-                console.error(`❌ Erro ao atualizar status da apólice ${policy.id}:`, error);
-              } else {
-                console.log(`✅ Status da apólice ${policy.id} atualizado no banco`);
-              }
-            });
-        }
+        console.log(`🎯 [loadUserPolicies-${sessionId}] Status PRESERVADO da apólice ${policy.id}: ${finalStatus}`);
 
         // Detectar e corrigir dados misturados (legacy fix)
         let cleanedData = this.fixMixedData(policy);
@@ -409,13 +381,14 @@ export class PolicyPersistenceService {
           endDate: policy.fim_vigencia || new Date().toISOString().split('T')[0],
           policyNumber: policy.numero_apolice || 'N/A',
           paymentFrequency: policy.forma_pagamento || 'mensal',
-          status: finalStatus, // Usar o status correto
+          status: finalStatus, // Status PRESERVADO do banco
           pdfPath: policy.arquivo_url,
           extractedAt: policy.extraido_em || policy.created_at || new Date().toISOString(),
           
           // Campos obrigatórios
-          expirationDate: expirationDate || policy.fim_vigencia || new Date().toISOString().split('T')[0],
+          expirationDate: policy.expiration_date || policy.fim_vigencia || new Date().toISOString().split('T')[0],
           policyStatus: finalStatus as any,
+          quantidade_parcelas: policy.quantidade_parcelas || 12,
           
           // Parcelas
           installments: (policy.installments as any[])?.map(inst => ({
@@ -449,7 +422,7 @@ export class PolicyPersistenceService {
           limits: 'R$ 100.000 por sinistro'
         };
 
-        console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada com status: ${finalStatus}`);
+        console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada com status PRESERVADO: ${finalStatus}`);
 
         return convertedPolicy;
       });

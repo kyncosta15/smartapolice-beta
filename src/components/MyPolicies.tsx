@@ -16,19 +16,12 @@ export function MyPolicies() {
   const { policies, updatePolicy } = usePersistedPolicies();
   const { toast } = useToast();
   
-  // Converter para formato PolicyWithStatus garantindo que o status seja sempre válido
+  // Converter para formato PolicyWithStatus mantendo o status correto do banco
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
-    // Usar o status que já vem do banco, que foi corrigido pelo PolicyPersistenceService
-    let finalStatus = policy.status as PolicyStatus;
+    // Usar o status diretamente do banco sem validações extras
+    const finalStatus = policy.status as PolicyStatus;
     
-    // Validar se o status é um valor válido, senão usar 'vigente' como fallback
-    const validStatuses: PolicyStatus[] = ['vigente', 'ativa', 'aguardando_emissao', 'nao_renovada', 'vencida', 'pendente_analise', 'vencendo', 'desconhecido'];
-    if (!validStatuses.includes(finalStatus)) {
-      console.warn(`❌ Status inválido encontrado: ${finalStatus}, usando 'vigente'`);
-      finalStatus = 'vigente';
-    }
-    
-    console.log(`✅ [MyPolicies] Apólice ${policy.name}: status = ${finalStatus}`);
+    console.log(`✅ [MyPolicies] Apólice ${policy.name}: status do banco = ${finalStatus}`);
     
     return {
       id: policy.id,
@@ -82,8 +75,8 @@ export function MyPolicies() {
         {policiesWithStatus.map((policy) => {
           // Buscar dados originais da apólice para quantidade de parcelas
           const originalPolicy = policies.find(p => p.id === policy.id);
-          const installmentsCount = originalPolicy?.installments?.length || 
-                                  originalPolicy?.quantidade_parcelas ||
+          const installmentsCount = originalPolicy?.quantidade_parcelas || 
+                                  originalPolicy?.installments?.length || 
                                   12; // Fallback padrão
           
           console.log(`🎯 [MyPolicies-Render] Renderizando ${policy.name} com status: ${policy.status}`);
