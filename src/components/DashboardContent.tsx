@@ -71,11 +71,20 @@ export function DashboardContent() {
   };
 
   const handlePolicyExtracted = async (policy: any) => {
-    console.log('🚀 handlePolicyExtracted CHAMADO para:', policy.name || policy.segurado);
+    console.log('🚀 [DashboardContent] handlePolicyExtracted INICIADO para:', policy.name || policy.segurado);
+    
+    if (!policy) {
+      console.error('❌ [DashboardContent] Política inválida recebida');
+      return;
+    }
+
+    // Garantir que a política tem um ID único
+    const policyId = policy.id || `policy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     const newPolicy: ParsedPolicyData = {
       ...policy,
-      id: policy.id || `policy-${Date.now()}`,
+      id: policyId,
+      name: policy.name || policy.segurado || policy.insuredName || 'Apólice sem nome',
       status: policy.status || 'vigente',
       entity: user?.company || 'Não informado',
       category: policy.type === 'auto' ? 'Veicular' : 
@@ -95,24 +104,56 @@ export function DashboardContent() {
       documento: policy.documento,
       documento_tipo: policy.documento_tipo,
       insuredName: policy.segurado || policy.insuredName,
-      coberturas: policy.coberturas || []
+      coberturas: policy.coberturas || [],
+      
+      // Campos obrigatórios
+      expirationDate: policy.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      policyStatus: 'vigente',
+      extractedAt: new Date().toISOString(),
+      paymentFrequency: 'monthly'
     };
 
-    console.log('✅ Nova apólice processada:', newPolicy.name);
-    
-    // Adicionar imediatamente ao estado local
-    setExtractedPolicies(prev => [...prev, newPolicy]);
-    
-    // Recarregar as apólices persistidas para mostrar a nova apólice
-    setTimeout(() => {
-      console.log('🔄 Recarregando apólices persistidas...');
-      refreshPolicies();
-    }, 2000);
-    
-    toast({
-      title: "📄 Apólice Processada",
-      description: `${newPolicy.name} foi adicionada ao dashboard`,
+    console.log('✅ [DashboardContent] Nova apólice processada:', {
+      id: newPolicy.id,
+      name: newPolicy.name,
+      insurer: newPolicy.insurer
     });
+    
+    try {
+      // 1. PRIMEIRO: Adicionar imediatamente ao estado local para mostrar na UI
+      console.log('📝 [DashboardContent] Adicionando ao estado local...');
+      setExtractedPolicies(prev => {
+        // Verificar se já existe para evitar duplicatas
+        const exists = prev.some(p => p.id === newPolicy.id);
+        if (exists) {
+          console.log('⚠️ [DashboardContent] Apólice já existe no estado local, ignorando');
+          return prev;
+        }
+        console.log('✅ [DashboardContent] Apólice adicionada ao estado local');
+        return [newPolicy, ...prev];
+      });
+
+      // 2. Toast de sucesso imediato
+      toast({
+        title: "📄 Apólice Processada",
+        description: `${newPolicy.name} foi adicionada ao dashboard`,
+      });
+
+      // 3. Recarregar as apólices persistidas para sincronizar com o banco
+      console.log('🔄 [DashboardContent] Recarregando apólices persistidas em 1 segundo...');
+      setTimeout(() => {
+        refreshPolicies();
+        console.log('✅ [DashboardContent] Refresh das apólices persistidas executado');
+      }, 1000);
+
+    } catch (error) {
+      console.error('❌ [DashboardContent] Erro ao processar apólice:', error);
+      toast({
+        title: "❌ Erro no Processamento",
+        description: "Erro ao adicionar apólice ao dashboard",
+        variant: "destructive",
+      });
+    }
   };
 
   const generateInstallmentsFromNumber = (numberOfInstallments: number, monthlyAmount: number, startDate: string) => {
@@ -216,8 +257,7 @@ export function DashboardContent() {
     installments: policy.installments || []
   }));
 
-  console.log(`🔍 DashboardContent: Total de apólices (incluindo persistidas): ${allPolicies.length}`);
-  console.log(`📊 Apólices persistidas: ${persistedPolicies.length}, Extraídas: ${extractedPolicies.length}`);
+  console.log(`🔍 [DashboardContent] Total de apólices: ${allPolicies.length} (Persistidas: ${persistedPolicies.length}, Extraídas: ${extractedPolicies.length})`);
 
   return (
     <SidebarProvider>
