@@ -1,3 +1,4 @@
+
 export interface InstallmentData {
   numero: number;
   valor: number;
@@ -78,4 +79,7 @@ export interface ParsedPolicyData {
     bodilyInjury?: number;
     comprehensive?: boolean;
   };
+  
+  // ADDED: Missing quantidade_parcelas property
+  quantidade_parcelas?: number;
 }
