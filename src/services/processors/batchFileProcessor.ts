@@ -1,3 +1,4 @@
+
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
 import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
@@ -26,7 +27,11 @@ export class BatchFileProcessor {
   async processMultipleFiles(files: File[], userId: string | null): Promise<ParsedPolicyData[]> {
     console.log(`🚀 BatchFileProcessor.processMultipleFiles CHAMADO!`);
     console.log(`📤 BatchFileProcessor: Iniciando processamento de ${files.length} arquivos com userId: ${userId}`);
-    console.log(`📋 Arquivos para processar:`, files.map(f => f.name));
+    
+    if (!userId) {
+      console.error('❌ ERRO CRÍTICO: userId é obrigatório para processamento');
+      throw new Error('Usuário não autenticado. Faça login para continuar.');
+    }
     
     // Initialize status for all files
     files.forEach(file => {
@@ -67,6 +72,12 @@ export class BatchFileProcessor {
         const singleData = extractedDataArray[index];
         console.log(`🔄 Processando apólice ${index + 1}/${extractedDataArray.length}:`, singleData);
         
+        // CORREÇÃO CRÍTICA: Garantir que o userId seja definido nos dados antes de converter
+        const dataWithUserId = {
+          ...singleData,
+          user_id: userId // Garantir que user_id está definido
+        };
+        
         // Determinar qual arquivo esta apólice pertence
         const relatedFileName = this.findRelatedFileName(singleData, files) || files[index]?.name || `Arquivo ${index + 1}`;
         
@@ -78,27 +89,33 @@ export class BatchFileProcessor {
           });
         }
         
-        const parsedPolicy = this.convertToParsedPolicy(singleData, relatedFileName, files[index] || files[0]);
+        const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[index] || files[0]);
         allResults.push(parsedPolicy);
         
-        // Salvar arquivo e dados no banco de dados
+        // CORREÇÃO: Salvar arquivo e dados no banco de dados com userId correto
         const relatedFile = files.find(f => f.name === relatedFileName) || files[index] || files[0];
         if (relatedFile && userId) {
           console.log(`💾 BatchFileProcessor: Iniciando persistência para ${parsedPolicy.name} com userId: ${userId}`);
           try {
             const persistenceResult = await PolicyPersistenceService.savePolicyComplete(relatedFile, parsedPolicy, userId);
             console.log(`✅ BatchFileProcessor: Persistência concluída com sucesso: ${persistenceResult}`);
+            
+            if (persistenceResult) {
+              console.log(`📋 Apólice salva no banco com sucesso: ${parsedPolicy.name}`);
+            } else {
+              console.warn(`⚠️ Apólice processada mas pode não ter sido salva: ${parsedPolicy.name}`);
+            }
           } catch (persistenceError) {
             console.error(`❌ BatchFileProcessor: Erro na persistência:`, persistenceError);
             // Continuar processamento mesmo com erro de persistência
           }
         } else {
-          console.error(`❌ BatchFileProcessor: Não salvando persistência - userId: ${userId}, arquivo: ${relatedFile?.name}`);
+          console.error(`❌ BatchFileProcessor: Não salvando - userId: ${userId}, arquivo: ${relatedFile?.name}`);
         }
         
         // Add to dashboard immediately
         this.onPolicyExtracted(parsedPolicy);
-        console.log(`✅ Apólice ${index + 1} adicionada: ${parsedPolicy.name} - ${parsedPolicy.insurer}`);
+        console.log(`✅ Apólice ${index + 1} adicionada ao dashboard: ${parsedPolicy.name} - ${parsedPolicy.insurer}`);
 
         if (relatedFileName && files.find(f => f.name === relatedFileName)) {
           this.updateFileStatus(relatedFileName, {
@@ -174,23 +191,21 @@ export class BatchFileProcessor {
     return null;
   }
 
-  private getFileStatus(fileName: string) {
-    // Este método precisaria acessar o status atual do arquivo
-    // Por simplicidade, vamos assumir que não existe
-    return null;
-  }
-
   private convertToParsedPolicy(data: any, fileName: string, file: File): ParsedPolicyData {
+    console.log('🔄 convertToParsedPolicy chamado com dados:', data);
+    
     // Verificar se é dado direto do N8N ou estruturado
     if (data.numero_apolice && data.segurado && data.seguradora) {
       // É dado direto do N8N
+      console.log('📋 Convertendo dados diretos do N8N');
       return N8NDataConverter.convertN8NDirectData(data, fileName, file);
     } else if (data.informacoes_gerais && data.seguradora && data.vigencia) {
       // É dado estruturado
+      console.log('📋 Convertendo dados estruturados');
       return StructuredDataConverter.convertStructuredData(data, fileName, file);
     } else {
       // Fallback para dados não estruturados
-      console.warn('Dados não estruturados recebidos, usando fallback');
+      console.warn('📋 Dados não estruturados recebidos, usando fallback');
       return this.createFallbackPolicy(data, fileName, file);
     }
   }

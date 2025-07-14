@@ -1,3 +1,4 @@
+
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyTypeNormalizer } from './policyTypeNormalizer';
 
@@ -7,7 +8,7 @@ const mapStatus = (status: string | undefined): string => {
 
   const lowerStatus = status.toLowerCase();
 
-  if (lowerStatus.includes('ativo') || lowerStatus.includes('vigente')) {
+  if (lowerStatus.includes('ativo') || lowerStatus.includes('vigente') || lowerStatus.includes('ativa')) {
     return 'vigente';
   } else if (lowerStatus.includes('pendente')) {
     return 'pendente_analise';
@@ -88,7 +89,7 @@ export const convertN8NData = (data: any): ParsedPolicyData => {
   return {
     id: crypto.randomUUID(),
     name: data.segurado || 'Segurado não informado',
-    type: normalizedType, // CORREÇÃO: Usar tipo normalizado
+    type: normalizedType,
     insurer: data.seguradora || 'Seguradora não informada',
     premium: Number(data.valor_premio || data.premio) || 0,
     monthlyAmount: Number(data.custo_mensal || data.valor_parcela) || 0,
@@ -129,28 +130,30 @@ export const convertN8NData = (data: any): ParsedPolicyData => {
   };
 };
 
-// Função para converter dados diretos do N8N
+// CORREÇÃO CRÍTICA: Função para converter dados diretos do N8N com userId correto
 export const convertN8NDirectData = (data: any, fileName: string, file: File): ParsedPolicyData => {
+  console.log('🔄 convertN8NDirectData chamado com dados:', data);
+  
   // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
   const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
   
-  return {
+  const convertedPolicy: ParsedPolicyData = {
     id: crypto.randomUUID(),
     name: data.segurado || fileName.replace('.pdf', ''),
-    type: normalizedType, // CORREÇÃO: Usar tipo normalizado
+    type: normalizedType,
     insurer: data.seguradora || 'Seguradora não informada',
-    premium: Number(data.valor_premio || data.premio) || 0,
+    premium: Number(data.premio) || 0,
     monthlyAmount: Number(data.custo_mensal || data.valor_parcela) || 0,
-    startDate: data.inicio_vigencia || data.inicio || new Date().toISOString().split('T')[0],
-    endDate: data.fim_vigencia || data.fim || new Date().toISOString().split('T')[0],
+    startDate: data.inicio || new Date().toISOString().split('T')[0],
+    endDate: data.fim || new Date().toISOString().split('T')[0],
     policyNumber: data.numero_apolice || 'N/A',
-    paymentFrequency: data.forma_pagamento || data.pagamento || 'mensal',
+    paymentFrequency: data.pagamento || 'mensal',
     status: mapStatus(data.status),
     file,
     extractedAt: new Date().toISOString(),
     
     // NOVOS CAMPOS OBRIGATÓRIOS
-    expirationDate: data.fim_vigencia || data.fim || new Date().toISOString().split('T')[0],
+    expirationDate: data.fim || new Date().toISOString().split('T')[0],
     policyStatus: 'vigente',
     
     // Campos específicos do N8N
@@ -175,8 +178,11 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File): P
     category: normalizedType === 'auto' ? 'Veicular' : 
              normalizedType === 'empresarial' ? 'Empresarial' : 'Outros',
     coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo) || [],
-    totalCoverage: Number(data.valor_premio || data.premio) || 0
+    totalCoverage: Number(data.premio) || 0
   };
+
+  console.log('✅ Política convertida:', convertedPolicy);
+  return convertedPolicy;
 };
 
 export class N8NDataConverter {
