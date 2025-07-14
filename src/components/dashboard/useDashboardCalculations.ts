@@ -1,5 +1,3 @@
-
-
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { extractFieldValue } from '@/utils/extractFieldValue';
@@ -178,7 +176,7 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // Evolução mensal dos custos - VERSÃO SIMPLIFICADA
+    // Evolução mensal dos custos - ALTERADO PARA 12 MESES
     const monthlyEvolution = [];
     
     console.log('🔍 DEBUG - Total de policies:', policies.length);
@@ -188,14 +186,15 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
     // Se há apólices, assumir que estão ativas no período atual
     const currentMonthlyCost = totalMonthlyCost;
     
-    for (let i = 5; i >= 0; i--) {
+    // ALTERADO: 12 meses ao invés de 6
+    for (let i = 11; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
       const month = date.toLocaleDateString('pt-BR', { month: 'short' });
       
-      // Para simplificar: se há apólices, mostrar custo nos últimos 3 meses
+      // Para simplificar: se há apólices, mostrar custo nos últimos 6 meses
       // Nos meses anteriores, mostrar 0 (antes da contratação)
-      const isRecentMonth = i <= 2; // Últimos 3 meses
+      const isRecentMonth = i <= 5; // Últimos 6 meses com custo
       const costForMonth = (policies.length > 0 && isRecentMonth) ? currentMonthlyCost : 0;
       const activePolicies = (policies.length > 0 && isRecentMonth) ? policies.length : 0;
       
@@ -206,7 +205,7 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       });
     }
     
-    console.log('📊 Evolução mensal simplificada:', monthlyEvolution);
+    console.log('📊 Evolução mensal com 12 meses:', monthlyEvolution);
 
     // Apólices inseridas nos últimos 30 dias
     const thirtyDaysAgo = new Date();
@@ -248,4 +247,3 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
     };
   }, [policies]);
 }
-

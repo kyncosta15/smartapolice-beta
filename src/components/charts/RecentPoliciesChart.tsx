@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Calendar, DollarSign, Clock } from 'lucide-react';
 import { PolicyData } from './chartData';
@@ -96,7 +97,7 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
 
                     {/* Informações principais */}
                     <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-4 gap-4 md:gap-6'}`}>
-                      {/* Data de Inserção */}
+                      {/* Data de Inserção - ÍCONE ALTERADO */}
                       <div className="text-center">
                         <div className="flex items-center justify-center gap-1 mb-1">
                           <Calendar className="h-4 w-4 text-gray-400" />
@@ -107,7 +108,7 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
                         </p>
                       </div>
 
-                      {/* Valor */}
+                      {/* Valor - ÍCONE ALTERADO */}
                       <div className="text-center">
                         <div className="flex items-center justify-center gap-1 mb-1">
                           <DollarSign className="h-4 w-4 text-gray-400" />
@@ -118,7 +119,7 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
                         </p>
                       </div>
 
-                      {/* Data de Vencimento */}
+                      {/* Data de Vencimento - ÍCONE ALTERADO */}
                       <div className="text-center">
                         <div className="flex items-center justify-center gap-1 mb-1">
                           <Clock className="h-4 w-4 text-gray-400" />

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
@@ -148,7 +147,7 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica
     });
 
-    // Evolução mensal
+    // Evolução mensal - ALTERADO PARA 12 MESES
     const monthlyEvolution = generateMonthlyEvolution(policies);
 
     // Insights
@@ -201,8 +200,8 @@ function generateMonthlyEvolution(policies: ParsedPolicyData[]) {
   const monthlyMap: { [key: string]: number } = {};
   const now = new Date();
   
-  // Últimos 6 meses
-  for (let i = 5; i >= 0; i--) {
+  // ALTERADO: Últimos 12 meses ao invés de 6
+  for (let i = 11; i >= 0; i--) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = date.toLocaleDateString('pt-BR', { month: 'short' });
     monthlyMap[key] = 0;
@@ -211,7 +210,8 @@ function generateMonthlyEvolution(policies: ParsedPolicyData[]) {
   // Distribui custos
   policies.forEach(policy => {
     Object.keys(monthlyMap).forEach(month => {
-      monthlyMap[month] += (policy.monthlyAmount || 0) / 6; // Distribuição simples
+      // ALTERADO: Distribuição pelos 12 meses ao invés de 6
+      monthlyMap[month] += (policy.monthlyAmount || 0) / 12;
     });
   });
 
