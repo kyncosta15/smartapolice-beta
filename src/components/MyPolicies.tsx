@@ -11,70 +11,26 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { useToast } from '@/hooks/use-toast';
 
-// FUNÇÃO PRINCIPAL: Determinar status correto baseado na data de vencimento
-const determineCorrectStatus = (policy: PolicyWithStatus): PolicyStatus => {
-  const expirationDateStr = policy.expirationDate || policy.endDate;
-  
-  console.log(`🔍 [determineCorrectStatus] Analisando apólice "${policy.name}":`, {
-    id: policy.id,
-    expirationDate: expirationDateStr,
-    currentStatus: policy.status,
-    endDate: policy.endDate
-  });
-  
-  if (!expirationDateStr) {
-    console.log(`⚠️ [determineCorrectStatus] Sem data para apólice ${policy.name} - usando 'vigente'`);
-    return 'vigente';
-  }
-  
-  const now = new Date();
-  now.setHours(0, 0, 0, 0); // Zerar horas para comparação apenas de datas
-  
-  const expirationDate = new Date(expirationDateStr);
-  expirationDate.setHours(0, 0, 0, 0);
-  
-  // Verificar se a data é válida
-  if (isNaN(expirationDate.getTime())) {
-    console.error(`❌ [determineCorrectStatus] Data inválida para ${policy.name}: ${expirationDateStr}`);
-    return 'vigente';
-  }
-  
-  const diffTime = expirationDate.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  console.log(`📅 [determineCorrectStatus] Análise de vencimento para "${policy.name}":`, {
-    expirationDate: expirationDate.toLocaleDateString('pt-BR'),
-    today: now.toLocaleDateString('pt-BR'),
-    diffDays,
-    diffTime
-  });
-  
-  let determinedStatus: PolicyStatus;
-  
-  // Lógica de determinação de status
-  if (diffDays < -30) {
-    determinedStatus = 'nao_renovada';
-  } else if (diffDays < 0) {
-    determinedStatus = 'vencida';
-  } else if (diffDays <= 30) {
-    determinedStatus = 'vencendo';
-  } else {
-    determinedStatus = 'vigente';
-  }
-  
-  console.log(`✅ [determineCorrectStatus] Status determinado para "${policy.name}": ${determinedStatus} (${diffDays} dias)`);
-  
-  return determinedStatus;
-};
-
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const { policies, updatePolicy } = usePersistedPolicies();
   const { toast } = useToast();
   
-  // Converter para formato PolicyWithStatus com status correto
+  // Converter para formato PolicyWithStatus garantindo que o status seja sempre válido
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
-    const policyWithStatus: PolicyWithStatus = {
+    // Usar o status que já vem do banco, que foi corrigido pelo PolicyPersistenceService
+    let finalStatus = policy.status as PolicyStatus;
+    
+    // Validar se o status é um valor válido, senão usar 'vigente' como fallback
+    const validStatuses: PolicyStatus[] = ['vigente', 'ativa', 'aguardando_emissao', 'nao_renovada', 'vencida', 'pendente_analise', 'vencendo', 'desconhecido'];
+    if (!validStatuses.includes(finalStatus)) {
+      console.warn(`❌ Status inválido encontrado: ${finalStatus}, usando 'vigente'`);
+      finalStatus = 'vigente';
+    }
+    
+    console.log(`✅ [MyPolicies] Apólice ${policy.name}: status = ${finalStatus}`);
+    
+    return {
       id: policy.id,
       name: policy.name,
       insurer: policy.insurer,
@@ -84,27 +40,7 @@ export function MyPolicies() {
       startDate: policy.startDate,
       endDate: policy.endDate,
       expirationDate: policy.expirationDate || policy.endDate,
-      status: policy.status as PolicyStatus || 'vigente'
-    };
-    
-    // Determinar status correto baseado na data
-    const correctStatus = determineCorrectStatus(policyWithStatus);
-    
-    // Se o status mudou, atualizar no banco
-    if (policyWithStatus.status !== correctStatus) {
-      console.log(`🔄 Status da apólice ${policy.name} será atualizado: ${policyWithStatus.status} -> ${correctStatus}`);
-      
-      // Atualizar no banco de forma assíncrona
-      updatePolicy(policy.id, { status: correctStatus }).then(success => {
-        if (success) {
-          console.log(`✅ Status da apólice ${policy.name} atualizado com sucesso`);
-        }
-      });
-    }
-    
-    return {
-      ...policyWithStatus,
-      status: correctStatus // Usar sempre o status correto
+      status: finalStatus
     };
   });
   
@@ -144,22 +80,21 @@ export function MyPolicies() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {policiesWithStatus.map((policy) => {
-          // SEMPRE usar status correto e atualizado
-          const currentStatus = determineCorrectStatus(policy);
-          
           // Buscar dados originais da apólice para quantidade de parcelas
           const originalPolicy = policies.find(p => p.id === policy.id);
           const installmentsCount = originalPolicy?.installments?.length || 
                                   originalPolicy?.quantidade_parcelas ||
                                   12; // Fallback padrão
           
+          console.log(`🎯 [MyPolicies-Render] Renderizando ${policy.name} com status: ${policy.status}`);
+          
           return (
             <Card key={policy.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg">{policy.name}</CardTitle>
-                  <Badge className={STATUS_COLORS[currentStatus] || STATUS_COLORS.vigente}>
-                    {formatStatusText(currentStatus)}
+                  <Badge className={STATUS_COLORS[policy.status] || STATUS_COLORS.vigente}>
+                    {formatStatusText(policy.status)}
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-500">{policy.insurer}</p>
