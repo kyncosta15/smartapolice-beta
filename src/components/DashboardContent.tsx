@@ -36,7 +36,8 @@ export function DashboardContent() {
     deletePolicy: deletePersistedPolicy,
     updatePolicy: updatePersistedPolicy,
     downloadPDF: downloadPersistedPDF,
-    hasPersistedData 
+    hasPersistedData,
+    refreshPolicies 
   } = usePersistedPolicies();
 
   // Hook para persistência de usuários baseado em role
@@ -70,22 +71,21 @@ export function DashboardContent() {
   };
 
   const handlePolicyExtracted = async (policy: any) => {
-    console.log('🚀 handlePolicyExtracted CHAMADO para persistência!');
-    console.log('Nova apólice extraída:', policy);
+    console.log('🚀 handlePolicyExtracted CHAMADO para:', policy.name || policy.segurado);
     
     const newPolicy: ParsedPolicyData = {
       ...policy,
-      id: `policy-${Date.now()}`,
-      status: 'active',
+      id: policy.id || `policy-${Date.now()}`,
+      status: policy.status || 'vigente',
       entity: user?.company || 'Não informado',
       category: policy.type === 'auto' ? 'Veicular' : 
                policy.type === 'vida' ? 'Pessoal' : 
                policy.type === 'saude' ? 'Saúde' : 'Geral',
-      coverage: ['Cobertura Básica', ' Responsabilidade Civil'],
+      coverage: policy.coverage || ['Cobertura Básica', 'Responsabilidade Civil'],
       monthlyAmount: policy.monthlyAmount || (parseFloat(policy.premium) / 12) || 0,
       premium: policy.premium || 0,
-      deductible: Math.floor(Math.random() * 5000) + 1000,
-      limits: 'R$ 100.000 por sinistro',
+      deductible: policy.deductible || Math.floor(Math.random() * 5000) + 1000,
+      limits: policy.limits || 'R$ 100.000 por sinistro',
       installments: Array.isArray(policy.installments) ? policy.installments : 
                    policy.installments ? generateInstallmentsFromNumber(policy.installments, policy.monthlyAmount, policy.startDate) :
                    generateDefaultInstallments(policy.monthlyAmount, policy.startDate),
@@ -95,64 +95,26 @@ export function DashboardContent() {
       documento: policy.documento,
       documento_tipo: policy.documento_tipo,
       insuredName: policy.segurado || policy.insuredName,
-      coberturas: policy.coberturas
+      coberturas: policy.coberturas || []
     };
 
-    console.log('✅ Adicionando apólice ao dashboard local primeiro');
+    console.log('✅ Nova apólice processada:', newPolicy.name);
+    
+    // Adicionar imediatamente ao estado local
     setExtractedPolicies(prev => [...prev, newPolicy]);
     
-    // CORREÇÃO CRÍTICA: Garantir que a persistência seja imediata e robusta
-    if (user?.id && policy.file) {
-      console.log('💾 INICIANDO persistência IMEDIATA para usuário:', user.id);
-      
-      try {
-        const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
-        const success = await PolicyPersistenceService.savePolicyComplete(policy.file, newPolicy, user.id);
-        
-        if (success) {
-          console.log('✅ PERSISTÊNCIA REALIZADA COM SUCESSO!');
-          
-          // Atualizar a lista de apólices persistidas
-          setTimeout(() => {
-            addPersistedPolicy(newPolicy);
-          }, 1000);
-          
-          toast({
-            title: "📄 Apólice Salva",
-            description: `${policy.name || 'Nova apólice'} foi processada e salva no banco de dados`,
-          });
-        } else {
-          console.error('❌ FALHA NA PERSISTÊNCIA');
-          toast({
-            title: "⚠️ Aviso",
-            description: `Apólice processada mas pode não ter sido salva. Verifique após fazer logout/login.`,
-            variant: "destructive",
-          });
-        }
-        
-      } catch (error) {
-        console.error('❌ Erro crítico na persistência:', error);
-        toast({
-          title: "❌ Erro na Persistência",
-          description: "A apólice foi processada mas pode não ter sido salva permanentemente",
-          variant: "destructive",
-        });
-      }
-    } else {
-      console.warn('⚠️ Persistência pulada - dados insuficientes:', {
-        userId: user?.id,
-        hasFile: !!policy.file
-      });
-      
-      toast({
-        title: "⚠️ Persistência Limitada",
-        description: "Apólice adicionada mas pode não persistir após logout",
-        variant: "destructive",
-      });
-    }
+    // Recarregar as apólices persistidas para mostrar a nova apólice
+    setTimeout(() => {
+      console.log('🔄 Recarregando apólices persistidas...');
+      refreshPolicies();
+    }, 2000);
+    
+    toast({
+      title: "📄 Apólice Processada",
+      description: `${newPolicy.name} foi adicionada ao dashboard`,
+    });
   };
 
-  // Função auxiliar para gerar parcelas a partir de um número
   const generateInstallmentsFromNumber = (numberOfInstallments: number, monthlyAmount: number, startDate: string) => {
     const installments = [];
     const baseDate = new Date(startDate);
@@ -172,7 +134,6 @@ export function DashboardContent() {
     return installments;
   };
 
-  // Função auxiliar para gerar parcelas padrão
   const generateDefaultInstallments = (monthlyAmount: number, startDate: string) => {
     return generateInstallmentsFromNumber(12, monthlyAmount || 100, startDate);
   };
@@ -250,11 +211,9 @@ export function DashboardContent() {
   };
 
   // Normalizar dados das apólices para garantir compatibilidade com todos os componentes
-  // IMPORTANTE: Usar allPolicies (que inclui persistidas) e não apenas extractedPolicies
   const normalizedPolicies = allPolicies.map(policy => ({
     ...policy,
-    // Manter installments como array - já é o formato correto
-    installments: policy.installments
+    installments: policy.installments || []
   }));
 
   console.log(`🔍 DashboardContent: Total de apólices (incluindo persistidas): ${allPolicies.length}`);
