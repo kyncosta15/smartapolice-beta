@@ -1,8 +1,15 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { FileText, DollarSign, Shield, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import React, { useMemo } from 'react';
+import {
+  Card, CardContent, CardHeader, CardTitle
+} from '@/components/ui/card';
+import {
+  FileText, DollarSign, Shield,
+  AlertTriangle, XCircle
+} from 'lucide-react';
+
 import { formatCurrency } from '@/utils/currencyFormatter';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface KPICardsProps {
   totalPolicies: number;
@@ -14,84 +21,140 @@ interface KPICardsProps {
   onTotalClick?: () => void;
 }
 
-export function KPICards({
-  totalPolicies,
-  totalMonthlyCost,
-  totalInsuredValue,
-  expiringPolicies,
-  expiredPolicies,
-  activePolicies,
-  onTotalClick
-}: KPICardsProps) {
-  const kpiCards = [
-    {
-      title: 'Total de Apólices',
-      value: totalPolicies.toString(),
-      icon: FileText,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      onClick: onTotalClick
-    },
-    {
-      title: 'Custo Mensal Total',
-      value: formatCurrency(totalMonthlyCost),
-      icon: DollarSign,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50'
-    },
-    {
-      title: 'Valor Segurado Total',
-      value: formatCurrency(totalInsuredValue),
-      icon: Shield,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    },
-    {
-      title: 'Apólices Ativas',
-      value: activePolicies.toString(),
-      icon: CheckCircle,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50'
-    },
-    {
-      title: 'Vencendo em 30 dias',
-      value: expiringPolicies.toString(),
-      icon: Clock,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50'
-    },
-    {
-      title: 'Apólices Vencidas',
-      value: expiredPolicies.toString(),
-      icon: AlertTriangle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50'
-    }
-  ];
+// Utilitário interno para formatar valores – sempre valor completo
+const formatValue = (value: number, isCurrency: boolean, isMobile: boolean) => {
+  const safe = Number.isFinite(value) ? value : 0;
 
+  if (isCurrency) {
+    // Sempre mostrar valor completo com casas decimais, sem abreviações
+    return formatCurrency(safe, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  // Valores inteiros simples
+  return safe.toString();
+};
+
+export function KPICards(props: KPICardsProps) {
+  const isMobile = useIsMobile();
+
+  /* ------------------------------------------------------------------ */
+  /*  Construção das "fichas" (cards)                                   */
+  /* ------------------------------------------------------------------ */
+  const cards = useMemo(() => ([
+    {
+      title: 'Total',
+      value: props.totalPolicies,
+      subtitle: 'Apólices',
+      icon: FileText,
+      bg: 'from-blue-500 to-blue-600',
+      isCurrency: false,
+      isClickable: true,
+      onClick: props.onTotalClick
+    },
+    {
+      title: 'Prêmio Mensal',
+      value: props.totalMonthlyCost,
+      subtitle: 'Prêmio Total',
+      icon: DollarSign,
+      bg: 'from-green-500 to-green-600',
+      isCurrency: true
+    },
+    {
+      title: 'Valor Segurado',
+      value: props.totalInsuredValue,
+      subtitle: 'Cobertura total',
+      icon: Shield,
+      bg: 'from-purple-500 to-purple-600',
+      isCurrency: true
+    },
+    {
+      title: 'Ativas',
+      value: props.activePolicies,
+      subtitle: 'Em vigor',
+      icon: Shield,
+      bg: 'from-emerald-500 to-emerald-600',
+      isCurrency: false
+    },
+    {
+      title: 'Vencidas',
+      value: props.expiredPolicies,
+      subtitle: 'Expiradas',
+      icon: XCircle,
+      bg: 'from-red-500 to-red-600',
+      isCurrency: false
+    },
+    {
+      title: 'Vencendo',
+      value: props.expiringPolicies,
+      subtitle: 'Próximos 30 dias',
+      icon: AlertTriangle,
+      bg: 'from-orange-500 to-orange-600',
+      isCurrency: false
+    }
+  ]), [props]);
+
+  /* ------------------------------------------------------------------ */
+  /*  Renderização                                                       */
+  /* ------------------------------------------------------------------ */
+  const renderCard = (
+    {
+      title, value, subtitle, icon: Icon, bg, isCurrency, isClickable, onClick
+    }: (typeof cards)[number],
+    key: React.Key
+  ) => (
+    <Card
+      key={key}
+      className={`bg-gradient-to-r ${bg} text-white border-0 shadow-lg ${
+        isClickable ? 'cursor-pointer hover:scale-105 transition-transform' : ''
+      }`}
+      onClick={isClickable ? onClick : undefined}
+    >
+      <CardHeader
+        className={`flex flex-row items-center justify-between space-y-0 ${
+          isMobile ? 'pb-1 px-3 pt-2' : 'pb-2'
+        }`}
+      >
+        <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium opacity-90`}>
+          {title}
+        </CardTitle>
+        <Icon className={`${isMobile ? 'h-3 w-3' : 'h-5 w-5'} opacity-80`} />
+      </CardHeader>
+
+      <CardContent className={`${isMobile ? 'pb-2 px-3' : 'pb-4'}`}>
+        <div className={`${isMobile ? 'text-sm' : 'text-3xl'} font-bold mb-1 break-words`}>
+          {formatValue(value, isCurrency, isMobile)}
+        </div>
+        <p className="text-xs opacity-80">
+          {subtitle}
+        </p>
+      </CardContent>
+    </Card>
+  );
+
+  /* ------------------------------------------------------------------ */
+  /*  Mobile → 2 cards per row                                          */
+  /* ------------------------------------------------------------------ */
+  if (isMobile) {
+    return (
+      <div className="w-full px-4">
+        <div className="grid grid-cols-2 gap-2">
+          {cards.map(renderCard)}
+        </div>
+      </div>
+    );
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Desktop → 3 cards per row (2 rows)                               */
+  /* ------------------------------------------------------------------ */
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-      {kpiCards.map((card, index) => (
-        <Card 
-          key={index}
-          className={`hover:shadow-md transition-shadow ${card.onClick ? 'cursor-pointer' : ''}`}
-          onClick={card.onClick}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="text-sm font-medium text-gray-600">
-              {card.title}
-            </div>
-            <div className={`p-2 rounded-lg ${card.bgColor}`}>
-              <card.icon className={`h-4 w-4 ${card.color}`} />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {card.value}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="w-full px-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {cards.map(renderCard)}
+      </div>
     </div>
   );
 }
