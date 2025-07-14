@@ -147,6 +147,12 @@ export function MyPolicies() {
           // SEMPRE usar status correto e atualizado
           const currentStatus = determineCorrectStatus(policy);
           
+          // Buscar dados originais da apólice para quantidade de parcelas
+          const originalPolicy = policies.find(p => p.id === policy.id);
+          const installmentsCount = originalPolicy?.installments?.length || 
+                                  originalPolicy?.quantidade_parcelas ||
+                                  12; // Fallback padrão
+          
           return (
             <Card key={policy.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
@@ -173,15 +179,21 @@ export function MyPolicies() {
                   </div>
                 </div>
                 
-                <div className="text-sm">
-                  <p className="text-gray-500">Vencimento</p>
-                  <p className={`font-medium ${
-                    new Date(policy.expirationDate || policy.endDate) < new Date() 
-                      ? 'text-red-600' 
-                      : 'text-gray-900'
-                  }`}>
-                    {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
-                  </p>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-gray-500">Parcelas</p>
+                    <p className="font-medium">{installmentsCount}x</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Vencimento</p>
+                    <p className={`font-medium ${
+                      new Date(policy.expirationDate || policy.endDate) < new Date() 
+                        ? 'text-red-600' 
+                        : 'text-gray-900'
+                    }`}>
+                      {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
