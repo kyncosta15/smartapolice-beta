@@ -78,6 +78,10 @@ export class BatchFileProcessor {
           user_id: userId // Garantir que user_id está definido
         };
         
+        console.log(`🔍 Processando apólice ${index + 1} com userId: ${userId}`);
+        console.log('📋 Dados originais:', singleData);
+        console.log('📋 Dados com userId:', dataWithUserId);
+        
         // Determinar qual arquivo esta apólice pertence
         const relatedFileName = this.findRelatedFileName(singleData, files) || files[index]?.name || `Arquivo ${index + 1}`;
         
@@ -90,6 +94,7 @@ export class BatchFileProcessor {
         }
         
         const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[index] || files[0]);
+        console.log(`✅ Apólice ${index + 1} convertida com sucesso:`, parsedPolicy);
         allResults.push(parsedPolicy);
         
         // CORREÇÃO: Salvar arquivo e dados no banco de dados com userId correto
@@ -194,11 +199,19 @@ export class BatchFileProcessor {
   private convertToParsedPolicy(data: any, fileName: string, file: File): ParsedPolicyData {
     console.log('🔄 convertToParsedPolicy chamado com dados:', data);
     
+    // CORREÇÃO: Verificar se user_id está definido
+    const userIdFromData = data.user_id;
+    if (!userIdFromData) {
+      console.error('❌ ERRO: user_id não encontrado nos dados para conversão');
+      console.error('Dados recebidos:', data);
+      throw new Error('user_id é obrigatório para converter dados de apólice');
+    }
+    
     // Verificar se é dado direto do N8N ou estruturado
     if (data.numero_apolice && data.segurado && data.seguradora) {
       // É dado direto do N8N
-      console.log('📋 Convertendo dados diretos do N8N');
-      return N8NDataConverter.convertN8NDirectData(data, fileName, file);
+      console.log('📋 Convertendo dados diretos do N8N com userId:', userIdFromData);
+      return N8NDataConverter.convertN8NDirectData(data, fileName, file, userIdFromData);
     } else if (data.informacoes_gerais && data.seguradora && data.vigencia) {
       // É dado estruturado
       console.log('📋 Convertendo dados estruturados');

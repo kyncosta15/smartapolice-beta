@@ -82,9 +82,19 @@ const generateInstallmentsFromN8NData = (data: any): Array<{numero: number, valo
 };
 
 // Função para converter dados do N8N para o formato ParsedPolicyData
-export const convertN8NData = (data: any): ParsedPolicyData => {
+export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => {
   // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
   const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
+  
+  // CORREÇÃO CRÍTICA: Garantir que user_id seja sempre definido
+  if (!userId && !data.user_id) {
+    console.error('❌ ERRO CRÍTICO: user_id não fornecido para convertN8NData');
+    console.error('Dados recebidos:', data);
+    throw new Error('user_id é obrigatório para processar dados do N8N');
+  }
+  
+  const finalUserId = userId || data.user_id;
+  console.log(`✅ convertN8NData: Usando userId: ${finalUserId}`);
   
   return {
     id: crypto.randomUUID(),
@@ -131,8 +141,18 @@ export const convertN8NData = (data: any): ParsedPolicyData => {
 };
 
 // CORREÇÃO CRÍTICA: Função para converter dados diretos do N8N com userId correto
-export const convertN8NDirectData = (data: any, fileName: string, file: File): ParsedPolicyData => {
+export const convertN8NDirectData = (data: any, fileName: string, file: File, userId?: string): ParsedPolicyData => {
   console.log('🔄 convertN8NDirectData chamado com dados:', data);
+  
+  // CORREÇÃO CRÍTICA: Garantir que user_id seja sempre definido
+  if (!userId && !data.user_id) {
+    console.error('❌ ERRO CRÍTICO: user_id não fornecido para convertN8NDirectData');
+    console.error('Dados recebidos:', data);
+    throw new Error('user_id é obrigatório para processar dados diretos do N8N');
+  }
+  
+  const finalUserId = userId || data.user_id;
+  console.log(`✅ convertN8NDirectData: Usando userId: ${finalUserId}`);
   
   // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
   const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
