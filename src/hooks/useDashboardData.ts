@@ -148,7 +148,7 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica
     });
 
-    // Evolução mensal
+    // Evolução mensal - CORRIGIDO PARA 12 MESES
     const monthlyEvolution = generateMonthlyEvolution(policies);
 
     // Insights
@@ -201,17 +201,17 @@ function generateMonthlyEvolution(policies: ParsedPolicyData[]) {
   const monthlyMap: { [key: string]: number } = {};
   const now = new Date();
   
-  // Últimos 6 meses
-  for (let i = 5; i >= 0; i--) {
+  // CORRIGIDO: Últimos 12 meses ao invés de 6
+  for (let i = 11; i >= 0; i--) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = date.toLocaleDateString('pt-BR', { month: 'short' });
     monthlyMap[key] = 0;
   }
 
-  // Distribui custos
+  // Distribui custos pelos 12 meses
   policies.forEach(policy => {
     Object.keys(monthlyMap).forEach(month => {
-      monthlyMap[month] += (policy.monthlyAmount || 0) / 6; // Distribuição simples
+      monthlyMap[month] += (policy.monthlyAmount || 0) / 12; // Distribuição pelos 12 meses
     });
   });
 

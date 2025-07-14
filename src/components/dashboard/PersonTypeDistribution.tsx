@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Users, Building } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { User, Building2 } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 interface PersonTypeDistributionProps {
   personTypeDistribution: {
@@ -12,72 +12,102 @@ interface PersonTypeDistributionProps {
 }
 
 export function PersonTypeDistribution({ personTypeDistribution }: PersonTypeDistributionProps) {
-  const isMobile = useIsMobile();
+  const total = personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica;
+  
+  const chartData = [
+    {
+      name: 'Pessoa Física',
+      value: personTypeDistribution.pessoaFisica,
+      color: '#3B82F6',
+      icon: User
+    },
+    {
+      name: 'Pessoa Jurídica', 
+      value: personTypeDistribution.pessoaJuridica,
+      color: '#10B981',
+      icon: Building2
+    }
+  ];
+
+  const hasData = total > 0;
 
   return (
-    <Card className="w-full overflow-hidden">
-      <CardHeader className={`border-b border-gray-100 ${isMobile ? 'p-2 pb-1' : 'p-4'}`}>
-        <CardTitle className={`flex items-center ${isMobile ? 'text-xs' : 'text-lg'}`}>
-          <FileText className={`${isMobile ? 'h-3 w-3' : 'h-5 w-5'} mr-2 text-orange-600`} />
-          Vínculo
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <User className="h-5 w-5 text-blue-600" />
+          Distribuição por Vínculo
         </CardTitle>
       </CardHeader>
-      <CardContent className={`${isMobile ? 'p-2 pt-1' : 'pt-6'} w-full overflow-hidden`}>
-        <div className={`${isMobile ? 'space-y-2' : 'space-y-4'}`}>
-          {/* Card Pessoa Física */}
-          <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-md transition-shadow w-full overflow-hidden">
-            <CardContent className={`${isMobile ? 'p-2' : 'p-6'}`}>
-              <div className="flex items-center justify-between">
-                <div className={`flex items-center ${isMobile ? 'space-x-2' : 'space-x-4'}`}>
-                  <div className={`${isMobile ? 'p-1' : 'p-3'} bg-blue-500 rounded-xl shadow-lg`}>
-                    <Users className={`${isMobile ? 'h-3 w-3' : 'h-8 w-8'} text-white`} />
-                  </div>
-                  <div>
-                    <h3 className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-blue-900`}>
-                      {isMobile ? 'P. Física' : 'Pessoa Física'}
-                    </h3>
-                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-600 font-medium`}>CPF</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className={`${isMobile ? 'text-lg' : 'text-4xl'} font-bold text-blue-700`}>
-                    {personTypeDistribution.pessoaFisica}
-                  </div>
-                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-600 font-medium`}>
-                    {personTypeDistribution.pessoaFisica === 1 ? 'apólice' : 'apólices'}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      <CardContent>
+        {hasData ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Gráfico de Pizza */}
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={80}
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [
+                      `${value} apólice${value !== 1 ? 's' : ''}`,
+                      name
+                    ]}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
 
-          {/* Card Pessoa Jurídica */}
-          <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:shadow-md transition-shadow w-full overflow-hidden">
-            <CardContent className={`${isMobile ? 'p-2' : 'p-6'}`}>
-              <div className="flex items-center justify-between">
-                <div className={`flex items-center ${isMobile ? 'space-x-2' : 'space-x-4'}`}>
-                  <div className={`${isMobile ? 'p-1' : 'p-3'} bg-purple-500 rounded-xl shadow-lg`}>
-                    <Building className={`${isMobile ? 'h-3 w-3' : 'h-8 w-8'} text-white`} />
+            {/* Cards de Resumo */}
+            <div className="flex flex-col justify-center space-y-4">
+              {chartData.map((item) => {
+                const percentage = total > 0 ? Math.round((item.value / total) * 100) : 0;
+                const IconComponent = item.icon;
+                
+                return (
+                  <div key={item.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg" style={{ backgroundColor: `${item.color}20` }}>
+                        <IconComponent className="h-5 w-5" style={{ color: item.color }} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{item.name}</p>
+                        <p className="text-sm text-gray-600">{percentage}% do total</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold" style={{ color: item.color }}>
+                        {item.value}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        apólice{item.value !== 1 ? 's' : ''}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-purple-900`}>
-                      {isMobile ? 'P. Jurídica' : 'Pessoa Jurídica'}
-                    </h3>
-                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-purple-600 font-medium`}>CNPJ</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className={`${isMobile ? 'text-lg' : 'text-4xl'} font-bold text-purple-700`}>
-                    {personTypeDistribution.pessoaJuridica}
-                  </div>
-                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-purple-600 font-medium`}>
-                    {personTypeDistribution.pessoaJuridica === 1 ? 'apólice' : 'apólices'}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <User className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-500">Nenhum dado de vínculo disponível</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Faça upload de apólices para ver a distribuição por pessoa física/jurídica
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
