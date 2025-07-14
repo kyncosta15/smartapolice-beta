@@ -176,36 +176,36 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]) {
       return acc;
     }, {} as Record<string, number>);
 
-    // Evolução mensal dos custos - ALTERADO PARA 12 MESES
+    // PROJEÇÃO DINÂMICA: Evolução mensal dos custos de 12 meses a partir do mês atual
     const monthlyEvolution = [];
     
     console.log('🔍 DEBUG - Total de policies:', policies.length);
     console.log('🔍 DEBUG - TotalMonthlyCost calculado:', totalMonthlyCost);
+    console.log('📅 Gerando evolução mensal dinâmica a partir de:', new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }));
     
-    // Para políticas reais, mostrar o custo atual nos últimos meses
-    // Se há apólices, assumir que estão ativas no período atual
+    // Para políticas reais, mostrar o custo atual nos próximos 12 meses
     const currentMonthlyCost = totalMonthlyCost;
     
-    // ALTERADO: 12 meses ao invés de 6
-    for (let i = 11; i >= 0; i--) {
+    // PROJEÇÃO DINÂMICA: 12 meses a partir do mês atual
+    for (let i = 0; i < 12; i++) {
       const date = new Date();
-      date.setMonth(date.getMonth() - i);
-      const month = date.toLocaleDateString('pt-BR', { month: 'short' });
+      date.setMonth(date.getMonth() + i);
+      const month = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
       
-      // Para simplificar: se há apólices, mostrar custo nos últimos 6 meses
-      // Nos meses anteriores, mostrar 0 (antes da contratação)
-      const isRecentMonth = i <= 5; // Últimos 6 meses com custo
-      const costForMonth = (policies.length > 0 && isRecentMonth) ? currentMonthlyCost : 0;
-      const activePolicies = (policies.length > 0 && isRecentMonth) ? policies.length : 0;
+      // Projetar custos para todos os 12 meses
+      const costForMonth = policies.length > 0 ? currentMonthlyCost : 0;
+      const activePoliciesCount = policies.length > 0 ? policies.length : 0;
       
       monthlyEvolution.push({
         month,
         custo: costForMonth,
-        apolices: activePolicies
+        apolices: activePoliciesCount
       });
+      
+      console.log(`📆 Mês ${i + 1}: ${month} - Custo: R$ ${costForMonth} - Apólices: ${activePoliciesCount}`);
     }
     
-    console.log('📊 Evolução mensal com 12 meses:', monthlyEvolution);
+    console.log('📊 Evolução mensal dinâmica de 12 meses:', monthlyEvolution);
 
     // Apólices inseridas nos últimos 30 dias
     const thirtyDaysAgo = new Date();

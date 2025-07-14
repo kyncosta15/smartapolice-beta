@@ -147,7 +147,7 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica
     });
 
-    // Evolução mensal - ALTERADO PARA 12 MESES
+    // Evolução mensal - PROJEÇÃO DINÂMICA DE 12 MESES A PARTIR DO MÊS ATUAL
     const monthlyEvolution = generateMonthlyEvolution(policies);
 
     // Insights
@@ -200,25 +200,32 @@ function generateMonthlyEvolution(policies: ParsedPolicyData[]) {
   const monthlyMap: { [key: string]: number } = {};
   const now = new Date();
   
-  // ALTERADO: Últimos 12 meses ao invés de 6
-  for (let i = 11; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = date.toLocaleDateString('pt-BR', { month: 'short' });
+  // PROJEÇÃO DINÂMICA: 12 meses a partir do mês atual
+  console.log('📅 Gerando projeção dinâmica de 12 meses a partir de:', now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }));
+  
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const key = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
     monthlyMap[key] = 0;
+    
+    console.log(`📆 Mês ${i + 1}: ${key}`);
   }
 
-  // Distribui custos
+  // Distribui custos mensais para os próximos 12 meses
   policies.forEach(policy => {
+    const monthlyCost = policy.monthlyAmount || 0;
     Object.keys(monthlyMap).forEach(month => {
-      // ALTERADO: Distribuição pelos 12 meses ao invés de 6
-      monthlyMap[month] += (policy.monthlyAmount || 0) / 12;
+      monthlyMap[month] += monthlyCost;
     });
   });
 
-  return Object.entries(monthlyMap).map(([month, cost]) => ({
+  const result = Object.entries(monthlyMap).map(([month, cost]) => ({
     month,
     cost: Math.round(cost)
   }));
+
+  console.log('📊 Projeção mensal dinâmica gerada:', result);
+  return result;
 }
 
 function generateBasicInsights(policies: ParsedPolicyData[]) {
