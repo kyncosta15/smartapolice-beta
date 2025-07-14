@@ -59,8 +59,7 @@ export class PDFPasswordService {
     try {
       // Tentar carregar o PDF com a senha usando a sintaxe correta do pdf-lib
       const pdfDoc = await PDFDocument.load(pdfBytes, { 
-        parseSpeed: 'fastest',
-        throwOnInvalidObject: false,
+        ignoreEncryption: true,
         // Note: pdf-lib doesn't support password parameter directly in load()
         // This is a limitation of the library - it doesn't handle password-protected PDFs well
       });

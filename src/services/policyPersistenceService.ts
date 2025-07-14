@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData, InstallmentData, CoverageData } from '@/utils/policyDataParser';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -24,19 +23,19 @@ export class PolicyPersistenceService {
         return [];
       }
 
-      // Mapear os resultados para o tipo ParsedPolicyData
+      // Mapear os resultados para o tipo ParsedPolicyData com conversões corretas
       const parsedPolicies: ParsedPolicyData[] = policies.map(policy => ({
         id: policy.id,
-        name: policy.segurado || policy.segurado || 'Segurado não informado',
+        name: policy.segurado || 'Segurado não informado',
         type: policy.tipo_seguro || 'Tipo não informado',
         insurer: policy.seguradora || 'Seguradora não informada',
         policyNumber: policy.numero_apolice || 'Número não informado',
-        premium: policy.valor_premio?.toString() || 'Prêmio não informado',
-        monthlyAmount: policy.custo_mensal?.toString() || 'Custo mensal não informado',
+        premium: Number(policy.valor_premio) || 0,
+        monthlyAmount: Number(policy.custo_mensal) || 0,
         startDate: policy.inicio_vigencia || 'Início não informado',
         endDate: policy.fim_vigencia || 'Fim não informado',
         status: policy.status || 'desconhecido',
-        pdfPath: policy.arquivo_url || null,
+        pdfPath: policy.arquivo_url || undefined,
         installments: [], // Carregar parcelas separadamente se necessário
         coverages: [],   // Carregar coberturas separadamente se necessário
         category: policy.forma_pagamento || 'Não informado',
@@ -51,10 +50,11 @@ export class PolicyPersistenceService {
         // Campos específicos do N8N
         insuredName: policy.segurado,
         documento: policy.documento,
-        documento_tipo: policy.documento_tipo,
+        documento_tipo: policy.documento_tipo as 'CPF' | 'CNPJ' | undefined,
         vehicleModel: policy.modelo_veiculo,
         uf: policy.uf,
-        deductible: policy.franquia?.toString(),
+        deductible: Number(policy.franquia) || undefined,
+        quantidade_parcelas: policy.quantidade_parcelas || undefined,
       }));
 
       console.log(`✅ Apólices carregadas com sucesso para o usuário ${userId}:`, parsedPolicies.length);
@@ -229,7 +229,7 @@ export class PolicyPersistenceService {
         pdfPath
       });
 
-      // Preparar dados para inserção
+      // Preparar dados para inserção com conversões corretas de tipo
       const insertData = {
         id: policyData.id,
         user_id: userId,
@@ -237,8 +237,8 @@ export class PolicyPersistenceService {
         seguradora: policyData.insurer,
         numero_apolice: policyData.policyNumber,
         tipo_seguro: policyData.type,
-        valor_premio: policyData.premium ? parseFloat(policyData.premium.toString()) : null,
-        custo_mensal: policyData.monthlyAmount ? parseFloat(policyData.monthlyAmount.toString()) : null,
+        valor_premio: typeof policyData.premium === 'number' ? policyData.premium : parseFloat(policyData.premium?.toString() || '0'),
+        custo_mensal: typeof policyData.monthlyAmount === 'number' ? policyData.monthlyAmount : parseFloat(policyData.monthlyAmount?.toString() || '0'),
         inicio_vigencia: policyData.startDate,
         fim_vigencia: policyData.endDate,
         status: policyData.status || 'vigente',
@@ -250,9 +250,10 @@ export class PolicyPersistenceService {
         documento_tipo: policyData.documento_tipo,
         modelo_veiculo: policyData.vehicleModel,
         uf: policyData.uf,
-        franquia: policyData.deductible ? parseFloat(policyData.deductible.toString()) : null,
+        franquia: typeof policyData.deductible === 'number' ? policyData.deductible : parseFloat(policyData.deductible?.toString() || '0'),
         forma_pagamento: policyData.category,
         corretora: policyData.entity,
+        quantidade_parcelas: policyData.quantidade_parcelas,
         // Metadados de senha (se necessário, adicionar campo na tabela)
         // password_status: wasPasswordProtected ? 'Desbloqueado com senha' : 'Sem senha'
       };
