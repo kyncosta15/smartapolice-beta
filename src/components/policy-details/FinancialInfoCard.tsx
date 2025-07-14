@@ -9,9 +9,23 @@ interface FinancialInfoCardProps {
 export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
   // Calcular número de parcelas dos dados da apólice
   const getInstallmentsCount = () => {
-    if (policy.quantidade_parcelas) return policy.quantidade_parcelas;
-    if (policy.installments && Array.isArray(policy.installments)) return policy.installments.length;
-    return null;
+    // Priorizar quantidade_parcelas do banco
+    if (policy.quantidade_parcelas && policy.quantidade_parcelas > 0) {
+      return policy.quantidade_parcelas;
+    }
+    
+    // Fallback para installments array
+    if (policy.installments && Array.isArray(policy.installments) && policy.installments.length > 0) {
+      return policy.installments.length;
+    }
+    
+    // Fallback para parcelas array (legacy)
+    if (policy.parcelas && Array.isArray(policy.parcelas) && policy.parcelas.length > 0) {
+      return policy.parcelas.length;
+    }
+    
+    // Último fallback para 12 parcelas (padrão)
+    return 12;
   };
 
   const installmentsCount = getInstallmentsCount();
@@ -39,27 +53,25 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
           </p>
         </div>
 
-        {installmentsCount && installmentsCount > 0 && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 shadow-sm border border-blue-100">
-            <label className="text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-2">
-              <Hash className="h-4 w-4" />
-              Parcelamento
-            </label>
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl shadow-md">
-                {installmentsCount}
-              </div>
-              <div>
-                <p className="text-lg font-bold text-gray-900 font-sf-pro">
-                  {installmentsCount}x parcelas
-                </p>
-                <p className="text-sm text-blue-600 font-sf-pro">
-                  Pagamento facilitado
-                </p>
-              </div>
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 shadow-sm border border-blue-100">
+          <label className="text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-2">
+            <Hash className="h-4 w-4" />
+            Parcelamento
+          </label>
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl shadow-md">
+              {installmentsCount}
+            </div>
+            <div>
+              <p className="text-lg font-bold text-gray-900 font-sf-pro">
+                {installmentsCount}x parcelas
+              </p>
+              <p className="text-sm text-blue-600 font-sf-pro">
+                Pagamento facilitado
+              </p>
             </div>
           </div>
-        )}
+        </div>
 
         {(policy.forma_pagamento || policy.paymentForm) && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
