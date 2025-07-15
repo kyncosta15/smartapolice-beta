@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -70,7 +71,9 @@ export function MyPolicies() {
     renewalAlert?.clear();
   };
 
-  const handleDeleteClick = (policy: PolicyWithStatus) => {
+  const handleDeleteClick = (e: React.MouseEvent, policy: PolicyWithStatus) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log(`🗑️ [handleDeleteClick] Preparando deleção da apólice: ${policy.name} (${policy.id})`);
     setPolicyToDelete(policy);
     setShowDeleteDialog(true);
@@ -161,12 +164,7 @@ export function MyPolicies() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log(`🗑️ [Delete Button] Clicou para deletar: ${policy.name} (${policy.id})`);
-                        handleDeleteClick(policy);
-                      }}
+                      onClick={(e) => handleDeleteClick(e, policy)}
                       className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
                       title="Deletar apólice"
                       disabled={isDeleting}
