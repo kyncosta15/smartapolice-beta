@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,12 +27,10 @@ export function MyPolicies() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<PolicyWithStatus | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { policies, updatePolicy, deletePolicy } = usePersistedPolicies();
+  const { policies, updatePolicy, deletePolicy, refreshPolicies } = usePersistedPolicies();
   const { toast } = useToast();
   
-  // Converter para formato PolicyWithStatus mantendo o status correto do banco
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
-    // Usar o status diretamente do banco sem validações extras
     const finalStatus = policy.status as PolicyStatus;
     
     console.log(`✅ [MyPolicies] Apólice ${policy.name}: status do banco = ${finalStatus}`);
@@ -52,13 +49,11 @@ export function MyPolicies() {
     };
   });
   
-  // Hook para verificar renovações
   const renewalAlert = useRenewalChecker(policiesWithStatus);
 
   const handleRenewalDecision = async (policy: PolicyWithStatus, newStatus: PolicyStatus) => {
     console.log(`🔄 [handleRenewalDecision] Atualizando status: ${policy.id} -> ${newStatus}`);
     
-    // Atualizar no banco
     const updateSuccess = await updatePolicy(policy.id, { status: newStatus });
     
     if (updateSuccess) {
@@ -68,39 +63,49 @@ export function MyPolicies() {
       });
     }
 
-    // Se escolheu renovar, mostrar modal de confirmação
     if (newStatus === "aguardando_emissao") {
       setShowInfoModal(true);
     }
 
-    // Limpar o alerta de renovação
     renewalAlert?.clear();
   };
 
   const handleDeleteClick = (policy: PolicyWithStatus) => {
+    console.log(`🗑️ [handleDeleteClick] Preparando deleção da apólice: ${policy.name} (${policy.id})`);
     setPolicyToDelete(policy);
     setShowDeleteDialog(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!policyToDelete) return;
+    if (!policyToDelete) {
+      console.log('❌ [handleConfirmDelete] Nenhuma apólice selecionada para deleção');
+      return;
+    }
     
     setIsDeleting(true);
-    console.log(`🗑️ Iniciando deleção da apólice: ${policyToDelete.name} (${policyToDelete.id})`);
+    console.log(`🗑️ [handleConfirmDelete] Iniciando deleção da apólice: ${policyToDelete.name} (${policyToDelete.id})`);
     
     try {
       const success = await deletePolicy(policyToDelete.id);
       
       if (success) {
+        console.log(`✅ [handleConfirmDelete] Apólice ${policyToDelete.id} deletada com sucesso`);
+        
         toast({
           title: "✅ Apólice Deletada",
           description: `A apólice "${policyToDelete.name}" foi removida com sucesso`,
         });
         
-        // Fechar o dialog imediatamente após sucesso
         setShowDeleteDialog(false);
         setPolicyToDelete(null);
+        
+        setTimeout(() => {
+          refreshPolicies();
+        }, 500);
+        
       } else {
+        console.log(`❌ [handleConfirmDelete] Falha ao deletar apólice ${policyToDelete.id}`);
+        
         toast({
           title: "❌ Erro na Deleção",
           description: "Não foi possível deletar a apólice. Tente novamente.",
@@ -108,7 +113,8 @@ export function MyPolicies() {
         });
       }
     } catch (error) {
-      console.error('❌ Erro na deleção:', error);
+      console.error('❌ [handleConfirmDelete] Erro na deleção:', error);
+      
       toast({
         title: "❌ Erro Inesperado",
         description: "Ocorreu um erro ao deletar a apólice",
@@ -120,6 +126,7 @@ export function MyPolicies() {
   };
 
   const handleCancelDelete = () => {
+    console.log('❌ [handleCancelDelete] Deleção cancelada pelo usuário');
     setShowDeleteDialog(false);
     setPolicyToDelete(null);
   };
@@ -135,11 +142,10 @@ export function MyPolicies() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {policiesWithStatus.map((policy) => {
-          // Buscar dados originais da apólice para quantidade de parcelas
           const originalPolicy = policies.find(p => p.id === policy.id);
           const installmentsCount = originalPolicy?.quantidade_parcelas || 
                                   originalPolicy?.installments?.length || 
-                                  12; // Fallback padrão
+                                  12;
           
           console.log(`🎯 [MyPolicies-Render] Renderizando ${policy.name} com status: ${policy.status}`);
           
@@ -155,9 +161,15 @@ export function MyPolicies() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteClick(policy)}
-                      className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log(`🗑️ [Delete Button] Clicou para deletar: ${policy.name} (${policy.id})`);
+                        handleDeleteClick(policy);
+                      }}
+                      className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
                       title="Deletar apólice"
+                      disabled={isDeleting}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -202,7 +214,6 @@ export function MyPolicies() {
         })}
       </div>
 
-      {/* Modal de Renovação */}
       {renewalAlert && (
         <RenewalModal
           policy={renewalAlert.toRenew}
@@ -211,33 +222,50 @@ export function MyPolicies() {
         />
       )}
 
-      {/* Modal de Informação */}
       <InfoModal 
         isOpen={showInfoModal}
         onClose={() => setShowInfoModal(false)}
       />
 
-      {/* Dialog de Confirmação de Deleção */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+      <AlertDialog open={showDeleteDialog} onOpenChange={(open) => {
+        if (!open && !isDeleting) {
+          handleCancelDelete();
+        }
+      }}>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Deleção</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja deletar a apólice "{policyToDelete?.name}"?
+            <AlertDialogTitle className="text-lg font-semibold text-red-600">
+              ⚠️ Confirmar Deleção
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-gray-600">
+              Tem certeza que deseja deletar a apólice <strong>"{policyToDelete?.name}"</strong>?
               <br /><br />
-              <strong>Esta ação não pode ser desfeita.</strong> Todos os dados relacionados a esta apólice, incluindo parcelas e coberturas, serão permanentemente removidos.
+              <span className="text-red-600 font-medium">
+                Esta ação não pode ser desfeita.
+              </span> Todos os dados relacionados a esta apólice, incluindo parcelas e coberturas, serão permanentemente removidos.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelDelete} disabled={isDeleting}>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel 
+              onClick={handleCancelDelete} 
+              disabled={isDeleting}
+              className="border-gray-300"
+            >
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleConfirmDelete}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600 text-white"
             >
-              {isDeleting ? "Deletando..." : "Deletar Apólice"}
+              {isDeleting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Deletando...
+                </div>
+              ) : (
+                "🗑️ Deletar Apólice"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
