@@ -88,7 +88,7 @@ export function usePersistedPolicies() {
     setPolicies(prev => [mappedPolicy, ...prev]);
   };
 
-  // Remover apólice da lista - FUNÇÃO CORRIGIDA
+  // Remover apólice da lista IMEDIATAMENTE para melhor UX
   const removePolicy = (policyId: string) => {
     setPolicies(prev => {
       const newPolicies = prev.filter(p => p.id !== policyId);
@@ -97,7 +97,7 @@ export function usePersistedPolicies() {
     });
   };
 
-  // CORREÇÃO PRINCIPAL: Deletar apólice do banco de dados com token atualizado
+  // FUNÇÃO MELHORADA: Deletar apólice com sincronização otimizada
   const deletePolicy = async (policyId: string): Promise<boolean> => {
     if (!user?.id) {
       toast({
@@ -119,25 +119,46 @@ export function usePersistedPolicies() {
       return false;
     }
 
+    console.log(`🗑️ Iniciando deleção sincronizada da apólice: ${policyId}`);
+    
+    // OTIMIZAÇÃO 1: Remover do estado local IMEDIATAMENTE para melhor UX
+    removePolicy(policyId);
+
     try {
-      console.log(`🗑️ Iniciando deleção da apólice: ${policyId}`);
-      
-      // CORREÇÃO: Obter token de autenticação mais atual e robusto
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Erro ao obter sessão:', sessionError);
-        throw new Error("Erro na sessão de usuário");
-      }
-      
-      if (!session?.access_token) {
-        console.error('Token de acesso não encontrado');
-        throw new Error("Token de acesso não encontrado - faça login novamente");
+      // OTIMIZAÇÃO 2: Verificar se a apólice ainda existe no banco antes de tentar deletar
+      const { data: existingPolicy, error: checkError } = await supabase
+        .from('policies')
+        .select('id')
+        .eq('id', policyId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (checkError?.code === 'PGRST116') {
+        // Apólice já não existe no banco - sucesso silencioso
+        console.log(`✅ Apólice ${policyId} já foi removida do banco`);
+        return true;
       }
 
-      console.log(`🔑 Token obtido, fazendo chamada para Edge Function`);
+      if (checkError) {
+        console.error('❌ Erro ao verificar existência da apólice:', checkError);
+        // Restaurar no estado local em caso de erro
+        setPolicies(prev => [policyExists, ...prev]);
+        throw new Error("Erro ao verificar apólice no banco");
+      }
+
+      // OTIMIZAÇÃO 3: Obter token atualizado
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      // Chamar a Edge Function para deletar a apólice e todos os dados relacionados
+      if (sessionError || !session?.access_token) {
+        console.error('❌ Erro na sessão:', sessionError);
+        // Restaurar no estado local
+        setPolicies(prev => [policyExists, ...prev]);
+        throw new Error("Sessão inválida - faça login novamente");
+      }
+
+      console.log(`🔑 Token obtido, chamando Edge Function para deletar ${policyId}`);
+      
+      // OTIMIZAÇÃO 4: Chamar Edge Function com timeout reduzido
       const response = await fetch(`https://jhvbfvqhuemuvwgqpskz.supabase.co/functions/v1/delete-policy`, {
         method: 'POST',
         headers: {
@@ -145,42 +166,41 @@ export function usePersistedPolicies() {
           'Authorization': `Bearer ${session.access_token}`,
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpodmJmdnFodWVtdXZ3Z3Fwc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTI2MDEsImV4cCI6MjA2Njg4ODYwMX0.V8I0byW7xs0iMBEBc6C3h0lvPhgPZ4mGwjfm31XkEQg'
         },
-        body: JSON.stringify({ policyId })
+        body: JSON.stringify({ policyId }),
+        signal: AbortSignal.timeout(10000) // Timeout de 10 segundos
       });
       
       console.log(`📡 Response status: ${response.status}`);
       
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Erro na resposta da Edge Function:', errorData);
+        const errorText = await response.text();
+        console.error('❌ Erro na resposta da Edge Function:', errorText);
+        
+        // Restaurar no estado local em caso de erro
+        setPolicies(prev => [policyExists, ...prev]);
         
         if (response.status === 401) {
           throw new Error('Sessão expirada - faça login novamente');
         }
         
-        throw new Error(errorData.error || `Erro ${response.status} ao deletar apólice`);
+        throw new Error(`Erro ${response.status} ao deletar apólice`);
       }
       
       const result = await response.json();
       console.log('✅ Resposta da Edge Function:', result);
-
-      // CORREÇÃO: Remover do estado local IMEDIATAMENTE após confirmação
-      removePolicy(policyId);
-      
-      toast({
-        title: "✅ Apólice Deletada",
-        description: "A apólice foi removida com sucesso",
-      });
       
       return true;
+      
     } catch (error) {
       console.error('❌ Erro detalhado na deleção:', error);
       
-      toast({
-        title: "❌ Erro ao Deletar",
-        description: error instanceof Error ? error.message : "Não foi possível remover a apólice",
-        variant: "destructive",
-      });
+      // OTIMIZAÇÃO 5: Restaurar apólice no estado local apenas em caso de erro real
+      const stillExists = policies.find(p => p.id === policyId);
+      if (!stillExists) {
+        setPolicies(prev => [policyExists, ...prev]);
+      }
+      
+      // Não mostrar toast de erro aqui - será tratado no componente
       return false;
     }
   };

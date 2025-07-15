@@ -2,6 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Trash2 } from 'lucide-react';
 import { PolicyWithStatus, PolicyStatus } from '@/types/policyStatus';
 import { STATUS_COLORS, formatStatusText } from '@/utils/statusColors';
 import { useRenewalChecker } from '@/hooks/useRenewalChecker';
@@ -13,7 +25,10 @@ import { useToast } from '@/hooks/use-toast';
 
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const { policies, updatePolicy } = usePersistedPolicies();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [policyToDelete, setPolicyToDelete] = useState<PolicyWithStatus | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { policies, updatePolicy, deletePolicy } = usePersistedPolicies();
   const { toast } = useToast();
   
   // Converter para formato PolicyWithStatus mantendo o status correto do banco
@@ -62,6 +77,53 @@ export function MyPolicies() {
     renewalAlert?.clear();
   };
 
+  const handleDeleteClick = (policy: PolicyWithStatus) => {
+    setPolicyToDelete(policy);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!policyToDelete) return;
+    
+    setIsDeleting(true);
+    console.log(`🗑️ Iniciando deleção da apólice: ${policyToDelete.name} (${policyToDelete.id})`);
+    
+    try {
+      const success = await deletePolicy(policyToDelete.id);
+      
+      if (success) {
+        toast({
+          title: "✅ Apólice Deletada",
+          description: `A apólice "${policyToDelete.name}" foi removida com sucesso`,
+        });
+        
+        // Fechar o dialog imediatamente após sucesso
+        setShowDeleteDialog(false);
+        setPolicyToDelete(null);
+      } else {
+        toast({
+          title: "❌ Erro na Deleção",
+          description: "Não foi possível deletar a apólice. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('❌ Erro na deleção:', error);
+      toast({
+        title: "❌ Erro Inesperado",
+        description: "Ocorreu um erro ao deletar a apólice",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+    setPolicyToDelete(null);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -86,9 +148,20 @@ export function MyPolicies() {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg">{policy.name}</CardTitle>
-                  <Badge className={STATUS_COLORS[policy.status] || STATUS_COLORS.vigente}>
-                    {formatStatusText(policy.status)}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={STATUS_COLORS[policy.status] || STATUS_COLORS.vigente}>
+                      {formatStatusText(policy.status)}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteClick(policy)}
+                      className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                      title="Deletar apólice"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-sm text-gray-500">{policy.insurer}</p>
               </CardHeader>
@@ -143,6 +216,32 @@ export function MyPolicies() {
         isOpen={showInfoModal}
         onClose={() => setShowInfoModal(false)}
       />
+
+      {/* Dialog de Confirmação de Deleção */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Deleção</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar a apólice "{policyToDelete?.name}"?
+              <br /><br />
+              <strong>Esta ação não pode ser desfeita.</strong> Todos os dados relacionados a esta apólice, incluindo parcelas e coberturas, serão permanentemente removidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDelete} disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {isDeleting ? "Deletando..." : "Deletar Apólice"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
