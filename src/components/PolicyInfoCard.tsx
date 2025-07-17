@@ -6,6 +6,7 @@ import { FileText, User } from 'lucide-react';
 import { DocumentValidator } from '@/utils/documentValidator';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { extractFieldValue } from '@/utils/extractFieldValue';
 
 interface PolicyInfoCardProps {
   policy: ParsedPolicyData;
@@ -14,16 +15,28 @@ interface PolicyInfoCardProps {
 export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
   const isMobile = useIsMobile();
 
-  // Função para extrair valor de campo (string ou objeto)
-  const extractFieldValue = (field: any): string => {
-    if (!field) return '';
-    if (typeof field === 'string') return field;
-    if (typeof field === 'object') {
-      if (field.value !== undefined) return String(field.value);
-      if (field.empresa) return field.empresa;
-      return '';
+  // Função para extrair nome da seguradora de forma segura
+  const getInsurerName = (insurerData: any): string => {
+    console.log('🏢 Extraindo nome da seguradora:', insurerData);
+    
+    if (!insurerData) return 'Não informado';
+    
+    if (typeof insurerData === 'string') {
+      try {
+        // Tentar fazer parse se for uma string JSON
+        const parsed = JSON.parse(insurerData);
+        return parsed.empresa || parsed.name || 'Seguradora não informada';
+      } catch {
+        // Se não for JSON válido, retornar a string mesmo
+        return insurerData;
+      }
     }
-    return String(field);
+    
+    if (typeof insurerData === 'object') {
+      return insurerData.empresa || insurerData.name || 'Seguradora não informada';
+    }
+    
+    return String(insurerData);
   };
 
   // Usar dados de documento do N8N se disponíveis, caso contrário detectar
@@ -59,7 +72,7 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
     }
     
     // Fallback para detecção automática no número da apólice ou outros campos de texto
-    const textToAnalyze = `${policy.policyNumber} ${policy.name} ${extractFieldValue(policy.insurer)}`;
+    const textToAnalyze = `${policy.policyNumber} ${policy.name} ${getInsurerName(policy.insurer)}`;
     const docInfo = DocumentValidator.detectDocument(textToAnalyze);
     return docInfo;
   };
@@ -67,26 +80,29 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
+      case 'vigente':
         return <Badge className="bg-green-50 text-green-600 border-green-200 hover:bg-green-50 font-sans">Ativa</Badge>;
       case 'expiring':
+      case 'vencendo':
         return <Badge className="bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-50 font-sans">Vencendo</Badge>;
       case 'expired':
+      case 'vencida':
         return <Badge className="bg-red-50 text-red-600 border-red-200 hover:bg-red-50 font-sans">Vencida</Badge>;
       default:
-        return <Badge variant="secondary" className="font-sans">Desconhecido</Badge>;
+        return <Badge variant="secondary" className="font-sans">Ativa</Badge>;
     }
   };
 
   const getTypeLabel = (type: string) => {
     const types = {
-      auto: 'Auto',
-      vida: 'Vida',
-      saude: 'Saúde',
-      patrimonial: 'Patrimonial',
-      empresarial: 'Empresarial',
+      auto: 'Seguro Auto',
+      vida: 'Seguro de Vida',
+      saude: 'Seguro Saúde',
+      patrimonial: 'Seguro Patrimonial',
+      empresarial: 'Seguro Empresarial',
       acidentes_pessoais: 'Acidentes Pessoais'
     };
-    return types[type] || type;
+    return types[type] || 'Seguro Auto';
   };
 
   const getPersonTypeBadge = () => {
@@ -108,7 +124,7 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
   };
 
   const documentInfo = getDocumentInfo();
-  const insurerName = extractFieldValue(policy.insurer);
+  const insurerName = getInsurerName(policy.insurer);
   const insuredNameValue = extractFieldValue(policy.insuredName);
 
   return (
@@ -166,6 +182,23 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
         <div>
           <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium font-sans`}>Seguradora</p>
           <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 break-words font-sans`}>{insurerName}</p>
+        </div>
+
+        <div>
+          <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium font-sans`}>Valor Mensal</p>
+          <p className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-green-600 font-sans`}>
+            R$ {policy.monthlyAmount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+          </p>
+        </div>
+
+        <div>
+          <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium font-sans`}>Cobertura</p>
+          <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 font-sans`}>
+            {policy.coberturas && policy.coberturas.length > 0 
+              ? policy.coberturas.map(c => c.descricao).join(', ')
+              : 'Cobertura Básica'
+            }
+          </p>
         </div>
       </CardContent>
     </Card>
