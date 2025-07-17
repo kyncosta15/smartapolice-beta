@@ -1,4 +1,5 @@
 
+
 import { DocumentValidator } from '@/utils/documentValidator';
 
 interface SmartApóliceLogoProps {
@@ -37,7 +38,7 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
     <div className={`flex items-center space-x-2 ${className}`}>
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md blur-sm opacity-75"></div>
-        <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md p-1.5">
+        <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md">
           <img 
             src="/lovable-uploads/9dcc521f-9fa3-47d8-8528-180194c3c933.png" 
             alt="SmartApólice Logo" 
@@ -74,3 +75,4 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
     </div>
   );
 }
+
