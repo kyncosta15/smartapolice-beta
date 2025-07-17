@@ -1,5 +1,5 @@
 
-import { Shield } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { DocumentValidator } from '@/utils/documentValidator';
 
 interface SmartApóliceLogoProps {
@@ -51,7 +51,7 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md blur-sm opacity-75"></div>
         <div className={`relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md ${sizeClasses[size]} flex items-center justify-center`}>
-          <Shield className={`${iconSizeClasses[size]} text-white absolute`} />
+          <ShieldCheck className={`${iconSizeClasses[size]} text-white absolute`} />
           <span className={`${letterSizeClasses[size]} font-bold text-white relative z-10`}>
             S
           </span>
