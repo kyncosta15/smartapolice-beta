@@ -1,5 +1,5 @@
 
-
+import { Shield } from 'lucide-react';
 import { DocumentValidator } from '@/utils/documentValidator';
 
 interface SmartApóliceLogoProps {
@@ -22,6 +22,18 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
     lg: 'text-3xl'
   };
 
+  const iconSizeClasses = {
+    sm: 'h-6 w-6',
+    md: 'h-8 w-8',
+    lg: 'h-12 w-12'
+  };
+
+  const letterSizeClasses = {
+    sm: 'text-xs',
+    md: 'text-sm',
+    lg: 'text-lg'
+  };
+
   // Detectar tipo de pessoa baseado no documento
   const getPersonTypeLabel = () => {
     if (!documentNumber) return '';
@@ -38,12 +50,11 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
     <div className={`flex items-center space-x-2 ${className}`}>
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md blur-sm opacity-75"></div>
-        <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md">
-          <img 
-            src="/lovable-uploads/9dcc521f-9fa3-47d8-8528-180194c3c933.png" 
-            alt="SmartApólice Logo" 
-            className={`${sizeClasses[size]} object-contain`}
-          />
+        <div className={`relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md ${sizeClasses[size]} flex items-center justify-center`}>
+          <Shield className={`${iconSizeClasses[size]} text-white absolute`} />
+          <span className={`${letterSizeClasses[size]} font-bold text-white relative z-10`}>
+            S
+          </span>
         </div>
       </div>
       {showText && (
@@ -75,4 +86,3 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
     </div>
   );
 }
-
