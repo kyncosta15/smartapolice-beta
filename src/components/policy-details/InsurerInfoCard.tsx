@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Star, Shield } from 'lucide-react';
 
 interface InsurerInfoCardProps {
-  insurer: string;
+  insurer: string | object;
   type: string;
   readOnly?: boolean;
 }
@@ -13,6 +13,20 @@ export const InsurerInfoCard = ({
   type,
   readOnly = false 
 }: InsurerInfoCardProps) => {
+  // Função para extrair o nome da seguradora
+  const getInsurerName = (insurerData: string | object): string => {
+    if (typeof insurerData === 'string') {
+      return insurerData;
+    }
+    
+    if (typeof insurerData === 'object' && insurerData !== null) {
+      const insurerObj = insurerData as any;
+      return insurerObj.empresa || insurerObj.name || 'Seguradora não informada';
+    }
+    
+    return 'Seguradora não informada';
+  };
+
   const getInsuranceTypeLabel = (type: string) => {
     switch (type?.toLowerCase()) {
       case 'auto':
@@ -30,6 +44,8 @@ export const InsurerInfoCard = ({
     }
   };
 
+  const insurerName = getInsurerName(insurer);
+
   return (
     <Card className="flex flex-col h-full border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
       <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-blue-200 pb-4">
@@ -45,7 +61,7 @@ export const InsurerInfoCard = ({
           <Star className="h-5 w-5 text-blue-500 mt-1 flex-shrink-0" />
           <div>
             <p className="text-sm font-medium text-blue-600 mb-1">Nome da Seguradora</p>
-            <p className="text-base font-semibold text-gray-800 font-sf-pro">{insurer}</p>
+            <p className="text-base font-semibold text-gray-800 font-sf-pro">{insurerName}</p>
           </div>
         </div>
 

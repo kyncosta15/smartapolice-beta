@@ -14,37 +14,52 @@ interface PolicyInfoCardProps {
 export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
   const isMobile = useIsMobile();
 
+  // Função para extrair valor de campo (string ou objeto)
+  const extractFieldValue = (field: any): string => {
+    if (!field) return '';
+    if (typeof field === 'string') return field;
+    if (typeof field === 'object') {
+      if (field.value !== undefined) return String(field.value);
+      if (field.empresa) return field.empresa;
+      return '';
+    }
+    return String(field);
+  };
+
   // Usar dados de documento do N8N se disponíveis, caso contrário detectar
   const getDocumentInfo = () => {
+    const documento = extractFieldValue(policy.documento);
+    const documentoTipo = extractFieldValue(policy.documento_tipo);
+    
     // Priorizar dados vindos do N8N
-    if (policy.documento && policy.documento_tipo) {
-      const documentType = policy.documento_tipo === 'CPF' ? 'PF' : 'PJ';
+    if (documento && documentoTipo) {
+      const documentType = documentoTipo === 'CPF' ? 'PF' : 'PJ';
       
       // Formatar o número do documento
-      let formatted = policy.documento;
-      if (policy.documento_tipo === 'CPF' && policy.documento.length >= 11) {
-        const cleanDoc = policy.documento.replace(/\D/g, '');
+      let formatted = documento;
+      if (documentoTipo === 'CPF' && documento.length >= 11) {
+        const cleanDoc = documento.replace(/\D/g, '');
         if (cleanDoc.length === 11) {
           formatted = cleanDoc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
         }
-      } else if (policy.documento_tipo === 'CNPJ' && policy.documento.length >= 14) {
-        const cleanDoc = policy.documento.replace(/\D/g, '');
+      } else if (documentoTipo === 'CNPJ' && documento.length >= 14) {
+        const cleanDoc = documento.replace(/\D/g, '');
         if (cleanDoc.length === 14) {
           formatted = cleanDoc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
         }
       }
       
       return {
-        type: policy.documento_tipo,
+        type: documentoTipo,
         personType: documentType,
         formatted: formatted,
-        rawValue: policy.documento,
-        nomeCompleto: policy.insuredName // Nome do segurado
+        rawValue: documento,
+        nomeCompleto: extractFieldValue(policy.insuredName)
       };
     }
     
     // Fallback para detecção automática no número da apólice ou outros campos de texto
-    const textToAnalyze = `${policy.policyNumber} ${policy.name} ${policy.insurer}`;
+    const textToAnalyze = `${policy.policyNumber} ${policy.name} ${extractFieldValue(policy.insurer)}`;
     const docInfo = DocumentValidator.detectDocument(textToAnalyze);
     return docInfo;
   };
@@ -93,6 +108,8 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
   };
 
   const documentInfo = getDocumentInfo();
+  const insurerName = extractFieldValue(policy.insurer);
+  const insuredNameValue = extractFieldValue(policy.insuredName);
 
   return (
     <Card className="h-full shadow-md border-gray-200 hover:shadow-lg transition-all duration-200 font-sans">
@@ -126,10 +143,10 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
         </div>
 
         {/* Nome do Segurado */}
-        {policy.insuredName && (
+        {insuredNameValue && (
           <div>
             <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium font-sans`}>Nome do Segurado</p>
-            <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 break-words font-sans`}>{policy.insuredName}</p>
+            <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 break-words font-sans`}>{insuredNameValue}</p>
           </div>
         )}
 
@@ -148,7 +165,7 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
 
         <div>
           <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium font-sans`}>Seguradora</p>
-          <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 break-words font-sans`}>{policy.insurer}</p>
+          <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 break-words font-sans`}>{insurerName}</p>
         </div>
       </CardContent>
     </Card>

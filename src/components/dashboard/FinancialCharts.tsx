@@ -10,6 +10,24 @@ interface FinancialChartsProps {
 }
 
 export function FinancialCharts({ financialData }: FinancialChartsProps) {
+  // Função para extrair valor de campo (string ou objeto)
+  const extractFieldValue = (field: any): string => {
+    if (!field) return '';
+    if (typeof field === 'string') return field;
+    if (typeof field === 'object') {
+      if (field.value !== undefined) return String(field.value);
+      if (field.empresa) return field.empresa;
+      return '';
+    }
+    return String(field);
+  };
+
+  // Processar dados para garantir que nomes sejam strings
+  const processedData = financialData.map(item => ({
+    ...item,
+    name: extractFieldValue(item.name)
+  }));
+
   return (
     <Card>
       <CardHeader className="border-b border-gray-100">
@@ -21,7 +39,7 @@ export function FinancialCharts({ financialData }: FinancialChartsProps) {
       <CardContent className="pt-6">
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={financialData} layout="horizontal">
+            <BarChart data={processedData} layout="horizontal">
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
               <YAxis dataKey="name" type="category" width={120} />
