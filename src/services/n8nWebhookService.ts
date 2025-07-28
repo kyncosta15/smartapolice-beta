@@ -1,3 +1,4 @@
+
 import { DynamicPDFData } from '@/types/pdfUpload';
 
 interface N8NDirectResponse {
@@ -33,10 +34,11 @@ interface N8NWebhookResponse {
 }
 
 export class N8NWebhookService {
-  private static readonly WEBHOOK_URL = 'https://smartapolice.app.n8n.cloud/webhook/upload-arquivo';
+  private static readonly WEBHOOK_URL = 'https://smartapoliceoficialbeta.app.n8n.cloud/webhook/upload-arquivo';
   
   static async processarPdfComN8n(file: File, userId?: string): Promise<N8NWebhookResponse> {
     console.log(`🌐 Enviando PDF para processamento N8N: ${file.name}`);
+    console.log('📡 Webhook URL:', this.WEBHOOK_URL);
     console.log('👤 User ID enviado para N8N:', userId);
     
     try {
@@ -58,10 +60,18 @@ export class N8NWebhookService {
       
       const response = await fetch(this.WEBHOOK_URL, {
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+        }
       });
 
+      console.log('📡 Status da resposta:', response.status);
+      console.log('📡 Headers da resposta:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Erro HTTP:', response.status, response.statusText, errorText);
         throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
       }
 

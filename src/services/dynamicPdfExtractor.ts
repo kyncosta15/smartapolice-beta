@@ -1,11 +1,12 @@
 
 export class DynamicPDFExtractor {
-  private static readonly WEBHOOK_URL = 'https://smartapolice.app.n8n.cloud/webhook/upload-arquivo';
+  private static readonly WEBHOOK_URL = 'https://smartapoliceoficialbeta.app.n8n.cloud/webhook/upload-arquivo';
   private static readonly TIMEOUT = 120000; // Aumentado para 2 minutos
   private static readonly MAX_RETRIES = 2; // Reduzido para evitar loops longos
 
   static async extractFromPDF(file: File, userId?: string): Promise<any> {
     console.log(`🔄 Enviando arquivo individual: ${file.name} (${file.size} bytes)`);
+    console.log('📡 Webhook URL:', this.WEBHOOK_URL);
     console.log(`👤 userId: ${userId}`);
 
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
@@ -22,6 +23,7 @@ export class DynamicPDFExtractor {
         }
 
         console.log(`🔄 Tentativa ${attempt}/${this.MAX_RETRIES} para ${file.name}`);
+        console.log('📤 Enviando para:', this.WEBHOOK_URL);
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
@@ -33,6 +35,9 @@ export class DynamicPDFExtractor {
           method: 'POST',
           body: formData,
           signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+          }
         });
 
         clearTimeout(timeoutId);
@@ -40,6 +45,8 @@ export class DynamicPDFExtractor {
         console.log(`📡 Resposta para ${file.name}: ${response.status} ${response.statusText}`);
 
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Erro HTTP:', response.status, response.statusText, errorText);
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 

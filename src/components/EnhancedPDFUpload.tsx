@@ -1,8 +1,10 @@
+
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FilePlus, Cloud, Clock } from 'lucide-react';
+import { FilePlus, Cloud, Clock, Webhook } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { useToast } from '@/hooks/use-toast';
 import { useFileStatusManager } from '@/hooks/useFileStatusManager';
@@ -50,6 +52,8 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
     console.log(`🚀 EnhancedPDFUpload.onDrop CHAMADO!`);
     console.log(`📤 Iniciando processamento em lote de ${acceptedFiles.length} arquivo(s)`);
     console.log(`👤 User ID para processamento:`, user.id);
+    console.log(`🔗 Webhook ativo: https://smartapoliceoficialbeta.app.n8n.cloud/webhook/upload-arquivo`);
+    
     setIsProcessingBatch(true);
 
     try {
@@ -61,7 +65,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       
       toast({
         title: "🎉 Processamento em Lote Concluído",
-        description: `${allResults.length} apólices foram processadas e adicionadas ao dashboard`,
+        description: `${allResults.length} apólices foram processadas via webhook N8N`,
       });
 
     } catch (error) {
@@ -98,9 +102,17 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           <CardTitle className="flex items-center space-x-2">
             <Cloud className="h-5 w-5 text-blue-600" />
             <span>Upload de Apólices</span>
+            <Badge variant="secondary" className="ml-2">
+              <Webhook className="h-3 w-3 mr-1" />
+              Webhook Ativo
+            </Badge>
           </CardTitle>
           <CardDescription>
-            Sistema otimizado processa múltiplos PDFs simultaneamente para máxima eficiência.
+            Sistema conectado ao webhook N8N para processamento inteligente de PDFs.
+            <br />
+            <span className="text-xs text-muted-foreground">
+              Endpoint: smartapoliceoficialbeta.app.n8n.cloud/webhook/upload-arquivo
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -117,12 +129,17 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
               <FilePlus className={`h-6 w-6 mx-auto mb-2 ${isProcessingBatch ? 'text-gray-400' : 'text-gray-400'}`} />
               <p className={`text-sm ${isProcessingBatch ? 'text-gray-400' : 'text-gray-500'}`}>
                 {isProcessingBatch 
-                  ? 'Processamento em lote em andamento...' 
+                  ? 'Processamento via webhook N8N em andamento...' 
                   : isDragActive 
                     ? 'Solte os arquivos aqui...' 
                     : 'Arraste e solte os PDFs ou clique para selecionar (máx. 10 arquivos)'
                 }
               </p>
+              {isProcessingBatch && (
+                <p className="text-xs text-blue-600 mt-2">
+                  Enviando para processamento inteligente...
+                </p>
+              )}
             </div>
           </div>
 
@@ -132,6 +149,10 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           />
         </CardContent>
         <CardFooter className="justify-between">
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <Webhook className="h-4 w-4" />
+            <span>Processamento via N8N ativo</span>
+          </div>
         </CardFooter>
       </Card>
     </div>
