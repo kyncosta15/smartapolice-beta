@@ -8,12 +8,23 @@ interface DashboardData {
   totalMonthlyCost: number;
   totalInsuredValue: number;
   expiringPolicies: number;
+  expiredPolicies: number;
+  activePolicies: number;
   totalInstallments: number;
   insurerDistribution: Array<{ name: string; value: number; percentage: number }>;
   typeDistribution: Array<{ name: string; value: number }>;
-  monthlyEvolution: Array<{ month: string; cost: number }>;
+  monthlyEvolution: Array<{ month: string; custo: number; apolices: number }>;
   insights: Array<{ type: string; category: string; message: string }>;
   personTypeDistribution: { pessoaFisica: number; pessoaJuridica: number };
+  recentPolicies: Array<{
+    id: string;
+    name: string;
+    insurer: string;
+    premium: number;
+    monthlyAmount: number;
+    endDate: string;
+    extractedAt: string;
+  }>;
 }
 
 export const useDashboardCalculations = (policies: ParsedPolicyData[]): DashboardData => {
@@ -45,12 +56,23 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
     const totalMonthlyCost = policies.reduce((sum, policy) => sum + (policy.monthlyAmount || 0), 0);
     const totalInsuredValue = policies.reduce((sum, policy) => sum + (policy.totalCoverage || 0), 0);
     
-    // Calcular apólices vencendo (próximos 30 dias)
+    // Calcular apólices por status
     const today = new Date();
     const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+    
     const expiringPolicies = policies.filter(policy => {
       const endDate = new Date(policy.endDate);
       return endDate >= today && endDate <= thirtyDaysFromNow;
+    }).length;
+
+    const expiredPolicies = policies.filter(policy => {
+      const endDate = new Date(policy.endDate);
+      return endDate < today;
+    }).length;
+
+    const activePolicies = policies.filter(policy => {
+      const endDate = new Date(policy.endDate);
+      return endDate >= today;
     }).length;
 
     // Calcular total de parcelas
@@ -133,7 +155,7 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica
     });
 
-    // Evolução mensal (projeção de 12 meses)
+    // Evolução mensal (projeção de 12 meses) - Fixed type
     const currentDate = new Date();
     const monthlyEvolution = [];
     
@@ -157,13 +179,40 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
         return sum;
       }, 0);
       
+      // Count active policies for this month
+      const activeCount = policies.filter(policy => {
+        const startDate = new Date(policy.startDate);
+        const endDate = new Date(policy.endDate);
+        return date >= startDate && date <= endDate;
+      }).length;
+      
       monthlyEvolution.push({
         month: monthLabel,
-        cost: monthlyCost
+        custo: monthlyCost,
+        apolices: activeCount
       });
     }
 
     console.log('📊 Projeção mensal dinâmica gerada:', monthlyEvolution);
+
+    // Recent policies (last 30 days)
+    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const recentPolicies = policies
+      .filter(policy => {
+        const extractedDate = new Date(policy.extractedAt);
+        return extractedDate >= thirtyDaysAgo;
+      })
+      .sort((a, b) => new Date(b.extractedAt).getTime() - new Date(a.extractedAt).getTime())
+      .slice(0, 10)
+      .map(policy => ({
+        id: policy.id,
+        name: policy.name,
+        insurer: getInsurerName(policy.insurer),
+        premium: policy.premium || 0,
+        monthlyAmount: policy.monthlyAmount || 0,
+        endDate: policy.endDate,
+        extractedAt: policy.extractedAt
+      }));
 
     // Insights
     const insights = [];
@@ -189,12 +238,15 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       totalMonthlyCost,
       totalInsuredValue,
       expiringPolicies,
+      expiredPolicies,
+      activePolicies,
       totalInstallments,
       insurerDistribution,
       typeDistribution,
       monthlyEvolution,
       insights,
-      personTypeDistribution
+      personTypeDistribution,
+      recentPolicies
     };
 
     console.log('📊 Dashboard data final:', dashboardData);

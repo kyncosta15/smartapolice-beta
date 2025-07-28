@@ -70,7 +70,7 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
   }));
 
   // Transform recent policies to match expected format
-  const recentPoliciesFormatted = dashboardData.recentPolicies.map(policy => {
+  const recentPoliciesFormatted = (dashboardData.recentPolicies || []).map(policy => {
     // Find the original policy to get additional data
     const originalPolicy = policies.find(p => p.id === policy.id);
     
