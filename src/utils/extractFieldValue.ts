@@ -14,12 +14,26 @@ export const extractFieldValue = (field: any): string | null => {
   }
 
   // 2. objeto do n8n: { value: '...'}
-  if (typeof field === 'object' && 'value' in field) {
-    const v = field.value;
-    console.log('🔍 Valor do objeto N8N:', v);
-    if (typeof v === 'string' && v.toLowerCase() !== 'undefined' && v.trim() !== '') {
-      console.log('✅ Valor do objeto N8N é válido:', v);
-      return v;
+  if (typeof field === 'object' && field !== null) {
+    // Handle insurer object structure
+    if ('empresa' in field && field.empresa) {
+      console.log('✅ Extraindo empresa do objeto:', field.empresa);
+      return String(field.empresa);
+    }
+    
+    if ('value' in field) {
+      const v = field.value;
+      console.log('🔍 Valor do objeto N8N:', v);
+      if (typeof v === 'string' && v.toLowerCase() !== 'undefined' && v.trim() !== '') {
+        console.log('✅ Valor do objeto N8N é válido:', v);
+        return v;
+      }
+    }
+    
+    // Handle other object structures
+    if ('name' in field && field.name) {
+      console.log('✅ Extraindo name do objeto:', field.name);
+      return String(field.name);
     }
   }
 

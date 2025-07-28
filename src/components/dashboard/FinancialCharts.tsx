@@ -13,12 +13,19 @@ export function FinancialCharts({ financialData }: FinancialChartsProps) {
   // Função para extrair valor de campo (string ou objeto)
   const extractFieldValue = (field: any): string => {
     if (!field) return '';
+    
     if (typeof field === 'string') return field;
+    
     if (typeof field === 'object') {
+      // Handle insurer object structure
+      if (field.empresa) return String(field.empresa);
       if (field.value !== undefined) return String(field.value);
-      if (field.empresa) return field.empresa;
-      return '';
+      if (field.name) return String(field.name);
+      
+      // Fallback for other object structures
+      return 'Não informado';
     }
+    
     return String(field);
   };
 
