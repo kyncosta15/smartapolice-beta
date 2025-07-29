@@ -35,9 +35,15 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
     return insurerColors[insurerName as keyof typeof insurerColors] || insurerColors['Outros'];
   };
 
+  // Função para obter apenas o primeiro nome da seguradora
+  const getShortName = (fullName: string) => {
+    return fullName.split(' ')[0];
+  };
+
   // Preparar dados para o gráfico de barras
   const barChartData = chartData.insurerData.map(insurer => ({
     name: insurer.name,
+    shortName: getShortName(insurer.name),
     value: insurer.value,
     color: getInsurerColor(insurer.name)
   }));
@@ -66,7 +72,6 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
               data={barChartData} 
               margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
             >
-              {/* Gradiente para o fundo do gráfico */}
               <defs>
                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="rgba(99, 102, 241, 0.1)" />
@@ -85,13 +90,13 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
                 strokeWidth={1}
               />
               <XAxis 
-                dataKey="name" 
+                dataKey="shortName"
                 tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
                 tickLine={{ stroke: '#e2e8f0', strokeWidth: 1 }}
                 axisLine={{ stroke: '#e2e8f0', strokeWidth: 1 }}
-                angle={-45}
-                textAnchor="end"
-                height={80}
+                angle={0}
+                textAnchor="middle"
+                height={60}
                 interval={0}
               />
               <YAxis 
@@ -107,7 +112,12 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
               />
               <Tooltip 
                 formatter={(value) => [`${Number(value).toFixed(1)}%`, 'Participação']}
-                labelFormatter={(label) => `Seguradora: ${label}`}
+                labelFormatter={(label, payload) => {
+                  if (payload && payload.length > 0) {
+                    return `Seguradora: ${payload[0].payload.name}`;
+                  }
+                  return `Seguradora: ${label}`;
+                }}
                 contentStyle={{
                   backgroundColor: 'rgba(255, 255, 255, 0.98)',
                   border: '1px solid #e2e8f0',
