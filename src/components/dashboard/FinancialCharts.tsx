@@ -4,35 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/utils/currencyFormatter';
+import { extractFieldValue } from '@/utils/extractFieldValue';
 
 interface FinancialChartsProps {
   financialData: Array<{ name: string; valor: number; cobertura: number }>;
 }
 
 export function FinancialCharts({ financialData }: FinancialChartsProps) {
-  // Função para extrair valor de campo (string ou objeto)
-  const extractFieldValue = (field: any): string => {
-    if (!field) return '';
-    
-    if (typeof field === 'string') return field;
-    
-    if (typeof field === 'object') {
-      // Handle insurer object structure
-      if (field.empresa) return String(field.empresa);
-      if (field.value !== undefined) return String(field.value);
-      if (field.name) return String(field.name);
-      
-      // Fallback for other object structures
-      return 'Não informado';
-    }
-    
-    return String(field);
-  };
-
-  // Processar dados para garantir que nomes sejam strings
+  // Processar dados para garantir que nomes sejam strings usando extractFieldValue
   const processedData = financialData.map(item => ({
     ...item,
-    name: extractFieldValue(item.name)
+    name: extractFieldValue(item.name) || 'Não informado'
   }));
 
   return (
