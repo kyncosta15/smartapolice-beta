@@ -35,12 +35,23 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
     return insurerColors[insurerName as keyof typeof insurerColors] || insurerColors['Outros'];
   };
 
+  // Função para truncar nomes muito longos para o eixo X
+  const truncateName = (name: string, maxLength: number = 12) => {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + '...';
+  };
+
   // Preparar dados para o gráfico de barras
   const barChartData = chartData.insurerData.map(insurer => ({
     name: insurer.name,
+    shortName: truncateName(insurer.name),
     value: insurer.value,
     color: getInsurerColor(insurer.name)
   }));
+
+  // Calcular altura dinâmica baseada no número de itens
+  const dynamicHeight = Math.max(400, barChartData.length * 30 + 150);
+  const bottomMargin = Math.max(120, barChartData.length * 8 + 80);
 
   return (
     <Card className="bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-lg backdrop-blur-sm">
@@ -60,11 +71,11 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="w-full h-80 relative">
+        <div className="w-full relative" style={{ height: `${dynamicHeight}px` }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={barChartData} 
-              margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: bottomMargin }}
             >
               <defs>
                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -84,15 +95,16 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
                 strokeWidth={1}
               />
               <XAxis 
-                dataKey="name"
+                dataKey="shortName"
                 tick={{ fontSize: 10, fill: '#64748b', fontWeight: 500 }}
                 tickLine={{ stroke: '#e2e8f0', strokeWidth: 1 }}
                 axisLine={{ stroke: '#e2e8f0', strokeWidth: 1 }}
                 angle={-45}
                 textAnchor="end"
-                height={100}
+                height={bottomMargin - 20}
                 interval={0}
-                minTickGap={0}
+                minTickGap={5}
+                allowDataOverflow={false}
               />
               <YAxis 
                 tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
@@ -107,7 +119,11 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
               />
               <Tooltip 
                 formatter={(value) => [`${Number(value).toFixed(1)}%`, 'Participação']}
-                labelFormatter={(label) => `Seguradora: ${label}`}
+                labelFormatter={(label) => {
+                  // Encontrar o nome completo baseado no nome truncado
+                  const fullData = barChartData.find(item => item.shortName === label);
+                  return `Seguradora: ${fullData?.name || label}`;
+                }}
                 contentStyle={{
                   backgroundColor: 'rgba(255, 255, 255, 0.98)',
                   border: '1px solid #e2e8f0',
@@ -141,19 +157,19 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
         {hasData && (
           <div className="mt-6 p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100">
             <h4 className="text-sm font-semibold text-gray-700 mb-3">Seguradoras</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {chartData.insurerData.map((insurer) => (
                 <div key={insurer.name} className="flex items-center space-x-2">
                   <div 
-                    className="w-4 h-4 rounded-full shadow-sm"
+                    className="w-4 h-4 rounded-full shadow-sm flex-shrink-0"
                     style={{ 
                       background: `linear-gradient(135deg, ${getInsurerColor(insurer.name)}, ${getInsurerColor(insurer.name)}cc)`
                     }}
                   />
-                  <span className="text-xs font-medium text-gray-600 truncate">
+                  <span className="text-xs font-medium text-gray-600 truncate flex-1">
                     {insurer.name}
                   </span>
-                  <span className="text-xs text-gray-500 ml-auto">
+                  <span className="text-xs text-gray-500 flex-shrink-0">
                     {insurer.value.toFixed(1)}%
                   </span>
                 </div>
