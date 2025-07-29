@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Building2 } from 'lucide-react';
 import { PolicyData, generateChartData, getEmptyStateData } from './chartData';
 
@@ -22,35 +22,25 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
     'Mapfre': '#10b981',       // Verde claro
     'Tokio Marine': '#7c3aed', // Roxo
     'HDI': '#8b5cf6',          // Roxo claro
+    'Darwin Seguros S.A.': '#f59e0b', // Laranja
+    'HDI SEGUROS S.A.': '#8b5cf6',    // Roxo claro
     'Liberty': '#f59e0b',      // Laranja
     'AXA': '#d97706',          // Laranja escuro
     'Generali': '#06b6d4',     // Ciano
     'Outros': '#6b7280'        // Cinza
   };
 
-  // Convert insurer data to line chart format for trend visualization
-  const generateTrendData = () => {
-    if (!hasData) return getEmptyStateData().monthlyData;
-    
-    // Simulate trend data based on current distribution
-    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
-    return months.map(month => {
-      const dataPoint: any = { month };
-      chartData.insurerData.forEach(insurer => {
-        // Add some variation to simulate trends
-        const variation = (Math.random() - 0.5) * 6;
-        dataPoint[insurer.name] = Math.max(0, insurer.value + variation);
-      });
-      return dataPoint;
-    });
-  };
-
-  const trendData = generateTrendData();
-
   // Função para obter cor da seguradora
   const getInsurerColor = (insurerName: string) => {
     return insurerColors[insurerName as keyof typeof insurerColors] || insurerColors['Outros'];
   };
+
+  // Preparar dados para o gráfico de barras
+  const barChartData = chartData.insurerData.map(insurer => ({
+    name: insurer.name,
+    value: insurer.value,
+    color: getInsurerColor(insurer.name)
+  }));
 
   return (
     <Card className="bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-lg backdrop-blur-sm">
@@ -61,7 +51,7 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
           </div>
           <div>
             <CardTitle className="text-xl font-bold text-gray-900 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">
-              Participação por Seguradora
+              Distribuição por Seguradora
             </CardTitle>
             <p className="text-sm text-gray-600 mt-1">
               {hasData ? 'Distribuição de apólices entre seguradoras' : 'Aguardando dados para análise'}
@@ -72,9 +62,9 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
       <CardContent className="pt-0">
         <div className="w-full h-80 relative">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart 
-              data={trendData} 
-              margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+            <BarChart 
+              data={barChartData} 
+              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
             >
               {/* Gradiente para o fundo do gráfico */}
               <defs>
@@ -82,10 +72,10 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
                   <stop offset="0%" stopColor="rgba(99, 102, 241, 0.1)" />
                   <stop offset="100%" stopColor="rgba(99, 102, 241, 0.02)" />
                 </linearGradient>
-                {chartData.insurerData.map((insurer, index) => (
-                  <linearGradient key={insurer.name} id={`gradient-${insurer.name}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={getInsurerColor(insurer.name)} stopOpacity={0.8} />
-                    <stop offset="100%" stopColor={getInsurerColor(insurer.name)} stopOpacity={0.2} />
+                {barChartData.map((insurer, index) => (
+                  <linearGradient key={insurer.name} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={insurer.color} stopOpacity={0.8} />
+                    <stop offset="100%" stopColor={insurer.color} stopOpacity={0.6} />
                   </linearGradient>
                 ))}
               </defs>
@@ -95,10 +85,14 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
                 strokeWidth={1}
               />
               <XAxis 
-                dataKey="month" 
-                tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
+                dataKey="name" 
+                tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
                 tickLine={{ stroke: '#e2e8f0', strokeWidth: 1 }}
                 axisLine={{ stroke: '#e2e8f0', strokeWidth: 1 }}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                interval={0}
               />
               <YAxis 
                 tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
@@ -112,8 +106,8 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
                 }}
               />
               <Tooltip 
-                formatter={(value, name) => [`${Number(value).toFixed(1)}%`, name]}
-                labelFormatter={(label) => `Mês: ${label}`}
+                formatter={(value) => [`${Number(value).toFixed(1)}%`, 'Participação']}
+                labelFormatter={(label) => `Seguradora: ${label}`}
                 contentStyle={{
                   backgroundColor: 'rgba(255, 255, 255, 0.98)',
                   border: '1px solid #e2e8f0',
@@ -122,36 +116,17 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
                   boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05)',
                   backdropFilter: 'blur(8px)'
                 }}
-                cursor={{
-                  stroke: 'rgba(99, 102, 241, 0.2)',
-                  strokeWidth: 2,
-                  fill: 'url(#chartGradient)'
-                }}
               />
-              {chartData.insurerData.map((insurer, index) => (
-                <Line 
-                  key={insurer.name}
-                  type="monotone" 
-                  dataKey={insurer.name} 
-                  stroke={hasData ? getInsurerColor(insurer.name) : '#e2e8f0'}
-                  strokeWidth={3} 
-                  dot={{ 
-                    r: 5, 
-                    strokeWidth: 3,
-                    fill: '#fff',
-                    stroke: hasData ? getInsurerColor(insurer.name) : '#e2e8f0',
-                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
-                  }}
-                  activeDot={{ 
-                    r: 7, 
-                    strokeWidth: 3,
-                    fill: '#fff',
-                    stroke: hasData ? getInsurerColor(insurer.name) : '#e2e8f0',
-                    filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))'
-                  }}
-                />
-              ))}
-            </LineChart>
+              <Bar 
+                dataKey="value" 
+                fill="url(#chartGradient)"
+                radius={[4, 4, 0, 0]}
+              >
+                {barChartData.map((entry, index) => (
+                  <Bar key={`cell-${index}`} fill={`url(#gradient-${index})`} />
+                ))}
+              </Bar>
+            </BarChart>
           </ResponsiveContainer>
           
           {!hasData && (
