@@ -1,9 +1,9 @@
+
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FilePlus, Cloud, Clock, Webhook } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { FilePlus, Cloud, Clock } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { useToast } from '@/hooks/use-toast';
 import { useFileStatusManager } from '@/hooks/useFileStatusManager';
@@ -101,10 +101,6 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           <CardTitle className="flex items-center space-x-2">
             <Cloud className="h-5 w-5 text-blue-600" />
             <span>Upload de Apólices</span>
-            <Badge variant="secondary" className="ml-2">
-              <Webhook className="h-3 w-3 mr-1" />
-              Webhook Ativo
-            </Badge>
           </CardTitle>
           <CardDescription>
           </CardDescription>
