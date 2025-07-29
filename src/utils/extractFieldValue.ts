@@ -1,5 +1,4 @@
 
-
 export const extractFieldValue = (field: any): string | null => {
   console.log('🔍 Extraindo valor do campo:', field);
   
@@ -89,7 +88,7 @@ export const extractFieldValue = (field: any): string | null => {
           console.log(`✅ Valor único extraído de ${singleKey}:`, singleValue.value);
           return singleValue.value;
         }
-      } else if (typeof singleValue === 'string' && singleValue.toLowerCase() !== 'undefined' && singleValue.value.trim() !== '') {
+      } else if (typeof singleValue === 'string' && singleValue.toLowerCase() !== 'undefined' && singleValue.trim() !== '') {
         console.log(`✅ Valor único string extraído de ${singleKey}:`, singleValue);
         return singleValue;
       }
@@ -146,4 +145,3 @@ export function inferTipoPorDocumento(doc: string | null): 'CPF' | 'CNPJ' | null
   console.log('⚠️ Documento com tamanho inválido para CPF/CNPJ');
   return null;
 }
-
