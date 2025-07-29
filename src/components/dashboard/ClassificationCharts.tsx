@@ -46,7 +46,19 @@ export function ClassificationCharts({
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="text-sm font-medium text-gray-900">{`${label}`}</p>
-          <p className="text-sm text-blue-600">{`Valor: ${payload[0].value}`}</p>
+          <p className="text-sm text-blue-600">{`Valor: ${payload[0].value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const PieTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="text-sm font-medium text-gray-900">{payload[0].name}</p>
+          <p className="text-sm text-blue-600">{`${payload[0].name}: ${payload[0].value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}</p>
         </div>
       );
     }
@@ -83,7 +95,7 @@ export function ClassificationCharts({
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip content={<PieTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
