@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -171,7 +172,7 @@ export function ClassificationCharts({
                             Valor
                           </p>
                           <p className={`font-medium text-green-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                            R$ {policy.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            R$ {policy.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                           </p>
                         </div>
                         
