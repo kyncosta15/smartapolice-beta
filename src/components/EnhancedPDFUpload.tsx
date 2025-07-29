@@ -142,12 +142,6 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
             activeFiles={activeFiles} 
           />
         </CardContent>
-        <CardFooter className="justify-between">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Webhook className="h-4 w-4" />
-            <span>Processamento via N8N ativo</span>
-          </div>
-        </CardFooter>
       </Card>
     </div>
   );
