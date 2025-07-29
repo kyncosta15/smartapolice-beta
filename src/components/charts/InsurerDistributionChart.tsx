@@ -64,7 +64,7 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={barChartData} 
-              margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
             >
               <defs>
                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -90,8 +90,9 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
                 axisLine={{ stroke: '#e2e8f0', strokeWidth: 1 }}
                 angle={-45}
                 textAnchor="end"
-                height={80}
+                height={100}
                 interval={0}
+                minTickGap={0}
               />
               <YAxis 
                 tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
