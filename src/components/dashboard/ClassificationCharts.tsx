@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NewPolicyModal } from '../NewPolicyModal';
+import { FileText, Calendar, DollarSign, Clock } from 'lucide-react';
 
 interface ClassificationChartsProps {
   typeDistribution: Array<{ name: string; value: number; color: string }>;
@@ -129,7 +129,8 @@ export function ClassificationCharts({
         <Card className="bg-white border border-gray-200 shadow-sm lg:col-span-2">
           <CardHeader className={`${isMobile ? 'p-3 pb-1' : 'p-6 pb-2'}`}>
             <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold text-gray-900 flex items-center`}>
-              📄 Novas Apólices (30 dias)
+              <FileText className="h-5 w-5 mr-2 text-blue-600" />
+              Novas Apólices (30 dias)
             </CardTitle>
           </CardHeader>
           <CardContent className={`${isMobile ? 'p-3 pt-1' : 'p-6 pt-2'}`}>
@@ -155,21 +156,30 @@ export function ClassificationCharts({
                     <div className="flex flex-col items-end space-y-1">
                       <div className="flex items-center space-x-4">
                         <div className="text-center">
-                          <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'}`}>📅 Inserida</p>
+                          <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'} flex items-center justify-center gap-1`}>
+                            <Calendar className="h-3 w-3" />
+                            Inserida
+                          </p>
                           <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
                             {new Date(policy.insertDate).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
                         
                         <div className="text-center">
-                          <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'}`}>💰 Valor</p>
+                          <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'} flex items-center justify-center gap-1`}>
+                            <DollarSign className="h-3 w-3" />
+                            Valor
+                          </p>
                           <p className={`font-medium text-green-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                             R$ {policy.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </p>
                         </div>
                         
                         <div className="text-center">
-                          <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'}`}>⏰ Vencimento</p>
+                          <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'} flex items-center justify-center gap-1`}>
+                            <Clock className="h-3 w-3" />
+                            Vencimento
+                          </p>
                           <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
                             {new Date(policy.dueDate).toLocaleDateString('pt-BR')}
                           </p>
