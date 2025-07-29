@@ -1,4 +1,5 @@
 
+
 export const extractFieldValue = (field: any): string | null => {
   console.log('🔍 Extraindo valor do campo:', field);
   
@@ -9,6 +10,17 @@ export const extractFieldValue = (field: any): string | null => {
 
   // 1. string simples
   if (typeof field === 'string' && field.toLowerCase() !== 'undefined' && field.trim() !== '') {
+    // Verificar se é um JSON string que precisa ser parseado
+    if (field.startsWith('{') && field.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(field);
+        console.log('🔧 String JSON detectada, parseando:', parsed);
+        return extractFieldValue(parsed); // Recursão para processar o objeto parseado
+      } catch (e) {
+        console.log('⚠️ Falha ao parsear JSON, retornando string original:', field);
+        return field;
+      }
+    }
     console.log('✅ Campo é string válida:', field);
     return field;
   }
@@ -16,12 +28,12 @@ export const extractFieldValue = (field: any): string | null => {
   // 2. objeto do n8n: { value: '...'}
   if (typeof field === 'object' && field !== null) {
     // Handle N8N object with _type and value structure
-    if ('_type' in field && '_type' in field && field._type === 'undefined') {
+    if ('_type' in field && field._type === 'undefined') {
       console.log('⚠️ Campo N8N com _type undefined, retornando null');
       return null;
     }
     
-    // Handle insurer object structure
+    // Handle insurer object structure - PRIORIZAR EMPRESA
     if ('empresa' in field && field.empresa) {
       const empresaValue = typeof field.empresa === 'object' && field.empresa.value 
         ? field.empresa.value 
@@ -55,7 +67,7 @@ export const extractFieldValue = (field: any): string | null => {
       return String(nameValue);
     }
 
-    // Handle categoria, cobertura, entidade objects
+    // Handle categoria, cobertura, entidade objects - mas só se não tiver empresa
     for (const key of ['categoria', 'cobertura', 'entidade']) {
       if (key in field && field[key]) {
         const keyValue = typeof field[key] === 'object' && field[key].value 
@@ -77,13 +89,13 @@ export const extractFieldValue = (field: any): string | null => {
           console.log(`✅ Valor único extraído de ${singleKey}:`, singleValue.value);
           return singleValue.value;
         }
-      } else if (typeof singleValue === 'string' && singleValue.toLowerCase() !== 'undefined' && singleValue.trim() !== '') {
+      } else if (typeof singleValue === 'string' && singleValue.toLowerCase() !== 'undefined' && singleValue.value.trim() !== '') {
         console.log(`✅ Valor único string extraído de ${singleKey}:`, singleValue);
         return singleValue;
       }
     }
 
-    console.log('⚠️ Objeto complexo encontrado, convertendo para string:', field);
+    console.log('⚠️ Objeto complexo encontrado, tentando extrair string válida:', field);
     // As a last resort, try to find any valid string value in the object
     const findValidString = (obj: any): string | null => {
       if (typeof obj === 'string' && obj.toLowerCase() !== 'undefined' && obj.trim() !== '') {
@@ -103,6 +115,10 @@ export const extractFieldValue = (field: any): string | null => {
       console.log('✅ String válida encontrada no objeto:', foundString);
       return foundString;
     }
+    
+    // Se chegou até aqui, não conseguiu extrair nada válido
+    console.log('❌ Não foi possível extrair valor válido do objeto, retornando null');
+    return null;
   }
 
   // 3. Verificar se é um número (para documentos)
@@ -130,3 +146,4 @@ export function inferTipoPorDocumento(doc: string | null): 'CPF' | 'CNPJ' | null
   console.log('⚠️ Documento com tamanho inválido para CPF/CNPJ');
   return null;
 }
+
