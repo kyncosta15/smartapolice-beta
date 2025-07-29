@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FilePlus, Cloud, Clock, Webhook } from 'lucide-react';
@@ -108,7 +107,6 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
             </Badge>
           </CardTitle>
           <CardDescription>
-            Sistema conectado ao webhook N8N para processamento inteligente de PDFs.
             <br />
             <span className="text-xs text-muted-foreground">
               Endpoint: smartapoliceoficialbeta.app.n8n.cloud/webhook/upload-arquivo
