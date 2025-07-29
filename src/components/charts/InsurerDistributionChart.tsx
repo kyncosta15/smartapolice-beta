@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Building2 } from 'lucide-react';
 import { PolicyData, generateChartData, getEmptyStateData } from './chartData';
 
@@ -119,11 +119,10 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
               />
               <Bar 
                 dataKey="value" 
-                fill="url(#chartGradient)"
                 radius={[4, 4, 0, 0]}
               >
                 {barChartData.map((entry, index) => (
-                  <Bar key={`cell-${index}`} fill={`url(#gradient-${index})`} />
+                  <Cell key={`cell-${index}`} fill={`url(#gradient-${index})`} />
                 ))}
               </Bar>
             </BarChart>
