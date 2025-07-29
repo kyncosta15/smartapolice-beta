@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -190,8 +189,42 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (policy: ParsedPolicyData) => {
+    // Calcular o status real baseado na data de vencimento
+    const getRealStatus = (policy: ParsedPolicyData): string => {
+      const expirationDate = policy.expirationDate || policy.endDate;
+      
+      if (!expirationDate) {
+        return 'vigente';
+      }
+      
+      const now = new Date();
+      const expDate = new Date(expirationDate);
+      const diffTime = expDate.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays < -30) {
+        return 'nao_renovada';
+      } else if (diffDays < 0) {
+        return 'vencida';
+      } else if (diffDays <= 30) {
+        return 'vencendo';
+      } else {
+        return 'vigente';
+      }
+    };
+    
+    const realStatus = getRealStatus(policy);
+    
+    switch (realStatus) {
+      case 'vigente':
+        return <Badge className="bg-green-50 text-green-600 border-green-200">Vigente</Badge>;
+      case 'vencendo':
+        return <Badge className="bg-orange-50 text-orange-600 border-orange-200">Vencendo</Badge>;
+      case 'vencida':
+        return <Badge className="bg-red-50 text-red-600 border-red-200">Vencida</Badge>;
+      case 'nao_renovada':
+        return <Badge className="bg-gray-50 text-gray-600 border-gray-200">Não Renovada</Badge>;
       case 'active':
         return <Badge className="bg-green-50 text-green-600 border-green-200">Ativa</Badge>;
       case 'expiring':
@@ -199,7 +232,7 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
       case 'expired':
         return <Badge className="bg-red-50 text-red-600 border-red-200">Vencida</Badge>;
       default:
-        return <Badge variant="secondary">Desconhecido</Badge>;
+        return <Badge className="bg-blue-50 text-blue-600 border-blue-200">Vigente</Badge>;
     }
   };
 
@@ -357,7 +390,7 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
                   <p className="text-sm text-gray-500">{policy.policyNumber}</p>
                 </div>
                 <div className="flex flex-col gap-2">
-                  {getStatusBadge(policy.status)}
+                  {getStatusBadge(policy)}
                   {viewMode === 'admin' && getOptimizationBadge(policy)}
                 </div>
               </div>
