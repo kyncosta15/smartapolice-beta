@@ -21,6 +21,55 @@ interface ClassificationChartsProps {
   colors: string[];
 }
 
+// Cores específicas para cada tipo de seguradora
+const INSURER_COLORS: Record<string, string> = {
+  'Porto Seguro': '#e11d48',
+  'Porto Seguro Cia. de Seguros Gerais': '#e11d48',
+  'Bradesco': '#059669',
+  'Bradesco Seguros': '#059669',
+  'SulAmérica': '#2563eb',
+  'Allianz': '#f59e0b',
+  'HDI Seguros': '#8b5cf6',
+  'HDI SEGUROS S.A.': '#8b5cf6',
+  'HDI': '#8b5cf6',
+  'Liberty Seguros': '#06b6d4',
+  'Liberty': '#06b6d4',
+  'Tokio Marine': '#ec4899',
+  'Mapfre': '#84cc16',
+  'Zurich': '#1d4ed8',
+  'Darwin Seguros S.A.': '#ef4444',
+  'Sompo Seguros': '#f97316',
+  'Itaú Seguros': '#10b981',
+  'Azul Seguros': '#3b82f6',
+  'Alfa Seguradora': '#7c3aed',
+  'Suhai Seguradora': '#14b8a6',
+  'Excelsior Seguros': '#f59e0b',
+  'Too Seguros': '#6366f1',
+  'Icatu Seguros': '#8b5cf6',
+  'Capemisa': '#10b981',
+  'MetLife': '#059669',
+  'Prudential': '#2563eb',
+  'Youse': '#ef4444',
+  'Seguros Unimed': '#22c55e',
+  'Centauro-ON': '#f97316',
+  'BB Seguros': '#eab308',
+  'Assurant': '#6b7280',
+  'Não informado': '#9ca3af',
+  'Outros': '#6b7280'
+};
+
+// Cores para tipos de seguro
+const TYPE_COLORS: Record<string, string> = {
+  'Auto': '#3b82f6',
+  'Vida': '#10b981',
+  'Saúde': '#f59e0b',
+  'Empresarial': '#8b5cf6',
+  'Patrimonial': '#ef4444',
+  'Acidentes Pessoais': '#06b6d4',
+  'Responsabilidade Civil': '#84cc16',
+  'Outros': '#6b7280'
+};
+
 export function ClassificationCharts({ 
   typeDistribution, 
   insurerDistribution, 
@@ -41,6 +90,17 @@ export function ClassificationCharts({
     setSelectedPolicy(null);
   };
 
+  // Aplicar cores específicas aos dados de distribuição
+  const typeDistributionWithColors = typeDistribution.map(item => ({
+    ...item,
+    color: TYPE_COLORS[item.name] || item.color || '#6b7280'
+  }));
+
+  const insurerDistributionWithColors = insurerDistribution.map(item => ({
+    ...item,
+    color: INSURER_COLORS[item.name] || item.color || '#6b7280'
+  }));
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -58,7 +118,7 @@ export function ClassificationCharts({
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="text-sm font-medium text-gray-900">{payload[0].name}</p>
-          <p className="text-sm text-blue-600">{`${payload[0].name}: ${payload[0].value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}</p>
+          <p className="text-sm text-blue-600">{`Valor: ${payload[0].value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}</p>
         </div>
       );
     }
@@ -76,11 +136,11 @@ export function ClassificationCharts({
             </CardTitle>
           </CardHeader>
           <CardContent className={`${isMobile ? 'p-3 pt-1' : 'p-6 pt-2'}`}>
-            {typeDistribution.length > 0 ? (
+            {typeDistributionWithColors.length > 0 ? (
               <ResponsiveContainer width="100%" height={isMobile ? 180 : 300}>
                 <PieChart>
                   <Pie
-                    data={typeDistribution}
+                    data={typeDistributionWithColors}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -91,7 +151,7 @@ export function ClassificationCharts({
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {typeDistribution.map((entry, index) => (
+                    {typeDistributionWithColors.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -114,9 +174,9 @@ export function ClassificationCharts({
             </CardTitle>
           </CardHeader>
           <CardContent className={`${isMobile ? 'p-3 pt-1' : 'p-6 pt-2'}`}>
-            {insurerDistribution.length > 0 ? (
+            {insurerDistributionWithColors.length > 0 ? (
               <ResponsiveContainer width="100%" height={isMobile ? 180 : 300}>
-                <BarChart data={insurerDistribution} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                <BarChart data={insurerDistributionWithColors} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis 
                     dataKey="name" 
@@ -127,7 +187,14 @@ export function ClassificationCharts({
                   />
                   <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="value" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                  <Bar 
+                    dataKey="value" 
+                    radius={[4, 4, 0, 0]}
+                  >
+                    {insurerDistributionWithColors.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
