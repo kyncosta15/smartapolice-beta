@@ -107,10 +107,6 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
             </Badge>
           </CardTitle>
           <CardDescription>
-            <br />
-            <span className="text-xs text-muted-foreground">
-              Endpoint: smartapoliceoficialbeta.app.n8n.cloud/webhook/upload-arquivo
-            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>
