@@ -1,5 +1,4 @@
 
-import { Shield } from 'lucide-react';
 import { DocumentValidator } from '@/utils/documentValidator';
 
 interface SmartApóliceLogoProps {
@@ -8,6 +7,38 @@ interface SmartApóliceLogoProps {
   className?: string;
   documentNumber?: string;
 }
+
+// Componente do ícone customizado
+const CustomIcon = ({ className }: { className?: string }) => (
+  <svg 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className={className}
+  >
+    {/* Documento com canto dobrado */}
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14,2 14,8 20,8"/>
+    
+    {/* Linhas do documento */}
+    <line x1="9" y1="13" x2="11" y2="13"/>
+    <line x1="9" y1="15" x2="11" y2="15"/>
+    
+    {/* Ondas WiFi */}
+    <path d="M8 10c1.5-1.5 3.5-1.5 5 0"/>
+    <path d="M7.5 8.5c2.5-2.5 5.5-2.5 8 0"/>
+    <path d="M8.5 11.5c.5-.5 1.5-.5 2 0"/>
+    
+    {/* Shield com check */}
+    <path d="M17.5 14.5c0 2-1.5 3.5-3 4.5-1.5-1-3-2.5-3-4.5s1.5-3 3-3 3 1 3 3z"/>
+    <path d="M13.5 16.5l1 1 2-2"/>
+  </svg>
+);
 
 export function SmartApóliceLogo({ size = 'md', showText = true, className = '', documentNumber }: SmartApóliceLogoProps) {
   const sizeClasses = {
@@ -55,7 +86,7 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
         
         {/* Main shield container */}
         <div className={`relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md ${sizeClasses[size]} flex items-center justify-center border border-blue-400/30 shadow-lg shadow-blue-500/20`}>
-          <Shield className={`${iconSizeClasses[size]} text-white/20 absolute`} />
+          <CustomIcon className={`${iconSizeClasses[size]} text-white/20 absolute`} />
           <span className={`${letterSizeClasses[size]} font-bold text-white relative z-10 drop-shadow-lg`}>
             S
           </span>
