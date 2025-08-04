@@ -1,4 +1,5 @@
 
+
 import { DocumentValidator } from '@/utils/documentValidator';
 
 interface SmartApóliceLogoProps {
@@ -19,12 +20,6 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
     sm: 'text-lg',
     md: 'text-xl',
     lg: 'text-3xl'
-  };
-
-  const iconSizeClasses = {
-    sm: 'h-6 w-6',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12'
   };
 
   const letterSizeClasses = {
@@ -53,11 +48,11 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md blur-sm opacity-80"></div>
         
         {/* Main shield container */}
-        <div className={`relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md ${sizeClasses[size]} flex items-center justify-center border border-blue-400/30 shadow-lg shadow-blue-500/20`}>
+        <div className={`relative ${sizeClasses[size]} rounded-md border border-blue-400/30 shadow-lg shadow-blue-500/20 overflow-hidden`}>
           <img 
             src="/lovable-uploads/99f35bc7-891f-474c-aef7-eab756781670.png" 
             alt="SmartApólice Logo" 
-            className={`${iconSizeClasses[size]} object-contain z-20 relative`}
+            className="w-full h-full object-cover z-20 relative"
           />
         </div>
       </div>
@@ -90,3 +85,4 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
     </div>
   );
 }
+
