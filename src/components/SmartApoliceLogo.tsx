@@ -7,7 +7,7 @@ interface SmartApóliceLogoProps {
   documentNumber?: string;
 }
 
-// Componente do ícone customizado
+// Componente do ícone customizado baseado na imagem fornecida
 const CustomIcon = ({ className }: { className?: string }) => (
   <svg 
     width="24" 
@@ -20,22 +20,18 @@ const CustomIcon = ({ className }: { className?: string }) => (
     strokeLinejoin="round"
     className={className}
   >
-    {/* Documento com canto dobrado */}
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-    <polyline points="14,2 14,8 20,8"/>
+    {/* Documento principal */}
+    <path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/>
+    <path d="M14 2v4h4"/>
     
     {/* Linhas do documento */}
-    <line x1="9" y1="13" x2="11" y2="13"/>
-    <line x1="9" y1="15" x2="11" y2="15"/>
+    <line x1="8" y1="10" x2="16" y2="10"/>
+    <line x1="8" y1="12" x2="16" y2="12"/>
+    <line x1="8" y1="14" x2="12" y2="14"/>
     
-    {/* Ondas WiFi */}
-    <path d="M8 10c1.5-1.5 3.5-1.5 5 0"/>
-    <path d="M7.5 8.5c2.5-2.5 5.5-2.5 8 0"/>
-    <path d="M8.5 11.5c.5-.5 1.5-.5 2 0"/>
-    
-    {/* Shield com check */}
-    <path d="M17.5 14.5c0 2-1.5 3.5-3 4.5-1.5-1-3-2.5-3-4.5s1.5-3 3-3 3 1 3 3z"/>
-    <path d="M13.5 16.5l1 1 2-2"/>
+    {/* Check mark no canto inferior direito */}
+    <circle cx="18" cy="18" r="3" fill="currentColor" stroke="none"/>
+    <path d="M16.5 18l1 1 2-2" stroke="white" strokeWidth="1.5" fill="none"/>
   </svg>
 );
 
