@@ -1,4 +1,3 @@
-
 import { DocumentValidator } from '@/utils/documentValidator';
 
 interface SmartApóliceLogoProps {
@@ -86,10 +85,7 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
         
         {/* Main shield container */}
         <div className={`relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md ${sizeClasses[size]} flex items-center justify-center border border-blue-400/30 shadow-lg shadow-blue-500/20`}>
-          <CustomIcon className={`${iconSizeClasses[size]} text-white/20 absolute`} />
-          <span className={`${letterSizeClasses[size]} font-bold text-white relative z-10 drop-shadow-lg`}>
-            S
-          </span>
+          <CustomIcon className={`${iconSizeClasses[size]} text-white z-20 relative`} />
         </div>
       </div>
       {showText && (
