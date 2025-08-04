@@ -52,7 +52,7 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
           <img 
             src="/lovable-uploads/99f35bc7-891f-474c-aef7-eab756781670.png" 
             alt="SmartApólice Logo" 
-            className="w-full h-full object-cover z-20 relative"
+            className="w-full h-full object-cover scale-110 z-20 relative"
           />
         </div>
       </div>
