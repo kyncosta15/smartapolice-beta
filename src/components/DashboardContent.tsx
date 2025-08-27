@@ -1,326 +1,220 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { AppSidebar } from '@/components/AppSidebar';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { Navbar } from '@/components/Navbar';
-import { WelcomeSection } from '@/components/WelcomeSection';
-import { ContentRenderer } from '@/components/ContentRenderer';
-import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
-import { useToast } from '@/hooks/use-toast';
-import { useDashboardData } from '@/hooks/useDashboardData';
-import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
-import { usePersistedUsers } from '@/hooks/usePersistedUsers';
-import { ParsedPolicyData } from '@/utils/policyDataParser';
-import { 
-  createExtendedInstallments,
-  filterOverdueInstallments,
-  calculateDuingNext30Days
-} from '@/utils/installmentUtils';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { Shield, Upload, FileText, Users, TrendingUp, AlertTriangle, Plus, Settings, LogOut, Bell } from 'lucide-react';
+import { DashboardCards } from './DashboardCards';
+import { MyPolicies } from './MyPolicies';
+import { EnhancedPDFUpload } from './EnhancedPDFUpload';
+import { WelcomeSection } from './WelcomeSection';
+import { ContactSection } from './ContactSection';
+import { OptimizedSettings } from './OptimizedSettings';
+import { AdminDashboardNew } from './AdminDashboardNew';
+import { NewPolicyModal } from './NewPolicyModal';
+import { AlertsPanel } from './AlertsPanel';
+import N8NDataTester from './N8NDataTester';
 
-export function DashboardContent() {
-  const { user } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [selectedPolicy, setSelectedPolicy] = useState(null);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [extractedPolicies, setExtractedPolicies] = useState<ParsedPolicyData[]>([]);
-  const [activeSection, setActiveSection] = useState('home');
-  const dashboardRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
+export const DashboardContent = () => {
+  const { user, logout } = useAuth();
+  const { policies, isLoading, hasPersistedData } = usePersistedPolicies();
+  const { totalValue, monthlySpending, pendingRenewals } = useDashboardData(policies);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [showNewPolicyModal, setShowNewPolicyModal] = useState(false);
 
-  // Hook para persistência de apólices
-  const { 
-    policies: persistedPolicies, 
-    addPolicy: addPersistedPolicy, 
-    deletePolicy: deletePersistedPolicy,
-    updatePolicy: updatePersistedPolicy,
-    downloadPDF: downloadPersistedPDF,
-    hasPersistedData 
-  } = usePersistedPolicies();
-
-  // Hook para persistência de usuários baseado em role
-  const { 
-    users: persistedUsers, 
-    updateUser, 
-    deleteUser, 
-    addUser,
-    canManageUsers,
-    isLoading: usersLoading
-  } = usePersistedUsers();
-
-  // Combinar apólices extraídas e persistidas, evitando duplicatas
-  const allPolicies = [...extractedPolicies, ...persistedPolicies.filter(
-    pp => !extractedPolicies.some(ep => ep.id === pp.id)
-  )];
-
-  // Usar o hook de dashboard data com todas as apólices
-  const { dashboardData } = useDashboardData(allPolicies);
-
-  // Calcular estatísticas de parcelas com TODAS as apólices (incluindo persistidas)
-  const allInstallments = createExtendedInstallments(allPolicies);
-  const overdueInstallments = filterOverdueInstallments(allInstallments);
-  const duingNext30Days = calculateDuingNext30Days(allInstallments);
-
-  // Criar estatísticas atualizadas para o dashboard
-  const enhancedDashboardStats = {
-    ...dashboardData,
-    overdueInstallments: overdueInstallments.length,
-    duingNext30Days: duingNext30Days
-  };
-
-  const handlePolicyExtracted = async (policy: any) => {
-    console.log('🚀 handlePolicyExtracted CHAMADO para persistência!');
-    console.log('Nova apólice extraída:', policy);
-    
-    // CORREÇÃO: Garantir ID único e evitar duplicação
-    const policyId = policy.id || `policy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
-    const newPolicy: ParsedPolicyData = {
-      ...policy,
-      id: policyId,
-      status: policy.status || 'vigente',
-      entity: user?.company || 'Não informado',
-      category: policy.type === 'auto' ? 'Veicular' : 
-               policy.type === 'vida' ? 'Pessoal' : 
-               policy.type === 'saude' ? 'Saúde' : 
-               policy.type === 'empresarial' ? 'Empresarial' : 'Geral',
-      coverage: policy.coberturas?.map((c: any) => c.descricao) || ['Cobertura Básica'],
-      monthlyAmount: policy.monthlyAmount || (parseFloat(policy.premium) / 12) || 0,
-      premium: policy.premium || 0,
-      deductible: policy.deductible || Math.floor(Math.random() * 5000) + 1000,
-      limits: 'R$ 100.000 por sinistro',
-      installments: Array.isArray(policy.installments) ? policy.installments : 
-                   policy.installments ? generateInstallmentsFromNumber(policy.installments, policy.monthlyAmount, policy.startDate) :
-                   generateDefaultInstallments(policy.monthlyAmount, policy.startDate),
-      totalCoverage: policy.totalCoverage || policy.premium || 0,
-      startDate: policy.startDate || new Date().toISOString().split('T')[0],
-      endDate: policy.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      documento: policy.documento,
-      documento_tipo: policy.documento_tipo,
-      insuredName: policy.segurado || policy.insuredName,
-      coberturas: policy.coberturas || []
-    };
-
-    console.log('✅ Adicionando apólice ao dashboard local imediatamente');
-    
-    // CORREÇÃO: Verificar se a apólice já existe antes de adicionar
-    setExtractedPolicies(prev => {
-      const exists = prev.some(p => p.id === newPolicy.id || 
-        (p.policyNumber === newPolicy.policyNumber && p.policyNumber !== 'N/A'));
-      
-      if (exists) {
-        console.log('⚠️ Apólice já existe, não duplicando');
-        return prev;
-      }
-      
-      console.log('✅ Nova apólice adicionada ao estado local');
-      return [newPolicy, ...prev];
+  useEffect(() => {
+    console.log('🎯 DashboardContent render:', { 
+      user: user?.name, 
+      policiesCount: policies.length,
+      activeTab 
     });
-    
-    // CORREÇÃO CRÍTICA: Garantir que a persistência seja feita com userId correto
-    if (user?.id && policy.file) {
-      console.log('💾 INICIANDO persistência IMEDIATA para usuário:', user.id);
+  }, [user, policies.length, activeTab]);
+
+  const handleLogout = async () => {
+    try {
+      console.log('👋 Iniciando logout...');
+      await logout();
+    } catch (error) {
+      console.error('❌ Erro no logout:', error);
+    }
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <div className="space-y-6">
+            <WelcomeSection user={user} />
+            <DashboardCards 
+              totalValue={totalValue}
+              monthlySpending={monthlySpending}
+              totalPolicies={policies.length}
+              pendingRenewals={pendingRenewals}
+            />
+            
+            {/* Seção de teste N8N - apenas em desenvolvimento */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-6">
+                <N8NDataTester />
+              </div>
+            )}
+          </div>
+        );
       
-      try {
-        const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
-        const success = await PolicyPersistenceService.savePolicyComplete(policy.file, newPolicy, user.id);
-        
-        if (success) {
-          console.log('✅ PERSISTÊNCIA REALIZADA COM SUCESSO!');
-          
-          // Recarregar apólices persistidas após um breve delay
-          setTimeout(() => {
-            addPersistedPolicy(newPolicy);
-          }, 2000);
-          
-          toast({
-            title: "📄 Apólice Salva",
-            description: `${policy.name || 'Nova apólice'} foi processada e salva no banco de dados`,
-          });
-        } else {
-          console.error('❌ FALHA NA PERSISTÊNCIA');
-          toast({
-            title: "⚠️ Aviso",
-            description: `Apólice processada mas pode não ter sido salva. Verifique após fazer logout/login.`,
-            variant: "destructive",
-          });
-        }
-        
-      } catch (error) {
-        console.error('❌ Erro crítico na persistência:', error);
-        toast({
-          title: "❌ Erro na Persistência",
-          description: "A apólice foi processada mas pode não ter sido salva permanentemente",
-          variant: "destructive",
-        });
-      }
-    } else {
-      console.warn('⚠️ Persistência pulada - dados insuficientes:', {
-        userId: user?.id,
-        hasFile: !!policy.file
-      });
+      case 'policies':
+        return <MyPolicies />;
       
-      toast({
-        title: "✅ Apólice Processada",
-        description: "Apólice adicionada ao dashboard (persistência pode ser limitada sem arquivo)",
-      });
-    }
-  };
-
-  // Função auxiliar para gerar parcelas a partir de um número
-  const generateInstallmentsFromNumber = (numberOfInstallments: number, monthlyAmount: number, startDate: string) => {
-    const installments = [];
-    const baseDate = new Date(startDate);
-    
-    for (let i = 0; i < numberOfInstallments; i++) {
-      const installmentDate = new Date(baseDate);
-      installmentDate.setMonth(installmentDate.getMonth() + i);
+      case 'upload':
+        return <EnhancedPDFUpload />;
       
-      installments.push({
-        numero: i + 1,
-        valor: monthlyAmount,
-        data: installmentDate.toISOString().split('T')[0],
-        status: installmentDate < new Date() ? 'paga' : 'pendente'
-      });
-    }
-    
-    return installments;
-  };
-
-  // Função auxiliar para gerar parcelas padrão
-  const generateDefaultInstallments = (monthlyAmount: number, startDate: string) => {
-    return generateInstallmentsFromNumber(12, monthlyAmount || 100, startDate);
-  };
-
-  const handlePolicySelect = (policy: any) => {
-    setSelectedPolicy(policy);
-    setIsDetailsModalOpen(true);
-  };
-
-  const handlePolicyUpdate = async (updatedPolicy: any) => {
-    // Tentar atualizar no banco primeiro (se for persistida)
-    const isPersistedPolicy = persistedPolicies.some(p => p.id === updatedPolicy.id);
-    
-    if (isPersistedPolicy) {
-      const success = await updatePersistedPolicy(updatedPolicy.id, updatedPolicy);
-      if (!success) return; // Erro já mostrado no hook
-    } else {
-      // Atualizar apenas no estado local (apólices extraídas)
-      setExtractedPolicies(prev => 
-        prev.map(policy => 
-          policy.id === updatedPolicy.id ? updatedPolicy : policy
-        )
-      );
+      case 'admin':
+        return user?.role === 'administrador' ? <AdminDashboardNew /> : (
+          <div className="text-center py-8">
+            <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">Acesso restrito para administradores</p>
+          </div>
+        );
       
-      toast({
-        title: "Apólice Atualizada",
-        description: "As informações foram salvas com sucesso",
-      });
+      case 'contacts':
+        return <ContactSection />;
+      
+      case 'settings':
+        return <OptimizedSettings />;
+      
+      default:
+        return null;
     }
   };
-
-  const handleDeletePolicy = async (policyId: string) => {
-    console.log(`🗑️ Tentando deletar apólice: ${policyId}`);
-    
-    // Tentar deletar do banco primeiro (se for persistida)
-    const isPersistedPolicy = persistedPolicies.some(p => p.id === policyId);
-    
-    if (isPersistedPolicy) {
-      console.log('📝 Apólice persistida - usando deleção do banco');
-      const success = await deletePersistedPolicy(policyId);
-      if (!success) {
-        console.error('❌ Falha na deleção da apólice persistida');
-      }
-    } else {
-      console.log('📝 Apólice local - removendo do estado');
-      // Deletar apenas do estado local (apólices extraídas)
-      const policyToDelete = extractedPolicies.find(p => p.id === policyId);
-      if (policyToDelete) {
-        setExtractedPolicies(prev => prev.filter(p => p.id !== policyId));
-        
-        toast({
-          title: "✅ Apólice Removida",
-          description: "A apólice foi removida com sucesso",
-        });
-      }
-    }
-  };
-
-  const handleUserUpdate = async (updatedUser: any) => {
-    const success = await updateUser(updatedUser.id, updatedUser);
-    // O toast já é mostrado no hook usePersistedUsers
-    if (!success) {
-      // Toast de erro já foi mostrado no hook
-    }
-  };
-
-  const handleUserDelete = async (userId: string) => {
-    await deleteUser(userId);
-    // O toast já é mostrado no hook usePersistedUsers
-  };
-
-  const handleClientRegister = async (client: any) => {
-    await addUser(client);
-    // O toast já é mostrado no hook usePersistedUsers
-  };
-
-  // Normalizar dados das apólices para garantir compatibilidade com todos os componentes
-  // IMPORTANTE: Usar allPolicies (que inclui persistidas) e não apenas extractedPolicies
-  const normalizedPolicies = allPolicies.map(policy => ({
-    ...policy,
-    // Manter installments como array - já é o formato correto
-    installments: policy.installments
-  }));
-
-  console.log(`🔍 DashboardContent: Total de apólices (incluindo persistidas): ${allPolicies.length}`);
-  console.log(`📊 Apólices persistidas: ${persistedPolicies.length}, Extraídas: ${extractedPolicies.length}`);
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar onSectionChange={setActiveSection} activeSection={activeSection} />
-        <SidebarInset>
-          <Navbar 
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            notificationCount={enhancedDashboardStats.duingNext30Days}
-            policies={normalizedPolicies}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Shield className="h-8 w-8 text-blue-600" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">SmartApólice</h1>
+                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded tracking-wider">
+                  BETA
+                </span>
+              </div>
+            </div>
 
-          <div className="flex-1">
-            <WelcomeSection />
-            
-            <div id="dashboard-content" className="dashboard-content">
-              <ContentRenderer
-                activeSection={activeSection}
-                searchTerm={searchTerm}
-                filterType={filterType}
-                allPolicies={normalizedPolicies}
-                extractedPolicies={normalizedPolicies}
-                allUsers={persistedUsers}
-                usersLoading={usersLoading}
-                onPolicySelect={handlePolicySelect}
-                onPolicyUpdate={handlePolicyUpdate}
-                onPolicyDelete={handleDeletePolicy}
-                onPolicyDownload={downloadPersistedPDF}
-                onPolicyExtracted={handlePolicyExtracted}
-                onUserUpdate={handleUserUpdate}
-                onUserDelete={handleUserDelete}
-                onClientRegister={handleClientRegister}
-                onSectionChange={setActiveSection}
-              />
+            {/* User Menu */}
+            <div className="flex items-center space-x-4">
+              <AlertsPanel />
+              
+              <div className="flex items-center space-x-3">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                  <Badge variant="secondary" className="text-xs">
+                    {user?.role === 'administrador' ? 'Admin' : 'Cliente'}
+                  </Badge>
+                </div>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
+        </div>
+      </header>
 
-          <PolicyDetailsModal 
-            isOpen={isDetailsModalOpen}
-            onClose={() => setIsDetailsModalOpen(false)}
-            policy={selectedPolicy}
-            onDelete={handleDeletePolicy}
-          />
-        </SidebarInset>
+      {/* Navigation Tabs */}
+      <div className="bg-white/60 backdrop-blur-sm border-b border-gray-200/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-6 bg-transparent h-auto p-0">
+              <TabsTrigger 
+                value="dashboard" 
+                className="flex items-center space-x-2 py-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+              >
+                <TrendingUp className="h-4 w-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="policies" 
+                className="flex items-center space-x-2 py-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+              >
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">Minhas Apólices</span>
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="upload" 
+                className="flex items-center space-x-2 py-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+              >
+                <Upload className="h-4 w-4" />
+                <span className="hidden sm:inline">Upload</span>
+              </TabsTrigger>
+
+              {user?.role === 'administrador' && (
+                <TabsTrigger 
+                  value="admin" 
+                  className="flex items-center space-x-2 py-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+                >
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Admin</span>
+                </TabsTrigger>
+              )}
+              
+              <TabsTrigger 
+                value="contacts" 
+                className="flex items-center space-x-2 py-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+              >
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Contatos</span>
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="settings" 
+                className="flex items-center space-x-2 py-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Configurações</span>
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Content */}
+            <div className="min-h-[calc(100vh-8rem)]">
+              <TabsContent value={activeTab} className="mt-6 pb-8">
+                {renderTabContent()}
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
       </div>
-    </SidebarProvider>
+
+      {/* Floating Action Button */}
+      <Button
+        onClick={() => setShowNewPolicyModal(true)}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-blue-600 hover:bg-blue-700"
+        size="icon"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
+
+      {/* New Policy Modal */}
+      <NewPolicyModal 
+        isOpen={showNewPolicyModal}
+        onClose={() => setShowNewPolicyModal(false)}
+      />
+    </div>
   );
-}
+};

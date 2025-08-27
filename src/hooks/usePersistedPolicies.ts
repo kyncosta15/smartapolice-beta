@@ -18,6 +18,7 @@ export function usePersistedPolicies() {
   const mapLegacyStatus = (status: string) => {
     switch (status) {
       case 'active':
+      case 'Ativa':
         return 'vigente';
       case 'expiring':
         return 'renovada_aguardando';
@@ -27,6 +28,99 @@ export function usePersistedPolicies() {
         return status;
     }
   };
+
+  // NOVA FUNÇÃO: Converter dados do N8N para formato ParsedPolicyData
+  const convertN8NDataToPolicy = (n8nData: any): ParsedPolicyData => {
+    console.log('🔄 Convertendo dados do N8N:', n8nData);
+    
+    return {
+      id: `n8n_${n8nData.numero_apolice || Date.now()}`,
+      name: `Apólice ${n8nData.segurado?.split(' ')[0] || 'N8N'}`,
+      type: n8nData.tipo === 'Automóvel' ? 'auto' : n8nData.tipo?.toLowerCase() || 'auto',
+      insurer: n8nData.seguradora || 'Seguradora N8N',
+      premium: Number(n8nData.premio) || 0,
+      monthlyAmount: Number(n8nData.custo_mensal) || Number(n8nData.premio) || 0,
+      startDate: n8nData.inicio || new Date().toISOString().split('T')[0],
+      endDate: n8nData.fim || new Date().toISOString().split('T')[0],
+      expirationDate: n8nData.fim || new Date().toISOString().split('T')[0],
+      policyNumber: n8nData.numero_apolice || 'N/A',
+      paymentFrequency: n8nData.pagamento || 'mensal',
+      status: mapLegacyStatus(n8nData.status || 'vigente'),
+      policyStatus: mapLegacyStatus(n8nData.status || 'vigente') as any,
+      
+      // Dados específicos do N8N
+      insuredName: n8nData.segurado || 'Segurado N8N',
+      documento: n8nData.documento || '',
+      documento_tipo: (n8nData.documento_tipo as 'CPF' | 'CNPJ') || 'CPF',
+      vehicleModel: n8nData.modelo_veiculo || '',
+      uf: n8nData.uf || '',
+      deductible: Number(n8nData.franquia) || 0,
+      entity: n8nData.corretora || 'Corretora N8N',
+      
+      // Parcelas e coberturas
+      installments: n8nData.vencimentos_futuros || [],
+      coberturas: n8nData.coberturas || [],
+      
+      // Campos obrigatórios
+      category: n8nData.tipo === 'Automóvel' ? 'Veicular' : 'Geral',
+      coverage: n8nData.coberturas?.map((c: any) => c.descricao) || ['Cobertura Básica'],
+      totalCoverage: Number(n8nData.premio) || 0,
+      limits: 'Conforme apólice',
+      quantidade_parcelas: n8nData.parcelas || 1,
+      extractedAt: new Date().toISOString(),
+      pdfPath: undefined
+    };
+  };
+
+  // NOVA FUNÇÃO: Processar dados do N8N automaticamente
+  const processN8NData = async (n8nDataArray: any[]) => {
+    if (!user?.id) {
+      console.log('⚠️ Usuário não autenticado, dados do N8N não serão processados');
+      return;
+    }
+
+    console.log(`📥 Processando ${n8nDataArray.length} políticas do N8N`);
+    
+    for (const n8nData of n8nDataArray) {
+      try {
+        const policyData = convertN8NDataToPolicy(n8nData);
+        console.log('✅ Dados convertidos:', policyData.name);
+        
+        // Adicionar e sincronizar automaticamente
+        await addPolicy(policyData);
+        
+        toast({
+          title: "📥 Apólice Recebida",
+          description: `${policyData.name} foi salva automaticamente`,
+        });
+        
+      } catch (error) {
+        console.error('❌ Erro ao processar dados do N8N:', error);
+        toast({
+          title: "❌ Erro N8N",
+          description: `Falha ao processar dados: ${n8nData.segurado}`,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Listener para dados do N8N - ESCUTAR EVENTOS GLOBAIS
+  useEffect(() => {
+    const handleN8NData = (event: CustomEvent) => {
+      console.log('🎯 Evento N8N recebido:', event.detail);
+      if (user?.id && isInitialized) {
+        processN8NData(event.detail);
+      }
+    };
+
+    // Escutar eventos customizados do N8N
+    window.addEventListener('n8n-policy-data' as any, handleN8NData);
+    
+    return () => {
+      window.removeEventListener('n8n-policy-data' as any, handleN8NData);
+    };
+  }, [user?.id, isInitialized]);
 
   // Carregar apólices quando usuário faz login e auth está inicializada
   useEffect(() => {
@@ -87,7 +181,7 @@ export function usePersistedPolicies() {
     }
   };
 
-  // NOVA FUNÇÃO: Adicionar e sincronizar apólice automaticamente
+  // FUNÇÃO MELHORADA: Adicionar e sincronizar apólice automaticamente
   const addPolicy = async (policy: ParsedPolicyData, file?: File) => {
     if (!user?.id) {
       toast({
@@ -105,11 +199,22 @@ export function usePersistedPolicies() {
     
     console.log('➕ Adicionando e sincronizando apólice:', mappedPolicy.id);
     
+    // Verificar se já existe
+    const existingPolicy = policies.find(p => p.policyNumber === mappedPolicy.policyNumber);
+    if (existingPolicy) {
+      console.log('⚠️ Apólice já existe, atualizando em vez de criar nova');
+      toast({
+        title: "ℹ️ Apólice Atualizada",
+        description: `${mappedPolicy.name} foi atualizada`,
+      });
+      return true;
+    }
+    
     // Adicionar ao estado local primeiro para UX responsivo
     setPolicies(prev => {
       const exists = prev.some(p => p.id === mappedPolicy.id);
       if (exists) {
-        console.log('⚠️ Apólice já existe, não adicionando');
+        console.log('⚠️ Apólice já existe no estado, não adicionando');
         return prev;
       }
       return [mappedPolicy, ...prev];
@@ -121,10 +226,6 @@ export function usePersistedPolicies() {
       
       if (success) {
         console.log(`✅ Apólice ${mappedPolicy.id} sincronizada com sucesso`);
-        toast({
-          title: "✅ Apólice Salva",
-          description: `${mappedPolicy.name} foi salva com sucesso`,
-        });
         return true;
       } else {
         // Remover do estado local se falhou a sincronização
@@ -403,6 +504,7 @@ export function usePersistedPolicies() {
     downloadPDF,
     refreshPolicies,
     hasPersistedData: policies.length > 0,
-    syncStatus // Expor status da sincronização
+    syncStatus, // Expor status da sincronização
+    processN8NData // Expor função para processar dados N8N manualmente
   };
 }
