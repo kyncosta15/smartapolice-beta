@@ -12,10 +12,13 @@ interface FinancialChartsProps {
 
 export function FinancialCharts({ financialData }: FinancialChartsProps) {
   // Processar dados para garantir que nomes sejam strings usando extractFieldValue
-  const processedData = financialData.map(item => ({
-    ...item,
-    name: extractFieldValue(item.name) || 'Não informado'
-  }));
+  const processedData = financialData.map(item => {
+    const safeName = extractFieldValue(item.name);
+    return {
+      ...item,
+      name: safeName || 'Não informado'
+    };
+  });
 
   return (
     <Card>
