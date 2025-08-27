@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData } from './policyDataParser';
 import { extractFieldValue } from './extractFieldValue';
 
@@ -30,6 +29,41 @@ export interface DashboardData {
     pessoaFisica: number;
     pessoaJuridica: number;
   };
+}
+
+// Chart data calculation functions
+export function calculateStatusChartData(policies: ParsedPolicyData[]) {
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'];
+  
+  const statusMap = new Map<string, number>();
+  
+  policies.forEach(policy => {
+    const status = policy.status || 'Ativa';
+    statusMap.set(status, (statusMap.get(status) || 0) + 1);
+  });
+
+  return Array.from(statusMap.entries()).map(([name, count], index) => ({
+    name,
+    count,
+    color: COLORS[index % COLORS.length]
+  }));
+}
+
+export function calculateInsurerChartData(policies: ParsedPolicyData[]) {
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16'];
+  
+  const insurerMap = new Map<string, number>();
+  
+  policies.forEach(policy => {
+    const insurerName = extractFieldValue(policy.insurer) || 'Não informado';
+    insurerMap.set(insurerName, (insurerMap.get(insurerName) || 0) + 1);
+  });
+
+  return Array.from(insurerMap.entries()).map(([insurer, count], index) => ({
+    insurer,
+    count,
+    color: COLORS[index % COLORS.length]
+  }));
 }
 
 export function calculateDashboardMetrics(policies: ParsedPolicyData[]): DashboardData {
