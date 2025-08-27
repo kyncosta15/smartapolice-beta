@@ -9,7 +9,7 @@ export function usePersistedPolicies() {
   const [policies, setPolicies] = useState<ParsedPolicyData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, isInitialized } = useAuth();
   const { toast } = useToast();
 
   // Mapeamento de status para compatibilidade com dados antigos
@@ -26,21 +26,34 @@ export function usePersistedPolicies() {
     }
   };
 
-  // Carregar apólices quando usuário faz login
+  // Carregar apólices quando usuário faz login e auth está inicializada
   useEffect(() => {
-    if (user?.id) {
-      loadPersistedPolicies();
-    } else {
-      // Limpar dados quando usuário faz logout
-      setPolicies([]);
+    console.log('🔄 usePersistedPolicies useEffect:', { 
+      userId: user?.id, 
+      isInitialized,
+      currentPoliciesCount: policies.length 
+    });
+
+    if (isInitialized) {
+      if (user?.id) {
+        console.log('📋 Usuário autenticado, carregando apólices...');
+        loadPersistedPolicies();
+      } else {
+        console.log('🚫 Usuário não autenticado, limpando dados...');
+        // Limpar dados quando usuário faz logout
+        setPolicies([]);
+        setError(null);
+      }
     }
-  }, [user?.id]);
+  }, [user?.id, isInitialized]); // Incluir isInitialized nas dependências
 
   const loadPersistedPolicies = async () => {
     if (!user?.id) {
+      console.log('⚠️ loadPersistedPolicies: Usuário não identificado');
       return;
     }
 
+    console.log('🔄 Iniciando carregamento de apólices para usuário:', user.id);
     setIsLoading(true);
     setError(null);
 
@@ -48,6 +61,7 @@ export function usePersistedPolicies() {
       // Primeiro, limpar duplicatas se existirem
       const cleanedCount = await PolicyPersistenceService.cleanupDuplicatePolicies(user.id);
       if (cleanedCount > 0) {
+        console.log(`🧹 ${cleanedCount} apólices duplicadas removidas`);
         toast({
           title: "🧹 Limpeza Realizada",
           description: `${cleanedCount} apólices duplicadas foram removidas`,
@@ -55,6 +69,7 @@ export function usePersistedPolicies() {
       }
       
       const loadedPolicies = await PolicyPersistenceService.loadUserPolicies(user.id);
+      console.log(`📋 ${loadedPolicies.length} apólices carregadas do banco`);
       
       // Mapear status para novos valores
       const mappedPolicies = loadedPolicies.map(policy => ({
@@ -63,9 +78,11 @@ export function usePersistedPolicies() {
       }));
       
       setPolicies(mappedPolicies);
+      console.log('✅ Apólices definidas no estado:', mappedPolicies.length);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados';
+      console.error('❌ Erro ao carregar apólices:', err);
       setError(errorMessage);
       
       toast({
@@ -85,7 +102,15 @@ export function usePersistedPolicies() {
       status: mapLegacyStatus(policy.status)
     };
     
-    setPolicies(prev => [mappedPolicy, ...prev]);
+    console.log('➕ Adicionando apólice ao estado:', mappedPolicy.id);
+    setPolicies(prev => {
+      const exists = prev.some(p => p.id === mappedPolicy.id);
+      if (exists) {
+        console.log('⚠️ Apólice já existe, não adicionando');
+        return prev;
+      }
+      return [mappedPolicy, ...prev];
+    });
   };
 
   // Remover apólice da lista IMEDIATAMENTE para melhor UX
@@ -335,7 +360,8 @@ export function usePersistedPolicies() {
 
   // Recarregar dados
   const refreshPolicies = () => {
-    if (user?.id) {
+    if (user?.id && isInitialized) {
+      console.log('🔄 Refresh manual das apólices solicitado');
       loadPersistedPolicies();
     }
   };

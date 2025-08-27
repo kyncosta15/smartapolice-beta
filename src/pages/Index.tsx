@@ -5,16 +5,18 @@ import { DashboardContent } from '@/components/DashboardContent';
 import { Shield, Loader2 } from 'lucide-react';
 
 const AppContent = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isInitialized } = useAuth();
 
   console.log('🎯 AppContent render:', { 
-    user: user?.name || 'None', 
+    user: user?.name || 'Nenhum', 
     isLoading,
+    isInitialized,
     userExists: !!user 
   });
 
-  if (isLoading) {
-    console.log('⏳ Showing loading screen');
+  // Mostrar loading apenas enquanto auth não foi inicializada
+  if (!isInitialized || isLoading) {
+    console.log('⏳ Mostrando tela de loading');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center space-y-6">
@@ -33,7 +35,7 @@ const AppContent = () => {
               </span>
             </div>
             <p className="text-gray-600">
-              Carregando sua central inteligente...
+              {isInitialized ? 'Carregando dados do usuário...' : 'Inicializando sistema...'}
             </p>
           </div>
           
@@ -51,16 +53,16 @@ const AppContent = () => {
   }
 
   if (!user) {
-    console.log('🔐 No user found, showing auth page');
+    console.log('🔐 Usuário não encontrado, mostrando página de auth');
     return <AuthPage />;
   }
 
-  console.log('✅ User authenticated, showing dashboard for:', user.name);
+  console.log('✅ Usuário autenticado, mostrando dashboard para:', user.name);
   return <DashboardContent />;
 };
 
 const Index = () => {
-  console.log('🚀 Index component mounted');
+  console.log('🚀 Componente Index montado');
   
   return (
     <AuthProvider>
