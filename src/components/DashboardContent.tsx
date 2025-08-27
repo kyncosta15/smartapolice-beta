@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -8,7 +9,6 @@ import { ContentRenderer } from '@/components/ContentRenderer';
 import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { usePersistedUsers } from '@/hooks/usePersistedUsers';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
@@ -89,7 +89,6 @@ export function DashboardContent() {
       monthlyAmount: policy.monthlyAmount || (parseFloat(policy.premium) / 12) || 0,
       premium: policy.premium || 0,
       deductible: policy.deductible || Math.floor(Math.random() * 5000) + 1000,
-      limits: 'R$ 100.000 por sinistro',
       installments: Array.isArray(policy.installments) ? policy.installments : 
                    policy.installments ? generateInstallmentsFromNumber(policy.installments, policy.monthlyAmount, policy.startDate) :
                    generateDefaultInstallments(policy.monthlyAmount, policy.startDate),
