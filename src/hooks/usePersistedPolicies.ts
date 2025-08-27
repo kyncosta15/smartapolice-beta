@@ -4,6 +4,7 @@ import { PolicyPersistenceService } from '@/services/policyPersistenceService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePolicySync } from './usePolicySync';
+import { supabase } from '@/integrations/supabase/client';
 
 export function usePersistedPolicies() {
   const [policies, setPolicies] = useState<ParsedPolicyData[]>([]);
