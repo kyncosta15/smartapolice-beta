@@ -22,7 +22,8 @@ export interface DashboardMetrics {
   }>;
   monthlyEvolution: Array<{
     month: string;
-    cost: number;
+    custo: number;
+    apolices: number;
   }>;
   insights: Array<{
     type: 'info' | 'warning' | 'error';
@@ -168,7 +169,7 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]): Dashboar
       total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica
     });
 
-    // Gerar evolução mensal dinâmica
+    // Gerar evolução mensal dinâmica com estrutura correta
     console.log('📅 Gerando projeção dinâmica de 12 meses a partir de:', new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(today));
     
     const monthlyEvolution = [];
@@ -180,7 +181,8 @@ export function useDashboardCalculations(policies: ParsedPolicyData[]): Dashboar
       
       monthlyEvolution.push({
         month: monthName,
-        cost: Math.round(totalMonthlyCost)
+        custo: Math.round(totalMonthlyCost),
+        apolices: totalPolicies
       });
     }
     
