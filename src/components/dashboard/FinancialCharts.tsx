@@ -13,10 +13,26 @@ interface FinancialChartsProps {
 export function FinancialCharts({ financialData }: FinancialChartsProps) {
   // Processar dados para garantir que nomes sejam strings usando extractFieldValue
   const processedData = financialData.map(item => {
-    const safeName = extractFieldValue(item.name);
+    let safeName = 'Não informado';
+    
+    // Se name já é uma string válida, usar diretamente
+    if (typeof item.name === 'string' && item.name.trim() !== '') {
+      safeName = item.name;
+    } else {
+      // Caso contrário, tentar extrair usando extractFieldValue
+      const extractedName = extractFieldValue(item.name);
+      safeName = extractedName || 'Não informado';
+    }
+    
+    console.log('📊 FinancialCharts processando item:', { 
+      original: item.name, 
+      processed: safeName,
+      type: typeof item.name
+    });
+
     return {
       ...item,
-      name: safeName || 'Não informado'
+      name: safeName
     };
   });
 
