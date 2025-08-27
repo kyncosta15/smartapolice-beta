@@ -3,7 +3,7 @@ import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyPersistenceService } from '@/services/policyPersistenceService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { usePolicySync } from './usePolicySync';
 
 export function usePersistedPolicies() {
   const [policies, setPolicies] = useState<ParsedPolicyData[]>([]);
@@ -11,8 +11,9 @@ export function usePersistedPolicies() {
   const [error, setError] = useState<string | null>(null);
   const { user, isInitialized } = useAuth();
   const { toast } = useToast();
+  const { syncStatus, syncPolicyToDatabase, loadPoliciesFromDatabase } = usePolicySync();
 
-  // Mapeamento de status para compatibilidade com dados antigos
+  // Mapeamento de status para compatibilidade
   const mapLegacyStatus = (status: string) => {
     switch (status) {
       case 'active':
@@ -40,12 +41,11 @@ export function usePersistedPolicies() {
         loadPersistedPolicies();
       } else {
         console.log('🚫 Usuário não autenticado, limpando dados...');
-        // Limpar dados quando usuário faz logout
         setPolicies([]);
         setError(null);
       }
     }
-  }, [user?.id, isInitialized]); // Incluir isInitialized nas dependências
+  }, [user?.id, isInitialized]);
 
   const loadPersistedPolicies = async () => {
     if (!user?.id) {
@@ -58,17 +58,8 @@ export function usePersistedPolicies() {
     setError(null);
 
     try {
-      // Primeiro, limpar duplicatas se existirem
-      const cleanedCount = await PolicyPersistenceService.cleanupDuplicatePolicies(user.id);
-      if (cleanedCount > 0) {
-        console.log(`🧹 ${cleanedCount} apólices duplicadas removidas`);
-        toast({
-          title: "🧹 Limpeza Realizada",
-          description: `${cleanedCount} apólices duplicadas foram removidas`,
-        });
-      }
-      
-      const loadedPolicies = await PolicyPersistenceService.loadUserPolicies(user.id);
+      // Usar o hook de sincronização para carregar do banco
+      const loadedPolicies = await loadPoliciesFromDatabase();
       console.log(`📋 ${loadedPolicies.length} apólices carregadas do banco`);
       
       // Mapear status para novos valores
@@ -95,14 +86,25 @@ export function usePersistedPolicies() {
     }
   };
 
-  // Adicionar nova apólice à lista
-  const addPolicy = (policy: ParsedPolicyData) => {
+  // NOVA FUNÇÃO: Adicionar e sincronizar apólice automaticamente
+  const addPolicy = async (policy: ParsedPolicyData, file?: File) => {
+    if (!user?.id) {
+      toast({
+        title: "❌ Erro de Autenticação",
+        description: "Usuário não autenticado",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     const mappedPolicy = {
       ...policy,
       status: mapLegacyStatus(policy.status)
     };
     
-    console.log('➕ Adicionando apólice ao estado:', mappedPolicy.id);
+    console.log('➕ Adicionando e sincronizando apólice:', mappedPolicy.id);
+    
+    // Adicionar ao estado local primeiro para UX responsivo
     setPolicies(prev => {
       const exists = prev.some(p => p.id === mappedPolicy.id);
       if (exists) {
@@ -111,6 +113,29 @@ export function usePersistedPolicies() {
       }
       return [mappedPolicy, ...prev];
     });
+
+    // Sincronizar com o banco em background
+    try {
+      const success = await syncPolicyToDatabase(mappedPolicy, file);
+      
+      if (success) {
+        console.log(`✅ Apólice ${mappedPolicy.id} sincronizada com sucesso`);
+        toast({
+          title: "✅ Apólice Salva",
+          description: `${mappedPolicy.name} foi salva com sucesso`,
+        });
+        return true;
+      } else {
+        // Remover do estado local se falhou a sincronização
+        setPolicies(prev => prev.filter(p => p.id !== mappedPolicy.id));
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Erro na sincronização da apólice:', error);
+      // Remover do estado local se falhou a sincronização
+      setPolicies(prev => prev.filter(p => p.id !== mappedPolicy.id));
+      return false;
+    }
   };
 
   // Remover apólice da lista IMEDIATAMENTE para melhor UX
@@ -368,14 +393,15 @@ export function usePersistedPolicies() {
 
   return {
     policies,
-    isLoading,
+    isLoading: isLoading || syncStatus === 'syncing',
     error,
-    addPolicy,
+    addPolicy, // Função atualizada com sincronização automática
     removePolicy,
     deletePolicy,
     updatePolicy,
     downloadPDF,
     refreshPolicies,
-    hasPersistedData: policies.length > 0
+    hasPersistedData: policies.length > 0,
+    syncStatus // Expor status da sincronização
   };
 }
