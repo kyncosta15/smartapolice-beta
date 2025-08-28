@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
 export interface N8NDirectData {
@@ -150,8 +149,7 @@ export class N8NDataConverter {
                normalizedType === 'saude' ? 'Saúde' : 
                normalizedType === 'empresarial' ? 'Empresarial' : 'Geral',
       coverage: coberturas.map(c => c.descricao),
-      totalCoverage: data.premio,
-      limits: 'Conforme apólice'
+      totalCoverage: data.premio
     };
 
     console.log('✅ Conversão N8N concluída:', {
