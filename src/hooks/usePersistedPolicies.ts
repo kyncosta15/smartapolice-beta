@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyPersistenceService } from '@/services/policyPersistenceService';
@@ -13,23 +12,40 @@ export function usePersistedPolicies() {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Mapeamento de status para compatibilidade com dados antigos
+  const mapLegacyStatus = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'vigente';
+      case 'expiring':
+        return 'renovada_aguardando';
+      case 'expired':
+        return 'nao_renovada';
+      default:
+        return status;
+    }
+  };
+
   // Carregar apólices quando usuário faz login
   useEffect(() => {
     if (user?.id) {
       loadPersistedPolicies();
     } else {
+      // Limpar dados quando usuário faz logout
       setPolicies([]);
     }
   }, [user?.id]);
 
   const loadPersistedPolicies = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
 
     try {
-      // Limpar duplicatas se existirem
+      // Primeiro, limpar duplicatas se existirem
       const cleanedCount = await PolicyPersistenceService.cleanupDuplicatePolicies(user.id);
       if (cleanedCount > 0) {
         toast({
@@ -39,7 +55,14 @@ export function usePersistedPolicies() {
       }
       
       const loadedPolicies = await PolicyPersistenceService.loadUserPolicies(user.id);
-      setPolicies(loadedPolicies);
+      
+      // Mapear status para novos valores
+      const mappedPolicies = loadedPolicies.map(policy => ({
+        ...policy,
+        status: mapLegacyStatus(policy.status)
+      }));
+      
+      setPolicies(mappedPolicies);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados';
@@ -55,13 +78,17 @@ export function usePersistedPolicies() {
     }
   };
 
-  // Adicionar nova apólice à lista PRESERVANDO dados originais
+  // Adicionar nova apólice à lista
   const addPolicy = (policy: ParsedPolicyData) => {
-    console.log('➕ Adicionando apólice ORIGINAL ao estado:', policy.name);
-    setPolicies(prev => [policy, ...prev]);
+    const mappedPolicy = {
+      ...policy,
+      status: mapLegacyStatus(policy.status)
+    };
+    
+    setPolicies(prev => [mappedPolicy, ...prev]);
   };
 
-  // Remover apólice IMEDIATAMENTE do estado para melhor UX
+  // Remover apólice da lista IMEDIATAMENTE para melhor UX
   const removePolicy = (policyId: string) => {
     setPolicies(prev => {
       const newPolicies = prev.filter(p => p.id !== policyId);
@@ -70,7 +97,7 @@ export function usePersistedPolicies() {
     });
   };
 
-  // FUNÇÃO MELHORADA: Deletar apólice com persistência completa
+  // FUNÇÃO MELHORADA: Deletar apólice com sincronização otimizada
   const deletePolicy = async (policyId: string): Promise<boolean> => {
     if (!user?.id) {
       toast({
@@ -81,6 +108,7 @@ export function usePersistedPolicies() {
       return false;
     }
 
+    // Verificar se a apólice existe no estado local antes de deletar
     const policyExists = policies.find(p => p.id === policyId);
     if (!policyExists) {
       toast({
@@ -91,13 +119,13 @@ export function usePersistedPolicies() {
       return false;
     }
 
-    console.log(`🗑️ Iniciando deleção COMPLETA da apólice: ${policyId}`);
+    console.log(`🗑️ Iniciando deleção sincronizada da apólice: ${policyId}`);
     
-    // Remover do estado local IMEDIATAMENTE
+    // OTIMIZAÇÃO 1: Remover do estado local IMEDIATAMENTE para melhor UX
     removePolicy(policyId);
 
     try {
-      // Verificar se existe no banco
+      // OTIMIZAÇÃO 2: Verificar se a apólice ainda existe no banco antes de tentar deletar
       const { data: existingPolicy, error: checkError } = await supabase
         .from('policies')
         .select('id')
@@ -106,28 +134,31 @@ export function usePersistedPolicies() {
         .single();
 
       if (checkError?.code === 'PGRST116') {
+        // Apólice já não existe no banco - sucesso silencioso
         console.log(`✅ Apólice ${policyId} já foi removida do banco`);
         return true;
       }
 
       if (checkError) {
         console.error('❌ Erro ao verificar existência da apólice:', checkError);
+        // Restaurar no estado local em caso de erro
         setPolicies(prev => [policyExists, ...prev]);
         throw new Error("Erro ao verificar apólice no banco");
       }
 
-      // Obter sessão atualizada
+      // OTIMIZAÇÃO 3: Obter token atualizado
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session?.access_token) {
         console.error('❌ Erro na sessão:', sessionError);
+        // Restaurar no estado local
         setPolicies(prev => [policyExists, ...prev]);
         throw new Error("Sessão inválida - faça login novamente");
       }
 
-      console.log(`🔑 Chamando Edge Function para deletar ${policyId}`);
+      console.log(`🔑 Token obtido, chamando Edge Function para deletar ${policyId}`);
       
-      // Chamar Edge Function para deleção completa
+      // OTIMIZAÇÃO 4: Chamar Edge Function com timeout reduzido
       const response = await fetch(`https://jhvbfvqhuemuvwgqpskz.supabase.co/functions/v1/delete-policy`, {
         method: 'POST',
         headers: {
@@ -136,7 +167,7 @@ export function usePersistedPolicies() {
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpodmJmdnFodWVtdXZ3Z3Fwc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTI2MDEsImV4cCI6MjA2Njg4ODYwMX0.V8I0byW7xs0iMBEBc6C3h0lvPhgPZ4mGwjfm31XkEQg'
         },
         body: JSON.stringify({ policyId }),
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(10000) // Timeout de 10 segundos
       });
       
       console.log(`📡 Response status: ${response.status}`);
@@ -144,6 +175,8 @@ export function usePersistedPolicies() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Erro na resposta da Edge Function:', errorText);
+        
+        // Restaurar no estado local em caso de erro
         setPolicies(prev => [policyExists, ...prev]);
         
         if (response.status === 401) {
@@ -154,23 +187,25 @@ export function usePersistedPolicies() {
       }
       
       const result = await response.json();
-      console.log('✅ Apólice deletada COMPLETAMENTE:', result);
+      console.log('✅ Resposta da Edge Function:', result);
       
       return true;
       
     } catch (error) {
       console.error('❌ Erro detalhado na deleção:', error);
       
+      // OTIMIZAÇÃO 5: Restaurar apólice no estado local apenas em caso de erro real
       const stillExists = policies.find(p => p.id === policyId);
       if (!stillExists) {
         setPolicies(prev => [policyExists, ...prev]);
       }
       
+      // Não mostrar toast de erro aqui - será tratado no componente
       return false;
     }
   };
 
-  // Atualizar apólice PRESERVANDO dados originais
+  // Atualizar apólice no banco de dados
   const updatePolicy = async (policyId: string, updates: Partial<ParsedPolicyData>): Promise<boolean> => {
     if (!user?.id) {
       toast({
@@ -182,9 +217,10 @@ export function usePersistedPolicies() {
     }
 
     try {
-      // Converter dados para formato do banco PRESERVANDO originais
+      // Converter dados para formato do banco - mapeando TODOS os campos editáveis
       const dbUpdates: any = {};
       
+      // Campos básicos
       if (updates.name !== undefined) dbUpdates.segurado = updates.name;
       if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
       if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
@@ -193,8 +229,11 @@ export function usePersistedPolicies() {
       if (updates.monthlyAmount !== undefined) dbUpdates.custo_mensal = updates.monthlyAmount;
       if (updates.startDate !== undefined) dbUpdates.inicio_vigencia = updates.startDate;
       if (updates.endDate !== undefined) dbUpdates.fim_vigencia = updates.endDate;
-      if (updates.status !== undefined) dbUpdates.status = updates.status;
+      if (updates.status !== undefined) dbUpdates.status = mapLegacyStatus(updates.status);
+      if (updates.category !== undefined) dbUpdates.forma_pagamento = updates.category;
       if (updates.entity !== undefined) dbUpdates.corretora = updates.entity;
+      
+      // Campos específicos do N8N
       if (updates.insuredName !== undefined) dbUpdates.segurado = updates.insuredName;
       if (updates.documento !== undefined) dbUpdates.documento = updates.documento;
       if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = updates.documento_tipo;
@@ -208,16 +247,23 @@ export function usePersistedPolicies() {
         .eq('id', policyId)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      // Atualizar estado local PRESERVANDO dados originais
+      // Atualizar estado local com mapeamento de status
+      const mappedUpdates = {
+        ...updates,
+        status: updates.status ? mapLegacyStatus(updates.status) : undefined
+      };
+      
       setPolicies(prev => 
-        prev.map(p => p.id === policyId ? { ...p, ...updates } : p)
+        prev.map(p => p.id === policyId ? { ...p, ...mappedUpdates } : p)
       );
       
       toast({
         title: "✅ Apólice Atualizada",
-        description: "As alterações foram salvas preservando dados originais",
+        description: "As alterações foram salvas com sucesso",
       });
       
       return true;
@@ -231,7 +277,7 @@ export function usePersistedPolicies() {
     }
   };
 
-  // Obter URL de download para PDF
+  // Obter URL de download para um PDF
   const getPDFDownloadUrl = async (policyId: string): Promise<string | null> => {
     const policy = policies.find(p => p.id === policyId);
     
@@ -272,6 +318,7 @@ export function usePersistedPolicies() {
     const downloadUrl = await getPDFDownloadUrl(policyId);
     
     if (downloadUrl) {
+      // Criar link temporário para download
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = `${policyName}.pdf`;
@@ -286,7 +333,7 @@ export function usePersistedPolicies() {
     }
   };
 
-  // Recarregar dados PRESERVANDO originais
+  // Recarregar dados
   const refreshPolicies = () => {
     if (user?.id) {
       loadPersistedPolicies();
