@@ -96,26 +96,61 @@ export class N8NDataConverter {
     const mappedStatus = this.mapStatus(data.status);
     const normalizedType = this.normalizeInsuranceType(data.tipo);
     
-    // Calcular valor mensal - se parcelas = 0, usar o prêmio total dividido por 12
-    const monthlyAmount = data.custo_mensal > 0 ? data.custo_mensal : 
-                         data.parcelas > 0 ? data.premio / data.parcelas : 
-                         data.premio / 12; // Assumir pagamento anual dividido em 12x
+    // Calcular valor mensal corretamente baseado nos dados reais do N8N
+    let monthlyAmount = 0;
     
-    // Processar coberturas - garantir que sempre temos um array
+    if (data.custo_mensal > 0) {
+      // Se custo_mensal está definido, usar este valor
+      monthlyAmount = data.custo_mensal;
+    } else if (data.parcelas > 0 && data.valor_parcela > 0) {
+      // Se há parcelas definidas, usar valor_parcela
+      monthlyAmount = data.valor_parcela;
+    } else if (data.premio > 0) {
+      // Caso contrário, dividir prêmio por 12 meses
+      monthlyAmount = data.premio / 12;
+    }
+    
+    console.log('💰 Cálculo do valor mensal:', {
+      custo_mensal: data.custo_mensal,
+      parcelas: data.parcelas,
+      valor_parcela: data.valor_parcela,
+      premio: data.premio,
+      monthlyAmount_calculado: monthlyAmount
+    });
+    
+    // Processar coberturas - manter LMI como está no N8N (0 ou valor real)
     const coberturas = Array.isArray(data.coberturas) ? data.coberturas.map(cobertura => ({
       id: crypto.randomUUID(),
       descricao: cobertura.descricao,
-      lmi: cobertura.lmi > 0 ? cobertura.lmi : undefined
+      lmi: cobertura.lmi || undefined // Converter 0 para undefined
     })) : [];
 
-    // Gerar parcelas se necessário - se parcelas = 0, criar parcelas anuais
-    const installments = data.parcelas > 0 ? 
-      this.generateInstallments(data.parcelas, data.valor_parcela || monthlyAmount, data.inicio) :
-      this.generateInstallments(12, monthlyAmount, data.inicio); // 12 parcelas mensais por padrão
+    // Gerar parcelas baseado nos dados reais
+    let installments = [];
+    let quantidade_parcelas = 0;
+    
+    if (data.parcelas > 0) {
+      // Se há parcelas definidas, usar os dados do N8N
+      quantidade_parcelas = data.parcelas;
+      const valorParcela = data.valor_parcela > 0 ? data.valor_parcela : monthlyAmount;
+      installments = this.generateInstallments(data.parcelas, valorParcela, data.inicio);
+    } else {
+      // Se não há parcelas, assumir pagamento à vista ou criar parcelas mensais
+      quantidade_parcelas = 1; // Pagamento à vista
+      if (monthlyAmount > 0) {
+        // Criar uma única parcela com o valor total
+        installments = [{
+          numero: 1,
+          valor: data.premio,
+          data: data.inicio,
+          status: 'pendente' as const
+        }];
+      }
+    }
 
     const convertedPolicy: ParsedPolicyData = {
       id: policyId,
-      name: `Apólice ${data.segurado.split(' ')[0]}`,
+      name: `Apólice ${data.segurado}`,
       type: normalizedType,
       insurer: data.seguradora,
       premium: data.premio,
@@ -142,7 +177,7 @@ export class N8NDataConverter {
       // Parcelas e coberturas
       installments: installments,
       coberturas: coberturas,
-      quantidade_parcelas: data.parcelas > 0 ? data.parcelas : 12,
+      quantidade_parcelas: quantidade_parcelas,
       
       // Campos de compatibilidade
       category: normalizedType === 'auto' ? 'Veicular' : 
@@ -165,7 +200,9 @@ export class N8NDataConverter {
       name: convertedPolicy.name,
       status: convertedPolicy.status,
       coberturas: convertedPolicy.coberturas?.length || 0,
-      monthlyAmount: convertedPolicy.monthlyAmount
+      monthlyAmount: convertedPolicy.monthlyAmount,
+      quantidade_parcelas: convertedPolicy.quantidade_parcelas,
+      premium: convertedPolicy.premium
     });
 
     return convertedPolicy;
