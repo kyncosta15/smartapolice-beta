@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyPersistenceService } from '@/services/policyPersistenceService';
@@ -87,7 +88,7 @@ export function usePersistedPolicies() {
     }
   };
 
-  // FUNÇÃO ATUALIZADA: Adicionar e sincronizar apólice com persistência completa
+  // NOVA FUNÇÃO: Adicionar e sincronizar apólice automaticamente
   const addPolicy = async (policy: ParsedPolicyData, file?: File) => {
     if (!user?.id) {
       toast({
@@ -103,12 +104,7 @@ export function usePersistedPolicies() {
       status: mapLegacyStatus(policy.status)
     };
     
-    console.log('➕ Adicionando e sincronizando apólice com persistência completa:', {
-      policyId: mappedPolicy.id,
-      policyName: mappedPolicy.name,
-      hasFile: !!file,
-      fileName: file?.name
-    });
+    console.log('➕ Adicionando e sincronizando apólice:', mappedPolicy.id);
     
     // Adicionar ao estado local primeiro para UX responsivo
     setPolicies(prev => {
@@ -120,50 +116,31 @@ export function usePersistedPolicies() {
       return [mappedPolicy, ...prev];
     });
 
-    // Sincronizar com o banco usando persistência completa
+    // Sincronizar com o banco em background
     try {
-      let success = false;
-      
-      if (file) {
-        // PERSISTÊNCIA COMPLETA: Salvar arquivo + dados
-        console.log(`💾 Salvando com persistência completa (arquivo + dados)`);
-        success = await PolicyPersistenceService.savePolicyComplete(file, mappedPolicy, user.id);
-      } else {
-        // APENAS DADOS: Usar sincronização normal
-        console.log(`💾 Salvando apenas dados da apólice`);
-        success = await syncPolicyToDatabase(mappedPolicy);
-      }
+      const success = await syncPolicyToDatabase(mappedPolicy, file);
       
       if (success) {
-        console.log(`✅ Apólice ${mappedPolicy.id} persistida com sucesso`);
+        console.log(`✅ Apólice ${mappedPolicy.id} sincronizada com sucesso`);
         toast({
           title: "✅ Apólice Salva",
-          description: `${mappedPolicy.name} foi salva no banco de dados`,
+          description: `${mappedPolicy.name} foi salva com sucesso`,
         });
         return true;
       } else {
         // Remover do estado local se falhou a sincronização
         setPolicies(prev => prev.filter(p => p.id !== mappedPolicy.id));
-        toast({
-          title: "❌ Erro ao Salvar",
-          description: "Falha ao salvar a apólice no banco de dados",
-          variant: "destructive",
-        });
         return false;
       }
     } catch (error) {
-      console.error('❌ Erro na persistência da apólice:', error);
+      console.error('❌ Erro na sincronização da apólice:', error);
       // Remover do estado local se falhou a sincronização
       setPolicies(prev => prev.filter(p => p.id !== mappedPolicy.id));
-      toast({
-        title: "❌ Erro ao Salvar",
-        description: "Erro inesperado ao salvar a apólice",
-        variant: "destructive",
-      });
       return false;
     }
   };
 
+  // Remover apólice da lista IMEDIATAMENTE para melhor UX
   const removePolicy = (policyId: string) => {
     setPolicies(prev => {
       const newPolicies = prev.filter(p => p.id !== policyId);
@@ -172,6 +149,7 @@ export function usePersistedPolicies() {
     });
   };
 
+  // FUNÇÃO MELHORADA: Deletar apólice com sincronização otimizada
   const deletePolicy = async (policyId: string): Promise<boolean> => {
     if (!user?.id) {
       toast({
@@ -182,6 +160,7 @@ export function usePersistedPolicies() {
       return false;
     }
 
+    // Verificar se a apólice existe no estado local antes de deletar
     const policyExists = policies.find(p => p.id === policyId);
     if (!policyExists) {
       toast({
@@ -194,9 +173,11 @@ export function usePersistedPolicies() {
 
     console.log(`🗑️ Iniciando deleção sincronizada da apólice: ${policyId}`);
     
+    // OTIMIZAÇÃO 1: Remover do estado local IMEDIATAMENTE para melhor UX
     removePolicy(policyId);
 
     try {
+      // OTIMIZAÇÃO 2: Verificar se a apólice ainda existe no banco antes de tentar deletar
       const { data: existingPolicy, error: checkError } = await supabase
         .from('policies')
         .select('id')
@@ -205,26 +186,31 @@ export function usePersistedPolicies() {
         .single();
 
       if (checkError?.code === 'PGRST116') {
+        // Apólice já não existe no banco - sucesso silencioso
         console.log(`✅ Apólice ${policyId} já foi removida do banco`);
         return true;
       }
 
       if (checkError) {
         console.error('❌ Erro ao verificar existência da apólice:', checkError);
+        // Restaurar no estado local em caso de erro
         setPolicies(prev => [policyExists, ...prev]);
         throw new Error("Erro ao verificar apólice no banco");
       }
 
+      // OTIMIZAÇÃO 3: Obter token atualizado
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session?.access_token) {
         console.error('❌ Erro na sessão:', sessionError);
+        // Restaurar no estado local
         setPolicies(prev => [policyExists, ...prev]);
         throw new Error("Sessão inválida - faça login novamente");
       }
 
       console.log(`🔑 Token obtido, chamando Edge Function para deletar ${policyId}`);
       
+      // OTIMIZAÇÃO 4: Chamar Edge Function com timeout reduzido
       const response = await fetch(`https://jhvbfvqhuemuvwgqpskz.supabase.co/functions/v1/delete-policy`, {
         method: 'POST',
         headers: {
@@ -233,7 +219,7 @@ export function usePersistedPolicies() {
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpodmJmdnFodWVtdXZ3Z3Fwc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTI2MDEsImV4cCI6MjA2Njg4ODYwMX0.V8I0byW7xs0iMBEBc6C3h0lvPhgPZ4mGwjfm31XkEQg'
         },
         body: JSON.stringify({ policyId }),
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(10000) // Timeout de 10 segundos
       });
       
       console.log(`📡 Response status: ${response.status}`);
@@ -242,6 +228,7 @@ export function usePersistedPolicies() {
         const errorText = await response.text();
         console.error('❌ Erro na resposta da Edge Function:', errorText);
         
+        // Restaurar no estado local em caso de erro
         setPolicies(prev => [policyExists, ...prev]);
         
         if (response.status === 401) {
@@ -259,15 +246,18 @@ export function usePersistedPolicies() {
     } catch (error) {
       console.error('❌ Erro detalhado na deleção:', error);
       
+      // OTIMIZAÇÃO 5: Restaurar apólice no estado local apenas em caso de erro real
       const stillExists = policies.find(p => p.id === policyId);
       if (!stillExists) {
         setPolicies(prev => [policyExists, ...prev]);
       }
       
+      // Não mostrar toast de erro aqui - será tratado no componente
       return false;
     }
   };
 
+  // Atualizar apólice no banco de dados
   const updatePolicy = async (policyId: string, updates: Partial<ParsedPolicyData>): Promise<boolean> => {
     if (!user?.id) {
       toast({
@@ -279,8 +269,10 @@ export function usePersistedPolicies() {
     }
 
     try {
+      // Converter dados para formato do banco - mapeando TODOS os campos editáveis
       const dbUpdates: any = {};
       
+      // Campos básicos
       if (updates.name !== undefined) dbUpdates.segurado = updates.name;
       if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
       if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
@@ -293,6 +285,7 @@ export function usePersistedPolicies() {
       if (updates.category !== undefined) dbUpdates.forma_pagamento = updates.category;
       if (updates.entity !== undefined) dbUpdates.corretora = updates.entity;
       
+      // Campos específicos do N8N
       if (updates.insuredName !== undefined) dbUpdates.segurado = updates.insuredName;
       if (updates.documento !== undefined) dbUpdates.documento = updates.documento;
       if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = updates.documento_tipo;
@@ -310,6 +303,7 @@ export function usePersistedPolicies() {
         throw error;
       }
 
+      // Atualizar estado local com mapeamento de status
       const mappedUpdates = {
         ...updates,
         status: updates.status ? mapLegacyStatus(updates.status) : undefined
@@ -335,6 +329,7 @@ export function usePersistedPolicies() {
     }
   };
 
+  // Obter URL de download para um PDF
   const getPDFDownloadUrl = async (policyId: string): Promise<string | null> => {
     const policy = policies.find(p => p.id === policyId);
     
@@ -370,10 +365,12 @@ export function usePersistedPolicies() {
     }
   };
 
+  // Baixar PDF de uma apólice
   const downloadPDF = async (policyId: string, policyName: string) => {
     const downloadUrl = await getPDFDownloadUrl(policyId);
     
     if (downloadUrl) {
+      // Criar link temporário para download
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = `${policyName}.pdf`;
@@ -388,6 +385,7 @@ export function usePersistedPolicies() {
     }
   };
 
+  // Recarregar dados
   const refreshPolicies = () => {
     if (user?.id && isInitialized) {
       console.log('🔄 Refresh manual das apólices solicitado');
@@ -399,13 +397,13 @@ export function usePersistedPolicies() {
     policies,
     isLoading: isLoading || syncStatus === 'syncing',
     error,
-    addPolicy, // Função atualizada com persistência completa
+    addPolicy, // Função atualizada com sincronização automática
     removePolicy,
     deletePolicy,
     updatePolicy,
     downloadPDF,
     refreshPolicies,
     hasPersistedData: policies.length > 0,
-    syncStatus
+    syncStatus // Expor status da sincronização
   };
 }

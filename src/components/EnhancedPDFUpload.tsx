@@ -25,22 +25,11 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   const { user } = useAuth();
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
 
-  // Função que será chamada quando uma política for extraída
-  const handlePolicyExtracted = useCallback((policy: ParsedPolicyData) => {
-    console.log(`📋 Política extraída:`, { 
-      policyName: policy.name, 
-      hasFile: !!policy.file
-    });
-    
-    // Chamar a função original passando a política (com arquivo já incluído)
-    onPolicyExtracted(policy);
-  }, [onPolicyExtracted]);
-
   const fileProcessor = new FileProcessor(
     updateFileStatus,
     removeFileStatus,
-    user?.id || null,
-    handlePolicyExtracted,
+    user?.id || null, // Passar o userId para o FileProcessor
+    onPolicyExtracted,
     toast
   );
 
@@ -75,7 +64,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       
       toast({
         title: "🎉 Processamento em Lote Concluído",
-        description: `${allResults.length} apólices foram processadas e salvas no banco de dados`,
+        description: `${allResults.length} apólices foram processadas via webhook N8N`,
       });
 
     } catch (error) {
@@ -98,7 +87,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       'application/pdf': ['.pdf'],
     },
     maxFiles: 10,
-    multiple: true,
+    multiple: true, // Garantir que múltiplos arquivos são aceitos
     disabled: isProcessingBatch,
   });
 
@@ -114,7 +103,6 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
             <span>Upload de Apólices</span>
           </CardTitle>
           <CardDescription>
-            Arraste e solte os PDFs para processamento automático e salvamento no banco
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -131,7 +119,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
               <FilePlus className={`h-6 w-6 mx-auto mb-2 ${isProcessingBatch ? 'text-gray-400' : 'text-gray-400'}`} />
               <p className={`text-sm ${isProcessingBatch ? 'text-gray-400' : 'text-gray-500'}`}>
                 {isProcessingBatch 
-                  ? 'Processamento e salvamento em andamento...' 
+                  ? 'Processamento via webhook N8N em andamento...' 
                   : isDragActive 
                     ? 'Solte os arquivos aqui...' 
                     : 'Arraste e solte os PDFs ou clique para selecionar (máx. 10 arquivos)'
@@ -139,7 +127,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
               </p>
               {isProcessingBatch && (
                 <p className="text-xs text-blue-600 mt-2">
-                  Processando e salvando no banco de dados...
+                  Enviando para processamento inteligente...
                 </p>
               )}
             </div>

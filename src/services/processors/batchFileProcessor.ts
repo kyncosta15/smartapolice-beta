@@ -8,13 +8,13 @@ import { PolicyPersistenceService } from '../policyPersistenceService';
 export class BatchFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
   private removeFileStatus: (fileName: string) => void;
-  private onPolicyExtracted: (policy: ParsedPolicyData, file?: File) => void;
+  private onPolicyExtracted: (policy: ParsedPolicyData) => void;
   private toast: any;
 
   constructor(
     updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
     removeFileStatus: (fileName: string) => void,
-    onPolicyExtracted: (policy: ParsedPolicyData, file?: File) => void,
+    onPolicyExtracted: (policy: ParsedPolicyData) => void,
     toast: any
   ) {
     this.updateFileStatus = updateFileStatus;
@@ -64,7 +64,7 @@ export class BatchFileProcessor {
         files.forEach((file, index) => {
           const mockPolicy = this.createFallbackPolicy(file, userId);
           allResults.push(mockPolicy);
-          this.onPolicyExtracted(mockPolicy, file);
+          this.onPolicyExtracted(mockPolicy);
         });
       } else {
         // Processar dados extraídos
@@ -77,35 +77,38 @@ export class BatchFileProcessor {
             user_id: userId
           };
           
-          const relatedFile = files[Math.min(index, files.length - 1)];
-          const relatedFileName = relatedFile?.name || `Arquivo ${index + 1}`;
+          const relatedFileName = files[Math.min(index, files.length - 1)]?.name || `Arquivo ${index + 1}`;
           
           this.updateFileStatus(relatedFileName, {
             progress: 60 + (index * 15),
             status: 'processing',
-            message: 'Convertendo e salvando dados...'
+            message: 'Convertendo dados...'
           });
           
           try {
-            const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, relatedFile);
+            const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[Math.min(index, files.length - 1)]);
             allResults.push(parsedPolicy);
             
-            // IMPORTANTE: Passar tanto a política quanto o arquivo para persistência
-            console.log(`💾 Passando política ${parsedPolicy.name} com arquivo ${relatedFile.name} para callback`);
-            this.onPolicyExtracted(parsedPolicy, relatedFile);
+            // Salvar no banco
+            const relatedFile = files[Math.min(index, files.length - 1)];
+            if (relatedFile) {
+              await PolicyPersistenceService.savePolicyComplete(relatedFile, parsedPolicy, userId);
+            }
+            
+            this.onPolicyExtracted(parsedPolicy);
             
             this.updateFileStatus(relatedFileName, {
               progress: 90 + (index * 2),
               status: 'processing',
-              message: `✅ Processado e salvo: ${parsedPolicy.insurer}`
+              message: `✅ Processado: ${parsedPolicy.insurer}`
             });
             
           } catch (conversionError) {
             console.error(`❌ Erro na conversão do item ${index + 1}:`, conversionError);
             // Criar fallback mesmo com erro de conversão
-            const fallbackPolicy = this.createFallbackPolicy(relatedFile, userId);
+            const fallbackPolicy = this.createFallbackPolicy(files[Math.min(index, files.length - 1)], userId);
             allResults.push(fallbackPolicy);
-            this.onPolicyExtracted(fallbackPolicy, relatedFile);
+            this.onPolicyExtracted(fallbackPolicy);
           }
         }
       }
@@ -115,16 +118,16 @@ export class BatchFileProcessor {
         this.updateFileStatus(file.name, {
           progress: 100,
           status: 'completed',
-          message: `✅ Salvo no banco (${index + 1}/${files.length})`
+          message: `✅ Concluído (${index + 1}/${files.length})`
         });
       });
 
-      console.log(`🎉 Processamento finalizado! ${allResults.length} apólices processadas e salvas`);
+      console.log(`🎉 Processamento finalizado! ${allResults.length} apólices processadas`);
       
       if (allResults.length > 0) {
         this.toast({
           title: `🎉 Processamento Concluído`,
-          description: `${allResults.length} apólices foram processadas e salvas no banco de dados`,
+          description: `${allResults.length} apólices foram processadas com sucesso`,
         });
       }
 
@@ -146,7 +149,7 @@ export class BatchFileProcessor {
         files.forEach(file => {
           const fallbackPolicy = this.createFallbackPolicy(file, userId);
           allResults.push(fallbackPolicy);
-          this.onPolicyExtracted(fallbackPolicy, file);
+          this.onPolicyExtracted(fallbackPolicy);
         });
       }
       
@@ -155,7 +158,7 @@ export class BatchFileProcessor {
         this.updateFileStatus(file.name, {
           progress: 100,
           status: allResults.length > 0 ? 'completed' : 'failed',
-          message: allResults.length > 0 ? '✅ Salvo com dados simulados' : `❌ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+          message: allResults.length > 0 ? '✅ Processado com dados simulados' : `❌ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
         });
       });
 
