@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FilePlus, Cloud, Clock } from 'lucide-react';
@@ -24,23 +25,22 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   const { user } = useAuth();
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
 
-  // Função que será chamada quando uma política for extraída, incluindo o arquivo
-  const handlePolicyExtracted = useCallback((policy: ParsedPolicyData, file?: File) => {
-    console.log(`📋 Política extraída com arquivo:`, { 
+  // Função que será chamada quando uma política for extraída
+  const handlePolicyExtracted = useCallback((policy: ParsedPolicyData) => {
+    console.log(`📋 Política extraída:`, { 
       policyName: policy.name, 
-      hasFile: !!file,
-      fileName: file?.name 
+      hasFile: !!policy.file
     });
     
-    // Chamar a função original passando tanto a política quanto o arquivo
-    onPolicyExtracted(policy, file);
+    // Chamar a função original passando a política (com arquivo já incluído)
+    onPolicyExtracted(policy);
   }, [onPolicyExtracted]);
 
   const fileProcessor = new FileProcessor(
     updateFileStatus,
     removeFileStatus,
     user?.id || null,
-    handlePolicyExtracted, // Usar a função wrapper que inclui o arquivo
+    handlePolicyExtracted,
     toast
   );
 

@@ -37,17 +37,16 @@ export function DashboardContent({ activeTab, onTabChange }: DashboardContentPro
   
   const { dashboardData, isRefreshing, lastUpdate, refreshDashboard } = useDashboardData(policies);
 
-  // Função para lidar com políticas extraídas (agora com arquivo)
-  const handlePolicyExtracted = async (policy: ParsedPolicyData, file?: File) => {
+  // Função para lidar com políticas extraídas (agora sem arquivo separado)
+  const handlePolicyExtracted = async (policy: ParsedPolicyData) => {
     console.log(`🎯 DashboardContent: Política extraída recebida:`, {
       policyName: policy.name,
-      hasFile: !!file,
-      fileName: file?.name
+      hasFile: !!policy.file
     });
 
     try {
-      // Adicionar política com o arquivo para persistência completa
-      const success = await addPolicy(policy, file);
+      // Adicionar política (o arquivo já está incluído na policy)
+      const success = await addPolicy(policy, policy.file);
       
       if (success) {
         console.log(`✅ Política ${policy.name} adicionada e persistida com sucesso`);
@@ -149,10 +148,17 @@ export function DashboardContent({ activeTab, onTabChange }: DashboardContentPro
 
         <TabsContent value="dashboard" className="space-y-6">
           <DashboardCards 
-            totalPolicies={dashboardData.totalPolicies}
-            totalMonthlyCost={dashboardData.totalMonthlyCost}
-            expiringPolicies={dashboardData.expiringPolicies}
-            totalInsuredValue={dashboardData.totalInsuredValue}
+            stats={{
+              totalPolicies: dashboardData.totalPolicies,
+              monthlyCost: dashboardData.totalMonthlyCost,
+              totalInsured: dashboardData.totalInsuredValue,
+              activeAlerts: 0,
+              expiringPolicies: dashboardData.expiringPolicies,
+              totalInstallments: dashboardData.totalInstallments,
+              overdueInstallments: 0,
+              duingNext30Days: dashboardData.expiringPolicies,
+              responsibleUser: user?.name || 'Usuário'
+            }}
           />
           <ChartsSection />
         </TabsContent>
