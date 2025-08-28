@@ -1,3 +1,4 @@
+
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 
 export interface N8NDirectData {
@@ -95,8 +96,10 @@ export class N8NDataConverter {
     const mappedStatus = this.mapStatus(data.status);
     const normalizedType = this.normalizeInsuranceType(data.tipo);
     
-    // Calcular valor mensal se não fornecido
-    const monthlyAmount = data.custo_mensal || (data.parcelas > 0 ? data.premio / data.parcelas : data.valor_parcela);
+    // Calcular valor mensal - se parcelas = 0, usar o prêmio total dividido por 12
+    const monthlyAmount = data.custo_mensal > 0 ? data.custo_mensal : 
+                         data.parcelas > 0 ? data.premio / data.parcelas : 
+                         data.premio / 12; // Assumir pagamento anual dividido em 12x
     
     // Processar coberturas - garantir que sempre temos um array
     const coberturas = Array.isArray(data.coberturas) ? data.coberturas.map(cobertura => ({
@@ -105,12 +108,10 @@ export class N8NDataConverter {
       lmi: cobertura.lmi > 0 ? cobertura.lmi : undefined
     })) : [];
 
-    // Gerar parcelas se necessário
-    const installments = data.parcelas > 0 ? this.generateInstallments(
-      data.parcelas,
-      data.valor_parcela || monthlyAmount,
-      data.inicio
-    ) : [];
+    // Gerar parcelas se necessário - se parcelas = 0, criar parcelas anuais
+    const installments = data.parcelas > 0 ? 
+      this.generateInstallments(data.parcelas, data.valor_parcela || monthlyAmount, data.inicio) :
+      this.generateInstallments(12, monthlyAmount, data.inicio); // 12 parcelas mensais por padrão
 
     const convertedPolicy: ParsedPolicyData = {
       id: policyId,
@@ -141,7 +142,7 @@ export class N8NDataConverter {
       // Parcelas e coberturas
       installments: installments,
       coberturas: coberturas,
-      quantidade_parcelas: data.parcelas,
+      quantidade_parcelas: data.parcelas > 0 ? data.parcelas : 12,
       
       // Campos de compatibilidade
       category: normalizedType === 'auto' ? 'Veicular' : 
@@ -149,14 +150,22 @@ export class N8NDataConverter {
                normalizedType === 'saude' ? 'Saúde' : 
                normalizedType === 'empresarial' ? 'Empresarial' : 'Geral',
       coverage: coberturas.map(c => c.descricao),
-      totalCoverage: data.premio
+      totalCoverage: data.premio,
+      
+      // Dados do veículo se disponível
+      vehicleDetails: data.modelo_veiculo ? {
+        model: data.modelo_veiculo,
+        year: data.ano_modelo ? parseInt(data.ano_modelo) : undefined,
+        plate: data.placa
+      } : undefined
     };
 
     console.log('✅ Conversão N8N concluída:', {
       id: convertedPolicy.id,
       name: convertedPolicy.name,
       status: convertedPolicy.status,
-      coberturas: convertedPolicy.coberturas?.length || 0
+      coberturas: convertedPolicy.coberturas?.length || 0,
+      monthlyAmount: convertedPolicy.monthlyAmount
     });
 
     return convertedPolicy;
