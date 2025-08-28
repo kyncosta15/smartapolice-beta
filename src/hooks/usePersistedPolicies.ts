@@ -85,7 +85,7 @@ export function usePersistedPolicies() {
     }
   };
 
-  // NOVA FUNÇÃO MELHORADA: Adicionar e sincronizar apólice automaticamente
+  // FUNÇÃO CRÍTICA MELHORADA: Garantir persistência IMEDIATA e FORÇADA
   const addPolicy = async (policy: ParsedPolicyData, file?: File) => {
     if (!user?.id) {
       console.error('❌ CRÍTICO: Usuário não autenticado para adicionar apólice');
@@ -97,7 +97,7 @@ export function usePersistedPolicies() {
       return false;
     }
 
-    console.log('➕ INICIANDO adição e sincronização de apólice:', policy.name);
+    console.log('🚀 INICIANDO addPolicy com persistência FORÇADA:', policy.name);
     
     // Garantir que o policy tem ID único
     if (!policy.id) {
@@ -109,25 +109,8 @@ export function usePersistedPolicies() {
       status: mapLegacyStatus(policy.status || 'vigente')
     };
     
-    // Adicionar ao estado local IMEDIATAMENTE para UX responsivo
-    setPolicies(prev => {
-      const exists = prev.some(p => 
-        p.id === mappedPolicy.id || 
-        (p.policyNumber === mappedPolicy.policyNumber && mappedPolicy.policyNumber !== 'N/A')
-      );
-      
-      if (exists) {
-        console.log('⚠️ Apólice já existe, não duplicando');
-        return prev;
-      }
-      
-      console.log('✅ Apólice adicionada ao estado local');
-      return [mappedPolicy, ...prev];
-    });
-
-    // PERSISTÊNCIA FORÇADA no banco de dados
     try {
-      console.log('💾 FORÇANDO persistência no banco de dados...');
+      console.log('💾 TENTATIVA 1: Persistência IMEDIATA no banco de dados...');
       
       let success = false;
       
@@ -143,40 +126,87 @@ export function usePersistedPolicies() {
       if (success) {
         console.log('✅ PERSISTÊNCIA REALIZADA COM SUCESSO!');
         
+        // Adicionar ao estado local APÓS sucesso da persistência
+        setPolicies(prev => {
+          const exists = prev.some(p => 
+            p.id === mappedPolicy.id || 
+            (p.policyNumber === mappedPolicy.policyNumber && mappedPolicy.policyNumber !== 'N/A')
+          );
+          
+          if (exists) {
+            console.log('⚠️ Apólice já existe no estado local');
+            return prev;
+          }
+          
+          console.log('✅ Apólice adicionada ao estado local');
+          return [mappedPolicy, ...prev];
+        });
+        
         toast({
           title: "✅ Apólice Salva Permanentemente",
           description: `${mappedPolicy.name} foi salva no banco de dados`,
         });
         
-        // Recarregar dados do banco para garantir sincronização
+        // Recarregar dados do banco para garantir sincronização TOTAL
         setTimeout(() => {
+          console.log('🔄 Recarregando dados após persistência bem-sucedida...');
           loadPersistedPolicies();
-        }, 1000);
+        }, 2000);
         
         return true;
       } else {
-        console.error('❌ FALHA NA PERSISTÊNCIA');
+        console.error('❌ FALHA NA PERSISTÊNCIA - Tentativa 1');
         
-        // Remover do estado local se falhou
-        setPolicies(prev => prev.filter(p => p.id !== mappedPolicy.id));
+        // TENTATIVA 2: Forçar persistência direta no banco
+        console.log('💾 TENTATIVA 2: Persistência direta via Supabase...');
         
-        toast({
-          title: "❌ Erro na Persistência",
-          description: "Não foi possível salvar a apólice permanentemente",
-          variant: "destructive",
-        });
-        
-        return false;
+        const { error: directError } = await supabase
+          .from('policies')
+          .insert({
+            id: mappedPolicy.id,
+            user_id: user.id,
+            segurado: mappedPolicy.name || mappedPolicy.insuredName,
+            seguradora: mappedPolicy.insurer,
+            numero_apolice: mappedPolicy.policyNumber,
+            tipo_seguro: mappedPolicy.type,
+            valor_premio: mappedPolicy.premium,
+            custo_mensal: mappedPolicy.monthlyAmount,
+            inicio_vigencia: mappedPolicy.startDate,
+            fim_vigencia: mappedPolicy.endDate,
+            status: mappedPolicy.status,
+            forma_pagamento: mappedPolicy.category || 'Não informado',
+            corretora: mappedPolicy.entity || 'Não informado',
+            franquia: mappedPolicy.deductible || 0,
+            created_by_extraction: true,
+            extraction_timestamp: new Date().toISOString()
+          });
+
+        if (!directError) {
+          console.log('✅ PERSISTÊNCIA DIRETA REALIZADA COM SUCESSO!');
+          
+          setPolicies(prev => [mappedPolicy, ...prev]);
+          
+          toast({
+            title: "✅ Apólice Salva (Persistência Direta)",
+            description: `${mappedPolicy.name} foi salva diretamente no banco`,
+          });
+          
+          setTimeout(() => {
+            loadPersistedPolicies();
+          }, 2000);
+          
+          return true;
+        } else {
+          console.error('❌ FALHA NA PERSISTÊNCIA DIRETA:', directError);
+          throw new Error('Falha em todas as tentativas de persistência');
+        }
       }
     } catch (error) {
       console.error('❌ Erro crítico na persistência:', error);
       
-      // Remover do estado local em caso de erro
-      setPolicies(prev => prev.filter(p => p.id !== mappedPolicy.id));
-      
       toast({
-        title: "❌ Erro Crítico",
-        description: "Falha ao salvar a apólice no banco de dados",
+        title: "❌ Erro Crítico de Persistência",
+        description: "Não foi possível salvar a apólice permanentemente. Verifique sua conexão.",
         variant: "destructive",
       });
       
@@ -441,7 +471,7 @@ export function usePersistedPolicies() {
     policies,
     isLoading: isLoading || syncStatus === 'syncing',
     error,
-    addPolicy, // Função corrigida
+    addPolicy, // Função corrigida e melhorada
     removePolicy: (policyId: string) => {
       setPolicies(prev => prev.filter(p => p.id !== policyId));
     },
