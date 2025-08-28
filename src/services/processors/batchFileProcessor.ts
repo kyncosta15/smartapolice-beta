@@ -1,9 +1,9 @@
-
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
 import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
 import { StructuredDataConverter } from '@/utils/parsers/structuredDataConverter';
 import { FileProcessingStatus } from '@/types/pdfUpload';
+import { PolicyPersistenceService } from '../policyPersistenceService';
 
 export class BatchFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
@@ -64,9 +64,6 @@ export class BatchFileProcessor {
         files.forEach((file, index) => {
           const mockPolicy = this.createFallbackPolicy(file, userId);
           allResults.push(mockPolicy);
-          
-          // CHAMAR onPolicyExtracted IMEDIATAMENTE para persistência
-          console.log(`📤 Enviando apólice simulada ${index + 1} para persistência:`, mockPolicy.name);
           this.onPolicyExtracted(mockPolicy);
         });
       } else {
@@ -92,14 +89,18 @@ export class BatchFileProcessor {
             const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[Math.min(index, files.length - 1)]);
             allResults.push(parsedPolicy);
             
-            // CHAMADA CRÍTICA: Enviar para persistência IMEDIATAMENTE
-            console.log(`📤 Enviando apólice ${index + 1} para persistência:`, parsedPolicy.name);
+            // Salvar no banco
+            const relatedFile = files[Math.min(index, files.length - 1)];
+            if (relatedFile) {
+              await PolicyPersistenceService.savePolicyComplete(relatedFile, parsedPolicy, userId);
+            }
+            
             this.onPolicyExtracted(parsedPolicy);
             
             this.updateFileStatus(relatedFileName, {
               progress: 90 + (index * 2),
               status: 'processing',
-              message: `✅ Processado e enviado para persistência: ${parsedPolicy.insurer}`
+              message: `✅ Processado: ${parsedPolicy.insurer}`
             });
             
           } catch (conversionError) {
@@ -107,9 +108,6 @@ export class BatchFileProcessor {
             // Criar fallback mesmo com erro de conversão
             const fallbackPolicy = this.createFallbackPolicy(files[Math.min(index, files.length - 1)], userId);
             allResults.push(fallbackPolicy);
-            
-            // Enviar fallback para persistência também
-            console.log(`📤 Enviando apólice fallback para persistência:`, fallbackPolicy.name);
             this.onPolicyExtracted(fallbackPolicy);
           }
         }
@@ -120,16 +118,16 @@ export class BatchFileProcessor {
         this.updateFileStatus(file.name, {
           progress: 100,
           status: 'completed',
-          message: `✅ Processado e enviado para persistência (${index + 1}/${files.length})`
+          message: `✅ Concluído (${index + 1}/${files.length})`
         });
       });
 
-      console.log(`🎉 Processamento finalizado! ${allResults.length} apólices processadas e enviadas para persistência`);
+      console.log(`🎉 Processamento finalizado! ${allResults.length} apólices processadas`);
       
       if (allResults.length > 0) {
         this.toast({
           title: `🎉 Processamento Concluído`,
-          description: `${allResults.length} apólices foram processadas e enviadas para persistência no banco`,
+          description: `${allResults.length} apólices foram processadas com sucesso`,
         });
       }
 
@@ -151,9 +149,6 @@ export class BatchFileProcessor {
         files.forEach(file => {
           const fallbackPolicy = this.createFallbackPolicy(file, userId);
           allResults.push(fallbackPolicy);
-          
-          // Enviar para persistência mesmo sendo fallback
-          console.log(`📤 Enviando apólice fallback para persistência:`, fallbackPolicy.name);
           this.onPolicyExtracted(fallbackPolicy);
         });
       }
@@ -216,7 +211,7 @@ export class BatchFileProcessor {
       endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       policyNumber: `SIM-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       paymentFrequency: 'monthly',
-      status: 'vigente',
+      status: 'active',
       file,
       extractedAt: new Date().toISOString(),
       installments: [],
@@ -235,5 +230,18 @@ export class BatchFileProcessor {
 
     console.log(`✅ Política simulada criada: ${mockPolicyData.name}`);
     return mockPolicyData;
+  }
+
+  private findRelatedFileName(data: any, files: File[]): string | null {
+    if (data.segurado) {
+      const seguradoName = data.segurado.toLowerCase();
+      const matchingFile = files.find(file => {
+        const fileName = file.name.toLowerCase();
+        const firstNames = seguradoName.split(' ').slice(0, 2);
+        return firstNames.some(name => fileName.includes(name));
+      });
+      return matchingFile?.name || null;
+    }
+    return null;
   }
 }

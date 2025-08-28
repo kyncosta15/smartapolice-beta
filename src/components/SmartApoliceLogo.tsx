@@ -1,5 +1,5 @@
 
-
+import { Shield } from 'lucide-react';
 import { DocumentValidator } from '@/utils/documentValidator';
 
 interface SmartApóliceLogoProps {
@@ -20,6 +20,12 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
     sm: 'text-lg',
     md: 'text-xl',
     lg: 'text-3xl'
+  };
+
+  const iconSizeClasses = {
+    sm: 'h-6 w-6',
+    md: 'h-8 w-8',
+    lg: 'h-12 w-12'
   };
 
   const letterSizeClasses = {
@@ -48,12 +54,11 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md blur-sm opacity-80"></div>
         
         {/* Main shield container */}
-        <div className={`relative ${sizeClasses[size]} rounded-md border border-blue-400/30 shadow-lg shadow-blue-500/20 overflow-hidden`}>
-          <img 
-            src="/lovable-uploads/99f35bc7-891f-474c-aef7-eab756781670.png" 
-            alt="SmartApólice Logo" 
-            className="w-full h-full object-cover scale-110 z-20 relative"
-          />
+        <div className={`relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-md ${sizeClasses[size]} flex items-center justify-center border border-blue-400/30 shadow-lg shadow-blue-500/20`}>
+          <Shield className={`${iconSizeClasses[size]} text-white/20 absolute`} />
+          <span className={`${letterSizeClasses[size]} font-bold text-white relative z-10 drop-shadow-lg`}>
+            S
+          </span>
         </div>
       </div>
       {showText && (
@@ -85,4 +90,3 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
     </div>
   );
 }
-

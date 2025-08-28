@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Star, Shield } from 'lucide-react';
-import { extractFieldValue } from '@/utils/extractFieldValue';
 
 interface InsurerInfoCardProps {
   insurer: string | object;
@@ -14,19 +13,28 @@ export const InsurerInfoCard = ({
   type,
   readOnly = false 
 }: InsurerInfoCardProps) => {
-  // Usar extractFieldValue para garantir que sempre temos uma string
+  // Função para extrair o nome da seguradora
   const getInsurerName = (insurerData: string | object): string => {
-    console.log('🏢 Extraindo nome da seguradora:', insurerData);
+    if (typeof insurerData === 'string') {
+      return insurerData;
+    }
     
-    const extracted = extractFieldValue(insurerData);
-    return extracted || 'Seguradora não informada';
+    if (typeof insurerData === 'object' && insurerData !== null) {
+      const insurerObj = insurerData as any;
+      
+      // Handle different object structures
+      if (insurerObj.empresa) return String(insurerObj.empresa);
+      if (insurerObj.name) return String(insurerObj.name);
+      if (insurerObj.value) return String(insurerObj.value);
+      
+      return 'Seguradora não informada';
+    }
+    
+    return 'Seguradora não informada';
   };
 
   const getInsuranceTypeLabel = (type: string) => {
-    const extracted = extractFieldValue(type);
-    const typeValue = extracted || type || '';
-    
-    switch (typeValue.toLowerCase()) {
+    switch (type?.toLowerCase()) {
       case 'auto':
         return 'Seguro Auto';
       case 'vida':
@@ -38,7 +46,7 @@ export const InsurerInfoCard = ({
       case 'empresarial':
         return 'Seguro Empresarial';
       default:
-        return typeValue || 'Seguro';
+        return type || 'Seguro';
     }
   };
 

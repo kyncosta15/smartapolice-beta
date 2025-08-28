@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { FileProcessingStatus } from '@/types/pdfUpload';
 import { BatchFileProcessor } from './processors/batchFileProcessor';
@@ -12,8 +11,8 @@ export class FileProcessor {
   constructor(
     updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
     removeFileStatus: (fileName: string) => void,
-    userId: string | null,
-    onPolicyExtracted: (policy: ParsedPolicyData, file?: File) => void, // Atualizado para incluir file
+    userId: string | null, // Corrigido: agora recebe userId como parâmetro
+    onPolicyExtracted: (policy: ParsedPolicyData) => void,
     toast: any
   ) {
     this.userId = userId;

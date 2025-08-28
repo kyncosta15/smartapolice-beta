@@ -19,8 +19,24 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
   const getInsurerName = (insurerData: any): string => {
     console.log('🏢 Extraindo nome da seguradora:', insurerData);
     
-    const extractedName = extractFieldValue(insurerData);
-    return extractedName || 'Seguradora não informada';
+    if (!insurerData) return 'Não informado';
+    
+    if (typeof insurerData === 'string') {
+      try {
+        // Tentar fazer parse se for uma string JSON
+        const parsed = JSON.parse(insurerData);
+        return parsed.empresa || parsed.name || 'Seguradora não informada';
+      } catch {
+        // Se não for JSON válido, retornar a string mesmo
+        return insurerData;
+      }
+    }
+    
+    if (typeof insurerData === 'object') {
+      return insurerData.empresa || insurerData.name || 'Seguradora não informada';
+    }
+    
+    return String(insurerData);
   };
 
   // Usar dados de documento do N8N se disponíveis, caso contrário detectar
