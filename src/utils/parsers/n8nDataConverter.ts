@@ -1,5 +1,5 @@
 
-import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { ParsedPolicyData } from '../policyDataParser';
 
 export interface N8NDirectData {
   user_id?: string | null;
@@ -26,31 +26,26 @@ export interface N8NDirectData {
   email?: string;
   telefone?: string;
   status: string;
-  corretora: string;
+  corretora?: string;
   cidade?: string;
-  uf: string;
-  coberturas: Array<{
+  uf?: string;
+  coberturas?: Array<{
     descricao: string;
-    lmi: number;
+    lmi?: number;
   }>;
 }
 
 export class N8NDataConverter {
-  // Mapear status do N8N para status do sistema
+  
+  // Mapear status do N8N para valores do sistema
   private static mapStatus(n8nStatus: string): string {
     const statusMap: Record<string, string> = {
       'Ativa': 'vigente',
-      'ativa': 'vigente',
-      'Active': 'vigente',
-      'active': 'vigente',
+      'Vigente': 'vigente',
       'Vencida': 'vencida',
-      'vencida': 'vencida',
-      'Expired': 'vencida',
-      'expired': 'vencida',
+      'Cancelada': 'nao_renovada',
       'Pendente': 'pendente_analise',
-      'pendente': 'pendente_analise',
-      'Renovação': 'aguardando_emissao',
-      'renovacao': 'aguardando_emissao'
+      'Em Análise': 'pendente_analise'
     };
     
     return statusMap[n8nStatus] || 'vigente';
@@ -60,159 +55,19 @@ export class N8NDataConverter {
   private static normalizeInsuranceType(tipo: string): string {
     const typeMap: Record<string, string> = {
       'Automóvel': 'auto',
-      'automovel': 'auto',
       'Auto': 'auto',
-      'auto': 'auto',
+      'Veicular': 'auto',
       'Vida': 'vida',
-      'vida': 'vida',
       'Saúde': 'saude',
-      'saude': 'saude',
-      'Empresarial': 'empresarial',
-      'empresarial': 'empresarial'
+      'Residencial': 'residencial',
+      'Empresarial': 'empresarial'
     };
     
     return typeMap[tipo] || 'auto';
   }
 
-  static convertN8NDirectData(
-    data: N8NDirectData, 
-    fileName: string, 
-    file?: File,
-    userIdOverride?: string
-  ): ParsedPolicyData {
-    console.log('🔄 Convertendo dados diretos do N8N:', data);
-    
-    // CRÍTICO: Garantir que sempre temos um userId válido
-    const finalUserId = userIdOverride || data.user_id;
-    if (!finalUserId) {
-      console.error('❌ ERRO CRÍTICO: userId não fornecido para conversão N8N');
-      throw new Error('userId é obrigatório para conversão de dados N8N');
-    }
-
-    // Gerar ID único para a apólice
-    const policyId = crypto.randomUUID();
-    
-    // Converter status
-    const mappedStatus = this.mapStatus(data.status);
-    const normalizedType = this.normalizeInsuranceType(data.tipo);
-    
-    // Calcular valor mensal corretamente baseado nos dados reais do N8N
-    let monthlyAmount = 0;
-    
-    if (data.custo_mensal > 0) {
-      // Se custo_mensal está definido, usar este valor
-      monthlyAmount = data.custo_mensal;
-    } else if (data.parcelas > 0 && data.valor_parcela > 0) {
-      // Se há parcelas definidas, usar valor_parcela
-      monthlyAmount = data.valor_parcela;
-    } else if (data.premio > 0) {
-      // Caso contrário, dividir prêmio por 12 meses
-      monthlyAmount = data.premio / 12;
-    }
-    
-    console.log('💰 Cálculo do valor mensal:', {
-      custo_mensal: data.custo_mensal,
-      parcelas: data.parcelas,
-      valor_parcela: data.valor_parcela,
-      premio: data.premio,
-      monthlyAmount_calculado: monthlyAmount
-    });
-    
-    // Processar coberturas - manter LMI como está no N8N (0 ou valor real)
-    const coberturas = Array.isArray(data.coberturas) ? data.coberturas.map(cobertura => ({
-      id: crypto.randomUUID(),
-      descricao: cobertura.descricao,
-      lmi: cobertura.lmi || undefined // Converter 0 para undefined
-    })) : [];
-
-    // Gerar parcelas baseado nos dados reais
-    let installments = [];
-    let quantidade_parcelas = 0;
-    
-    if (data.parcelas > 0) {
-      // Se há parcelas definidas, usar os dados do N8N
-      quantidade_parcelas = data.parcelas;
-      const valorParcela = data.valor_parcela > 0 ? data.valor_parcela : monthlyAmount;
-      installments = this.generateInstallments(data.parcelas, valorParcela, data.inicio);
-    } else {
-      // Se não há parcelas, assumir pagamento à vista ou criar parcelas mensais
-      quantidade_parcelas = 1; // Pagamento à vista
-      if (monthlyAmount > 0) {
-        // Criar uma única parcela com o valor total
-        installments = [{
-          numero: 1,
-          valor: data.premio,
-          data: data.inicio,
-          status: 'pendente' as const
-        }];
-      }
-    }
-
-    const convertedPolicy: ParsedPolicyData = {
-      id: policyId,
-      name: `Apólice ${data.segurado}`,
-      type: normalizedType,
-      insurer: data.seguradora,
-      premium: data.premio,
-      monthlyAmount: monthlyAmount,
-      startDate: data.inicio,
-      endDate: data.fim,
-      expirationDate: data.fim,
-      policyNumber: data.numero_apolice,
-      paymentFrequency: data.pagamento || 'mensal',
-      status: mappedStatus,
-      policyStatus: mappedStatus as any,
-      file: file,
-      extractedAt: new Date().toISOString(),
-      
-      // Dados específicos do N8N
-      insuredName: data.segurado,
-      documento: data.documento,
-      documento_tipo: data.documento_tipo,
-      vehicleModel: data.modelo_veiculo,
-      uf: data.uf,
-      deductible: data.franquia,
-      entity: data.corretora,
-      
-      // Parcelas e coberturas
-      installments: installments,
-      coberturas: coberturas,
-      quantidade_parcelas: quantidade_parcelas,
-      
-      // Campos de compatibilidade
-      category: normalizedType === 'auto' ? 'Veicular' : 
-               normalizedType === 'vida' ? 'Pessoal' : 
-               normalizedType === 'saude' ? 'Saúde' : 
-               normalizedType === 'empresarial' ? 'Empresarial' : 'Geral',
-      coverage: coberturas.map(c => c.descricao),
-      totalCoverage: data.premio,
-      
-      // Dados do veículo se disponível
-      vehicleDetails: data.modelo_veiculo ? {
-        model: data.modelo_veiculo,
-        year: data.ano_modelo ? parseInt(data.ano_modelo) : undefined,
-        plate: data.placa
-      } : undefined
-    };
-
-    console.log('✅ Conversão N8N concluída:', {
-      id: convertedPolicy.id,
-      name: convertedPolicy.name,
-      status: convertedPolicy.status,
-      coberturas: convertedPolicy.coberturas?.length || 0,
-      monthlyAmount: convertedPolicy.monthlyAmount,
-      quantidade_parcelas: convertedPolicy.quantidade_parcelas,
-      premium: convertedPolicy.premium
-    });
-
-    return convertedPolicy;
-  }
-
-  private static generateInstallments(
-    numberOfInstallments: number,
-    installmentValue: number,
-    startDate: string
-  ) {
+  // Gerar parcelas baseado nos dados do N8N
+  private static generateInstallments(numberOfInstallments: number, installmentValue: number, startDate: string) {
     const installments = [];
     const baseDate = new Date(startDate);
     
@@ -229,5 +84,120 @@ export class N8NDataConverter {
     }
     
     return installments;
+  }
+
+  // FUNÇÃO PRINCIPAL: Converter dados do N8N para ParsedPolicyData
+  static convertN8NDirectData(
+    data: N8NDirectData,
+    fileName: string,
+    file?: File,
+    userIdOverride?: string
+  ): ParsedPolicyData {
+    console.log('🔄 Convertendo dados N8N ORIGINAIS:', data);
+
+    // Garantir userId válido
+    const userId = userIdOverride || data.user_id || crypto.randomUUID();
+    const policyId = `n8n-${data.numero_apolice}-${Date.now()}`;
+
+    // Mapear status e tipo
+    const mappedStatus = this.mapStatus(data.status);
+    const normalizedType = this.normalizeInsuranceType(data.tipo);
+    
+    // PRESERVAR dados originais do N8N - cálculo fiel aos dados recebidos
+    const monthlyAmount = data.custo_mensal || (data.valor_parcela > 0 ? data.valor_parcela : data.premio / 12);
+    
+    // Processar coberturas mantendo estrutura original
+    const coberturas = Array.isArray(data.coberturas) ? data.coberturas.map(cobertura => ({
+      id: crypto.randomUUID(),
+      descricao: cobertura.descricao,
+      lmi: cobertura.lmi
+    })) : [];
+
+    // Gerar parcelas baseado nos dados reais do N8N
+    const installments = data.parcelas > 0 ? 
+      this.generateInstallments(data.parcelas, data.valor_parcela || monthlyAmount, data.inicio) :
+      this.generateInstallments(1, data.premio, data.inicio); // Pagamento à vista se parcelas = 0
+
+    const convertedPolicy: ParsedPolicyData = {
+      id: policyId,
+      name: `Apólice ${data.segurado}`,
+      type: normalizedType,
+      insurer: data.seguradora,
+      premium: data.premio,
+      monthlyAmount: monthlyAmount,
+      startDate: data.inicio,
+      endDate: data.fim,
+      policyNumber: data.numero_apolice,
+      paymentFrequency: data.pagamento,
+      status: mappedStatus,
+      file: file,
+      extractedAt: new Date().toISOString(),
+      
+      // Campos obrigatórios
+      expirationDate: data.fim,
+      policyStatus: mappedStatus as any,
+      
+      // Dados específicos do N8N
+      insuredName: data.segurado,
+      documento: data.documento,
+      documento_tipo: data.documento_tipo,
+      vehicleModel: data.modelo_veiculo,
+      uf: data.uf,
+      deductible: data.franquia,
+      
+      // Parcelas e coberturas ORIGINAIS
+      installments: installments,
+      coberturas: coberturas,
+      quantidade_parcelas: data.parcelas || 1,
+      
+      // Campos de compatibilidade para o sistema
+      category: normalizedType === 'auto' ? 'Veicular' : 
+               normalizedType === 'vida' ? 'Pessoal' : 
+               normalizedType === 'saude' ? 'Saúde' : 'Geral',
+      coverage: coberturas.map(c => c.descricao),
+      totalCoverage: data.premio,
+      entity: data.corretora || 'Não informado',
+      pdfPath: undefined,
+      
+      // Detalhes do veículo se disponível
+      vehicleDetails: data.modelo_veiculo ? {
+        model: data.modelo_veiculo,
+        year: data.ano_modelo ? parseInt(data.ano_modelo) : undefined,
+        plate: data.placa
+      } : undefined
+    };
+
+    console.log('✅ Dados N8N convertidos:', {
+      id: convertedPolicy.id,
+      name: convertedPolicy.name,
+      status: convertedPolicy.status,
+      coberturas: convertedPolicy.coberturas?.length || 0,
+      monthlyAmount: convertedPolicy.monthlyAmount,
+      installments: convertedPolicy.installments?.length || 0
+    });
+
+    return convertedPolicy;
+  }
+
+  // Converter múltiplas apólices do N8N
+  static convertMultipleN8NData(
+    dataArray: N8NDirectData[],
+    userIdOverride?: string
+  ): ParsedPolicyData[] {
+    console.log(`🔄 Convertendo ${dataArray.length} apólices do N8N`);
+    
+    return dataArray.map((data, index) => {
+      try {
+        return this.convertN8NDirectData(
+          data,
+          `n8n-policy-${index}`,
+          undefined,
+          userIdOverride
+        );
+      } catch (error) {
+        console.error(`❌ Erro ao converter apólice ${index}:`, error);
+        throw error;
+      }
+    });
   }
 }

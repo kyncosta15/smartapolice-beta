@@ -20,6 +20,7 @@ interface N8NWebhookResponse {
 export class N8NWebhookService {
   private static readonly WEBHOOK_URL = 'https://smartapolicetest.app.n8n.cloud/webhook/upload-arquivo';
   
+  // FUNÇÃO PRINCIPAL: Processar PDF com N8N e retornar dados fidedignos
   static async processarPdfComN8n(file: File, userId?: string): Promise<N8NWebhookResponse> {
     console.log(`🌐 Enviando PDF para processamento N8N: ${file.name}`);
     console.log(`👤 UserId fornecido: ${userId}`);
@@ -32,7 +33,7 @@ export class N8NWebhookService {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('user_id', userId); // CRÍTICO: Enviar userId para o N8N
+      formData.append('user_id', userId);
       formData.append('filename', file.name);
 
       console.log('📤 Enviando para webhook N8N:', this.WEBHOOK_URL);
@@ -54,52 +55,54 @@ export class N8NWebhookService {
       }
 
       const result: N8NDirectResponse = await response.json();
-      console.log('📋 Resultado do N8N:', result);
+      console.log('📋 Resultado ORIGINAL do N8N:', result);
 
       if (!result.success || !result.data || !Array.isArray(result.data)) {
         console.error('❌ Resposta inválida do N8N:', result);
         throw new Error(result.error || 'Resposta inválida do webhook N8N');
       }
 
-      // Converter dados do N8N para ParsedPolicyData
+      // Converter dados PRESERVANDO informações originais
       const convertedPolicies: ParsedPolicyData[] = [];
 
       for (const policyData of result.data) {
         try {
-          console.log('🔄 Convertendo política N8N:', {
+          console.log('🔄 Processando política N8N ORIGINAL:', {
             segurado: policyData.segurado,
             numero_apolice: policyData.numero_apolice,
-            user_id_original: policyData.user_id,
-            user_id_override: userId
+            premio: policyData.premio,
+            parcelas: policyData.parcelas,
+            valor_parcela: policyData.valor_parcela,
+            custo_mensal: policyData.custo_mensal,
+            coberturas: policyData.coberturas?.length
           });
 
           const convertedPolicy = N8NDataConverter.convertN8NDirectData(
             policyData,
             file.name,
             file,
-            userId // CRÍTICO: Passar userId como override
+            userId
           );
 
           convertedPolicies.push(convertedPolicy);
-          console.log('✅ Política convertida com sucesso:', convertedPolicy.id);
+          console.log('✅ Política convertida PRESERVANDO dados originais:', convertedPolicy.id);
 
         } catch (conversionError) {
           console.error('❌ Erro na conversão da política:', conversionError);
-          // Continuar com as outras políticas mesmo se uma falhar
+          throw conversionError;
         }
       }
 
       if (convertedPolicies.length === 0) {
-        console.warn('⚠️ Nenhuma política foi convertida com sucesso');
         throw new Error('Nenhuma política pôde ser processada pelos dados do N8N');
       }
 
-      console.log(`✅ N8N processamento concluído: ${convertedPolicies.length} políticas`);
+      console.log(`✅ N8N processamento concluído: ${convertedPolicies.length} políticas ORIGINAIS processadas`);
 
       return {
         success: true,
         policies: convertedPolicies,
-        message: `${convertedPolicies.length} apólices processadas com sucesso`,
+        message: `${convertedPolicies.length} apólices processadas com dados originais do N8N`,
         totalProcessed: convertedPolicies.length
       };
 
@@ -109,9 +112,9 @@ export class N8NWebhookService {
     }
   }
 
-  // Método para processar dados N8N já recebidos (sem upload)
+  // Processar dados N8N diretos (sem upload)
   static async processN8NData(data: N8NDirectData[], userId: string): Promise<ParsedPolicyData[]> {
-    console.log('🔄 Processando dados N8N recebidos:', data.length, 'itens');
+    console.log('🔄 Processando dados N8N ORIGINAIS recebidos:', data.length, 'itens');
 
     if (!userId) {
       throw new Error('userId é obrigatório para processar dados N8N');
@@ -123,7 +126,7 @@ export class N8NWebhookService {
       try {
         const convertedPolicy = N8NDataConverter.convertN8NDirectData(
           policyData,
-          'dados-n8n',
+          'dados-n8n-originais',
           undefined,
           userId
         );
@@ -131,10 +134,11 @@ export class N8NWebhookService {
         convertedPolicies.push(convertedPolicy);
       } catch (error) {
         console.error('❌ Erro na conversão de dados N8N:', error);
+        throw error;
       }
     }
 
-    console.log(`✅ Processamento N8N concluído: ${convertedPolicies.length} políticas`);
+    console.log(`✅ Processamento N8N ORIGINAL concluído: ${convertedPolicies.length} políticas`);
     return convertedPolicies;
   }
 }
