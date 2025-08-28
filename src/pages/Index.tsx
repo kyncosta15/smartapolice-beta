@@ -10,11 +10,9 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardContent 
-        activeTab={activeTab} 
-        onTabChange={handleTabChange}
-      />
-    </div>
+    <DashboardContent 
+      activeTab={activeTab} 
+      onTabChange={handleTabChange}
+    />
   );
 }
