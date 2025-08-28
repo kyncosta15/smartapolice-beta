@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,13 +24,18 @@ interface DashboardContentProps {
 export function DashboardContent({ activeTab, onTabChange }: DashboardContentProps) {
   const { user } = useAuth();
   const [isNewPolicyModalOpen, setIsNewPolicyModalOpen] = useState(false);
-  const { dashboardData, isRefreshing, lastUpdate, refreshDashboard } = useDashboardData();
+  const [selectedPolicy, setSelectedPolicy] = useState<ParsedPolicyData | null>(null);
+  
   const { 
     policies, 
     isLoading: isPoliciesLoading, 
     addPolicy, 
-    refreshPolicies 
+    refreshPolicies,
+    deletePolicy,
+    updatePolicy 
   } = usePersistedPolicies();
+  
+  const { dashboardData, isRefreshing, lastUpdate, refreshDashboard } = useDashboardData(policies);
 
   // Função para lidar com políticas extraídas (agora com arquivo)
   const handlePolicyExtracted = async (policy: ParsedPolicyData, file?: File) => {
@@ -57,6 +63,18 @@ export function DashboardContent({ activeTab, onTabChange }: DashboardContentPro
     } catch (error) {
       console.error('❌ Erro ao processar política extraída:', error);
     }
+  };
+
+  const handlePolicySelect = (policy: ParsedPolicyData) => {
+    setSelectedPolicy(policy);
+  };
+
+  const handlePolicyUpdate = (updatedPolicy: ParsedPolicyData) => {
+    updatePolicy(updatedPolicy.id, updatedPolicy);
+  };
+
+  const handlePolicyDelete = (policyId: string) => {
+    deletePolicy(policyId);
   };
 
   // Carregar dados do dashboard ao montar o componente
@@ -132,9 +150,9 @@ export function DashboardContent({ activeTab, onTabChange }: DashboardContentPro
         <TabsContent value="dashboard" className="space-y-6">
           <DashboardCards 
             totalPolicies={dashboardData.totalPolicies}
-            monthlySpending={dashboardData.monthlySpending}
-            pendingRenewals={dashboardData.pendingRenewals}
-            totalValue={dashboardData.totalValue}
+            totalMonthlyCost={dashboardData.totalMonthlyCost}
+            expiringPolicies={dashboardData.expiringPolicies}
+            totalInsuredValue={dashboardData.totalInsuredValue}
           />
           <ChartsSection />
         </TabsContent>
@@ -144,7 +162,14 @@ export function DashboardContent({ activeTab, onTabChange }: DashboardContentPro
         </TabsContent>
 
         <TabsContent value="policies" className="space-y-6">
-          <PolicyTable policies={policies} isLoading={isPoliciesLoading} />
+          <PolicyTable 
+            searchTerm=""
+            filterType="all"
+            onPolicySelect={handlePolicySelect}
+            extractedPolicies={policies}
+            onPolicyUpdate={handlePolicyUpdate}
+            onPolicyDelete={handlePolicyDelete}
+          />
         </TabsContent>
 
         {user.role === 'administrador' && (
