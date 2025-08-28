@@ -28,7 +28,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   const fileProcessor = new FileProcessor(
     updateFileStatus,
     removeFileStatus,
-    user?.id || null, // Passar o userId para o FileProcessor
+    user?.id || null,
     onPolicyExtracted,
     toast
   );
@@ -41,45 +41,52 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
 
     if (!user?.id) {
       toast({
-        title: "Erro de Autenticação",
+        title: "❌ Erro de Autenticação",
         description: "Usuário não autenticado. Faça login para continuar.",
         variant: "destructive",
       });
       return;
     }
 
-    console.log(`🚀 EnhancedPDFUpload.onDrop CHAMADO!`);
-    console.log(`📤 Iniciando processamento em lote de ${acceptedFiles.length} arquivo(s)`);
-    console.log(`👤 User ID para processamento:`, user.id);
-    console.log(`🔗 Webhook ativo: https://smartapoliceoficialbeta.app.n8n.cloud/webhook/upload-arquivo`);
+    console.log(`🚀 EnhancedPDFUpload.onDrop INICIADO!`);
+    console.log(`📤 Processando ${acceptedFiles.length} arquivo(s) para usuário: ${user.id}`);
+    console.log(`🔗 Webhook N8N: https://smartapolicetest.app.n8n.cloud/webhook/upload-arquivo`);
     
     setIsProcessingBatch(true);
 
     try {
+      // Processar arquivos via webhook N8N
       console.log(`🚀 Chamando fileProcessor.processMultipleFiles...`);
-      // Processar arquivos em lote (método otimizado)
       const allResults = await fileProcessor.processMultipleFiles(acceptedFiles);
       
-      console.log(`🎉 Processamento completo! ${allResults.length} apólices extraídas`);
+      console.log(`🎉 Processamento concluído! ${allResults.length} apólices extraídas`);
       
-      toast({
-        title: "🎉 Processamento em Lote Concluído",
-        description: `${allResults.length} apólices foram processadas via webhook N8N`,
-      });
+      if (allResults.length > 0) {
+        toast({
+          title: "🎉 Upload Processado com Sucesso",
+          description: `${allResults.length} apólices foram extraídas e salvas no banco de dados`,
+        });
+      } else {
+        toast({
+          title: "⚠️ Nenhuma Apólice Extraída",
+          description: "Os arquivos foram processados mas nenhuma apólice foi extraída.",
+          variant: "destructive",
+        });
+      }
 
     } catch (error) {
-      console.error('❌ Erro no processamento em lote:', error);
+      console.error('❌ Erro no processamento:', error);
       
       toast({
-        title: "Erro no Processamento em Lote",
-        description: "Ocorreu um erro durante o processamento dos arquivos",
+        title: "❌ Erro no Processamento",
+        description: error instanceof Error ? error.message : "Erro desconhecido durante o processamento",
         variant: "destructive",
       });
     } finally {
       setIsProcessingBatch(false);
     }
 
-  }, [fileProcessor, toast, user?.id]);
+  }, [fileProcessor, toast, user?.id, onPolicyExtracted]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -87,7 +94,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       'application/pdf': ['.pdf'],
     },
     maxFiles: 10,
-    multiple: true, // Garantir que múltiplos arquivos são aceitos
+    multiple: true,
     disabled: isProcessingBatch,
   });
 
@@ -103,6 +110,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
             <span>Upload de Apólices</span>
           </CardTitle>
           <CardDescription>
+            Envie seus PDFs de apólices para extração automática via N8N
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -127,7 +135,13 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
               </p>
               {isProcessingBatch && (
                 <p className="text-xs text-blue-600 mt-2">
+                  <Clock className="h-4 w-4 inline mr-1" />
                   Enviando para processamento inteligente...
+                </p>
+              )}
+              {processingCount > 0 && !isProcessingBatch && (
+                <p className="text-xs text-orange-600 mt-2">
+                  {processingCount} arquivo(s) sendo processado(s)
                 </p>
               )}
             </div>
