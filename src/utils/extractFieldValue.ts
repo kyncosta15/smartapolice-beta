@@ -1,4 +1,5 @@
 
+
 export const extractFieldValue = (field: any): string | null => {
   console.log('🔍 Extraindo valor do campo:', field);
   
@@ -7,8 +8,13 @@ export const extractFieldValue = (field: any): string | null => {
     return null;
   }
 
-  // 1. string simples
-  if (typeof field === 'string' && field.toLowerCase() !== 'undefined' && field.trim() !== '') {
+  // 1. string simples - CORREÇÃO: verificar se toLowerCase existe
+  if (typeof field === 'string') {
+    if (field === 'undefined' || field.trim() === '') {
+      console.log('❌ String vazia ou "undefined"');
+      return null;
+    }
+    
     // Verificar se é um JSON string que precisa ser parseado
     if (field.startsWith('{') && field.endsWith('}')) {
       try {
@@ -47,11 +53,11 @@ export const extractFieldValue = (field: any): string | null => {
       
       // Handle nested value objects
       if (typeof v === 'object' && v !== null && 'value' in v) {
-        if (typeof v.value === 'string' && v.value.toLowerCase() !== 'undefined' && v.value.trim() !== '') {
+        if (typeof v.value === 'string' && v.value !== 'undefined' && v.value.trim() !== '') {
           console.log('✅ Valor aninhado do objeto N8N é válido:', v.value);
           return v.value;
         }
-      } else if (typeof v === 'string' && v.toLowerCase() !== 'undefined' && v.trim() !== '') {
+      } else if (typeof v === 'string' && v !== 'undefined' && v.trim() !== '') {
         console.log('✅ Valor do objeto N8N é válido:', v);
         return v;
       }
@@ -84,11 +90,11 @@ export const extractFieldValue = (field: any): string | null => {
       const singleValue = field[singleKey];
       
       if (typeof singleValue === 'object' && singleValue !== null && 'value' in singleValue) {
-        if (typeof singleValue.value === 'string' && singleValue.value.toLowerCase() !== 'undefined' && singleValue.value.trim() !== '') {
+        if (typeof singleValue.value === 'string' && singleValue.value !== 'undefined' && singleValue.value.trim() !== '') {
           console.log(`✅ Valor único extraído de ${singleKey}:`, singleValue.value);
           return singleValue.value;
         }
-      } else if (typeof singleValue === 'string' && singleValue.toLowerCase() !== 'undefined' && singleValue.trim() !== '') {
+      } else if (typeof singleValue === 'string' && singleValue !== 'undefined' && singleValue.trim() !== '') {
         console.log(`✅ Valor único string extraído de ${singleKey}:`, singleValue);
         return singleValue;
       }
@@ -97,7 +103,7 @@ export const extractFieldValue = (field: any): string | null => {
     console.log('⚠️ Objeto complexo encontrado, tentando extrair string válida:', field);
     // As a last resort, try to find any valid string value in the object
     const findValidString = (obj: any): string | null => {
-      if (typeof obj === 'string' && obj.toLowerCase() !== 'undefined' && obj.trim() !== '') {
+      if (typeof obj === 'string' && obj !== 'undefined' && obj.trim() !== '') {
         return obj;
       }
       if (typeof obj === 'object' && obj !== null) {
@@ -126,14 +132,28 @@ export const extractFieldValue = (field: any): string | null => {
     return field.toString();
   }
 
+  // CORREÇÃO: Conversão segura para string para outros tipos
+  if (field !== null && field !== undefined) {
+    const stringValue = String(field);
+    if (stringValue !== 'undefined' && stringValue.trim() !== '') {
+      console.log('✅ Campo convertido para string:', stringValue);
+      return stringValue;
+    }
+  }
+
   console.log('❌ Campo não possui valor válido');
   return null;
 };
 
 export function inferTipoPorDocumento(doc: string | null): 'CPF' | 'CNPJ' | null {
   if (!doc) return null;
-  const digits = doc.replace(/\D/g, '');
+  
+  // CORREÇÃO: Conversão segura para string antes de usar replace
+  const docString = String(doc);
+  const digits = docString.replace(/\D/g, '');
+  
   console.log('🔍 Inferindo tipo por documento. Dígitos:', digits, 'Tamanho:', digits.length);
+  
   if (digits.length === 11) {
     console.log('✅ Documento identificado como CPF');
     return 'CPF';
@@ -145,3 +165,4 @@ export function inferTipoPorDocumento(doc: string | null): 'CPF' | 'CNPJ' | null
   console.log('⚠️ Documento com tamanho inválido para CPF/CNPJ');
   return null;
 }
+
