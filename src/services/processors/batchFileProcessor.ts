@@ -5,6 +5,7 @@ import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
 import { StructuredDataConverter } from '@/utils/parsers/structuredDataConverter';
 import { FileProcessingStatus } from '@/types/pdfUpload';
 import { PolicyPersistenceService } from '../policyPersistenceService';
+import { SafeDataExtractor } from '@/utils/safeDataExtractor';
 
 export class BatchFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
@@ -79,7 +80,7 @@ export class BatchFileProcessor {
             user_id: userId // Forçar userId nos dados
           };
           
-          const relatedFileName = this.findRelatedFileName(singleData, files) || files[Math.min(index, files.length - 1)]?.name || `Arquivo ${index + 1}`;
+          const relatedFileName = this.findRelatedFileNameSafely(singleData, files) || files[Math.min(index, files.length - 1)]?.name || `Arquivo ${index + 1}`;
           
           this.updateFileStatus(relatedFileName, {
             progress: 60 + (index * 15),
@@ -213,21 +214,21 @@ export class BatchFileProcessor {
   }
 
   private createFallbackPolicy(file: File, userId: string, originalData?: any): ParsedPolicyData {
-    // Se temos dados originais, usar o que conseguirmos extrair
-    const segurado = originalData?.segurado || `Cliente ${file.name.replace('.pdf', '')}`;
-    const seguradora = originalData?.seguradora || 'Seguradora Não Identificada';
-    const premio = Number(originalData?.premio) || 1200 + Math.random() * 1800;
+    // Usar SafeDataExtractor para extrair dados de forma segura
+    const seguradoName = SafeDataExtractor.extractInsuredName(originalData?.segurado) || `Cliente ${file.name.replace('.pdf', '')}`;
+    const seguradoraName = SafeDataExtractor.extractInsurerName(originalData?.seguradora) || 'Seguradora Não Identificada';
+    const premio = SafeDataExtractor.extractFinancialValue(originalData?.premio) || (1200 + Math.random() * 1800);
     
     const mockPolicyData: ParsedPolicyData = {
       id: crypto.randomUUID(),
-      name: segurado,
+      name: seguradoName,
       type: 'auto',
-      insurer: seguradora,
+      insurer: seguradoraName,
       premium: premio,
       monthlyAmount: premio / 12,
       startDate: originalData?.inicio || new Date().toISOString().split('T')[0],
       endDate: originalData?.fim || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      policyNumber: originalData?.numero_apolice || `FB-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      policyNumber: SafeDataExtractor.extractPolicyNumber(originalData) || `FB-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       paymentFrequency: 'monthly',
       status: 'vigente',
       file,
@@ -239,12 +240,12 @@ export class BatchFileProcessor {
       policyStatus: 'vigente',
       
       // Campos específicos se disponíveis
-      insuredName: segurado,
+      insuredName: seguradoName,
       documento: originalData?.documento,
       documento_tipo: originalData?.documento_tipo as 'CPF' | 'CNPJ' || 'CPF',
       vehicleModel: originalData?.modelo_veiculo,
       uf: originalData?.uf,
-      deductible: Number(originalData?.franquia) || undefined,
+      deductible: SafeDataExtractor.extractFinancialValue(originalData?.franquia) || undefined,
       
       // Campos opcionais
       coberturas: originalData?.coberturas || [{ descricao: 'Cobertura Básica' }],
@@ -258,16 +259,29 @@ export class BatchFileProcessor {
     return mockPolicyData;
   }
 
-  private findRelatedFileName(data: any, files: File[]): string | null {
-    if (data.segurado) {
-      const seguradoName = data.segurado.toLowerCase();
-      const matchingFile = files.find(file => {
-        const fileName = file.name.toLowerCase();
-        const firstNames = seguradoName.split(' ').slice(0, 2);
-        return firstNames.some(name => fileName.includes(name));
-      });
-      return matchingFile?.name || null;
+  /**
+   * Função segura para encontrar arquivo relacionado
+   * Usa SafeDataExtractor para extrair nome do segurado de forma segura
+   */
+  private findRelatedFileNameSafely(data: any, files: File[]): string | null {
+    try {
+      // Usar SafeDataExtractor para extrair nome do segurado de forma segura
+      const seguradoName = SafeDataExtractor.extractInsuredName(data.segurado);
+      
+      if (seguradoName) {
+        const seguradoLower = seguradoName.toLowerCase();
+        const matchingFile = files.find(file => {
+          const fileName = file.name.toLowerCase();
+          const firstNames = seguradoLower.split(' ').slice(0, 2);
+          return firstNames.some(name => fileName.includes(name));
+        });
+        return matchingFile?.name || null;
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('⚠️ Erro ao encontrar arquivo relacionado:', error);
+      return null;
     }
-    return null;
   }
 }
