@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +23,7 @@ import { InfoModal } from '@/components/InfoModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { useToast } from '@/hooks/use-toast';
-import { renderValue, renderCurrency } from '@/utils/renderValue';
+import { renderValue, renderValueAsString, renderCurrency } from '@/utils/renderValue';
 
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -35,14 +36,14 @@ export function MyPolicies() {
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
     const finalStatus = policy.status as PolicyStatus;
     
-    console.log(`✅ [MyPolicies] Apólice ${renderValue(policy.name)}: status do banco = ${finalStatus}`);
+    console.log(`✅ [MyPolicies] Apólice ${renderValueAsString(policy.name)}: status do banco = ${finalStatus}`);
     
     return {
       id: policy.id,
-      name: renderValue(policy.name),
-      insurer: renderValue(policy.insurer || policy.seguradora),
-      policyNumber: renderValue(policy.policyNumber || policy.numero_apolice),
-      type: renderValue(policy.type || policy.tipo),
+      name: renderValueAsString(policy.name),
+      insurer: renderValueAsString(policy.insurer),
+      policyNumber: renderValueAsString(policy.policyNumber),
+      type: renderValueAsString(policy.type),
       monthlyAmount: policy.monthlyAmount,
       startDate: policy.startDate,
       endDate: policy.endDate,

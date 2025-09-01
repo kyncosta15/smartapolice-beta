@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 /**
@@ -57,6 +56,74 @@ export function renderValue(value: any): React.ReactNode {
     }
     if ("value" in value && value.value) {
       return renderValue(value.value);
+    }
+
+    // Se nada foi encontrado, tentar stringify de forma segura
+    try {
+      const stringified = JSON.stringify(value);
+      if (stringified !== "{}") {
+        return stringified;
+      }
+    } catch (error) {
+      console.warn("Erro ao stringify objeto:", error);
+    }
+
+    return "Objeto complexo";
+  }
+
+  // Fallback para outros tipos
+  return String(value);
+}
+
+/**
+ * Versão que sempre retorna string para compatibilidade com interfaces TypeScript
+ */
+export function renderValueAsString(value: any): string {
+  if (value == null || value === undefined) {
+    return "";
+  }
+
+  // Strings e números são válidos
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+
+  // Arrays - renderizar como lista
+  if (Array.isArray(value)) {
+    return value.map(v => renderValueAsString(v)).join(", ");
+  }
+
+  // Objetos - extrair campos conhecidos ou stringify
+  if (typeof value === "object") {
+    // Estrutura N8N específica - PRIORIDADE ALTA
+    if ("empresa" in value && value.empresa) {
+      return renderValueAsString(value.empresa);
+    }
+    if ("categoria" in value && value.categoria) {
+      return renderValueAsString(value.categoria);
+    }
+    if ("cobertura" in value && value.cobertura) {
+      return renderValueAsString(value.cobertura);
+    }
+    if ("entidade" in value && value.entidade) {
+      return renderValueAsString(value.entidade);
+    }
+
+    // Campos comuns de objetos
+    if ("descricao" in value && value.descricao) {
+      return renderValueAsString(value.descricao);
+    }
+    if ("nome" in value && value.nome) {
+      return renderValueAsString(value.nome);
+    }
+    if ("razaoSocial" in value && value.razaoSocial) {
+      return renderValueAsString(value.razaoSocial);
+    }
+    if ("name" in value && value.name) {
+      return renderValueAsString(value.name);
+    }
+    if ("value" in value && value.value) {
+      return renderValueAsString(value.value);
     }
 
     // Se nada foi encontrado, tentar stringify de forma segura
