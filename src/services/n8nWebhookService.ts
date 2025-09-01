@@ -215,8 +215,7 @@ export class N8NWebhookService {
       // Campos de documento do N8N
       documento: extractFieldValue(n8nData.documento),
       documento_tipo: extractFieldValue(n8nData.documento_tipo) as 'CPF' | 'CNPJ',
-      // Outros campos específicos
-      modelo_veiculo: extractFieldValue(n8nData.modelo_veiculo),
+      // Remover modelo_veiculo pois não existe no tipo DynamicPDFData
       uf: extractFieldValue(n8nData.uf),
       franquia: extractNumericValue(n8nData.franquia),
       corretora: extractFieldValue(n8nData.corretora),

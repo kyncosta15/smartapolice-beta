@@ -56,17 +56,17 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     color: COLORS[index % COLORS.length]
   }));
 
-  // Transform insurer data to match expected format
-  const insurerDistributionFormatted = insurerChartData.map(item => ({
-    name: item.insurer,
-    value: item.count,
-    color: item.color
+  // Transform insurer data to match expected format - fix property mapping
+  const insurerDistributionFormatted = insurerChartData.map((item, index) => ({
+    name: item.name,
+    value: item.value,
+    color: COLORS[index % COLORS.length]
   }));
 
-  // Transform status data to match expected format  
+  // Transform status data to match expected format - fix property mapping
   const statusDistributionFormatted = statusChartData.map(item => ({
     name: item.name,
-    value: item.count
+    value: item.value
   }));
 
   // Transform recent policies to match expected format
