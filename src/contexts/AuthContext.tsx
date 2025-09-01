@@ -3,22 +3,65 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+// Extended user interface with our custom properties
+export interface ExtendedUser extends User {
+  name?: string;
+  role?: string;
+  company?: string;
+  phone?: string;
+  avatar?: string;
+}
+
+export type UserRole = 'cliente' | 'administrador' | 'corretora';
+
 interface AuthContextType {
-  user: User | null;
+  user: ExtendedUser | null;
   session: Session | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  // Add missing methods for compatibility
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (userData: {
+    email: string;
+    password: string;
+    name: string;
+    company?: string;
+    phone?: string;
+    role: UserRole;
+  }) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Function to fetch extended user data from our users table
+  const fetchExtendedUserData = async (userId: string): Promise<ExtendedUser | null> => {
+    try {
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('❌ Erro ao buscar dados do usuário:', error);
+        return null;
+      }
+
+      return userData as ExtendedUser;
+    } catch (error) {
+      console.error('❌ Erro inesperado ao buscar dados do usuário:', error);
+      return null;
+    }
+  };
 
   // CORREÇÃO PRINCIPAL: Melhor gestão do estado de autenticação
   useEffect(() => {
@@ -36,19 +79,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Atualizar estado SEMPRE que houver mudança
         setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
-
-        // Log detalhado do estado
+        
         if (session?.user) {
-          console.log('✅ Usuário autenticado:', {
-            id: session.user.id,
-            email: session.user.email,
-            event
-          });
+          console.log('✅ Usuário autenticado, buscando dados estendidos...');
+          // Fetch extended user data from our users table
+          const extendedUser = await fetchExtendedUserData(session.user.id);
+          if (extendedUser) {
+            // Merge Supabase user with our extended data
+            const mergedUser: ExtendedUser = {
+              ...session.user,
+              name: extendedUser.name,
+              role: extendedUser.role,
+              company: extendedUser.company,
+              phone: extendedUser.phone,
+              avatar: extendedUser.avatar,
+            };
+            setUser(mergedUser);
+            console.log('✅ Dados do usuário carregados:', {
+              id: mergedUser.id,
+              email: mergedUser.email,
+              name: mergedUser.name,
+              role: mergedUser.role
+            });
+          } else {
+            // Fallback to basic user data if extended data not found
+            setUser(session.user as ExtendedUser);
+          }
         } else {
           console.log('❌ Usuário não autenticado, event:', event);
+          setUser(null);
         }
+        
+        setIsLoading(false);
       }
     );
 
@@ -68,7 +130,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: session.user.email
           });
           setSession(session);
-          setUser(session.user);
+          
+          // Fetch extended user data
+          const extendedUser = await fetchExtendedUserData(session.user.id);
+          if (extendedUser) {
+            const mergedUser: ExtendedUser = {
+              ...session.user,
+              name: extendedUser.name,
+              role: extendedUser.role,
+              company: extendedUser.company,
+              phone: extendedUser.phone,
+              avatar: extendedUser.avatar,
+            };
+            setUser(mergedUser);
+          } else {
+            setUser(session.user as ExtendedUser);
+          }
         } else {
           console.log('📭 Nenhuma sessão existente encontrada');
           setSession(null);
@@ -210,12 +287,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         console.log('✅ Sessão atualizada com sucesso');
         setSession(data.session);
-        setUser(data.session?.user ?? null);
+        
+        if (data.session?.user) {
+          const extendedUser = await fetchExtendedUserData(data.session.user.id);
+          if (extendedUser) {
+            const mergedUser: ExtendedUser = {
+              ...data.session.user,
+              name: extendedUser.name,
+              role: extendedUser.role,
+              company: extendedUser.company,
+              phone: extendedUser.phone,
+              avatar: extendedUser.avatar,
+            };
+            setUser(mergedUser);
+          } else {
+            setUser(data.session.user as ExtendedUser);
+          }
+        }
       }
     } catch (error) {
       console.error('❌ Erro inesperado ao atualizar sessão:', error);
     }
   };
+
+  // Compatibility methods for existing components
+  const login = async (email: string, password: string) => {
+    const result = await signIn(email, password);
+    return {
+      success: !result.error,
+      error: result.error?.message || undefined
+    };
+  };
+
+  const register = async (userData: {
+    email: string;
+    password: string;
+    name: string;
+    company?: string;
+    phone?: string;
+    role: UserRole;
+  }) => {
+    const result = await signUp(userData.email, userData.password, userData.name);
+    return {
+      success: !result.error,
+      error: result.error?.message || undefined
+    };
+  };
+
+  const logout = signOut;
 
   const value = {
     user,
@@ -225,6 +344,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     refreshSession,
+    login,
+    register,
+    logout,
   };
 
   return (
