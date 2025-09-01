@@ -1,12 +1,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, User } from 'lucide-react';
+import { renderValue } from '@/utils/renderValue';
 
 interface ResponsiblePersonCardProps {
   policy: any;
 }
 
 export const ResponsiblePersonCard = ({ policy }: ResponsiblePersonCardProps) => {
+  const responsibleName = renderValue(
+    policy?.responsavel_nome || 
+    policy?.responsible?.name || 
+    policy?.responsible || 
+    policy?.segurado ||
+    policy?.name
+  );
+
   return (
     <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
       <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-slate-200 pb-4">
@@ -20,7 +29,7 @@ export const ResponsiblePersonCard = ({ policy }: ResponsiblePersonCardProps) =>
           <User className="h-10 w-10 text-white" />
         </div>
         <p className="text-xl font-bold text-slate-900 font-sf-pro">
-          {policy.responsavel_nome || 'Não definido'}
+          {responsibleName || 'Não definido'}
         </p>
       </CardContent>
     </Card>

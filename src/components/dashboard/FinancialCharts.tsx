@@ -4,19 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/utils/currencyFormatter';
-import { extractFieldValue } from '@/utils/extractFieldValue';
+import { renderValue } from '@/utils/renderValue';
 
 interface FinancialChartsProps {
-  financialData: Array<{ name: string; valor: number; cobertura: number }>;
+  financialData: Array<{ name: any; valor: number; cobertura: number }>;
 }
 
 export function FinancialCharts({ financialData }: FinancialChartsProps) {
-  // Processar dados para garantir que nomes sejam strings válidas
+  // Processar dados para garantir que nomes sejam strings válidas usando renderValue
   const processedData = financialData.map(item => {
-    const extractedName = extractFieldValue(item.name);
+    const safeName = renderValue(item.name);
+    
     return {
       ...item,
-      name: extractedName || 'Não informado'
+      name: typeof safeName === 'string' ? safeName : 'Não informado'
     };
   });
 

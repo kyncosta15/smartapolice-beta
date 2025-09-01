@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import { Download, Eye, Edit, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -6,13 +7,14 @@ import { Badge } from '@/components/ui/badge'
 import { LocationFilter } from './LocationFilter'
 import { PolicyEditModal } from './PolicyEditModal'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { renderValue } from '@/utils/renderValue'
 
 interface Policy {
   id: string
-  name: string
-  insurer: string
-  policyNumber: string
-  type: string
+  name: any
+  insurer: any
+  policyNumber: any
+  type: any
   uf: string
   pdfPath: string
 }
@@ -42,7 +44,7 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
       a.href     = url
-      a.download = `${policy.name}.pdf`
+      a.download = `${renderValue(policy.name)}.pdf`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -52,6 +54,14 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
       alert('Não foi possível baixar o arquivo. Tente novamente.')
     }
   }
+
+  const getSearchableText = (policy: Policy) => {
+    const name = renderValue(policy.name);
+    const insurer = renderValue(policy.insurer);
+    const policyNumber = renderValue(policy.policyNumber);
+    
+    return `${name} ${insurer} ${policyNumber}`.toLowerCase();
+  };
 
   return (
     <div className="space-y-6">
@@ -68,12 +78,13 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
 
       <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'}`}>
         {policies
-          .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+          .filter(policy => getSearchableText(policy).includes(search.toLowerCase()))
           .map(policy => (
             <Card key={policy.id}>
               <CardContent>
-                <h3 className="text-lg font-semibold">{policy.name}</h3>
-                <p className="text-sm">{policy.insurer}</p>
+                <h3 className="text-lg font-semibold">{renderValue(policy.name)}</h3>
+                <p className="text-sm">{renderValue(policy.insurer)}</p>
+                <p className="text-xs text-gray-500">Apólice: {renderValue(policy.policyNumber)}</p>
 
                 <div className="flex space-x-2 mt-4">
                   <Button size="sm" onClick={() => handleDownload(policy)}>

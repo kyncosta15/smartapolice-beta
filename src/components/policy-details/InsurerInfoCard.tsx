@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Star, Shield } from 'lucide-react';
+import { renderValue } from '@/utils/renderValue';
 
 interface InsurerInfoCardProps {
   insurer: string | object;
@@ -13,28 +14,12 @@ export const InsurerInfoCard = ({
   type,
   readOnly = false 
 }: InsurerInfoCardProps) => {
-  // Função para extrair o nome da seguradora
-  const getInsurerName = (insurerData: string | object): string => {
-    if (typeof insurerData === 'string') {
-      return insurerData;
-    }
-    
-    if (typeof insurerData === 'object' && insurerData !== null) {
-      const insurerObj = insurerData as any;
-      
-      // Handle different object structures
-      if (insurerObj.empresa) return String(insurerObj.empresa);
-      if (insurerObj.name) return String(insurerObj.name);
-      if (insurerObj.value) return String(insurerObj.value);
-      
-      return 'Seguradora não informada';
-    }
-    
-    return 'Seguradora não informada';
-  };
-
+  // Usar renderValue para extrair o nome da seguradora de forma segura
+  const insurerName = renderValue(insurer);
+  
   const getInsuranceTypeLabel = (type: string) => {
-    switch (type?.toLowerCase()) {
+    const typeStr = String(type || '').toLowerCase();
+    switch (typeStr) {
       case 'auto':
         return 'Seguro Auto';
       case 'vida':
@@ -46,11 +31,9 @@ export const InsurerInfoCard = ({
       case 'empresarial':
         return 'Seguro Empresarial';
       default:
-        return type || 'Seguro';
+        return renderValue(type) || 'Seguro';
     }
   };
-
-  const insurerName = getInsurerName(insurer);
 
   return (
     <Card className="flex flex-col h-full border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
@@ -67,7 +50,9 @@ export const InsurerInfoCard = ({
           <Star className="h-5 w-5 text-blue-500 mt-1 flex-shrink-0" />
           <div>
             <p className="text-sm font-medium text-blue-600 mb-1">Nome da Seguradora</p>
-            <p className="text-base font-semibold text-gray-800 font-sf-pro">{insurerName}</p>
+            <p className="text-base font-semibold text-gray-800 font-sf-pro">
+              {insurerName || 'Seguradora não informada'}
+            </p>
           </div>
         </div>
 
@@ -76,7 +61,9 @@ export const InsurerInfoCard = ({
           <Shield className="h-5 w-5 text-blue-500 mt-1 flex-shrink-0" />
           <div>
             <p className="text-sm font-medium text-blue-600 mb-1">Tipo de Seguro</p>
-            <p className="text-base font-semibold text-gray-800 font-sf-pro">{getInsuranceTypeLabel(type)}</p>
+            <p className="text-base font-semibold text-gray-800 font-sf-pro">
+              {getInsuranceTypeLabel(type)}
+            </p>
           </div>
         </div>
       </CardContent>
