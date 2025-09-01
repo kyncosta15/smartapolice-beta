@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Function to fetch extended user data from our users table
   const fetchExtendedUserData = async (userId: string) => {
     try {
+      console.log('🔍 Buscando dados estendidos para usuário:', userId);
       const { data: userData, error } = await supabase
         .from('users')
         .select('*')
@@ -56,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
 
+      console.log('✅ Dados do usuário encontrados:', userData);
       return userData;
     } catch (error) {
       console.error('❌ Erro inesperado ao buscar dados do usuário:', error);
@@ -63,11 +64,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // CORREÇÃO PRINCIPAL: Melhor gestão do estado de autenticação
+  // Enhanced auth state management with better error handling
   useEffect(() => {
     console.log('🔐 AuthProvider: Configurando autenticação');
+    let mounted = true;
 
-    // Configurar listener de mudanças de estado PRIMEIRO
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔄 Auth state change:', { 
@@ -77,93 +79,124 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userEmail: session?.user?.email 
         });
         
-        // Atualizar estado SEMPRE que houver mudança
+        if (!mounted) return;
+        
+        // Update session state immediately
         setSession(session);
         
         if (session?.user) {
-          console.log('✅ Usuário autenticado, buscando dados estendidos...');
-          // Fetch extended user data from our users table
-          const extendedUserData = await fetchExtendedUserData(session.user.id);
-          if (extendedUserData) {
-            // Merge Supabase user with our extended data
-            const mergedUser: ExtendedUser = {
-              ...session.user,
-              name: extendedUserData.name,
-              role: extendedUserData.role,
-              company: extendedUserData.company,
-              phone: extendedUserData.phone,
-              avatar: extendedUserData.avatar,
-            };
-            setUser(mergedUser);
-            console.log('✅ Dados do usuário carregados:', {
-              id: mergedUser.id,
-              email: mergedUser.email,
-              name: mergedUser.name,
-              role: mergedUser.role
-            });
-          } else {
-            // Fallback to basic user data if extended data not found
-            setUser(session.user as ExtendedUser);
-          }
+          console.log('✅ Usuário autenticado, processando dados...');
+          
+          // Defer data fetching to avoid blocking the auth state update
+          setTimeout(async () => {
+            if (!mounted) return;
+            
+            try {
+              // Fetch extended user data from our users table
+              const extendedUserData = await fetchExtendedUserData(session.user.id);
+              
+              if (!mounted) return;
+              
+              if (extendedUserData) {
+                // Merge Supabase user with our extended data
+                const mergedUser: ExtendedUser = {
+                  ...session.user,
+                  name: extendedUserData.name,
+                  role: extendedUserData.role,
+                  company: extendedUserData.company,
+                  phone: extendedUserData.phone,
+                  avatar: extendedUserData.avatar,
+                };
+                setUser(mergedUser);
+                console.log('✅ Dados do usuário carregados:', {
+                  id: mergedUser.id,
+                  email: mergedUser.email,
+                  name: mergedUser.name,
+                  role: mergedUser.role
+                });
+              } else {
+                // Fallback to basic user data if extended data not found
+                console.log('⚠️ Dados estendidos não encontrados, usando dados básicos');
+                const fallbackUser: ExtendedUser = {
+                  ...session.user,
+                  name: session.user.email?.split('@')[0] || 'Usuário',
+                  role: 'cliente',
+                  company: '',
+                  phone: '',
+                  avatar: ''
+                };
+                setUser(fallbackUser);
+              }
+            } catch (error) {
+              console.error('❌ Erro ao processar dados do usuário:', error);
+              // Still set a fallback user to prevent infinite loading
+              const fallbackUser: ExtendedUser = {
+                ...session.user,
+                name: session.user.email?.split('@')[0] || 'Usuário',
+                role: 'cliente',
+                company: '',
+                phone: '',
+                avatar: ''
+              };
+              setUser(fallbackUser);
+            } finally {
+              if (mounted) {
+                setIsLoading(false);
+              }
+            }
+          }, 100);
         } else {
           console.log('❌ Usuário não autenticado, event:', event);
           setUser(null);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 
-    // DEPOIS verificar sessão existente
-    const checkSession = async () => {
+    // Check for existing session AFTER setting up the listener
+    const checkInitialSession = async () => {
       try {
-        console.log('🔍 Verificando sessão existente...');
+        console.log('🔍 Verificando sessão inicial...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         
         if (error) {
           console.error('❌ Erro ao verificar sessão:', error);
           setSession(null);
           setUser(null);
-        } else if (session) {
-          console.log('✅ Sessão existente encontrada:', {
+          setIsLoading(false);
+          return;
+        }
+
+        if (session) {
+          console.log('✅ Sessão inicial encontrada:', {
             userId: session.user.id,
             email: session.user.email
           });
-          setSession(session);
-          
-          // Fetch extended user data
-          const extendedUserData = await fetchExtendedUserData(session.user.id);
-          if (extendedUserData) {
-            const mergedUser: ExtendedUser = {
-              ...session.user,
-              name: extendedUserData.name,
-              role: extendedUserData.role,
-              company: extendedUserData.company,
-              phone: extendedUserData.phone,
-              avatar: extendedUserData.avatar,
-            };
-            setUser(mergedUser);
-          } else {
-            setUser(session.user as ExtendedUser);
-          }
+          // The onAuthStateChange will handle the rest
         } else {
-          console.log('📭 Nenhuma sessão existente encontrada');
+          console.log('📭 Nenhuma sessão inicial encontrada');
           setSession(null);
           setUser(null);
+          setIsLoading(false);
         }
       } catch (error) {
-        console.error('❌ Erro inesperado ao verificar sessão:', error);
-        setSession(null);
-        setUser(null);
-      } finally {
-        setIsLoading(false);
+        console.error('❌ Erro inesperado ao verificar sessão inicial:', error);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setIsLoading(false);
+        }
       }
     };
 
-    checkSession();
+    // Small delay to ensure the auth listener is set up first
+    setTimeout(checkInitialSession, 50);
 
     return () => {
       console.log('🧹 Limpando subscription de auth');
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -180,6 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('❌ Erro no login:', error);
+        setIsLoading(false);
         return { error };
       }
 
@@ -188,13 +222,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data.user?.email
       });
 
-      // O estado será atualizado automaticamente pelo onAuthStateChange
+      // Don't set isLoading to false here - let the auth state change handle it
       return { error: null };
     } catch (error) {
       console.error('❌ Erro inesperado no login:', error);
-      return { error };
-    } finally {
       setIsLoading(false);
+      return { error };
     }
   };
 
