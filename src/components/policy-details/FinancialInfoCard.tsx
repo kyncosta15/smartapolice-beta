@@ -28,7 +28,37 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
     return 12;
   };
 
+  // CORREÇÃO: Calcular prêmio mensal corretamente
+  const calculateMonthlyPremium = () => {
+    const premiumValue = policy.valor_premio || policy.premium || 0;
+    
+    // Se há custo_mensal definido, usar ele
+    if (policy.custo_mensal && policy.custo_mensal > 0) {
+      return policy.custo_mensal;
+    }
+    
+    // Se há monthlyAmount definido, usar ele
+    if (policy.monthlyAmount && policy.monthlyAmount > 0) {
+      return policy.monthlyAmount;
+    }
+    
+    // Se há valor_parcela definido, usar ele
+    if (policy.valor_parcela && policy.valor_parcela > 0) {
+      return policy.valor_parcela;
+    }
+    
+    // Calcular baseado no número de parcelas
+    const installmentsCount = getInstallmentsCount();
+    if (installmentsCount > 0) {
+      return premiumValue / installmentsCount;
+    }
+    
+    // Fallback: dividir por 12
+    return premiumValue / 12;
+  };
+
   const installmentsCount = getInstallmentsCount();
+  const monthlyPremium = calculateMonthlyPremium();
 
   return (
     <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 overflow-hidden">
@@ -49,7 +79,7 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
         <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
           <label className="text-sm font-medium text-amber-700 font-sf-pro block mb-1">Prêmio Mensal</label>
           <p className="text-2xl font-bold text-gray-900 font-sf-pro">
-            R$ {((policy.valor_premio || policy.premium || 0) / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            R$ {monthlyPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
 
