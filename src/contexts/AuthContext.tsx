@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Function to fetch extended user data from our users table
-  const fetchExtendedUserData = async (userId: string): Promise<ExtendedUser | null> => {
+  const fetchExtendedUserData = async (userId: string) => {
     try {
       const { data: userData, error } = await supabase
         .from('users')
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
 
-      return userData as ExtendedUser;
+      return userData;
     } catch (error) {
       console.error('❌ Erro inesperado ao buscar dados do usuário:', error);
       return null;
@@ -83,16 +83,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           console.log('✅ Usuário autenticado, buscando dados estendidos...');
           // Fetch extended user data from our users table
-          const extendedUser = await fetchExtendedUserData(session.user.id);
-          if (extendedUser) {
+          const extendedUserData = await fetchExtendedUserData(session.user.id);
+          if (extendedUserData) {
             // Merge Supabase user with our extended data
             const mergedUser: ExtendedUser = {
               ...session.user,
-              name: extendedUser.name,
-              role: extendedUser.role,
-              company: extendedUser.company,
-              phone: extendedUser.phone,
-              avatar: extendedUser.avatar,
+              name: extendedUserData.name,
+              role: extendedUserData.role,
+              company: extendedUserData.company,
+              phone: extendedUserData.phone,
+              avatar: extendedUserData.avatar,
             };
             setUser(mergedUser);
             console.log('✅ Dados do usuário carregados:', {
@@ -132,15 +132,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           
           // Fetch extended user data
-          const extendedUser = await fetchExtendedUserData(session.user.id);
-          if (extendedUser) {
+          const extendedUserData = await fetchExtendedUserData(session.user.id);
+          if (extendedUserData) {
             const mergedUser: ExtendedUser = {
               ...session.user,
-              name: extendedUser.name,
-              role: extendedUser.role,
-              company: extendedUser.company,
-              phone: extendedUser.phone,
-              avatar: extendedUser.avatar,
+              name: extendedUserData.name,
+              role: extendedUserData.role,
+              company: extendedUserData.company,
+              phone: extendedUserData.phone,
+              avatar: extendedUserData.avatar,
             };
             setUser(mergedUser);
           } else {
@@ -289,15 +289,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(data.session);
         
         if (data.session?.user) {
-          const extendedUser = await fetchExtendedUserData(data.session.user.id);
-          if (extendedUser) {
+          const extendedUserData = await fetchExtendedUserData(data.session.user.id);
+          if (extendedUserData) {
             const mergedUser: ExtendedUser = {
               ...data.session.user,
-              name: extendedUser.name,
-              role: extendedUser.role,
-              company: extendedUser.company,
-              phone: extendedUser.phone,
-              avatar: extendedUser.avatar,
+              name: extendedUserData.name,
+              role: extendedUserData.role,
+              company: extendedUserData.company,
+              phone: extendedUserData.phone,
+              avatar: extendedUserData.avatar,
             };
             setUser(mergedUser);
           } else {
