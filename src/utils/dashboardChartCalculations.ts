@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData } from './policyDataParser';
 import { extractFieldValue, extractNumericValue } from './extractFieldValue';
 
@@ -152,6 +151,44 @@ export const calculateDashboardData = (policies: ParsedPolicyData[]): DashboardD
   console.log('📊 Dashboard data final:', result);
   
   return result;
+};
+
+export const calculateStatusChartData = (policies: ParsedPolicyData[]) => {
+  if (!policies || policies.length === 0) {
+    return [];
+  }
+
+  const statusCounts = policies.reduce((acc, policy) => {
+    const status = extractFieldValue(policy.status) || 'vigente';
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return Object.entries(statusCounts).map(([status, count]) => ({
+    name: status,
+    value: count,
+    percentage: (count / policies.length) * 100
+  }));
+};
+
+export const calculateInsurerChartData = (policies: ParsedPolicyData[]) => {
+  if (!policies || policies.length === 0) {
+    return [];
+  }
+
+  const insurerCounts = policies.reduce((acc, policy) => {
+    const insurer = extractFieldValue(policy.insurer) || 'Não informado';
+    acc[insurer] = (acc[insurer] || 0) + extractNumericValue(policy.monthlyAmount);
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalValue = Object.values(insurerCounts).reduce((sum, value) => sum + value, 0);
+
+  return Object.entries(insurerCounts).map(([insurer, value]) => ({
+    name: insurer,
+    value,
+    percentage: totalValue > 0 ? (value / totalValue) * 100 : 0
+  }));
 };
 
 const normalizeInsuranceType = (type: string): string => {

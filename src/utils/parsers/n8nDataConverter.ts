@@ -1,12 +1,14 @@
 
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyTypeNormalizer } from './policyTypeNormalizer';
+import { extractFieldValue, extractNumericValue, inferDocumentType } from '@/utils/extractFieldValue';
 
 // Função auxiliar para mapear o status
 const mapStatus = (status: string | undefined): string => {
-  if (!status) return 'vigente';
+  const statusValue = extractFieldValue(status);
+  if (!statusValue) return 'vigente';
 
-  const lowerStatus = status.toLowerCase();
+  const lowerStatus = statusValue.toLowerCase();
 
   if (lowerStatus.includes('ativo') || lowerStatus.includes('vigente') || lowerStatus.includes('ativa')) {
     return 'vigente';
@@ -37,9 +39,9 @@ const analyzeInstallmentStatus = (dueDate: string): 'paga' | 'pendente' => {
 const generateInstallmentsFromN8NData = (data: any): Array<{numero: number, valor: number, data: string, status: 'paga' | 'pendente'}> => {
   const installments = [];
   
-  // CORREÇÃO: Verificar se parcelas é um número válido e valor_parcela existe
-  const numParcelas = Number(data.parcelas) || 1;
-  const valorParcela = Number(data.valor_parcela) || Number(data.premio) || 0;
+  // CORREÇÃO: Usar extractFieldValue e extractNumericValue para valores seguros
+  const numParcelas = extractNumericValue(data.parcelas) || 1;
+  const valorParcela = extractNumericValue(data.valor_parcela) || extractNumericValue(data.premio) || 0;
   
   // Se temos vencimentos_futuros e valor_parcela, usar esses dados
   if (data.vencimentos_futuros && Array.isArray(data.vencimentos_futuros) && data.vencimentos_futuros.length > 0) {
@@ -54,7 +56,7 @@ const generateInstallmentsFromN8NData = (data: any): Array<{numero: number, valo
   }
   // NOVA LÓGICA: Se não há vencimentos mas há parcelas > 0, gerar parcelas mensais
   else if (numParcelas > 0) {
-    const startDate = new Date(data.inicio || new Date());
+    const startDate = new Date(extractFieldValue(data.inicio) || new Date());
     
     for (let i = 0; i < numParcelas; i++) {
       const installmentDate = new Date(startDate);
@@ -70,10 +72,10 @@ const generateInstallmentsFromN8NData = (data: any): Array<{numero: number, valo
   }
   // FALLBACK: Criar ao menos uma parcela com o valor total
   else {
-    const startDate = new Date(data.inicio || new Date());
+    const startDate = new Date(extractFieldValue(data.inicio) || new Date());
     installments.push({
       numero: 1,
-      valor: Number(data.premio) || 0,
+      valor: extractNumericValue(data.premio) || 0,
       data: startDate.toISOString().split('T')[0],
       status: 'pendente' as const
     });
@@ -84,6 +86,8 @@ const generateInstallmentsFromN8NData = (data: any): Array<{numero: number, valo
 
 // Função para converter dados do N8N para o formato ParsedPolicyData
 export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => {
+  console.log('🔄 convertN8NData - dados recebidos:', JSON.stringify(data, null, 2));
+  
   // CORREÇÃO CRÍTICA: Garantir que user_id seja sempre definido
   if (!userId && !data.user_id) {
     console.error('❌ ERRO CRÍTICO: user_id não fornecido para convertN8NData');
@@ -91,65 +95,94 @@ export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => 
     throw new Error('user_id é obrigatório para processar dados do N8N');
   }
   
-  const finalUserId = userId || data.user_id;
+  const finalUserId = userId || extractFieldValue(data.user_id);
   console.log(`✅ convertN8NData: Usando userId: ${finalUserId}`);
   
   // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
-  const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
+  const tipoSeguro = extractFieldValue(data.tipo_seguro) || extractFieldValue(data.tipo) || 'auto';
+  const normalizedType = PolicyTypeNormalizer.normalizeType(tipoSeguro);
+  
+  // CORREÇÃO: Extrair valores seguros usando extractFieldValue e extractNumericValue
+  const segurado = extractFieldValue(data.segurado) || 'Segurado não informado';
+  const seguradora = extractFieldValue(data.seguradora) || 'Seguradora não informada';
+  const numeroApolice = extractFieldValue(data.numero_apolice) || extractFieldValue(data.apolice) || 'N/A';
+  const documento = extractFieldValue(data.documento);
+  const documentoTipo = inferDocumentType(documento);
   
   // CORREÇÃO: Calcular custo mensal baseado nos dados disponíveis
-  const totalParcelas = Number(data.parcelas) || 1;
-  const valorPremio = Number(data.premio) || 0;
-  const valorParcela = Number(data.valor_parcela) || (totalParcelas > 0 ? valorPremio / totalParcelas : valorPremio);
-  const custoMensal = Number(data.custo_mensal) || valorParcela;
+  const totalParcelas = extractNumericValue(data.parcelas) || 1;
+  const valorPremio = extractNumericValue(data.premio) || 0;
+  const valorParcela = extractNumericValue(data.valor_parcela) || (totalParcelas > 0 ? valorPremio / totalParcelas : valorPremio);
+  const custoMensal = extractNumericValue(data.custo_mensal) || valorParcela;
   
+  // Extrair datas de forma segura
+  const inicioVigencia = extractFieldValue(data.inicio_vigencia) || extractFieldValue(data.inicio) || new Date().toISOString().split('T')[0];
+  const fimVigencia = extractFieldValue(data.fim_vigencia) || extractFieldValue(data.fim) || new Date().toISOString().split('T')[0];
+  
+  // Processar coberturas se existirem
+  let coberturas = [];
+  if (data.coberturas && Array.isArray(data.coberturas)) {
+    coberturas = data.coberturas.map((cobertura: any) => ({
+      descricao: extractFieldValue(cobertura.descricao) || extractFieldValue(cobertura.tipo) || 'Cobertura',
+      lmi: extractNumericValue(cobertura.lmi) || undefined
+    }));
+  }
+  
+  console.log('✅ Dados processados com extractFieldValue:', {
+    segurado,
+    seguradora,
+    numeroApolice,
+    normalizedType,
+    valorPremio,
+    custoMensal,
+    documento,
+    documentoTipo
+  });
+
   return {
     id: crypto.randomUUID(),
-    name: data.segurado || 'Segurado não informado',
+    name: segurado,
     type: normalizedType,
-    insurer: data.seguradora || 'Seguradora não informada',
+    insurer: seguradora,
     premium: valorPremio,
     monthlyAmount: custoMensal,
-    startDate: data.inicio_vigencia || data.inicio || new Date().toISOString().split('T')[0],
-    endDate: data.fim_vigencia || data.fim || new Date().toISOString().split('T')[0],
-    policyNumber: data.numero_apolice || 'N/A',
-    paymentFrequency: data.forma_pagamento || data.pagamento || 'mensal',
+    startDate: inicioVigencia,
+    endDate: fimVigencia,
+    policyNumber: numeroApolice,
+    paymentFrequency: extractFieldValue(data.forma_pagamento) || extractFieldValue(data.pagamento) || 'mensal',
     status: mapStatus(data.status),
     extractedAt: new Date().toISOString(),
 
     // NOVOS CAMPOS OBRIGATÓRIOS
-    expirationDate: data.fim_vigencia || data.fim || new Date().toISOString().split('T')[0],
+    expirationDate: fimVigencia,
     policyStatus: 'vigente',
 
     // Campos específicos do N8N
-    insuredName: data.segurado,
-    documento: data.documento,
-    documento_tipo: data.documento_tipo as 'CPF' | 'CNPJ',
-    vehicleModel: data.modelo_veiculo,
-    uf: data.uf,
-    deductible: Number(data.franquia) || undefined,
+    insuredName: segurado,
+    documento: documento,
+    documento_tipo: documentoTipo,
+    vehicleModel: extractFieldValue(data.modelo_veiculo),
+    uf: extractFieldValue(data.uf),
+    deductible: extractNumericValue(data.franquia) || undefined,
 
     // Parcelas com tratamento adequado para diferentes formatos
     installments: generateInstallmentsFromN8NData(data),
 
-    // CORREÇÃO PRINCIPAL: Coberturas com LMI - garantir formato correto
-    coberturas: data.coberturas?.map((cobertura: any) => ({
-      descricao: cobertura.descricao || cobertura.tipo,
-      lmi: Number(cobertura.lmi) || undefined
-    })) || [],
+    // Coberturas processadas
+    coberturas: coberturas,
 
     // Campos de compatibilidade
-    entity: data.corretora || 'Não informado',
+    entity: extractFieldValue(data.corretora) || 'Não informado',
     category: normalizedType === 'auto' ? 'Veicular' : 
              normalizedType === 'empresarial' ? 'Empresarial' : 'Outros',
-    coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo) || [],
+    coverage: coberturas.map((c: any) => c.descricao) || [],
     totalCoverage: valorPremio
   };
 };
 
 // CORREÇÃO CRÍTICA: Função para converter dados diretos do N8N com userId correto
 export const convertN8NDirectData = (data: any, fileName: string, file: File, userId?: string): ParsedPolicyData => {
-  console.log('🔄 convertN8NDirectData chamado com dados:', data);
+  console.log('🔄 convertN8NDirectData chamado com dados:', JSON.stringify(data, null, 2));
   
   // CORREÇÃO CRÍTICA: Garantir que user_id seja sempre definido
   if (!userId && !data.user_id) {
@@ -158,63 +191,17 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File, us
     throw new Error('user_id é obrigatório para processar dados diretos do N8N');
   }
   
-  const finalUserId = userId || data.user_id;
+  const finalUserId = userId || extractFieldValue(data.user_id);
   console.log(`✅ convertN8NDirectData: Usando userId: ${finalUserId}`);
   
-  // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
-  const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
+  // Usar a função principal de conversão
+  const convertedPolicy = convertN8NData(data, finalUserId);
   
-  // CORREÇÃO: Calcular valores financeiros corretamente
-  const totalParcelas = Number(data.parcelas) || 1;
-  const valorPremio = Number(data.premio) || 0;
-  const valorParcela = Number(data.valor_parcela) || (totalParcelas > 0 ? valorPremio / totalParcelas : valorPremio);
-  const custoMensal = Number(data.custo_mensal) || valorParcela;
-  
-  const convertedPolicy: ParsedPolicyData = {
-    id: crypto.randomUUID(),
-    name: data.segurado || fileName.replace('.pdf', ''),
-    type: normalizedType,
-    insurer: data.seguradora || 'Seguradora não informada',
-    premium: valorPremio,
-    monthlyAmount: custoMensal,
-    startDate: data.inicio || new Date().toISOString().split('T')[0],
-    endDate: data.fim || new Date().toISOString().split('T')[0],
-    policyNumber: data.numero_apolice || 'N/A',
-    paymentFrequency: data.pagamento || 'mensal',
-    status: mapStatus(data.status),
-    file,
-    extractedAt: new Date().toISOString(),
-    
-    // NOVOS CAMPOS OBRIGATÓRIOS
-    expirationDate: data.fim || new Date().toISOString().split('T')[0],
-    policyStatus: 'vigente',
-    
-    // Campos específicos do N8N
-    insuredName: data.segurado,
-    documento: data.documento,
-    documento_tipo: data.documento_tipo as 'CPF' | 'CNPJ',
-    vehicleModel: data.modelo_veiculo,
-    uf: data.uf,
-    deductible: Number(data.franquia) || undefined,
+  // Adicionar o arquivo e ajustar alguns campos específicos
+  convertedPolicy.file = file;
+  convertedPolicy.name = extractFieldValue(data.segurado) || fileName.replace('.pdf', '');
 
-    // CORREÇÃO PRINCIPAL: Parcelas com tratamento robusto para diferentes formatos
-    installments: generateInstallmentsFromN8NData(data),
-
-    // CORREÇÃO PRINCIPAL: Coberturas com LMI - garantir formato correto
-    coberturas: data.coberturas?.map((cobertura: any) => ({
-      descricao: cobertura.descricao || cobertura.tipo,
-      lmi: Number(cobertura.lmi) || undefined
-    })) || [],
-
-    // Campos de compatibilidade
-    entity: data.corretora || 'Não informado',
-    category: normalizedType === 'auto' ? 'Veicular' : 
-             normalizedType === 'empresarial' ? 'Empresarial' : 'Outros',
-    coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo) || [],
-    totalCoverage: valorPremio
-  };
-
-  console.log('✅ Política convertida:', convertedPolicy);
+  console.log('✅ Política convertida (convertN8NDirectData):', convertedPolicy);
   return convertedPolicy;
 };
 
