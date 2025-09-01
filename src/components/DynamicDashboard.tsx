@@ -10,7 +10,7 @@ import { useDashboardCalculations } from './dashboard/useDashboardCalculations';
 import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { PDFReportGenerator } from './PDFReportGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { calculateStatusChartData, calculateInsurerChartData } from '@/utils/dashboardChartCalculations';
+import { calculateStatusChartData, calculateInsurerChartData, calculatePersonTypeDistribution } from '@/utils/dashboardChartCalculations';
 
 interface DynamicDashboardProps {
   policies: ParsedPolicyData[];
@@ -46,9 +46,10 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     }
   };
 
-  // Usar os novos cálculos com cores corretas
-  const statusChartData = calculateStatusChartData(policies as any);
+  // CORREÇÃO: Usar os cálculos corrigidos com extractFieldValue
+  const statusChartData = calculateStatusChartData(policies);
   const insurerChartData = calculateInsurerChartData(policies);
+  const personTypeData = calculatePersonTypeDistribution(policies);
 
   // Add colors to distribution data
   const typeDistributionWithColors = dashboardData.typeDistribution.map((item, index) => ({
@@ -56,14 +57,14 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     color: COLORS[index % COLORS.length]
   }));
 
-  // Transform insurer data to match expected format - fix property mapping
+  // CORREÇÃO: Formatar dados da seguradora corretamente
   const insurerDistributionFormatted = insurerChartData.map((item, index) => ({
-    name: item.name,
+    name: item.name, // Já é string graças ao extractFieldValue
     value: item.value,
     color: COLORS[index % COLORS.length]
   }));
 
-  // Transform status data to match expected format - fix property mapping
+  // Transform status data to match expected format
   const statusDistributionFormatted = statusChartData.map(item => ({
     name: item.name,
     value: item.value
@@ -149,7 +150,7 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
         {/* Vínculo - Pessoa Física/Jurídica */}
         <div className="w-full overflow-hidden">
           <PersonTypeDistribution
-            personTypeDistribution={dashboardData.personTypeDistribution}
+            personTypeDistribution={personTypeData}
           />
         </div>
 
