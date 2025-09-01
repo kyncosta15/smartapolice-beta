@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,14 +35,14 @@ export function MyPolicies() {
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
     const finalStatus = policy.status as PolicyStatus;
     
-    console.log(`✅ [MyPolicies] Apólice ${policy.name}: status do banco = ${finalStatus}`);
+    console.log(`✅ [MyPolicies] Apólice ${renderValue(policy.name)}: status do banco = ${finalStatus}`);
     
     return {
       id: policy.id,
-      name: policy.name,
-      insurer: policy.insurer,
-      policyNumber: policy.policyNumber,
-      type: policy.type,
+      name: renderValue(policy.name),
+      insurer: renderValue(policy.insurer || policy.seguradora),
+      policyNumber: renderValue(policy.policyNumber || policy.numero_apolice),
+      type: renderValue(policy.type || policy.tipo),
       monthlyAmount: policy.monthlyAmount,
       startDate: policy.startDate,
       endDate: policy.endDate,
@@ -156,7 +157,7 @@ export function MyPolicies() {
             <Card key={policy.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{renderValue(policy.name)}</CardTitle>
+                  <CardTitle className="text-lg">{policy.name}</CardTitle>
                   <div className="flex items-center gap-2">
                     <Badge className={STATUS_COLORS[policy.status] || STATUS_COLORS.vigente}>
                       {formatStatusText(policy.status)}
@@ -173,14 +174,14 @@ export function MyPolicies() {
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500">{renderValue(policy.insurer)}</p>
+                <p className="text-sm text-gray-500">{policy.insurer}</p>
               </CardHeader>
               
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-gray-500">Número</p>
-                    <p className="font-medium">{renderValue(policy.policyNumber)}</p>
+                    <p className="font-medium">{policy.policyNumber}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Valor Mensal</p>

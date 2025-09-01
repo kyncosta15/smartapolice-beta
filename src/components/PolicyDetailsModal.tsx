@@ -10,6 +10,7 @@ import { CoveragesCard } from './policy-details/CoveragesCard';
 import { ValidityInfoCard } from './policy-details/ValidityInfoCard';
 import { VehicleInfoCard } from './policy-details/VehicleInfoCard';
 import { ResponsiblePersonCard } from './policy-details/ResponsiblePersonCard';
+import { renderValue } from '@/utils/renderValue';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -96,7 +97,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
             <CoveragesCard coverages={coverages} policyId={policy.id} />
 
             <ValidityInfoCard policy={policy} />
-            {policy.vehicleModel && <VehicleInfoCard policy={policy} />}
+            {renderValue(policy.vehicleModel) !== '-' && <VehicleInfoCard policy={policy} />}
 
             {(policy.insuredName || policy.documento) && (
               <ResponsiblePersonCard policy={policy} />

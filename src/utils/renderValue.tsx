@@ -28,7 +28,7 @@ export function renderValue(value: any): React.ReactNode {
 
   // Objetos - extrair campos conhecidos ou stringify
   if (typeof value === "object") {
-    // Estrutura N8N específica
+    // Estrutura N8N específica - PRIORIDADE ALTA
     if ("empresa" in value && value.empresa) {
       return renderValue(value.empresa);
     }
