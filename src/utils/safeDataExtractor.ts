@@ -40,7 +40,7 @@ export class SafeDataExtractor {
   }
 
   /**
-   * Extrai o nome da seguradora de diferentes formatos
+   * Extrai o nome da seguradora de diferentes formatos, priorizando 'empresa'
    */
   static extractInsurerName(seguradora: any): string | null {
     if (!seguradora) return null;
@@ -50,19 +50,48 @@ export class SafeDataExtractor {
       return seguradora.trim();
     }
     
-    // Se é um objeto, tentar extrair empresa primeiro
+    // Se é um objeto, tentar extrair campos na ordem de prioridade
     if (typeof seguradora === 'object') {
-      // Prioridade: empresa > name > value
-      const fields = ['empresa', 'name', 'value'];
+      // Prioridade 1: empresa
+      if (seguradora.empresa) {
+        if (typeof seguradora.empresa === 'string') {
+          return seguradora.empresa.trim();
+        }
+        if (typeof seguradora.empresa === 'object' && seguradora.empresa.value) {
+          return String(seguradora.empresa.value).trim();
+        }
+      }
       
-      for (const field of fields) {
+      // Prioridade 2: name
+      if (seguradora.name) {
+        if (typeof seguradora.name === 'string') {
+          return seguradora.name.trim();
+        }
+        if (typeof seguradora.name === 'object' && seguradora.name.value) {
+          return String(seguradora.name.value).trim();
+        }
+      }
+      
+      // Prioridade 3: value
+      if (seguradora.value) {
+        if (typeof seguradora.value === 'string') {
+          return seguradora.value.trim();
+        }
+        // Recursão para objetos aninhados
+        const extracted = this.extractInsurerName(seguradora.value);
+        if (extracted) return extracted;
+      }
+      
+      // Prioridade 4: categoria, cobertura, entidade (estrutura N8N específica)
+      const fallbackFields = ['categoria', 'cobertura', 'entidade'];
+      for (const field of fallbackFields) {
         if (seguradora[field]) {
           if (typeof seguradora[field] === 'string') {
             return seguradora[field].trim();
           }
-          // Recursão para objetos aninhados
-          const extracted = this.extractInsurerName(seguradora[field]);
-          if (extracted) return extracted;
+          if (typeof seguradora[field] === 'object' && seguradora[field].value) {
+            return String(seguradora[field].value).trim();
+          }
         }
       }
     }

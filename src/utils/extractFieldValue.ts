@@ -32,13 +32,37 @@ export const extractFieldValue = (field: any): string | null => {
       return null;
     }
     
-    // Handle insurer object structure - PRIORIZAR EMPRESA
+    // Handle the specific N8N structure: {empresa, categoria, cobertura, entidade}
     if ('empresa' in field && field.empresa) {
-      const empresaValue = typeof field.empresa === 'object' && field.empresa.value 
-        ? field.empresa.value 
-        : field.empresa;
-      console.log('✅ Extraindo empresa do objeto:', empresaValue);
-      return String(empresaValue);
+      const empresaValue = extractFieldValue(field.empresa);
+      if (empresaValue) {
+        console.log('✅ Extraindo empresa do objeto:', empresaValue);
+        return empresaValue;
+      }
+    }
+    
+    if ('categoria' in field && field.categoria) {
+      const categoriaValue = extractFieldValue(field.categoria);
+      if (categoriaValue) {
+        console.log('✅ Extraindo categoria do objeto:', categoriaValue);
+        return categoriaValue;
+      }
+    }
+    
+    if ('cobertura' in field && field.cobertura) {
+      const coberturaValue = extractFieldValue(field.cobertura);
+      if (coberturaValue) {
+        console.log('✅ Extraindo cobertura do objeto:', coberturaValue);
+        return coberturaValue;
+      }
+    }
+    
+    if ('entidade' in field && field.entidade) {
+      const entidadeValue = extractFieldValue(field.entidade);
+      if (entidadeValue) {
+        console.log('✅ Extraindo entidade do objeto:', entidadeValue);
+        return entidadeValue;
+      }
     }
     
     if ('value' in field) {
@@ -59,21 +83,10 @@ export const extractFieldValue = (field: any): string | null => {
     
     // Handle other object structures
     if ('name' in field && field.name) {
-      const nameValue = typeof field.name === 'object' && field.name.value 
-        ? field.name.value 
-        : field.name;
-      console.log('✅ Extraindo name do objeto:', nameValue);
-      return String(nameValue);
-    }
-
-    // Handle categoria, cobertura, entidade objects - mas só se não tiver empresa
-    for (const key of ['categoria', 'cobertura', 'entidade']) {
-      if (key in field && field[key]) {
-        const keyValue = typeof field[key] === 'object' && field[key].value 
-          ? field[key].value 
-          : field[key];
-        console.log(`✅ Extraindo ${key} do objeto:`, keyValue);
-        return String(keyValue);
+      const nameValue = extractFieldValue(field.name);
+      if (nameValue) {
+        console.log('✅ Extraindo name do objeto:', nameValue);
+        return nameValue;
       }
     }
 
@@ -83,14 +96,10 @@ export const extractFieldValue = (field: any): string | null => {
       const singleKey = keys[0];
       const singleValue = field[singleKey];
       
-      if (typeof singleValue === 'object' && singleValue !== null && 'value' in singleValue) {
-        if (typeof singleValue.value === 'string' && singleValue.value.toLowerCase() !== 'undefined' && singleValue.value.trim() !== '') {
-          console.log(`✅ Valor único extraído de ${singleKey}:`, singleValue.value);
-          return singleValue.value;
-        }
-      } else if (typeof singleValue === 'string' && singleValue.toLowerCase() !== 'undefined' && singleValue.trim() !== '') {
-        console.log(`✅ Valor único string extraído de ${singleKey}:`, singleValue);
-        return singleValue;
+      const extractedValue = extractFieldValue(singleValue);
+      if (extractedValue) {
+        console.log(`✅ Valor único extraído de ${singleKey}:`, extractedValue);
+        return extractedValue;
       }
     }
 
@@ -116,8 +125,8 @@ export const extractFieldValue = (field: any): string | null => {
     }
     
     // Se chegou até aqui, não conseguiu extrair nada válido
-    console.log('❌ Não foi possível extrair valor válido do objeto, retornando null');
-    return null;
+    console.log('❌ Não foi possível extrair valor válido do objeto, retornando "Não informado"');
+    return 'Não informado';
   }
 
   // 3. Verificar se é um número (para documentos)
@@ -126,8 +135,8 @@ export const extractFieldValue = (field: any): string | null => {
     return field.toString();
   }
 
-  console.log('❌ Campo não possui valor válido');
-  return null;
+  console.log('❌ Campo não possui valor válido, retornando "Não informado"');
+  return 'Não informado';
 };
 
 export function inferTipoPorDocumento(doc: string | null): 'CPF' | 'CNPJ' | null {

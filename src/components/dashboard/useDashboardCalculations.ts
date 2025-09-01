@@ -33,22 +33,8 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
     
     // Função para extrair nome da seguradora de forma segura
     const getInsurerName = (insurerData: any): string => {
-      if (!insurerData) return 'Seguradora Desconhecida';
-      
-      if (typeof insurerData === 'string') {
-        return insurerData;
-      }
-      
-      if (typeof insurerData === 'object' && insurerData !== null) {
-        // Handle different object structures
-        if (insurerData.empresa) return String(insurerData.empresa);
-        if (insurerData.name) return String(insurerData.name);
-        if (insurerData.value) return String(insurerData.value);
-        
-        return 'Seguradora Desconhecida';
-      }
-      
-      return String(insurerData);
+      const extracted = extractFieldValue(insurerData);
+      return extracted || 'Seguradora Desconhecida';
     };
 
     // Calcular métricas básicas
@@ -129,7 +115,7 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       
       const documentoTipo = extractFieldValue(policy.documento_tipo);
       
-      if (!documentoTipo || documentoTipo === 'undefined' || documentoTipo === '') {
+      if (!documentoTipo || documentoTipo === 'undefined' || documentoTipo === '' || documentoTipo === 'Não informado') {
         console.log(`⚠️ Política "${policy.name}": campo documento_tipo não encontrado, vazio ou undefined`);
         console.log('⚠️ Dados disponíveis:', Object.keys(policy));
         console.log('⚠️ Valor do campo documento_tipo:', policy.documento_tipo);
