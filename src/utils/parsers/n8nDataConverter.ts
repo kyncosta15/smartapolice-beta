@@ -37,44 +37,45 @@ const analyzeInstallmentStatus = (dueDate: string): 'paga' | 'pendente' => {
 const generateInstallmentsFromN8NData = (data: any): Array<{numero: number, valor: number, data: string, status: 'paga' | 'pendente'}> => {
   const installments = [];
   
+  // CORREÇÃO: Verificar se parcelas é um número válido e valor_parcela existe
+  const numParcelas = Number(data.parcelas) || 1;
+  const valorParcela = Number(data.valor_parcela) || Number(data.premio) || 0;
+  
   // Se temos vencimentos_futuros e valor_parcela, usar esses dados
-  if (data.vencimentos_futuros && Array.isArray(data.vencimentos_futuros) && data.valor_parcela) {
+  if (data.vencimentos_futuros && Array.isArray(data.vencimentos_futuros) && data.vencimentos_futuros.length > 0) {
     data.vencimentos_futuros.forEach((vencimento: string, index: number) => {
       installments.push({
         numero: index + 1,
-        valor: Number(data.valor_parcela),
+        valor: valorParcela,
         data: vencimento,
         status: analyzeInstallmentStatus(vencimento)
       });
     });
   }
-  // Se não temos vencimentos_futuros mas temos numero de parcelas, gerar baseado na data de início
-  else if (data.parcelas && typeof data.parcelas === 'number' && data.valor_parcela) {
+  // NOVA LÓGICA: Se não há vencimentos mas há parcelas > 0, gerar parcelas mensais
+  else if (numParcelas > 0) {
     const startDate = new Date(data.inicio || new Date());
-    const numberOfInstallments = Number(data.parcelas);
-    const installmentValue = Number(data.valor_parcela);
     
-    for (let i = 0; i < numberOfInstallments; i++) {
+    for (let i = 0; i < numParcelas; i++) {
       const installmentDate = new Date(startDate);
       installmentDate.setMonth(installmentDate.getMonth() + i);
       
       installments.push({
         numero: i + 1,
-        valor: installmentValue,
+        valor: valorParcela,
         data: installmentDate.toISOString().split('T')[0],
         status: analyzeInstallmentStatus(installmentDate.toISOString().split('T')[0])
       });
     }
   }
-  // Se parcelas é um array (formato antigo)
-  else if (Array.isArray(data.parcelas)) {
-    data.parcelas.forEach((parcela: any, index: number) => {
-      installments.push({
-        numero: index + 1,
-        valor: Number(parcela.valor) || 0,
-        data: parcela.data_vencimento,
-        status: analyzeInstallmentStatus(parcela.data_vencimento)
-      });
+  // FALLBACK: Criar ao menos uma parcela com o valor total
+  else {
+    const startDate = new Date(data.inicio || new Date());
+    installments.push({
+      numero: 1,
+      valor: Number(data.premio) || 0,
+      data: startDate.toISOString().split('T')[0],
+      status: 'pendente' as const
     });
   }
   
@@ -83,9 +84,6 @@ const generateInstallmentsFromN8NData = (data: any): Array<{numero: number, valo
 
 // Função para converter dados do N8N para o formato ParsedPolicyData
 export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => {
-  // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
-  const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
-  
   // CORREÇÃO CRÍTICA: Garantir que user_id seja sempre definido
   if (!userId && !data.user_id) {
     console.error('❌ ERRO CRÍTICO: user_id não fornecido para convertN8NData');
@@ -96,13 +94,22 @@ export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => 
   const finalUserId = userId || data.user_id;
   console.log(`✅ convertN8NData: Usando userId: ${finalUserId}`);
   
+  // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
+  const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
+  
+  // CORREÇÃO: Calcular custo mensal baseado nos dados disponíveis
+  const totalParcelas = Number(data.parcelas) || 1;
+  const valorPremio = Number(data.premio) || 0;
+  const valorParcela = Number(data.valor_parcela) || (totalParcelas > 0 ? valorPremio / totalParcelas : valorPremio);
+  const custoMensal = Number(data.custo_mensal) || valorParcela;
+  
   return {
     id: crypto.randomUUID(),
     name: data.segurado || 'Segurado não informado',
     type: normalizedType,
     insurer: data.seguradora || 'Seguradora não informada',
-    premium: Number(data.valor_premio || data.premio) || 0,
-    monthlyAmount: Number(data.custo_mensal || data.valor_parcela) || 0,
+    premium: valorPremio,
+    monthlyAmount: custoMensal,
     startDate: data.inicio_vigencia || data.inicio || new Date().toISOString().split('T')[0],
     endDate: data.fim_vigencia || data.fim || new Date().toISOString().split('T')[0],
     policyNumber: data.numero_apolice || 'N/A',
@@ -136,7 +143,7 @@ export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => 
     category: normalizedType === 'auto' ? 'Veicular' : 
              normalizedType === 'empresarial' ? 'Empresarial' : 'Outros',
     coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo) || [],
-    totalCoverage: Number(data.valor_premio || data.premio) || 0
+    totalCoverage: valorPremio
   };
 };
 
@@ -157,13 +164,19 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File, us
   // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
   const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
   
+  // CORREÇÃO: Calcular valores financeiros corretamente
+  const totalParcelas = Number(data.parcelas) || 1;
+  const valorPremio = Number(data.premio) || 0;
+  const valorParcela = Number(data.valor_parcela) || (totalParcelas > 0 ? valorPremio / totalParcelas : valorPremio);
+  const custoMensal = Number(data.custo_mensal) || valorParcela;
+  
   const convertedPolicy: ParsedPolicyData = {
     id: crypto.randomUUID(),
     name: data.segurado || fileName.replace('.pdf', ''),
     type: normalizedType,
     insurer: data.seguradora || 'Seguradora não informada',
-    premium: Number(data.premio) || 0,
-    monthlyAmount: Number(data.custo_mensal || data.valor_parcela) || 0,
+    premium: valorPremio,
+    monthlyAmount: custoMensal,
     startDate: data.inicio || new Date().toISOString().split('T')[0],
     endDate: data.fim || new Date().toISOString().split('T')[0],
     policyNumber: data.numero_apolice || 'N/A',
@@ -198,7 +211,7 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File, us
     category: normalizedType === 'auto' ? 'Veicular' : 
              normalizedType === 'empresarial' ? 'Empresarial' : 'Outros',
     coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo) || [],
-    totalCoverage: Number(data.premio) || 0
+    totalCoverage: valorPremio
   };
 
   console.log('✅ Política convertida:', convertedPolicy);
