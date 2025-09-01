@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, DollarSign, Building, User } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
-import { extractFieldValue } from '@/utils/extractFieldValue';
+import { extractFieldValue, extractNumericValue } from '@/utils/extractFieldValue';
 
 interface NewPolicyModalProps {
   isOpen: boolean;
@@ -33,9 +33,10 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
   };
 
   const getStatusBadge = (status?: string) => {
-    if (!status) return null;
+    const safeStatus = extractFieldValue(status);
+    if (!safeStatus) return null;
     
-    switch (status.toLowerCase()) {
+    switch (safeStatus.toLowerCase()) {
       case 'ativa':
       case 'active':
         return <Badge className="bg-green-50 text-green-600 border-green-200">Ativa</Badge>;
@@ -46,14 +47,14 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
       case 'expired':
         return <Badge className="bg-red-50 text-red-600 border-red-200">Vencida</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="secondary">{safeStatus}</Badge>;
     }
   };
 
   // CORREÇÃO: Garantir que todos os valores sejam strings ou números, não objetos
   const safeName = extractFieldValue(policy.name) || 'Nome não disponível';
   const safeInsurer = extractFieldValue(policy.insurer) || 'Seguradora não identificada';
-  const safeValue = typeof policy.value === 'number' ? policy.value : 0;
+  const safeValue = extractNumericValue(policy.value) || 0;
   const safeDueDate = extractFieldValue(policy.dueDate) || new Date().toISOString();
   const safeInsertDate = extractFieldValue(policy.insertDate) || new Date().toISOString();
   const safeType = extractFieldValue(policy.type) || '';

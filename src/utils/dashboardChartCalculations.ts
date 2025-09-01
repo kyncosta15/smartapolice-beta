@@ -1,98 +1,277 @@
 
-import { PolicyWithStatus } from '@/types/policyStatus';
-import { getChartColor } from '@/utils/statusColors';
+import { ParsedPolicyData } from './policyDataParser';
+import { extractFieldValue, extractNumericValue } from './extractFieldValue';
 
-// Função para determinar o status correto baseado na data de vencimento
-const getCorrectPolicyStatus = (policy: any): string => {
-  if (!policy.endDate && !policy.expirationDate) {
-    return 'vigente';
-  }
-  
-  const now = new Date();
-  const expirationDate = new Date(policy.endDate || policy.expirationDate);
-  const diffTime = expirationDate.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  // Se já venceu
-  if (diffDays < 0) {
-    return 'vencida';
-  }
-  
-  // Se está vencendo nos próximos 30 dias
-  if (diffDays <= 30 && diffDays >= 0) {
-    return 'vencendo';
-  }
-  
-  // Caso contrário, está vigente
-  return 'ativa';
-};
-
-// Cálculo para gráfico de status das apólices
-export function calculateStatusChartData(policies: PolicyWithStatus[]) {
-  // Corrigir status das apólices baseado na data de vencimento
-  const policiesWithCorrectStatus = policies.map(policy => ({
-    ...policy,
-    status: getCorrectPolicyStatus(policy)
-  }));
-
-  const statusCounts = policiesWithCorrectStatus.reduce<Record<string, number>>((acc, policy) => {
-    const status = policy.status || 'vigente';
-    acc[status] = (acc[status] || 0) + 1;
-    return acc;
-  }, {});
-
-  return Object.entries(statusCounts).map(([status, count]) => ({
-    status,
-    count,
-    color: getChartColor(status as any),
-    name: status.replace(/_/g, " ").toUpperCase()
-  }));
+export interface DashboardData {
+  totalPolicies: number;
+  totalMonthlyCost: number;
+  totalInsuredValue: number;
+  expiringPolicies: number;
+  totalInstallments: number;
+  insurerDistribution: Array<{
+    name: string;
+    value: number;
+    percentage: number;
+  }>;
+  typeDistribution: Array<{
+    name: string;
+    value: number;
+  }>;
+  monthlyEvolution: Array<{
+    month: string;
+    cost: number;
+  }>;
+  insights: Array<{
+    type: 'info' | 'warning' | 'success';
+    category: string;
+    message: string;
+  }>;
+  personTypeDistribution: {
+    pessoaFisica: number;
+    pessoaJuridica: number;
+  };
 }
 
-// Cálculo para gráfico de distribuição por seguradora com cores
-export function calculateInsurerChartData(policies: any[]) {
-  const insurerCounts = policies.reduce<Record<string, number>>((acc, policy) => {
-    const insurer = policy.insurer || policy.seguradora || 'Não informado';
-    acc[insurer] = (acc[insurer] || 0) + 1;
-    return acc;
-  }, {});
+export const calculateDashboardData = (policies: ParsedPolicyData[]): DashboardData => {
+  console.log('🔍 Recalculando métricas do dashboard para', policies.length, 'apólices');
 
-  // Cores específicas para seguradoras
-  const insurerColors = {
-    'Porto Seguro': '#3B82F6',
-    'Porto Seguro Cia. de Seguros Gerais': '#3B82F6',
-    'Bradesco': '#10B981',
-    'Bradesco Seguros': '#10B981',
-    'Allianz': '#F59E0B',
-    'HDI SEGUROS S.A.': '#8B5CF6',
-    'HDI': '#8B5CF6',
-    'Darwin Seguros S.A.': '#EF4444',
-    'SulAmérica': '#06B6D4',
-    'Mapfre': '#84CC16',
-    'Tokio Marine': '#EC4899',
-    'Liberty': '#F97316',
-    'AXA': '#14B8A6',
-    'Generali': '#8B5CF6',
-    'Outros': '#6B7280',
-    'Não informado': '#9CA3AF'
+  if (!policies || policies.length === 0) {
+    return {
+      totalPolicies: 0,
+      totalMonthlyCost: 0,
+      totalInsuredValue: 0,
+      expiringPolicies: 0,
+      totalInstallments: 0,
+      insurerDistribution: [],
+      typeDistribution: [],
+      monthlyEvolution: [],
+      insights: [],
+      personTypeDistribution: { pessoaFisica: 0, pessoaJuridica: 0 }
+    };
+  }
+
+  // Calcular totais usando extractNumericValue para garantir valores numéricos
+  const totalPolicies = policies.length;
+  const totalMonthlyCost = policies.reduce((sum, policy) => {
+    const monthlyAmount = extractNumericValue(policy.monthlyAmount) || 0;
+    return sum + monthlyAmount;
+  }, 0);
+  
+  const totalInsuredValue = policies.reduce((sum, policy) => {
+    const premium = extractNumericValue(policy.premium) || 0;
+    return sum + premium;
+  }, 0);
+
+  // Calcular apólices vencendo (próximos 30 dias)
+  const now = new Date();
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  
+  const expiringPolicies = policies.filter(policy => {
+    const endDateStr = extractFieldValue(policy.endDate) || extractFieldValue(policy.expirationDate);
+    if (!endDateStr) return false;
+    
+    try {
+      const endDate = new Date(endDateStr);
+      return endDate <= thirtyDaysFromNow && endDate >= now;
+    } catch {
+      return false;
+    }
+  }).length;
+
+  // Calcular total de parcelas
+  const totalInstallments = policies.reduce((sum, policy) => {
+    if (policy.installments && Array.isArray(policy.installments)) {
+      return sum + policy.installments.length;
+    }
+    return sum;
+  }, 0);
+
+  // Distribuição por seguradora usando extractFieldValue
+  const insurerCounts: Record<string, number> = {};
+  policies.forEach(policy => {
+    const insurerName = extractFieldValue(policy.insurer) || 'Não Identificada';
+    const monthlyAmount = extractNumericValue(policy.monthlyAmount) || 0;
+    
+    if (!insurerCounts[insurerName]) {
+      insurerCounts[insurerName] = 0;
+    }
+    insurerCounts[insurerName] += monthlyAmount;
+  });
+
+  const insurerDistribution = Object.entries(insurerCounts)
+    .map(([name, value]) => ({
+      name: extractFieldValue(name) || 'Não Identificada', // Garantir que é string
+      value: Math.round(value),
+      percentage: Math.round((value / totalMonthlyCost) * 100)
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  // Distribuição por tipo usando extractFieldValue
+  const typeCounts: Record<string, number> = {};
+  policies.forEach(policy => {
+    const typeName = extractFieldValue(policy.type) || extractFieldValue(policy.category) || 'Não Especificado';
+    const monthlyAmount = extractNumericValue(policy.monthlyAmount) || 0;
+    
+    const normalizedType = normalizeInsuranceType(typeName);
+    
+    if (!typeCounts[normalizedType]) {
+      typeCounts[normalizedType] = 0;
+    }
+    typeCounts[normalizedType] += monthlyAmount;
+  });
+
+  const typeDistribution = Object.entries(typeCounts)
+    .map(([name, value]) => ({
+      name: extractFieldValue(name) || 'Não Especificado', // Garantir que é string
+      value: Math.round(value)
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  // Classificação pessoa física/jurídica usando extractFieldValue
+  const personTypeDistribution = classifyPersonTypes(policies);
+
+  // Evolução mensal (projeção dinâmica)
+  const monthlyEvolution = generateMonthlyProjection(totalMonthlyCost);
+
+  // Insights
+  const insights = generateInsights(policies, totalMonthlyCost, totalInstallments);
+
+  const result = {
+    totalPolicies,
+    totalMonthlyCost: Math.round(totalMonthlyCost * 100) / 100,
+    totalInsuredValue: Math.round(totalInsuredValue * 100) / 100,
+    expiringPolicies,
+    totalInstallments,
+    insurerDistribution,
+    typeDistribution,
+    monthlyEvolution,
+    insights,
+    personTypeDistribution
   };
 
-  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16'];
+  console.log('📊 Dashboard data final:', result);
   
-  return Object.entries(insurerCounts).map(([insurer, count], index) => ({
-    insurer,
-    count,
-    color: insurerColors[insurer as keyof typeof insurerColors] || colors[index % colors.length],
-    name: insurer
-  }));
-}
+  return result;
+};
 
-// Exemplo de uso no componente de dashboard:
-/*
-const statusChartData = calculateStatusChartData(policies);
-const insurerChartData = calculateInsurerChartData(policies);
+const normalizeInsuranceType = (type: string): string => {
+  const typeStr = extractFieldValue(type) || '';
+  const lowerType = typeStr.toLowerCase();
+  
+  if (lowerType.includes('auto') || lowerType.includes('veicular') || lowerType.includes('carro')) {
+    return 'Seguro Auto';
+  }
+  if (lowerType.includes('empresarial') || lowerType.includes('commercial')) {
+    return 'Empresarial';
+  }
+  if (lowerType.includes('residencial') || lowerType.includes('casa')) {
+    return 'Residencial';
+  }
+  if (lowerType.includes('vida') || lowerType.includes('life')) {
+    return 'Seguro de Vida';
+  }
+  
+  return typeStr || 'Outros';
+};
 
-// Para usar em componente de donut/pie chart:
-<PieChart data={statusChartData} />
-<PieChart data={insurerChartData} />
-*/
+const classifyPersonTypes = (policies: ParsedPolicyData[]) => {
+  console.log('🔍 Iniciando classificação de pessoa física/jurídica...');
+  
+  let pessoaFisica = 0;
+  let pessoaJuridica = 0;
+
+  policies.forEach(policy => {
+    console.log('📋 Analisando política:', {
+      id: policy.id,
+      name: extractFieldValue(policy.name),
+      documento_tipo: policy.documento_tipo,
+      documento: policy.documento
+    });
+
+    const documentoTipo = extractFieldValue(policy.documento_tipo);
+    
+    if (!documentoTipo || documentoTipo === 'undefined' || documentoTipo === '') {
+      console.log(`⚠️ Política "${extractFieldValue(policy.name)}": campo documento_tipo não encontrado, vazio ou undefined`);
+      console.log('⚠️ Dados disponíveis:', Object.keys(policy));
+      console.log('⚠️ Valor do campo documento_tipo:', policy.documento_tipo);
+      return; // Pular esta política
+    }
+
+    console.log(`📄 Política "${extractFieldValue(policy.name)}": documento_tipo = "${documentoTipo}"`);
+
+    if (documentoTipo === 'CPF') {
+      pessoaFisica++;
+      console.log('✅ PESSOA FÍSICA incrementada (CPF detectado)');
+    } else if (documentoTipo === 'CNPJ') {
+      pessoaJuridica++;
+      console.log('✅ PESSOA JURÍDICA incrementada (CNPJ detectado)');
+    } else {
+      console.log(`⚠️ Tipo de documento desconhecido: "${documentoTipo}"`);
+    }
+  });
+
+  const result = { pessoaFisica, pessoaJuridica };
+  console.log('🎯 RESULTADO FINAL da classificação:', {
+    ...result,
+    total: pessoaFisica + pessoaJuridica
+  });
+  
+  return result;
+};
+
+const generateMonthlyProjection = (monthlyCost: number): Array<{ month: string; cost: number }> => {
+  const now = new Date();
+  const projection = [];
+  
+  console.log('📅 Gerando projeção dinâmica de 12 meses a partir de:', now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }));
+
+  for (let i = 0; i < 12; i++) {
+    const month = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const monthName = month.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+    
+    console.log(`📆 Mês ${i + 1}: ${monthName}`);
+    
+    projection.push({
+      month: monthName,
+      cost: Math.round(monthlyCost)
+    });
+  }
+
+  console.log('📊 Projeção mensal dinâmica gerada:', projection);
+  return projection;
+};
+
+const generateInsights = (policies: ParsedPolicyData[], totalMonthlyCost: number, totalInstallments: number) => {
+  const insights = [];
+  
+  // Insight sobre custos altos
+  const highCostPolicies = policies.filter(policy => {
+    const monthlyAmount = extractNumericValue(policy.monthlyAmount) || 0;
+    const avgCost = totalMonthlyCost / policies.length;
+    return monthlyAmount > avgCost * 1.5;
+  }).length;
+
+  if (highCostPolicies > 0) {
+    insights.push({
+      type: 'warning' as const,
+      category: 'Alto Custo',
+      message: `${highCostPolicies} apólice(s) com custo acima da média. Considere renegociar.`
+    });
+  }
+
+  // Insight sobre portfolio
+  insights.push({
+    type: 'info' as const,
+    category: 'Portfolio',
+    message: `Portfolio bem diversificado com ${policies.length} apólices ativas.`
+  });
+
+  // Insight sobre parcelas
+  insights.push({
+    type: 'info' as const,
+    category: 'Parcelas',
+    message: `Total de ${totalInstallments} parcelas distribuídas em suas apólices.`
+  });
+
+  return insights;
+};
