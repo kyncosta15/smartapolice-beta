@@ -1,6 +1,7 @@
+
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
-import { PolicyDataMapper } from '@/utils/policyDataMapper';
+import { extractFieldValue } from '@/utils/extractFieldValue';
 
 interface DashboardData {
   totalPolicies: number;
@@ -30,11 +31,29 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
   return useMemo(() => {
     console.log('🔍 Recalculando métricas do dashboard para', policies.length, 'apólices');
     
-    // Calcular métricas básicas usando mapper robusto
+    // Função para extrair nome da seguradora de forma segura
+    const getInsurerName = (insurerData: any): string => {
+      if (!insurerData) return 'Seguradora Desconhecida';
+      
+      if (typeof insurerData === 'string') {
+        return insurerData;
+      }
+      
+      if (typeof insurerData === 'object' && insurerData !== null) {
+        // Handle different object structures
+        if (insurerData.empresa) return String(insurerData.empresa);
+        if (insurerData.name) return String(insurerData.name);
+        if (insurerData.value) return String(insurerData.value);
+        
+        return 'Seguradora Desconhecida';
+      }
+      
+      return String(insurerData);
+    };
+
+    // Calcular métricas básicas
     const totalPolicies = policies.length;
-    const totalMonthlyCost = policies.reduce((sum, policy) => 
-      sum + PolicyDataMapper.getMonthlyAmount(policy), 0
-    );
+    const totalMonthlyCost = policies.reduce((sum, policy) => sum + (policy.monthlyAmount || 0), 0);
     const totalInsuredValue = policies.reduce((sum, policy) => sum + (policy.totalCoverage || 0), 0);
     
     // Calcular apólices por status
@@ -61,11 +80,10 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       return sum + (policy.installments?.length || 0);
     }, 0);
 
-    // Distribuição por seguradora usando mapper
+    // Distribuição por seguradora
     const insurerCounts = policies.reduce((acc, policy) => {
-      const insurerName = PolicyDataMapper.getInsurerName(policy);
-      const monthlyAmount = PolicyDataMapper.getMonthlyAmount(policy);
-      acc[insurerName] = (acc[insurerName] || 0) + monthlyAmount;
+      const insurerName = getInsurerName(policy.insurer);
+      acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
 
@@ -90,8 +108,7 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
 
     const typeCounts = policies.reduce((acc, policy) => {
       const typeLabel = getTypeLabel(policy.type);
-      const monthlyAmount = PolicyDataMapper.getMonthlyAmount(policy);
-      acc[typeLabel] = (acc[typeLabel] || 0) + monthlyAmount;
+      acc[typeLabel] = (acc[typeLabel] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
 
@@ -100,19 +117,33 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       value
     }));
 
-    // Classificação por pessoa física/jurídica usando mapper
+    // Classificação por pessoa física/jurídica
     console.log('🔍 Iniciando classificação de pessoa física/jurídica...');
     const personTypeDistribution = policies.reduce((acc, policy) => {
-      const documentType = PolicyDataMapper.getDocumentType(policy);
+      console.log('📋 Analisando política:', {
+        id: policy.id,
+        name: policy.name,
+        documento_tipo: policy.documento_tipo,
+        documento: policy.documento
+      });
       
-      if (documentType === 'CPF') {
-        console.log(`✅ Política "${PolicyDataMapper.getInsuredName(policy)}": classificada como Pessoa Física`);
+      const documentoTipo = extractFieldValue(policy.documento_tipo);
+      
+      if (!documentoTipo || documentoTipo === 'undefined' || documentoTipo === '') {
+        console.log(`⚠️ Política "${policy.name}": campo documento_tipo não encontrado, vazio ou undefined`);
+        console.log('⚠️ Dados disponíveis:', Object.keys(policy));
+        console.log('⚠️ Valor do campo documento_tipo:', policy.documento_tipo);
+        return acc;
+      }
+      
+      if (documentoTipo === 'CPF') {
+        console.log(`✅ Política "${policy.name}": classificada como Pessoa Física`);
         acc.pessoaFisica++;
-      } else if (documentType === 'CNPJ') {
-        console.log(`✅ Política "${PolicyDataMapper.getInsuredName(policy)}": classificada como Pessoa Jurídica`);
+      } else if (documentoTipo === 'CNPJ') {
+        console.log(`✅ Política "${policy.name}": classificada como Pessoa Jurídica`);
         acc.pessoaJuridica++;
       } else {
-        console.log(`⚠️ Política "${PolicyDataMapper.getInsuredName(policy)}": tipo de documento não determinado`);
+        console.log(`⚠️ Política "${policy.name}": tipo de documento desconhecido: ${documentoTipo}`);
       }
       
       return acc;
@@ -143,7 +174,7 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
         
         // Verificar se a apólice está ativa neste mês
         if (date >= startDate && date <= endDate) {
-          return sum + PolicyDataMapper.getMonthlyAmount(policy);
+          return sum + (policy.monthlyAmount || 0);
         }
         return sum;
       }, 0);
@@ -175,10 +206,10 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       .slice(0, 10)
       .map(policy => ({
         id: policy.id,
-        name: PolicyDataMapper.getInsuredName(policy),
-        insurer: PolicyDataMapper.getInsurerName(policy),
+        name: policy.name,
+        insurer: getInsurerName(policy.insurer),
         premium: policy.premium || 0,
-        monthlyAmount: PolicyDataMapper.getMonthlyAmount(policy),
+        monthlyAmount: policy.monthlyAmount || 0,
         endDate: policy.endDate,
         extractedAt: policy.extractedAt
       }));

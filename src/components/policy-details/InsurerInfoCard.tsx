@@ -1,83 +1,84 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Tag } from 'lucide-react';
-import { extractFieldValue } from '@/utils/extractFieldValue';
+import { Building2, Star, Shield } from 'lucide-react';
 
 interface InsurerInfoCardProps {
-  insurer?: any;
-  type?: any;
-  policy?: any;
+  insurer: string | object;
+  type: string;
+  readOnly?: boolean;
 }
 
-export const InsurerInfoCard = ({ insurer, type, policy }: InsurerInfoCardProps) => {
-  // CORREÇÃO CRÍTICA: Usar extractFieldValue para todos os campos
-  const safeInsurer = extractFieldValue(insurer) || 
-                     extractFieldValue(policy?.seguradora) ||
-                     extractFieldValue(policy?.insurer) ||
-                     extractFieldValue(policy?.empresa) ||
-                     'Seguradora não informada';
+export const InsurerInfoCard = ({ 
+  insurer, 
+  type,
+  readOnly = false 
+}: InsurerInfoCardProps) => {
+  // Função para extrair o nome da seguradora
+  const getInsurerName = (insurerData: string | object): string => {
+    if (typeof insurerData === 'string') {
+      return insurerData;
+    }
+    
+    if (typeof insurerData === 'object' && insurerData !== null) {
+      const insurerObj = insurerData as any;
+      
+      // Handle different object structures
+      if (insurerObj.empresa) return String(insurerObj.empresa);
+      if (insurerObj.name) return String(insurerObj.name);
+      if (insurerObj.value) return String(insurerObj.value);
+      
+      return 'Seguradora não informada';
+    }
+    
+    return 'Seguradora não informada';
+  };
 
-  const safeType = extractFieldValue(type) || 
-                  extractFieldValue(policy?.tipo_seguro) ||
-                  extractFieldValue(policy?.type) ||
-                  extractFieldValue(policy?.categoria) ||
-                  'Tipo não especificado';
+  const getInsuranceTypeLabel = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case 'auto':
+        return 'Seguro Auto';
+      case 'vida':
+        return 'Seguro de Vida';
+      case 'saude':
+        return 'Seguro Saúde';
+      case 'residencial':
+        return 'Seguro Residencial';
+      case 'empresarial':
+        return 'Seguro Empresarial';
+      default:
+        return type || 'Seguro';
+    }
+  };
 
-  // Extrair informações adicionais se disponíveis
-  const broker = extractFieldValue(policy?.broker) ||
-                extractFieldValue(policy?.corretora) ||
-                extractFieldValue(policy?.entidade);
-
-  const category = extractFieldValue(policy?.category) ||
-                  extractFieldValue(policy?.categoria);
+  const insurerName = getInsurerName(insurer);
 
   return (
-    <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-emerald-50 to-teal-100 overflow-hidden">
-      <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-emerald-200 pb-4">
-        <CardTitle className="flex items-center text-xl font-bold text-emerald-900 font-sf-pro">
-          <Building className="h-6 w-6 mr-3 text-emerald-600" />
+    <Card className="flex flex-col h-full border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
+      <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-blue-200 pb-4">
+        <CardTitle className="flex items-center text-xl font-bold text-blue-900 font-sf-pro">
+          <Building2 className="h-6 w-6 mr-3 text-blue-600" />
           Seguradora
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6 space-y-5">
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-6 shadow-md">
-          <label className="text-sm font-medium text-white/90 font-sf-pro block mb-2">Empresa</label>
-          <p className="text-2xl font-bold text-white font-sf-pro">
-            {safeInsurer}
-          </p>
+
+      <CardContent className="p-6 space-y-4">
+        {/* Nome da Seguradora */}
+        <div className="flex items-start gap-3">
+          <Star className="h-5 w-5 text-blue-500 mt-1 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-blue-600 mb-1">Nome da Seguradora</p>
+            <p className="text-base font-semibold text-gray-800 font-sf-pro">{insurerName}</p>
+          </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
-          <label className="text-sm font-medium text-emerald-700 font-sf-pro flex items-center gap-2 mb-1">
-            <Tag className="h-4 w-4" />
-            Tipo de Seguro
-          </label>
-          <p className="text-lg font-semibold text-gray-900 font-sf-pro capitalize">
-            {safeType}
-          </p>
+        {/* Tipo de Seguro */}
+        <div className="flex items-start gap-3">
+          <Shield className="h-5 w-5 text-blue-500 mt-1 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-blue-600 mb-1">Tipo de Seguro</p>
+            <p className="text-base font-semibold text-gray-800 font-sf-pro">{getInsuranceTypeLabel(type)}</p>
+          </div>
         </div>
-
-        {broker && (
-          <div className="bg-emerald-50 rounded-xl p-4 shadow-sm border border-emerald-100">
-            <label className="text-sm font-medium text-emerald-700 font-sf-pro block mb-1">
-              Corretora
-            </label>
-            <p className="text-base font-medium text-gray-900 font-sf-pro">
-              {broker}
-            </p>
-          </div>
-        )}
-
-        {category && category !== safeType && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
-            <label className="text-sm font-medium text-emerald-700 font-sf-pro block mb-1">
-              Categoria
-            </label>
-            <p className="text-base font-medium text-gray-900 font-sf-pro capitalize">
-              {category}
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

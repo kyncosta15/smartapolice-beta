@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,46 +13,45 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
-import { PolicyStatus } from '@/types/policyStatus';
+import { PolicyWithStatus, PolicyStatus } from '@/types/policyStatus';
 import { STATUS_COLORS, formatStatusText } from '@/utils/statusColors';
 import { useRenewalChecker } from '@/hooks/useRenewalChecker';
 import { RenewalModal } from '@/components/RenewalModal';
 import { InfoModal } from '@/components/InfoModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
-import { usePolicyNormalization } from '@/hooks/usePolicyNormalization';
 import { useToast } from '@/hooks/use-toast';
 
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [policyToDelete, setPolicyToDelete] = useState<any>(null);
+  const [policyToDelete, setPolicyToDelete] = useState<PolicyWithStatus | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { policies, updatePolicy, deletePolicy, refreshPolicies } = usePersistedPolicies();
   const { toast } = useToast();
-
-  // Normalizar políticas para renderização segura
-  const normalizedPolicies = usePolicyNormalization(policies);
   
-  console.log('🎯 MyPolicies - Políticas normalizadas:', normalizedPolicies.length);
-  
-  // Converter para formato esperado pelo useRenewalChecker
-  const policiesWithStatus = normalizedPolicies.map(policy => ({
-    id: policy.id,
-    name: policy.name,
-    insurer: policy.insurer,
-    policyNumber: policy.policyNumber,
-    type: policy.type,
-    monthlyAmount: policy.monthlyAmount,
-    startDate: policy.startDate,
-    endDate: policy.endDate,
-    expirationDate: policy.expirationDate,
-    status: policy.status as PolicyStatus
-  }));
+  const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
+    const finalStatus = policy.status as PolicyStatus;
+    
+    console.log(`✅ [MyPolicies] Apólice ${policy.name}: status do banco = ${finalStatus}`);
+    
+    return {
+      id: policy.id,
+      name: policy.name,
+      insurer: policy.insurer,
+      policyNumber: policy.policyNumber,
+      type: policy.type,
+      monthlyAmount: policy.monthlyAmount,
+      startDate: policy.startDate,
+      endDate: policy.endDate,
+      expirationDate: policy.expirationDate || policy.endDate,
+      status: finalStatus
+    };
+  });
   
   const renewalAlert = useRenewalChecker(policiesWithStatus);
 
-  const handleRenewalDecision = async (policy: any, newStatus: PolicyStatus) => {
+  const handleRenewalDecision = async (policy: PolicyWithStatus, newStatus: PolicyStatus) => {
     console.log(`🔄 [handleRenewalDecision] Atualizando status: ${policy.id} -> ${newStatus}`);
     
     const updateSuccess = await updatePolicy(policy.id, { status: newStatus });
@@ -72,7 +70,7 @@ export function MyPolicies() {
     renewalAlert?.clear();
   };
 
-  const handleDeleteClick = (e: React.MouseEvent, policy: any) => {
+  const handleDeleteClick = (e: React.MouseEvent, policy: PolicyWithStatus) => {
     e.preventDefault();
     e.stopPropagation();
     console.log(`🗑️ [handleDeleteClick] Preparando deleção da apólice: ${policy.name} (${policy.id})`);
@@ -135,46 +133,32 @@ export function MyPolicies() {
     setPolicyToDelete(null);
   };
 
-  // Renderização segura com validação
-  if (!normalizedPolicies || normalizedPolicies.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">Minhas Apólices</h2>
-          <Badge variant="secondary">0 apólices</Badge>
-        </div>
-        
-        <div className="text-center py-12">
-          <p className="text-gray-500">Nenhuma apólice encontrada</p>
-          <p className="text-sm text-gray-400 mt-2">
-            Faça upload de seus documentos para começar
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Minhas Apólices</h2>
         <Badge variant="secondary">
-          {normalizedPolicies.length} apólice{normalizedPolicies.length !== 1 ? 's' : ''}
+          {policiesWithStatus.length} apólice{policiesWithStatus.length !== 1 ? 's' : ''}
         </Badge>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {normalizedPolicies.map((policy) => {
+        {policiesWithStatus.map((policy) => {
+          const originalPolicy = policies.find(p => p.id === policy.id);
+          const installmentsCount = originalPolicy?.quantidade_parcelas || 
+                                  originalPolicy?.installments?.length || 
+                                  12;
+          
           console.log(`🎯 [MyPolicies-Render] Renderizando ${policy.name} com status: ${policy.status}`);
           
           return (
             <Card key={policy.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{policy.name || 'Nome não informado'}</CardTitle>
+                  <CardTitle className="text-lg">{policy.name}</CardTitle>
                   <div className="flex items-center gap-2">
-                    <Badge className={STATUS_COLORS[policy.status as PolicyStatus] || STATUS_COLORS.vigente}>
-                      {formatStatusText(policy.status as PolicyStatus)}
+                    <Badge className={STATUS_COLORS[policy.status] || STATUS_COLORS.vigente}>
+                      {formatStatusText(policy.status)}
                     </Badge>
                     <Button
                       variant="ghost"
@@ -188,19 +172,19 @@ export function MyPolicies() {
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500">{policy.insurer || 'Seguradora não informada'}</p>
+                <p className="text-sm text-gray-500">{policy.insurer}</p>
               </CardHeader>
               
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-gray-500">Número</p>
-                    <p className="font-medium">{policy.policyNumber || 'N/A'}</p>
+                    <p className="font-medium">{policy.policyNumber}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Valor Mensal</p>
                     <p className="font-semibold text-green-600">
-                      {formatCurrency(policy.monthlyAmount || 0)}
+                      {formatCurrency(policy.monthlyAmount)}
                     </p>
                   </div>
                 </div>
@@ -208,19 +192,16 @@ export function MyPolicies() {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-gray-500">Parcelas</p>
-                    <p className="font-medium">{policy.installmentsCount || 0}x</p>
+                    <p className="font-medium">{installmentsCount}x</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Vencimento</p>
                     <p className={`font-medium ${
-                      policy.expirationDate && new Date(policy.expirationDate) < new Date() 
+                      new Date(policy.expirationDate || policy.endDate) < new Date() 
                         ? 'text-red-600' 
                         : 'text-gray-900'
                     }`}>
-                      {policy.expirationDate 
-                        ? new Date(policy.expirationDate).toLocaleDateString('pt-BR')
-                        : 'Não informado'
-                      }
+                      {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 </div>
@@ -254,7 +235,7 @@ export function MyPolicies() {
               ⚠️ Confirmar Deleção
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-gray-600">
-              Tem certeza que deseja deletar a apólice <strong>"{policyToDelete?.name || 'N/A'}"</strong>?
+              Tem certeza que deseja deletar a apólice <strong>"{policyToDelete?.name}"</strong>?
               <br /><br />
               <span className="text-red-600 font-medium">
                 Esta ação não pode ser desfeita.

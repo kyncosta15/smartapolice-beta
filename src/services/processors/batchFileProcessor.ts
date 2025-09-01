@@ -5,7 +5,6 @@ import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
 import { StructuredDataConverter } from '@/utils/parsers/structuredDataConverter';
 import { FileProcessingStatus } from '@/types/pdfUpload';
 import { PolicyPersistenceService } from '../policyPersistenceService';
-import { extractFieldValue, extractNumericValue } from '@/utils/extractFieldValue';
 
 export class BatchFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
@@ -112,7 +111,7 @@ export class BatchFileProcessor {
             this.updateFileStatus(relatedFileName, {
               progress: 90 + (index * 2),
               status: 'processing',
-              message: `✅ Processado: ${extractFieldValue(parsedPolicy.insurer)}`
+              message: `✅ Processado: ${parsedPolicy.insurer}`
             });
             
           } catch (conversionError) {
@@ -201,11 +200,7 @@ export class BatchFileProcessor {
     }
     
     // Verificar formato dos dados e converter adequadamente
-    const numeroApolice = extractFieldValue(data.numero_apolice);
-    const segurado = extractFieldValue(data.segurado);
-    const seguradora = extractFieldValue(data.seguradora);
-    
-    if (numeroApolice && segurado && seguradora) {
+    if (data.numero_apolice && data.segurado && data.seguradora) {
       console.log('📋 Convertendo dados diretos do N8N');
       return N8NDataConverter.convertN8NDirectData(data, fileName, file, userId);
     } else if (data.informacoes_gerais && data.seguradora && data.vigencia) {
@@ -218,10 +213,10 @@ export class BatchFileProcessor {
   }
 
   private createFallbackPolicy(file: File, userId: string, originalData?: any): ParsedPolicyData {
-    // CORREÇÃO: Usar extractFieldValue para extrair campos seguros
-    const segurado = extractFieldValue(originalData?.segurado) || `Cliente ${file.name.replace('.pdf', '')}`;
-    const seguradora = extractFieldValue(originalData?.seguradora) || 'Seguradora Não Identificada';
-    const premio = extractNumericValue(originalData?.premio) || 1200 + Math.random() * 1800;
+    // Se temos dados originais, usar o que conseguirmos extrair
+    const segurado = originalData?.segurado || `Cliente ${file.name.replace('.pdf', '')}`;
+    const seguradora = originalData?.seguradora || 'Seguradora Não Identificada';
+    const premio = Number(originalData?.premio) || 1200 + Math.random() * 1800;
     
     const mockPolicyData: ParsedPolicyData = {
       id: crypto.randomUUID(),
@@ -230,9 +225,9 @@ export class BatchFileProcessor {
       insurer: seguradora,
       premium: premio,
       monthlyAmount: premio / 12,
-      startDate: extractFieldValue(originalData?.inicio) || new Date().toISOString().split('T')[0],
-      endDate: extractFieldValue(originalData?.fim) || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      policyNumber: extractFieldValue(originalData?.numero_apolice) || `FB-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      startDate: originalData?.inicio || new Date().toISOString().split('T')[0],
+      endDate: originalData?.fim || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      policyNumber: originalData?.numero_apolice || `FB-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       paymentFrequency: 'monthly',
       status: 'vigente',
       file,
@@ -240,20 +235,20 @@ export class BatchFileProcessor {
       installments: [],
       
       // Campos obrigatórios
-      expirationDate: extractFieldValue(originalData?.fim) || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      expirationDate: originalData?.fim || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       policyStatus: 'vigente',
       
       // Campos específicos se disponíveis
       insuredName: segurado,
-      documento: extractFieldValue(originalData?.documento),
-      documento_tipo: extractFieldValue(originalData?.documento_tipo) as 'CPF' | 'CNPJ' || 'CPF',
-      vehicleModel: extractFieldValue(originalData?.modelo_veiculo),
-      uf: extractFieldValue(originalData?.uf),
-      deductible: extractNumericValue(originalData?.franquia) || undefined,
+      documento: originalData?.documento,
+      documento_tipo: originalData?.documento_tipo as 'CPF' | 'CNPJ' || 'CPF',
+      vehicleModel: originalData?.modelo_veiculo,
+      uf: originalData?.uf,
+      deductible: Number(originalData?.franquia) || undefined,
       
       // Campos opcionais
       coberturas: originalData?.coberturas || [{ descricao: 'Cobertura Básica' }],
-      entity: extractFieldValue(originalData?.corretora) || 'Corretora Não Identificada',
+      entity: originalData?.corretora || 'Corretora Não Identificada',
       category: 'Veicular',
       coverage: ['Cobertura Básica'],
       totalCoverage: premio
@@ -264,10 +259,8 @@ export class BatchFileProcessor {
   }
 
   private findRelatedFileName(data: any, files: File[]): string | null {
-    // CORREÇÃO: Usar extractFieldValue para segurado
-    const seguradoField = extractFieldValue(data.segurado);
-    if (seguradoField) {
-      const seguradoName = seguradoField.toLowerCase();
+    if (data.segurado) {
+      const seguradoName = data.segurado.toLowerCase();
       const matchingFile = files.find(file => {
         const fileName = file.name.toLowerCase();
         const firstNames = seguradoName.split(' ').slice(0, 2);

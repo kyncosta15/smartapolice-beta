@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Hash } from 'lucide-react';
-import { extractFieldValue, extractNumericValue } from '@/utils/extractFieldValue';
 
 interface FinancialInfoCardProps {
   policy: any;
@@ -11,9 +10,8 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
   // Calcular número de parcelas dos dados da apólice
   const getInstallmentsCount = () => {
     // Priorizar quantidade_parcelas do banco
-    const quantidadeParcelas = extractNumericValue(policy.quantidade_parcelas);
-    if (quantidadeParcelas > 0) {
-      return quantidadeParcelas;
+    if (policy.quantidade_parcelas && policy.quantidade_parcelas > 0) {
+      return policy.quantidade_parcelas;
     }
     
     // Fallback para installments array
@@ -30,26 +28,23 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
     return 12;
   };
 
-  // CORREÇÃO: Calcular prêmio mensal corretamente usando extractNumericValue
+  // CORREÇÃO: Calcular prêmio mensal corretamente
   const calculateMonthlyPremium = () => {
-    const premiumValue = extractNumericValue(policy.valor_premio) || extractNumericValue(policy.premium) || 0;
+    const premiumValue = policy.valor_premio || policy.premium || 0;
     
     // Se há custo_mensal definido, usar ele
-    const custoMensal = extractNumericValue(policy.custo_mensal);
-    if (custoMensal > 0) {
-      return custoMensal;
+    if (policy.custo_mensal && policy.custo_mensal > 0) {
+      return policy.custo_mensal;
     }
     
     // Se há monthlyAmount definido, usar ele
-    const monthlyAmount = extractNumericValue(policy.monthlyAmount);
-    if (monthlyAmount > 0) {
-      return monthlyAmount;
+    if (policy.monthlyAmount && policy.monthlyAmount > 0) {
+      return policy.monthlyAmount;
     }
     
     // Se há valor_parcela definido, usar ele
-    const valorParcela = extractNumericValue(policy.valor_parcela);
-    if (valorParcela > 0) {
-      return valorParcela;
+    if (policy.valor_parcela && policy.valor_parcela > 0) {
+      return policy.valor_parcela;
     }
     
     // Calcular baseado no número de parcelas
@@ -64,12 +59,6 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
 
   const installmentsCount = getInstallmentsCount();
   const monthlyPremium = calculateMonthlyPremium();
-  
-  // CORREÇÃO: Usar extractNumericValue para garantir que temos números válidos
-  const annualPremium = extractNumericValue(policy.valor_premio) || extractNumericValue(policy.premium) || 0;
-  
-  // CORREÇÃO: Usar extractFieldValue para forma de pagamento
-  const formaPagamento = extractFieldValue(policy.forma_pagamento) || extractFieldValue(policy.paymentForm);
 
   return (
     <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 overflow-hidden">
@@ -83,7 +72,7 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
         <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-6 shadow-md">
           <label className="text-sm font-medium text-white/90 font-sf-pro block mb-2">Prêmio Anual</label>
           <p className="text-3xl font-bold text-white font-sf-pro">
-            R$ {annualPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            R$ {(policy.valor_premio || policy.premium || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </p>
         </div>
         
@@ -114,13 +103,13 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
           </div>
         </div>
 
-        {formaPagamento && (
+        {(policy.forma_pagamento || policy.paymentForm) && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100">
             <label className="text-sm font-medium text-amber-700 font-sf-pro block mb-1">
               Forma de Pagamento
             </label>
             <p className="text-base font-medium text-gray-900 font-sf-pro capitalize">
-              {formaPagamento}
+              {policy.forma_pagamento || policy.paymentForm}
             </p>
           </div>
         )}

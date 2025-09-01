@@ -1,114 +1,57 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Clock } from 'lucide-react';
-import { extractFieldValue } from '@/utils/extractFieldValue';
 
 interface ValidityInfoCardProps {
   policy: any;
 }
 
 export const ValidityInfoCard = ({ policy }: ValidityInfoCardProps) => {
-  // CORREÇÃO CRÍTICA: Usar extractFieldValue para todas as datas
-  const startDate = extractFieldValue(policy.startDate) || 
-                   extractFieldValue(policy.inicio_vigencia) ||
-                   extractFieldValue(policy.inicio) ||
-                   extractFieldValue(policy.vigencia?.inicio);
-
-  const endDate = extractFieldValue(policy.endDate) || 
-                 extractFieldValue(policy.fim_vigencia) ||
-                 extractFieldValue(policy.fim) ||
-                 extractFieldValue(policy.vigencia?.fim) ||
-                 extractFieldValue(policy.expirationDate);
-
-  const status = extractFieldValue(policy.status) || 
-                extractFieldValue(policy.policyStatus) ||
-                'Não informado';
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Data não informada';
-    
-    try {
-      if (dateString.includes('-')) {
-        return new Date(dateString).toLocaleDateString('pt-BR');
-      }
-      return dateString;
-    } catch {
-      return dateString;
-    }
-  };
-
-  const calculateDaysRemaining = () => {
-    if (!endDate) return null;
-    
-    try {
-      const end = new Date(endDate);
-      const today = new Date();
-      const diffTime = end.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      return diffDays;
-    } catch {
-      return null;
-    }
-  };
-
-  const daysRemaining = calculateDaysRemaining();
-
-  const getStatusColor = () => {
-    if (daysRemaining === null) return 'text-gray-600';
-    if (daysRemaining < 30) return 'text-red-600';
-    if (daysRemaining < 90) return 'text-orange-600';
-    return 'text-green-600';
-  };
-
-  const getStatusText = () => {
-    if (daysRemaining === null) return 'Período não calculado';
-    if (daysRemaining < 0) return `Vencida há ${Math.abs(daysRemaining)} dias`;
-    if (daysRemaining === 0) return 'Vence hoje';
-    return `${daysRemaining} dias restantes`;
-  };
-
   return (
-    <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-purple-50 to-pink-100 overflow-hidden">
-      <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-purple-200 pb-4">
-        <CardTitle className="flex items-center text-xl font-bold text-purple-900 font-sf-pro">
-          <Calendar className="h-6 w-6 mr-3 text-purple-600" />
-          Vigência
+    <Card className="flex flex-col h-full border-0 shadow-lg rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 overflow-hidden">
+      <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-indigo-200 pb-4">
+        <CardTitle className="flex items-center text-xl font-bold text-indigo-900 font-sf-pro">
+          <Calendar className="h-6 w-6 mr-3 text-indigo-600" />
+          Vigência & Histórico
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-5">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
-          <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">Início da Vigência</label>
-          <p className="text-lg font-bold text-gray-900 font-sf-pro">
-            {formatDate(startDate)}
-          </p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
+            <label className="text-sm font-medium text-indigo-700 font-sf-pro block mb-1">Data de Início</label>
+            <p className="text-base font-bold text-gray-900 font-sf-pro">
+              {new Date(policy.startDate).toLocaleDateString('pt-BR')}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
+            <label className="text-sm font-medium text-indigo-700 font-sf-pro block mb-1">Data de Fim</label>
+            <p className="text-base font-bold text-gray-900 font-sf-pro">
+              {new Date(policy.endDate).toLocaleDateString('pt-BR')}
+            </p>
+          </div>
         </div>
 
-        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-4 shadow-md">
-          <label className="text-sm font-medium text-white/90 font-sf-pro block mb-2">Fim da Vigência</label>
-          <p className="text-xl font-bold text-white font-sf-pro">
-            {formatDate(endDate)}
-          </p>
-        </div>
-
-        {daysRemaining !== null && (
-          <div className="bg-purple-50 rounded-xl p-4 shadow-sm border border-purple-100">
-            <label className="text-sm font-medium text-purple-700 font-sf-pro flex items-center gap-2 mb-2">
+        {policy.extractedAt && (
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
+            <label className="text-sm font-medium text-indigo-700 font-sf-pro flex items-center gap-2 mb-1">
               <Clock className="h-4 w-4" />
-              Status da Vigência
+              Extraído em
             </label>
-            <p className={`text-lg font-bold font-sf-pro ${getStatusColor()}`}>
-              {getStatusText()}
+            <p className="text-sm font-medium text-gray-900 font-sf-pro">
+              {new Date(policy.extractedAt).toLocaleDateString('pt-BR')} às{' '}
+              {new Date(policy.extractedAt).toLocaleTimeString('pt-BR')}
             </p>
           </div>
         )}
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
-          <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">Status Geral</label>
-          <p className="text-base font-semibold text-gray-900 font-sf-pro capitalize">
-            {status}
-          </p>
-        </div>
+        {policy.fileName && (
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
+            <label className="text-sm font-medium text-indigo-700 font-sf-pro block mb-1">Arquivo Original</label>
+            <p className="text-sm bg-gray-50 p-3 rounded-lg border font-sf-pro font-medium text-gray-700 break-all">
+              {policy.fileName}
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

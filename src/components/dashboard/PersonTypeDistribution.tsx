@@ -14,15 +14,6 @@ interface PersonTypeDistributionProps {
 export function PersonTypeDistribution({ personTypeDistribution }: PersonTypeDistributionProps) {
   const isMobile = useIsMobile();
 
-  // Garantir que os valores são números seguros
-  const safePessoaFisica = typeof personTypeDistribution.pessoaFisica === 'number' 
-    ? personTypeDistribution.pessoaFisica 
-    : 0;
-  
-  const safePessoaJuridica = typeof personTypeDistribution.pessoaJuridica === 'number' 
-    ? personTypeDistribution.pessoaJuridica 
-    : 0;
-
   return (
     <Card className="w-full overflow-hidden">
       <CardHeader className={`border-b border-gray-100 ${isMobile ? 'p-2 pb-1' : 'p-4'}`}>
@@ -50,10 +41,10 @@ export function PersonTypeDistribution({ personTypeDistribution }: PersonTypeDis
                 </div>
                 <div className="text-right">
                   <div className={`${isMobile ? 'text-lg' : 'text-4xl'} font-bold text-blue-700`}>
-                    {safePessoaFisica}
+                    {personTypeDistribution.pessoaFisica}
                   </div>
                   <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-600 font-medium`}>
-                    {safePessoaFisica === 1 ? 'apólice' : 'apólices'}
+                    {personTypeDistribution.pessoaFisica === 1 ? 'apólice' : 'apólices'}
                   </p>
                 </div>
               </div>
@@ -77,10 +68,10 @@ export function PersonTypeDistribution({ personTypeDistribution }: PersonTypeDis
                 </div>
                 <div className="text-right">
                   <div className={`${isMobile ? 'text-lg' : 'text-4xl'} font-bold text-purple-700`}>
-                    {safePessoaJuridica}
+                    {personTypeDistribution.pessoaJuridica}
                   </div>
                   <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-purple-600 font-medium`}>
-                    {safePessoaJuridica === 1 ? 'apólice' : 'apólices'}
+                    {personTypeDistribution.pessoaJuridica === 1 ? 'apólice' : 'apólices'}
                   </p>
                 </div>
               </div>

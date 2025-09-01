@@ -1,112 +1,147 @@
 
-// CORREÇÃO COMPLETA: Função para extrair valores seguros de qualquer tipo de dado
+export const extractFieldValue = (field: any): string | null => {
+  console.log('🔍 Extraindo valor do campo:', field);
+  
+  if (!field) {
+    console.log('❌ Campo é null/undefined');
+    return null;
+  }
 
-export function extractFieldValue(value: any): string {
-  // Se é null, undefined ou string vazia, retornar string vazia
-  if (value === null || value === undefined || value === '') {
-    return '';
-  }
-  
-  // Se já é string, retornar diretamente
-  if (typeof value === 'string') {
-    return value;
-  }
-  
-  // Se é número, converter para string
-  if (typeof value === 'number') {
-    return value.toString();
-  }
-  
-  // Se é boolean, converter para string
-  if (typeof value === 'boolean') {
-    return value.toString();
-  }
-  
-  // Se é um objeto do N8N com propriedades específicas
-  if (value && typeof value === 'object') {
-    // Verificar se é um objeto N8N com as propriedades esperadas
-    if (value.empresa || value.categoria || value.cobertura || value.entidade) {
-      // Extrair o primeiro valor disponível do objeto N8N
-      return extractFieldValue(value.empresa || value.categoria || value.cobertura || value.entidade);
-    }
-    
-    // Se tem uma propriedade 'value', usar ela
-    if (value.value !== undefined) {
-      return extractFieldValue(value.value);
-    }
-    
-    // Se tem uma propriedade 'text', usar ela
-    if (value.text !== undefined) {
-      return extractFieldValue(value.text);
-    }
-    
-    // Se tem uma propriedade 'name', usar ela
-    if (value.name !== undefined) {
-      return extractFieldValue(value.name);
-    }
-    
-    // Se é um array, pegar o primeiro elemento
-    if (Array.isArray(value) && value.length > 0) {
-      return extractFieldValue(value[0]);
-    }
-    
-    // Se é um objeto Date
-    if (value instanceof Date) {
-      return value.toISOString();
-    }
-    
-    // Para outros objetos, tentar converter para JSON e depois extrair uma representação útil
-    try {
-      const stringified = JSON.stringify(value);
-      // Se o JSON é muito longo, retornar uma representação mais simples
-      if (stringified.length > 100) {
-        return '[Objeto Complexo]';
+  // 1. string simples
+  if (typeof field === 'string' && field.toLowerCase() !== 'undefined' && field.trim() !== '') {
+    // Verificar se é um JSON string que precisa ser parseado
+    if (field.startsWith('{') && field.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(field);
+        console.log('🔧 String JSON detectada, parseando:', parsed);
+        return extractFieldValue(parsed); // Recursão para processar o objeto parseado
+      } catch (e) {
+        console.log('⚠️ Falha ao parsear JSON, retornando string original:', field);
+        return field;
       }
-      return stringified;
-    } catch {
-      return '[Objeto]';
     }
+    console.log('✅ Campo é string válida:', field);
+    return field;
   }
-  
-  // Fallback: converter qualquer coisa para string
-  try {
-    return String(value);
-  } catch {
-    return '';
-  }
-}
 
-// Função auxiliar para detectar tipo de documento baseado no valor extraído
-export function inferDocumentType(documento: any): 'CPF' | 'CNPJ' {
-  const docString = extractFieldValue(documento);
-  
-  if (!docString) return 'CPF';
-  
-  // Remover caracteres não numéricos
-  const numbersOnly = docString.replace(/\D/g, '');
-  
-  // Se tem 14 dígitos, é CNPJ
-  if (numbersOnly.length === 14) {
+  // 2. objeto do n8n: { value: '...'}
+  if (typeof field === 'object' && field !== null) {
+    // Handle N8N object with _type and value structure
+    if ('_type' in field && field._type === 'undefined') {
+      console.log('⚠️ Campo N8N com _type undefined, retornando null');
+      return null;
+    }
+    
+    // Handle insurer object structure - PRIORIZAR EMPRESA
+    if ('empresa' in field && field.empresa) {
+      const empresaValue = typeof field.empresa === 'object' && field.empresa.value 
+        ? field.empresa.value 
+        : field.empresa;
+      console.log('✅ Extraindo empresa do objeto:', empresaValue);
+      return String(empresaValue);
+    }
+    
+    if ('value' in field) {
+      const v = field.value;
+      console.log('🔍 Valor do objeto N8N:', v);
+      
+      // Handle nested value objects
+      if (typeof v === 'object' && v !== null && 'value' in v) {
+        if (typeof v.value === 'string' && v.value.toLowerCase() !== 'undefined' && v.value.trim() !== '') {
+          console.log('✅ Valor aninhado do objeto N8N é válido:', v.value);
+          return v.value;
+        }
+      } else if (typeof v === 'string' && v.toLowerCase() !== 'undefined' && v.trim() !== '') {
+        console.log('✅ Valor do objeto N8N é válido:', v);
+        return v;
+      }
+    }
+    
+    // Handle other object structures
+    if ('name' in field && field.name) {
+      const nameValue = typeof field.name === 'object' && field.name.value 
+        ? field.name.value 
+        : field.name;
+      console.log('✅ Extraindo name do objeto:', nameValue);
+      return String(nameValue);
+    }
+
+    // Handle categoria, cobertura, entidade objects - mas só se não tiver empresa
+    for (const key of ['categoria', 'cobertura', 'entidade']) {
+      if (key in field && field[key]) {
+        const keyValue = typeof field[key] === 'object' && field[key].value 
+          ? field[key].value 
+          : field[key];
+        console.log(`✅ Extraindo ${key} do objeto:`, keyValue);
+        return String(keyValue);
+      }
+    }
+
+    // If object has only one key, try to extract its value
+    const keys = Object.keys(field);
+    if (keys.length === 1) {
+      const singleKey = keys[0];
+      const singleValue = field[singleKey];
+      
+      if (typeof singleValue === 'object' && singleValue !== null && 'value' in singleValue) {
+        if (typeof singleValue.value === 'string' && singleValue.value.toLowerCase() !== 'undefined' && singleValue.value.trim() !== '') {
+          console.log(`✅ Valor único extraído de ${singleKey}:`, singleValue.value);
+          return singleValue.value;
+        }
+      } else if (typeof singleValue === 'string' && singleValue.toLowerCase() !== 'undefined' && singleValue.trim() !== '') {
+        console.log(`✅ Valor único string extraído de ${singleKey}:`, singleValue);
+        return singleValue;
+      }
+    }
+
+    console.log('⚠️ Objeto complexo encontrado, tentando extrair string válida:', field);
+    // As a last resort, try to find any valid string value in the object
+    const findValidString = (obj: any): string | null => {
+      if (typeof obj === 'string' && obj.toLowerCase() !== 'undefined' && obj.trim() !== '') {
+        return obj;
+      }
+      if (typeof obj === 'object' && obj !== null) {
+        for (const value of Object.values(obj)) {
+          const result = findValidString(value);
+          if (result) return result;
+        }
+      }
+      return null;
+    };
+    
+    const foundString = findValidString(field);
+    if (foundString) {
+      console.log('✅ String válida encontrada no objeto:', foundString);
+      return foundString;
+    }
+    
+    // Se chegou até aqui, não conseguiu extrair nada válido
+    console.log('❌ Não foi possível extrair valor válido do objeto, retornando null');
+    return null;
+  }
+
+  // 3. Verificar se é um número (para documentos)
+  if (typeof field === 'number') {
+    console.log('✅ Campo é número:', field);
+    return field.toString();
+  }
+
+  console.log('❌ Campo não possui valor válido');
+  return null;
+};
+
+export function inferTipoPorDocumento(doc: string | null): 'CPF' | 'CNPJ' | null {
+  if (!doc) return null;
+  const digits = doc.replace(/\D/g, '');
+  console.log('🔍 Inferindo tipo por documento. Dígitos:', digits, 'Tamanho:', digits.length);
+  if (digits.length === 11) {
+    console.log('✅ Documento identificado como CPF');
+    return 'CPF';
+  }
+  if (digits.length === 14) {
+    console.log('✅ Documento identificado como CNPJ');
     return 'CNPJ';
   }
-  
-  // Caso contrário, assumir CPF
-  return 'CPF';
-}
-
-// Função para extrair valores numéricos seguros
-export function extractNumericValue(value: any): number {
-  const stringValue = extractFieldValue(value);
-  
-  if (!stringValue) return 0;
-  
-  // Remover caracteres não numéricos exceto ponto e vírgula
-  const cleanValue = stringValue.replace(/[^\d.,]/g, '');
-  
-  // Converter vírgula para ponto (formato brasileiro)
-  const normalizedValue = cleanValue.replace(',', '.');
-  
-  const parsed = parseFloat(normalizedValue);
-  
-  return isNaN(parsed) ? 0 : parsed;
+  console.log('⚠️ Documento com tamanho inválido para CPF/CNPJ');
+  return null;
 }

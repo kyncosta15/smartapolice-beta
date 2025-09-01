@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, DollarSign, Building, User } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
-import { extractFieldValue, extractNumericValue } from '@/utils/extractFieldValue';
 
 interface NewPolicyModalProps {
   isOpen: boolean;
@@ -33,10 +32,9 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
   };
 
   const getStatusBadge = (status?: string) => {
-    const safeStatus = extractFieldValue(status);
-    if (!safeStatus) return null;
+    if (!status) return null;
     
-    switch (safeStatus.toLowerCase()) {
+    switch (status.toLowerCase()) {
       case 'ativa':
       case 'active':
         return <Badge className="bg-green-50 text-green-600 border-green-200">Ativa</Badge>;
@@ -47,18 +45,9 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
       case 'expired':
         return <Badge className="bg-red-50 text-red-600 border-red-200">Vencida</Badge>;
       default:
-        return <Badge variant="secondary">{safeStatus}</Badge>;
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
-
-  // CORREÇÃO: Garantir que todos os valores sejam strings ou números, não objetos
-  const safeName = extractFieldValue(policy.name) || 'Nome não disponível';
-  const safeInsurer = extractFieldValue(policy.insurer) || 'Seguradora não identificada';
-  const safeValue = extractNumericValue(policy.value) || 0;
-  const safeDueDate = extractFieldValue(policy.dueDate) || new Date().toISOString();
-  const safeInsertDate = extractFieldValue(policy.insertDate) || new Date().toISOString();
-  const safeType = extractFieldValue(policy.type) || '';
-  const safeStatus = extractFieldValue(policy.status) || '';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -73,11 +62,11 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
           {/* Nome da Apólice */}
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {safeName}
+              {policy.name}
             </h3>
-            {safeStatus && (
+            {policy.status && (
               <div className="flex justify-center">
-                {getStatusBadge(safeStatus)}
+                {getStatusBadge(policy.status)}
               </div>
             )}
           </div>
@@ -88,7 +77,7 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
               <Building className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm text-gray-500">Seguradora</p>
-                <p className="font-medium text-gray-900">{safeInsurer}</p>
+                <p className="font-medium text-gray-900">{policy.insurer}</p>
               </div>
             </div>
 
@@ -97,7 +86,7 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
               <div>
                 <p className="text-sm text-gray-500">Valor</p>
                 <p className="font-medium text-gray-900">
-                  {formatCurrency(safeValue)}
+                  {formatCurrency(policy.value)}
                 </p>
               </div>
             </div>
@@ -107,7 +96,7 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
               <div>
                 <p className="text-sm text-gray-500">Data de Inserção</p>
                 <p className="font-medium text-gray-900">
-                  {formatDate(safeInsertDate)}
+                  {formatDate(policy.insertDate)}
                 </p>
               </div>
             </div>
@@ -117,17 +106,17 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
               <div>
                 <p className="text-sm text-gray-500">Vencimento</p>
                 <p className="font-medium text-gray-900">
-                  {formatDate(safeDueDate)}
+                  {formatDate(policy.dueDate)}
                 </p>
               </div>
             </div>
 
-            {safeType && (
+            {policy.type && (
               <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                 <User className="h-5 w-5 text-purple-600" />
                 <div>
                   <p className="text-sm text-gray-500">Tipo</p>
-                  <p className="font-medium text-gray-900">{safeType}</p>
+                  <p className="font-medium text-gray-900">{policy.type}</p>
                 </div>
               </div>
             )}

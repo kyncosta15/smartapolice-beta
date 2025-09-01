@@ -1,21 +1,15 @@
 import { DynamicPDFData } from '@/types/pdfUpload';
-import { extractFieldValue, extractNumericValue } from '@/utils/extractFieldValue';
 
 interface N8NDirectResponse {
   segurado?: string;
   seguradora?: string;
   tipo?: string;
-  tipo_seguro?: string;
   inicio?: string;
-  inicio_vigencia?: string;
   fim?: string;
-  fim_vigencia?: string;
   premio?: number;
   parcelas?: number;
   pagamento?: string;
-  forma_pagamento?: string;
   custo_mensal?: number;
-  valor_parcela?: number;
   vencimentos_futuros?: any[];
   status?: string;
   // Policy number fields from N8N
@@ -24,15 +18,9 @@ interface N8NDirectResponse {
   // Campos de documento
   documento?: string;
   documento_tipo?: 'CPF' | 'CNPJ';
-  // Outros campos
-  modelo_veiculo?: string;
-  uf?: string;
-  franquia?: number;
-  corretora?: string;
   // Coberturas with LMI - processadas do texto original
   coberturas?: Array<{
     descricao: string;
-    tipo?: string;
     lmi?: number;
   }>;
 }
@@ -88,12 +76,12 @@ export class N8NWebhookService {
 
       const result = await response.json() as N8NDirectResponse;
       
-      console.log('✅ Resposta COMPLETA recebida do N8N:', JSON.stringify(result, null, 2));
+      console.log('✅ Resposta recebida do N8N:', result);
+      console.log('📅 Vencimentos futuros recebidos:', result.vencimentos_futuros);
       
       // Log specifically the policy number received
-      const numeroApolice = extractFieldValue(result.numero_apolice) || extractFieldValue(result.apolice);
-      if (numeroApolice) {
-        console.log('📋 Número da apólice recebido:', numeroApolice);
+      if (result.numero_apolice || result.apolice) {
+        console.log('📋 Número da apólice recebido:', result.numero_apolice || result.apolice);
       }
       
       // Log coverages with LMI
@@ -101,12 +89,8 @@ export class N8NWebhookService {
         console.log('🛡️ Coberturas com LMI recebidas:', result.coberturas);
       }
       
-      // Verificar se temos dados válidos do N8N usando extractFieldValue
-      const segurado = extractFieldValue(result.segurado);
-      const seguradora = extractFieldValue(result.seguradora);
-      const premio = extractNumericValue(result.premio);
-      
-      if (segurado || seguradora || premio > 0) {
+      // Verificar se temos dados válidos do N8N
+      if (result && (result.segurado || result.seguradora || result.premio)) {
         console.log('🎉 Dados processados com sucesso pela IA do N8N!');
         
         // Converter dados do N8N para o formato esperado
@@ -137,41 +121,30 @@ export class N8NWebhookService {
   }
 
   private static convertN8NResponseToDynamicPDFData(n8nData: N8NDirectResponse): DynamicPDFData {
-    console.log('🔄 Convertendo resposta N8N para DynamicPDFData:', JSON.stringify(n8nData, null, 2));
-    
-    // Usar extractFieldValue para todos os campos de string
-    const segurado = extractFieldValue(n8nData.segurado) || 'Segurado Não Informado';
-    const seguradora = extractFieldValue(n8nData.seguradora) || 'Seguradora N8N';
-    const tipoSeguro = extractFieldValue(n8nData.tipo_seguro) || extractFieldValue(n8nData.tipo) || 'Auto';
-    const status = extractFieldValue(n8nData.status) || 'Ativa';
-    
-    // Usar extractNumericValue para campos numéricos
-    const premioAnual = extractNumericValue(n8nData.premio) || 0;
-    const numeroParcelas = extractNumericValue(n8nData.parcelas) || 12;
-    const valorParcela = extractNumericValue(n8nData.valor_parcela) || extractNumericValue(n8nData.custo_mensal) || (premioAnual / 12);
-    const premioMensal = Math.round(valorParcela * 100) / 100;
-    
-    // Extrair datas de forma segura
-    const startDate = extractFieldValue(n8nData.inicio_vigencia) || extractFieldValue(n8nData.inicio) || new Date().toISOString().split('T')[0];
-    const endDate = extractFieldValue(n8nData.fim_vigencia) || extractFieldValue(n8nData.fim) || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const startDate = n8nData.inicio || new Date().toISOString().split('T')[0];
+    const endDate = n8nData.fim || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const premioAnual = n8nData.premio || 0;
+    const premioMensal = n8nData.custo_mensal || (premioAnual / 12);
+    const numeroParcelas = n8nData.parcelas || 12;
 
     // Priorizar numero_apolice, depois apolice, e só usar fallback se nenhum estiver disponível
-    let policyNumber = extractFieldValue(n8nData.numero_apolice) || extractFieldValue(n8nData.apolice);
+    let policyNumber = n8nData.numero_apolice || n8nData.apolice;
     
     // Se não tiver número da apólice, usar um fallback mais específico
     if (!policyNumber) {
       console.warn('⚠️ Número da apólice não encontrado no retorno do N8N, usando fallback');
-      policyNumber = `N8N-${Date.now()}`;
+      policyNumber = `SEM-NUMERO-${Date.now()}`;
     }
     
     console.log('🔢 Número da apólice definido:', policyNumber);
+    console.log('🛡️ Coberturas recebidas do N8N:', n8nData.coberturas);
 
     // Processar coberturas - garantir que sejam processadas corretamente
     let processedCoberturas = [];
     if (n8nData.coberturas && Array.isArray(n8nData.coberturas)) {
       processedCoberturas = n8nData.coberturas.map(cobertura => ({
-        descricao: extractFieldValue(cobertura.descricao) || extractFieldValue(cobertura.tipo) || 'Cobertura',
-        lmi: extractNumericValue(cobertura.lmi) || undefined
+        descricao: cobertura.descricao || '',
+        lmi: cobertura.lmi ? Number(cobertura.lmi) : undefined
       }));
     }
     
@@ -187,42 +160,39 @@ export class N8NWebhookService {
       parcelas = this.generateInstallmentDetails(premioMensal, startDate, numeroParcelas);
     }
 
-    const convertedData: DynamicPDFData = {
+    return {
       informacoes_gerais: {
-        nome_apolice: `Apólice ${seguradora}`,
-        tipo: tipoSeguro,
-        status: status,
+        nome_apolice: `Apólice ${n8nData.seguradora || 'N8N'}`,
+        tipo: n8nData.tipo || "Auto",
+        status: n8nData.status || "Ativa",
         numero_apolice: policyNumber
       },
       seguradora: {
-        empresa: seguradora,
+        empresa: n8nData.seguradora || "Seguradora N8N",
         categoria: "Processado via N8N",
         cobertura: "Cobertura N8N",
         entidade: "N8N IA"
       },
       informacoes_financeiras: {
         premio_anual: premioAnual,
-        premio_mensal: premioMensal
+        premio_mensal: Math.round(premioMensal * 100) / 100
       },
       vigencia: {
         inicio: startDate,
         fim: endDate,
         extraido_em: new Date().toISOString().split('T')[0]
       },
-      segurado: {
-        nome: segurado
-      },
-      // Apenas campos de documento que existem no tipo DynamicPDFData
-      documento: extractFieldValue(n8nData.documento),
-      documento_tipo: extractFieldValue(n8nData.documento_tipo) as 'CPF' | 'CNPJ',
+      segurado: n8nData.segurado ? {
+        nome: n8nData.segurado
+      } : undefined,
+      // Campos de documento do N8N
+      documento: n8nData.documento,
+      documento_tipo: n8nData.documento_tipo,
       // Coberturas array - mantendo a estrutura processada do N8N
       coberturas: processedCoberturas,
       // Adicionar as parcelas como propriedade adicional
       parcelas_detalhadas: parcelas
     };
-
-    console.log('✅ DynamicPDFData convertido:', JSON.stringify(convertedData, null, 2));
-    return convertedData;
   }
 
   private static generateInstallmentsFromVencimentos(vencimentos: any[], monthlyValue: number) {

@@ -1,154 +1,98 @@
 
-import { ParsedPolicyData } from './policyDataParser';
-import { PolicyDataMapper } from './policyDataMapper';
+import { PolicyWithStatus } from '@/types/policyStatus';
+import { getChartColor } from '@/utils/statusColors';
 
-export interface ChartDataItem {
-  name: string;
-  value: number;
-  percentage?: number;
-  color?: string;
-}
-
-export interface StatusChartItem {
-  name: string;
-  value: number;
-}
-
-// Função para calcular dados do gráfico de status
-export const calculateStatusChartData = (policies: ParsedPolicyData[]): StatusChartItem[] => {
-  const statusCounts = policies.reduce((acc, policy) => {
-    const status = PolicyDataMapper.getStatus(policy);
-    
-    const statusKey = status.toLowerCase().includes('vig') ? 'Vigentes' :
-                     status.toLowerCase().includes('vencid') ? 'Vencidas' :
-                     status.toLowerCase().includes('cancel') ? 'Canceladas' :
-                     status.toLowerCase().includes('renovad') ? 'Renovadas' : 'Outras';
-    
-    acc[statusKey] = (acc[statusKey] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  return Object.entries(statusCounts).map(([name, value]) => ({
-    name,
-    value
-  }));
-};
-
-// Função para calcular dados do gráfico de seguradoras
-export const calculateInsurerChartData = (policies: ParsedPolicyData[]): ChartDataItem[] => {
-  console.log('🔍 calculateInsurerChartData - Processando políticas:', policies.length);
-  
-  if (!policies || policies.length === 0) {
-    return [];
+// Função para determinar o status correto baseado na data de vencimento
+const getCorrectPolicyStatus = (policy: any): string => {
+  if (!policy.endDate && !policy.expirationDate) {
+    return 'vigente';
   }
+  
+  const now = new Date();
+  const expirationDate = new Date(policy.endDate || policy.expirationDate);
+  const diffTime = expirationDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Se já venceu
+  if (diffDays < 0) {
+    return 'vencida';
+  }
+  
+  // Se está vencendo nos próximos 30 dias
+  if (diffDays <= 30 && diffDays >= 0) {
+    return 'vencendo';
+  }
+  
+  // Caso contrário, está vigente
+  return 'ativa';
+};
 
-  const insurerCounts = policies.reduce((acc, policy) => {
-    // USANDO MAPPER ROBUSTO: Evita erros de propriedade inexistente
-    const insurerName = PolicyDataMapper.getInsurerName(policy);
-    const policyValue = PolicyDataMapper.getMonthlyAmount(policy);
-    
-    console.log(`📋 Política ${PolicyDataMapper.getInsuredName(policy)}: seguradora extraída = "${insurerName}"`);
-    
-    if (!acc[insurerName]) {
-      acc[insurerName] = { count: 0, totalValue: 0 };
-    }
-    
-    acc[insurerName].count += 1;
-    acc[insurerName].totalValue += policyValue;
-    
-    return acc;
-  }, {} as Record<string, { count: number; totalValue: number }>);
-
-  const totalValue = Object.values(insurerCounts).reduce((sum, item) => sum + item.totalValue, 0);
-
-  const result = Object.entries(insurerCounts).map(([name, data]) => ({
-    name: name,
-    value: Math.round(data.totalValue),
-    percentage: totalValue > 0 ? Math.round((data.totalValue / totalValue) * 100) : 0
+// Cálculo para gráfico de status das apólices
+export function calculateStatusChartData(policies: PolicyWithStatus[]) {
+  // Corrigir status das apólices baseado na data de vencimento
+  const policiesWithCorrectStatus = policies.map(policy => ({
+    ...policy,
+    status: getCorrectPolicyStatus(policy)
   }));
 
-  console.log('✅ calculateInsurerChartData resultado:', result);
-  return result;
-};
-
-// Função para calcular distribuição de tipos
-export const calculateTypeDistribution = (policies: ParsedPolicyData[]): ChartDataItem[] => {
-  const typeCounts = policies.reduce((acc, policy) => {
-    const mappedData = PolicyDataMapper.mapForChart(policy);
-    const type = mappedData.type;
-    
-    const typeKey = type.toLowerCase().includes('auto') ? 'Seguro Auto' :
-                   type.toLowerCase().includes('vida') ? 'Seguro Vida' :
-                   type.toLowerCase().includes('empresarial') ? 'Empresarial' :
-                   type.toLowerCase().includes('resid') ? 'Residencial' : 'Outros';
-    
-    const monthlyAmount = mappedData.monthlyAmount;
-    
-    if (!acc[typeKey]) {
-      acc[typeKey] = 0;
-    }
-    acc[typeKey] += monthlyAmount;
-    
+  const statusCounts = policiesWithCorrectStatus.reduce<Record<string, number>>((acc, policy) => {
+    const status = policy.status || 'vigente';
+    acc[status] = (acc[status] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {});
 
-  return Object.entries(typeCounts).map(([name, value]) => ({
-    name,
-    value: Math.round(value)
+  return Object.entries(statusCounts).map(([status, count]) => ({
+    status,
+    count,
+    color: getChartColor(status as any),
+    name: status.replace(/_/g, " ").toUpperCase()
   }));
-};
+}
 
-// Função para calcular políticas recentes
-export const calculateRecentPolicies = (policies: ParsedPolicyData[]) => {
-  return policies
-    .sort((a, b) => new Date(b.extractedAt).getTime() - new Date(a.extractedAt).getTime())
-    .slice(0, 5)
-    .map(policy => {
-      const mappedData = PolicyDataMapper.mapForChart(policy);
-      return {
-        id: policy.id,
-        name: mappedData.name,
-        insurer: mappedData.insurer,
-        premium: PolicyDataMapper.getMonthlyAmount(policy),
-        monthlyAmount: mappedData.monthlyAmount,
-        endDate: mappedData.endDate,
-        extractedAt: mappedData.extractedAt
-      };
-    });
-};
+// Cálculo para gráfico de distribuição por seguradora com cores
+export function calculateInsurerChartData(policies: any[]) {
+  const insurerCounts = policies.reduce<Record<string, number>>((acc, policy) => {
+    const insurer = policy.insurer || policy.seguradora || 'Não informado';
+    acc[insurer] = (acc[insurer] || 0) + 1;
+    return acc;
+  }, {});
 
-// Função para classificação de pessoa física/jurídica usando mapper robusto
-export const calculatePersonTypeDistribution = (policies: ParsedPolicyData[]) => {
-  console.log('🔍 Iniciando classificação de pessoa física/jurídica...');
+  // Cores específicas para seguradoras
+  const insurerColors = {
+    'Porto Seguro': '#3B82F6',
+    'Porto Seguro Cia. de Seguros Gerais': '#3B82F6',
+    'Bradesco': '#10B981',
+    'Bradesco Seguros': '#10B981',
+    'Allianz': '#F59E0B',
+    'HDI SEGUROS S.A.': '#8B5CF6',
+    'HDI': '#8B5CF6',
+    'Darwin Seguros S.A.': '#EF4444',
+    'SulAmérica': '#06B6D4',
+    'Mapfre': '#84CC16',
+    'Tokio Marine': '#EC4899',
+    'Liberty': '#F97316',
+    'AXA': '#14B8A6',
+    'Generali': '#8B5CF6',
+    'Outros': '#6B7280',
+    'Não informado': '#9CA3AF'
+  };
+
+  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16'];
   
-  const distribution = { pessoaFisica: 0, pessoaJuridica: 0 };
-  
-  policies.forEach(policy => {
-    const mappedData = PolicyDataMapper.mapForChart(policy);
-    const documentType = mappedData.documentType;
-    
-    console.log('📋 Analisando política:', {
-      id: policy.id,
-      name: mappedData.name,
-      documentType: documentType
-    });
-    
-    if (documentType === 'CPF') {
-      distribution.pessoaFisica++;
-      console.log('✅ PESSOA FÍSICA incrementada (CPF detectado)');
-    } else if (documentType === 'CNPJ') {
-      distribution.pessoaJuridica++;
-      console.log('✅ PESSOA JURÍDICA incrementada (CNPJ detectado)');
-    } else {
-      console.log(`⚠️ Política "${mappedData.name}": tipo de documento não determinado`);
-    }
-  });
-  
-  console.log('🎯 RESULTADO FINAL da classificação:', {
-    pessoaFisica: distribution.pessoaFisica,
-    pessoaJuridica: distribution.pessoaJuridica,
-    total: distribution.pessoaFisica + distribution.pessoaJuridica
-  });
-  
-  return distribution;
-};
+  return Object.entries(insurerCounts).map(([insurer, count], index) => ({
+    insurer,
+    count,
+    color: insurerColors[insurer as keyof typeof insurerColors] || colors[index % colors.length],
+    name: insurer
+  }));
+}
+
+// Exemplo de uso no componente de dashboard:
+/*
+const statusChartData = calculateStatusChartData(policies);
+const insurerChartData = calculateInsurerChartData(policies);
+
+// Para usar em componente de donut/pie chart:
+<PieChart data={statusChartData} />
+<PieChart data={insurerChartData} />
+*/

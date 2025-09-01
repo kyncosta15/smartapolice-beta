@@ -10,7 +10,7 @@ import { useDashboardCalculations } from './dashboard/useDashboardCalculations';
 import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { PDFReportGenerator } from './PDFReportGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { calculateStatusChartData, calculateInsurerChartData, calculatePersonTypeDistribution } from '@/utils/dashboardChartCalculations';
+import { calculateStatusChartData, calculateInsurerChartData } from '@/utils/dashboardChartCalculations';
 
 interface DynamicDashboardProps {
   policies: ParsedPolicyData[];
@@ -46,10 +46,9 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     }
   };
 
-  // CORREÇÃO: Usar os cálculos corrigidos com extractFieldValue
-  const statusChartData = calculateStatusChartData(policies);
+  // Usar os novos cálculos com cores corretas
+  const statusChartData = calculateStatusChartData(policies as any);
   const insurerChartData = calculateInsurerChartData(policies);
-  const personTypeData = calculatePersonTypeDistribution(policies);
 
   // Add colors to distribution data
   const typeDistributionWithColors = dashboardData.typeDistribution.map((item, index) => ({
@@ -57,17 +56,17 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     color: COLORS[index % COLORS.length]
   }));
 
-  // CORREÇÃO: Formatar dados da seguradora corretamente
-  const insurerDistributionFormatted = insurerChartData.map((item, index) => ({
-    name: item.name, // Já é string graças ao extractFieldValue
-    value: item.value,
-    color: COLORS[index % COLORS.length]
+  // Transform insurer data to match expected format
+  const insurerDistributionFormatted = insurerChartData.map(item => ({
+    name: item.insurer,
+    value: item.count,
+    color: item.color
   }));
 
-  // Transform status data to match expected format
+  // Transform status data to match expected format  
   const statusDistributionFormatted = statusChartData.map(item => ({
     name: item.name,
-    value: item.value
+    value: item.count
   }));
 
   // Transform recent policies to match expected format
@@ -150,7 +149,7 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
         {/* Vínculo - Pessoa Física/Jurídica */}
         <div className="w-full overflow-hidden">
           <PersonTypeDistribution
-            personTypeDistribution={personTypeData}
+            personTypeDistribution={dashboardData.personTypeDistribution}
           />
         </div>
 
