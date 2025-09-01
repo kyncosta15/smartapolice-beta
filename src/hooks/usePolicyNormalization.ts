@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyDataMapper } from '@/utils/policyDataMapper';
+import { extractFieldValue, extractNumericValue } from '@/utils/extractFieldValue';
 
 interface NormalizedPolicy {
   id: string;
@@ -19,41 +20,62 @@ interface NormalizedPolicy {
 
 export const usePolicyNormalization = (policies: ParsedPolicyData[]): NormalizedPolicy[] => {
   return useMemo(() => {
-    console.log('🔄 Normalizando políticas para renderização segura:', policies.length);
+    console.log('🔄 Normalizando políticas para renderização 100% segura:', policies.length);
     
-    return policies.map(policy => {
+    if (!Array.isArray(policies)) {
+      console.warn('⚠️ Policies não é um array:', policies);
+      return [];
+    }
+    
+    return policies.map((policy, index) => {
       try {
-        // Usar o PolicyDataMapper para extrair dados de forma segura
+        // Verificar se a política é um objeto válido
+        if (!policy || typeof policy !== 'object') {
+          console.warn(`⚠️ Política inválida no índice ${index}:`, policy);
+          return {
+            id: `invalid-${index}`,
+            name: 'Política Inválida',
+            insurer: 'Não informado',
+            policyNumber: 'N/A',
+            type: 'Não informado',
+            monthlyAmount: 0,
+            startDate: '',
+            endDate: '',
+            expirationDate: '',
+            status: 'erro',
+            installmentsCount: 0
+          };
+        }
+
+        // Usar o PolicyDataMapper para extrair dados de forma 100% segura
         const normalizedPolicy: NormalizedPolicy = {
-          id: policy.id || 'unknown',
+          id: String(policy.id || `policy-${index}`),
           name: PolicyDataMapper.getInsuredName(policy),
           insurer: PolicyDataMapper.getInsurerName(policy),
-          policyNumber: policy.policyNumber || 'N/A',
-          type: policy.type || 'Não informado',
+          policyNumber: PolicyDataMapper.getPolicyNumber(policy),
+          type: PolicyDataMapper.getPolicyType(policy),
           monthlyAmount: PolicyDataMapper.getMonthlyAmount(policy),
-          startDate: policy.startDate || '',
-          endDate: policy.endDate || '',
-          expirationDate: policy.expirationDate || policy.endDate || '',
+          startDate: extractFieldValue(policy.startDate) || '',
+          endDate: extractFieldValue(policy.endDate) || '',
+          expirationDate: extractFieldValue(policy.expirationDate || policy.endDate) || '',
           status: PolicyDataMapper.getStatus(policy),
-          installmentsCount: policy.quantidade_parcelas || 
+          installmentsCount: extractNumericValue(policy.quantidade_parcelas) || 
                            (Array.isArray(policy.installments) ? policy.installments.length : 0) || 
                            12
         };
 
-        console.log(`✅ Política normalizada: ${normalizedPolicy.name}`, {
-          originalInsurer: policy.insurer,
-          normalizedInsurer: normalizedPolicy.insurer,
-          originalName: policy.name,
-          normalizedName: normalizedPolicy.name
+        console.log(`✅ Política normalizada com segurança: ${normalizedPolicy.name}`, {
+          originalData: policy,
+          normalizedData: normalizedPolicy
         });
 
         return normalizedPolicy;
       } catch (error) {
-        console.error('❌ Erro ao normalizar política:', error, policy);
+        console.error(`❌ Erro ao normalizar política no índice ${index}:`, error, policy);
         
         // Retornar dados seguros em caso de erro
         return {
-          id: policy.id || `error-${Date.now()}`,
+          id: `error-${index}-${Date.now()}`,
           name: 'Erro na Política',
           insurer: 'Não informado',
           policyNumber: 'N/A',

@@ -3,11 +3,11 @@ import { ParsedPolicyData } from './policyDataParser';
 import { extractFieldValue, extractNumericValue } from './extractFieldValue';
 
 /**
- * Mapeador robusto para dados de políticas que elimina erros de propriedades inexistentes
+ * Mapeador ultra-robusto para dados de políticas que elimina completamente erros de objetos inválidos
  */
 export class PolicyDataMapper {
   /**
-   * Extrai o nome da seguradora de forma segura
+   * Extrai o nome da seguradora de forma 100% segura
    */
   static getInsurerName(policy: ParsedPolicyData): string {
     if (!policy) {
@@ -15,18 +15,19 @@ export class PolicyDataMapper {
       return 'Seguradora Não Informada';
     }
 
-    // Tentar múltiplas propriedades possíveis
+    // Tentar múltiplas propriedades possíveis com extractFieldValue
     const possibleFields = [
       policy.insurer,
       (policy as any).seguradora,
-      policy.entity
+      policy.entity,
+      (policy as any).empresa
     ];
 
     for (const field of possibleFields) {
       try {
         const value = extractFieldValue(field);
-        if (value && value !== 'Não informado' && value !== '' && value !== 'undefined') {
-          return value;
+        if (value && value !== 'Não informado' && value !== '' && value !== 'undefined' && value !== 'null') {
+          return String(value).trim();
         }
       } catch (error) {
         console.warn('⚠️ Erro ao extrair campo da seguradora:', error);
@@ -38,7 +39,7 @@ export class PolicyDataMapper {
   }
 
   /**
-   * Extrai o tipo de documento de forma segura
+   * Extrai o tipo de documento de forma 100% segura
    */
   static getDocumentType(policy: ParsedPolicyData): 'CPF' | 'CNPJ' | null {
     if (!policy) {
@@ -56,7 +57,7 @@ export class PolicyDataMapper {
       try {
         const value = extractFieldValue(field);
         if (value) {
-          const upperValue = value.toUpperCase();
+          const upperValue = String(value).toUpperCase().trim();
           if (upperValue === 'CPF' || upperValue === 'CNPJ') {
             return upperValue as 'CPF' | 'CNPJ';
           }
@@ -71,7 +72,7 @@ export class PolicyDataMapper {
     try {
       const documento = extractFieldValue(policy.documento);
       if (documento) {
-        const numbersOnly = documento.replace(/\D/g, '');
+        const numbersOnly = String(documento).replace(/\D/g, '');
         if (numbersOnly.length === 11) return 'CPF';
         if (numbersOnly.length === 14) return 'CNPJ';
       }
@@ -83,7 +84,7 @@ export class PolicyDataMapper {
   }
 
   /**
-   * Extrai o nome do segurado de forma segura
+   * Extrai o nome do segurado de forma 100% segura
    */
   static getInsuredName(policy: ParsedPolicyData): string {
     if (!policy) {
@@ -94,14 +95,15 @@ export class PolicyDataMapper {
     const possibleFields = [
       policy.name,
       policy.insuredName,
-      (policy as any).segurado
+      (policy as any).segurado,
+      (policy as any).nome
     ];
 
     for (const field of possibleFields) {
       try {
         const value = extractFieldValue(field);
-        if (value && value !== 'Não informado' && value !== '' && value !== 'undefined') {
-          return value;
+        if (value && value !== 'Não informado' && value !== '' && value !== 'undefined' && value !== 'null') {
+          return String(value).trim();
         }
       } catch (error) {
         console.warn('⚠️ Erro ao extrair nome do segurado:', error);
@@ -113,7 +115,7 @@ export class PolicyDataMapper {
   }
 
   /**
-   * Extrai o valor mensal de forma segura
+   * Extrai o valor mensal de forma 100% segura
    */
   static getMonthlyAmount(policy: ParsedPolicyData): number {
     if (!policy) {
@@ -124,7 +126,8 @@ export class PolicyDataMapper {
     const possibleFields = [
       policy.monthlyAmount,
       (policy as any).custo_mensal,
-      policy.premium
+      policy.premium,
+      (policy as any).valor_mensal
     ];
 
     for (const field of possibleFields) {
@@ -143,7 +146,7 @@ export class PolicyDataMapper {
   }
 
   /**
-   * Extrai o status de forma segura
+   * Extrai o status de forma 100% segura
    */
   static getStatus(policy: ParsedPolicyData): string {
     if (!policy) {
@@ -160,8 +163,8 @@ export class PolicyDataMapper {
     for (const field of possibleFields) {
       try {
         const value = extractFieldValue(field);
-        if (value && value !== '' && value !== 'undefined') {
-          return value;
+        if (value && value !== '' && value !== 'undefined' && value !== 'null') {
+          return String(value).trim().toLowerCase();
         }
       } catch (error) {
         console.warn('⚠️ Erro ao extrair status:', error);
@@ -173,7 +176,68 @@ export class PolicyDataMapper {
   }
 
   /**
-   * Mapeia dados para uso em gráficos de forma segura
+   * Extrai o tipo de seguro de forma 100% segura
+   */
+  static getPolicyType(policy: ParsedPolicyData): string {
+    if (!policy) {
+      console.warn('⚠️ PolicyDataMapper.getPolicyType: policy é null/undefined');
+      return 'auto';
+    }
+
+    const possibleFields = [
+      policy.type,
+      (policy as any).tipo_seguro,
+      policy.category,
+      (policy as any).categoria
+    ];
+
+    for (const field of possibleFields) {
+      try {
+        const value = extractFieldValue(field);
+        if (value && value !== '' && value !== 'undefined' && value !== 'null') {
+          return String(value).trim().toLowerCase();
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao extrair tipo de seguro:', error);
+        continue;
+      }
+    }
+
+    return 'auto';
+  }
+
+  /**
+   * Extrai o número da apólice de forma 100% segura
+   */
+  static getPolicyNumber(policy: ParsedPolicyData): string {
+    if (!policy) {
+      console.warn('⚠️ PolicyDataMapper.getPolicyNumber: policy é null/undefined');
+      return 'N/A';
+    }
+
+    const possibleFields = [
+      policy.policyNumber,
+      (policy as any).numero_apolice,
+      (policy as any).policy_number
+    ];
+
+    for (const field of possibleFields) {
+      try {
+        const value = extractFieldValue(field);
+        if (value && value !== '' && value !== 'undefined' && value !== 'null') {
+          return String(value).trim();
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao extrair número da apólice:', error);
+        continue;
+      }
+    }
+
+    return 'N/A';
+  }
+
+  /**
+   * Mapeia dados para uso em gráficos de forma 100% segura
    */
   static mapForChart(policy: ParsedPolicyData) {
     if (!policy) {
@@ -194,13 +258,14 @@ export class PolicyDataMapper {
 
     try {
       return {
-        id: policy.id || 'unknown',
+        id: String(policy.id || 'unknown'),
         name: this.getInsuredName(policy),
         insurer: this.getInsurerName(policy),
         monthlyAmount: this.getMonthlyAmount(policy),
         documentType: this.getDocumentType(policy),
         status: this.getStatus(policy),
-        type: extractFieldValue(policy.type) || 'auto',
+        type: this.getPolicyType(policy),
+        policyNumber: this.getPolicyNumber(policy),
         startDate: extractFieldValue(policy.startDate) || '',
         endDate: extractFieldValue(policy.endDate) || '',
         extractedAt: extractFieldValue(policy.extractedAt) || new Date().toISOString()
@@ -208,13 +273,14 @@ export class PolicyDataMapper {
     } catch (error) {
       console.error('❌ Erro crítico no mapeamento para gráfico:', error);
       return {
-        id: policy.id || 'error',
+        id: String(policy.id || 'error'),
         name: 'Erro no Mapeamento',
         insurer: 'Erro',
         monthlyAmount: 0,
         documentType: null,
         status: 'erro',
         type: 'unknown',
+        policyNumber: 'N/A',
         startDate: '',
         endDate: '',
         extractedAt: new Date().toISOString()
