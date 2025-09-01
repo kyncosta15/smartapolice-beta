@@ -212,13 +212,9 @@ export class N8NWebhookService {
       segurado: {
         nome: segurado
       },
-      // Campos de documento do N8N
+      // Apenas campos de documento que existem no tipo DynamicPDFData
       documento: extractFieldValue(n8nData.documento),
       documento_tipo: extractFieldValue(n8nData.documento_tipo) as 'CPF' | 'CNPJ',
-      // Remover modelo_veiculo pois não existe no tipo DynamicPDFData
-      uf: extractFieldValue(n8nData.uf),
-      franquia: extractNumericValue(n8nData.franquia),
-      corretora: extractFieldValue(n8nData.corretora),
       // Coberturas array - mantendo a estrutura processada do N8N
       coberturas: processedCoberturas,
       // Adicionar as parcelas como propriedade adicional
