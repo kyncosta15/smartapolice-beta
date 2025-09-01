@@ -5,7 +5,7 @@ import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
 import { StructuredDataConverter } from '@/utils/parsers/structuredDataConverter';
 import { FileProcessingStatus } from '@/types/pdfUpload';
 import { PolicyPersistenceService } from '../policyPersistenceService';
-import { extractFieldValue } from '@/utils/extractFieldValue';
+import { extractFieldValue, extractNumericValue } from '@/utils/extractFieldValue';
 
 export class BatchFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
@@ -112,7 +112,7 @@ export class BatchFileProcessor {
             this.updateFileStatus(relatedFileName, {
               progress: 90 + (index * 2),
               status: 'processing',
-              message: `✅ Processado: ${parsedPolicy.insurer}`
+              message: `✅ Processado: ${extractFieldValue(parsedPolicy.insurer)}`
             });
             
           } catch (conversionError) {
@@ -201,7 +201,11 @@ export class BatchFileProcessor {
     }
     
     // Verificar formato dos dados e converter adequadamente
-    if (data.numero_apolice && data.segurado && data.seguradora) {
+    const numeroApolice = extractFieldValue(data.numero_apolice);
+    const segurado = extractFieldValue(data.segurado);
+    const seguradora = extractFieldValue(data.seguradora);
+    
+    if (numeroApolice && segurado && seguradora) {
       console.log('📋 Convertendo dados diretos do N8N');
       return N8NDataConverter.convertN8NDirectData(data, fileName, file, userId);
     } else if (data.informacoes_gerais && data.seguradora && data.vigencia) {
@@ -217,7 +221,7 @@ export class BatchFileProcessor {
     // CORREÇÃO: Usar extractFieldValue para extrair campos seguros
     const segurado = extractFieldValue(originalData?.segurado) || `Cliente ${file.name.replace('.pdf', '')}`;
     const seguradora = extractFieldValue(originalData?.seguradora) || 'Seguradora Não Identificada';
-    const premio = Number(extractFieldValue(originalData?.premio)) || 1200 + Math.random() * 1800;
+    const premio = extractNumericValue(originalData?.premio) || 1200 + Math.random() * 1800;
     
     const mockPolicyData: ParsedPolicyData = {
       id: crypto.randomUUID(),
@@ -245,7 +249,7 @@ export class BatchFileProcessor {
       documento_tipo: extractFieldValue(originalData?.documento_tipo) as 'CPF' | 'CNPJ' || 'CPF',
       vehicleModel: extractFieldValue(originalData?.modelo_veiculo),
       uf: extractFieldValue(originalData?.uf),
-      deductible: Number(extractFieldValue(originalData?.franquia)) || undefined,
+      deductible: extractNumericValue(originalData?.franquia) || undefined,
       
       // Campos opcionais
       coberturas: originalData?.coberturas || [{ descricao: 'Cobertura Básica' }],

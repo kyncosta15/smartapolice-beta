@@ -1,59 +1,48 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, User, MapPin } from 'lucide-react';
-import { DocumentValidator } from '@/utils/documentValidator';
+import { FileText, Calendar, Hash } from 'lucide-react';
+import { extractFieldValue } from '@/utils/extractFieldValue';
 
 interface GeneralInfoCardProps {
   policy: any;
 }
 
 export const GeneralInfoCard = ({ policy }: GeneralInfoCardProps) => {
-  // Função para obter informações do documento do N8N
-  const getDocumentInfo = () => {
-    // Priorizar dados vindos do N8N
-    if (policy.documento && policy.documento_tipo) {
-      const documentType = policy.documento_tipo;
-      const personType = policy.documento_tipo === 'CPF' ? 'PF' : 'PJ';
-      
-      // Formatar o número do documento
-      let formatted = policy.documento;
-      if (policy.documento_tipo === 'CPF' && policy.documento.length >= 11) {
-        const cleanDoc = policy.documento.replace(/\D/g, '');
-        if (cleanDoc.length === 11) {
-          formatted = cleanDoc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-        }
-      } else if (policy.documento_tipo === 'CNPJ' && policy.documento.length >= 14) {
-        const cleanDoc = policy.documento.replace(/\D/g, '');
-        if (cleanDoc.length === 14) {
-          formatted = cleanDoc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-        }
+  // CORREÇÃO CRÍTICA: Usar extractFieldValue para todos os campos que podem ser objetos
+  const policyName = extractFieldValue(policy.name) || 
+                    extractFieldValue(policy.nome_apolice) || 
+                    extractFieldValue(policy.segurado?.nome) ||
+                    extractFieldValue(policy.insuredName) || 
+                    'Apólice sem nome';
+
+  const policyNumber = extractFieldValue(policy.policyNumber) || 
+                      extractFieldValue(policy.numero_apolice) || 
+                      extractFieldValue(policy.policy_number) ||
+                      'Não informado';
+
+  const policyType = extractFieldValue(policy.type) || 
+                    extractFieldValue(policy.tipo_seguro) || 
+                    extractFieldValue(policy.categoria) ||
+                    'Não especificado';
+
+  const extractedDate = extractFieldValue(policy.extractedAt) || 
+                       extractFieldValue(policy.created_at) ||
+                       extractFieldValue(policy.extraido_em) ||
+                       new Date().toLocaleDateString('pt-BR');
+
+  const formatDate = (dateString: string) => {
+    try {
+      if (dateString.includes('-')) {
+        return new Date(dateString).toLocaleDateString('pt-BR');
       }
-      
-      return {
-        type: documentType,
-        personType: personType,
-        formatted: formatted,
-        rawValue: policy.documento,
-        nomeCompleto: policy.insuredName
-      };
+      return dateString;
+    } catch {
+      return dateString;
     }
-    
-    // Fallback para detecção automática
-    if (policy.insuredDocument) {
-      return DocumentValidator.detectDocument(policy.insuredDocument);
-    }
-    
-    if (policy.insuredCpfCnpj) {
-      return DocumentValidator.detectDocument(policy.insuredCpfCnpj);
-    }
-    
-    return null;
   };
 
-  const documentInfo = getDocumentInfo();
-
   return (
-    <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
+    <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
       <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-blue-200 pb-4">
         <CardTitle className="flex items-center text-xl font-bold text-blue-900 font-sf-pro">
           <FileText className="h-6 w-6 mr-3 text-blue-600" />
@@ -63,46 +52,36 @@ export const GeneralInfoCard = ({ policy }: GeneralInfoCardProps) => {
       <CardContent className="p-6 space-y-5">
         <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
           <label className="text-sm font-medium text-blue-700 font-sf-pro block mb-1">Nome da Apólice</label>
-          <p className="text-xl font-bold text-gray-900 font-sf-pro">{policy.name}</p>
+          <p className="text-lg font-bold text-gray-900 font-sf-pro leading-tight">
+            {policyName}
+          </p>
         </div>
 
-        {policy.insuredName && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
-            <label className="text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-1">
-              <User className="h-4 w-4" />
-              Nome Completo do Segurado
-            </label>
-            <p className="text-lg font-semibold text-gray-900 font-sf-pro">{policy.insuredName}</p>
-          </div>
-        )}
-
-        {documentInfo && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
-            <label className="text-sm font-medium text-blue-700 font-sf-pro block mb-1">
-              {documentInfo.type}
-            </label>
-            <p className="font-mono text-lg font-bold text-gray-900 font-sf-pro">
-              {documentInfo.formatted}
-            </p>
-            <p className="text-xs text-blue-600 mt-2 font-sf-pro font-medium">
-              {documentInfo.personType === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
-            </p>
-          </div>
-        )}
-
-        {policy.uf && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
-            <label className="text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-1">
-              <MapPin className="h-4 w-4" />
-              Estado (UF)
-            </label>
-            <p className="text-xl font-bold text-gray-900 font-sf-pro">{policy.uf}</p>
-          </div>
-        )}
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl p-4 shadow-md">
+          <label className="text-sm font-medium text-white/90 font-sf-pro flex items-center gap-2 mb-2">
+            <Hash className="h-4 w-4" />
+            Número da Apólice
+          </label>
+          <p className="text-xl font-bold text-white font-sf-pro">
+            {policyNumber}
+          </p>
+        </div>
 
         <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
-          <label className="text-sm font-medium text-blue-700 font-sf-pro block mb-1">Número da Apólice</label>
-          <p className="font-mono text-base font-semibold text-gray-900 font-sf-pro">{policy.policyNumber}</p>
+          <label className="text-sm font-medium text-blue-700 font-sf-pro block mb-1">Tipo de Seguro</label>
+          <p className="text-base font-semibold text-gray-900 font-sf-pro capitalize">
+            {policyType}
+          </p>
+        </div>
+
+        <div className="bg-blue-50 rounded-xl p-4 shadow-sm border border-blue-100">
+          <label className="text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-2">
+            <Calendar className="h-4 w-4" />
+            Extraído em
+          </label>
+          <p className="text-sm font-medium text-blue-600 font-sf-pro">
+            {formatDate(extractedDate)}
+          </p>
         </div>
       </CardContent>
     </Card>
