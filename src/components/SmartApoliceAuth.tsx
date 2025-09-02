@@ -18,7 +18,7 @@ const SmartApoliceAuthContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header com logo e navegação */}
+      {/* Header com navegação */}
       <header className="p-6 flex items-center justify-between">
         <Link to="/system-selection" className="flex items-center text-muted-foreground hover:text-primary transition-colors">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -33,16 +33,8 @@ const SmartApoliceAuthContent = () => {
       {/* Conteúdo da autenticação */}
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
-          <CardContent className="p-0">
-            <div className="p-6 text-center border-b">
-              <SmartApóliceLogo size="md" showText={true} />
-              <p className="text-sm text-muted-foreground mt-2">
-                Acesse sua central de apólices
-              </p>
-            </div>
-            <div className="p-6">
-              <AuthPage />
-            </div>
+          <CardContent className="p-6">
+            <AuthPage />
           </CardContent>
         </Card>
       </div>
