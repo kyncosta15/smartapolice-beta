@@ -28,8 +28,16 @@ export const LandingPage = () => {
           </div>
         </div>
         
-        <h1 className="text-4xl md:text-6xl font-bold text-primary mb-2">
-          RCorp
+        <h1 className="text-4xl md:text-6xl font-bold text-primary mb-2 relative overflow-hidden">
+          <span className="relative inline-block">
+            RCorp
+            {/* Shimmer effect */}
+            <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent" 
+                 style={{ 
+                   animation: 'shimmer 2.5s ease-in-out infinite'
+                 }}>
+            </div>
+          </span>
         </h1>
         <p className="text-xl text-muted-foreground">
           Soluções corporativas inteligentes
