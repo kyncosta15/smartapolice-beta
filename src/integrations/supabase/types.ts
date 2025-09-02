@@ -411,6 +411,65 @@ export type Database = {
           },
         ]
       }
+      planilhas_uploads: {
+        Row: {
+          caminho_storage: string
+          colaboradores_importados: number | null
+          created_at: string
+          data_processamento: string | null
+          data_upload: string
+          dependentes_importados: number | null
+          empresa_id: string | null
+          id: string
+          nome_arquivo: string
+          status: string
+          tamanho_arquivo: number
+          tipo_arquivo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          caminho_storage: string
+          colaboradores_importados?: number | null
+          created_at?: string
+          data_processamento?: string | null
+          data_upload?: string
+          dependentes_importados?: number | null
+          empresa_id?: string | null
+          id?: string
+          nome_arquivo: string
+          status?: string
+          tamanho_arquivo: number
+          tipo_arquivo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          caminho_storage?: string
+          colaboradores_importados?: number | null
+          created_at?: string
+          data_processamento?: string | null
+          data_upload?: string
+          dependentes_importados?: number | null
+          empresa_id?: string | null
+          id?: string
+          nome_arquivo?: string
+          status?: string
+          tamanho_arquivo?: number
+          tipo_arquivo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planilhas_uploads_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       policies: {
         Row: {
           ano_modelo: string | null
