@@ -491,7 +491,10 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Upload Tab */}
           <TabsContent value="upload">
-            <SpreadsheetUpload />
+            <SpreadsheetUpload 
+              onFileSelect={(file) => console.log('Arquivo selecionado:', file)}
+              onDataUpdate={loadData}
+            />
           </TabsContent>
         </Tabs>
       </main>

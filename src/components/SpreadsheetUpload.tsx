@@ -19,19 +19,16 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import * as XLSX from 'xlsx';
 
-interface ProcessedData {
-  colaboradores: any[];
-  dependentes: any[];
-  errors: string[];
-  warnings: string[];
+interface SpreadsheetUploadProps {
+  onFileSelect?: (file: File) => void;
+  onDataUpdate?: () => void;
 }
 
-export const SpreadsheetUpload = () => {
+export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragOver, setIsDragOver] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -75,29 +72,23 @@ export const SpreadsheetUpload = () => {
   const handleFileSelect = (selectedFile: File) => {
     if (validateFile(selectedFile)) {
       setFile(selectedFile);
-      setProcessedData(null);
+      onFileSelect?.(selectedFile);
     }
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('🔍 handleInputChange chamado');
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      console.log('📁 Arquivo selecionado:', selectedFile.name);
       handleFileSelect(selectedFile);
-    } else {
-      console.log('❌ Nenhum arquivo selecionado');
     }
   };
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    console.log('🎯 handleDrop chamado');
     e.preventDefault();
     setIsDragOver(false);
     
     const droppedFile = e.dataTransfer.files?.[0];
     if (droppedFile) {
-      console.log('📁 Arquivo solto:', droppedFile.name);
       handleFileSelect(droppedFile);
     }
   }, []);
@@ -130,13 +121,117 @@ export const SpreadsheetUpload = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const processSpreadsheet = async () => {
+    if (!file) return;
+
+    setIsProcessing(true);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          // Processar a planilha e extrair dados
+          const arrayBuffer = e.target?.result as ArrayBuffer;
+          const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const data = XLSX.utils.sheet_to_json(worksheet);
+
+          console.log('📊 Dados extraídos da planilha:', data);
+
+          // Obter usuário atual
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            throw new Error('Usuário não autenticado');
+          }
+
+          // Buscar empresa do usuário
+          const { data: userProfile } = await supabase
+            .from('users')
+            .select('company')
+            .eq('id', user.id)
+            .single();
+
+          if (!userProfile?.company) {
+            throw new Error('Empresa do usuário não encontrada');
+          }
+
+          // Verificar se empresa existe, se não criar
+          let { data: empresa } = await supabase
+            .from('empresas')
+            .select('id')
+            .eq('nome', userProfile.company)
+            .maybeSingle();
+
+          if (!empresa) {
+            const { data: novaEmpresa, error: empresaError } = await supabase
+              .from('empresas')
+              .insert([{ nome: userProfile.company }])
+              .select('id')
+              .single();
+
+            if (empresaError) throw empresaError;
+            empresa = novaEmpresa;
+          }
+
+          // Processar dados da planilha e inserir colaboradores
+          const colaboradores = data.map((row: any) => ({
+            empresa_id: empresa.id,
+            nome: row.nome || row.Nome || row.NOME || '',
+            cpf: row.cpf || row.CPF || '',
+            email: row.email || row.Email || row.EMAIL || '',
+            telefone: row.telefone || row.Telefone || row.TELEFONE || '',
+            data_nascimento: row.data_nascimento || row['Data Nascimento'] || null,
+            cargo: row.cargo || row.Cargo || row.CARGO || '',
+            centro_custo: row.centro_custo || row['Centro de Custo'] || '',
+            data_admissao: row.data_admissao || row['Data Admissão'] || null,
+            status: 'ativo' as const,
+            custo_mensal: parseFloat(row.custo_mensal || row['Custo Mensal'] || '0') || 0
+          })).filter(col => col.nome && col.cpf);
+
+          if (colaboradores.length > 0) {
+            const { error: colaboradoresError } = await supabase
+              .from('colaboradores')
+              .insert(colaboradores);
+
+            if (colaboradoresError) throw colaboradoresError;
+          }
+
+          toast({
+            title: "Planilha processada com sucesso!",
+            description: `${colaboradores.length} colaboradores foram importados`,
+          });
+
+          // Recarregar dados do dashboard
+          onDataUpdate?.();
+          
+          // Limpar arquivo
+          setFile(null);
+
+        } catch (error) {
+          console.error('❌ Erro ao processar dados da planilha:', error);
+          toast({
+            title: "Erro ao processar dados",
+            description: "Verifique o formato da planilha e tente novamente",
+            variant: "destructive",
+          });
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      console.error('❌ Erro ao processar planilha:', error);
+      toast({
+        title: "Erro ao processar planilha",
+        description: "Ocorreu um erro ao processar o arquivo",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+    }
+  };
+
   const sendToWebhook = async () => {
-    console.log('📤 sendToWebhook chamado');
-    console.log('📁 File:', file?.name);
-    console.log('🔗 WebhookUrl:', webhookUrl);
-    
     if (!file || !webhookUrl) {
-      console.log('❌ Dados incompletos - file:', !!file, 'webhookUrl:', !!webhookUrl);
       toast({
         title: "Dados incompletos",
         description: "Selecione um arquivo e informe a URL do webhook",
@@ -145,7 +240,6 @@ export const SpreadsheetUpload = () => {
       return;
     }
 
-    console.log('🚀 Iniciando envio para webhook...');
     setIsUploading(true);
 
     try {
@@ -159,7 +253,6 @@ export const SpreadsheetUpload = () => {
       const fileName = `${Date.now()}_${file.name}`;
       const filePath = `${user.id}/${fileName}`;
 
-      console.log('💾 Salvando arquivo no storage:', filePath);
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('smartbeneficios')
         .upload(filePath, file);
@@ -168,9 +261,7 @@ export const SpreadsheetUpload = () => {
         throw uploadError;
       }
 
-      console.log('✅ Arquivo salvo no storage:', uploadData.path);
-
-      // Agora enviar para webhook com informações do storage
+      // Agora enviar para webhook
       const formData = new FormData();
       formData.append('file', file);
       formData.append('fileName', file.name);
@@ -192,7 +283,6 @@ export const SpreadsheetUpload = () => {
           description: "O arquivo foi salvo no sistema e enviado para processamento",
         });
         
-        // Limpar arquivo após envio bem-sucedido
         setFile(null);
         setWebhookUrl('');
       } else {
@@ -211,210 +301,8 @@ export const SpreadsheetUpload = () => {
     }
   };
 
-  const processSpreadsheet = async () => {
-    console.log('⚙️ processSpreadsheet chamado');
-    if (!file) {
-      console.log('❌ Nenhum arquivo para processar');
-      return;
-    }
-
-    console.log('🔄 Iniciando processamento do arquivo:', file.name);
-    setIsProcessing(true);
-    setUploadProgress(0);
-
-    try {
-      // Simular processamento da planilha
-      const mockProcessedData: ProcessedData = {
-        colaboradores: [
-          {
-            nome: 'Carlos Roberto Silva',
-            cpf: '555.666.777-88',
-            email: 'carlos.silva@rcaldas.com.br',
-            telefone: '71988776655',
-            data_nascimento: '1987-05-20',
-            cargo: 'Coordenador de Projetos',
-            centro_custo: 'Engenharia',
-            data_admissao: '2024-01-15',
-            custo_mensal: 380.00
-          },
-          {
-            nome: 'Fernanda Costa Lima',
-            cpf: '666.777.888-99',
-            email: 'fernanda.lima@rcaldas.com.br',
-            telefone: '71977665544',
-            data_nascimento: '1992-09-10',
-            cargo: 'Analista de Qualidade',
-            centro_custo: 'Qualidade',
-            data_admissao: '2024-02-01',
-            custo_mensal: 340.00
-          }
-        ],
-        dependentes: [
-          {
-            colaborador_cpf: '555.666.777-88',
-            nome: 'Marina Silva Costa',
-            cpf: '777.888.999-00',
-            data_nascimento: '2015-03-12',
-            grau_parentesco: 'filha',
-            custo_mensal: 160.00
-          }
-        ],
-        errors: [],
-        warnings: ['CPF 555.666.777-88 já existe no sistema, dados serão atualizados']
-      };
-
-      // Simular progresso
-      for (let i = 0; i <= 100; i += 20) {
-        setUploadProgress(i);
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-
-      setProcessedData(mockProcessedData);
-      
-      toast({
-        title: "Planilha processada com sucesso",
-        description: `${mockProcessedData.colaboradores.length} colaboradores e ${mockProcessedData.dependentes.length} dependentes identificados`,
-      });
-
-    } catch (error) {
-      console.error('Erro ao processar planilha:', error);
-      toast({
-        title: "Erro no processamento",
-        description: "Ocorreu um erro ao processar a planilha",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const confirmImport = async () => {
-    if (!processedData) return;
-
-    try {
-      setIsProcessing(true);
-      
-      // Verificar usuário autenticado
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      console.log('👤 Usuário autenticado:', user.id);
-
-      // Buscar empresa do usuário
-      const { data: userProfile, error: userError } = await supabase
-        .from('users')
-        .select('company')
-        .eq('id', user.id)
-        .single();
-
-      if (userError || !userProfile?.company) {
-        throw new Error('Empresa do usuário não encontrada');
-      }
-
-      // Buscar empresa no banco
-      const { data: empresa, error: empresaError } = await supabase
-        .from('empresas')
-        .select('id')
-        .eq('nome', userProfile.company)
-        .single();
-
-      if (empresaError || !empresa) {
-        throw new Error('Empresa não encontrada no sistema');
-      }
-
-      console.log('🏢 Empresa encontrada:', empresa.id);
-
-      // Inserir colaboradores
-      for (const colaborador of processedData.colaboradores) {
-        console.log('👷 Inserindo colaborador:', colaborador.nome);
-        
-        const { error } = await supabase
-          .from('colaboradores')
-          .upsert({
-            empresa_id: empresa.id,
-            user_id: user.id, // Vincular ao usuário
-            nome: colaborador.nome,
-            cpf: colaborador.cpf,
-            email: colaborador.email,
-            telefone: colaborador.telefone,
-            data_nascimento: colaborador.data_nascimento,
-            cargo: colaborador.cargo,
-            centro_custo: colaborador.centro_custo,
-            data_admissao: colaborador.data_admissao,
-            custo_mensal: colaborador.custo_mensal,
-            status: 'ativo'
-          }, {
-            onConflict: 'cpf'
-          });
-
-        if (error) {
-          console.error('Erro ao inserir colaborador:', error);
-        }
-      }
-
-      // Inserir dependentes
-      for (const dependente of processedData.dependentes) {
-        console.log('👶 Inserindo dependente:', dependente.nome);
-        
-        // Buscar colaborador pelo CPF
-        const { data: colaborador } = await supabase
-          .from('colaboradores')
-          .select('id')
-          .eq('cpf', dependente.colaborador_cpf)
-          .eq('user_id', user.id) // Filtrar pelo usuário
-          .single();
-
-        if (colaborador) {
-          const { error } = await supabase
-            .from('dependentes')
-            .upsert({
-              colaborador_id: colaborador.id,
-              nome: dependente.nome,
-              cpf: dependente.cpf,
-              data_nascimento: dependente.data_nascimento,
-              grau_parentesco: dependente.grau_parentesco,
-              custo_mensal: dependente.custo_mensal,
-              status: 'ativo'
-            }, {
-              onConflict: 'cpf'
-            });
-
-          if (error) {
-            console.error('Erro ao inserir dependente:', error);
-          }
-        }
-      }
-
-      toast({
-        title: "Importação concluída",
-        description: "Dados importados com sucesso e vinculados ao seu usuário",
-      });
-
-      setProcessedData(null);
-      setFile(null);
-
-      // Recarregar dados do dashboard
-      window.location.reload();
-
-    } catch (error) {
-      console.error('Erro na importação:', error);
-      toast({
-        title: "Erro na importação",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const downloadTemplate = () => {
-    console.log('📥 downloadTemplate chamado');
-    // Criar template em formato CSV
-    const csvContent = `Nome,CPF,Email,Telefone,Data Nascimento,Cargo,Centro de Custo,Data Admissão,Custo Mensal
+    const csvContent = `nome,cpf,email,telefone,data_nascimento,cargo,centro_custo,data_admissao,custo_mensal
 João Silva,123.456.789-00,joao@empresa.com.br,71999887766,1985-01-15,Analista,Financeiro,2024-01-10,350.00
 Maria Santos,987.654.321-00,maria@empresa.com.br,71988776655,1990-03-22,Coordenadora,RH,2024-02-01,420.00`;
 
@@ -444,7 +332,7 @@ Maria Santos,987.654.321-00,maria@empresa.com.br,71988776655,1990-03-22,Coordena
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5" />
-            Importar Colaboradores e Dependentes
+            Importar Colaboradores
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -452,7 +340,7 @@ Maria Santos,987.654.321-00,maria@empresa.com.br,71988776655,1990-03-22,Coordena
           <div className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2">
-                <Label htmlFor="webhook-url">URL do Webhook n8n</Label>
+                <Label htmlFor="webhook-url">URL do Webhook n8n (opcional)</Label>
                 <Input
                   id="webhook-url"
                   type="url"
@@ -466,7 +354,8 @@ Maria Santos,987.654.321-00,maria@empresa.com.br,71988776655,1990-03-22,Coordena
                 <Button 
                   onClick={sendToWebhook}
                   disabled={!file || !webhookUrl || isUploading}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  variant="outline"
+                  className="w-full"
                 >
                   <Send className="h-4 w-4 mr-2" />
                   {isUploading ? 'Enviando...' : 'Enviar para n8n'}
@@ -501,215 +390,65 @@ Maria Santos,987.654.321-00,maria@empresa.com.br,71988776655,1990-03-22,Coordena
                 accept=".xlsx,.xls,.csv"
                 onChange={handleInputChange}
                 className="hidden"
-                id="file-upload"
+                id="file-input"
               />
-              <label htmlFor="file-upload">
-                <Button 
-                  className="cursor-pointer" 
-                  onClick={() => {
-                    console.log('🖱️ Botão "Selecionar Arquivo" clicado');
-                    document.getElementById('file-upload')?.click();
-                  }}
-                >
+              <Button 
+                asChild 
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <label htmlFor="file-input" className="cursor-pointer">
                   <Upload className="h-4 w-4 mr-2" />
                   Selecionar Arquivo
-                </Button>
-              </label>
+                </label>
+              </Button>
             </div>
           ) : (
-            /* Validador de Arquivo */
-            <Card className="border-2 border-green-200 bg-green-50">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <FileSpreadsheet className="h-8 w-8 text-green-600" />
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <h4 className="font-semibold text-green-800">{file.name}</h4>
-                        <Badge className="bg-green-200 text-green-800 text-xs">
-                          Arquivo válido
-                        </Badge>
+            <div className="border rounded-lg p-6 bg-green-50 border-green-200">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <CheckCircle className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">
+                      {file.name}
+                    </p>
+                    <div className="flex items-center mt-1 space-x-4 text-sm text-gray-500">
+                      <div className="flex items-center">
+                        <HardDrive className="h-4 w-4 mr-1" />
+                        {formatFileSize(file.size)}
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-green-700">
-                        <div className="flex items-center gap-2">
-                          <HardDrive className="h-4 w-4" />
-                          <span>Tamanho: {formatFileSize(file.size)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>Modificado: {formatFileDate(new Date(file.lastModified))}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4" />
-                          <span>Tipo: {file.type || 'Detectado por extensão'}</span>
-                        </div>
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        {formatFileDate(new Date(file.lastModified))}
                       </div>
                     </div>
                   </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setFile(null)}
-                    disabled={isProcessing || isUploading}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
                 </div>
-
-                {/* Botões de Ação */}
-                <div className="flex items-center gap-3 mt-4">
-                  <Button 
-                    onClick={processSpreadsheet}
-                    disabled={isProcessing || isUploading}
-                    variant="outline"
-                  >
-                    {isProcessing ? 'Processando...' : 'Processar Local'}
-                  </Button>
-                  
-                  <div className="text-sm text-muted-foreground">
-                    ou use o botão "Enviar para n8n" acima para processamento externo
-                  </div>
-                </div>
-
-                {isProcessing && (
-                  <div className="space-y-2 mt-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Processando arquivo...</span>
-                      <span>{uploadProgress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${uploadProgress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFile(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="mt-4 flex gap-2">
+                <Button 
+                  onClick={processSpreadsheet}
+                  disabled={isProcessing}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  {isProcessing ? 'Processando...' : 'Processar e Importar'}
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
-
-      {/* Resultado do Processamento */}
-      {processedData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Colaboradores Identificados
-                <Badge className="bg-blue-100 text-blue-800">
-                  {processedData.colaboradores.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 max-h-60 overflow-y-auto">
-                {processedData.colaboradores.map((colaborador, index) => (
-                  <div key={index} className="p-3 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="font-medium">{colaborador.nome}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {colaborador.cargo} • {colaborador.centro_custo}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      CPF: {colaborador.cpf} • Custo: R$ {colaborador.custo_mensal}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Dependentes Identificados
-                <Badge className="bg-green-100 text-green-800">
-                  {processedData.dependentes.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 max-h-60 overflow-y-auto">
-                {processedData.dependentes.length > 0 ? (
-                  processedData.dependentes.map((dependente, index) => (
-                    <div key={index} className="p-3 border rounded-lg">
-                      <div className="flex items-center gap-2 mb-1">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="font-medium">{dependente.nome}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {dependente.grau_parentesco} • CPF: {dependente.cpf}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Custo: R$ {dependente.custo_mensal}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground text-center py-4">
-                    Nenhum dependente identificado na planilha
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Avisos e Erros */}
-          {(processedData.warnings.length > 0 || processedData.errors.length > 0) && (
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5" />
-                  Avisos e Observações
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {processedData.warnings.map((warning, index) => (
-                    <div key={index} className="flex items-start gap-2 p-2 bg-yellow-50 rounded">
-                      <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5" />
-                      <span className="text-sm">{warning}</span>
-                    </div>
-                  ))}
-                  {processedData.errors.map((error, index) => (
-                    <div key={index} className="flex items-start gap-2 p-2 bg-red-50 rounded">
-                      <AlertCircle className="h-4 w-4 text-red-500 mt-0.5" />
-                      <span className="text-sm text-red-700">{error}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Botão de Confirmação */}
-          <div className="lg:col-span-2 flex justify-end gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => setProcessedData(null)}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              onClick={confirmImport}
-              disabled={isProcessing}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {isProcessing ? 'Importando...' : 'Confirmar Importação'}
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
