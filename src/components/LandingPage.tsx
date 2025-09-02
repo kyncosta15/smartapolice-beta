@@ -9,6 +9,25 @@ export const LandingPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex flex-col">
       {/* Header */}
       <header className="p-6 text-center">
+        {/* Animated Shield above RCorp */}
+        <div className="flex justify-center mb-4">
+          <div className="relative">
+            {/* Outer glow ring */}
+            <div className="absolute inset-0 w-16 h-16 bg-primary/20 rounded-xl animate-ping" style={{ animationDuration: '2s' }}></div>
+            
+            {/* Main container */}
+            <div className="relative w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center shadow-lg">
+              <Shield className="w-6 h-6 text-white animate-pulse drop-shadow-lg" style={{ 
+                filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.3))',
+                animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite, bounce 3s ease-in-out infinite'
+              }} />
+            </div>
+            
+            {/* Rotating border */}
+            <div className="absolute inset-0 w-12 h-12 border-2 border-primary/30 rounded-xl animate-spin" style={{ animationDuration: '4s' }}></div>
+          </div>
+        </div>
+        
         <h1 className="text-4xl md:text-6xl font-bold text-primary mb-2">
           RCorp
         </h1>
@@ -73,22 +92,10 @@ export const LandingPage = () => {
               </div>
             </div>
             
-            {/* Central tech icon with animated shield */}
+            {/* Central tech icon */}
             <div className="absolute inset-0 flex items-center justify-center z-20">
-              <div className="relative">
-                {/* Outer glow ring */}
-                <div className="absolute inset-0 w-20 h-20 bg-primary/20 rounded-xl animate-ping" style={{ animationDuration: '2s' }}></div>
-                
-                {/* Main container */}
-                <div className="relative w-16 h-16 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center shadow-lg">
-                  <Shield className="w-8 h-8 text-white animate-pulse drop-shadow-lg" style={{ 
-                    filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.3))',
-                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite, bounce 3s ease-in-out infinite'
-                  }} />
-                </div>
-                
-                {/* Rotating border */}
-                <div className="absolute inset-0 w-16 h-16 border-2 border-primary/30 rounded-xl animate-spin" style={{ animationDuration: '4s' }}></div>
+              <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center shadow-lg animate-pulse">
+                <div className="w-8 h-8 border-2 border-white rounded opacity-80"></div>
               </div>
             </div>
           </div>
