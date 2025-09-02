@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -49,6 +49,115 @@ export type Database = {
           },
         ]
       }
+      colaboradores: {
+        Row: {
+          cargo: string | null
+          centro_custo: string | null
+          cpf: string
+          created_at: string
+          custo_mensal: number | null
+          data_admissao: string | null
+          data_demissao: string | null
+          data_nascimento: string | null
+          email: string | null
+          empresa_id: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          status: Database["public"]["Enums"]["colaborador_status"] | null
+          telefone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          cargo?: string | null
+          centro_custo?: string | null
+          cpf: string
+          created_at?: string
+          custo_mensal?: number | null
+          data_admissao?: string | null
+          data_demissao?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["colaborador_status"] | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          cargo?: string | null
+          centro_custo?: string | null
+          cpf?: string
+          created_at?: string
+          custo_mensal?: number | null
+          data_admissao?: string | null
+          data_demissao?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["colaborador_status"] | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colaboradores_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      colaboradores_historico: {
+        Row: {
+          acao: string
+          colaborador_id: string | null
+          created_at: string
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          id: string
+          observacoes: string | null
+          usuario_responsavel: string | null
+        }
+        Insert: {
+          acao: string
+          colaborador_id?: string | null
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          id?: string
+          observacoes?: string | null
+          usuario_responsavel?: string | null
+        }
+        Update: {
+          acao?: string
+          colaborador_id?: string | null
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          id?: string
+          observacoes?: string | null
+          usuario_responsavel?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colaboradores_historico_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboard_exports: {
         Row: {
           created_at: string
@@ -82,6 +191,89 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      dependentes: {
+        Row: {
+          colaborador_id: string | null
+          cpf: string
+          created_at: string
+          custo_mensal: number | null
+          data_nascimento: string
+          documentos_anexos: string[] | null
+          grau_parentesco: Database["public"]["Enums"]["grau_parentesco"]
+          id: string
+          nome: string
+          status: Database["public"]["Enums"]["colaborador_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          colaborador_id?: string | null
+          cpf: string
+          created_at?: string
+          custo_mensal?: number | null
+          data_nascimento: string
+          documentos_anexos?: string[] | null
+          grau_parentesco: Database["public"]["Enums"]["grau_parentesco"]
+          id?: string
+          nome: string
+          status?: Database["public"]["Enums"]["colaborador_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          colaborador_id?: string | null
+          cpf?: string
+          created_at?: string
+          custo_mensal?: number | null
+          data_nascimento?: string
+          documentos_anexos?: string[] | null
+          grau_parentesco?: Database["public"]["Enums"]["grau_parentesco"]
+          id?: string
+          nome?: string
+          status?: Database["public"]["Enums"]["colaborador_status"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dependentes_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas: {
+        Row: {
+          cnpj: string | null
+          contato_rh_email: string | null
+          contato_rh_nome: string | null
+          contato_rh_telefone: string | null
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          cnpj?: string | null
+          contato_rh_email?: string | null
+          contato_rh_nome?: string | null
+          contato_rh_telefone?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string | null
+          contato_rh_email?: string | null
+          contato_rh_nome?: string | null
+          contato_rh_telefone?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -351,6 +543,84 @@ export type Database = {
           },
         ]
       }
+      tickets: {
+        Row: {
+          canal_origem: string | null
+          colaborador_id: string | null
+          created_at: string
+          dados_solicitacao: Json | null
+          data_conclusao: string | null
+          data_execucao: string | null
+          data_recebimento: string | null
+          data_validacao: string | null
+          descricao: string | null
+          empresa_id: string | null
+          id: string
+          numero_ticket: string
+          observacoes_internas: string | null
+          operador_responsavel: string | null
+          status: Database["public"]["Enums"]["ticket_status"] | null
+          tipo: Database["public"]["Enums"]["ticket_type"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          canal_origem?: string | null
+          colaborador_id?: string | null
+          created_at?: string
+          dados_solicitacao?: Json | null
+          data_conclusao?: string | null
+          data_execucao?: string | null
+          data_recebimento?: string | null
+          data_validacao?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          id?: string
+          numero_ticket: string
+          observacoes_internas?: string | null
+          operador_responsavel?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"] | null
+          tipo: Database["public"]["Enums"]["ticket_type"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          canal_origem?: string | null
+          colaborador_id?: string | null
+          created_at?: string
+          dados_solicitacao?: Json | null
+          data_conclusao?: string | null
+          data_execucao?: string | null
+          data_recebimento?: string | null
+          data_validacao?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          id?: string
+          numero_ticket?: string
+          observacoes_internas?: string | null
+          operador_responsavel?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"] | null
+          tipo?: Database["public"]["Enums"]["ticket_type"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           avatar: string | null
@@ -401,9 +671,9 @@ export type Database = {
       check_and_fix_policy_inconsistencies: {
         Args: Record<PropertyKey, never>
         Returns: {
+          fixed: boolean
           issue_type: string
           policy_id: string
-          fixed: boolean
         }[]
       }
       delete_policy_completely: {
@@ -426,18 +696,33 @@ export type Database = {
         Args: { file_path: string }
         Returns: {
           can_access: boolean
-          user_id: string
           file_owner: string
           reason: string
+          user_id: string
         }[]
       }
     }
     Enums: {
+      colaborador_status: "ativo" | "inativo" | "pendente"
+      grau_parentesco: "conjuge" | "filho" | "filha" | "mae" | "pai" | "outros"
       policy_status:
         | "vigente"
         | "aguardando_emissao"
         | "nao_renovada"
         | "pendente_analise"
+      ticket_status:
+        | "recebido"
+        | "em_validacao"
+        | "em_execucao"
+        | "concluido"
+        | "pendente_cliente"
+        | "cancelado"
+      ticket_type:
+        | "inclusao_dependente"
+        | "exclusao_dependente"
+        | "duvida_cobertura"
+        | "segunda_via_carteirinha"
+        | "duvida_geral"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -565,11 +850,28 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      colaborador_status: ["ativo", "inativo", "pendente"],
+      grau_parentesco: ["conjuge", "filho", "filha", "mae", "pai", "outros"],
       policy_status: [
         "vigente",
         "aguardando_emissao",
         "nao_renovada",
         "pendente_analise",
+      ],
+      ticket_status: [
+        "recebido",
+        "em_validacao",
+        "em_execucao",
+        "concluido",
+        "pendente_cliente",
+        "cancelado",
+      ],
+      ticket_type: [
+        "inclusao_dependente",
+        "exclusao_dependente",
+        "duvida_cobertura",
+        "segunda_via_carteirinha",
+        "duvida_geral",
       ],
     },
   },
