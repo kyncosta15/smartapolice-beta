@@ -18,7 +18,7 @@ import {
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
 import { SpreadsheetUpload } from '@/components/SpreadsheetUpload';
-import { PlanilhaHistorico } from './PlanilhaHistorico';
+import { PlanilhaHistorico } from '@/components/PlanilhaHistorico';
 
 // Dados mock para demonstração
 const mockData = {
