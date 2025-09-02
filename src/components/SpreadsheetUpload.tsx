@@ -149,6 +149,28 @@ export const SpreadsheetUpload = () => {
     setIsUploading(true);
 
     try {
+      // Primeiro, salvar arquivo no Supabase Storage
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      console.log('💾 Salvando arquivo no storage:', filePath);
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('smartbeneficios')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      console.log('✅ Arquivo salvo no storage:', uploadData.path);
+
+      // Agora enviar para webhook com informações do storage
       const formData = new FormData();
       formData.append('file', file);
       formData.append('fileName', file.name);
@@ -156,6 +178,8 @@ export const SpreadsheetUpload = () => {
       formData.append('lastModified', file.lastModified.toString());
       formData.append('timestamp', new Date().toISOString());
       formData.append('source', 'SmartBeneficios');
+      formData.append('userId', user.id);
+      formData.append('storagePath', uploadData.path);
 
       const response = await fetch(webhookUrl, {
         method: 'POST',
@@ -165,7 +189,7 @@ export const SpreadsheetUpload = () => {
       if (response.ok) {
         toast({
           title: "Arquivo enviado com sucesso",
-          description: "O arquivo foi enviado para o n8n para processamento",
+          description: "O arquivo foi salvo no sistema e enviado para processamento",
         });
         
         // Limpar arquivo após envio bem-sucedido
@@ -179,7 +203,7 @@ export const SpreadsheetUpload = () => {
       console.error('Erro ao enviar para webhook:', error);
       toast({
         title: "Erro no envio",
-        description: "Não foi possível enviar o arquivo. Verifique a URL do webhook.",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive"
       });
     } finally {
@@ -269,24 +293,49 @@ export const SpreadsheetUpload = () => {
 
     try {
       setIsProcessing(true);
+      
+      // Verificar usuário autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
 
-      // Buscar empresa RCaldas
-      const { data: empresa } = await supabase
-        .from('empresas')
-        .select('id')
-        .eq('nome', 'RCaldas')
+      console.log('👤 Usuário autenticado:', user.id);
+
+      // Buscar empresa do usuário
+      const { data: userProfile, error: userError } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user.id)
         .single();
 
-      if (!empresa) {
-        throw new Error('Empresa não encontrada');
+      if (userError || !userProfile?.company) {
+        throw new Error('Empresa do usuário não encontrada');
       }
+
+      // Buscar empresa no banco
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (empresaError || !empresa) {
+        throw new Error('Empresa não encontrada no sistema');
+      }
+
+      console.log('🏢 Empresa encontrada:', empresa.id);
 
       // Inserir colaboradores
       for (const colaborador of processedData.colaboradores) {
+        console.log('👷 Inserindo colaborador:', colaborador.nome);
+        
         const { error } = await supabase
           .from('colaboradores')
           .upsert({
             empresa_id: empresa.id,
+            user_id: user.id, // Vincular ao usuário
             nome: colaborador.nome,
             cpf: colaborador.cpf,
             email: colaborador.email,
@@ -308,11 +357,14 @@ export const SpreadsheetUpload = () => {
 
       // Inserir dependentes
       for (const dependente of processedData.dependentes) {
+        console.log('👶 Inserindo dependente:', dependente.nome);
+        
         // Buscar colaborador pelo CPF
         const { data: colaborador } = await supabase
           .from('colaboradores')
           .select('id')
           .eq('cpf', dependente.colaborador_cpf)
+          .eq('user_id', user.id) // Filtrar pelo usuário
           .single();
 
         if (colaborador) {
@@ -338,17 +390,20 @@ export const SpreadsheetUpload = () => {
 
       toast({
         title: "Importação concluída",
-        description: "Dados importados com sucesso para o sistema",
+        description: "Dados importados com sucesso e vinculados ao seu usuário",
       });
 
       setProcessedData(null);
       setFile(null);
 
+      // Recarregar dados do dashboard
+      window.location.reload();
+
     } catch (error) {
       console.error('Erro na importação:', error);
       toast({
         title: "Erro na importação",
-        description: "Ocorreu um erro ao importar os dados",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive"
       });
     } finally {

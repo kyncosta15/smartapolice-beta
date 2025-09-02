@@ -108,10 +108,38 @@ export const useSmartBeneficiosData = () => {
 
   // Buscar colaboradores
   const fetchColaboradores = async () => {
+    if (!user) return;
+    
     try {
+      // Primeiro buscar a empresa do usuário
+      const { data: userProfile, error: userError } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user.id)
+        .single();
+
+      if (userError || !userProfile?.company) {
+        console.log('Empresa do usuário não encontrada');
+        return;
+      }
+
+      // Buscar empresa no banco
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (empresaError || !empresa) {
+        console.log('Empresa não encontrada no sistema');
+        return;
+      }
+
+      // Buscar colaboradores da empresa
       const { data, error } = await supabase
         .from('colaboradores')
         .select('*')
+        .eq('empresa_id', empresa.id)
         .eq('status', 'ativo')
         .order('nome');
 
@@ -125,10 +153,41 @@ export const useSmartBeneficiosData = () => {
 
   // Buscar dependentes
   const fetchDependentes = async () => {
+    if (!user) return;
+    
     try {
+      // Buscar dependentes através dos colaboradores do usuário
+      const { data: userProfile, error: userError } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user.id)
+        .single();
+
+      if (userError || !userProfile?.company) {
+        console.log('Empresa do usuário não encontrada');
+        return;
+      }
+
+      // Buscar empresa no banco
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (empresaError || !empresa) {
+        console.log('Empresa não encontrada no sistema');
+        return;
+      }
+
+      // Buscar dependentes dos colaboradores da empresa
       const { data, error } = await supabase
         .from('dependentes')
-        .select('*')
+        .select(`
+          *,
+          colaboradores!inner(empresa_id)
+        `)
+        .eq('colaboradores.empresa_id', empresa.id)
         .eq('status', 'ativo')
         .order('nome');
 
@@ -142,10 +201,38 @@ export const useSmartBeneficiosData = () => {
 
   // Buscar tickets
   const fetchTickets = async () => {
+    if (!user) return;
+    
     try {
+      // Buscar tickets através da empresa do usuário
+      const { data: userProfile, error: userError } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user.id)
+        .single();
+
+      if (userError || !userProfile?.company) {
+        console.log('Empresa do usuário não encontrada');
+        return;
+      }
+
+      // Buscar empresa no banco
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (empresaError || !empresa) {
+        console.log('Empresa não encontrada no sistema');
+        return;
+      }
+
+      // Buscar tickets da empresa
       const { data, error } = await supabase
         .from('tickets')
         .select('*')
+        .eq('empresa_id', empresa.id)
         .order('created_at', { ascending: false })
         .limit(50);
 

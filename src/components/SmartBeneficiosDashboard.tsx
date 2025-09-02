@@ -128,7 +128,7 @@ export const SmartBeneficiosDashboard = () => {
               Exportar
             </Button>
             <Badge className="bg-green-100 text-green-800 border-green-300">
-              RCorp Tecnologia
+              {isLoading ? 'Carregando...' : 'SmartBenefícios Ativo'}
             </Badge>
           </div>
         </div>
@@ -287,36 +287,63 @@ export const SmartBeneficiosDashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {mockColaboradores.map((colaborador) => (
-                    <div key={colaborador.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium">{colaborador.nome}</h3>
-                            <Badge className={getStatusColor(colaborador.status) + ' text-white'}>
-                              {colaborador.status}
-                            </Badge>
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <p>Carregando colaboradores...</p>
+                  </div>
+                ) : colaboradores.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Nenhum colaborador encontrado</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Faça upload de uma planilha para importar colaboradores
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {colaboradores
+                      .filter(colaborador => 
+                        colaborador.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        colaborador.cpf.includes(searchTerm) ||
+                        colaborador.cargo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        colaborador.centro_custo?.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .map((colaborador) => (
+                        <div key={colaborador.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-medium">{colaborador.nome}</h3>
+                                <Badge className={getStatusColor(colaborador.status) + ' text-white'}>
+                                  {colaborador.status}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {colaborador.cargo} • {colaborador.centro_custo} • CPF: {colaborador.cpf}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Custo: {formatCurrency(colaborador.custo_mensal || 0)}
+                                {colaborador.email && ` • ${colaborador.email}`}
+                              </p>
+                              {colaborador.data_admissao && (
+                                <p className="text-xs text-muted-foreground">
+                                  Admissão: {new Date(colaborador.data_admissao).toLocaleDateString('pt-BR')}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="outline" size="sm">
+                                Editar
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                Histórico
+                              </Button>
+                            </div>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {colaborador.cargo} • {colaborador.centroCusto} • CPF: {colaborador.cpf}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {colaborador.dependentes} dependentes • Custo: {formatCurrency(colaborador.custoMensal)}
-                          </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
-                            Editar
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            Histórico
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -327,7 +354,7 @@ export const SmartBeneficiosDashboard = () => {
               <h2 className="text-2xl font-bold">Solicitações</h2>
               <div className="flex items-center gap-2">
                 <Badge className="bg-blue-100 text-blue-800">
-                  {mockTickets.length} tickets
+                  {isLoading ? '...' : `${tickets.length} tickets`}
                 </Badge>
               </div>
             </div>
@@ -337,32 +364,55 @@ export const SmartBeneficiosDashboard = () => {
                 <CardTitle>Tickets Recentes</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {mockTickets.map((ticket) => (
-                    <div key={ticket.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{ticket.numero}</Badge>
-                          <Badge className={getStatusColor(ticket.status) + ' text-white'}>
-                            {ticket.status.replace('_', ' ')}
-                          </Badge>
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <p>Carregando tickets...</p>
+                  </div>
+                ) : tickets.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FileText className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Nenhum ticket encontrado</h3>
+                    <p className="text-muted-foreground">
+                      Ainda não há solicitações registradas
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {tickets.map((ticket) => (
+                      <div key={ticket.id} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{ticket.numero_ticket}</Badge>
+                            <Badge className={getStatusColor(ticket.status) + ' text-white'}>
+                              {ticket.status.replace('_', ' ')}
+                            </Badge>
+                          </div>
+                          {ticket.canal_origem && (
+                            <Badge className="bg-gray-100 text-gray-800">
+                              {ticket.canal_origem}
+                            </Badge>
+                          )}
                         </div>
-                        <Badge className="bg-gray-100 text-gray-800">
-                          {ticket.canal}
-                        </Badge>
+                        <div>
+                          <h4 className="font-medium">{ticket.titulo}</h4>
+                          {ticket.descricao && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {ticket.descricao}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Tipo: {getTipoTicketLabel(ticket.tipo)}
+                          </p>
+                          {ticket.data_recebimento && (
+                            <p className="text-xs text-muted-foreground">
+                              Recebido em: {new Date(ticket.data_recebimento).toLocaleDateString('pt-BR')}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-medium">{getTipoTicketLabel(ticket.tipo)}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Colaborador: {ticket.colaborador}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Recebido em: {new Date(ticket.dataRecebimento).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
