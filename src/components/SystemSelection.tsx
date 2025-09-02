@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Heart, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Shield, Users, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const SystemSelection = () => {
@@ -80,7 +80,7 @@ export const SystemSelection = () => {
               
               <CardHeader className="text-center pb-4 relative z-10">
                 <div className="w-20 h-20 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-secondary/30 group-hover:to-secondary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl">
-                  <Heart className="h-10 w-10 text-secondary group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" />
+                  <Users className="h-10 w-10 text-secondary group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" />
                 </div>
                 <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-secondary bg-clip-text text-transparent">SmartBenefícios</CardTitle>
               </CardHeader>
