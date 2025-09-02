@@ -67,7 +67,25 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
 
     // Distribuição por seguradora
     const insurerCounts = policies.reduce((acc, policy) => {
-      const insurerName = policy.insurer || 'Não informado';
+      // Use extractFieldValue to safely extract insurer name from N8N objects
+      const extractFieldValue = (field: any): string => {
+        if (!field) return 'Não informado';
+        if (typeof field === 'string') return field;
+        if (typeof field === 'object' && field !== null) {
+          // Handle N8N structure with empresa, categoria, cobertura, entidade
+          if ('empresa' in field && field.empresa) {
+            return typeof field.empresa === 'string' ? field.empresa : 'Seguradora Desconhecida';
+          }
+          if ('value' in field && field.value) {
+            return typeof field.value === 'string' ? field.value : 'Seguradora Desconhecida';
+          }
+          // If it's an object, try to stringify safely
+          return 'Seguradora Desconhecida';
+        }
+        return String(field);
+      };
+      
+      const insurerName = extractFieldValue(policy.insurer);
       acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);

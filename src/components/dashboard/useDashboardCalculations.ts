@@ -34,7 +34,11 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
     // Função para extrair nome da seguradora de forma segura
     const getInsurerName = (insurerData: any): string => {
       const extracted = extractFieldValue(insurerData);
-      return extracted || 'Seguradora Desconhecida';
+      // Ensure we always return a string, never an object
+      if (typeof extracted === 'string' && extracted !== 'Não informado') {
+        return extracted;
+      }
+      return 'Seguradora Desconhecida';
     };
 
     // Calcular métricas básicas
