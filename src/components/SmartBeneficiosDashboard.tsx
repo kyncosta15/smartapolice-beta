@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
+import { SpreadsheetUpload } from '@/components/SpreadsheetUpload';
 
 // Dados mock para demonstração
 const mockData = {
@@ -136,11 +137,12 @@ export const SmartBeneficiosDashboard = () => {
       {/* Main Content */}
       <main className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
             <TabsTrigger value="tickets">Solicitações</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+            <TabsTrigger value="upload">Upload</TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -435,6 +437,11 @@ export const SmartBeneficiosDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Upload Tab */}
+          <TabsContent value="upload">
+            <SpreadsheetUpload />
           </TabsContent>
         </Tabs>
       </main>
