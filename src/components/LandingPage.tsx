@@ -10,26 +10,26 @@ export const LandingPage = () => {
       {/* Header */}
       <header className="p-6 text-center">
         {/* Animated Logo above RCorp */}
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-6">
           <div className="relative">
             {/* Outer glow ring */}
-            <div className="absolute inset-0 w-16 h-16 bg-primary/20 rounded-xl animate-ping" style={{ animationDuration: '2s' }}></div>
+            <div className="absolute inset-0 w-24 h-24 bg-primary/20 rounded-2xl animate-ping" style={{ animationDuration: '2s' }}></div>
             
             {/* Main container */}
-            <div className="relative w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+            <div className="relative w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
               <img 
                 src="/lovable-uploads/80ca086b-4968-405c-b87b-05cb3237db65.png" 
                 alt="RCorp Logo" 
-                className="w-8 h-8 object-contain animate-pulse drop-shadow-lg" 
+                className="w-14 h-14 object-contain animate-pulse drop-shadow-xl" 
                 style={{ 
-                  filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.3))',
+                  filter: 'drop-shadow(0 0 12px rgba(59, 130, 246, 0.4))',
                   animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite, bounce 3s ease-in-out infinite'
                 }} 
               />
             </div>
             
             {/* Rotating border */}
-            <div className="absolute inset-0 w-12 h-12 border-2 border-primary/30 rounded-xl animate-spin" style={{ animationDuration: '4s' }}></div>
+            <div className="absolute inset-0 w-20 h-20 border-2 border-primary/40 rounded-2xl animate-spin" style={{ animationDuration: '4s' }}></div>
           </div>
         </div>
         
