@@ -1,5 +1,6 @@
 
 import { DocumentValidator } from '@/utils/documentValidator';
+import { Shield } from 'lucide-react';
 
 interface SmartApóliceLogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -41,11 +42,9 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
 
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
-      {/* Círculo azul com S */}
+      {/* Círculo azul com ícone Shield */}
       <div className={`${sizeClasses[size]} bg-blue-600 rounded-full flex items-center justify-center`}>
-        <span className={`${letterSizeClasses[size]} font-bold text-white`}>
-          S
-        </span>
+        <Shield className={`${letterSizeClasses[size]} text-white`} />
       </div>
       
       {showText && (
