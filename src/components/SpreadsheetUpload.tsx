@@ -80,18 +80,24 @@ export const SpreadsheetUpload = () => {
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🔍 handleInputChange chamado');
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
+      console.log('📁 Arquivo selecionado:', selectedFile.name);
       handleFileSelect(selectedFile);
+    } else {
+      console.log('❌ Nenhum arquivo selecionado');
     }
   };
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    console.log('🎯 handleDrop chamado');
     e.preventDefault();
     setIsDragOver(false);
     
     const droppedFile = e.dataTransfer.files?.[0];
     if (droppedFile) {
+      console.log('📁 Arquivo solto:', droppedFile.name);
       handleFileSelect(droppedFile);
     }
   }, []);
@@ -125,7 +131,12 @@ export const SpreadsheetUpload = () => {
   };
 
   const sendToWebhook = async () => {
+    console.log('📤 sendToWebhook chamado');
+    console.log('📁 File:', file?.name);
+    console.log('🔗 WebhookUrl:', webhookUrl);
+    
     if (!file || !webhookUrl) {
+      console.log('❌ Dados incompletos - file:', !!file, 'webhookUrl:', !!webhookUrl);
       toast({
         title: "Dados incompletos",
         description: "Selecione um arquivo e informe a URL do webhook",
@@ -134,6 +145,7 @@ export const SpreadsheetUpload = () => {
       return;
     }
 
+    console.log('🚀 Iniciando envio para webhook...');
     setIsUploading(true);
 
     try {
@@ -176,8 +188,13 @@ export const SpreadsheetUpload = () => {
   };
 
   const processSpreadsheet = async () => {
-    if (!file) return;
+    console.log('⚙️ processSpreadsheet chamado');
+    if (!file) {
+      console.log('❌ Nenhum arquivo para processar');
+      return;
+    }
 
+    console.log('🔄 Iniciando processamento do arquivo:', file.name);
     setIsProcessing(true);
     setUploadProgress(0);
 
@@ -340,6 +357,7 @@ export const SpreadsheetUpload = () => {
   };
 
   const downloadTemplate = () => {
+    console.log('📥 downloadTemplate chamado');
     // Criar template em formato CSV
     const csvContent = `Nome,CPF,Email,Telefone,Data Nascimento,Cargo,Centro de Custo,Data Admissão,Custo Mensal
 João Silva,123.456.789-00,joao@empresa.com.br,71999887766,1985-01-15,Analista,Financeiro,2024-01-10,350.00
@@ -431,7 +449,13 @@ Maria Santos,987.654.321-00,maria@empresa.com.br,71988776655,1990-03-22,Coordena
                 id="file-upload"
               />
               <label htmlFor="file-upload">
-                <Button className="cursor-pointer">
+                <Button 
+                  className="cursor-pointer" 
+                  onClick={() => {
+                    console.log('🖱️ Botão "Selecionar Arquivo" clicado');
+                    document.getElementById('file-upload')?.click();
+                  }}
+                >
                   <Upload className="h-4 w-4 mr-2" />
                   Selecionar Arquivo
                 </Button>
