@@ -152,33 +152,57 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
       console.log('✅ Arquivo salvo no storage:', uploadData.path);
 
       // 2. Buscar empresa do usuário
-      const { data: userProfile } = await supabase
+      const { data: userProfile, error: userError } = await supabase
         .from('users')
-        .select('company')
+        .select('company, name')
         .eq('id', user.id)
         .single();
 
-      if (!userProfile?.company) {
-        throw new Error('Empresa do usuário não encontrada');
+      if (userError) {
+        throw new Error(`Erro ao buscar perfil do usuário: ${userError.message}`);
       }
 
+      // Se usuário não tem empresa, usar o nome do usuário como empresa
+      let companyName = userProfile?.company;
+      if (!companyName || companyName.trim() === '') {
+        companyName = userProfile?.name || 'Empresa Padrão';
+        
+        // Atualizar o perfil do usuário com a empresa
+        await supabase
+          .from('users')
+          .update({ company: companyName })
+          .eq('id', user.id);
+      }
+
+      console.log('🏢 Empresa do usuário:', companyName);
+
       // Verificar se empresa existe, se não criar
-      let { data: empresa } = await supabase
+      let { data: empresa, error: empresaError } = await supabase
         .from('empresas')
         .select('id')
-        .eq('nome', userProfile.company)
+        .eq('nome', companyName)
         .maybeSingle();
 
+      if (empresaError) {
+        console.error('Erro ao buscar empresa:', empresaError);
+      }
+
       if (!empresa) {
+        console.log('🆕 Criando nova empresa:', companyName);
         const { data: novaEmpresa, error: empresaError } = await supabase
           .from('empresas')
-          .insert([{ nome: userProfile.company }])
+          .insert([{ nome: companyName }])
           .select('id')
           .single();
 
-        if (empresaError) throw empresaError;
+        if (empresaError) {
+          console.error('Erro ao criar empresa:', empresaError);
+          throw new Error(`Erro ao criar empresa: ${empresaError.message}`);
+        }
         empresa = novaEmpresa;
       }
+
+      console.log('✅ Empresa configurada:', empresa.id);
 
       // 3. Salvar metadados do upload no banco
       const { data: uploadRecord, error: uploadRecordError } = await createUpload(
