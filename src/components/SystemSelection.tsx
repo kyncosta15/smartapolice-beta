@@ -44,15 +44,18 @@ export const SystemSelection = () => {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* SmartApólice */}
-            <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary hover:scale-105"
+            <Card className="group cursor-pointer hover:shadow-2xl transition-all duration-500 border-2 hover:border-primary/30 hover:scale-105 relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 hover:from-primary/10 hover:to-primary/20"
                   onClick={() => handleSystemSelect('smartapolice')}>
-              <CardHeader className="text-center pb-4">
-                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Shield className="h-10 w-10 text-primary group-hover:scale-110 transition-transform" />
+              {/* Subtle animated background overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+              
+              <CardHeader className="text-center pb-4 relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl">
+                  <Shield className="h-10 w-10 text-primary group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" />
                 </div>
-                <CardTitle className="text-2xl">SmartApólice</CardTitle>
+                <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">SmartApólice</CardTitle>
               </CardHeader>
-              <CardContent className="text-center space-y-4">
+              <CardContent className="text-center space-y-4 relative z-10">
                 <p className="text-muted-foreground">
                   Gestão inteligente de seguros e apólices corporativas
                 </p>
@@ -62,7 +65,7 @@ export const SystemSelection = () => {
                   <li>• Relatórios automatizados</li>
                   <li>• Gestão de renovações</li>
                 </ul>
-                <Button className="w-full group-hover:bg-primary/90 transition-colors">
+                <Button variant="gradient" className="w-full transition-all duration-300 hover:shadow-lg">
                   Acessar SmartApólice
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -70,15 +73,18 @@ export const SystemSelection = () => {
             </Card>
 
             {/* SmartBenefícios */}
-            <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary hover:scale-105"
+            <Card className="group cursor-pointer hover:shadow-2xl transition-all duration-500 border-2 hover:border-primary/30 hover:scale-105 relative overflow-hidden bg-gradient-to-br from-secondary/5 via-background to-secondary/10 hover:from-secondary/10 hover:to-secondary/20"
                   onClick={() => handleSystemSelect('smartbeneficios')}>
-              <CardHeader className="text-center pb-4">
-                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Heart className="h-10 w-10 text-primary group-hover:scale-110 transition-transform" />
+              {/* Subtle animated background overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+              
+              <CardHeader className="text-center pb-4 relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-secondary/30 group-hover:to-secondary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl">
+                  <Heart className="h-10 w-10 text-secondary group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" />
                 </div>
-                <CardTitle className="text-2xl">SmartBenefícios</CardTitle>
+                <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-secondary bg-clip-text text-transparent">SmartBenefícios</CardTitle>
               </CardHeader>
-              <CardContent className="text-center space-y-4">
+              <CardContent className="text-center space-y-4 relative z-10">
                 <p className="text-muted-foreground">
                   Administração completa de benefícios corporativos
                 </p>
@@ -88,7 +94,7 @@ export const SystemSelection = () => {
                   <li>• Relatórios de utilização</li>
                   <li>• Integração RH</li>
                 </ul>
-                <Button className="w-full group-hover:bg-primary/90 transition-colors">
+                <Button variant="gradient" className="w-full transition-all duration-300 hover:shadow-lg">
                   Acessar SmartBenefícios
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -100,7 +106,7 @@ export const SystemSelection = () => {
 
       {/* Footer */}
       <footer className="p-6 text-center text-muted-foreground">
-        <p>&copy; 2024 RCorp. Todos os direitos reservados.</p>
+        <p>&copy; 2025 RCorp. Todos os direitos reservados.</p>
       </footer>
     </div>
   );
