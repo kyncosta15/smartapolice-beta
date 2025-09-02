@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Building2 } from 'lucide-react';
 import { PolicyData, generateChartData, getEmptyStateData } from './chartData';
+import { renderValueAsString } from '@/utils/renderValue';
 
 interface InsurerDistributionChartProps {
   policies?: PolicyData[];
@@ -10,7 +11,16 @@ interface InsurerDistributionChartProps {
 
 export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionChartProps) => {
   const hasData = policies && policies.length > 0;
-  const chartData = hasData ? generateChartData(policies) : getEmptyStateData();
+  const rawChartData = hasData ? generateChartData(policies) : getEmptyStateData();
+  
+  // Safely extract insurer names from potentially complex N8N objects
+  const chartData = {
+    ...rawChartData,
+    insurerData: rawChartData.insurerData.map(insurer => ({
+      ...insurer,
+      name: renderValueAsString(insurer.name)
+    }))
+  };
 
   // Cores específicas para seguradoras com gradientes
   const insurerColors = {
@@ -37,9 +47,10 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
     return months.map(month => {
       const dataPoint: any = { month };
       chartData.insurerData.forEach(insurer => {
-        // Add some variation to simulate trends
+        // Add some variation to simulate trends  
         const variation = (Math.random() - 0.5) * 6;
-        dataPoint[insurer.name] = Math.max(0, insurer.value + variation);
+        const safeName = renderValueAsString(insurer.name);
+        dataPoint[safeName] = Math.max(0, insurer.value + variation);
       });
       return dataPoint;
     });

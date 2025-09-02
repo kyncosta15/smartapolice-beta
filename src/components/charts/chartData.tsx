@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatCurrency } from '@/utils/currencyFormatter';
+import { renderValueAsString } from '@/utils/renderValue';
 
 // Shared chart data and utilities - now dynamic based on extracted policies
 export interface PolicyData {
@@ -135,7 +136,8 @@ export const generateChartData = (policies: PolicyData[]) => {
 
   // Insurer distribution
   const insurerCounts = policies.reduce((acc, policy) => {
-    acc[policy.insurer] = (acc[policy.insurer] || 0) + 1;
+    const safeInsurerName = renderValueAsString(policy.insurer);
+    acc[safeInsurerName] = (acc[safeInsurerName] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 

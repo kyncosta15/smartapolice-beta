@@ -4,6 +4,7 @@ import { FileText, Calendar, DollarSign, Clock } from 'lucide-react';
 import { PolicyData } from './chartData';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { renderValueAsString } from '@/utils/renderValue';
 
 interface RecentPoliciesChartProps {
   policies: PolicyData[];
@@ -91,7 +92,7 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
                         {policy.name || `Apólice ${policy.policyNumber || 'S/N'}`}
                       </h4>
                       <p className="text-sm text-gray-500">
-                        {policy.insurer || 'Seguradora não informada'}
+                        {renderValueAsString(policy.insurer) || 'Seguradora não informada'}
                       </p>
                     </div>
 
