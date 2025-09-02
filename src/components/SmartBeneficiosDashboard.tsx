@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   Users, 
   Heart,
@@ -13,12 +14,17 @@ import {
   Download,
   Filter,
   Search,
-  AlertTriangle
+  AlertTriangle,
+  LogOut,
+  User
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
 import { SpreadsheetUpload } from '@/components/SpreadsheetUpload';
 import { PlanilhaHistorico } from '@/components/PlanilhaHistorico';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 // Dados mock para demonstração
 const mockData = {
@@ -108,6 +114,28 @@ export const SmartBeneficiosDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
   const { metrics, colaboradores, tickets, isLoading, error, loadData } = useSmartBeneficiosData();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Logout realizado com sucesso!');
+      navigate('/system-selection');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast.error('Erro ao fazer logout');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
@@ -124,10 +152,36 @@ export const SmartBeneficiosDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            {/* Informações do usuário */}
+            {user && (
+              <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary text-white">
+                    {getInitials(user.name || 'U')}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-sm">
+                  <p className="font-medium text-gray-900">{user.name}</p>
+                  <p className="text-gray-500">{user.email}</p>
+                </div>
+              </div>
+            )}
+            
             <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Exportar
             </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogout}
+              className="text-red-600 border-red-200 hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
+            
             <Badge className="bg-green-100 text-green-800 border-green-300">
               {isLoading ? 'Carregando...' : 'SmartBenefícios Ativo'}
             </Badge>
