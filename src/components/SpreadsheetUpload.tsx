@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { usePlanilhaUploads } from '@/hooks/usePlanilhaUploads';
 import * as XLSX from 'xlsx';
 
 interface SpreadsheetUploadProps {
@@ -33,6 +34,7 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+  const { createUpload, updateUploadStatus } = usePlanilhaUploads();
 
   const validateFile = (selectedFile: File): boolean => {
     const validTypes = [
@@ -125,53 +127,80 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
     if (!file) return;
 
     setIsProcessing(true);
+    let uploadRecord: any = null;
 
     try {
+      // Obter usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // 1. Primeiro salvar arquivo no Supabase Storage
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      console.log('💾 Salvando arquivo no storage:', filePath);
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('smartbeneficios')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw new Error(`Erro ao salvar arquivo: ${uploadError.message}`);
+      }
+
+      console.log('✅ Arquivo salvo no storage:', uploadData.path);
+
+      // 2. Buscar empresa do usuário
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user.id)
+        .single();
+
+      if (!userProfile?.company) {
+        throw new Error('Empresa do usuário não encontrada');
+      }
+
+      // Verificar se empresa existe, se não criar
+      let { data: empresa } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .maybeSingle();
+
+      if (!empresa) {
+        const { data: novaEmpresa, error: empresaError } = await supabase
+          .from('empresas')
+          .insert([{ nome: userProfile.company }])
+          .select('id')
+          .single();
+
+        if (empresaError) throw empresaError;
+        empresa = novaEmpresa;
+      }
+
+      // 3. Salvar metadados do upload no banco
+      const { data: uploadRecord, error: uploadRecordError } = await createUpload(
+        file,
+        uploadData.path,
+        empresa?.id
+      );
+
+      if (uploadRecordError || !uploadRecord) {
+        throw new Error(`Erro ao criar registro de upload: ${uploadRecordError}`);
+      }
+
+      // 4. Processar a planilha e extrair dados
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
-          // Processar a planilha e extrair dados
           const arrayBuffer = e.target?.result as ArrayBuffer;
           const workbook = XLSX.read(arrayBuffer, { type: 'array' });
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const data = XLSX.utils.sheet_to_json(worksheet);
 
           console.log('📊 Dados extraídos da planilha:', data);
-
-          // Obter usuário atual
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) {
-            throw new Error('Usuário não autenticado');
-          }
-
-          // Buscar empresa do usuário
-          const { data: userProfile } = await supabase
-            .from('users')
-            .select('company')
-            .eq('id', user.id)
-            .single();
-
-          if (!userProfile?.company) {
-            throw new Error('Empresa do usuário não encontrada');
-          }
-
-          // Verificar se empresa existe, se não criar
-          let { data: empresa } = await supabase
-            .from('empresas')
-            .select('id')
-            .eq('nome', userProfile.company)
-            .maybeSingle();
-
-          if (!empresa) {
-            const { data: novaEmpresa, error: empresaError } = await supabase
-              .from('empresas')
-              .insert([{ nome: userProfile.company }])
-              .select('id')
-              .single();
-
-            if (empresaError) throw empresaError;
-            empresa = novaEmpresa;
-          }
 
           // Processar dados da planilha e inserir colaboradores
           const colaboradores = data.map((row: any) => ({
@@ -188,17 +217,27 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
             custo_mensal: parseFloat(row.custo_mensal || row['Custo Mensal'] || '0') || 0
           })).filter(col => col.nome && col.cpf);
 
+          let colaboradoresImportados = 0;
           if (colaboradores.length > 0) {
             const { error: colaboradoresError } = await supabase
               .from('colaboradores')
-              .insert(colaboradores);
+              .upsert(colaboradores, { onConflict: 'cpf,empresa_id' });
 
             if (colaboradoresError) throw colaboradoresError;
+            colaboradoresImportados = colaboradores.length;
           }
+
+          // 5. Atualizar status do upload para processado
+          await updateUploadStatus(
+            uploadRecord.id, 
+            'processado', 
+            colaboradoresImportados, 
+            0
+          );
 
           toast({
             title: "Planilha processada com sucesso!",
-            description: `${colaboradores.length} colaboradores foram importados`,
+            description: `${colaboradoresImportados} colaboradores foram importados e o arquivo foi salvo no sistema`,
           });
 
           // Recarregar dados do dashboard
@@ -209,6 +248,12 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
 
         } catch (error) {
           console.error('❌ Erro ao processar dados da planilha:', error);
+          
+          // Atualizar status para erro
+          if (uploadRecord) {
+            await updateUploadStatus(uploadRecord.id, 'erro');
+          }
+          
           toast({
             title: "Erro ao processar dados",
             description: "Verifique o formato da planilha e tente novamente",
@@ -219,11 +264,18 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
         }
       };
       reader.readAsArrayBuffer(file);
+
     } catch (error) {
       console.error('❌ Erro ao processar planilha:', error);
+      
+      // Atualizar status para erro se houver upload record
+      if (uploadRecord) {
+        await updateUploadStatus(uploadRecord.id, 'erro');
+      }
+      
       toast({
         title: "Erro ao processar planilha",
-        description: "Ocorreu um erro ao processar o arquivo",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
       setIsProcessing(false);

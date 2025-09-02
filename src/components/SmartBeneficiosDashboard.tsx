@@ -18,6 +18,7 @@ import {
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
 import { SpreadsheetUpload } from '@/components/SpreadsheetUpload';
+import { PlanilhaHistorico } from './PlanilhaHistorico';
 
 // Dados mock para demonstração
 const mockData = {
@@ -491,10 +492,14 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Upload Tab */}
           <TabsContent value="upload">
-            <SpreadsheetUpload 
-              onFileSelect={(file) => console.log('Arquivo selecionado:', file)}
-              onDataUpdate={loadData}
-            />
+            <div className="space-y-6">
+              <SpreadsheetUpload 
+                onFileSelect={(file) => console.log('Arquivo selecionado:', file)}
+                onDataUpdate={loadData}
+              />
+              
+              <PlanilhaHistorico />
+            </div>
           </TabsContent>
         </Tabs>
       </main>
