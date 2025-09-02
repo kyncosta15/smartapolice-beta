@@ -80,7 +80,7 @@ export const SystemSelection = () => {
               
               <CardHeader className="text-center pb-4 relative z-10">
                 <div className="w-20 h-20 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-secondary/30 group-hover:to-secondary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl">
-                  <Users className="h-10 w-10 text-secondary group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" fill="currentColor" />
+                  <Users className="h-10 w-10 text-primary group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" fill="currentColor" />
                 </div>
                 <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-secondary bg-clip-text text-transparent">SmartBenefícios</CardTitle>
               </CardHeader>
