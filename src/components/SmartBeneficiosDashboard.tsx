@@ -16,6 +16,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
+import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
 
 // Dados mock para demonstração
 const mockData = {
@@ -100,9 +101,11 @@ const getTipoTicketLabel = (tipo: string) => {
   }
 };
 
+// Atualizar o dashboard para usar dados reais
 export const SmartBeneficiosDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
+  const { metrics, colaboradores, tickets, isLoading, error, loadData } = useSmartBeneficiosData();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
@@ -148,7 +151,7 @@ export const SmartBeneficiosDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Vidas Ativas</p>
-                      <p className="text-2xl font-bold">{mockData.vidasAtivas}</p>
+                      <p className="text-2xl font-bold">{isLoading ? '...' : metrics.vidasAtivas}</p>
                     </div>
                     <Users className="h-8 w-8 text-blue-500" />
                   </div>
@@ -160,7 +163,7 @@ export const SmartBeneficiosDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Custo Mensal</p>
-                      <p className="text-2xl font-bold">{formatCurrency(mockData.custoMensal)}</p>
+                      <p className="text-2xl font-bold">{isLoading ? '...' : formatCurrency(metrics.custoMensal)}</p>
                     </div>
                     <DollarSign className="h-8 w-8 text-green-500" />
                   </div>
@@ -172,7 +175,7 @@ export const SmartBeneficiosDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Custo Médio/Vida</p>
-                      <p className="text-2xl font-bold">{formatCurrency(mockData.custoMedioVida)}</p>
+                      <p className="text-2xl font-bold">{isLoading ? '...' : formatCurrency(metrics.custoMedioVida)}</p>
                     </div>
                     <Heart className="h-8 w-8 text-red-500" />
                   </div>
@@ -184,7 +187,7 @@ export const SmartBeneficiosDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Tickets Abertos</p>
-                      <p className="text-2xl font-bold">{mockData.ticketsAbertos}</p>
+                      <p className="text-2xl font-bold">{isLoading ? '...' : metrics.ticketsAbertos}</p>
                     </div>
                     <FileText className="h-8 w-8 text-orange-500" />
                   </div>
