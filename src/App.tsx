@@ -7,7 +7,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LandingPage } from "@/components/LandingPage";
 import { SystemSelection } from "@/components/SystemSelection";
 import { SmartApoliceAuth } from "@/components/SmartApoliceAuth";
-import { SmartBeneficiosAuth } from "@/components/SmartBeneficiosAuth";
+import { SmartBeneficiosAuthFunctional } from "@/components/SmartBeneficiosAuthFunctional";
+import { SmartBeneficiosGuard } from "@/components/SmartBeneficiosGuard";
+import { ColaboradorSolicitacao } from "@/components/ColaboradorSolicitacao";
 import { AuthGuard } from "@/components/AuthGuard";
 import NotFound from "./pages/NotFound";
 
@@ -22,8 +24,10 @@ const App = () => {
             <Route path="/" element={<LandingPage />} />
             <Route path="/system-selection" element={<SystemSelection />} />
             <Route path="/auth/smartapolice" element={<SmartApoliceAuth />} />
-            <Route path="/auth/smartbeneficios" element={<SmartBeneficiosAuth />} />
+            <Route path="/auth/smartbeneficios" element={<SmartBeneficiosAuthFunctional />} />
             <Route path="/dashboard" element={<AuthGuard />} />
+            <Route path="/smartbeneficios/dashboard" element={<SmartBeneficiosGuard />} />
+            <Route path="/colaborador/solicitacao" element={<ColaboradorSolicitacao />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

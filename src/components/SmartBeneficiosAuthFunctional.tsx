@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth, AuthProvider } from '@/contexts/AuthContext';
+import { useAuth, AuthProvider, UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const SmartBeneficiosAuthContent = () => {
@@ -29,7 +29,7 @@ const SmartBeneficiosAuthContent = () => {
     name: '',
     company: '',
     phone: '',
-    role: 'rh' // Default role para SmartBenefícios
+    role: 'rh' as UserRole // Default role para SmartBenefícios
   });
 
   useEffect(() => {

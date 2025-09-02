@@ -11,7 +11,7 @@ export interface ExtendedUser extends User {
   avatar?: string;
 }
 
-export type UserRole = 'cliente' | 'administrador' | 'corretora';
+export type UserRole = 'cliente' | 'administrador' | 'corretora' | 'rh';
 
 interface AuthContextType {
   user: ExtendedUser | null;

@@ -64,8 +64,18 @@ export const SmartBeneficiosAuth = () => {
             </div>
 
             <div className="space-y-3">
-              <Link to="/system-selection">
+              <Link to="/auth/smartbeneficios">
                 <Button className="w-full">
+                  Acessar SmartBenefícios MVP
+                </Button>
+              </Link>
+              <Link to="/colaborador/solicitacao">
+                <Button variant="outline" className="w-full">
+                  Portal do Colaborador
+                </Button>
+              </Link>
+              <Link to="/system-selection">
+                <Button variant="outline" className="w-full">
                   Voltar à seleção
                 </Button>
               </Link>
