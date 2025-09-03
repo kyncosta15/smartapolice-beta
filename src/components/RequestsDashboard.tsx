@@ -3,12 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Search,
@@ -18,10 +17,8 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  Calendar,
   User,
-  Users,
-  Building
+  Users
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -79,7 +76,6 @@ export const RequestsDashboard: React.FC = () => {
     try {
       setIsLoading(true);
       console.log('🔄 Iniciando busca de solicitações...');
-      console.log('👤 Usuário atual:', user);
 
       // Busca requests de forma mais simples e direta
       const { data: requestsData, error: requestsError } = await supabase
@@ -231,7 +227,6 @@ export const RequestsDashboard: React.FC = () => {
     setFilteredRequests(filtered);
   }, [requests, filters]);
 
-
   const getStatusBadge = (status: string) => {
     const variants = {
       recebido: { variant: 'secondary' as const, label: 'Recebido' },
@@ -334,7 +329,6 @@ export const RequestsDashboard: React.FC = () => {
         </Card>
       </div>
 
-
       {/* Filtros */}
       <Card>
         <CardHeader>
@@ -410,7 +404,7 @@ export const RequestsDashboard: React.FC = () => {
                   <TableHead>Colaborador</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Data</TableHead>
-                  <TableHead>Itens</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -432,28 +426,16 @@ export const RequestsDashboard: React.FC = () => {
                     <TableCell>
                       {format(new Date(request.submitted_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                     </TableCell>
-                    <TableCell>{request.request_items.length} itens</TableCell>
+                    <TableCell>{getStatusBadge(request.status)}</TableCell>
                     <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => setSelectedRequest(request)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ver
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                          {selectedRequest && (
-                            <RequestDetailModal 
-                              request={selectedRequest} 
-                              onClose={() => setSelectedRequest(null)}
-                            />
-                          )}
-                        </DialogContent>
-                      </Dialog>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setSelectedRequest(request)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver detalhes
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -469,186 +451,161 @@ export const RequestsDashboard: React.FC = () => {
           )}
         </CardContent>
       </Card>
-    </div>
-  );
-};
 
-// Componente do modal de detalhes
-const RequestDetailModal: React.FC<{
-  request: RequestWithDetails;
-  onClose: () => void;
-}> = ({ request, onClose }) => {
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      recebido: { variant: 'secondary' as const, label: 'Recebido' },
-      em_validacao: { variant: 'default' as const, label: 'Em Validação' },
-      concluido: { variant: 'default' as const, label: 'Concluído' },
-      recusado: { variant: 'destructive' as const, label: 'Recusado' }
-    };
-    const config = variants[status as keyof typeof variants] || variants.recebido;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
-
-  const getKindBadge = (kind: string) => {
-    return (
-      <Badge variant={kind === 'inclusao' ? 'default' : 'secondary'}>
-        {kind === 'inclusao' ? 'Inclusão' : 'Exclusão'}
-      </Badge>
-    );
-  };
-
-  return (
-    <div>
-      <DialogHeader>
-        <DialogTitle>
-          Solicitação {request.protocol_code}
-        </DialogTitle>
-      </DialogHeader>
-
-      <ScrollArea className="max-h-[60vh] mt-4">
-        <div className="space-y-6">
-          {/* Dados do colaborador */}
-          <div>
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Dados do Colaborador
-            </h3>
-            <Card className="p-4 bg-gray-50">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+      {/* Modal de detalhes - RESPONSIVO */}
+      <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
+        <DialogContent className="w-[95vw] max-w-4xl h-[95vh] max-h-[95vh] flex flex-col p-0">
+          <DialogHeader className="px-4 sm:px-6 py-4 border-b flex-shrink-0">
+            <DialogTitle className="text-lg sm:text-xl">
+              Solicitação {selectedRequest?.protocol_code}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <ScrollArea className="flex-1 px-4 sm:px-6 py-4">
+            {selectedRequest && (
+              <div className="space-y-6">
+                {/* Dados do colaborador */}
                 <div>
-                  <span className="font-medium">Nome:</span>
-                  <p>{request.employee.full_name}</p>
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Dados do Colaborador
+                  </h3>
+                  <Card className="p-4 bg-gray-50">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium">Nome:</span>
+                        <p className="break-words">{selectedRequest.employee.full_name}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">CPF:</span>
+                        <p>{selectedRequest.employee.cpf}</p>
+                      </div>
+                      {selectedRequest.employee.email && (
+                        <div className="sm:col-span-2">
+                          <span className="font-medium">E-mail:</span>
+                          <p className="break-words">{selectedRequest.employee.email}</p>
+                        </div>
+                      )}
+                      <div className="sm:col-span-2">
+                        <span className="font-medium">Data da solicitação:</span>
+                        <p>{format(new Date(selectedRequest.submitted_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
+
+                {/* Detalhes da solicitação */}
                 <div>
-                  <span className="font-medium">CPF:</span>
-                  <p>{request.employee.cpf}</p>
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Detalhes da Solicitação
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      {getKindBadge(selectedRequest.kind)}
+                      {getStatusBadge(selectedRequest.status)}
+                    </div>
+
+                    {/* Itens */}
+                    <div>
+                      <h4 className="font-medium mb-2">Itens solicitados:</h4>
+                      <div className="space-y-2">
+                        {selectedRequest.request_items.map((item) => (
+                          <Card key={item.id} className="p-3">
+                            <div className="flex items-center gap-2 text-sm flex-wrap">
+                              {item.target === 'titular' ? (
+                                <User className="h-4 w-4 flex-shrink-0" />
+                              ) : (
+                                <Users className="h-4 w-4 flex-shrink-0" />
+                              )}
+                              <span className="font-medium">
+                                {item.target === 'titular' 
+                                  ? 'Titular' 
+                                  : item.dependent?.full_name
+                                }
+                              </span>
+                              {item.dependent && (
+                                <Badge variant="outline" className="text-xs">
+                                  {item.dependent.relationship}
+                                </Badge>
+                              )}
+                              <span className="text-muted-foreground">•</span>
+                              <span className={item.action === 'incluir' ? 'text-green-600' : 'text-red-600'}>
+                                {item.action === 'incluir' ? 'Incluir' : 'Excluir'}
+                              </span>
+                            </div>
+                            {item.notes && (
+                              <p className="text-sm text-muted-foreground mt-1 break-words">{item.notes}</p>
+                            )}
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Observações */}
+                    {selectedRequest.metadata?.notes && (
+                      <div>
+                        <h4 className="font-medium mb-2">Observações:</h4>
+                        <p className="text-sm text-muted-foreground p-3 bg-gray-50 rounded break-words">
+                          {selectedRequest.metadata.notes}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Arquivos */}
+                    {selectedRequest.files.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-2">Arquivos anexados:</h4>
+                        <div className="space-y-1">
+                          {selectedRequest.files.map((file) => (
+                            <div key={file.id} className="flex items-center gap-2 text-sm">
+                              <FileText className="h-4 w-4 flex-shrink-0" />
+                              <span className="break-words">{file.original_name || 'Arquivo'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {request.employee.email && (
+
+                {/* Observações internas */}
+                {selectedRequest.metadata?.internal_notes && (
                   <div>
-                    <span className="font-medium">E-mail:</span>
-                    <p>{request.employee.email}</p>
+                    <h3 className="font-semibold mb-3">Observações Internas</h3>
+                    <div className="p-3 bg-gray-50 rounded">
+                      <p className="text-sm text-muted-foreground break-words">
+                        {selectedRequest.metadata.internal_notes}
+                      </p>
+                    </div>
                   </div>
                 )}
-                <div>
-                  <span className="font-medium">Data da solicitação:</span>
-                  <p>{format(new Date(request.submitted_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
-                </div>
               </div>
-            </Card>
-          </div>
-
-          {/* Detalhes da solicitação */}
-          <div>
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Detalhes da Solicitação
-            </h3>
-            <div className="space-y-3">
-              <div className="flex gap-4">
-                {getKindBadge(request.kind)}
-              </div>
-              
-              {/* Status somente leitura */}
-              <div className="p-3 bg-gray-50 rounded">
-                <p className="text-sm">
-                  <span className="font-medium">Status:</span> {getStatusBadge(request.status)}
-                </p>
-              </div>
-
-              {/* Itens */}
-              <div>
-                <h4 className="font-medium mb-2">Itens solicitados:</h4>
-                <div className="space-y-2">
-                  {request.request_items.map((item) => (
-                    <Card key={item.id} className="p-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        {item.target === 'titular' ? (
-                          <User className="h-4 w-4" />
-                        ) : (
-                          <Users className="h-4 w-4" />
-                        )}
-                        <span className="font-medium">
-                          {item.target === 'titular' 
-                            ? 'Titular' 
-                            : item.dependent?.full_name
-                          }
-                        </span>
-                        {item.dependent && (
-                          <Badge variant="outline" className="text-xs">
-                            {item.dependent.relationship}
-                          </Badge>
-                        )}
-                        <span className="text-muted-foreground">•</span>
-                        <span className={item.action === 'incluir' ? 'text-green-600' : 'text-red-600'}>
-                          {item.action === 'incluir' ? 'Incluir' : 'Excluir'}
-                        </span>
-                      </div>
-                      {item.notes && (
-                        <p className="text-sm text-muted-foreground mt-1">{item.notes}</p>
-                      )}
-                    </Card>
-                  ))}
-                </div>
-              </div>
-
-              {/* Observações */}
-              {request.metadata?.notes && (
-                <div>
-                  <h4 className="font-medium mb-2">Observações:</h4>
-                  <p className="text-sm text-muted-foreground p-3 bg-gray-50 rounded">
-                    {request.metadata.notes}
-                  </p>
-                </div>
-              )}
-
-              {/* Arquivos */}
-              {request.files.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Arquivos anexados:</h4>
-                  <div className="space-y-1">
-                    {request.files.map((file) => (
-                      <div key={file.id} className="flex items-center gap-2 text-sm">
-                        <FileText className="h-4 w-4" />
-                        <span>{file.original_name || 'Arquivo'}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Observações internas */}
-          {request.metadata?.internal_notes && (
-            <div>
-              <h3 className="font-semibold mb-3">Observações Internas</h3>
-              <div className="p-3 bg-gray-50 rounded">
-                <p className="text-sm text-muted-foreground">
-                  {request.metadata.internal_notes}
-                </p>
-              </div>
+            )}
+          </ScrollArea>
+          
+          {/* Área de aprovação - Fixo na parte inferior */}
+          {selectedRequest && (
+            <div className="border-t bg-background flex-shrink-0">
+              <ApproveRequestButton
+                requestId={selectedRequest.id}
+                requestStatus={selectedRequest.status}
+                protocolCode={selectedRequest.protocol_code}
+                onApproved={() => {
+                  setSelectedRequest(null);
+                }}
+              />
             </div>
           )}
-
-          <ApproveRequestButton
-            requestId={request.id}
-            requestStatus={request.status}
-            protocolCode={request.protocol_code}
-            onApproved={() => {
-              onClose();
-              // O realtime vai atualizar automaticamente
-            }}
-          />
-
+          
           {/* Botão fechar */}
-          <div className="flex justify-end">
-            <Button variant="outline" onClick={onClose}>
+          <div className="px-4 sm:px-6 py-3 border-t bg-muted/30 flex justify-end flex-shrink-0">
+            <Button variant="outline" onClick={() => setSelectedRequest(null)}>
               Fechar
             </Button>
           </div>
-        </div>
-      </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
