@@ -78,7 +78,7 @@ export const RequestsDashboard: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // Busca requests de forma mais simples, sem joins complexos
+      // Busca requests de forma mais simples e direta
       const { data: requestsData, error: requestsError } = await supabase
         .from('requests')
         .select(`
@@ -88,6 +88,7 @@ export const RequestsDashboard: React.FC = () => {
             target,
             action,
             notes,
+            dependent_id,
             dependents(
               full_name,
               relationship
@@ -100,69 +101,67 @@ export const RequestsDashboard: React.FC = () => {
           )
         `)
         .eq('draft', false)
-        .order('created_at', { ascending: false });
+        .order('submitted_at', { ascending: false });
 
-      if (requestsError) throw requestsError;
+      if (requestsError) {
+        console.error('Erro ao buscar requests:', requestsError);
+        throw requestsError;
+      }
 
+      console.log('Requests encontrados:', requestsData?.length || 0);
+      
       // Para cada request, buscar dados do employee separadamente
       const transformedRequests: RequestWithDetails[] = [];
       
       for (const request of requestsData || []) {
         if (request.employee_id) {
-          const { data: employeeData } = await supabase
+          const { data: employeeData, error: empError } = await supabase
             .from('employees')
             .select('full_name, cpf, email, company_id')
             .eq('id', request.employee_id)
-            .single();
+            .maybeSingle();
+
+          if (empError) {
+            console.error('Erro ao buscar employee:', empError);
+            continue;
+          }
 
           if (employeeData) {
-            // Para requests do formulário público, mostrar sempre
-            // Para outros, verificar empresa
-            let shouldInclude = true;
-            
-            if (employeeData.company_id) {
-              const { data: empresaData } = await supabase
-                .from('empresas')
-                .select('nome')
-                .eq('id', employeeData.company_id)
-                .single();
-              
-              // Se tem empresa, verificar se é a mesma do usuário
-              shouldInclude = empresaData?.nome === user?.company;
-            }
-
-            if (shouldInclude) {
-              transformedRequests.push({
-                ...request,
-                kind: request.kind as 'inclusao' | 'exclusao',
-                status: request.status as 'recebido' | 'em_validacao' | 'concluido' | 'recusado',
-                employee: {
-                  full_name: employeeData.full_name,
-                  cpf: employeeData.cpf,
-                  email: employeeData.email
-                },
-                request_items: request.request_items.map((item: any) => ({
-                  ...item,
-                  dependent: item.dependents
-                }))
-              });
-            }
+            // RLS já controla o acesso, então incluir todos os requests retornados
+            transformedRequests.push({
+              ...request,
+              kind: request.kind as 'inclusao' | 'exclusao',
+              status: request.status as 'recebido' | 'em_validacao' | 'concluido' | 'recusado',
+              employee: {
+                full_name: employeeData.full_name,
+                cpf: employeeData.cpf,
+                email: employeeData.email
+              },
+              request_items: (request.request_items || []).map((item: any) => ({
+                ...item,
+                dependent: item.dependents
+              })),
+              files: request.files || []
+            });
           }
         }
       }
 
+      console.log('Solicitações processadas:', transformedRequests.length);
       setRequests(transformedRequests);
     } catch (error) {
       console.error('Erro ao carregar solicitações:', error);
-      toast.error('Erro ao carregar solicitações');
+      toast.error('Erro ao carregar solicitações: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRequests();
-  }, [user?.company]);
+    if (user) {
+      fetchRequests();
+    }
+  }, [user]);
 
   // Aplica filtros
   useEffect(() => {
@@ -332,6 +331,31 @@ export const RequestsDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Debug Panel */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Status do Sistema</span>
+            <Button onClick={fetchRequests} variant="outline" size="sm">
+              🔄 Atualizar
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <strong>Solicitações:</strong> {requests.length}
+            </div>
+            <div>
+              <strong>Filtradas:</strong> {filteredRequests.length}  
+            </div>
+            <div>
+              <strong>Carregando:</strong> {isLoading ? 'Sim' : 'Não'}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filtros */}
       <Card>
