@@ -1230,6 +1230,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_and_fix_policy_inconsistencies: {
         Args: Record<PropertyKey, never>
         Returns: {
