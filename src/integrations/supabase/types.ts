@@ -1045,6 +1045,42 @@ export type Database = {
           },
         ]
       }
+      request_tickets: {
+        Row: {
+          created_at: string | null
+          external_ref: string | null
+          id: string
+          payload: Json
+          protocol_code: string
+          request_id: string | null
+          rh_note: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          external_ref?: string | null
+          id?: string
+          payload: Json
+          protocol_code: string
+          request_id?: string | null
+          rh_note?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          external_ref?: string | null
+          id?: string
+          payload?: Json
+          protocol_code?: string
+          request_id?: string | null
+          rh_note?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       requests: {
         Row: {
           channel: string | null
