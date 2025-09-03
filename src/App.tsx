@@ -28,7 +28,7 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               {/* Public routes */}
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/system-selection" element={<SystemSelection />} />
               <Route path="/auth/smartapolice" element={<SmartApoliceAuth />} />
@@ -42,7 +42,7 @@ const App = () => {
               <Route
                 path="/smartbeneficios/dashboard"
                 element={
-                  <ProtectedRoute requiredRoles={['rh', 'admin', 'administrador', 'financeiro']}>
+                  <ProtectedRoute requiredRoles={['rh', 'admin', 'administrador', 'financeiro', 'corretora_admin']}>
                     <SmartBeneficiosGuard />
                   </ProtectedRoute>
                 }
