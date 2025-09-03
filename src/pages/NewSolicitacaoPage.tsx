@@ -383,6 +383,7 @@ export const NewSolicitacaoPage: React.FC = () => {
                       value={formData.cpf}
                       onChange={handleCpfChange}
                       maxLength={14}
+                      disabled={isLoading}
                     />
                   </div>
                   
@@ -393,6 +394,7 @@ export const NewSolicitacaoPage: React.FC = () => {
                       placeholder="Digite seu nome completo"
                       value={formData.fullName}
                       onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                      disabled={isLoading}
                     />
                   </div>
                   
@@ -403,6 +405,7 @@ export const NewSolicitacaoPage: React.FC = () => {
                       placeholder="(11) 99999-9999"
                       value={formData.phone}
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      disabled={isLoading}
                     />
                   </div>
                   
@@ -413,6 +416,7 @@ export const NewSolicitacaoPage: React.FC = () => {
                       onCheckedChange={(checked) => 
                         setFormData(prev => ({ ...prev, lgpdConsent: checked as boolean }))
                       }
+                      disabled={isLoading}
                     />
                     <div className="text-sm leading-relaxed">
                       <label htmlFor="lgpd" className="cursor-pointer">
@@ -600,9 +604,14 @@ export const NewSolicitacaoPage: React.FC = () => {
               onClick={step === 0 ? handleStartSession : handleNext}
               disabled={!isStepValid() || isLoading}
             >
-              {isLoading ? 'Processando...' : (
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {step === 0 ? 'Iniciando...' : 'Salvando...'}
+                </div>
+              ) : (
                 <>
-                  Continuar
+                  {step === 0 ? 'Iniciar Solicitação' : 'Continuar'}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </>
               )}
@@ -612,7 +621,14 @@ export const NewSolicitacaoPage: React.FC = () => {
               onClick={handleSubmit}
               disabled={!isStepValid() || isLoading}
             >
-              {isLoading ? 'Enviando...' : 'Enviar Solicitação'}
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Enviando...
+                </div>
+              ) : (
+                'Enviar Solicitação'
+              )}
             </Button>
           )}
         </div>

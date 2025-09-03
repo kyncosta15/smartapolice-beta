@@ -61,29 +61,30 @@ serve(async (req) => {
     }
 
     const cleanCPF = cpf.replace(/\D/g, '');
-    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '';
+    
+    // Extract first IP from comma-separated list for INET type compatibility
+    const forwardedFor = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '';
+    const clientIP = forwardedFor.split(',')[0].trim() || null;
     const userAgent = req.headers.get('user-agent') || '';
 
-    // Check for active request in last 24h to prevent duplicates
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const { data: activeRequests } = await supabase
-      .from('requests')
-      .select('id, kind')
-      .eq('employee_id', 'employees.id')
-      .eq('status', 'recebido')
-      .gte('created_at', yesterday.toISOString())
-      .limit(1);
+    // Note: We'll check for duplicates after finding/creating the employee
 
     // Find or create employee
     let { data: employee, error: employeeError } = await supabase
       .from('employees')
       .select('*')
       .eq('cpf', cleanCPF)
-      .single();
+      .maybeSingle();
 
-    if (employeeError && employeeError.code === 'PGRST116') {
+    if (employeeError) {
+      console.error('Error finding employee:', employeeError);
+      return Response.json({
+        ok: false,
+        error: { code: 'DATABASE_ERROR', message: 'Erro ao buscar colaborador' }
+      }, { headers: corsHeaders });
+    }
+
+    if (!employee) {
       // Employee not found, create new one
       // First find a default company (we'll use the first one)
       const { data: companies } = await supabase
@@ -103,7 +104,7 @@ serve(async (req) => {
         .insert({
           cpf: cleanCPF,
           full_name: fullName,
-          phone: phone,
+          phone: phone || null,
           company_id: companies[0].id,
           status: 'ativo'
         })
@@ -119,12 +120,6 @@ serve(async (req) => {
       }
 
       employee = newEmployee;
-    } else if (employeeError) {
-      console.error('Error finding employee:', employeeError);
-      return Response.json({
-        ok: false,
-        error: { code: 'DATABASE_ERROR', message: 'Erro ao buscar colaborador' }
-      }, { headers: corsHeaders });
     } else {
       // Update employee name/phone if provided
       const updateData: any = {};
@@ -139,6 +134,25 @@ serve(async (req) => {
       }
     }
 
+    // Check for active request in last 24h to prevent duplicates
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const { data: activeRequests } = await supabase
+      .from('requests')
+      .select('id, kind')
+      .eq('employee_id', employee.id)
+      .eq('status', 'recebido')
+      .gte('created_at', yesterday.toISOString())
+      .limit(1);
+
+    if (activeRequests && activeRequests.length > 0) {
+      return Response.json({
+        ok: false,
+        error: { code: 'DUPLICATE_REQUEST', message: 'Já existe uma solicitação ativa nas últimas 24h' }
+      }, { headers: corsHeaders });
+    }
+
     // Get dependents
     const { data: dependents } = await supabase
       .from('dependents')
@@ -146,13 +160,19 @@ serve(async (req) => {
       .eq('employee_id', employee.id);
 
     // Create session
+    const sessionData: any = {
+      employee_id: employee.id,
+      user_agent: userAgent
+    };
+    
+    // Only add IP if it's valid
+    if (clientIP) {
+      sessionData.ip = clientIP;
+    }
+
     const { data: session, error: sessionError } = await supabase
       .from('public_sessions')
-      .insert({
-        employee_id: employee.id,
-        ip: clientIP,
-        user_agent: userAgent
-      })
+      .insert(sessionData)
       .select()
       .single();
 
@@ -164,13 +184,15 @@ serve(async (req) => {
       }, { headers: corsHeaders });
     }
 
-    // Create draft request
+    // Create draft request  
+    const protocolCode = `DRAFT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     const { data: request, error: requestError } = await supabase
       .from('requests')
       .insert({
         employee_id: employee.id,
         session_id: session.id,
-        protocol_code: `DRAFT-${Date.now()}`, // Temporary code
+        protocol_code: protocolCode,
         kind: 'inclusao', // Default, will be updated
         channel: 'form',
         draft: true,
