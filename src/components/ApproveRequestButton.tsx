@@ -10,6 +10,7 @@ interface ApproveRequestButtonProps {
   requestId: string;
   requestStatus: string;
   protocolCode: string;
+  userRole?: 'corretora_admin' | 'gestor_rh';
   onApproved?: () => void;
 }
 
@@ -17,6 +18,7 @@ export function ApproveRequestButton({
   requestId, 
   requestStatus, 
   protocolCode,
+  userRole = 'gestor_rh',
   onApproved 
 }: ApproveRequestButtonProps) {
   const [loading, setLoading] = useState(false);
@@ -88,11 +90,18 @@ export function ApproveRequestButton({
     <div className="space-y-4 p-4 border-t">
       <div className="space-y-2">
         <Label htmlFor="rh-note">
-          Observação para o backoffice (opcional)
+          {userRole === 'corretora_admin' 
+            ? 'Observação para processamento do ticket (opcional)' 
+            : 'Observação para o backoffice (opcional)'
+          }
         </Label>
         <Textarea
           id="rh-note"
-          placeholder="Digite observações para o time de processamento..."
+          placeholder={
+            userRole === 'corretora_admin'
+              ? "Digite observações para o processamento do ticket..."
+              : "Digite observações para o time de processamento..."
+          }
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={3}
@@ -110,16 +119,17 @@ export function ApproveRequestButton({
         disabled={loading}
         className="w-full"
         size="lg"
+        variant={userRole === 'corretora_admin' ? 'default' : 'secondary'}
       >
         {loading ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Enviando...
+            {userRole === 'corretora_admin' ? 'Criando ticket...' : 'Enviando...'}
           </>
         ) : (
           <>
             <Send className="w-4 h-4 mr-2" />
-            Aprovar e Enviar
+            {userRole === 'corretora_admin' ? 'Criar Ticket' : 'Aprovar e Enviar'}
           </>
         )}
       </Button>

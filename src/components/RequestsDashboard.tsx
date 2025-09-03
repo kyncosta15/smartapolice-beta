@@ -18,7 +18,8 @@ import {
   XCircle,
   Eye,
   User,
-  Users
+  Users,
+  Send
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -59,7 +60,7 @@ interface RequestWithDetails {
 }
 
 export const RequestsDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [requests, setRequests] = useState<RequestWithDetails[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<RequestWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,6 +72,18 @@ export const RequestsDashboard: React.FC = () => {
     dateFrom: '',
     dateTo: ''
   });
+  
+  // Verificar se o usuário tem permissão para ver o dashboard
+  const isCorretora = profile?.role === 'corretora_admin' || profile?.role === 'administrador' || profile?.role === 'admin';
+  const isGestorRH = profile?.role === 'gestor_rh' || profile?.role === 'rh';
+  
+  if (!isCorretora && !isGestorRH) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <p className="text-muted-foreground">Você não tem permissão para acessar esta área.</p>
+      </div>
+    );
+  }
 
   const fetchRequests = async () => {
     try {
@@ -266,6 +279,18 @@ export const RequestsDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header com informação da role */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">
+          {isCorretora ? 'Dashboard da Corretora - Solicitações' : 'Dashboard RH - Solicitações'}
+        </h1>
+        {isCorretora && (
+          <Badge variant="outline" className="bg-blue-50">
+            Administrador da Corretora
+          </Badge>
+        )}
+      </div>
+
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
@@ -427,7 +452,7 @@ export const RequestsDashboard: React.FC = () => {
                       {format(new Date(request.submitted_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                     </TableCell>
                     <TableCell>{getStatusBadge(request.status)}</TableCell>
-                    <TableCell>
+                    <TableCell className="space-x-2">
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -436,6 +461,16 @@ export const RequestsDashboard: React.FC = () => {
                         <Eye className="h-4 w-4 mr-2" />
                         Ver detalhes
                       </Button>
+                      {isCorretora && (request.status === 'recebido' || request.status === 'em_validacao') && (
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => setSelectedRequest(request)}
+                        >
+                          <Send className="h-4 w-4 mr-2" />
+                          Criar Ticket
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -591,8 +626,10 @@ export const RequestsDashboard: React.FC = () => {
                 requestId={selectedRequest.id}
                 requestStatus={selectedRequest.status}
                 protocolCode={selectedRequest.protocol_code}
+                userRole={isCorretora ? 'corretora_admin' : 'gestor_rh'}
                 onApproved={() => {
                   setSelectedRequest(null);
+                  fetchRequests();
                 }}
               />
             </div>
