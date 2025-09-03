@@ -22,6 +22,7 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
 import { SpreadsheetUpload } from '@/components/SpreadsheetUpload';
 import { PlanilhaHistorico } from '@/components/PlanilhaHistorico';
+import { ColaboradorModal } from '@/components/ColaboradorModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -313,10 +314,12 @@ export const SmartBeneficiosDashboard = () => {
           <TabsContent value="colaboradores" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">Gestão de Colaboradores</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Incluir Colaborador
-              </Button>
+              <ColaboradorModal>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Incluir Colaborador
+                </Button>
+              </ColaboradorModal>
             </div>
 
             <Card>
