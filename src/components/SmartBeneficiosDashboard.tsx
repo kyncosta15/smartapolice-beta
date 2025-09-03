@@ -200,12 +200,12 @@ export const SmartBeneficiosDashboard = () => {
       {/* Main Content */}
       <main className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-8 mb-8">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-8">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="apolices">Apólices</TabsTrigger>
             <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
-            <TabsTrigger value="links">Links</TabsTrigger>
             <TabsTrigger value="solicitacoes">Solicitações</TabsTrigger>
+            <TabsTrigger value="links">Links</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
             <TabsTrigger value="upload">Upload</TabsTrigger>
           </TabsList>
