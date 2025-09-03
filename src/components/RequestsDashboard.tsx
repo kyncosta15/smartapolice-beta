@@ -77,7 +77,6 @@ export const RequestsDashboard: React.FC = () => {
   const fetchRequests = async () => {
     try {
       setIsLoading(true);
-      console.log('🔄 Iniciando busca de solicitações...');
 
       // Busca requests de forma mais simples e direta
       const { data: requestsData, error: requestsError } = await supabase
@@ -105,19 +104,13 @@ export const RequestsDashboard: React.FC = () => {
         .order('submitted_at', { ascending: false });
 
       if (requestsError) {
-        console.error('❌ Erro ao buscar requests:', requestsError);
         throw requestsError;
       }
-
-      console.log('✅ Requests encontrados:', requestsData?.length || 0);
-      console.log('📊 Dados retornados:', requestsData);
       
       // Para cada request, buscar dados do employee separadamente
       const transformedRequests: RequestWithDetails[] = [];
       
       for (const request of requestsData || []) {
-        console.log(`🔍 Processando request ${request.protocol_code}...`);
-        
         if (request.employee_id) {
           const { data: employeeData, error: empError } = await supabase
             .from('employees')
@@ -126,13 +119,10 @@ export const RequestsDashboard: React.FC = () => {
             .maybeSingle();
 
           if (empError) {
-            console.error('❌ Erro ao buscar employee:', empError);
             continue;
           }
 
           if (employeeData) {
-            console.log(`👤 Employee encontrado: ${employeeData.full_name}`);
-            
             // RLS já controla o acesso, então incluir todos os requests retornados
             const transformedRequest = {
               ...request,
@@ -151,38 +141,41 @@ export const RequestsDashboard: React.FC = () => {
             };
             
             transformedRequests.push(transformedRequest);
-            console.log(`✅ Request transformado: ${request.protocol_code}`);
-          } else {
-            console.warn(`⚠️ Employee não encontrado para request ${request.protocol_code}`);
           }
-        } else {
-          console.warn(`⚠️ Request ${request.protocol_code} sem employee_id`);
         }
       }
 
-      console.log('📈 Solicitações processadas:', transformedRequests.length);
-      console.log('🎯 Dados finais:', transformedRequests);
-      
       setRequests(transformedRequests);
       
-      // Force refresh do filteredRequests
-      setTimeout(() => {
-        console.log('🔄 Atualizando filtros...');
-      }, 100);
-      
     } catch (error) {
-      console.error('💥 Erro ao carregar solicitações:', error);
+      console.error('Erro ao carregar solicitações:', error);
       toast.error('Erro ao carregar solicitações: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
-      console.log('✅ Busca finalizada');
     }
   };
 
+  // Hook para realtime
   useEffect(() => {
-    if (user) {
-      fetchRequests();
-    }
+    if (!user) return;
+
+    // Buscar dados iniciais
+    fetchRequests();
+
+    // Configurar realtime
+    const channel = supabase
+      .channel('requests-realtime')
+      .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'requests' },
+          () => {
+            console.log('🔄 Atualização automática via realtime');
+            fetchRequests();
+          })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   // Aplica filtros
@@ -225,32 +218,6 @@ export const RequestsDashboard: React.FC = () => {
     setFilteredRequests(filtered);
   }, [requests, filters]);
 
-  const updateRequestStatus = async (requestId: string, newStatus: string, notes?: string) => {
-    try {
-      const { error } = await supabase
-        .from('requests')
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString(),
-          ...(notes && { 
-            metadata: { 
-              ...selectedRequest?.metadata,
-              internal_notes: notes 
-            }
-          })
-        })
-        .eq('id', requestId);
-
-      if (error) throw error;
-
-      toast.success('Status atualizado com sucesso');
-      fetchRequests();
-      setSelectedRequest(null);
-    } catch (error) {
-      console.error('Erro ao atualizar status:', error);
-      toast.error('Erro ao atualizar status');
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -354,38 +321,6 @@ export const RequestsDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Debug Panel */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Status do Sistema</span>
-            <Button onClick={fetchRequests} variant="outline" size="sm">
-              🔄 Atualizar
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-4 gap-4 text-sm">
-            <div>
-              <strong>Solicitações:</strong> {requests.length}
-            </div>
-            <div>
-              <strong>Filtradas:</strong> {filteredRequests.length}  
-            </div>
-            <div>
-              <strong>Carregando:</strong> {isLoading ? 'Sim' : 'Não'}
-            </div>
-            <div>
-              <strong>Última busca:</strong> {new Date().toLocaleTimeString()}
-            </div>
-          </div>
-          {requests.length > 0 && (
-            <div className="mt-3 text-xs text-muted-foreground">
-              <p>Protocolos encontrados: {requests.map(r => r.protocol_code).join(', ')}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Filtros */}
       <Card>
@@ -461,7 +396,6 @@ export const RequestsDashboard: React.FC = () => {
                   <TableHead>Protocolo</TableHead>
                   <TableHead>Colaborador</TableHead>
                   <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead>Itens</TableHead>
                   <TableHead>Ações</TableHead>
@@ -482,7 +416,6 @@ export const RequestsDashboard: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell>{getKindBadge(request.kind)}</TableCell>
-                    <TableCell>{getStatusBadge(request.status)}</TableCell>
                     <TableCell>
                       {format(new Date(request.submitted_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                     </TableCell>
@@ -503,7 +436,6 @@ export const RequestsDashboard: React.FC = () => {
                           {selectedRequest && (
                             <RequestDetailModal 
                               request={selectedRequest} 
-                              onUpdateStatus={updateRequestStatus}
                               onClose={() => setSelectedRequest(null)}
                             />
                           )}
@@ -531,11 +463,8 @@ export const RequestsDashboard: React.FC = () => {
 // Componente do modal de detalhes
 const RequestDetailModal: React.FC<{
   request: RequestWithDetails;
-  onUpdateStatus: (id: string, status: string, notes?: string) => void;
   onClose: () => void;
-}> = ({ request, onUpdateStatus, onClose }) => {
-  const [newStatus, setNewStatus] = useState<string>(request.status);
-  const [notes, setNotes] = useState('');
+}> = ({ request, onClose }) => {
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -605,7 +534,13 @@ const RequestDetailModal: React.FC<{
             <div className="space-y-3">
               <div className="flex gap-4">
                 {getKindBadge(request.kind)}
-                {getStatusBadge(request.status)}
+              </div>
+              
+              {/* Status somente leitura */}
+              <div className="p-3 bg-gray-50 rounded">
+                <p className="text-sm">
+                  <span className="font-medium">Status:</span> {getStatusBadge(request.status)}
+                </p>
               </div>
 
               {/* Itens */}
@@ -671,51 +606,23 @@ const RequestDetailModal: React.FC<{
             </div>
           </div>
 
-          {/* Ações do RH */}
-          <div>
-            <h3 className="font-semibold mb-3">Ações do RH</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Alterar status:
-                </label>
-                <Select value={newStatus} onValueChange={setNewStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="recebido">Recebido</SelectItem>
-                    <SelectItem value="em_validacao">Em Validação</SelectItem>
-                    <SelectItem value="concluido">Concluído</SelectItem>
-                    <SelectItem value="recusado">Recusado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Observações internas (opcional):
-                </label>
-                <Textarea 
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Adicione observações sobre esta solicitação..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button 
-                  onClick={() => onUpdateStatus(request.id, newStatus, notes)}
-                  disabled={newStatus === request.status && !notes}
-                >
-                  Atualizar Status
-                </Button>
-                <Button variant="outline" onClick={onClose}>
-                  Fechar
-                </Button>
+          {/* Observações internas */}
+          {request.metadata?.internal_notes && (
+            <div>
+              <h3 className="font-semibold mb-3">Observações Internas</h3>
+              <div className="p-3 bg-gray-50 rounded">
+                <p className="text-sm text-muted-foreground">
+                  {request.metadata.internal_notes}
+                </p>
               </div>
             </div>
+          )}
+
+          {/* Botão fechar */}
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={onClose}>
+              Fechar
+            </Button>
           </div>
         </div>
       </ScrollArea>
