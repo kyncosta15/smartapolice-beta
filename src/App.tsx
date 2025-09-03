@@ -10,6 +10,7 @@ import { SmartApoliceAuth } from "@/components/SmartApoliceAuth";
 import { SmartBeneficiosAuthFunctional } from "@/components/SmartBeneficiosAuthFunctional";
 import { SmartBeneficiosGuard } from "@/components/SmartBeneficiosGuard";
 import { ColaboradorSolicitacao } from "@/components/ColaboradorSolicitacao";
+import { ColaboradorFormPage } from "@/pages/ColaboradorFormPage";
 import { AuthGuard } from "@/components/AuthGuard";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => {
             <Route path="/dashboard" element={<AuthGuard />} />
             <Route path="/smartbeneficios/dashboard" element={<SmartBeneficiosGuard />} />
             <Route path="/colaborador/solicitacao" element={<ColaboradorSolicitacao />} />
+            <Route path="/colaborador/:token" element={<ColaboradorFormPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -92,6 +92,32 @@ export interface ColaboradorApoliceVinculo {
   updated_at: string;
 }
 
+export interface ColaboradorLink {
+  id: string;
+  empresa_id: string;
+  user_id: string;
+  link_token: string;
+  titulo: string;
+  descricao?: string;
+  campos_solicitados: any[];
+  expira_em?: string;
+  ativo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ColaboradorSubmissao {
+  id: string;
+  link_id: string;
+  dados_preenchidos: any;
+  ip_origem?: string;
+  user_agent?: string;
+  status: 'recebida' | 'processada' | 'rejeitada';
+  observacoes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DashboardMetrics {
   vidasAtivas: number;
   custoMensal: number;
@@ -110,6 +136,8 @@ export const useSmartBeneficiosData = () => {
   const [dependentes, setDependentes] = useState<Dependente[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [apolices, setApolices] = useState<ApolicesBeneficios[]>([]);
+  const [colaboradorLinks, setColaboradorLinks] = useState<ColaboradorLink[]>([]);
+  const [submissoes, setSubmissoes] = useState<ColaboradorSubmissao[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     vidasAtivas: 0,
     custoMensal: 0,
@@ -363,13 +391,130 @@ export const useSmartBeneficiosData = () => {
         fetchColaboradores(), 
         fetchDependentes(),
         fetchTickets(),
-        fetchApolices()
+        fetchApolices(),
+        fetchColaboradorLinks(),
+        fetchSubmissoes()
       ]);
     } catch (err: any) {
       console.error('Erro ao carregar dados:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Buscar links de colaboradores
+  const fetchColaboradorLinks = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: userProfile, error: userError } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user.id)
+        .single();
+
+      if (userError || !userProfile?.company) return;
+
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (empresaError || !empresa) return;
+
+      const { data, error } = await supabase
+        .from('colaborador_links')
+        .select('*')
+        .eq('empresa_id', empresa.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setColaboradorLinks((data || []) as ColaboradorLink[]);
+    } catch (err: any) {
+      console.error('Erro ao buscar links:', err);
+      setError(err.message);
+    }
+  };
+
+  // Buscar submissões
+  const fetchSubmissoes = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('colaborador_submissoes')
+        .select(`
+          *,
+          colaborador_links (
+            titulo,
+            empresa_id
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSubmissoes((data || []) as ColaboradorSubmissao[]);
+    } catch (err: any) {
+      console.error('Erro ao buscar submissões:', err);
+      setError(err.message);
+    }
+  };
+
+  // Criar link para colaborador
+  const createColaboradorLink = async (linkData: {
+    titulo: string;
+    descricao?: string;
+    campos_solicitados: any[];
+    expira_em?: string;
+  }) => {
+    try {
+      if (!user) {
+        throw new Error('Usuário não encontrado');
+      }
+
+      const { data: userProfile, error: userError } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user.id)
+        .single();
+
+      if (userError || !userProfile?.company) {
+        throw new Error('Empresa do usuário não encontrada');
+      }
+
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (empresaError || !empresa) {
+        throw new Error('Empresa não encontrada no sistema');
+      }
+
+      // Gerar token único
+      const linkToken = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      const { data, error } = await supabase
+        .from('colaborador_links')
+        .insert([{
+          empresa_id: empresa.id,
+          user_id: user.id,
+          link_token: linkToken,
+          ...linkData
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      await fetchColaboradorLinks(); // Recarregar lista
+      return { data, error: null };
+    } catch (err: any) {
+      console.error('Erro ao criar link:', err);
+      return { data: null, error: err.message };
     }
   };
 
@@ -449,12 +594,15 @@ export const useSmartBeneficiosData = () => {
     dependentes,
     tickets,
     apolices,
+    colaboradorLinks,
+    submissoes,
     metrics,
     isLoading,
     error,
     loadData,
     addColaborador,
     updateColaborador,
-    createTicket
+    createTicket,
+    createColaboradorLink
   };
 };

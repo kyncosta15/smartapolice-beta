@@ -24,6 +24,7 @@ import { SpreadsheetUpload } from '@/components/SpreadsheetUpload';
 import { PlanilhaHistorico } from '@/components/PlanilhaHistorico';
 import { ColaboradorModal } from '@/components/ColaboradorModal';
 import { ApoliceCNPJView } from '@/components/ApoliceCNPJView';
+import { GeradorLinksColaborador } from '@/components/GeradorLinksColaborador';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -115,7 +116,7 @@ const getTipoTicketLabel = (tipo: string) => {
 export const SmartBeneficiosDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
-  const { metrics, colaboradores, tickets, apolices, isLoading, error, loadData } = useSmartBeneficiosData();
+  const { metrics, colaboradores, tickets, apolices, colaboradorLinks, submissoes, isLoading, error, loadData } = useSmartBeneficiosData();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -194,10 +195,11 @@ export const SmartBeneficiosDashboard = () => {
       {/* Main Content */}
       <main className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-7 mb-8">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="apolices">Apólices</TabsTrigger>
             <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
+            <TabsTrigger value="links">Links</TabsTrigger>
             <TabsTrigger value="tickets">Solicitações</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
             <TabsTrigger value="upload">Upload</TabsTrigger>
@@ -322,6 +324,22 @@ export const SmartBeneficiosDashboard = () => {
             </div>
             
             <ApoliceCNPJView apolices={apolices} isLoading={isLoading} />
+          </TabsContent>
+
+          {/* Links Tab */}
+          <TabsContent value="links" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Links para Colaboradores</h2>
+              <Badge className="bg-purple-100 text-purple-800">
+                {isLoading ? '...' : `${colaboradorLinks.length} link${colaboradorLinks.length !== 1 ? 's' : ''}`}
+              </Badge>
+            </div>
+            
+            <GeradorLinksColaborador 
+              colaboradorLinks={colaboradorLinks} 
+              submissoes={submissoes}
+              isLoading={isLoading} 
+            />
           </TabsContent>
 
           {/* Colaboradores Tab */}

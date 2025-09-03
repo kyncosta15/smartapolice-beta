@@ -168,6 +168,100 @@ export type Database = {
           },
         ]
       }
+      colaborador_links: {
+        Row: {
+          ativo: boolean | null
+          campos_solicitados: Json
+          created_at: string
+          descricao: string | null
+          empresa_id: string | null
+          expira_em: string | null
+          id: string
+          link_token: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          campos_solicitados?: Json
+          created_at?: string
+          descricao?: string | null
+          empresa_id?: string | null
+          expira_em?: string | null
+          id?: string
+          link_token: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean | null
+          campos_solicitados?: Json
+          created_at?: string
+          descricao?: string | null
+          empresa_id?: string | null
+          expira_em?: string | null
+          id?: string
+          link_token?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colaborador_links_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      colaborador_submissoes: {
+        Row: {
+          created_at: string
+          dados_preenchidos: Json
+          id: string
+          ip_origem: string | null
+          link_id: string | null
+          observacoes: string | null
+          status: string | null
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          dados_preenchidos?: Json
+          id?: string
+          ip_origem?: string | null
+          link_id?: string | null
+          observacoes?: string | null
+          status?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          dados_preenchidos?: Json
+          id?: string
+          ip_origem?: string | null
+          link_id?: string | null
+          observacoes?: string | null
+          status?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colaborador_submissoes_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "colaborador_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       colaboradores: {
         Row: {
           cargo: string | null
