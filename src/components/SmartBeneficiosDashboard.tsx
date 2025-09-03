@@ -28,7 +28,7 @@ import { ApoliceCNPJView } from '@/components/ApoliceCNPJView';
 import { GeradorLinksColaborador } from '@/components/GeradorLinksColaborador';
 import { ProtocolosDashboard } from '@/components/ProtocolosDashboard';
 import { RequestsDashboard } from '@/components/RequestsDashboard';
-import { NewLinkGenerator } from '@/components/NewLinkGenerator';
+// Link generator removed - now using public page
 import { EmployeesList } from '@/components/EmployeesList';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -340,7 +340,29 @@ export const SmartBeneficiosDashboard = () => {
               </p>
             </div>
             
-            <NewLinkGenerator />
+            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-blue-800 mb-3">Link Público de Solicitações</h3>
+              <p className="text-blue-700 mb-4">
+                Os colaboradores agora podem acessar diretamente a página de solicitações sem necessidade de links individuais.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 p-3 bg-white rounded border font-mono text-sm">
+                  {window.location.origin}/solicitacao
+                </div>
+                <Button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/solicitacao`);
+                    toast.success('Link copiado!');
+                  }}
+                  variant="outline"
+                >
+                  Copiar Link
+                </Button>
+              </div>
+              <p className="text-sm text-blue-600 mt-3">
+                💡 Mensagem sugerida para WhatsApp: "Olá! Para incluir ou excluir beneficiários do seu plano, acesse este link seguro: {window.location.origin}/solicitacao. Informe seu CPF e nome, siga os passos e no final você receberá o protocolo."
+              </p>
+            </div>
           </TabsContent>
 
           {/* Colaboradores Tab */}

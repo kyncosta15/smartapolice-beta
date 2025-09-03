@@ -965,6 +965,41 @@ export type Database = {
           },
         ]
       }
+      public_sessions: {
+        Row: {
+          employee_id: string | null
+          id: string
+          ip: unknown | null
+          last_seen_at: string | null
+          started_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          employee_id?: string | null
+          id?: string
+          ip?: unknown | null
+          last_seen_at?: string | null
+          started_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          employee_id?: string | null
+          id?: string
+          ip?: unknown | null
+          last_seen_at?: string | null
+          started_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_sessions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       request_items: {
         Row: {
           action: string
@@ -1020,6 +1055,7 @@ export type Database = {
           kind: string
           metadata: Json | null
           protocol_code: string
+          session_id: string | null
           status: string
           submitted_at: string | null
           updated_at: string | null
@@ -1033,6 +1069,7 @@ export type Database = {
           kind: string
           metadata?: Json | null
           protocol_code: string
+          session_id?: string | null
           status?: string
           submitted_at?: string | null
           updated_at?: string | null
@@ -1046,6 +1083,7 @@ export type Database = {
           kind?: string
           metadata?: Json | null
           protocol_code?: string
+          session_id?: string | null
           status?: string
           submitted_at?: string | null
           updated_at?: string | null
@@ -1056,6 +1094,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "public_sessions"
             referencedColumns: ["id"]
           },
         ]
