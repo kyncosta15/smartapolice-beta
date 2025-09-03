@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   ArrowLeft,
   Send,
-  Copy
+  Copy,
+  MessageCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -245,6 +246,17 @@ export const ColaboradorFormPage = () => {
                     variant="outline"
                   >
                     Fazer Nova Solicitação
+                  </Button>
+
+                  <Button 
+                    onClick={() => {
+                      const chatUrl = `/chat/${protocoloGerado}`;
+                      window.location.href = chatUrl;
+                    }}
+                    className="ml-2"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Iniciar Chat
                   </Button>
                 </div>
               ) : (

@@ -85,6 +85,145 @@ export type Database = {
           },
         ]
       }
+      chat_attachments: {
+        Row: {
+          arquivo_nome: string
+          arquivo_tamanho: number
+          arquivo_tipo: string
+          arquivo_url: string
+          created_at: string
+          id: string
+          message_id: string
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_tamanho: number
+          arquivo_tipo: string
+          arquivo_url: string
+          created_at?: string
+          id?: string
+          message_id: string
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_tamanho?: number
+          arquivo_tipo?: string
+          arquivo_url?: string
+          created_at?: string
+          id?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_chat_attachments_message"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          conteudo: string
+          created_at: string
+          id: string
+          lida: boolean | null
+          metadata: Json | null
+          remetente_id: string | null
+          remetente_nome: string
+          remetente_tipo: string
+          session_id: string
+          tipo_mensagem: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          id?: string
+          lida?: boolean | null
+          metadata?: Json | null
+          remetente_id?: string | null
+          remetente_nome: string
+          remetente_tipo: string
+          session_id: string
+          tipo_mensagem?: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          id?: string
+          lida?: boolean | null
+          metadata?: Json | null
+          remetente_id?: string | null
+          remetente_nome?: string
+          remetente_tipo?: string
+          session_id?: string
+          tipo_mensagem?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_chat_messages_session"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          avaliacao: number | null
+          comentario_avaliacao: string | null
+          created_at: string
+          finalizado_em: string | null
+          id: string
+          iniciado_em: string | null
+          status: string
+          submissao_id: string
+          updated_at: string
+          usuario_atendente_id: string | null
+        }
+        Insert: {
+          avaliacao?: number | null
+          comentario_avaliacao?: string | null
+          created_at?: string
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string | null
+          status?: string
+          submissao_id: string
+          updated_at?: string
+          usuario_atendente_id?: string | null
+        }
+        Update: {
+          avaliacao?: number | null
+          comentario_avaliacao?: string | null
+          created_at?: string
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string | null
+          status?: string
+          submissao_id?: string
+          updated_at?: string
+          usuario_atendente_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_chat_sessions_submissao"
+            columns: ["submissao_id"]
+            isOneToOne: false
+            referencedRelation: "colaborador_submissoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_chat_sessions_usuario"
+            columns: ["usuario_atendente_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coberturas: {
         Row: {
           created_at: string | null
