@@ -83,20 +83,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fetch user profile from new profiles table
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('🔍 Buscando perfil do usuário:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
-
-      if (error) {
+        .maybeSingle(); // Usar maybeSingle em vez de single para evitar erro quando não encontrar
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 é quando não encontra nenhum registro
         console.error('Error fetching profile:', error);
         return null;
       }
-
+      
+      if (!data) {
+        console.log('⚠️ Perfil não encontrado, criando baseado nos dados do usuário...');
+        // Se não encontrou profile, criar um básico baseado nos dados do usuário
+        const userData = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+          
+        if (userData.data) {
+          const newProfile = {
+            id: userId,
+            email: userData.data.email,
+            full_name: userData.data.name,
+            role: userData.data.role || 'rh',
+            company: userData.data.company,
+            is_active: userData.data.status === 'active'
+          };
+          
+          // Tentar criar o profile
+          const { data: createdProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert(newProfile)
+            .select()
+            .maybeSingle();
+            
+          if (!createError && createdProfile) {
+            console.log('✅ Perfil criado com sucesso:', createdProfile);
+            return createdProfile as UserProfile;
+          } else {
+            console.warn('⚠️ Não foi possível criar perfil, usando dados do usuário:', createError);
+            return newProfile as UserProfile; // Retorna os dados mesmo sem conseguir inserir
+          }
+        }
+        return null;
+      }
+      
+      console.log('✅ Perfil encontrado:', data);
       return data as UserProfile;
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('💥 Erro ao buscar perfil:', error);
       return null;
     }
   };
@@ -144,10 +184,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               
               if (!mounted) return;
               
-              // Set profile
-              if (profileData) {
-                setProfile(profileData);
-              }
+              // Set profile (pode ser null se não encontrou)
+              setProfile(profileData);
               
               if (extendedUserData) {
                 // Merge Supabase user with our extended data
@@ -196,7 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setLoading(false);
               }
             }
-          }, 100);
+          }, 50); // Reduzir o delay para loading mais rápido
         } else {
           console.log('❌ Usuário não autenticado, event:', event);
           setUser(null);
