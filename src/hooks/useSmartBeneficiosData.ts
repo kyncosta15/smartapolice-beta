@@ -262,50 +262,8 @@ export const useSmartBeneficiosData = () => {
     }
   };
 
-  // Buscar tickets
-  const fetchTickets = async () => {
-    if (!user) return;
-    
-    try {
-      // Buscar tickets através da empresa do usuário
-      const { data: userProfile, error: userError } = await supabase
-        .from('users')
-        .select('company')
-        .eq('id', user.id)
-        .single();
-
-      if (userError || !userProfile?.company) {
-        console.log('Empresa do usuário não encontrada');
-        return;
-      }
-
-      // Buscar empresa no banco
-      const { data: empresa, error: empresaError } = await supabase
-        .from('empresas')
-        .select('id')
-        .eq('nome', userProfile.company)
-        .single();
-
-      if (empresaError || !empresa) {
-        console.log('Empresa não encontrada no sistema');
-        return;
-      }
-
-      // Buscar tickets da empresa
-      const { data, error } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('empresa_id', empresa.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      setTickets(data || []);
-    } catch (err: any) {
-      console.error('Erro ao buscar tickets:', err);
-      setError(err.message);
-    }
-  };
+  // Buscar tickets - REMOVIDO para evitar conflito com nova tabela tickets
+  // Esta funcionalidade será implementada separadamente para benefícios
 
   // Buscar apólices
   const fetchApolices = async () => {
@@ -392,7 +350,7 @@ export const useSmartBeneficiosData = () => {
         fetchEmpresas(),
         fetchColaboradores(), 
         fetchDependentes(),
-        fetchTickets(),
+        // fetchTickets(), // REMOVIDO temporariamente
         fetchApolices(),
         fetchColaboradorLinks(),
         fetchSubmissoes()
@@ -560,28 +518,8 @@ export const useSmartBeneficiosData = () => {
     }
   };
 
-  // Criar ticket
-  const createTicket = async (ticketData: Omit<Ticket, 'id' | 'numero_ticket' | 'created_at' | 'updated_at'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('tickets')
-        .insert([{
-          ...ticketData,
-          numero_ticket: '', // Será substituído pelo trigger
-          data_recebimento: new Date().toISOString()
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setTickets(prev => [data, ...prev]);
-      return { data, error: null };
-    } catch (err: any) {
-      console.error('Erro ao criar ticket:', err);
-      return { data: null, error: err.message };
-    }
-  };
+  // Criar ticket - REMOVIDO para evitar conflito
+  // Esta funcionalidade será implementada separadamente para benefícios
 
   useEffect(() => {
     loadData();
@@ -605,7 +543,7 @@ export const useSmartBeneficiosData = () => {
     loadData,
     addColaborador,
     updateColaborador,
-    createTicket,
     createColaboradorLink
+    // createTicket, // REMOVIDO temporariamente
   };
 };

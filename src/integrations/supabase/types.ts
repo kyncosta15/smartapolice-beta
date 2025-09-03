@@ -1143,78 +1143,44 @@ export type Database = {
       }
       tickets: {
         Row: {
-          canal_origem: string | null
-          colaborador_id: string | null
-          created_at: string
-          dados_solicitacao: Json | null
-          data_conclusao: string | null
-          data_execucao: string | null
-          data_recebimento: string | null
-          data_validacao: string | null
-          descricao: string | null
-          empresa_id: string | null
+          created_at: string | null
+          external_ref: string | null
           id: string
-          numero_ticket: string
-          observacoes_internas: string | null
-          operador_responsavel: string | null
-          status: Database["public"]["Enums"]["ticket_status"] | null
-          tipo: Database["public"]["Enums"]["ticket_type"]
-          titulo: string
-          updated_at: string
+          payload: Json
+          protocol_code: string
+          request_id: string | null
+          rh_note: string | null
+          status: string
+          updated_at: string | null
         }
         Insert: {
-          canal_origem?: string | null
-          colaborador_id?: string | null
-          created_at?: string
-          dados_solicitacao?: Json | null
-          data_conclusao?: string | null
-          data_execucao?: string | null
-          data_recebimento?: string | null
-          data_validacao?: string | null
-          descricao?: string | null
-          empresa_id?: string | null
+          created_at?: string | null
+          external_ref?: string | null
           id?: string
-          numero_ticket: string
-          observacoes_internas?: string | null
-          operador_responsavel?: string | null
-          status?: Database["public"]["Enums"]["ticket_status"] | null
-          tipo: Database["public"]["Enums"]["ticket_type"]
-          titulo: string
-          updated_at?: string
+          payload: Json
+          protocol_code: string
+          request_id?: string | null
+          rh_note?: string | null
+          status?: string
+          updated_at?: string | null
         }
         Update: {
-          canal_origem?: string | null
-          colaborador_id?: string | null
-          created_at?: string
-          dados_solicitacao?: Json | null
-          data_conclusao?: string | null
-          data_execucao?: string | null
-          data_recebimento?: string | null
-          data_validacao?: string | null
-          descricao?: string | null
-          empresa_id?: string | null
+          created_at?: string | null
+          external_ref?: string | null
           id?: string
-          numero_ticket?: string
-          observacoes_internas?: string | null
-          operador_responsavel?: string | null
-          status?: Database["public"]["Enums"]["ticket_status"] | null
-          tipo?: Database["public"]["Enums"]["ticket_type"]
-          titulo?: string
-          updated_at?: string
+          payload?: Json
+          protocol_code?: string
+          request_id?: string | null
+          rh_note?: string | null
+          status?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "tickets_colaborador_id_fkey"
-            columns: ["colaborador_id"]
-            isOneToOne: false
-            referencedRelation: "colaboradores"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tickets_empresa_id_fkey"
-            columns: ["empresa_id"]
-            isOneToOne: false
-            referencedRelation: "empresas"
+            foreignKeyName: "tickets_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "requests"
             referencedColumns: ["id"]
           },
         ]
