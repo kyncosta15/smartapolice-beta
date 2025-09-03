@@ -4,8 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { 
   Heart, 
   User, 
@@ -13,7 +11,8 @@ import {
   Clock, 
   AlertTriangle,
   ArrowLeft,
-  Send 
+  Send,
+  Copy
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -35,7 +34,12 @@ export const ColaboradorFormPage = () => {
   const [linkData, setLinkData] = useState<LinkData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<{ [key: string]: any }>({});
+  const [formData, setFormData] = useState({
+    nome: '',
+    cpf: ''
+  });
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [protocoloGerado, setProtocoloGerado] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -76,13 +80,6 @@ export const ColaboradorFormPage = () => {
       }
 
       setLinkData(data as LinkData);
-      
-      // Inicializar formulário com campos vazios
-      const initialFormData: { [key: string]: any } = {};
-      (data.campos_solicitados as any[]).forEach((campo: any) => {
-        initialFormData[campo.id] = '';
-      });
-      setFormData(initialFormData);
 
     } catch (err) {
       console.error('Erro ao buscar dados do link:', err);
@@ -95,115 +92,36 @@ export const ColaboradorFormPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!linkData) return;
-
-    // Validar campos obrigatórios
-    const camposObrigatorios = linkData.campos_solicitados.filter((campo: any) => campo.obrigatorio);
-    const camposFaltantes = camposObrigatorios.filter((campo: any) => !formData[campo.id]);
-    
-    if (camposFaltantes.length > 0) {
-      toast.error('Preencha todos os campos obrigatórios.');
+    if (!formData.nome.trim() || !formData.cpf.trim()) {
+      toast.error('Por favor, preencha nome e CPF');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Capturar informações adicionais
-      const userAgent = navigator.userAgent;
-      const ipResponse = await fetch('https://api.ipify.org?format=json').catch(() => null);
-      const ipData = ipResponse ? await ipResponse.json() : null;
-
       const { data, error } = await supabase
         .from('colaborador_submissoes')
-        .insert([{
-          link_id: linkData.id,
+        .insert({
+          link_id: linkData?.id,
           dados_preenchidos: formData,
-          ip_origem: ipData?.ip || null,
-          user_agent: userAgent,
-          status: 'recebida'
-        }]);
+          status: 'recebida',
+          ip_origem: 'web',
+          user_agent: navigator.userAgent
+        })
+        .select('numero_protocolo')
+        .single();
 
       if (error) throw error;
 
-      toast.success('Informações enviadas com sucesso!');
-      
-      // Limpar formulário
-      setFormData({});
-      
-      // Mostrar mensagem de sucesso
-      setError(null);
-      
-    } catch (err) {
-      console.error('Erro ao enviar dados:', err);
-      toast.error('Erro ao enviar informações. Tente novamente.');
+      setProtocoloGerado(data.numero_protocolo);
+      setIsSubmitted(true);
+      toast.success('Protocolo gerado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao enviar dados:', error);
+      toast.error('Erro ao gerar protocolo. Tente novamente.');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const renderField = (campo: any) => {
-    const value = formData[campo.id] || '';
-
-    switch (campo.tipo) {
-      case 'textarea':
-        return (
-          <Textarea
-            id={campo.id}
-            value={value}
-            onChange={(e) => setFormData({ ...formData, [campo.id]: e.target.value })}
-            placeholder={`Digite ${campo.label.toLowerCase()}`}
-            required={campo.obrigatorio}
-            rows={3}
-          />
-        );
-      
-      case 'email':
-        return (
-          <Input
-            type="email"
-            id={campo.id}
-            value={value}
-            onChange={(e) => setFormData({ ...formData, [campo.id]: e.target.value })}
-            placeholder={`Digite ${campo.label.toLowerCase()}`}
-            required={campo.obrigatorio}
-          />
-        );
-      
-      case 'tel':
-        return (
-          <Input
-            type="tel"
-            id={campo.id}
-            value={value}
-            onChange={(e) => setFormData({ ...formData, [campo.id]: e.target.value })}
-            placeholder="(11) 99999-9999"
-            required={campo.obrigatorio}
-          />
-        );
-      
-      case 'date':
-        return (
-          <Input
-            type="date"
-            id={campo.id}
-            value={value}
-            onChange={(e) => setFormData({ ...formData, [campo.id]: e.target.value })}
-            required={campo.obrigatorio}
-          />
-        );
-      
-      default:
-        return (
-          <Input
-            type="text"
-            id={campo.id}
-            value={value}
-            onChange={(e) => setFormData({ ...formData, [campo.id]: e.target.value })}
-            placeholder={`Digite ${campo.label.toLowerCase()}`}
-            required={campo.obrigatorio}
-          />
-        );
     }
   };
 
@@ -264,58 +182,118 @@ export const ColaboradorFormPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                {linkData.titulo}
+                Cadastro de Colaborador
               </CardTitle>
-              {linkData.descricao && (
-                <p className="text-muted-foreground">{linkData.descricao}</p>
-              )}
-              
-              {linkData.expira_em && (
-                <div className="flex items-center gap-2 mt-2">
-                  <Clock className="h-4 w-4 text-orange-500" />
-                  <span className="text-sm text-muted-foreground">
-                    Expira em: {new Date(linkData.expira_em).toLocaleString('pt-BR')}
-                  </span>
-                </div>
-              )}
+              <p className="text-muted-foreground">
+                Preencha seus dados para gerar um protocolo de atendimento
+              </p>
             </CardHeader>
             
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {linkData.campos_solicitados.map((campo: any) => (
-                  <div key={campo.id} className="space-y-2">
-                    <Label htmlFor={campo.id} className="flex items-center gap-2">
-                      {campo.label}
-                      {campo.obrigatorio && (
-                        <Badge variant="outline" className="text-red-600 border-red-200">
-                          Obrigatório
-                        </Badge>
-                      )}
-                    </Label>
-                    {renderField(campo)}
+              {/* Verificar se foi enviado com sucesso */}
+              {isSubmitted && protocoloGerado ? (
+                <div className="text-center space-y-6">
+                  <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                    <CheckCircle className="h-10 w-10 text-green-600" />
                   </div>
-                ))}
+                  
+                  <div>
+                    <h3 className="text-xl font-semibold text-green-700 mb-2">
+                      Protocolo Gerado!
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Suas informações foram recebidas com sucesso.
+                    </p>
+                  </div>
 
-                <div className="pt-4 border-t">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                    <p className="text-sm font-medium text-green-800 mb-2">
+                      Seu número de protocolo é:
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-2xl font-mono font-bold text-green-600">
+                        {protocoloGerado}
+                      </span>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(protocoloGerado);
+                          toast.success('Protocolo copiado!');
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                    <h4 className="font-medium text-blue-800 mb-2">O que acontece agora?</h4>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• Suas informações foram encaminhadas para o RH</li>
+                      <li>• Em breve você será contatado com mais informações</li>
+                      <li>• Use este protocolo para consultar o status</li>
+                    </ul>
+                  </div>
+
                   <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isSubmitting}
+                    onClick={() => {
+                      setIsSubmitted(false);
+                      setProtocoloGerado(null);
+                      setFormData({ nome: '', cpf: '' });
+                    }}
+                    variant="outline"
                   >
-                    {isSubmitting ? (
-                      <>
-                        <Clock className="h-4 w-4 mr-2 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Enviar Informações
-                      </>
-                    )}
+                    Fazer Nova Solicitação
                   </Button>
                 </div>
-              </form>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="nome">Nome Completo *</Label>
+                    <Input
+                      type="text"
+                      id="nome"
+                      value={formData.nome}
+                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                      placeholder="Digite seu nome completo"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cpf">CPF *</Label>
+                    <Input
+                      type="text"
+                      id="cpf"
+                      value={formData.cpf}
+                      onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                      placeholder="000.000.000-00"
+                      required
+                    />
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Clock className="h-4 w-4 mr-2 animate-spin" />
+                          Gerando Protocolo...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Gerar Protocolo
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              )}
 
               {/* Informações de segurança */}
               <div className="mt-6 p-4 bg-gray-50 rounded-lg">
@@ -324,7 +302,7 @@ export const ColaboradorFormPage = () => {
                   <div className="text-sm">
                     <p className="font-medium text-gray-900">Suas informações estão seguras</p>
                     <p className="text-gray-600 mt-1">
-                      Este formulário utiliza conexão criptografada e suas dados são tratados
+                      Este formulário utiliza conexão criptografada e seus dados são tratados
                       com total confidencialidade de acordo com a LGPD.
                     </p>
                   </div>

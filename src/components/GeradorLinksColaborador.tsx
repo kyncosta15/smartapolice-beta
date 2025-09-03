@@ -39,15 +39,7 @@ interface GeradorLinksColaboradorProps {
 
 const CAMPOS_DISPONIVEIS = [
   { id: 'nome', label: 'Nome Completo', tipo: 'text', obrigatorio: true },
-  { id: 'cpf', label: 'CPF', tipo: 'text', obrigatorio: true },
-  { id: 'email', label: 'E-mail', tipo: 'email', obrigatorio: false },
-  { id: 'telefone', label: 'Telefone', tipo: 'tel', obrigatorio: false },
-  { id: 'data_nascimento', label: 'Data de Nascimento', tipo: 'date', obrigatorio: false },
-  { id: 'cargo', label: 'Cargo', tipo: 'text', obrigatorio: false },
-  { id: 'centro_custo', label: 'Centro de Custo', tipo: 'text', obrigatorio: false },
-  { id: 'data_admissao', label: 'Data de Admissão', tipo: 'date', obrigatorio: false },
-  { id: 'endereco', label: 'Endereço', tipo: 'textarea', obrigatorio: false },
-  { id: 'observacoes', label: 'Observações', tipo: 'textarea', obrigatorio: false }
+  { id: 'cpf', label: 'CPF', tipo: 'text', obrigatorio: true }
 ];
 
 export const GeradorLinksColaborador = ({ colaboradorLinks, submissoes, isLoading }: GeradorLinksColaboradorProps) => {

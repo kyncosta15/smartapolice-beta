@@ -25,6 +25,7 @@ import { PlanilhaHistorico } from '@/components/PlanilhaHistorico';
 import { ColaboradorModal } from '@/components/ColaboradorModal';
 import { ApoliceCNPJView } from '@/components/ApoliceCNPJView';
 import { GeradorLinksColaborador } from '@/components/GeradorLinksColaborador';
+import { ProtocolosDashboard } from '@/components/ProtocolosDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -195,11 +196,12 @@ export const SmartBeneficiosDashboard = () => {
       {/* Main Content */}
       <main className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-7 mb-8">
+          <TabsList className="grid w-full grid-cols-8 mb-8">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="apolices">Apólices</TabsTrigger>
             <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
             <TabsTrigger value="links">Links</TabsTrigger>
+            <TabsTrigger value="protocolos">Protocolos</TabsTrigger>
             <TabsTrigger value="tickets">Solicitações</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
             <TabsTrigger value="upload">Upload</TabsTrigger>
@@ -337,6 +339,21 @@ export const SmartBeneficiosDashboard = () => {
             
             <GeradorLinksColaborador 
               colaboradorLinks={colaboradorLinks} 
+              submissoes={submissoes}
+              isLoading={isLoading} 
+            />
+          </TabsContent>
+
+          {/* Protocolos Tab */}
+          <TabsContent value="protocolos" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Protocolos Gerados</h2>
+              <Badge className="bg-green-100 text-green-800">
+                {isLoading ? '...' : `${submissoes.filter(s => s.numero_protocolo).length} protocolo${submissoes.filter(s => s.numero_protocolo).length !== 1 ? 's' : ''}`}
+              </Badge>
+            </div>
+            
+            <ProtocolosDashboard 
               submissoes={submissoes}
               isLoading={isLoading} 
             />

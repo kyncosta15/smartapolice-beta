@@ -222,9 +222,11 @@ export type Database = {
         Row: {
           created_at: string
           dados_preenchidos: Json
+          data_protocolo: string | null
           id: string
           ip_origem: string | null
           link_id: string | null
+          numero_protocolo: string | null
           observacoes: string | null
           status: string | null
           updated_at: string
@@ -233,9 +235,11 @@ export type Database = {
         Insert: {
           created_at?: string
           dados_preenchidos?: Json
+          data_protocolo?: string | null
           id?: string
           ip_origem?: string | null
           link_id?: string | null
+          numero_protocolo?: string | null
           observacoes?: string | null
           status?: string | null
           updated_at?: string
@@ -244,9 +248,11 @@ export type Database = {
         Update: {
           created_at?: string
           dados_preenchidos?: Json
+          data_protocolo?: string | null
           id?: string
           ip_origem?: string | null
           link_id?: string | null
+          numero_protocolo?: string | null
           observacoes?: string | null
           status?: string | null
           updated_at?: string

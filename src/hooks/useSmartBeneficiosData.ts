@@ -112,8 +112,10 @@ export interface ColaboradorSubmissao {
   dados_preenchidos: any;
   ip_origem?: string;
   user_agent?: string;
-  status: 'recebida' | 'processada' | 'rejeitada';
+  status: 'recebida' | 'processada' | 'erro';
   observacoes?: string;
+  numero_protocolo?: string;
+  data_protocolo?: string;
   created_at: string;
   updated_at: string;
 }
