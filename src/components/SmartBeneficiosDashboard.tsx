@@ -122,7 +122,7 @@ export const SmartBeneficiosDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
   const { metrics, colaboradores, tickets, apolices, colaboradorLinks, submissoes, isLoading, error, loadData } = useSmartBeneficiosData();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
 
   const getInitials = (name: string) => {
@@ -138,7 +138,7 @@ export const SmartBeneficiosDashboard = () => {
     try {
       await signOut();
       toast.success('Logout realizado com sucesso!');
-      navigate('/system-selection');
+      navigate('/auth');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
       toast.error('Erro ao fazer logout');
@@ -161,16 +161,23 @@ export const SmartBeneficiosDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             {/* Informações do usuário */}
-            {user && (
+            {user && profile && (
               <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary text-white">
-                    {getInitials(user.name || 'U')}
+                    {getInitials(profile.full_name || 'U')}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-sm">
-                  <p className="font-medium text-gray-900">{user.name}</p>
-                  <p className="text-gray-500">{user.email}</p>
+                  <p className="font-medium text-gray-900">{profile.full_name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-gray-500">{profile.email}</p>
+                    <Badge variant={profile.role === 'administrador' || profile.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
+                      {profile.role === 'administrador' ? 'Admin' : 
+                       profile.role === 'admin' ? 'Admin' :
+                       profile.role === 'rh' ? 'RH' : 'Financeiro'}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             )}

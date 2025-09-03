@@ -13,14 +13,29 @@ export interface ExtendedUser extends User {
 
 export type UserRole = 'cliente' | 'administrador' | 'corretora' | 'rh';
 
+interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  role: 'rh' | 'admin' | 'administrador' | 'financeiro';
+  company?: string;
+  avatar_url?: string;
+  phone?: string;
+  department?: string;
+  is_active: boolean;
+}
+
 interface AuthContextType {
   user: ExtendedUser | null;
   session: Session | null;
-  isLoading: boolean;
+  profile: UserProfile | null;
+  loading: boolean;
+  isLoading: boolean; // Alias for loading for compatibility
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   // Add missing methods for compatibility
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (userData: {
@@ -39,7 +54,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<ExtendedUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Function to fetch extended user data from our users table
   const fetchExtendedUserData = async (userId: string) => {
@@ -61,6 +77,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('❌ Erro inesperado ao buscar dados do usuário:', error);
       return null;
+    }
+  };
+
+  // Fetch user profile from new profiles table
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+
+      return data as UserProfile;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      const profileData = await fetchProfile(user.id);
+      setProfile(profileData);
     }
   };
 
@@ -92,10 +136,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!mounted) return;
             
             try {
-              // Fetch extended user data from our users table
-              const extendedUserData = await fetchExtendedUserData(session.user.id);
+              // Fetch profile data and extended user data
+              const [profileData, extendedUserData] = await Promise.all([
+                fetchProfile(session.user.id),
+                fetchExtendedUserData(session.user.id)
+              ]);
               
               if (!mounted) return;
+              
+              // Set profile
+              if (profileData) {
+                setProfile(profileData);
+              }
               
               if (extendedUserData) {
                 // Merge Supabase user with our extended data
@@ -119,11 +171,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 console.log('⚠️ Dados estendidos não encontrados, usando dados básicos');
                 const fallbackUser: ExtendedUser = {
                   ...session.user,
-                  name: session.user.email?.split('@')[0] || 'Usuário',
-                  role: 'cliente',
-                  company: '',
-                  phone: '',
-                  avatar: ''
+                  name: profileData?.full_name || session.user.email?.split('@')[0] || 'Usuário',
+                  role: profileData?.role || 'cliente',
+                  company: profileData?.company || '',
+                  phone: profileData?.phone || '',
+                  avatar: profileData?.avatar_url || ''
                 };
                 setUser(fallbackUser);
               }
@@ -141,14 +193,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUser(fallbackUser);
             } finally {
               if (mounted) {
-                setIsLoading(false);
+                setLoading(false);
               }
             }
           }, 100);
         } else {
           console.log('❌ Usuário não autenticado, event:', event);
           setUser(null);
-          setIsLoading(false);
+          setProfile(null);
+          setLoading(false);
         }
       }
     );
@@ -165,7 +218,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('❌ Erro ao verificar sessão:', error);
           setSession(null);
           setUser(null);
-          setIsLoading(false);
+          setProfile(null);
+          setLoading(false);
           return;
         }
 
@@ -179,14 +233,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('📭 Nenhuma sessão inicial encontrada');
           setSession(null);
           setUser(null);
-          setIsLoading(false);
+          setProfile(null);
+          setLoading(false);
         }
       } catch (error) {
         console.error('❌ Erro inesperado ao verificar sessão inicial:', error);
         if (mounted) {
           setSession(null);
           setUser(null);
-          setIsLoading(false);
+          setProfile(null);
+          setLoading(false);
         }
       }
     };
@@ -203,7 +259,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     console.log('🔑 Tentativa de login para:', email);
-    setIsLoading(true);
+    setLoading(true);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -213,7 +269,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('❌ Erro no login:', error);
-        setIsLoading(false);
+        setLoading(false);
         return { error };
       }
 
@@ -222,18 +278,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data.user?.email
       });
 
-      // Don't set isLoading to false here - let the auth state change handle it
+      // Don't set loading to false here - let the auth state change handle it
       return { error: null };
     } catch (error) {
       console.error('❌ Erro inesperado no login:', error);
-      setIsLoading(false);
+      setLoading(false);
       return { error };
     }
   };
 
   const signUp = async (email: string, password: string, name: string) => {
     console.log('📝 Tentativa de registro para:', email);
-    setIsLoading(true);
+    setLoading(true);
 
     try {
       // Primeiro, criar o usuário no Supabase Auth
@@ -279,13 +335,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('❌ Erro inesperado no registro:', error);
       return { error };
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     console.log('🚪 Iniciando logout');
-    setIsLoading(true);
+    setLoading(true);
 
     try {
       const { error } = await supabase.auth.signOut();
@@ -299,13 +355,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Limpar estado local independentemente de erro
       setSession(null);
       setUser(null);
+      setProfile(null);
     } catch (error) {
       console.error('❌ Erro inesperado no logout:', error);
       // Ainda assim limpar o estado local
       setSession(null);
       setUser(null);
+      setProfile(null);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -322,7 +380,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(data.session);
         
         if (data.session?.user) {
-          const extendedUserData = await fetchExtendedUserData(data.session.user.id);
+          const [profileData, extendedUserData] = await Promise.all([
+            fetchProfile(data.session.user.id),
+            fetchExtendedUserData(data.session.user.id)
+          ]);
+          
+          if (profileData) {
+            setProfile(profileData);
+          }
+          
           if (extendedUserData) {
             const mergedUser: ExtendedUser = {
               ...data.session.user,
@@ -372,11 +438,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     session,
-    isLoading,
+    profile,
+    loading,
+    isLoading: loading, // Alias for compatibility
     signIn,
     signUp,
     signOut,
     refreshSession,
+    refreshProfile,
     login,
     register,
     logout,
