@@ -148,33 +148,34 @@ export const SmartBeneficiosDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 p-6">
+      <header className="bg-white border-b border-gray-200 p-3 sm:p-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-              <Heart className="h-6 w-6 text-white" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-full flex items-center justify-center">
+              <Heart className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-primary">SmartBenefícios</h1>
-              <p className="text-sm text-muted-foreground">Portal RH/Financeiro</p>
+              <h1 className="text-lg sm:text-2xl font-bold text-primary">SmartBenefícios</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Portal RH/Financeiro</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-4">
             {/* Informações do usuário */}
             {user && profile && (
-              <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-white">
+              <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1 sm:py-2 bg-gray-50 rounded-lg">
+                <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
+                  <AvatarFallback className="bg-primary text-white text-xs sm:text-sm">
                     {getInitials(profile.full_name || 'U')}
                   </AvatarFallback>
                 </Avatar>
-                <div className="text-sm">
+                <div className="text-xs sm:text-sm hidden md:block">
                   <p className="font-medium text-gray-900">{profile.full_name}</p>
                   <div className="flex items-center gap-2">
-                    <p className="text-gray-500">{profile.email}</p>
-                    <Badge variant={profile.role === 'administrador' || profile.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
+                    <p className="text-gray-500 hidden lg:block">{profile.email}</p>
+                    <Badge variant={profile.role === 'administrador' || profile.role === 'admin' || profile.role === 'corretora_admin' ? 'default' : 'secondary'} className="text-xs">
                       {profile.role === 'administrador' ? 'Admin' : 
                        profile.role === 'admin' ? 'Admin' :
+                       profile.role === 'corretora_admin' ? 'Corretora' :
                        profile.role === 'rh' ? 'RH' : 'Financeiro'}
                     </Badge>
                   </div>
@@ -182,22 +183,22 @@ export const SmartBeneficiosDashboard = () => {
               </div>
             )}
             
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Exportar
+            <Button variant="outline" size="sm" className="hidden sm:flex text-xs">
+              <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:block">Exportar</span>
             </Button>
             
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleLogout}
-              className="text-red-600 border-red-200 hover:bg-red-50"
+              className="text-red-600 border-red-200 hover:bg-red-50 text-xs"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
+              <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:block">Sair</span>
             </Button>
             
-            <Badge className="bg-green-100 text-green-800 border-green-300">
+            <Badge className="bg-green-100 text-green-800 border-green-300 text-xs hidden lg:block">
               {isLoading ? 'Carregando...' : 'SmartBenefícios Ativo'}
             </Badge>
           </div>
@@ -205,16 +206,17 @@ export const SmartBeneficiosDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
+      <main className="p-3 sm:p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-8">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="apolices">Apólices</TabsTrigger>
-            <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
-            <TabsTrigger value="solicitacoes">Solicitações</TabsTrigger>
-            <TabsTrigger value="links">Links</TabsTrigger>
-            <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
-            <TabsTrigger value="upload">Upload</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 mb-4 overflow-x-auto">
+            <TabsTrigger value="dashboard" className="text-xs sm:text-sm">Dashboard</TabsTrigger>
+            <TabsTrigger value="apolices" className="text-xs sm:text-sm">Apólices</TabsTrigger>
+            <TabsTrigger value="colaboradores" className="text-xs sm:text-sm">Colaboradores</TabsTrigger>
+            <TabsTrigger value="solicitacoes" className="text-xs sm:text-sm">Solicitações</TabsTrigger>
+            <TabsTrigger value="tickets" className="text-xs sm:text-sm">Tickets</TabsTrigger>
+            <TabsTrigger value="links" className="text-xs sm:text-sm">Links</TabsTrigger>
+            <TabsTrigger value="relatorios" className="text-xs sm:text-sm">Relatórios</TabsTrigger>
+            <TabsTrigger value="upload" className="text-xs sm:text-sm">Upload</TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -382,28 +384,40 @@ export const SmartBeneficiosDashboard = () => {
             <RequestsDashboard />
           </TabsContent>
 
+          {/* Tickets Tab */}
+          <TabsContent value="tickets" className="space-y-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Gestão de Tickets</h2>
+              <Badge className="bg-blue-100 text-blue-800">
+                {isLoading ? '...' : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`}
+              </Badge>
+            </div>
+            
+            <ProtocolosDashboard submissoes={submissoes} isLoading={isLoading} />
+          </TabsContent>
+
           {/* Relatórios Tab */}
-          <TabsContent value="relatorios" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Relatórios e Exportações</h2>
+          <TabsContent value="relatorios" className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold">Relatórios e Exportações</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Relatório Consolidado</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base sm:text-lg">Relatório Consolidado</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
+                <CardContent className="space-y-3 sm:space-y-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Relatório completo com todos os colaboradores, dependentes e custos
                   </p>
                   <div className="flex flex-col gap-2">
-                    <Button className="w-full">
-                      <Download className="h-4 w-4 mr-2" />
+                    <Button className="w-full text-xs sm:text-sm h-8 sm:h-10">
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Exportar PDF
                     </Button>
-                    <Button variant="outline" className="w-full">
-                      <Download className="h-4 w-4 mr-2" />
+                    <Button variant="outline" className="w-full text-xs sm:text-sm h-8 sm:h-10">
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Exportar Excel
                     </Button>
                   </div>
@@ -411,20 +425,20 @@ export const SmartBeneficiosDashboard = () => {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Relatório de Tickets</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base sm:text-lg">Relatório de Tickets</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
+                <CardContent className="space-y-3 sm:space-y-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Histórico completo de solicitações por período
                   </p>
                   <div className="flex flex-col gap-2">
-                    <Button className="w-full">
-                      <Download className="h-4 w-4 mr-2" />
+                    <Button className="w-full text-xs sm:text-sm h-8 sm:h-10">
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Exportar PDF
                     </Button>
-                    <Button variant="outline" className="w-full">
-                      <Download className="h-4 w-4 mr-2" />
+                    <Button variant="outline" className="w-full text-xs sm:text-sm h-8 sm:h-10">
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Exportar Excel
                     </Button>
                   </div>
@@ -432,20 +446,20 @@ export const SmartBeneficiosDashboard = () => {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Custo por Centro</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base sm:text-lg">Custo por Centro</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
+                <CardContent className="space-y-3 sm:space-y-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Análise de custos segmentada por centro de custo
                   </p>
                   <div className="flex flex-col gap-2">
-                    <Button className="w-full">
-                      <Download className="h-4 w-4 mr-2" />
+                    <Button className="w-full text-xs sm:text-sm h-8 sm:h-10">
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Exportar PDF
                     </Button>
-                    <Button variant="outline" className="w-full">
-                      <Download className="h-4 w-4 mr-2" />
+                    <Button variant="outline" className="w-full text-xs sm:text-sm h-8 sm:h-10">
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Exportar Excel
                     </Button>
                   </div>
