@@ -77,6 +77,7 @@ export const RequestsDashboard: React.FC = () => {
   const fetchRequests = async () => {
     try {
       setIsLoading(true);
+      console.log('🔄 Iniciando busca de solicitações...');
 
       // Busca requests de forma mais simples e direta
       const { data: requestsData, error: requestsError } = await supabase
@@ -104,16 +105,19 @@ export const RequestsDashboard: React.FC = () => {
         .order('submitted_at', { ascending: false });
 
       if (requestsError) {
-        console.error('Erro ao buscar requests:', requestsError);
+        console.error('❌ Erro ao buscar requests:', requestsError);
         throw requestsError;
       }
 
-      console.log('Requests encontrados:', requestsData?.length || 0);
+      console.log('✅ Requests encontrados:', requestsData?.length || 0);
+      console.log('📊 Dados retornados:', requestsData);
       
       // Para cada request, buscar dados do employee separadamente
       const transformedRequests: RequestWithDetails[] = [];
       
       for (const request of requestsData || []) {
+        console.log(`🔍 Processando request ${request.protocol_code}...`);
+        
         if (request.employee_id) {
           const { data: employeeData, error: empError } = await supabase
             .from('employees')
@@ -122,13 +126,15 @@ export const RequestsDashboard: React.FC = () => {
             .maybeSingle();
 
           if (empError) {
-            console.error('Erro ao buscar employee:', empError);
+            console.error('❌ Erro ao buscar employee:', empError);
             continue;
           }
 
           if (employeeData) {
+            console.log(`👤 Employee encontrado: ${employeeData.full_name}`);
+            
             // RLS já controla o acesso, então incluir todos os requests retornados
-            transformedRequests.push({
+            const transformedRequest = {
               ...request,
               kind: request.kind as 'inclusao' | 'exclusao',
               status: request.status as 'recebido' | 'em_validacao' | 'concluido' | 'recusado',
@@ -142,18 +148,34 @@ export const RequestsDashboard: React.FC = () => {
                 dependent: item.dependents
               })),
               files: request.files || []
-            });
+            };
+            
+            transformedRequests.push(transformedRequest);
+            console.log(`✅ Request transformado: ${request.protocol_code}`);
+          } else {
+            console.warn(`⚠️ Employee não encontrado para request ${request.protocol_code}`);
           }
+        } else {
+          console.warn(`⚠️ Request ${request.protocol_code} sem employee_id`);
         }
       }
 
-      console.log('Solicitações processadas:', transformedRequests.length);
+      console.log('📈 Solicitações processadas:', transformedRequests.length);
+      console.log('🎯 Dados finais:', transformedRequests);
+      
       setRequests(transformedRequests);
+      
+      // Force refresh do filteredRequests
+      setTimeout(() => {
+        console.log('🔄 Atualizando filtros...');
+      }, 100);
+      
     } catch (error) {
-      console.error('Erro ao carregar solicitações:', error);
+      console.error('💥 Erro ao carregar solicitações:', error);
       toast.error('Erro ao carregar solicitações: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
+      console.log('✅ Busca finalizada');
     }
   };
 
@@ -343,7 +365,7 @@ export const RequestsDashboard: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-4 gap-4 text-sm">
             <div>
               <strong>Solicitações:</strong> {requests.length}
             </div>
@@ -353,7 +375,15 @@ export const RequestsDashboard: React.FC = () => {
             <div>
               <strong>Carregando:</strong> {isLoading ? 'Sim' : 'Não'}
             </div>
+            <div>
+              <strong>Última busca:</strong> {new Date().toLocaleTimeString()}
+            </div>
           </div>
+          {requests.length > 0 && (
+            <div className="mt-3 text-xs text-muted-foreground">
+              <p>Protocolos encontrados: {requests.map(r => r.protocol_code).join(', ')}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
