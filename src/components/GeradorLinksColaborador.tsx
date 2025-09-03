@@ -51,7 +51,7 @@ export const GeradorLinksColaborador = ({ colaboradorLinks, submissoes, isLoadin
     expira_em: ''
   });
 
-  const { createColaboradorLink, loadData } = useSmartBeneficiosData();
+  const { createColaboradorLink } = useSmartBeneficiosData();
 
   const handleCreateLink = async () => {
     if (!formData.titulo || formData.campos_solicitados.length === 0) {
@@ -81,8 +81,6 @@ export const GeradorLinksColaborador = ({ colaboradorLinks, submissoes, isLoadin
         campos_solicitados: [],
         expira_em: ''
       });
-      // Recarregar dados para mostrar o novo link
-      await loadData();
     }
   };
 

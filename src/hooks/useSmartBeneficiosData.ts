@@ -512,7 +512,8 @@ export const useSmartBeneficiosData = () => {
 
       if (error) throw error;
       
-      await fetchColaboradorLinks(); // Recarregar lista
+      // Atualizar estado diretamente
+      setColaboradorLinks(prev => [data as ColaboradorLink, ...prev]);
       return { data, error: null };
     } catch (err: any) {
       console.error('Erro ao criar link:', err);
