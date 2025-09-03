@@ -116,15 +116,22 @@ export const RequestsDashboard: React.FC = () => {
             .single();
 
           if (employeeData) {
-            // Buscar empresa separadamente
-            const { data: empresaData } = await supabase
-              .from('empresas')
-              .select('nome')
-              .eq('id', employeeData.company_id)
-              .single();
+            // Para requests do formulário público, mostrar sempre
+            // Para outros, verificar empresa
+            let shouldInclude = true;
+            
+            if (employeeData.company_id) {
+              const { data: empresaData } = await supabase
+                .from('empresas')
+                .select('nome')
+                .eq('id', employeeData.company_id)
+                .single();
+              
+              // Se tem empresa, verificar se é a mesma do usuário
+              shouldInclude = empresaData?.nome === user?.company;
+            }
 
-            // Verificar se é da mesma empresa do usuário
-            if (empresaData?.nome === user?.company) {
+            if (shouldInclude) {
               transformedRequests.push({
                 ...request,
                 kind: request.kind as 'inclusao' | 'exclusao',
