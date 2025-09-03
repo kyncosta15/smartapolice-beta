@@ -85,145 +85,6 @@ export type Database = {
           },
         ]
       }
-      chat_attachments: {
-        Row: {
-          arquivo_nome: string
-          arquivo_tamanho: number
-          arquivo_tipo: string
-          arquivo_url: string
-          created_at: string
-          id: string
-          message_id: string
-        }
-        Insert: {
-          arquivo_nome: string
-          arquivo_tamanho: number
-          arquivo_tipo: string
-          arquivo_url: string
-          created_at?: string
-          id?: string
-          message_id: string
-        }
-        Update: {
-          arquivo_nome?: string
-          arquivo_tamanho?: number
-          arquivo_tipo?: string
-          arquivo_url?: string
-          created_at?: string
-          id?: string
-          message_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_chat_attachments_message"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "chat_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chat_messages: {
-        Row: {
-          conteudo: string
-          created_at: string
-          id: string
-          lida: boolean | null
-          metadata: Json | null
-          remetente_id: string | null
-          remetente_nome: string
-          remetente_tipo: string
-          session_id: string
-          tipo_mensagem: string
-        }
-        Insert: {
-          conteudo: string
-          created_at?: string
-          id?: string
-          lida?: boolean | null
-          metadata?: Json | null
-          remetente_id?: string | null
-          remetente_nome: string
-          remetente_tipo: string
-          session_id: string
-          tipo_mensagem?: string
-        }
-        Update: {
-          conteudo?: string
-          created_at?: string
-          id?: string
-          lida?: boolean | null
-          metadata?: Json | null
-          remetente_id?: string | null
-          remetente_nome?: string
-          remetente_tipo?: string
-          session_id?: string
-          tipo_mensagem?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_chat_messages_session"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "chat_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chat_sessions: {
-        Row: {
-          avaliacao: number | null
-          comentario_avaliacao: string | null
-          created_at: string
-          finalizado_em: string | null
-          id: string
-          iniciado_em: string | null
-          status: string
-          submissao_id: string
-          updated_at: string
-          usuario_atendente_id: string | null
-        }
-        Insert: {
-          avaliacao?: number | null
-          comentario_avaliacao?: string | null
-          created_at?: string
-          finalizado_em?: string | null
-          id?: string
-          iniciado_em?: string | null
-          status?: string
-          submissao_id: string
-          updated_at?: string
-          usuario_atendente_id?: string | null
-        }
-        Update: {
-          avaliacao?: number | null
-          comentario_avaliacao?: string | null
-          created_at?: string
-          finalizado_em?: string | null
-          id?: string
-          iniciado_em?: string | null
-          status?: string
-          submissao_id?: string
-          updated_at?: string
-          usuario_atendente_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_chat_sessions_submissao"
-            columns: ["submissao_id"]
-            isOneToOne: false
-            referencedRelation: "colaborador_submissoes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_chat_sessions_usuario"
-            columns: ["usuario_atendente_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       coberturas: {
         Row: {
           created_at: string | null
@@ -602,6 +463,77 @@ export type Database = {
           },
         ]
       }
+      dependents: {
+        Row: {
+          birth_date: string | null
+          cpf: string | null
+          created_at: string | null
+          employee_id: string | null
+          full_name: string
+          id: string
+          relationship: string | null
+        }
+        Insert: {
+          birth_date?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          employee_id?: string | null
+          full_name: string
+          id?: string
+          relationship?: string | null
+        }
+        Update: {
+          birth_date?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          employee_id?: string | null
+          full_name?: string
+          id?: string
+          relationship?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dependents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          company_id: string
+          cpf: string
+          created_at: string | null
+          email: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          company_id: string
+          cpf: string
+          created_at?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          status?: string
+        }
+        Update: {
+          company_id?: string
+          cpf?: string
+          created_at?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       empresas: {
         Row: {
           cnpj: string | null
@@ -634,6 +566,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      files: {
+        Row: {
+          created_at: string | null
+          id: string
+          mime_type: string | null
+          original_name: string | null
+          path: string
+          request_id: string | null
+          size: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mime_type?: string | null
+          original_name?: string | null
+          path: string
+          request_id?: string | null
+          size?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mime_type?: string | null
+          original_name?: string | null
+          path?: string
+          request_id?: string | null
+          size?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "files_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       installments: {
         Row: {
@@ -960,6 +930,136 @@ export type Database = {
           },
         ]
       }
+      public_request_tokens: {
+        Row: {
+          created_at: string | null
+          employee_id: string | null
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id?: string | null
+          expires_at: string
+          id?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string | null
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_request_tokens_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_items: {
+        Row: {
+          action: string
+          created_at: string | null
+          dependent_id: string | null
+          id: string
+          notes: string | null
+          request_id: string | null
+          target: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          dependent_id?: string | null
+          id?: string
+          notes?: string | null
+          request_id?: string | null
+          target: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          dependent_id?: string | null
+          id?: string
+          notes?: string | null
+          request_id?: string | null
+          target?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_items_dependent_id_fkey"
+            columns: ["dependent_id"]
+            isOneToOne: false
+            referencedRelation: "dependents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requests: {
+        Row: {
+          channel: string | null
+          created_at: string | null
+          draft: boolean | null
+          employee_id: string | null
+          id: string
+          kind: string
+          metadata: Json | null
+          protocol_code: string
+          status: string
+          submitted_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string | null
+          draft?: boolean | null
+          employee_id?: string | null
+          id?: string
+          kind: string
+          metadata?: Json | null
+          protocol_code: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string | null
+          draft?: boolean | null
+          employee_id?: string | null
+          id?: string
+          kind?: string
+          metadata?: Json | null
+          protocol_code?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           canal_origem: string | null
@@ -1104,6 +1204,10 @@ export type Database = {
       delete_user_completely: {
         Args: { user_id_param: string }
         Returns: boolean
+      }
+      generate_protocol_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_current_user_role: {
         Args: Record<PropertyKey, never>

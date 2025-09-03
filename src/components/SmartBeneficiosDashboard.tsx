@@ -27,7 +27,7 @@ import { ColaboradorModal } from '@/components/ColaboradorModal';
 import { ApoliceCNPJView } from '@/components/ApoliceCNPJView';
 import { GeradorLinksColaborador } from '@/components/GeradorLinksColaborador';
 import { ProtocolosDashboard } from '@/components/ProtocolosDashboard';
-import { ChatManagement } from '@/components/ChatManagement';
+import { RequestsDashboard } from '@/components/RequestsDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -203,8 +203,7 @@ export const SmartBeneficiosDashboard = () => {
             <TabsTrigger value="apolices">Apólices</TabsTrigger>
             <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
             <TabsTrigger value="links">Links</TabsTrigger>
-            <TabsTrigger value="protocolos">Protocolos</TabsTrigger>
-            <TabsTrigger value="chat">Chat</TabsTrigger>
+            <TabsTrigger value="solicitacoes">Solicitações</TabsTrigger>
             <TabsTrigger value="tickets">Solicitações</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
             <TabsTrigger value="upload">Upload</TabsTrigger>
@@ -458,17 +457,9 @@ export const SmartBeneficiosDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Chat Tab */}
-          <TabsContent value="chat" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Sistema de Chat</h2>
-              <Badge className="bg-blue-100 text-blue-800">
-                <MessageCircle className="h-4 w-4 mr-1" />
-                Chat Ativo
-              </Badge>
-            </div>
-            
-            <ChatManagement />
+          {/* Solicitações Tab */}
+          <TabsContent value="solicitacoes" className="space-y-6">
+            <RequestsDashboard />
           </TabsContent>
 
           {/* Tickets Tab */}
