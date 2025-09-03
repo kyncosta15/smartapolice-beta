@@ -473,26 +473,35 @@ export const useSmartBeneficiosData = () => {
   }) => {
     try {
       if (!user) {
+        console.error('Usuário não encontrado:', user);
         throw new Error('Usuário não encontrado');
       }
 
+      console.log('Buscando empresa do usuário:', user.id);
       const { data: userProfile, error: userError } = await supabase
         .from('users')
         .select('company')
         .eq('id', user.id)
         .single();
 
+      console.log('Resultado da busca do usuário:', { userProfile, userError });
+      
       if (userError || !userProfile?.company) {
+        console.error('Erro ao buscar empresa do usuário:', userError, userProfile);
         throw new Error('Empresa do usuário não encontrada');
       }
 
+      console.log('Buscando empresa no sistema:', userProfile.company);
       const { data: empresa, error: empresaError } = await supabase
         .from('empresas')
         .select('id')
         .eq('nome', userProfile.company)
         .single();
 
+      console.log('Resultado da busca da empresa:', { empresa, empresaError });
+
       if (empresaError || !empresa) {
+        console.error('Erro ao buscar empresa:', empresaError, empresa);
         throw new Error('Empresa não encontrada no sistema');
       }
 
