@@ -135,21 +135,28 @@ serve(async (req) => {
     }
 
     // Check for active request in last 24h to prevent duplicates
+    // Only consider 'recebido' and 'em_validacao' as active statuses
+    // 'concluido' and 'recusado' should allow new requests
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
     const { data: activeRequests } = await supabase
       .from('requests')
-      .select('id, kind')
+      .select('id, status, protocol_code')
       .eq('employee_id', employee.id)
-      .eq('status', 'recebido')
+      .eq('draft', false)  // Only non-draft requests
+      .in('status', ['recebido', 'em_validacao'])
       .gte('created_at', yesterday.toISOString())
       .limit(1);
 
     if (activeRequests && activeRequests.length > 0) {
+      const activeRequest = activeRequests[0];
       return Response.json({
         ok: false,
-        error: { code: 'DUPLICATE_REQUEST', message: 'Já existe uma solicitação ativa nas últimas 24h' }
+        error: { 
+          code: 'DUPLICATE_REQUEST', 
+          message: `Já existe uma solicitação ativa (${activeRequest.protocol_code}) com status "${activeRequest.status}". Aguarde o processamento antes de criar uma nova solicitação.` 
+        }
       }, { headers: corsHeaders });
     }
 
