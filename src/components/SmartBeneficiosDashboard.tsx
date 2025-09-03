@@ -28,6 +28,8 @@ import { ApoliceCNPJView } from '@/components/ApoliceCNPJView';
 import { GeradorLinksColaborador } from '@/components/GeradorLinksColaborador';
 import { ProtocolosDashboard } from '@/components/ProtocolosDashboard';
 import { RequestsDashboard } from '@/components/RequestsDashboard';
+import { NewLinkGenerator } from '@/components/NewLinkGenerator';
+import { EmployeesList } from '@/components/EmployeesList';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -331,18 +333,19 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Links Tab */}
           <TabsContent value="links" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Links para Colaboradores</h2>
-              <Badge className="bg-purple-100 text-purple-800">
-                {isLoading ? '...' : `${colaboradorLinks.length} link${colaboradorLinks.length !== 1 ? 's' : ''}`}
-              </Badge>
+            <div>
+              <h2 className="text-2xl font-bold">Gerador de Links</h2>
+              <p className="text-muted-foreground">
+                Gere links personalizados para colaboradores preencherem solicitações
+              </p>
             </div>
             
-            <GeradorLinksColaborador 
-              colaboradorLinks={colaboradorLinks} 
-              submissoes={submissoes}
-              isLoading={isLoading} 
-            />
+            <NewLinkGenerator />
+          </TabsContent>
+
+          {/* Colaboradores Tab */}
+          <TabsContent value="colaboradores" className="space-y-6">
+            <EmployeesList />
           </TabsContent>
 
           {/* Solicitações Tab */}
