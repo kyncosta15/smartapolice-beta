@@ -198,13 +198,12 @@ export const SmartBeneficiosDashboard = () => {
       {/* Main Content */}
       <main className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-9 mb-8">
+          <TabsList className="grid w-full grid-cols-8 mb-8">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="apolices">Apólices</TabsTrigger>
             <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
             <TabsTrigger value="links">Links</TabsTrigger>
             <TabsTrigger value="solicitacoes">Solicitações</TabsTrigger>
-            <TabsTrigger value="tickets">Solicitações</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
             <TabsTrigger value="upload">Upload</TabsTrigger>
           </TabsList>
@@ -346,189 +345,9 @@ export const SmartBeneficiosDashboard = () => {
             />
           </TabsContent>
 
-          {/* Protocolos Tab */}
-          <TabsContent value="protocolos" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Protocolos Gerados</h2>
-              <Badge className="bg-green-100 text-green-800">
-                {isLoading ? '...' : `${submissoes.filter(s => s.numero_protocolo).length} protocolo${submissoes.filter(s => s.numero_protocolo).length !== 1 ? 's' : ''}`}
-              </Badge>
-            </div>
-            
-            <ProtocolosDashboard 
-              submissoes={submissoes}
-              isLoading={isLoading} 
-            />
-          </TabsContent>
-
-          {/* Colaboradores Tab */}
-          <TabsContent value="colaboradores" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Gestão de Colaboradores</h2>
-              <ColaboradorModal>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Incluir Colaborador
-                </Button>
-              </ColaboradorModal>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Colaboradores Ativos</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input
-                        type="text"
-                        placeholder="Buscar colaborador..."
-                        className="pl-10 pr-4 py-2 border rounded-md w-64"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Filter className="h-4 w-4 mr-2" />
-                      Filtros
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="text-center py-8">
-                    <p>Carregando colaboradores...</p>
-                  </div>
-                ) : colaboradores.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Nenhum colaborador encontrado</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Faça upload de uma planilha para importar colaboradores
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {colaboradores
-                      .filter(colaborador => 
-                        colaborador.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        colaborador.cpf.includes(searchTerm) ||
-                        colaborador.cargo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        colaborador.centro_custo?.toLowerCase().includes(searchTerm.toLowerCase())
-                      )
-                      .map((colaborador) => (
-                        <div key={colaborador.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-medium">{colaborador.nome}</h3>
-                                <Badge className={getStatusColor(colaborador.status) + ' text-white'}>
-                                  {colaborador.status}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                {colaborador.cargo} • {colaborador.centro_custo} • CPF: {colaborador.cpf}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Custo: {formatCurrency(colaborador.custo_mensal || 0)}
-                                {colaborador.email && ` • ${colaborador.email}`}
-                              </p>
-                              {colaborador.data_admissao && (
-                                <p className="text-xs text-muted-foreground">
-                                  Admissão: {new Date(colaborador.data_admissao).toLocaleDateString('pt-BR')}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm">
-                                Editar
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                Histórico
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           {/* Solicitações Tab */}
           <TabsContent value="solicitacoes" className="space-y-6">
             <RequestsDashboard />
-          </TabsContent>
-
-          {/* Tickets Tab */}
-          <TabsContent value="tickets" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Solicitações</h2>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-blue-100 text-blue-800">
-                  {isLoading ? '...' : `${tickets.length} tickets`}
-                </Badge>
-              </div>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Tickets Recentes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="text-center py-8">
-                    <p>Carregando tickets...</p>
-                  </div>
-                ) : tickets.length === 0 ? (
-                  <div className="text-center py-8">
-                    <FileText className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Nenhum ticket encontrado</h3>
-                    <p className="text-muted-foreground">
-                      Ainda não há solicitações registradas
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {tickets.map((ticket) => (
-                      <div key={ticket.id} className="p-4 border rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{ticket.numero_ticket}</Badge>
-                            <Badge className={getStatusColor(ticket.status) + ' text-white'}>
-                              {ticket.status.replace('_', ' ')}
-                            </Badge>
-                          </div>
-                          {ticket.canal_origem && (
-                            <Badge className="bg-gray-100 text-gray-800">
-                              {ticket.canal_origem}
-                            </Badge>
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{ticket.titulo}</h4>
-                          {ticket.descricao && (
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {ticket.descricao}
-                            </p>
-                          )}
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Tipo: {getTipoTicketLabel(ticket.tipo)}
-                          </p>
-                          {ticket.data_recebimento && (
-                            <p className="text-xs text-muted-foreground">
-                              Recebido em: {new Date(ticket.data_recebimento).toLocaleDateString('pt-BR')}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Relatórios Tab */}

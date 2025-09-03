@@ -78,19 +78,11 @@ export const RequestsDashboard: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // Busca requests com dados relacionados
-      const { data, error } = await supabase
+      // Busca requests de forma mais simples, sem joins complexos
+      const { data: requestsData, error: requestsError } = await supabase
         .from('requests')
         .select(`
           *,
-          employees!inner(
-            full_name,
-            cpf,
-            email,
-            empresas!inner(
-              nome
-            )
-          ),
           request_items(
             id,
             target,
@@ -108,25 +100,51 @@ export const RequestsDashboard: React.FC = () => {
           )
         `)
         .eq('draft', false)
-        .eq('employees.empresas.nome', user?.company)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (requestsError) throw requestsError;
 
-      const transformedData = data.map(request => ({
-        ...request,
-        employee: {
-          full_name: request.employees.full_name,
-          cpf: request.employees.cpf,
-          email: request.employees.email
-        },
-        request_items: request.request_items.map(item => ({
-          ...item,
-          dependent: item.dependents
-        }))
-      })) as RequestWithDetails[];
+      // Para cada request, buscar dados do employee separadamente
+      const transformedRequests: RequestWithDetails[] = [];
+      
+      for (const request of requestsData || []) {
+        if (request.employee_id) {
+          const { data: employeeData } = await supabase
+            .from('employees')
+            .select('full_name, cpf, email, company_id')
+            .eq('id', request.employee_id)
+            .single();
 
-      setRequests(transformedData);
+          if (employeeData) {
+            // Buscar empresa separadamente
+            const { data: empresaData } = await supabase
+              .from('empresas')
+              .select('nome')
+              .eq('id', employeeData.company_id)
+              .single();
+
+            // Verificar se é da mesma empresa do usuário
+            if (empresaData?.nome === user?.company) {
+              transformedRequests.push({
+                ...request,
+                kind: request.kind as 'inclusao' | 'exclusao',
+                status: request.status as 'recebido' | 'em_validacao' | 'concluido' | 'recusado',
+                employee: {
+                  full_name: employeeData.full_name,
+                  cpf: employeeData.cpf,
+                  email: employeeData.email
+                },
+                request_items: request.request_items.map((item: any) => ({
+                  ...item,
+                  dependent: item.dependents
+                }))
+              });
+            }
+          }
+        }
+      }
+
+      setRequests(transformedRequests);
     } catch (error) {
       console.error('Erro ao carregar solicitações:', error);
       toast.error('Erro ao carregar solicitações');
