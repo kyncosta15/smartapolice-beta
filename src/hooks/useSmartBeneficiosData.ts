@@ -60,6 +60,38 @@ export interface Ticket {
   updated_at: string;
 }
 
+export interface ApolicesBeneficios {
+  id: string;
+  empresa_id: string;
+  user_id: string;
+  cnpj: string;
+  razao_social: string;
+  tipo_beneficio: string;
+  seguradora: string;
+  numero_apolice: string;
+  inicio_vigencia: string;
+  fim_vigencia: string;
+  valor_total?: number;
+  valor_empresa?: number;
+  valor_colaborador?: number;
+  quantidade_vidas?: number;
+  observacoes?: string;
+  status: 'ativa' | 'cancelada' | 'suspensa' | 'vencida';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ColaboradorApoliceVinculo {
+  id: string;
+  colaborador_id: string;
+  apolice_id: string;
+  data_inclusao: string;
+  data_exclusao?: string;
+  status: 'ativo' | 'inativo' | 'suspenso';
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DashboardMetrics {
   vidasAtivas: number;
   custoMensal: number;
@@ -77,6 +109,7 @@ export const useSmartBeneficiosData = () => {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [dependentes, setDependentes] = useState<Dependente[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [apolices, setApolices] = useState<ApolicesBeneficios[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     vidasAtivas: 0,
     custoMensal: 0,
@@ -244,6 +277,50 @@ export const useSmartBeneficiosData = () => {
     }
   };
 
+  // Buscar apólices
+  const fetchApolices = async () => {
+    if (!user) return;
+    
+    try {
+      // Buscar apólices através da empresa do usuário
+      const { data: userProfile, error: userError } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user.id)
+        .single();
+
+      if (userError || !userProfile?.company) {
+        console.log('Empresa do usuário não encontrada');
+        return;
+      }
+
+      // Buscar empresa no banco
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (empresaError || !empresa) {
+        console.log('Empresa não encontrada no sistema');
+        return;
+      }
+
+      // Buscar apólices da empresa
+      const { data, error } = await supabase
+        .from('apolices_beneficios')
+        .select('*')
+        .eq('empresa_id', empresa.id)
+        .order('razao_social', { ascending: true });
+
+      if (error) throw error;
+      setApolices((data || []) as ApolicesBeneficios[]);
+    } catch (err: any) {
+      console.error('Erro ao buscar apólices:', err);
+      setError(err.message);
+    }
+  };
+
   // Calcular métricas do dashboard
   const calculateMetrics = () => {
     const colaboradoresAtivos = colaboradores.length;
@@ -285,7 +362,8 @@ export const useSmartBeneficiosData = () => {
         fetchEmpresas(),
         fetchColaboradores(), 
         fetchDependentes(),
-        fetchTickets()
+        fetchTickets(),
+        fetchApolices()
       ]);
     } catch (err: any) {
       console.error('Erro ao carregar dados:', err);
@@ -370,6 +448,7 @@ export const useSmartBeneficiosData = () => {
     colaboradores,
     dependentes,
     tickets,
+    apolices,
     metrics,
     isLoading,
     error,

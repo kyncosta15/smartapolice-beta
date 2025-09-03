@@ -23,6 +23,7 @@ import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
 import { SpreadsheetUpload } from '@/components/SpreadsheetUpload';
 import { PlanilhaHistorico } from '@/components/PlanilhaHistorico';
 import { ColaboradorModal } from '@/components/ColaboradorModal';
+import { ApoliceCNPJView } from '@/components/ApoliceCNPJView';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -114,7 +115,7 @@ const getTipoTicketLabel = (tipo: string) => {
 export const SmartBeneficiosDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
-  const { metrics, colaboradores, tickets, isLoading, error, loadData } = useSmartBeneficiosData();
+  const { metrics, colaboradores, tickets, apolices, isLoading, error, loadData } = useSmartBeneficiosData();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -193,8 +194,9 @@ export const SmartBeneficiosDashboard = () => {
       {/* Main Content */}
       <main className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="apolices">Apólices</TabsTrigger>
             <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
             <TabsTrigger value="tickets">Solicitações</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
@@ -308,6 +310,18 @@ export const SmartBeneficiosDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Apólices Tab */}
+          <TabsContent value="apolices" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Gestão de Apólices</h2>
+              <Badge className="bg-blue-100 text-blue-800">
+                {isLoading ? '...' : `${apolices.length} apólice${apolices.length !== 1 ? 's' : ''}`}
+              </Badge>
+            </div>
+            
+            <ApoliceCNPJView apolices={apolices} isLoading={isLoading} />
           </TabsContent>
 
           {/* Colaboradores Tab */}

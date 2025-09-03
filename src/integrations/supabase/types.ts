@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      apolices_beneficios: {
+        Row: {
+          cnpj: string
+          created_at: string
+          empresa_id: string | null
+          fim_vigencia: string
+          id: string
+          inicio_vigencia: string
+          numero_apolice: string
+          observacoes: string | null
+          quantidade_vidas: number | null
+          razao_social: string
+          seguradora: string
+          status: string | null
+          tipo_beneficio: string
+          updated_at: string
+          user_id: string
+          valor_colaborador: number | null
+          valor_empresa: number | null
+          valor_total: number | null
+        }
+        Insert: {
+          cnpj: string
+          created_at?: string
+          empresa_id?: string | null
+          fim_vigencia: string
+          id?: string
+          inicio_vigencia: string
+          numero_apolice: string
+          observacoes?: string | null
+          quantidade_vidas?: number | null
+          razao_social: string
+          seguradora: string
+          status?: string | null
+          tipo_beneficio: string
+          updated_at?: string
+          user_id: string
+          valor_colaborador?: number | null
+          valor_empresa?: number | null
+          valor_total?: number | null
+        }
+        Update: {
+          cnpj?: string
+          created_at?: string
+          empresa_id?: string | null
+          fim_vigencia?: string
+          id?: string
+          inicio_vigencia?: string
+          numero_apolice?: string
+          observacoes?: string | null
+          quantidade_vidas?: number | null
+          razao_social?: string
+          seguradora?: string
+          status?: string | null
+          tipo_beneficio?: string
+          updated_at?: string
+          user_id?: string
+          valor_colaborador?: number | null
+          valor_empresa?: number | null
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apolices_beneficios_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coberturas: {
         Row: {
           created_at: string | null
@@ -45,6 +116,54 @@ export type Database = {
             columns: ["policy_id"]
             isOneToOne: false
             referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      colaborador_apolice_vinculo: {
+        Row: {
+          apolice_id: string | null
+          colaborador_id: string | null
+          created_at: string
+          data_exclusao: string | null
+          data_inclusao: string
+          id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          apolice_id?: string | null
+          colaborador_id?: string | null
+          created_at?: string
+          data_exclusao?: string | null
+          data_inclusao?: string
+          id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          apolice_id?: string | null
+          colaborador_id?: string | null
+          created_at?: string
+          data_exclusao?: string | null
+          data_inclusao?: string
+          id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colaborador_apolice_vinculo_apolice_id_fkey"
+            columns: ["apolice_id"]
+            isOneToOne: false
+            referencedRelation: "apolices_beneficios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "colaborador_apolice_vinculo_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
             referencedColumns: ["id"]
           },
         ]
