@@ -77,6 +77,8 @@ export const RequestsDashboard: React.FC = () => {
   const fetchRequests = async () => {
     try {
       setIsLoading(true);
+      console.log('🔄 Iniciando busca de solicitações...');
+      console.log('👤 Usuário atual:', user);
 
       // Busca requests de forma mais simples e direta
       const { data: requestsData, error: requestsError } = await supabase
@@ -103,7 +105,10 @@ export const RequestsDashboard: React.FC = () => {
         .eq('draft', false)
         .order('submitted_at', { ascending: false });
 
+      console.log('📊 Resultado da query requests:', { data: requestsData, error: requestsError });
+
       if (requestsError) {
+        console.error('❌ Erro ao buscar requests:', requestsError);
         throw requestsError;
       }
       
@@ -111,6 +116,8 @@ export const RequestsDashboard: React.FC = () => {
       const transformedRequests: RequestWithDetails[] = [];
       
       for (const request of requestsData || []) {
+        console.log(`🔍 Processando request ${request.protocol_code}...`);
+        
         if (request.employee_id) {
           const { data: employeeData, error: empError } = await supabase
             .from('employees')
@@ -118,7 +125,10 @@ export const RequestsDashboard: React.FC = () => {
             .eq('id', request.employee_id)
             .maybeSingle();
 
+          console.log('👤 Resultado da query employee:', { data: employeeData, error: empError });
+
           if (empError) {
+            console.error('❌ Erro ao buscar employee:', empError);
             continue;
           }
 
@@ -141,14 +151,16 @@ export const RequestsDashboard: React.FC = () => {
             };
             
             transformedRequests.push(transformedRequest);
+            console.log(`✅ Request transformado: ${request.protocol_code}`);
           }
         }
       }
 
+      console.log('📈 Solicitações processadas:', transformedRequests.length);
       setRequests(transformedRequests);
       
     } catch (error) {
-      console.error('Erro ao carregar solicitações:', error);
+      console.error('💥 Erro ao carregar solicitações:', error);
       toast.error('Erro ao carregar solicitações: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
