@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRealtime } from '@/hooks/useRealtime';
 import { toast } from 'sonner';
 import useSWR from 'swr';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Request {
   id: string;
@@ -76,7 +77,11 @@ interface KPIs {
   tickets: number;
 }
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+const fetcher = async (url: string) => {
+  const { data, error } = await supabase.functions.invoke(url.replace('/functions/v1/', ''));
+  if (error) throw error;
+  return data;
+};
 
 export const RequestsNewDashboard = () => {
   const { user } = useAuth();
@@ -87,10 +92,10 @@ export const RequestsNewDashboard = () => {
   const [declineReason, setDeclineReason] = useState('');
 
   // SWR para dados
-  const { data: requestsRes, mutate: mutateRequests } = useSWR('/functions/v1/rh-requests-list', fetcher);
-  const { data: kpisRes, mutate: mutateKpis } = useSWR('/functions/v1/rh-requests-kpis', fetcher);
+  const { data: requestsRes, mutate: mutateRequests } = useSWR('rh-requests-list', fetcher);
+  const { data: kpisRes, mutate: mutateKpis } = useSWR('rh-requests-kpis', fetcher);
   const { data: detailRes, mutate: mutateDetail } = useSWR(
-    selectedRequestId ? `/functions/v1/rh-requests-detail/${selectedRequestId}` : null,
+    selectedRequestId ? `rh-requests-detail/${selectedRequestId}` : null,
     fetcher
   );
 
@@ -120,19 +125,19 @@ export const RequestsNewDashboard = () => {
     if (!selectedRequestId) return;
     
     try {
-      const response = await fetch('/functions/v1/rh-approve-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const { data, error } = await supabase.functions.invoke('rh-approve-request', {
+        body: { 
           requestId: selectedRequestId, 
           note: approveNote || undefined 
-        })
+        }
       });
 
-      const result = await response.json();
-      
-      if (!result.ok) {
-        throw new Error(result.error?.message || 'Erro ao aprovar');
+      if (error) {
+        throw new Error(error.message || 'Erro ao aprovar');
+      }
+
+      if (!data.ok) {
+        throw new Error(data.error?.message || 'Erro ao aprovar');
       }
 
       toast.success('Solicitação aprovada pelo RH! Enviada para análise da Administração.');
@@ -149,19 +154,19 @@ export const RequestsNewDashboard = () => {
     if (!selectedRequestId) return;
     
     try {
-      const response = await fetch('/functions/v1/rh-requests-decline', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const { data, error } = await supabase.functions.invoke('rh-requests-decline', {
+        body: { 
           requestId: selectedRequestId, 
           reason: declineReason || undefined 
-        })
+        }
       });
 
-      const result = await response.json();
-      
-      if (!result.ok) {
-        throw new Error(result.error?.message || 'Erro ao recusar');
+      if (error) {
+        throw new Error(error.message || 'Erro ao recusar');
+      }
+
+      if (!data.ok) {
+        throw new Error(data.error?.message || 'Erro ao recusar');
       }
 
       toast.success('Solicitação recusada.');

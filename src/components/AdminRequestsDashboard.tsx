@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRealtime } from '@/hooks/useRealtime';
 import { toast } from 'sonner';
 import useSWR from 'swr';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AdminRequest {
   id: string;
@@ -31,7 +32,11 @@ interface AdminRequest {
   qtd_itens: number;
 }
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+const fetcher = async (url: string) => {
+  const { data, error } = await supabase.functions.invoke(url.replace('/functions/v1/', ''));
+  if (error) throw error;
+  return data;
+};
 
 export const AdminRequestsDashboard = () => {
   const { user } = useAuth();
@@ -42,9 +47,9 @@ export const AdminRequestsDashboard = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // SWR para dados do administrador
-  const { data: requestsRes, mutate: mutateRequests } = useSWR('/functions/v1/adm-requests-list', fetcher);
+  const { data: requestsRes, mutate: mutateRequests } = useSWR('adm-requests-list', fetcher);
   const { data: detailRes, mutate: mutateDetail } = useSWR(
-    selectedRequestId ? `/functions/v1/rh-requests-detail/${selectedRequestId}` : null,
+    selectedRequestId ? `rh-requests-detail/${selectedRequestId}` : null,
     fetcher
   );
 
@@ -73,19 +78,19 @@ export const AdminRequestsDashboard = () => {
     
     setIsProcessing(true);
     try {
-      const response = await fetch('/functions/v1/adm-approve-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const { data, error } = await supabase.functions.invoke('adm-approve-request', {
+        body: { 
           requestId: selectedRequestId, 
           note: approveNote || undefined 
-        })
+        }
       });
 
-      const result = await response.json();
-      
-      if (!result.ok) {
-        throw new Error(result.error?.message || 'Erro ao aprovar');
+      if (error) {
+        throw new Error(error.message || 'Erro ao aprovar');
+      }
+
+      if (!data.ok) {
+        throw new Error(data.error?.message || 'Erro ao aprovar');
       }
 
       toast.success('Solicitação aprovada e convertida em ticket!');
@@ -105,19 +110,19 @@ export const AdminRequestsDashboard = () => {
     
     setIsProcessing(true);
     try {
-      const response = await fetch('/functions/v1/adm-requests-decline', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const { data, error } = await supabase.functions.invoke('adm-requests-decline', {
+        body: { 
           requestId: selectedRequestId, 
           reason: declineReason || undefined 
-        })
+        }
       });
 
-      const result = await response.json();
-      
-      if (!result.ok) {
-        throw new Error(result.error?.message || 'Erro ao recusar');
+      if (error) {
+        throw new Error(error.message || 'Erro ao recusar');
+      }
+
+      if (!data.ok) {
+        throw new Error(data.error?.message || 'Erro ao recusar');
       }
 
       toast.success('Solicitação recusada pela Administração.');
