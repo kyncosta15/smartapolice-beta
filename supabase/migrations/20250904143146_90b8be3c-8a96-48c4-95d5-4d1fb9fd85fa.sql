@@ -1,0 +1,1 @@
+UPDATE users SET role = 'administrador' WHERE email = 'matheus@smartbeneficios.com.br';
