@@ -36,6 +36,11 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
     tradeName: '',
     legalName: '',
   });
+  const [planData, setPlanData] = useState({
+    planId: '',
+    monthlyPremium: '',
+    startDate: new Date().toISOString().split('T')[0],
+  });
   const [dependentData, setDependentData] = useState({
     full_name: '',
     cpf: '',
@@ -43,7 +48,7 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
     relationship: '',
   });
   
-  const { createEmployee, createDependent, isLoading } = useCollaborators();
+  const { createEmployee, createDependent, isLoading, plans } = useCollaborators();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,10 +65,17 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
 
     try {
       // Criar colaborador
-      const newEmployee = await createEmployee({
+      const employeeCreateData = {
         ...employeeData,
-        company: companyData
-      });
+        company: companyData,
+        initialPlan: planData.planId ? {
+          planId: planData.planId,
+          monthlyPremium: parseFloat(planData.monthlyPremium),
+          startDate: planData.startDate
+        } : undefined
+      };
+      
+      const newEmployee = await createEmployee(employeeCreateData);
       
       // Se marcou para incluir dependente, criar o dependente
       if (incluirDependente && newEmployee?.id) {
@@ -86,6 +98,11 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
         tradeName: '',
         legalName: '',
       });
+      setPlanData({
+        planId: '',
+        monthlyPremium: '',
+        startDate: new Date().toISOString().split('T')[0],
+      });
       setDependentData({
         full_name: '',
         cpf: '',
@@ -101,12 +118,28 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
   };
 
   const formatCPF = (value: string) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-      .replace(/(-\d{2})\d+?$/, '$1');
+    const numbers = value.replace(/\D/g, '');
+    return numbers
+      .slice(0, 11)
+      .replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  };
+
+  const formatCNPJ = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers
+      .slice(0, 14)
+      .replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  };
+
+  const handlePlanChange = (planId: string) => {
+    setPlanData(prev => ({ ...prev, planId }));
+    const selectedPlan = plans.find(p => p.id === planId);
+    if (selectedPlan?.base_monthly_cost) {
+      setPlanData(prev => ({ 
+        ...prev, 
+        monthlyPremium: selectedPlan.base_monthly_cost!.toString() 
+      }));
+    }
   };
 
   return (
@@ -230,6 +263,60 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
                     type="date"
                     value={employeeData.birthDate}
                     onChange={(e) => setEmployeeData(prev => ({ ...prev, birthDate: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Plano Inicial (Opcional) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Plano Inicial (Opcional)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="plan_id">Plano</Label>
+                  <Select value={planData.planId} onValueChange={handlePlanChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um plano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {plans.map(plan => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name} - {plan.operator}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="monthly_premium">Valor Mensal (R$)</Label>
+                  <Input
+                    id="monthly_premium"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={planData.monthlyPremium}
+                    onChange={(e) => setPlanData(prev => ({ ...prev, monthlyPremium: e.target.value }))}
+                    disabled={!planData.planId}
+                    placeholder="0,00"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="start_date">Data de Início</Label>
+                  <Input
+                    id="start_date"
+                    type="date"
+                    value={planData.startDate}
+                    onChange={(e) => setPlanData(prev => ({ ...prev, startDate: e.target.value }))}
+                    disabled={!planData.planId}
                   />
                 </div>
               </div>

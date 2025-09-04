@@ -6,6 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { 
   User, 
   Users, 
   Search, 
@@ -21,6 +26,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { EmployeeDetailsDrawer } from './EmployeeDetailsDrawer';
 
 interface Company {
   id: string;
@@ -68,6 +74,7 @@ export const EmployeesList: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
   const fetchEmployees = async () => {
     try {
@@ -343,17 +350,26 @@ export const EmployeesList: React.FC = () => {
                       Editar
                     </Button>
                     
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="px-3"
-                      onClick={() => {
-                        // TODO: Implementar visualização detalhada
-                        console.log('Ver detalhes:', employee.id);
-                      }}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="px-3"
+                          onClick={() => setSelectedEmployeeId(employee.id)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent className="w-full sm:max-w-2xl">
+                        {selectedEmployeeId === employee.id && (
+                          <EmployeeDetailsDrawer 
+                            employeeId={selectedEmployeeId}
+                            onClose={() => setSelectedEmployeeId(null)}
+                          />
+                        )}
+                      </SheetContent>
+                    </Sheet>
                   </div>
                 </div>
               </CardContent>
