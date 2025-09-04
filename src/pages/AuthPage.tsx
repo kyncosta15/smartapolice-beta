@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 
 export const AuthPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,12 +36,22 @@ export const AuthPage = () => {
     department: ''
   });
 
-  // Redirect if already authenticated
+  // Handle auth redirects and provide system selection
   useEffect(() => {
-    if (user) {
-      navigate('/smartbeneficios/dashboard');
+    if (!loading) {
+      if (user) {
+        // Check user role and redirect appropriately
+        if (user.role === 'corretora_admin' || user.role === 'administrador') {
+          navigate('/dashboard');
+        } else {
+          navigate('/smartbeneficios/dashboard');
+        }
+      } else {
+        // If no user, redirect to system selection to choose login type
+        navigate('/system-selection');
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, loading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +76,7 @@ export const AuthPage = () => {
       }
 
       toast.success('Login realizado com sucesso!');
-      navigate('/smartbeneficios/dashboard');
+      // Navigation will be handled by useEffect based on user role
     } catch (err: any) {
       setError('Erro interno. Tente novamente.');
       console.error('Login error:', err);
@@ -150,199 +160,19 @@ export const AuthPage = () => {
     }
   };
 
-  if (user) {
-    return null; // Will redirect via useEffect
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+  // Show loading while checking auth or redirecting
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto animate-pulse">
             <Heart className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-primary">SmartBenefícios</h1>
-          <p className="text-muted-foreground mt-2">Sistema de Gestão de Benefícios</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">Acesso ao Sistema</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login" className="flex items-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  Login
-                </TabsTrigger>
-                <TabsTrigger value="signup" className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Cadastro
-                </TabsTrigger>
-              </TabsList>
-
-              {error && (
-                <Alert variant="destructive" className="mt-4">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              {/* Login Tab */}
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={loginForm.email}
-                      onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Senha</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-                      required
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Entrando...' : 'Entrar'}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              {/* Signup Tab */}
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-name">Nome Completo *</Label>
-                      <Input
-                        id="signup-name"
-                        placeholder="João Silva"
-                        value={signupForm.fullName}
-                        onChange={(e) => setSignupForm(prev => ({ ...prev, fullName: e.target.value }))}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-role">Cargo *</Label>
-                      <Select 
-                        value={signupForm.role} 
-                        onValueChange={(value: any) => setSignupForm(prev => ({ ...prev, role: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="rh">RH</SelectItem>
-                          <SelectItem value="administrador">Administrador</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email *</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={signupForm.email}
-                      onChange={(e) => setSignupForm(prev => ({ ...prev, email: e.target.value }))}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Senha *</Label>
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={signupForm.password}
-                        onChange={(e) => setSignupForm(prev => ({ ...prev, password: e.target.value }))}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-confirm">Confirmar Senha *</Label>
-                      <Input
-                        id="signup-confirm"
-                        type="password"
-                        placeholder="••••••••"
-                        value={signupForm.confirmPassword}
-                        onChange={(e) => setSignupForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-company">Empresa</Label>
-                      <Input
-                        id="signup-company"
-                        placeholder="Empresa Ltda"
-                        value={signupForm.company}
-                        onChange={(e) => setSignupForm(prev => ({ ...prev, company: e.target.value }))}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-phone">Telefone</Label>
-                      <Input
-                        id="signup-phone"
-                        placeholder="(11) 99999-9999"
-                        value={signupForm.phone}
-                        onChange={(e) => setSignupForm(prev => ({ ...prev, phone: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-department">Departamento</Label>
-                    <Input
-                      id="signup-department"
-                      placeholder="Recursos Humanos"
-                      value={signupForm.department}
-                      onChange={(e) => setSignupForm(prev => ({ ...prev, department: e.target.value }))}
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Criando conta...' : 'Criar Conta'}
-                  </Button>
-                </form>
-
-                <p className="text-xs text-muted-foreground mt-4 text-center">
-                  * Campos obrigatórios
-                </p>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        <div className="text-center mt-6">
-          <p className="text-sm text-muted-foreground">
-            Problemas com acesso? Entre em contato com o suporte.
-          </p>
+          <p className="text-muted-foreground">Verificando autenticação...</p>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  }
+
+  // This will rarely be shown as the useEffect will redirect
+  return null;

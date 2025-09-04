@@ -31,8 +31,8 @@ const App = () => {
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
-              <Route path="/auth" element={<AuthPage />} />
               <Route path="/system-selection" element={<SystemSelection />} />
+              <Route path="/auth" element={<SystemSelection />} />
               <Route path="/auth/smartapolice" element={<SmartApoliceAuth />} />
               <Route path="/auth/smartbeneficios" element={<SmartBeneficiosAuthFunctional />} />
               <Route path="/colaborador/solicitacao" element={<ColaboradorSolicitacao />} />
