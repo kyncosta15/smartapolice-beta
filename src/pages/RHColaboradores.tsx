@@ -36,7 +36,9 @@ import {
   User,
   Building,
   CreditCard,
-  UserPlus
+  UserPlus,
+  Eye,
+  Edit
 } from 'lucide-react';
 import { useCollaborators } from '@/hooks/useCollaborators';
 import { EmployeeForm } from '@/components/EmployeeForm';
@@ -243,17 +245,29 @@ export default function RHColaboradores() {
                     </p>
 
                     {/* Ações */}
-                    <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          // TODO: Implementar edição do colaborador
+                          console.log('Editar colaborador:', employee.id);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
+                      
                       <Sheet>
                         <SheetTrigger asChild>
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="w-full"
+                            className="px-3"
                             onClick={() => setSelectedEmployee(employee.id)}
                           >
-                            <User className="h-4 w-4 mr-2" />
-                            Detalhes
+                            <Eye className="h-4 w-4" />
                           </Button>
                         </SheetTrigger>
                         <SheetContent className="w-full sm:max-w-2xl">
