@@ -5,10 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
 import { 
   Settings, 
   Bell, 
@@ -17,7 +15,8 @@ import {
   Palette, 
   Download,
   Upload,
-  CreditCard
+  CreditCard,
+  Menu
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -47,19 +46,17 @@ export function OptimizedSettings() {
     }
   });
 
-  const [activeTab, setActiveTab] = useState('notifications');
+  const [activeSection, setActiveSection] = useState('notifications');
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
-  const tabs = [
+  const sections = [
     { value: 'notifications', label: 'Notificações', icon: Bell },
     { value: 'appearance', label: 'Aparência', icon: Palette },
     { value: 'security', label: 'Segurança', icon: Shield },
     { value: 'integration', label: 'Integração', icon: Database },
     { value: 'billing', label: 'Cobrança', icon: CreditCard }
   ];
-
-  const activeTabData = tabs.find(tab => tab.value === activeTab);
 
   const handleSave = (section: string) => {
     toast({
@@ -78,59 +75,10 @@ export function OptimizedSettings() {
     }));
   };
 
-  return (
-    <div className="space-y-6">
-      <Card className="bg-white border border-gray-200">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl font-semibold">
-            <Settings className="h-6 w-6 mr-2 text-blue-600" />
-            Configurações do Sistema
-          </CardTitle>
-        </CardHeader>
-      </Card>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        {/* Mobile: Dropdown menu */}
-        {isMobile ? (
-          <div className="w-full">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between h-12">
-                  <div className="flex items-center space-x-2">
-                    {activeTabData && <activeTabData.icon className="h-4 w-4" />}
-                    <span>{activeTabData?.label}</span>
-                  </div>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-full bg-white border border-gray-200 z-50" align="start">
-                {tabs.map((tab) => (
-                  <DropdownMenuItem
-                    key={tab.value}
-                    onSelect={() => setActiveTab(tab.value)}
-                    className="flex items-center space-x-2 p-3 hover:bg-gray-50 cursor-pointer"
-                  >
-                    <tab.icon className="h-4 w-4" />
-                    <span>{tab.label}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ) : (
-          /* Desktop: Regular tabs */
-          <TabsList className="grid w-full grid-cols-5">
-            {tabs.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="flex items-center space-x-2">
-                <tab.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        )}
-
-        {/* Notificações */}
-        <TabsContent value="notifications">
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'notifications':
+        return (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -210,10 +158,10 @@ export function OptimizedSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        );
 
-        {/* Aparência */}
-        <TabsContent value="appearance">
+      case 'appearance':
+        return (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -278,10 +226,10 @@ export function OptimizedSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        );
 
-        {/* Segurança */}
-        <TabsContent value="security">
+      case 'security':
+        return (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -345,10 +293,10 @@ export function OptimizedSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        );
 
-        {/* Integração */}
-        <TabsContent value="integration">
+      case 'integration':
+        return (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -429,10 +377,10 @@ export function OptimizedSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        );
 
-        {/* Cobrança */}
-        <TabsContent value="billing">
+      case 'billing':
+        return (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -475,8 +423,57 @@ export function OptimizedSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <Sidebar className="border-r">
+          <SidebarContent>
+            <div className="p-4">
+              <div className="flex items-center gap-2 mb-6">
+                <Settings className="h-6 w-6 text-blue-600" />
+                <h2 className="font-semibold text-lg">Configurações</h2>
+              </div>
+              
+              <SidebarMenu>
+                {sections.map((section) => (
+                  <SidebarMenuItem key={section.value}>
+                    <SidebarMenuButton
+                      onClick={() => setActiveSection(section.value)}
+                      isActive={activeSection === section.value}
+                      className="w-full justify-start"
+                    >
+                      <section.icon className="h-4 w-4" />
+                      <span>{section.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </div>
+          </SidebarContent>
+        </Sidebar>
+
+        <div className="flex-1 p-6">
+          {/* Header com trigger para mobile */}
+          <div className="flex items-center gap-4 mb-6 md:hidden">
+            <SidebarTrigger>
+              <Menu className="h-6 w-6" />
+            </SidebarTrigger>
+            <h1 className="text-xl font-semibold">Configurações</h1>
+          </div>
+          
+          {/* Conteúdo principal */}
+          <div className="space-y-6">
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }
