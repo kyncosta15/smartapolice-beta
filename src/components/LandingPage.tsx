@@ -27,12 +27,6 @@ export const LandingPage = () => {
               />
             </div>
             
-            {/* Logo overlay */}
-            <img 
-              src="/lovable-uploads/c778cf76-a82c-4edb-be06-f9de96644fe0.png" 
-              alt="Check Logo" 
-              className="absolute inset-0 w-20 h-20 object-contain rounded-2xl" 
-            />
           </div>
         </div>
         
