@@ -1144,6 +1144,47 @@ export type Database = {
           },
         ]
       }
+      request_approvals: {
+        Row: {
+          created_at: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision: string
+          id: string
+          note: string | null
+          request_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision: string
+          id?: string
+          note?: string | null
+          request_id: string
+          role: string
+        }
+        Update: {
+          created_at?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string
+          id?: string
+          note?: string | null
+          request_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_approvals_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       request_items: {
         Row: {
           action: string
