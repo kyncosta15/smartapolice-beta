@@ -30,6 +30,7 @@ import { PlanilhaHistorico } from '@/components/PlanilhaHistorico';
 import { ColaboradorModal } from '@/components/ColaboradorModal';
 import { ApoliceCNPJView } from '@/components/ApoliceCNPJView';
 import { ProtocolosDashboard } from '@/components/ProtocolosDashboard';
+import { ProtocolosAdminDashboard } from '@/components/ProtocolosAdminDashboard';
 import { RequestsNewDashboard } from '@/components/RequestsNewDashboard';
 // Link generator removed - now using public page
 import { EmployeesList } from '@/components/EmployeesList';
@@ -182,8 +183,8 @@ export const SmartBeneficiosDashboard = () => {
                   <p className="font-medium text-gray-900">{profile.full_name}</p>
                   <div className="flex items-center gap-2">
                     <p className="text-gray-500 hidden lg:block">{profile.email}</p>
-                    <Badge variant={profile.role === 'administrador' ? 'default' : 'secondary'} className="text-xs">
-                      {profile.role === 'administrador' ? 'Administrador' : 'RH'}
+                    <Badge variant={profile.role === 'administrador' || (profile as any).role === 'corretora_admin' ? 'default' : 'secondary'} className="text-xs">
+                      {profile.role === 'administrador' ? 'Administrador' : (profile as any).role === 'corretora_admin' ? 'Corretor Admin' : 'RH'}
                     </Badge>
                   </div>
                 </div>
@@ -392,7 +393,12 @@ export const SmartBeneficiosDashboard = () => {
               </Badge>
             </div>
             
-            <ProtocolosDashboard submissoes={submissoes} isLoading={isLoading} />
+            {/* Mostrar dashboard admin para corretora_admin, normal para outros */}
+            {(profile as any)?.role === 'corretora_admin' ? (
+              <ProtocolosAdminDashboard submissoes={submissoes} isLoading={isLoading} />
+            ) : (
+              <ProtocolosDashboard submissoes={submissoes} isLoading={isLoading} />
+            )}
           </TabsContent>
 
           {/* Relatórios Tab */}

@@ -23,3 +23,6 @@ enabled = true
 
 [functions.download-pdf]
 verify_jwt = false
+
+[functions.corretora-approve-ticket]
+verify_jwt = false
