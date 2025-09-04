@@ -176,3 +176,4 @@ export const AuthPage = () => {
 
   // This will rarely be shown as the useEffect will redirect
   return null;
+};
