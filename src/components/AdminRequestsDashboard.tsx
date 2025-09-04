@@ -258,9 +258,9 @@ export const AdminRequestsDashboard = () => {
             <DrawerTitle>
               Análise Final - Protocolo {requestDetail?.protocol_code}
             </DrawerTitle>
-            <p className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground">
               Status: {requestDetail && getStatusBadge(requestDetail.status)}
-            </p>
+            </div>
           </DrawerHeader>
           
           <div className="p-4 space-y-6 max-h-[70vh] overflow-auto">

@@ -19,7 +19,10 @@ serve(async (req) => {
     const body = await req.json();
     const { requestId, note } = body;
 
+    console.log('Processing admin approval for request:', requestId);
+
     if (!requestId) {
+      console.error('Missing requestId in request body');
       return new Response(
         JSON.stringify({ ok: false, error: { code: 'MISSING_REQUEST_ID', message: 'Request ID é obrigatório' } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -30,6 +33,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    console.log('Fetching request details for:', requestId);
 
     // Buscar request completo para criar ticket
     const { data: request, error: requestError } = await supabase
@@ -68,18 +73,24 @@ serve(async (req) => {
       .single();
 
     if (requestError || !request) {
+      console.error('Request not found:', requestError?.message || 'No request data');
       return new Response(
         JSON.stringify({ ok: false, error: { code: 'REQUEST_NOT_FOUND', message: 'Solicitação não encontrada' } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
       );
     }
 
+    console.log('Request found:', request.protocol_code, 'Status:', request.status);
+
     if (request.status !== 'aprovado_rh') {
+      console.error('Invalid status for admin approval:', request.status);
       return new Response(
         JSON.stringify({ ok: false, error: { code: 'INVALID_STATUS', message: 'Solicitação deve estar aprovada pelo RH' } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+
+    console.log('Updating request status to aprovado_adm');
 
     // Atualizar status para aprovado_adm
     const { error: updateError } = await supabase
@@ -91,12 +102,15 @@ serve(async (req) => {
       .eq('id', requestId);
 
     if (updateError) {
-      console.error('Erro ao atualizar request:', updateError);
+      console.error('Error updating request status:', updateError);
       return new Response(
         JSON.stringify({ ok: false, error: { code: 'UPDATE_ERROR', message: 'Erro ao aprovar solicitação' } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+
+    console.log('Request status updated successfully');
+    console.log('Creating ticket snapshot');
 
     // Criar snapshot do request para o ticket
     const snapshot = {
@@ -112,6 +126,8 @@ serve(async (req) => {
       approved_at: new Date().toISOString()
     };
 
+    console.log('Creating ticket for protocol:', request.protocol_code);
+
     // Criar ticket
     const { data: ticket, error: ticketError } = await supabase
       .from('tickets')
@@ -125,12 +141,15 @@ serve(async (req) => {
       .single();
 
     if (ticketError) {
-      console.error('Erro ao criar ticket:', ticketError);
+      console.error('Error creating ticket:', ticketError);
       return new Response(
         JSON.stringify({ ok: false, error: { code: 'TICKET_ERROR', message: 'Erro ao criar ticket' } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+
+    console.log('Ticket created successfully:', ticket.id);
+    console.log('Creating approval trail');
 
     // Criar trilha de aprovação
     const { error: approvalError } = await supabase
