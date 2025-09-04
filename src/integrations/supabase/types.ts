@@ -377,6 +377,30 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          cnpj: string
+          created_at: string | null
+          id: string
+          legal_name: string
+          trade_name: string | null
+        }
+        Insert: {
+          cnpj: string
+          created_at?: string | null
+          id?: string
+          legal_name: string
+          trade_name?: string | null
+        }
+        Update: {
+          cnpj?: string
+          created_at?: string | null
+          id?: string
+          legal_name?: string
+          trade_name?: string | null
+        }
+        Relationships: []
+      }
       dashboard_exports: {
         Row: {
           created_at: string
@@ -501,8 +525,57 @@ export type Database = {
           },
         ]
       }
+      employee_plans: {
+        Row: {
+          created_at: string | null
+          employee_id: string | null
+          end_date: string | null
+          id: string
+          monthly_premium: number
+          plan_id: string | null
+          start_date: string
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id?: string | null
+          end_date?: string | null
+          id?: string
+          monthly_premium: number
+          plan_id?: string | null
+          start_date: string
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string | null
+          end_date?: string | null
+          id?: string
+          monthly_premium?: number
+          plan_id?: string | null
+          start_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_plans_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_plans_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
+          birth_date: string | null
           company_id: string
           cpf: string
           created_at: string | null
@@ -513,6 +586,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          birth_date?: string | null
           company_id: string
           cpf: string
           created_at?: string | null
@@ -523,6 +597,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          birth_date?: string | null
           company_id?: string
           cpf?: string
           created_at?: string | null
@@ -797,6 +872,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plans: {
+        Row: {
+          base_monthly_cost: number | null
+          created_at: string | null
+          id: string
+          name: string
+          operator: string
+          type: string
+        }
+        Insert: {
+          base_monthly_cost?: number | null
+          created_at?: string | null
+          id?: string
+          name: string
+          operator: string
+          type: string
+        }
+        Update: {
+          base_monthly_cost?: number | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          operator?: string
+          type?: string
+        }
+        Relationships: []
       }
       policies: {
         Row: {

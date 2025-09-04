@@ -17,6 +17,8 @@ import { NewSolicitacaoPage } from "@/pages/NewSolicitacaoPage";
 import { AuthGuard } from "@/components/AuthGuard";
 import NotFound from "./pages/NotFound";
 import Index from './pages/Index';
+import RHDashboard from './pages/RHDashboard';
+import RHColaboradores from './pages/RHColaboradores';
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,8 @@ const App = () => {
               <Route path="/colaborador/solicitacao" element={<ColaboradorSolicitacao />} />
               <Route path="/colaborador/:token" element={<ColaboradorFormPage />} />
               <Route path="/solicitacao" element={<NewSolicitacaoPage />} />
+              <Route path="/rh/dashboard" element={<RHDashboard />} />
+              <Route path="/rh/colaboradores" element={<RHColaboradores />} />
               
               {/* Protected routes */}
               <Route path="/dashboard" element={<AuthGuard />} />
