@@ -38,7 +38,7 @@ serve(async (req) => {
 
     // Buscar o ticket
     const { data: ticket, error: ticketError } = await supabase
-      .from('request_tickets')
+      .from('tickets')
       .select('*')
       .eq('id', ticketId)
       .single();
@@ -70,7 +70,7 @@ serve(async (req) => {
 
     // Atualizar o ticket
     const { error: updateTicketError } = await supabase
-      .from('request_tickets')
+      .from('tickets')
       .update({ 
         status: newStatus,
         rh_note: note || null,
@@ -135,7 +135,7 @@ serve(async (req) => {
             const webhookResult = await webhookResponse.json();
             if (webhookResult.external_ref) {
               await supabase
-                .from('request_tickets')
+                .from('tickets')
                 .update({ external_ref: webhookResult.external_ref })
                 .eq('id', ticketId);
             }
