@@ -12,11 +12,37 @@ import {
   Mail,
   Phone,
   Calendar,
-  Building
+  Building,
+  ExternalLink,
+  Edit,
+  Eye,
+  CreditCard
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+
+interface Company {
+  id: string;
+  cnpj: string;
+  legal_name: string;
+  trade_name?: string;
+}
+
+interface Plan {
+  id: string;
+  name: string;
+  type: string;
+  operator: string;
+}
+
+interface EmployeePlan {
+  id: string;
+  plan_id: string;
+  monthly_premium: number;
+  status: string;
+  plans: Plan;
+}
 
 interface Employee {
   id: string;
@@ -24,8 +50,12 @@ interface Employee {
   full_name: string;
   email?: string;
   phone?: string;
+  birth_date?: string;
   status: 'ativo' | 'inativo' | 'pendente';
   created_at: string;
+  company_id: string;
+  companies?: Company;
+  employee_plans?: EmployeePlan[];
   dependents: {
     id: string;
     full_name: string;
@@ -60,6 +90,18 @@ export const EmployeesList: React.FC = () => {
         .from('employees')
         .select(`
           *,
+          employee_plans(
+            id,
+            plan_id,
+            monthly_premium,
+            status,
+            plans(
+              id,
+              name,
+              type,
+              operator
+            )
+          ),
           dependents(
             id,
             full_name,
@@ -74,10 +116,19 @@ export const EmployeesList: React.FC = () => {
         return;
       }
 
-      setEmployees((employeesData || []).map(emp => ({
+      // Buscar dados das empresas/companies separadamente
+      const { data: companiesData } = await supabase
+        .from('companies')
+        .select('*');
+
+      // Combinar dados
+      const employeesWithCompanies = (employeesData || []).map(emp => ({
         ...emp,
-        status: emp.status as 'ativo' | 'inativo' | 'pendente'
-      })));
+        status: emp.status as 'ativo' | 'inativo' | 'pendente',
+        companies: companiesData?.find(company => company.id === emp.company_id)
+      }));
+
+      setEmployees(employeesWithCompanies);
     } catch (error) {
       console.error('Erro ao carregar colaboradores:', error);
       toast.error('Erro ao carregar colaboradores');
@@ -91,6 +142,22 @@ export const EmployeesList: React.FC = () => {
       fetchEmployees();
     }
   }, [user?.company]);
+
+  const formatCPF = (cpf: string) => {
+    const cleaned = cpf.replace(/\D/g, '');
+    return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.***.***-$4');
+  };
+
+  const formatCNPJ = (cnpj: string) => {
+    const cleaned = cnpj.replace(/\D/g, '');
+    return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  };
+
+  const getCurrentPlan = (employee: Employee) => {
+    return employee.employee_plans?.find(plan => 
+      plan.status === 'ativo'
+    );
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -164,22 +231,69 @@ export const EmployeesList: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 flex-1">
-                    {/* Nome e status */}
+                    {/* Nome e CPF */}
                     <div className="flex items-center gap-3">
                       <User className="h-5 w-5 text-muted-foreground" />
-                      <h4 className="font-semibold text-lg">{employee.full_name}</h4>
+                      <div>
+                        <h4 className="font-semibold text-lg">{employee.full_name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          CPF: {formatCPF(employee.cpf)}
+                        </p>
+                      </div>
                       <Badge className={getStatusColor(employee.status)}>
                         {employee.status}
                       </Badge>
                     </div>
 
-                    {/* Informações básicas */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                        <span>CPF: {employee.cpf}</span>
+                    {/* CNPJ Vinculado */}
+                    {employee.companies && (
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            {employee.companies.trade_name || employee.companies.legal_name}
+                          </p>
+                          <Button 
+                            variant="link" 
+                            size="sm" 
+                            className="p-0 h-auto text-xs text-blue-600"
+                            onClick={() => {
+                              // Navigate to company page
+                              window.open(`/empresas/${employee.company_id}`, '_blank');
+                            }}
+                          >
+                            CNPJ: {formatCNPJ(employee.companies.cnpj)}
+                            <ExternalLink className="h-3 w-3 ml-1" />
+                          </Button>
+                        </div>
                       </div>
-                      
+                    )}
+
+                    {/* Plano do Colaborador */}
+                    {(() => {
+                      const currentPlan = getCurrentPlan(employee);
+                      return currentPlan ? (
+                        <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                          <CreditCard className="h-4 w-4 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium">{currentPlan.plans.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {currentPlan.plans.operator} - R$ {Number(currentPlan.monthly_premium).toLocaleString('pt-BR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })} /mês
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                          <CreditCard className="h-4 w-4 text-gray-400" />
+                          <p className="text-sm text-muted-foreground">Nenhum plano ativo</p>  
+                        </div>
+                      );
+                    })()}
+
+                    {/* Informações adicionais */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mt-3">
                       {employee.email && (
                         <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4 text-muted-foreground" />
@@ -193,13 +307,6 @@ export const EmployeesList: React.FC = () => {
                           <span>{employee.phone}</span>
                         </div>
                       )}
-                      
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>
-                          Cadastrado em: {new Date(employee.created_at).toLocaleDateString('pt-BR')}
-                        </span>
-                      </div>
                     </div>
 
                     {/* Dependentes */}
@@ -223,12 +330,29 @@ export const EmployeesList: React.FC = () => {
                   </div>
 
                   {/* Ações */}
-                  <div className="flex flex-col gap-2 ml-4">
-                    <Button variant="outline" size="sm">
+                  <div className="flex gap-2 ml-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        // TODO: Implementar edição
+                        console.log('Editar colaborador:', employee.id);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
                       Editar
                     </Button>
-                    <Button variant="outline" size="sm">
-                      Dependentes
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="px-3"
+                      onClick={() => {
+                        // TODO: Implementar visualização detalhada
+                        console.log('Ver detalhes:', employee.id);
+                      }}
+                    >
+                      <Eye className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
