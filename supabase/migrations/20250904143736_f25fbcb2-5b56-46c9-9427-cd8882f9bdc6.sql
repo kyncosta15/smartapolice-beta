@@ -1,0 +1,1 @@
+UPDATE users SET role = 'corretora_admin' WHERE email IN ('matheus@rcaldas.com.br', 'matheus.roxo@rcaldas.com.br');
