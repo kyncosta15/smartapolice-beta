@@ -182,11 +182,8 @@ export const SmartBeneficiosDashboard = () => {
                   <p className="font-medium text-gray-900">{profile.full_name}</p>
                   <div className="flex items-center gap-2">
                     <p className="text-gray-500 hidden lg:block">{profile.email}</p>
-                    <Badge variant={profile.role === 'administrador' || profile.role === 'admin' || profile.role === 'corretora_admin' ? 'default' : 'secondary'} className="text-xs">
-                      {profile.role === 'administrador' ? 'Admin' : 
-                       profile.role === 'admin' ? 'Admin' :
-                       profile.role === 'corretora_admin' ? 'Corretora' :
-                       profile.role === 'rh' ? 'RH' : 'Financeiro'}
+                    <Badge variant={profile.role === 'administrador' ? 'default' : 'secondary'} className="text-xs">
+                      {profile.role === 'administrador' ? 'Administrador' : 'RH'}
                     </Badge>
                   </div>
                 </div>

@@ -31,7 +31,7 @@ export const AuthPage = () => {
     confirmPassword: '',
     fullName: '',
     company: '',
-    role: 'rh' as 'rh' | 'admin' | 'administrador' | 'financeiro',
+    role: 'rh' as 'rh' | 'administrador',
     phone: '',
     department: ''
   });
@@ -248,8 +248,6 @@ export const AuthPage = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="rh">RH</SelectItem>
-                          <SelectItem value="financeiro">Financeiro</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
                           <SelectItem value="administrador">Administrador</SelectItem>
                         </SelectContent>
                       </Select>

@@ -11,13 +11,13 @@ export interface ExtendedUser extends User {
   avatar?: string;
 }
 
-export type UserRole = 'gestor_rh' | 'corretora_admin' | 'cliente' | 'administrador' | 'corretora' | 'rh';
+export type UserRole = 'rh' | 'administrador';
 
 interface UserProfile {
   id: string;
   email: string;
   full_name: string;
-  role: 'gestor_rh' | 'corretora_admin' | 'rh' | 'admin' | 'administrador' | 'financeiro'; // Incluindo as novas e antigas para compatibilidade
+  role: 'rh' | 'administrador';
   company?: string;
   avatar_url?: string;
   phone?: string;

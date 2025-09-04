@@ -74,8 +74,8 @@ export const RequestsDashboard: React.FC = () => {
   });
   
   // Verificar se o usuário tem permissão para ver o dashboard
-  const isCorretora = profile?.role === 'corretora_admin' || profile?.role === 'administrador' || profile?.role === 'admin';
-  const isGestorRH = profile?.role === 'gestor_rh' || profile?.role === 'rh';
+  const isCorretora = profile?.role === 'administrador';
+  const isGestorRH = profile?.role === 'rh';
   
   if (!isCorretora && !isGestorRH) {
     return (
