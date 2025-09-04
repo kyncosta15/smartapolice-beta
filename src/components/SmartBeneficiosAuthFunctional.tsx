@@ -132,7 +132,7 @@ const SmartBeneficiosAuthContent = () => {
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <img src="/lovable-uploads/b564f568-9d76-4f8b-959c-85156e66b47c.png" alt="Logo" className="h-8 w-8" />
             </div>
             <CardTitle className="text-2xl">Acesse o SmartBenefícios</CardTitle>
