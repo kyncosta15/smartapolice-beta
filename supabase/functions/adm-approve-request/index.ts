@@ -126,6 +126,43 @@ serve(async (req) => {
       approved_at: new Date().toISOString()
     };
 
+    console.log('Checking if ticket already exists for request:', requestId);
+    
+    // Check if ticket already exists for this request
+    const { data: existingTicket, error: checkError } = await supabase
+      .from('tickets')
+      .select('id, status')
+      .eq('request_id', requestId)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('Error checking existing ticket:', checkError);
+      return new Response(
+        JSON.stringify({ 
+          ok: false, 
+          error: { code: 'TICKET_CHECK_FAILED', message: 'Falha ao verificar tickets existentes' }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    if (existingTicket) {
+      console.log('Ticket already exists:', existingTicket.id, 'Status:', existingTicket.status);
+      return new Response(
+        JSON.stringify({ 
+          ok: true, 
+          message: 'Ticket já existe para esta solicitação',
+          data: { 
+            ticketId: existingTicket.id,
+            protocolCode: request.protocol_code,
+            externalRef: null,
+            existed: true
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log('Creating ticket for protocol:', request.protocol_code);
 
     // Criar ticket
