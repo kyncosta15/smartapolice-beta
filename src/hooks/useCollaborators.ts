@@ -149,7 +149,7 @@ export function useCollaborators() {
     try {
       console.log('🚀 Creating employee with data:', employeeData);
       
-      // Buscar empresa do usuário atual (da tabela empresas, não companies)
+      // Buscar empresa do usuário atual
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
         throw new Error('Usuário não autenticado');
@@ -165,24 +165,13 @@ export function useCollaborators() {
         throw new Error('Usuário não possui empresa associada');
       }
 
-      // Buscar empresa na tabela empresas
-      const { data: empresa } = await supabase
-        .from('empresas')
-        .select('id')
-        .eq('nome', userInfo.company)
-        .single();
+      console.log('✅ User company:', userInfo.company);
 
-      if (!empresa) {
-        throw new Error('Empresa não encontrada');
-      }
-
-      console.log('✅ Found empresa:', empresa);
-
-      // Verificar se precisa criar entrada na tabela companies (compatibilidade)
+      // Buscar ou criar empresa na tabela companies (que é usada pelos employees)
       let company = companies.find(c => c.cnpj === employeeData.company.cnpj);
       
       if (!company) {
-        console.log('🔄 Creating company entry for compatibility...');
+        console.log('🔄 Creating company entry...');
         const { data: newCompany, error: companyError } = await supabase
           .from('companies')
           .insert({
@@ -195,25 +184,36 @@ export function useCollaborators() {
 
         if (companyError) {
           console.error('❌ Error creating company:', companyError);
-          // Se falhar, usar a empresa existente
-          company = { 
-            id: empresa.id, 
-            cnpj: employeeData.company.cnpj,
-            legal_name: employeeData.company.legalName,
-            trade_name: employeeData.company.tradeName 
-          };
-        } else {
-          company = newCompany;
-          console.log('✅ Created company:', company);
+          throw companyError;
         }
+        
+        company = newCompany;
+        console.log('✅ Created company:', company);
       }
 
-      // Criar o colaborador usando a empresa encontrada
+      // Verificar se também existe na tabela empresas (para compatibilidade)
+      const { data: empresaExistente } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userInfo.company)
+        .single();
+
+      if (!empresaExistente) {
+        console.log('🔄 Creating empresa entry for compatibility...');
+        await supabase
+          .from('empresas')
+          .insert({
+            nome: userInfo.company,
+            cnpj: employeeData.company.cnpj
+          });
+      }
+
+      // Criar o colaborador
       console.log('🔄 Creating employee...');
       const { data: newEmployee, error: employeeError } = await supabase
         .from('employees')
         .insert({
-          company_id: empresa.id, // Usar sempre a empresa do usuário atual
+          company_id: company.id, // Usar o ID da tabela companies
           cpf: employeeData.cpf.replace(/\D/g, ''),
           full_name: employeeData.fullName,
           email: employeeData.email,
