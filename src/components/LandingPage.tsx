@@ -10,15 +10,15 @@ export const LandingPage = () => {
       {/* Left side - Content */}
       <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex flex-col relative z-10">
         {/* Header */}
-        <header className="p-6 text-center">
+        <header className="p-6 md:p-6 pt-8 md:pt-6 text-center">
           {/* Animated Logo above RCorp */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-8 md:mb-6">
             <div className="relative">
               {/* Outer glow ring */}
-              <div className="absolute inset-0 w-24 h-24 bg-primary/20 rounded-2xl animate-ping" style={{ animationDuration: '2s' }}></div>
+              <div className="absolute inset-0 w-32 h-32 md:w-24 md:h-24 bg-primary/20 rounded-2xl animate-ping" style={{ animationDuration: '2s' }}></div>
               
               {/* Main container */}
-              <div className="relative w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
+              <div className="relative w-28 h-28 md:w-20 md:h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
                 <img 
                   src="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414.png" 
                   alt="RCorp Logo" 
