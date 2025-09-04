@@ -207,12 +207,13 @@ export const SmartBeneficiosDashboard = () => {
       {/* Main Content */}
       <main className="p-3 sm:p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-4 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 mb-4 overflow-x-auto">
             <TabsTrigger value="dashboard" className="text-xs sm:text-sm">Dashboard</TabsTrigger>
             <TabsTrigger value="apolices" className="text-xs sm:text-sm">Apólices</TabsTrigger>
             <TabsTrigger value="colaboradores" className="text-xs sm:text-sm">Colaboradores</TabsTrigger>
             <TabsTrigger value="solicitacoes" className="text-xs sm:text-sm">Solicitações</TabsTrigger>
             <TabsTrigger value="tickets" className="text-xs sm:text-sm">Tickets</TabsTrigger>
+            <TabsTrigger value="rh-novo" className="text-xs sm:text-sm">RH Portal</TabsTrigger>
             <TabsTrigger value="relatorios" className="text-xs sm:text-sm">Relatórios</TabsTrigger>
             <TabsTrigger value="upload" className="text-xs sm:text-sm">Upload</TabsTrigger>
           </TabsList>
@@ -431,6 +432,128 @@ export const SmartBeneficiosDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* RH Portal Tab */}
+          <TabsContent value="rh-novo" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Portal RH - Nova Interface</h2>
+                <p className="text-muted-foreground">Acesse as novas funcionalidades de RH com dashboards avançados</p>
+              </div>
+              <Badge className="bg-green-100 text-green-800">Novo</Badge>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                      <DollarSign className="h-6 w-6 text-blue-600" />
+                    </div>
+                    Dashboard Executivo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Dashboard com KPIs executivos, vencimentos próximos, status das solicitações e gráficos de comparação financeira.
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>• KPIs de Vidas Ativas</span>
+                      <Badge variant="outline">Novo</Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>• Análise de Custos</span>
+                      <Badge variant="outline">Novo</Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>• Vencimentos Próximos</span>
+                      <Badge variant="outline">Novo</Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>• Gráfico Waterfall</span>
+                      <Badge variant="outline">Novo</Badge>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    className="w-full" 
+                    onClick={() => window.open('/rh/dashboard', '_blank')}
+                  >
+                    Abrir Dashboard RH
+                    <Download className="h-4 w-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
+                      <Users className="h-6 w-6 text-green-600" />
+                    </div>
+                    Gestão de Colaboradores
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Sistema completo para cadastro, edição e gestão de colaboradores com suas empresas, planos e dependentes.
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>• Cadastro de Colaboradores</span>
+                      <Badge variant="outline">Novo</Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>• Gestão de Dependentes</span>
+                      <Badge variant="outline">Novo</Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>• Vínculos de Planos</span>
+                      <Badge variant="outline">Novo</Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>• Busca Avançada</span>
+                      <Badge variant="outline">Novo</Badge>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    className="w-full" 
+                    onClick={() => window.open('/rh/colaboradores', '_blank')}
+                  >
+                    Abrir Gestão RH
+                    <Users className="h-4 w-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <AlertTriangle className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-blue-900 mb-2">Sobre as Novas Funcionalidades</h3>
+                    <p className="text-sm text-blue-800 mb-4">
+                      As páginas RH foram criadas com tecnologia moderna incluindo updates em tempo real via Supabase, 
+                      formulários avançados com validação, e dashboards interativos com gráficos dinâmicos.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className="bg-blue-100 text-blue-800">Realtime Updates</Badge>
+                      <Badge className="bg-green-100 text-green-800">Gráficos Dinâmicos</Badge>
+                      <Badge className="bg-purple-100 text-purple-800">Validação Avançada</Badge>
+                      <Badge className="bg-orange-100 text-orange-800">Responsive Design</Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Upload Tab */}
