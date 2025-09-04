@@ -42,7 +42,7 @@ export const LandingPage = () => {
               <img 
                 src="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414.png" 
                 alt="RCorp Logo" 
-                className="w-14 h-14 object-contain drop-shadow-xl" 
+                className="w-full h-full object-cover rounded-2xl" 
                 style={{ 
                   filter: 'drop-shadow(0 0 12px rgba(59, 130, 246, 0.4))'
                 }} 
