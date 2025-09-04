@@ -168,14 +168,9 @@ export const useSmartBeneficiosData = () => {
 
   // Buscar colaboradores
   const fetchColaboradores = async () => {
-    if (!user) {
-      console.log('❌ fetchColaboradores: Usuário não encontrado');
-      return;
-    }
+    if (!user) return;
     
     try {
-      console.log('🔍 fetchColaboradores: Buscando empresa do usuário:', user.id);
-      
       // Primeiro buscar a empresa do usuário
       const { data: userProfile, error: userError } = await supabase
         .from('users')
@@ -183,14 +178,10 @@ export const useSmartBeneficiosData = () => {
         .eq('id', user.id)
         .single();
 
-      console.log('👤 fetchColaboradores: Perfil do usuário:', { userProfile, userError });
-
       if (userError || !userProfile?.company) {
-        console.log('❌ fetchColaboradores: Empresa do usuário não encontrada');
+        console.log('Empresa do usuário não encontrada');
         return;
       }
-
-      console.log('🏢 fetchColaboradores: Buscando empresa no banco:', userProfile.company);
 
       // Buscar empresa no banco
       const { data: empresa, error: empresaError } = await supabase
@@ -199,14 +190,10 @@ export const useSmartBeneficiosData = () => {
         .eq('nome', userProfile.company)
         .single();
 
-      console.log('🏢 fetchColaboradores: Resultado da busca empresa:', { empresa, empresaError });
-
       if (empresaError || !empresa) {
-        console.log('❌ fetchColaboradores: Empresa não encontrada no sistema');
+        console.log('Empresa não encontrada no sistema');
         return;
       }
-
-      console.log('👥 fetchColaboradores: Buscando colaboradores da empresa:', empresa.id);
 
       // Buscar colaboradores da empresa
       const { data, error } = await supabase
@@ -216,12 +203,10 @@ export const useSmartBeneficiosData = () => {
         .eq('status', 'ativo')
         .order('nome');
 
-      console.log('👥 fetchColaboradores: Resultado:', { colaboradores: data, error, count: data?.length });
-
       if (error) throw error;
       setColaboradores(data || []);
     } catch (err: any) {
-      console.error('❌ fetchColaboradores: Erro ao buscar colaboradores:', err);
+      console.error('Erro ao buscar colaboradores:', err);
       setError(err.message);
     }
   };
@@ -345,9 +330,9 @@ export const useSmartBeneficiosData = () => {
     
     const custoMedioVida = vidasAtivas > 0 ? custoMensal / vidasAtivas : 0;
     
-    // Contar tickets da tabela tickets real
-    const ticketsAbertos = tickets.filter(t => t.status === 'aberto').length;
-    const ticketsPendentes = tickets.filter(t => ['em_validacao', 'processando'].includes(t.status)).length;
+    // Contar tickets/submissões reais
+    const ticketsAbertos = submissoes.filter(s => s.status === 'recebida').length;
+    const ticketsPendentes = submissoes.filter(s => s.status === 'processada').length;
 
     setMetrics({
       vidasAtivas,
@@ -363,41 +348,23 @@ export const useSmartBeneficiosData = () => {
 
   // Carregar todos os dados
   const loadData = async () => {
-    if (!user) {
-      console.log('❌ loadData: Usuário não encontrado');
-      return;
-    }
+    if (!user) return;
     
-    console.log('🔄 loadData: Iniciando carregamento de dados para usuário:', user.id);
     setIsLoading(true);
     setError(null);
     
     try {
-      // Carregar dados sequencialmente para debug
-      console.log('📋 Carregando empresas...');
-      await fetchEmpresas();
-      
-      console.log('👥 Carregando colaboradores...');
-      await fetchColaboradores();
-      
-      console.log('👶 Carregando dependentes...');
-      await fetchDependentes();
-      
-      console.log('🎫 Carregando tickets...');
-      await fetchTickets();
-      
-      console.log('📄 Carregando apólices...');
-      await fetchApolices();
-      
-      console.log('🔗 Carregando links...');
-      await fetchColaboradorLinks();
-      
-      console.log('📨 Carregando submissões...');
-      await fetchSubmissoes();
-      
-      console.log('✅ loadData: Todos os dados carregados com sucesso');
+      await Promise.all([
+        fetchEmpresas(),
+        fetchColaboradores(), 
+        fetchDependentes(),
+        fetchTickets(),
+        fetchApolices(),
+        fetchColaboradorLinks(),
+        fetchSubmissoes()
+      ]);
     } catch (err: any) {
-      console.error('❌ Erro ao carregar dados:', err);
+      console.error('Erro ao carregar dados:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -568,7 +535,7 @@ export const useSmartBeneficiosData = () => {
 
   useEffect(() => {
     calculateMetrics();
-  }, [colaboradores, dependentes, tickets]);
+  }, [colaboradores, dependentes, submissoes]);
 
   return {
     empresas,
