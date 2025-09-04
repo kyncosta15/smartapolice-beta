@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { 
   Users, 
   DollarSign, 
   TrendingUp, 
   AlertTriangle,
   Calendar,
-  ClipboardList
+  ClipboardList,
+  RefreshCw
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -26,6 +28,7 @@ import {
   Line
 } from 'recharts';
 import { useRHDashboardData } from '@/hooks/useRHDashboardData';
+import { useSyncDashboard } from '@/hooks/useSyncDashboard';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -36,8 +39,11 @@ export default function RHDashboard() {
     solicitacoesStatus, 
     waterfallData, 
     isLoading, 
-    error 
+    error,
+    refetch 
   } = useRHDashboardData();
+
+  const { syncDashboardData, forceRefresh, isSyncing } = useSyncDashboard();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -70,9 +76,31 @@ export default function RHDashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">SmartBenefícios — Portal RH/Financeiro</h1>
-        <p className="text-muted-foreground">Dashboard executivo de gestão de benefícios</p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">SmartBenefícios — Portal RH/Financeiro</h1>
+          <p className="text-muted-foreground">Dashboard executivo de gestão de benefícios</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={syncDashboardData}
+            disabled={isSyncing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            Sincronizar
+          </Button>
+        </div>
       </div>
 
       {/* KPI Cards */}

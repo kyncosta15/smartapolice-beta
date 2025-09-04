@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   LogOut,
   User,
-  MessageCircle
+  MessageCircle,
+  RefreshCw
 } from 'lucide-react';
 import { IncluirDependenteModal } from '@/components/IncluirDependenteModal';
 import { ExcluirColaboradorModal } from '@/components/ExcluirColaboradorModal';
@@ -38,6 +39,7 @@ import { EmployeesList } from '@/components/EmployeesList';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useSyncDashboard } from '@/hooks/useSyncDashboard';
 
 // Dados mock para demonstração
 const mockData = {
@@ -129,6 +131,7 @@ export const SmartBeneficiosDashboard = () => {
   const { metrics, colaboradores, tickets, apolices, colaboradorLinks, submissoes, isLoading, error, loadData } = useSmartBeneficiosData();
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const { syncDashboardData, forceRefresh, isSyncing } = useSyncDashboard();
 
   // Se o usuário for "Gestão RH", mostrar o dashboard executivo diretamente
   const userClassification = (profile as any)?.classification || (user as any)?.classification || 'Corretora';
@@ -386,6 +389,32 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Solicitações Tab */}
           <TabsContent value="solicitacoes" className="space-y-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">Solicitações</h2>
+                <p className="text-muted-foreground">Gerencie as solicitações de benefícios</p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadData}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={syncDashboardData}
+                  disabled={isSyncing}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                  Sincronizar
+                </Button>
+              </div>
+            </div>
             {(profile as any)?.role === 'corretora_admin' ? (
               <AdminRequestsDashboard />
             ) : (
