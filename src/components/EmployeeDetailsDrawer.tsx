@@ -193,55 +193,55 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
   const activeDependents = getActiveDependents();
 
   return (
-    <div className="space-y-6">
-      <SheetHeader>
-        <SheetTitle>{employee.full_name}</SheetTitle>
-        <SheetDescription>
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-0">
+      <SheetHeader className="space-y-2">
+        <SheetTitle className="text-lg sm:text-xl break-words">{employee.full_name}</SheetTitle>
+        <SheetDescription className="text-sm">
           Detalhes do colaborador e dependentes
         </SheetDescription>
       </SheetHeader>
 
-      <Accordion type="multiple" defaultValue={["profile", "company", "plan", "dependents"]}>
+      <Accordion type="multiple" defaultValue={["profile", "company", "plan", "dependents"]} className="space-y-2">
         {/* Perfil */}
         <AccordionItem value="profile">
-          <AccordionTrigger>
+          <AccordionTrigger className="py-3">
             <div className="flex items-center">
-              <User className="h-4 w-4 mr-2" />
-              Perfil
+              <User className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="text-sm sm:text-base">Perfil</span>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Nome Completo</Label>
-                <p className="text-sm font-medium">{employee.full_name}</p>
+          <AccordionContent className="space-y-3 sm:space-y-4 px-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs sm:text-sm">Nome Completo</Label>
+                <p className="text-sm font-medium break-words">{employee.full_name}</p>
               </div>
               
-              <div>
-                <Label>CPF</Label>
+              <div className="space-y-1">
+                <Label className="text-xs sm:text-sm">CPF</Label>
                 <p className="text-sm font-medium">{formatCPF(employee.cpf)}</p>
               </div>
               
-              <div>
-                <Label>Email</Label>
-                <p className="text-sm font-medium">{employee.email || 'Não informado'}</p>
+              <div className="space-y-1">
+                <Label className="text-xs sm:text-sm">Email</Label>
+                <p className="text-sm font-medium break-all">{employee.email || 'Não informado'}</p>
               </div>
               
-              <div>
-                <Label>Telefone</Label>
+              <div className="space-y-1">
+                <Label className="text-xs sm:text-sm">Telefone</Label>
                 <p className="text-sm font-medium">{employee.phone || 'Não informado'}</p>
               </div>
               
-              <div>
-                <Label>Data de Nascimento</Label>
+              <div className="space-y-1">
+                <Label className="text-xs sm:text-sm">Data de Nascimento</Label>
                 <p className="text-sm font-medium">
                   {employee.birth_date ? formatDate(employee.birth_date) : 'Não informado'}
                 </p>
               </div>
               
-              <div>
-                <Label>Status</Label>
-                <Badge variant={employee.status === 'ativo' ? 'default' : 'secondary'}>
+              <div className="space-y-1">
+                <Label className="text-xs sm:text-sm">Status</Label>
+                <Badge variant={employee.status === 'ativo' ? 'default' : 'secondary'} className="text-xs">
                   {employee.status}
                 </Badge>
               </div>
@@ -251,38 +251,38 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
 
         {/* Empresa */}
         <AccordionItem value="company">
-          <AccordionTrigger>
+          <AccordionTrigger className="py-3">
             <div className="flex items-center">
-              <Building className="h-4 w-4 mr-2" />
-              Empresa
+              <Building className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="text-sm sm:text-base">Empresa</span>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Nome Fantasia</Label>
-                <p className="text-sm font-medium">
+          <AccordionContent className="space-y-3 sm:space-y-4 px-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs sm:text-sm">Nome Fantasia</Label>
+                <p className="text-sm font-medium break-words">
                   {employee.companies?.trade_name || 'Não informado'}
                 </p>
               </div>
               
-              <div>
-                <Label>Razão Social</Label>
-                <p className="text-sm font-medium">{employee.companies?.legal_name}</p>
+              <div className="space-y-1">
+                <Label className="text-xs sm:text-sm">Razão Social</Label>
+                <p className="text-sm font-medium break-words">{employee.companies?.legal_name}</p>
               </div>
               
-              <div className="col-span-2">
-                <Label>CNPJ</Label>
+              <div className="col-span-1 sm:col-span-2 space-y-1">
+                <Label className="text-xs sm:text-sm">CNPJ</Label>
                 <Button 
                   variant="link" 
                   size="sm" 
-                  className="p-0 h-auto text-blue-600"
+                  className="p-0 h-auto text-blue-600 text-sm break-all"
                   onClick={() => {
                     window.open(`/rh/empresas/${employee.company_id}`, '_blank');
                   }}
                 >
                   {formatCNPJ(employee.companies?.cnpj || '')}
-                  <ExternalLink className="h-3 w-3 ml-1" />
+                  <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
                 </Button>
               </div>
             </div>
@@ -291,32 +291,32 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
 
         {/* Plano Atual */}
         <AccordionItem value="plan">
-          <AccordionTrigger>
+          <AccordionTrigger className="py-3">
             <div className="flex items-center">
-              <CreditCard className="h-4 w-4 mr-2" />
-              Plano Atual
+              <CreditCard className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="text-sm sm:text-base">Plano Atual</span>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="space-y-4">
+          <AccordionContent className="space-y-3 sm:space-y-4 px-1">
             {currentPlan ? (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Plano</Label>
-                  <p className="text-sm font-medium">{currentPlan.plans.name}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs sm:text-sm">Plano</Label>
+                  <p className="text-sm font-medium break-words">{currentPlan.plans.name}</p>
                 </div>
                 
-                <div>
-                  <Label>Operadora</Label>
-                  <p className="text-sm font-medium">{currentPlan.plans.operator}</p>
+                <div className="space-y-1">
+                  <Label className="text-xs sm:text-sm">Operadora</Label>
+                  <p className="text-sm font-medium break-words">{currentPlan.plans.operator}</p>
                 </div>
                 
-                <div>
-                  <Label>Data de Início</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs sm:text-sm">Data de Início</Label>
                   <p className="text-sm font-medium">{formatDate(currentPlan.start_date)}</p>
                 </div>
                 
-                <div>
-                  <Label>Mensalidade</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs sm:text-sm">Mensalidade</Label>
                   <p className="text-sm font-medium">
                     R$ {Number(currentPlan.monthly_premium).toLocaleString('pt-BR', {
                       minimumFractionDigits: 2,
@@ -325,48 +325,48 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
                   </p>
                 </div>
                 
-                <div className="col-span-2">
-                  <Button variant="outline" size="sm">
+                <div className="col-span-1 sm:col-span-2 pt-2">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     Alterar Plano
                   </Button>
                 </div>
               </div>
             ) : (
-              <p className="text-muted-foreground">Nenhum plano ativo</p>
+              <p className="text-muted-foreground text-sm">Nenhum plano ativo</p>
             )}
           </AccordionContent>
         </AccordionItem>
 
         {/* Dependentes */}
         <AccordionItem value="dependents">
-          <AccordionTrigger>
+          <AccordionTrigger className="py-3">
             <div className="flex items-center">
-              <Users className="h-4 w-4 mr-2" />
-              Dependentes ({activeDependents.length})
+              <Users className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="text-sm sm:text-base">Dependentes ({activeDependents.length})</span>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium">Lista de Dependentes</h4>
+          <AccordionContent className="space-y-3 sm:space-y-4 px-1">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <h4 className="font-medium text-sm sm:text-base">Lista de Dependentes</h4>
               <Dialog open={showDependentForm} onOpenChange={setShowDependentForm}>
                 <DialogTrigger asChild>
-                  <Button size="sm">
+                  <Button size="sm" className="w-full sm:w-auto">
                     <Plus className="h-4 w-4 mr-2" />
                     Adicionar
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="w-[95vw] max-w-md mx-auto">
                   <DialogHeader>
-                    <DialogTitle>
+                    <DialogTitle className="text-lg">
                       {editingDependent ? 'Editar Dependente' : 'Novo Dependente'}
                     </DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="text-sm">
                       Preencha os dados do dependente
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleDependentSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="dependent_name">Nome Completo *</Label>
+                      <Label htmlFor="dependent_name" className="text-sm">Nome Completo *</Label>
                       <Input
                         id="dependent_name"
                         value={dependentForm.full_name}
@@ -375,11 +375,12 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
                           full_name: e.target.value 
                         }))}
                         required
+                        className="text-sm"
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="dependent_cpf">CPF</Label>
+                      <Label htmlFor="dependent_cpf" className="text-sm">CPF</Label>
                       <Input
                         id="dependent_cpf"
                         value={dependentForm.cpf}
@@ -387,11 +388,12 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
                           ...prev, 
                           cpf: e.target.value 
                         }))}
+                        className="text-sm"
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="dependent_birth">Data de Nascimento</Label>
+                      <Label htmlFor="dependent_birth" className="text-sm">Data de Nascimento</Label>
                       <Input
                         id="dependent_birth"
                         type="date"
@@ -400,11 +402,12 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
                           ...prev, 
                           birth_date: e.target.value 
                         }))}
+                        className="text-sm"
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="dependent_relationship">Grau de Parentesco</Label>
+                      <Label htmlFor="dependent_relationship" className="text-sm">Grau de Parentesco</Label>
                       <Select 
                         value={dependentForm.relationship} 
                         onValueChange={(value) => setDependentForm(prev => ({ 
@@ -412,7 +415,7 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
                           relationship: value 
                         }))}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="text-sm">
                           <SelectValue placeholder="Selecione o parentesco" />
                         </SelectTrigger>
                         <SelectContent>
@@ -423,11 +426,11 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
                       </Select>
                     </div>
                     
-                    <div className="flex justify-end gap-2">
-                      <Button type="button" variant="outline" onClick={resetDependentForm}>
+                    <div className="flex flex-col sm:flex-row justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={resetDependentForm} className="text-sm">
                         Cancelar
                       </Button>
-                      <Button type="submit">
+                      <Button type="submit" className="text-sm">
                         {editingDependent ? 'Salvar' : 'Adicionar'}
                       </Button>
                     </div>
@@ -437,39 +440,80 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
             </div>
 
             {activeDependents.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
+              <p className="text-muted-foreground text-center py-6 sm:py-8 text-sm">
                 Nenhum dependente cadastrado
               </p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Parentesco</TableHead>
-                    <TableHead>Nascimento</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <div className="overflow-x-auto">
+                <div className="hidden sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">Nome</TableHead>
+                        <TableHead className="text-xs">Parentesco</TableHead>
+                        <TableHead className="text-xs">Nascimento</TableHead>
+                        <TableHead className="text-xs">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {activeDependents.map((dependent: any) => (
+                        <TableRow key={dependent.id}>
+                          <TableCell className="font-medium text-sm">
+                            {dependent.full_name}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
+                              {dependent.relationship || 'Não informado'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {dependent.birth_date ? formatDate(dependent.birth_date) : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => startEditDependent(dependent)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeleteDependent(dependent.id)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                {/* Mobile view */}
+                <div className="sm:hidden space-y-3">
                   {activeDependents.map((dependent: any) => (
-                    <TableRow key={dependent.id}>
-                      <TableCell className="font-medium">
-                        {dependent.full_name}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {dependent.relationship || 'Não informado'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {dependent.birth_date ? formatDate(dependent.birth_date) : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
+                    <div key={dependent.id} className="border rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium text-sm">{dependent.full_name}</p>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {dependent.relationship || 'Não informado'}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => startEditDependent(dependent)}
+                            className="h-8 w-8 p-0"
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -477,15 +521,21 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeleteDependent(dependent.id)}
+                            className="h-8 w-8 p-0"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </div>
+                      {dependent.birth_date && (
+                        <p className="text-xs text-muted-foreground">
+                          Nascimento: {formatDate(dependent.birth_date)}
+                        </p>
+                      )}
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+              </div>
             )}
           </AccordionContent>
         </AccordionItem>
