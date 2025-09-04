@@ -147,29 +147,73 @@ export function useCollaborators() {
 
   const createEmployee = async (employeeData: CreateEmployeeData) => {
     try {
-      // Primeiro, verificar se a empresa já existe ou criar uma nova
+      console.log('🚀 Creating employee with data:', employeeData);
+      
+      // Buscar empresa do usuário atual (da tabela empresas, não companies)
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: userInfo } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', currentUser.user.id)
+        .single();
+
+      if (!userInfo?.company) {
+        throw new Error('Usuário não possui empresa associada');
+      }
+
+      // Buscar empresa na tabela empresas
+      const { data: empresa } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userInfo.company)
+        .single();
+
+      if (!empresa) {
+        throw new Error('Empresa não encontrada');
+      }
+
+      console.log('✅ Found empresa:', empresa);
+
+      // Verificar se precisa criar entrada na tabela companies (compatibilidade)
       let company = companies.find(c => c.cnpj === employeeData.company.cnpj);
       
       if (!company) {
+        console.log('🔄 Creating company entry for compatibility...');
         const { data: newCompany, error: companyError } = await supabase
           .from('companies')
           .insert({
             cnpj: employeeData.company.cnpj,
             legal_name: employeeData.company.legalName,
-            trade_name: employeeData.company.tradeName
+            trade_name: employeeData.company.tradeName || employeeData.company.legalName
           })
           .select()
           .single();
 
-        if (companyError) throw companyError;
-        company = newCompany;
+        if (companyError) {
+          console.error('❌ Error creating company:', companyError);
+          // Se falhar, usar a empresa existente
+          company = { 
+            id: empresa.id, 
+            cnpj: employeeData.company.cnpj,
+            legal_name: employeeData.company.legalName,
+            trade_name: employeeData.company.tradeName 
+          };
+        } else {
+          company = newCompany;
+          console.log('✅ Created company:', company);
+        }
       }
 
-      // Criar o colaborador
+      // Criar o colaborador usando a empresa encontrada
+      console.log('🔄 Creating employee...');
       const { data: newEmployee, error: employeeError } = await supabase
         .from('employees')
         .insert({
-          company_id: company.id,
+          company_id: empresa.id, // Usar sempre a empresa do usuário atual
           cpf: employeeData.cpf.replace(/\D/g, ''),
           full_name: employeeData.fullName,
           email: employeeData.email,
@@ -180,10 +224,16 @@ export function useCollaborators() {
         .select()
         .single();
 
-      if (employeeError) throw employeeError;
+      if (employeeError) {
+        console.error('❌ Error creating employee:', employeeError);
+        throw employeeError;
+      }
+
+      console.log('✅ Created employee:', newEmployee);
 
       // Se há plano inicial, criar o vínculo
       if (employeeData.initialPlan) {
+        console.log('🔄 Creating employee plan...');
         const { error: planError } = await supabase
           .from('employee_plans')
           .insert({
@@ -194,14 +244,18 @@ export function useCollaborators() {
             status: 'ativo'
           });
 
-        if (planError) throw planError;
+        if (planError) {
+          console.error('❌ Error creating employee plan:', planError);
+          throw planError;
+        }
+        console.log('✅ Created employee plan');
       }
 
       toast({ title: 'Colaborador criado com sucesso!' });
       await fetchEmployees();
       return newEmployee;
     } catch (err) {
-      console.error('Error creating employee:', err);
+      console.error('❌ Error creating employee:', err);
       toast({
         title: 'Erro ao criar colaborador',
         description: err instanceof Error ? err.message : 'Erro desconhecido',
