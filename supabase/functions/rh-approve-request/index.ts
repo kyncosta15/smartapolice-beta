@@ -216,12 +216,12 @@ serve(async (req) => {
     await supabase
       .from('requests')
       .update({ 
-        status: 'em_validacao', 
+        status: 'aprovado_rh', 
         updated_at: new Date().toISOString() 
       })
       .eq('id', fullRequest.id)
 
-    console.log(`Request status updated to em_validacao`)
+    console.log(`Request status updated to aprovado_rh`)
 
     return new Response(
       JSON.stringify({ 
