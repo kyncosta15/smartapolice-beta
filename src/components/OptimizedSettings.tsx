@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,16 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronDown } from 'lucide-react';
 import { 
   Settings, 
   Bell, 
   Shield, 
   Database, 
   Palette, 
-  Globe, 
   Download,
   Upload,
-  Users,
   CreditCard
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -47,7 +47,19 @@ export function OptimizedSettings() {
     }
   });
 
+  const [activeTab, setActiveTab] = useState('notifications');
+  const isMobile = useIsMobile();
   const { toast } = useToast();
+
+  const tabs = [
+    { value: 'notifications', label: 'Notificações', icon: Bell },
+    { value: 'appearance', label: 'Aparência', icon: Palette },
+    { value: 'security', label: 'Segurança', icon: Shield },
+    { value: 'integration', label: 'Integração', icon: Database },
+    { value: 'billing', label: 'Cobrança', icon: CreditCard }
+  ];
+
+  const activeTabData = tabs.find(tab => tab.value === activeTab);
 
   const handleSave = (section: string) => {
     toast({
@@ -77,29 +89,45 @@ export function OptimizedSettings() {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="notifications" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-          <TabsTrigger value="notifications" className="flex items-center space-x-2">
-            <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">Notificações</span>
-          </TabsTrigger>
-          <TabsTrigger value="appearance" className="flex items-center space-x-2">
-            <Palette className="h-4 w-4" />
-            <span className="hidden sm:inline">Aparência</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center space-x-2">
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Segurança</span>
-          </TabsTrigger>
-          <TabsTrigger value="integration" className="flex items-center space-x-2">
-            <Database className="h-4 w-4" />
-            <span className="hidden sm:inline">Integração</span>
-          </TabsTrigger>
-          <TabsTrigger value="billing" className="flex items-center space-x-2">
-            <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">Cobrança</span>
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        {/* Mobile: Dropdown menu */}
+        {isMobile ? (
+          <div className="w-full">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between h-12">
+                  <div className="flex items-center space-x-2">
+                    {activeTabData && <activeTabData.icon className="h-4 w-4" />}
+                    <span>{activeTabData?.label}</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-full bg-white border border-gray-200 z-50" align="start">
+                {tabs.map((tab) => (
+                  <DropdownMenuItem
+                    key={tab.value}
+                    onSelect={() => setActiveTab(tab.value)}
+                    className="flex items-center space-x-2 p-3 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <tab.icon className="h-4 w-4" />
+                    <span>{tab.label}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ) : (
+          /* Desktop: Regular tabs */
+          <TabsList className="grid w-full grid-cols-5">
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value} className="flex items-center space-x-2">
+                <tab.icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        )}
 
         {/* Notificações */}
         <TabsContent value="notifications">
