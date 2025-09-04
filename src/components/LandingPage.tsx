@@ -6,7 +6,19 @@ import { Link } from 'react-router-dom';
 
 export const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex flex-col relative overflow-hidden">
+      {/* Background image with low opacity */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5 pointer-events-none"
+        style={{
+          backgroundImage: `url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png')`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center right'
+        }}
+      />
+      
+      {/* Content overlay */}
+      <div className="relative z-10 flex flex-col min-h-screen">
       {/* Header */}
       <header className="p-6 text-center">
         {/* Animated Logo above RCorp */}
@@ -71,10 +83,11 @@ export const LandingPage = () => {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="p-6 text-center text-muted-foreground">
-        <p>&copy; 2025 RCorp. Todos os direitos reservados.</p>
-      </footer>
+       {/* Footer */}
+       <footer className="p-6 text-center text-muted-foreground">
+         <p>&copy; 2025 RCorp. Todos os direitos reservados.</p>
+       </footer>
+      </div>
     </div>
   );
 };
