@@ -129,7 +129,7 @@ const getTipoTicketLabel = (tipo: string) => {
 export const SmartBeneficiosDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
-  const { metrics, colaboradores, tickets, apolices, colaboradorLinks, submissoes, isLoading, error, loadData } = useSmartBeneficiosData();
+  const { metrics, colaboradores, dependentes, empresas, tickets, apolices, colaboradorLinks, submissoes, isLoading, error, loadData } = useSmartBeneficiosData();
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { syncDashboardData, forceRefresh, isSyncing } = useSyncDashboard();
@@ -237,6 +237,80 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
+            {/* Status de Debug */}
+            {isLoading && (
+              <Card className="border-blue-200 bg-blue-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-blue-700">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span className="text-sm font-medium">Carregando dados... Verifique o console para detalhes</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {error && (
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-red-700">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Erro: {error}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Status dos dados */}
+            <Card className="border-gray-200">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <MessageCircle className="h-4 w-4" />
+                  Status dos Dados
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span>Empresas:</span>
+                    <Badge variant={empresas.length > 0 ? "default" : "secondary"}>
+                      {empresas.length}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Colaboradores:</span>
+                    <Badge variant={colaboradores.length > 0 ? "default" : "secondary"}>
+                      {colaboradores.length}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Dependentes:</span>
+                    <Badge variant={dependentes.length > 0 ? "default" : "secondary"}>
+                      {dependentes.length}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Apólices:</span>
+                    <Badge variant={apolices.length > 0 ? "default" : "secondary"}>
+                      {apolices.length}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="pt-2 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadData}
+                    disabled={isLoading}
+                    className="w-full text-xs"
+                  >
+                    <RefreshCw className={`h-3 w-3 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                    Recarregar Dados
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardContent className="p-6">
