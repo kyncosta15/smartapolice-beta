@@ -44,24 +44,50 @@ export function useRHDashboardData() {
 
   const fetchKPIs = async () => {
     try {
-      // Vidas ativas
+      // Get current user to filter by company
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (!userProfile?.company) return;
+
+      // Get company ID
+      const { data: companyData } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (!companyData) return;
+
+      // Vidas ativas (filtered by company)
       const { count: vidasAtivas } = await supabase
         .from('employees')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'ativo');
+        .eq('status', 'ativo')
+        .eq('company_id', companyData.id);
 
-      // Custo mensal (soma dos employee_plans ativos)
+      // Custo mensal (soma dos employee_plans ativos - filtered by company)
       const { data: plansData } = await supabase
         .from('employee_plans')
-        .select('monthly_premium')
+        .select(`
+          monthly_premium,
+          employees!inner(company_id)
+        `)
         .eq('status', 'ativo')
+        .eq('employees.company_id', companyData.id)
         .is('end_date', null);
 
       const custoMensal = plansData?.reduce((sum, plan) => sum + Number(plan.monthly_premium), 0) || 0;
 
-      // Tickets abertos
+      // Tickets abertos (using request_tickets table)
       const { count: ticketsAbertos } = await supabase
-        .from('tickets')
+        .from('request_tickets')
         .select('*', { count: 'exact', head: true })
         .in('status', ['aberto', 'enviado', 'processando']);
 
@@ -81,6 +107,27 @@ export function useRHDashboardData() {
 
   const fetchRenewals = async () => {
     try {
+      // Get current user to filter by company
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (!userProfile?.company) return;
+
+      // Get company ID
+      const { data: companyData } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (!companyData) return;
+
       const today = new Date();
       const futureDate = new Date(today.getTime() + (60 * 24 * 60 * 60 * 1000)); // +60 dias
 
@@ -90,10 +137,11 @@ export function useRHDashboardData() {
           id,
           end_date,
           monthly_premium,
-          employees!inner(full_name),
+          employees!inner(full_name, company_id),
           plans!inner(name)
         `)
         .eq('status', 'ativo')
+        .eq('employees.company_id', companyData.id)
         .not('end_date', 'is', null)
         .gte('end_date', today.toISOString().split('T')[0])
         .lte('end_date', futureDate.toISOString().split('T')[0])
@@ -123,9 +171,37 @@ export function useRHDashboardData() {
 
   const fetchSolicitacoesStatus = async () => {
     try {
+      // Get current user to filter by company
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (!userProfile?.company) return;
+
+      // Get company ID
+      const { data: companyData } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (!companyData) return;
+
+      // Fetch requests filtered by company
       const { data } = await supabase
         .from('requests')
-        .select('status')
+        .select(`
+          status,
+          employees!inner(
+            company_id
+          )
+        `)
+        .eq('employees.company_id', companyData.id)
         .not('draft', 'eq', true);
 
       const statusCounts = data?.reduce((acc, request) => {
