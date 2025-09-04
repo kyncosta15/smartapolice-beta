@@ -85,11 +85,11 @@ export function useRHDashboardData() {
 
       const custoMensal = plansData?.reduce((sum, plan) => sum + Number(plan.monthly_premium), 0) || 0;
 
-      // Tickets abertos (using request_tickets table)
+      // Tickets abertos (using tickets table)
       const { count: ticketsAbertos } = await supabase
-        .from('request_tickets')
+        .from('tickets')
         .select('*', { count: 'exact', head: true })
-        .in('status', ['aberto', 'enviado', 'processando']);
+        .eq('status', 'aberto');
 
       const custoMedioVida = vidasAtivas ? custoMensal / vidasAtivas : 0;
 

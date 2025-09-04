@@ -47,15 +47,12 @@ export interface Dependente {
 
 export interface Ticket {
   id: string;
-  numero_ticket: string;
-  colaborador_id?: string;
-  empresa_id?: string;
-  tipo: 'inclusao_dependente' | 'exclusao_dependente' | 'duvida_cobertura' | 'segunda_via_carteirinha' | 'duvida_geral';
-  status: 'recebido' | 'em_validacao' | 'em_execucao' | 'concluido' | 'pendente_cliente' | 'cancelado';
-  titulo: string;
-  descricao?: string;
-  canal_origem?: string;
-  data_recebimento?: string;
+  protocol_code: string;
+  request_id?: string;
+  status: 'aberto' | 'processada' | 'erro' | 'aprovado' | 'rejeitado' | 'em_validacao' | 'processando';
+  payload: any;
+  rh_note?: string;
+  external_ref?: string;
   created_at: string;
   updated_at: string;
 }
@@ -262,8 +259,21 @@ export const useSmartBeneficiosData = () => {
     }
   };
 
-  // Buscar tickets - REMOVIDO para evitar conflito com nova tabela tickets
-  // Esta funcionalidade será implementada separadamente para benefícios
+  // Buscar tickets da tabela atual
+  const fetchTickets = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTickets((data || []) as Ticket[]);
+    } catch (err: any) {
+      console.error('Erro ao buscar tickets:', err);
+      setError(err.message);
+    }
+  };
 
   // Buscar apólices
   const fetchApolices = async () => {
@@ -320,11 +330,9 @@ export const useSmartBeneficiosData = () => {
     
     const custoMedioVida = vidasAtivas > 0 ? custoMensal / vidasAtivas : 0;
     
-    const ticketsAbertos = tickets.filter(t => 
-      ['recebido', 'em_validacao', 'em_execucao', 'pendente_cliente'].includes(t.status)
-    ).length;
-    
-    const ticketsPendentes = tickets.filter(t => t.status === 'pendente_cliente').length;
+    // Contar tickets da tabela tickets real
+    const ticketsAbertos = tickets.filter(t => t.status === 'aberto').length;
+    const ticketsPendentes = tickets.filter(t => ['em_validacao', 'processando'].includes(t.status)).length;
 
     setMetrics({
       vidasAtivas,
@@ -350,7 +358,7 @@ export const useSmartBeneficiosData = () => {
         fetchEmpresas(),
         fetchColaboradores(), 
         fetchDependentes(),
-        // fetchTickets(), // REMOVIDO temporariamente
+        fetchTickets(),
         fetchApolices(),
         fetchColaboradorLinks(),
         fetchSubmissoes()

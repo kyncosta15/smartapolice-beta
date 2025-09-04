@@ -325,19 +325,39 @@ export const SmartBeneficiosDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {[
-                      { status: 'Em Validação', count: 3, color: 'orange' },
-                      { status: 'Em Execução', count: 4, color: 'purple' },
-                      { status: 'Pendente Cliente', count: 2, color: 'yellow' },
-                      { status: 'Concluídos Hoje', count: 8, color: 'green' }
-                    ].map((item) => (
-                      <div key={item.status} className="flex items-center justify-between">
-                        <span className="text-sm">{item.status}</span>
-                        <Badge className={`bg-${item.color}-100 text-${item.color}-800`}>
-                          {item.count}
-                        </Badge>
-                      </div>
-                    ))}
+                    {tickets.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Carregando dados dos tickets...</p>
+                    ) : (
+                      [
+                        { 
+                          status: 'Recebidos', 
+                          count: tickets.filter(t => t.status === 'aberto').length, 
+                          color: 'blue' 
+                        },
+                        { 
+                          status: 'Processados', 
+                          count: tickets.filter(t => ['processada', 'aprovado'].includes(t.status)).length, 
+                          color: 'green' 
+                        },
+                        { 
+                          status: 'Com Erro', 
+                          count: tickets.filter(t => ['erro', 'rejeitado'].includes(t.status)).length, 
+                          color: 'red' 
+                        },
+                        { 
+                          status: 'Em Validação', 
+                          count: tickets.filter(t => ['em_validacao', 'processando'].includes(t.status)).length, 
+                          color: 'orange' 
+                        }
+                      ].map((item) => (
+                        <div key={item.status} className="flex items-center justify-between">
+                          <span className="text-sm">{item.status}</span>
+                          <Badge className={`bg-${item.color}-100 text-${item.color}-800`}>
+                            {item.count}
+                          </Badge>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>
