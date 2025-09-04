@@ -28,8 +28,12 @@ export const LandingPage = () => {
               />
             </div>
             
-            {/* Rotating border */}
-            <div className="absolute inset-0 w-20 h-20 border-2 border-primary/40 rounded-2xl animate-spin" style={{ animationDuration: '4s' }}></div>
+            {/* Logo overlay */}
+            <img 
+              src="/lovable-uploads/c778cf76-a82c-4edb-be06-f9de96644fe0.png" 
+              alt="Check Logo" 
+              className="absolute inset-0 w-20 h-20 object-contain rounded-2xl" 
+            />
           </div>
         </div>
         
