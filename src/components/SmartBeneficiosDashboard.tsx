@@ -164,7 +164,11 @@ export const SmartBeneficiosDashboard = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-full flex items-center justify-center">
-              <Heart className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              <img 
+                src="/lovable-uploads/80ca086b-4968-405c-b87b-05cb3237db65.png" 
+                alt="SmartBenefícios Logo" 
+                className="h-4 w-4 sm:h-6 sm:w-6 object-contain" 
+              />
             </div>
             <div>
               <h1 className="text-lg sm:text-2xl font-bold text-primary">SmartBenefícios</h1>
