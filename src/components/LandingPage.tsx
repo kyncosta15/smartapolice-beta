@@ -8,7 +8,7 @@ export const LandingPage = () => {
   return (
     <div className="min-h-screen flex relative overflow-hidden">
       {/* Left side - Content */}
-      <div className="w-1/2 bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex flex-col relative z-10">
+      <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex flex-col relative z-10">
         {/* Header */}
         <header className="p-6 text-center">
           {/* Animated Logo above RCorp */}
@@ -79,12 +79,24 @@ export const LandingPage = () => {
       </div>
 
       {/* Right side - Background Image */}
-      <div className="w-1/2 relative">
+      <div className="hidden md:block md:w-1/2 relative">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png')`,
             backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        />
+      </div>
+
+      {/* Mobile background image overlay */}
+      <div className="md:hidden absolute top-0 right-0 w-1/3 h-1/3 opacity-20 z-0">
+        <div 
+          className="w-full h-full bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png')`,
+            backgroundSize: 'contain',
             backgroundPosition: 'center'
           }}
         />
