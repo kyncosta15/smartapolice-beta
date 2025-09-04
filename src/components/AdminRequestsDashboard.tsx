@@ -33,7 +33,9 @@ interface AdminRequest {
 }
 
 const fetcher = async (url: string) => {
-  const { data, error } = await supabase.functions.invoke(url.replace('/functions/v1/', ''));
+  const { data, error } = await supabase.functions.invoke(url.replace('/functions/v1/', ''), {
+    method: 'GET'
+  });
   if (error) throw error;
   return data;
 };
