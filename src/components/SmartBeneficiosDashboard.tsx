@@ -34,6 +34,7 @@ import { ProtocolosDashboard } from '@/components/ProtocolosDashboard';
 import { ProtocolosAdminDashboard } from '@/components/ProtocolosAdminDashboard';
 import { RequestsNewDashboard } from '@/components/RequestsNewDashboard';
 import { AdminRequestsDashboard } from '@/components/AdminRequestsDashboard';
+import { AdminTicketsDashboard } from '@/components/AdminTicketsDashboard';
 // Link generator removed - now using public page
 import { EmployeesList } from '@/components/EmployeesList';
 import { useAuth } from '@/contexts/AuthContext';
@@ -424,18 +425,11 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Tickets Tab */}
           <TabsContent value="tickets" className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Gestão de Tickets</h2>
-              <Badge className="bg-blue-100 text-blue-800">
-                {isLoading ? '...' : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`}
-              </Badge>
-            </div>
-            
-            {/* Mostrar dashboard admin para corretora_admin, normal para outros */}
+            {/* Mostrar dashboard admin para corretora_admin */}
             {(profile as any)?.role === 'corretora_admin' ? (
-              <ProtocolosAdminDashboard submissoes={submissoes} isLoading={isLoading} />
+              <AdminTicketsDashboard />
             ) : (
-              <ProtocolosDashboard submissoes={submissoes} isLoading={isLoading} />
+              <ProtocolosAdminDashboard submissoes={submissoes} isLoading={isLoading} />
             )}
           </TabsContent>
 
