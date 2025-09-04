@@ -1,6 +1,8 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,6 +15,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { user, profile, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -56,14 +59,22 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (requiredRoles.length > 0 && !requiredRoles.includes(profile.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center space-y-4">
           <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
           <p className="text-muted-foreground">
             Você não tem permissão para acessar esta página.
           </p>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground">
             Perfil necessário: {requiredRoles.join(', ')}
           </p>
+          <Button 
+            onClick={() => navigate(-1)} 
+            variant="outline" 
+            className="mt-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
         </div>
       </div>
     );
