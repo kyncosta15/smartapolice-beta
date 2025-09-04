@@ -26,3 +26,36 @@ verify_jwt = false
 
 [functions.corretora-approve-ticket]
 verify_jwt = false
+
+[functions.public-start]
+verify_jwt = false
+
+[functions.public-save]
+verify_jwt = false
+
+[functions.public-submit]
+verify_jwt = false
+
+[functions.rh-requests-list]
+verify_jwt = false
+
+[functions.rh-requests-kpis]
+verify_jwt = false
+
+[functions.rh-requests-detail]
+verify_jwt = false
+
+[functions.rh-approve-request]
+verify_jwt = false
+
+[functions.rh-requests-decline]
+verify_jwt = false
+
+[functions.adm-requests-list]
+verify_jwt = false
+
+[functions.adm-approve-request]
+verify_jwt = false
+
+[functions.adm-requests-decline]
+verify_jwt = false

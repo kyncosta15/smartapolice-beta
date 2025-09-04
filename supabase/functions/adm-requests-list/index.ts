@@ -11,13 +11,17 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  if (req.method !== 'GET') {
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Buscar solicitações não-draft
+    // Buscar solicitações aprovadas pelo RH
     const { data: requests, error } = await supabase
       .from('requests')
       .select(`
@@ -41,6 +45,7 @@ serve(async (req) => {
         )
       `)
       .eq('draft', false)
+      .in('status', ['aprovado_rh', 'em_validacao_adm'])
       .order('submitted_at', { ascending: false });
 
     if (error) {
@@ -70,7 +75,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Function error:', error);
     return new Response(
-      JSON.stringify({ ok: false, error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }),
+      JSON.stringify({ ok: false, error: { code: 'INTERNAL_ERROR', message: 'Erro interno do servidor' } }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

@@ -135,7 +135,7 @@ export const RequestsNewDashboard = () => {
         throw new Error(result.error?.message || 'Erro ao aprovar');
       }
 
-      toast.success('Solicitação aprovada e enviada ao backoffice!');
+      toast.success('Solicitação aprovada pelo RH! Enviada para análise da Administração.');
       setApproveNote('');
       setIsDrawerOpen(false);
       mutateAll();

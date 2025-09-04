@@ -32,6 +32,7 @@ import { ApoliceCNPJView } from '@/components/ApoliceCNPJView';
 import { ProtocolosDashboard } from '@/components/ProtocolosDashboard';
 import { ProtocolosAdminDashboard } from '@/components/ProtocolosAdminDashboard';
 import { RequestsNewDashboard } from '@/components/RequestsNewDashboard';
+import { AdminRequestsDashboard } from '@/components/AdminRequestsDashboard';
 // Link generator removed - now using public page
 import { EmployeesList } from '@/components/EmployeesList';
 import { useAuth } from '@/contexts/AuthContext';
@@ -381,7 +382,11 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Solicitações Tab */}
           <TabsContent value="solicitacoes" className="space-y-6">
-            <RequestsNewDashboard />
+            {(profile as any)?.role === 'corretora_admin' ? (
+              <AdminRequestsDashboard />
+            ) : (
+              <RequestsNewDashboard />
+            )}
           </TabsContent>
 
           {/* Tickets Tab */}

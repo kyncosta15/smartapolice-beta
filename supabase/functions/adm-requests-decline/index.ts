@@ -31,11 +31,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Atualizar status para recusado_rh
+    // Atualizar status para recusado_adm
     const { error: updateError } = await supabase
       .from('requests')
       .update({
-        status: 'recusado_rh',
+        status: 'recusado_adm',
         updated_at: new Date().toISOString()
       })
       .eq('id', requestId);
@@ -53,7 +53,7 @@ serve(async (req) => {
       .from('request_approvals')
       .insert([{
         request_id: requestId,
-        role: 'rh',
+        role: 'adm',
         decision: 'recusado',
         note: reason || null,
         decided_at: new Date().toISOString()
