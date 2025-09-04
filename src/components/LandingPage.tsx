@@ -40,7 +40,7 @@ export const LandingPage = () => {
             {/* Main container */}
             <div className="relative w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
               <img 
-                src="/lovable-uploads/280964fc-6628-4f9a-8a27-38eb1143dab2.png" 
+                src="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414.png" 
                 alt="RCorp Logo" 
                 className="w-14 h-14 object-contain drop-shadow-xl" 
                 style={{ 
