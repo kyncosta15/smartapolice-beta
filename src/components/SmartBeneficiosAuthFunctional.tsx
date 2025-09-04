@@ -116,7 +116,7 @@ const SmartBeneficiosAuthContent = () => {
         </Link>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-            <Heart className="h-6 w-6 text-white" />
+            <img src="/lovable-uploads/f99f90ec-93c1-4e2a-a2b2-892e655192bf.png" alt="Logo" className="h-6 w-6" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-primary">SmartBenefícios</h1>
