@@ -19,6 +19,8 @@ import {
   User,
   MessageCircle
 } from 'lucide-react';
+import { IncluirDependenteModal } from '@/components/IncluirDependenteModal';
+import { ExcluirColaboradorModal } from '@/components/ExcluirColaboradorModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
 import { useRHDashboardData } from '@/hooks/useRHDashboardData';
@@ -357,21 +359,22 @@ export const SmartBeneficiosDashboard = () => {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-2">
-                <Button 
-                  onClick={() => window.open('/rh/colaboradores', '_blank')}
-                  className="w-full sm:w-auto"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Incluir Dependentes
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => window.open('/rh/colaboradores', '_blank')}
-                  className="w-full sm:w-auto"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Excluir Colaboradores
-                </Button>
+                <IncluirDependenteModal>
+                  <Button className="w-full sm:w-auto">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Incluir Dependentes
+                  </Button>
+                </IncluirDependenteModal>
+                
+                <ExcluirColaboradorModal>
+                  <Button 
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Excluir Colaboradores
+                  </Button>
+                </ExcluirColaboradorModal>
               </div>
             </div>
             
