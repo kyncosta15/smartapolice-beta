@@ -165,7 +165,7 @@ export const SmartBeneficiosDashboard = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-full flex items-center justify-center">
               <img 
-                src="/lovable-uploads/80ca086b-4968-405c-b87b-05cb3237db65.png" 
+                src="/lovable-uploads/35e23026-c0af-40fa-b1db-60e8adc5169f.png" 
                 alt="SmartBenefícios Logo" 
                 className="h-4 w-4 sm:h-6 sm:w-6 object-contain" 
               />
