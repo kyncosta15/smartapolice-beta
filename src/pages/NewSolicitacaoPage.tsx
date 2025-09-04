@@ -241,13 +241,21 @@ export const NewSolicitacaoPage: React.FC = () => {
 
   const handleNext = async () => {
     await saveDraft();
-    setStep(prev => prev + 1);
+    setStep(prev => Math.min(prev + 1, 4)); // Cap at step 4
   };
 
   const handleSubmit = async () => {
     if (!sessionData) return;
 
+    // Validate that we have at least one item selected
+    const items = getRequestItems();
+    if (items.length === 0) {
+      setError('Selecione pelo menos uma pessoa para incluir ou excluir dos benefícios.');
+      return;
+    }
+
     setIsLoading(true);
+    setError(null);
     
     try {
       await saveDraft();
@@ -294,7 +302,7 @@ export const NewSolicitacaoPage: React.FC = () => {
       case 1: return formData.kind !== null;
       case 2: return formData.selectedPeople.titular || formData.selectedPeople.dependents.length > 0;
       case 3: return true; // Optional step
-      case 4: return true;
+      case 4: return formData.selectedPeople.titular || formData.selectedPeople.dependents.length > 0; // Must have items to submit
       default: return false;
     }
   };
@@ -344,10 +352,10 @@ export const NewSolicitacaoPage: React.FC = () => {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between text-sm text-gray-500 mb-2">
-            <span>Passo {step + 1} de 5</span>
-            <span>{Math.round(((step + 1) / 5) * 100)}%</span>
+            <span>Passo {Math.min(step + 1, 5)} de 5</span>
+            <span>{Math.min(Math.round(((step + 1) / 5) * 100), 100)}%</span>
           </div>
-          <Progress value={((step + 1) / 5) * 100} className="h-2" />
+          <Progress value={Math.min(((step + 1) / 5) * 100, 100)} className="h-2" />
         </div>
 
         {/* Error Display */}
