@@ -1,0 +1,1 @@
+UPDATE users SET role = 'administrador' WHERE email IN ('matheus@rcaldas.com.br', 'matheus.roxo@rcaldas.com.br');
