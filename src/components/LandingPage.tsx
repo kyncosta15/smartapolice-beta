@@ -17,16 +17,6 @@ export const LandingPage = () => {
         }}
       />
       
-      {/* Background image on the left with higher opacity */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10 pointer-events-none"
-        style={{
-          backgroundImage: `url('/lovable-uploads/4f7b736c-78c2-4f13-9570-096ebe5a6160.png')`,
-          backgroundSize: 'contain',
-          backgroundPosition: 'center left'
-        }}
-      />
-      
       {/* Content overlay */}
       <div className="relative z-10 flex flex-col min-h-screen">
       {/* Header */}
