@@ -27,7 +27,7 @@ import { ColaboradorModal } from '@/components/ColaboradorModal';
 import { ApoliceCNPJView } from '@/components/ApoliceCNPJView';
 import { GeradorLinksColaborador } from '@/components/GeradorLinksColaborador';
 import { ProtocolosDashboard } from '@/components/ProtocolosDashboard';
-import { RequestsDashboard } from '@/components/RequestsDashboard';
+import { RequestsNewDashboard } from '@/components/RequestsNewDashboard';
 // Link generator removed - now using public page
 import { EmployeesList } from '@/components/EmployeesList';
 import { useAuth } from '@/contexts/AuthContext';
@@ -381,7 +381,7 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Solicitações Tab */}
           <TabsContent value="solicitacoes" className="space-y-6">
-            <RequestsDashboard />
+            <RequestsNewDashboard />
           </TabsContent>
 
           {/* Tickets Tab */}
