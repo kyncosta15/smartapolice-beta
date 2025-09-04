@@ -20,10 +20,9 @@ export const LandingPage = () => {
               <img 
                 src="/lovable-uploads/80ca086b-4968-405c-b87b-05cb3237db65.png" 
                 alt="RCorp Logo" 
-                className="w-14 h-14 object-contain animate-pulse drop-shadow-xl" 
+                className="w-14 h-14 object-contain drop-shadow-xl" 
                 style={{ 
-                  filter: 'drop-shadow(0 0 12px rgba(59, 130, 246, 0.4))',
-                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite, bounce 3s ease-in-out infinite'
+                  filter: 'drop-shadow(0 0 12px rgba(59, 130, 246, 0.4))'
                 }} 
               />
             </div>
