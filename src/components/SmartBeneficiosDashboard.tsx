@@ -25,7 +25,6 @@ import { SpreadsheetUpload } from '@/components/SpreadsheetUpload';
 import { PlanilhaHistorico } from '@/components/PlanilhaHistorico';
 import { ColaboradorModal } from '@/components/ColaboradorModal';
 import { ApoliceCNPJView } from '@/components/ApoliceCNPJView';
-import { GeradorLinksColaborador } from '@/components/GeradorLinksColaborador';
 import { ProtocolosDashboard } from '@/components/ProtocolosDashboard';
 import { RequestsNewDashboard } from '@/components/RequestsNewDashboard';
 // Link generator removed - now using public page
@@ -208,13 +207,12 @@ export const SmartBeneficiosDashboard = () => {
       {/* Main Content */}
       <main className="p-3 sm:p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 mb-4 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-4 overflow-x-auto">
             <TabsTrigger value="dashboard" className="text-xs sm:text-sm">Dashboard</TabsTrigger>
             <TabsTrigger value="apolices" className="text-xs sm:text-sm">Apólices</TabsTrigger>
             <TabsTrigger value="colaboradores" className="text-xs sm:text-sm">Colaboradores</TabsTrigger>
             <TabsTrigger value="solicitacoes" className="text-xs sm:text-sm">Solicitações</TabsTrigger>
             <TabsTrigger value="tickets" className="text-xs sm:text-sm">Tickets</TabsTrigger>
-            <TabsTrigger value="links" className="text-xs sm:text-sm">Links</TabsTrigger>
             <TabsTrigger value="relatorios" className="text-xs sm:text-sm">Relatórios</TabsTrigger>
             <TabsTrigger value="upload" className="text-xs sm:text-sm">Upload</TabsTrigger>
           </TabsList>
@@ -340,39 +338,6 @@ export const SmartBeneficiosDashboard = () => {
             <ApoliceCNPJView apolices={apolices} isLoading={isLoading} />
           </TabsContent>
 
-          {/* Links Tab */}
-          <TabsContent value="links" className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold">Gerador de Links</h2>
-              <p className="text-muted-foreground">
-                Gere links personalizados para colaboradores preencherem solicitações
-              </p>
-            </div>
-            
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="font-semibold text-blue-800 mb-3">Link Público de Solicitações</h3>
-              <p className="text-blue-700 mb-4">
-                Os colaboradores agora podem acessar diretamente a página de solicitações sem necessidade de links individuais.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 p-3 bg-white rounded border font-mono text-sm">
-                  {window.location.origin}/solicitacao
-                </div>
-                <Button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/solicitacao`);
-                    toast.success('Link copiado!');
-                  }}
-                  variant="outline"
-                >
-                  Copiar Link
-                </Button>
-              </div>
-              <p className="text-sm text-blue-600 mt-3">
-                💡 Mensagem sugerida para WhatsApp: "Olá! Para incluir ou excluir beneficiários do seu plano, acesse este link seguro: {window.location.origin}/solicitacao. Informe seu CPF e nome, siga os passos e no final você receberá o protocolo."
-              </p>
-            </div>
-          </TabsContent>
 
           {/* Colaboradores Tab */}
           <TabsContent value="colaboradores" className="space-y-6">
