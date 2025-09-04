@@ -27,7 +27,8 @@ export const AuthPage = () => {
     name: '',
     company: '',
     phone: '',
-    role: 'cliente' as UserRole
+    role: 'cliente' as UserRole,
+    classification: 'Corretora' as 'Corretora' | 'Gestão RH'
   });
 
   const [personType, setPersonType] = useState<'pf' | 'pj'>('pf');
@@ -90,7 +91,10 @@ export const AuthPage = () => {
       return;
     }
 
-    const result = await register(registerData);
+    const result = await register({
+      ...registerData,
+      classification: registerData.classification
+    });
     
     if (result.success) {
       toast({
@@ -105,7 +109,8 @@ export const AuthPage = () => {
         name: '',
         company: '',
         phone: '',
-        role: 'cliente'
+        role: 'cliente' as UserRole,
+        classification: 'Corretora' as 'Corretora' | 'Gestão RH'
       });
       setPersonType('pf');
     } else {
@@ -221,7 +226,7 @@ export const AuthPage = () => {
                     </RadioGroup>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="register-name">{personType === 'pf' ? 'Nome' : 'Razão Social'} *</Label>
                       <div className="relative">
@@ -253,6 +258,22 @@ export const AuthPage = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="register-classification">Classificação *</Label>
+                    <Select
+                      value={registerData.classification}
+                      onValueChange={(value: 'Corretora' | 'Gestão RH') => setRegisterData(prev => ({ ...prev, classification: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Corretora">Corretora</SelectItem>
+                        <SelectItem value="Gestão RH">Gestão RH</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">

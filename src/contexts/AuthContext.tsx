@@ -45,6 +45,7 @@ interface AuthContextType {
     company?: string;
     phone?: string;
     role: UserRole;
+    classification?: 'Corretora' | 'Gestão RH';
   }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
