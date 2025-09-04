@@ -464,12 +464,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     company?: string;
     phone?: string;
     role: UserRole;
+    classification?: 'Corretora' | 'Gestão RH';
   }) => {
-    const result = await signUp(userData.email, userData.password, userData.name);
-    return {
-      success: !result.error,
-      error: result.error?.message || undefined
-    };
+    console.log('📝 Tentativa de registro para:', userData.email);
+    setLoading(true);
+
+    try {
+      // Primeiro, criar o usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        }
+      });
+
+      if (authError) {
+        console.error('❌ Erro no registro (auth):', authError);
+        return { success: false, error: authError.message };
+      }
+
+      if (!authData.user) {
+        console.error('❌ Usuário não foi criado');
+        return { success: false, error: 'Usuário não foi criado' };
+      }
+
+      console.log('✅ Usuário auth criado:', authData.user.id);
+
+      // Então, criar o perfil na tabela users
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email: userData.email,
+          name: userData.name,
+          password_hash: 'managed_by_auth',
+          role: userData.role,
+          company: userData.company,
+          phone: userData.phone,
+          classification: userData.classification || 'Corretora'
+        });
+
+      if (profileError) {
+        console.error('❌ Erro ao criar perfil:', profileError);
+        return { success: false, error: profileError.message };
+      }
+
+      console.log('✅ Perfil criado com sucesso');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erro inesperado no registro:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Erro desconhecido' };
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = signOut;
