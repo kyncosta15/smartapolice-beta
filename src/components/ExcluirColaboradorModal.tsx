@@ -23,7 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { UserX, Search, Trash2, User, Calendar, Building, Phone, Mail } from 'lucide-react';
 import { useCollaborators } from '@/hooks/useCollaborators';
 
@@ -48,19 +48,12 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
     try {
       await updateEmployee(employeeId, { status: 'inativo' });
       
-      toast({
-        title: "Sucesso",
-        description: "Colaborador inativado com sucesso!",
-      });
+      toast.success("Colaborador inativado com sucesso!");
       
       setSelectedEmployee(null);
     } catch (error) {
       console.error('Erro ao inativar colaborador:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao inativar colaborador. Tente novamente.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao inativar colaborador. Tente novamente.");
     }
   };
 

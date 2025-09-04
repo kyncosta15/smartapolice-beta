@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Plus, User, Calendar, Phone, Mail } from 'lucide-react';
 import { useCollaborators } from '@/hooks/useCollaborators';
 
@@ -36,20 +36,12 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
     e.preventDefault();
     
     if (!selectedEmployeeId) {
-      toast({
-        title: "Erro",
-        description: "Selecione um colaborador",
-        variant: "destructive",
-      });
+      toast.error("Selecione um colaborador");
       return;
     }
 
     if (!dependentData.full_name || !dependentData.relationship) {
-      toast({
-        title: "Erro", 
-        description: "Nome e grau de parentesco são obrigatórios",
-        variant: "destructive",
-      });
+      toast.error("Nome e grau de parentesco são obrigatórios");
       return;
     }
 
@@ -58,10 +50,7 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
         ...dependentData,
       });
       
-      toast({
-        title: "Sucesso",
-        description: "Dependente incluído com sucesso!",
-      });
+      toast.success("Dependente incluído com sucesso!");
       
       // Reset form
       setDependentData({
@@ -74,11 +63,7 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
       setOpen(false);
     } catch (error) {
       console.error('Erro ao incluir dependente:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao incluir dependente. Tente novamente.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao incluir dependente. Tente novamente.");
     }
   };
 
