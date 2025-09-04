@@ -7,13 +7,23 @@ import { Link } from 'react-router-dom';
 export const LandingPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex flex-col relative overflow-hidden">
-      {/* Background image with low opacity */}
+      {/* Background image on the right with low opacity */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5 pointer-events-none"
         style={{
           backgroundImage: `url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png')`,
           backgroundSize: 'contain',
           backgroundPosition: 'center right'
+        }}
+      />
+      
+      {/* Background image on the left with higher opacity */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20 pointer-events-none"
+        style={{
+          backgroundImage: `url('/lovable-uploads/4f7b736c-78c2-4f13-9570-096ebe5a6160.png')`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center left'
         }}
       />
       
