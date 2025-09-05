@@ -79,6 +79,7 @@ export function useCollaborators() {
 
   const fetchEmployees = async (search?: string) => {
     try {
+      console.log('🔍 Fetching employees with search:', search);
       let query = supabase
         .from('colaboradores')
         .select(`
@@ -99,6 +100,9 @@ export function useCollaborators() {
       }
 
       const { data: colaboradoresData, error } = await query.order('nome');
+
+      console.log('📊 Raw colaboradores data:', colaboradoresData);
+      console.log('❌ Error (if any):', error);
 
       if (error) throw error;
 
@@ -130,9 +134,10 @@ export function useCollaborators() {
         })) || []
       })) || [];
 
+      console.log('✅ Transformed employees:', employees);
       setEmployees(employees);
     } catch (err) {
-      console.error('Error fetching employees:', err);
+      console.error('❌ Error fetching employees:', err);
       setError('Erro ao carregar colaboradores');
     }
   };
