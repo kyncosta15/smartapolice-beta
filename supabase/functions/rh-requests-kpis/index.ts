@@ -17,15 +17,19 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Função helper para contagem
-    const getCount = async (status?: string) => {
+    // Pegar company_id do parâmetro da query se fornecido
+    const url = new URL(req.url);
+    const companyId = url.searchParams.get('company_id');
+
+    // Função helper para contagem de colaboradores ativos
+    const getActiveEmployeesCount = async () => {
       let query = supabase
-        .from('requests')
+        .from('colaboradores')
         .select('*', { count: 'exact', head: true })
-        .eq('draft', false);
+        .eq('status', 'ativo');
       
-      if (status) {
-        query = query.eq('status', status);
+      if (companyId) {
+        query = query.eq('empresa_id', companyId);
       }
       
       const { count, error } = await query;
@@ -33,29 +37,48 @@ serve(async (req) => {
       return count || 0;
     };
 
-    // Contagem de tickets
-    const { count: ticketsCount, error: ticketsError } = await supabase
-      .from('tickets')
-      .select('*', { count: 'exact', head: true });
+    // Função para calcular custo mensal dos colaboradores ativos
+    const getMonthlyCost = async () => {
+      let query = supabase
+        .from('colaboradores')
+        .select('custo_mensal')
+        .eq('status', 'ativo');
+      
+      if (companyId) {
+        query = query.eq('empresa_id', companyId);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      return (data || []).reduce((sum, col) => sum + (col.custo_mensal || 0), 0);
+    };
 
-    if (ticketsError) throw ticketsError;
+    // Contagem de tickets abertos
+    const getOpenTicketsCount = async () => {
+      const { count, error } = await supabase
+        .from('tickets')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['aberto', 'enviado', 'processando']);
+
+      if (error) throw error;
+      return count || 0;
+    };
 
     // Executar todas as consultas em paralelo
-    const [total, recebidos, em_validacao, concluidos, recusados] = await Promise.all([
-      getCount(),
-      getCount('recebido'),
-      getCount('em_validacao'),
-      getCount('concluido'),
-      getCount('recusado')
+    const [colaboradoresAtivos, custoMensal, ticketsAbertos] = await Promise.all([
+      getActiveEmployeesCount(),
+      getMonthlyCost(), 
+      getOpenTicketsCount()
     ]);
 
+    const custoMedioVida = colaboradoresAtivos > 0 ? custoMensal / colaboradoresAtivos : 0;
+
     const kpis = {
-      total,
-      recebidos,
-      em_validacao,
-      concluidos,
-      recusados,
-      tickets: ticketsCount || 0
+      colaboradoresAtivos,
+      custoMensal,
+      custoMedioVida,
+      ticketsAbertos
     };
 
     return new Response(

@@ -318,35 +318,89 @@ export const useSmartBeneficiosData = () => {
     }
   };
 
-  // Calcular métricas do dashboard
-  const calculateMetrics = () => {
-    const colaboradoresAtivos = colaboradores.filter(c => c.status === 'ativo').length;
-    const dependentesAtivos = dependentes.filter(d => d.status === 'ativo').length;
-    const vidasAtivas = colaboradoresAtivos + dependentesAtivos;
+  // Buscar KPIs do dashboard via API
+  const fetchDashboardKpis = async () => {
+    if (!user) return;
     
-    const custoMensal = colaboradores
-      .filter(c => c.status === 'ativo')
-      .reduce((sum, col) => sum + (col.custo_mensal || 0), 0) +
-      dependentes
-      .filter(d => d.status === 'ativo')
-      .reduce((sum, dep) => sum + (dep.custo_mensal || 0), 0);
-    
-    const custoMedioVida = vidasAtivas > 0 ? custoMensal / vidasAtivas : 0;
-    
-    // Contar tickets/submissões reais
-    const ticketsAbertos = submissoes.filter(s => s.status === 'recebida').length;
-    const ticketsPendentes = submissoes.filter(s => s.status === 'processada').length;
+    try {
+      // Primeiro buscar a empresa do usuário
+      const { data: userProfile, error: userError } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user.id)
+        .single();
 
-    setMetrics({
-      vidasAtivas,
-      custoMensal,
-      custoMedioVida,
-      vencimentosProximos: 8, // Mock - implementar lógica real
-      ticketsAbertos,
-      colaboradoresAtivos,
-      dependentesAtivos,
-      ticketsPendentes
-    });
+      if (userError || !userProfile?.company) {
+        console.log('Empresa do usuário não encontrada');
+        return;
+      }
+
+      // Buscar empresa no banco
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userProfile.company)
+        .single();
+
+      if (empresaError || !empresa) {
+        console.log('Empresa não encontrada no sistema');
+        return;
+      }
+
+      // Chamar a função edge para buscar KPIs
+      const { data, error } = await supabase.functions.invoke('rh-requests-kpis', {
+        body: { company_id: empresa.id }
+      });
+
+      if (error) throw error;
+      
+      if (data?.ok && data?.data) {
+        const kpis = data.data;
+        
+        // Contar dependentes ativos localmente
+        const dependentesAtivos = dependentes.filter(d => d.status === 'ativo').length;
+        const vidasAtivas = kpis.colaboradoresAtivos + dependentesAtivos;
+        
+        setMetrics({
+          vidasAtivas,
+          custoMensal: kpis.custoMensal,
+          custoMedioVida: kpis.custoMedioVida,
+          vencimentosProximos: 8, // Mock - implementar lógica real
+          ticketsAbertos: kpis.ticketsAbertos,
+          colaboradoresAtivos: kpis.colaboradoresAtivos,
+          dependentesAtivos,
+          ticketsPendentes: submissoes.filter(s => s.status === 'processada').length
+        });
+      }
+    } catch (err: any) {
+      console.error('Erro ao buscar KPIs:', err);
+      // Fallback para cálculo local se a API falhar
+      const colaboradoresAtivos = colaboradores.filter(c => c.status === 'ativo').length;
+      const dependentesAtivos = dependentes.filter(d => d.status === 'ativo').length;
+      const vidasAtivas = colaboradoresAtivos + dependentesAtivos;
+      
+      const custoMensal = colaboradores
+        .filter(c => c.status === 'ativo')
+        .reduce((sum, col) => sum + (col.custo_mensal || 0), 0) +
+        dependentes
+        .filter(d => d.status === 'ativo')
+        .reduce((sum, dep) => sum + (dep.custo_mensal || 0), 0);
+      
+      const custoMedioVida = vidasAtivas > 0 ? custoMensal / vidasAtivas : 0;
+      const ticketsAbertos = submissoes.filter(s => s.status === 'recebida').length;
+      const ticketsPendentes = submissoes.filter(s => s.status === 'processada').length;
+
+      setMetrics({
+        vidasAtivas,
+        custoMensal,
+        custoMedioVida,
+        vencimentosProximos: 8,
+        ticketsAbertos,
+        colaboradoresAtivos,
+        dependentesAtivos,
+        ticketsPendentes
+      });
+    }
   };
 
   // Carregar todos os dados
@@ -529,15 +583,34 @@ export const useSmartBeneficiosData = () => {
     }
   };
 
-  // Criar ticket - REMOVIDO para evitar conflito
-  // Esta funcionalidade será implementada separadamente para benefícios
+  const deleteColaborador = async (colaboradorId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('colaboradores-delete', {
+        body: { id: colaboradorId }
+      });
+
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error?.message || 'Erro ao excluir colaborador');
+
+      // Atualizar estado local
+      setColaboradores(prev => prev.filter(col => col.id !== colaboradorId));
+      
+      // Recalcular métricas
+      setTimeout(() => fetchDashboardKpis(), 100);
+      
+      return { data: data, error: null };
+    } catch (err: any) {
+      console.error('Erro ao excluir colaborador:', err);
+      return { data: null, error: err.message };
+    }
+  };
 
   useEffect(() => {
     loadData();
   }, [user]);
 
   useEffect(() => {
-    calculateMetrics();
+    fetchDashboardKpis();
   }, [colaboradores, dependentes, submissoes]);
 
   // Realtime updates
@@ -547,12 +620,15 @@ export const useSmartBeneficiosData = () => {
     const realtimeChannel = supabase.channel('smart-beneficios-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'colaboradores' }, () => {
         fetchColaboradores();
+        setTimeout(() => fetchDashboardKpis(), 100); // Pequeno delay para garantir que os dados foram atualizados
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'dependentes' }, () => {
         fetchDependentes();
+        setTimeout(() => fetchDashboardKpis(), 100);
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'colaborador_submissoes' }, () => {
         fetchSubmissoes();
+        setTimeout(() => fetchDashboardKpis(), 100);
       })
       .subscribe();
 
@@ -573,8 +649,10 @@ export const useSmartBeneficiosData = () => {
     isLoading,
     error,
     loadData,
+    fetchDashboardKpis,
     addColaborador,
     updateColaborador,
+    deleteColaborador,
     createColaboradorLink
     // createTicket, // REMOVIDO temporariamente
   };

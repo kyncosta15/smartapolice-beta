@@ -92,6 +92,7 @@ export const EmployeesList: React.FC = () => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchEmployees = async () => {
     try {
@@ -174,6 +175,38 @@ export const EmployeesList: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Função para deletar colaborador individual com loading
+  const deleteColaboradorIndividual = async (colaboradorId: string, nomeColaborador: string) => {
+    if (!confirm(`Excluir ${nomeColaborador}? Esta ação não pode ser desfeita.`)) return;
+    
+    setDeletingId(colaboradorId);
+    try {
+      const { data, error } = await supabase.functions.invoke('colaboradores-delete', {
+        body: { id: colaboradorId }
+      });
+
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error?.message || 'Erro ao excluir colaborador');
+
+      toast({
+        title: "Colaborador excluído",
+        description: `${nomeColaborador} foi excluído com sucesso`,
+      });
+
+      // Atualizar lista local
+      await fetchEmployees();
+    } catch (error) {
+      console.error('Erro ao excluir colaborador:', error);
+      toast({
+        title: "Erro ao excluir colaborador",
+        description: "Não foi possível excluir o colaborador selecionado",
+        variant: "destructive"
+      });
+    } finally {
+      setDeletingId(null);
     }
   };
 
