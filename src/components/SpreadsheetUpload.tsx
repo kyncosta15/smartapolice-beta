@@ -451,12 +451,26 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
           empresa_id: empresa.id
         }));
 
-        const { error } = await supabase
+        // Verificar quais colaboradores já existem
+        const cpfsExistentes = colaboradores.map(c => c.cpf);
+        const { data: colaboradoresExistentes } = await supabase
           .from('colaboradores')
-          .upsert(colaboradores, { onConflict: 'cpf,empresa_id' });
+          .select('cpf')
+          .eq('empresa_id', empresa.id)
+          .in('cpf', cpfsExistentes);
 
-        if (error) throw error;
-        colaboradoresImportados = colaboradores.length;
+        const cpfsJaCadastrados = new Set(colaboradoresExistentes?.map(c => c.cpf) || []);
+        const colaboradoresNovos = colaboradores.filter(c => !cpfsJaCadastrados.has(c.cpf));
+        
+        if (colaboradoresNovos.length > 0) {
+          const { error } = await supabase
+            .from('colaboradores')
+            .insert(colaboradoresNovos);
+
+          if (error) throw error;
+        }
+        
+        colaboradoresImportados = colaboradoresNovos.length;
       }
 
       // Importar dependentes
@@ -485,12 +499,30 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
           .filter(dep => dep.colaborador_id);
 
         if (dependentesComId.length > 0) {
-          const { error } = await supabase
+          // Verificar quais dependentes já existem
+          const cpfsDependentes = dependentesComId.map(d => d.cpf);
+          const { data: dependentesExistentes } = await supabase
             .from('dependentes')
-            .upsert(dependentesComId, { onConflict: 'cpf,colaborador_id' });
+            .select('cpf, colaborador_id')
+            .in('cpf', cpfsDependentes);
 
-          if (error) throw error;
-          dependentesImportados = dependentesComId.length;
+          const dependentesJaCadastrados = new Set(
+            dependentesExistentes?.map(d => `${d.cpf}-${d.colaborador_id}`) || []
+          );
+          
+          const dependentesNovos = dependentesComId.filter(
+            d => !dependentesJaCadastrados.has(`${d.cpf}-${d.colaborador_id}`)
+          );
+          
+          if (dependentesNovos.length > 0) {
+            const { error } = await supabase
+              .from('dependentes')
+              .insert(dependentesNovos);
+
+            if (error) throw error;
+          }
+          
+          dependentesImportados = dependentesNovos.length;
         }
       }
 
