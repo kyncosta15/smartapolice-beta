@@ -68,53 +68,63 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
       // Primeiro passo: Excluir dependentes
       setCurrentDeletionStep('Excluindo dependentes...');
       for (const employeeId of employeeIds) {
-        const { error: depError } = await supabase
-          .from('dependentes')
-          .delete()
-          .eq('colaborador_id', employeeId);
-          
-        if (depError) {
-          console.error(`Erro ao excluir dependentes do colaborador ${employeeId}:`, depError);
+        try {
+          const { error: depError } = await supabase
+            .from('dependentes')
+            .delete()
+            .eq('colaborador_id', employeeId);
+            
+          if (depError) {
+            console.error(`Erro ao excluir dependentes do colaborador ${employeeId}:`, depError);
+          }
+        } catch (error) {
+          console.error(`Erro ao excluir dependentes:`, error);
         }
       }
 
       // Segundo passo: Excluir colaboradores um por um
       setCurrentDeletionStep('Excluindo colaboradores...');
       for (const [index, employeeId] of employeeIds.entries()) {
-        const { error } = await supabase
-          .from('colaboradores')
-          .delete()
-          .eq('id', employeeId);
+        try {
+          const { error } = await supabase
+            .from('colaboradores')
+            .delete()
+            .eq('id', employeeId);
 
-        if (error) {
-          console.error(`Erro ao excluir colaborador ${employeeId}:`, error);
-          toast.error(`Erro ao excluir colaborador ${index + 1}/${employeeIds.length}`);
-        } else {
-          completed++;
-          setDeletedCount(completed);
-          const progress = Math.round((completed / employeeIds.length) * 100);
-          setDeletionProgress(progress);
-          setCurrentDeletionStep(`Excluído ${completed} de ${employeeIds.length} colaboradores...`);
-          
-          // Pequena pausa para mostrar o progresso
-          await new Promise(resolve => setTimeout(resolve, 100));
+          if (error) {
+            console.error(`Erro ao excluir colaborador ${employeeId}:`, error);
+            toast.error(`Erro ao excluir colaborador ${index + 1}/${employeeIds.length}: ${error.message}`);
+          } else {
+            completed++;
+            setDeletedCount(completed);
+            const progress = Math.round((completed / employeeIds.length) * 100);
+            setDeletionProgress(progress);
+            setCurrentDeletionStep(`Excluído ${completed} de ${employeeIds.length} colaboradores...`);
+            
+            // Pequena pausa para mostrar o progresso
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        } catch (error) {
+          console.error(`Erro crítico ao excluir colaborador ${employeeId}:`, error);
+          toast.error(`Erro crítico ao excluir colaborador ${index + 1}`);
         }
       }
 
       if (completed > 0) {
-        toast.success(`${completed} colaborador(es) foram excluídos com sucesso`);
+        toast.success(`${completed} colaborador(es) foram excluídos com sucesso!`);
       }
 
       if (completed < employeeIds.length) {
-        toast.error(`Apenas ${completed} de ${employeeIds.length} colaboradores foram excluídos`);
+        toast.error(`Apenas ${completed} de ${employeeIds.length} colaboradores foram excluídos. Verifique o console para mais detalhes.`);
       }
 
+      // Sempre limpar seleção e recarregar dados
       setSelectedEmployees(new Set());
       await refetch();
       
     } catch (error) {
       console.error('Erro durante a exclusão em massa:', error);
-      toast.error("Erro durante o processo de exclusão");
+      toast.error(`Erro durante o processo de exclusão: ${error.message || error}`);
     } finally {
       setIsDeleting(false);
       setDeletionProgress(0);
@@ -186,20 +196,46 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
                         Excluir ({selectedEmployees.size})
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja excluir permanentemente {selectedEmployees.size} colaborador(es)?
-                          <br /><br />
-                          <strong>Esta ação não pode ser desfeita e irá:</strong>
-                          <ul className="list-disc list-inside mt-2 space-y-1 text-red-600">
-                            <li>Remover os colaboradores completamente do sistema</li>
-                            <li>Excluir todos os dependentes associados</li>
-                            <li>Apagar todo o histórico permanentemente</li>
-                          </ul>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
+                     <AlertDialogContent className="max-w-md">
+                       <AlertDialogHeader>
+                         <AlertDialogTitle className="text-destructive flex items-center gap-2">
+                           <Trash2 className="h-5 w-5" />
+                           Confirmar Exclusão Permanente
+                         </AlertDialogTitle>
+                         <AlertDialogDescription className="space-y-3">
+                           <p>
+                             Tem certeza que deseja excluir permanentemente <strong>{selectedEmployees.size} colaborador(es)</strong>?
+                           </p>
+                           
+                           <div className="bg-red-50 border border-red-200 p-3 rounded-lg">
+                             <p className="font-semibold text-red-800 mb-2">⚠️ Esta ação é IRREVERSÍVEL e irá:</p>
+                             <ul className="text-sm text-red-700 space-y-1">
+                               <li>• Remover os colaboradores completamente do sistema</li>
+                               <li>• Excluir todos os dependentes associados</li>
+                               <li>• Apagar todo o histórico permanentemente</li>
+                               <li>• Não pode ser desfeita após confirmação</li>
+                             </ul>
+                           </div>
+                           
+                           {selectedEmployees.size <= 5 && (
+                             <div className="bg-gray-50 border p-2 rounded text-xs">
+                               <p className="font-medium mb-1">Colaboradores selecionados:</p>
+                               {filteredEmployees
+                                 .filter(emp => selectedEmployees.has(emp.id))
+                                 .map(emp => (
+                                   <div key={emp.id} className="text-muted-foreground">
+                                     • {emp.full_name} (CPF: {formatCPF(emp.cpf)})
+                                   </div>
+                                 ))
+                               }
+                             </div>
+                           )}
+                           
+                           <p className="text-sm text-muted-foreground">
+                             O processo será executado de forma assíncrona com progresso em tempo real.
+                           </p>
+                         </AlertDialogDescription>
+                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
                        <AlertDialogAction
@@ -243,12 +279,18 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
                       <span className="text-muted-foreground">{deletionProgress}%</span>
                     </div>
                     
-                    <Progress value={deletionProgress} className="w-full" />
+                    <Progress value={deletionProgress} className="w-full h-2" />
                     
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>{currentDeletionStep}</span>
-                      <span>{deletedCount}/{totalToDelete} concluído</span>
+                      <span className="font-medium">{deletedCount}/{totalToDelete} concluído</span>
                     </div>
+
+                    {currentDeletionStep.includes('Excluindo colaboradores') && (
+                      <div className="text-xs text-orange-600 mt-2">
+                        ⚠️ Processo irreversível em andamento...
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
