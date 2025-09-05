@@ -320,12 +320,16 @@ export const useSmartBeneficiosData = () => {
 
   // Calcular métricas do dashboard
   const calculateMetrics = () => {
-    const colaboradoresAtivos = colaboradores.length;
-    const dependentesAtivos = dependentes.length;
+    const colaboradoresAtivos = colaboradores.filter(c => c.status === 'ativo').length;
+    const dependentesAtivos = dependentes.filter(d => d.status === 'ativo').length;
     const vidasAtivas = colaboradoresAtivos + dependentesAtivos;
     
-    const custoMensal = colaboradores.reduce((sum, col) => sum + (col.custo_mensal || 0), 0) +
-                      dependentes.reduce((sum, dep) => sum + (dep.custo_mensal || 0), 0);
+    const custoMensal = colaboradores
+      .filter(c => c.status === 'ativo')
+      .reduce((sum, col) => sum + (col.custo_mensal || 0), 0) +
+      dependentes
+      .filter(d => d.status === 'ativo')
+      .reduce((sum, dep) => sum + (dep.custo_mensal || 0), 0);
     
     const custoMedioVida = vidasAtivas > 0 ? custoMensal / vidasAtivas : 0;
     
@@ -535,6 +539,27 @@ export const useSmartBeneficiosData = () => {
   useEffect(() => {
     calculateMetrics();
   }, [colaboradores, dependentes, submissoes]);
+
+  // Realtime updates
+  useEffect(() => {
+    if (!user) return;
+
+    const realtimeChannel = supabase.channel('smart-beneficios-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'colaboradores' }, () => {
+        fetchColaboradores();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dependentes' }, () => {
+        fetchDependentes();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'colaborador_submissoes' }, () => {
+        fetchSubmissoes();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(realtimeChannel);
+    };
+  }, [user]);
 
   return {
     empresas,
