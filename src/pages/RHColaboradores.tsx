@@ -270,13 +270,15 @@ export default function RHColaboradores() {
                             <Eye className="h-4 w-4" />
                           </Button>
                         </SheetTrigger>
-                        <SheetContent className="w-full sm:max-w-2xl">
-                          {selectedEmployee === employee.id && (
-                            <EmployeeDetailsDrawer 
-                              employeeId={selectedEmployee}
-                              onClose={() => setSelectedEmployee(null)}
-                            />
-                          )}
+                        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto max-h-screen">
+                          <div className="h-full overflow-y-auto pb-6">
+                            {selectedEmployee === employee.id && (
+                              <EmployeeDetailsDrawer 
+                                employeeId={selectedEmployee}
+                                onClose={() => setSelectedEmployee(null)}
+                              />
+                            )}
+                          </div>
                         </SheetContent>
                       </Sheet>
                     </div>
