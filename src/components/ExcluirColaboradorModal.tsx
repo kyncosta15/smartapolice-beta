@@ -65,48 +65,28 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
     try {
       let completed = 0;
 
-      // Primeiro passo: Excluir dependentes
-      setCurrentDeletionStep('Excluindo dependentes...');
-      for (const employeeId of employeeIds) {
-        try {
-          const { error: depError } = await supabase
-            .from('dependentes')
-            .delete()
-            .eq('colaborador_id', employeeId);
-            
-          if (depError) {
-            console.error(`Erro ao excluir dependentes do colaborador ${employeeId}:`, depError);
-          }
-        } catch (error) {
-          console.error(`Erro ao excluir dependentes:`, error);
-        }
-      }
-
-      // Segundo passo: Excluir colaboradores um por um
+      // Usar edge function para exclusão segura com CASCADE
       setCurrentDeletionStep('Excluindo colaboradores...');
       for (const [index, employeeId] of employeeIds.entries()) {
         try {
-          const { error } = await supabase
-            .from('colaboradores')
-            .delete()
-            .eq('id', employeeId);
+          const { data, error } = await supabase.functions.invoke('colaboradores-delete', {
+            body: { id: employeeId }
+          });
 
-          if (error) {
-            console.error(`Erro ao excluir colaborador ${employeeId}:`, error);
-            toast.error(`Erro ao excluir colaborador ${index + 1}/${employeeIds.length}: ${error.message}`);
-          } else {
-            completed++;
-            setDeletedCount(completed);
-            const progress = Math.round((completed / employeeIds.length) * 100);
-            setDeletionProgress(progress);
-            setCurrentDeletionStep(`Excluído ${completed} de ${employeeIds.length} colaboradores...`);
-            
-            // Pequena pausa para mostrar o progresso
-            await new Promise(resolve => setTimeout(resolve, 200));
-          }
+          if (error) throw error;
+          if (!data?.ok) throw new Error(data?.error?.message || 'Erro ao excluir colaborador');
+
+          completed++;
+          setDeletedCount(completed);
+          const progress = Math.round((completed / employeeIds.length) * 100);
+          setDeletionProgress(progress);
+          setCurrentDeletionStep(`Excluído ${completed} de ${employeeIds.length} colaboradores...`);
+          
+          // Pequena pausa para mostrar o progresso
+          await new Promise(resolve => setTimeout(resolve, 300));
         } catch (error) {
-          console.error(`Erro crítico ao excluir colaborador ${employeeId}:`, error);
-          toast.error(`Erro crítico ao excluir colaborador ${index + 1}`);
+          console.error(`Erro ao excluir colaborador ${employeeId}:`, error);
+          toast.error(`Erro ao excluir colaborador ${index + 1}/${employeeIds.length}: ${error.message || error}`);
         }
       }
 
