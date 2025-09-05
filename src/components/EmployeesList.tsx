@@ -5,11 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Sheet,
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { 
   User, 
   Users, 
@@ -21,11 +33,14 @@ import {
   ExternalLink,
   Edit,
   Eye,
-  CreditCard
+  CreditCard,
+  Trash2,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { EmployeeDetailsDrawer } from './EmployeeDetailsDrawer';
 
 interface Company {
@@ -75,6 +90,8 @@ export const EmployeesList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchEmployees = async () => {
     try {
@@ -150,9 +167,73 @@ export const EmployeesList: React.FC = () => {
       setEmployees(employeesWithCompanies);
     } catch (error) {
       console.error('Erro ao carregar colaboradores:', error);
-      toast.error('Erro ao carregar colaboradores');
+      toast({
+        title: "Erro ao carregar colaboradores",
+        description: "Não foi possível carregar os dados dos colaboradores",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const deleteSelectedEmployees = async () => {
+    if (selectedEmployees.size === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      const employeeIds = Array.from(selectedEmployees);
+      
+      // Delete dependents first
+      for (const employeeId of employeeIds) {
+        await supabase
+          .from('dependentes')
+          .delete()
+          .eq('colaborador_id', employeeId);
+      }
+      
+      // Delete employees
+      const { error } = await supabase
+        .from('colaboradores')
+        .delete()
+        .in('id', employeeIds);
+
+      if (error) throw error;
+
+      toast({
+        title: "Colaboradores excluídos",
+        description: `${employeeIds.length} colaborador(es) foram excluídos com sucesso`,
+      });
+
+      setSelectedEmployees(new Set());
+      await fetchEmployees();
+    } catch (error) {
+      console.error('Erro ao excluir colaboradores:', error);
+      toast({
+        title: "Erro ao excluir colaboradores",
+        description: "Não foi possível excluir os colaboradores selecionados",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const toggleEmployeeSelection = (employeeId: string) => {
+    const newSelected = new Set(selectedEmployees);
+    if (newSelected.has(employeeId)) {
+      newSelected.delete(employeeId);
+    } else {
+      newSelected.add(employeeId);
+    }
+    setSelectedEmployees(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedEmployees.size === filteredEmployees.length) {
+      setSelectedEmployees(new Set());
+    } else {
+      setSelectedEmployees(new Set(filteredEmployees.map(emp => emp.id)));
     }
   };
 
@@ -192,8 +273,8 @@ export const EmployeesList: React.FC = () => {
   };
 
   const filteredEmployees = employees.filter(employee =>
-    employee.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.cpf.includes(searchTerm) ||
+    employee.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    employee.cpf?.includes(searchTerm) ||
     employee.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -207,25 +288,84 @@ export const EmployeesList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header com busca */}
-      <div className="flex items-center justify-between">
+      {/* Header com busca e ações */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Colaboradores Cadastrados</h3>
           <p className="text-muted-foreground">
-            {employees.length} colaborador{employees.length !== 1 ? 'es' : ''} cadastrado{employees.length !== 1 ? 's' : ''}
+            {isLoading ? 'Carregando...' : `${filteredEmployees.length} colaborador${filteredEmployees.length !== 1 ? 'es' : ''} encontrado${filteredEmployees.length !== 1 ? 's' : ''}`}
           </p>
         </div>
         
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome, CPF ou email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-64"
-          />
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {/* Busca */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, CPF ou email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-full sm:w-64"
+            />
+          </div>
+
+          {/* Botão de exclusão */}
+          {selectedEmployees.size > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="destructive" 
+                  disabled={isDeleting}
+                  className="w-full sm:w-auto"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir ({selectedEmployees.size})
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tem certeza que deseja excluir {selectedEmployees.size} colaborador(es)? 
+                    Esta ação não pode ser desfeita e também excluirá todos os dependentes associados.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={deleteSelectedEmployees}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isDeleting ? 'Excluindo...' : 'Excluir'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </div>
+
+      {/* Controle de seleção */}
+      {filteredEmployees.length > 0 && (
+        <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+          <Checkbox
+            checked={selectedEmployees.size === filteredEmployees.length && filteredEmployees.length > 0}
+            onCheckedChange={toggleSelectAll}
+            id="select-all"
+          />
+          <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+            {selectedEmployees.size === filteredEmployees.length && filteredEmployees.length > 0
+              ? 'Desmarcar todos'
+              : 'Selecionar todos'
+            }
+          </label>
+          {selectedEmployees.size > 0 && (
+            <span className="text-sm text-muted-foreground ml-auto">
+              {selectedEmployees.size} selecionado{selectedEmployees.size !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Lista de colaboradores */}
       {filteredEmployees.length === 0 ? (
@@ -246,18 +386,27 @@ export const EmployeesList: React.FC = () => {
       ) : (
         <div className="grid gap-4">
           {filteredEmployees.map((employee) => (
-            <Card key={employee.id} className="hover:shadow-md transition-shadow">
+            <Card key={employee.id} className={`hover:shadow-md transition-all ${selectedEmployees.has(employee.id) ? 'ring-2 ring-primary' : ''}`}>
               <CardContent className="p-6">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  {/* Checkbox de seleção */}
+                  <Checkbox
+                    checked={selectedEmployees.has(employee.id)}
+                    onCheckedChange={() => toggleEmployeeSelection(employee.id)}
+                    className="mt-1"
+                  />
+                  
                   <div className="space-y-2 flex-1">
-                    {/* Nome e CPF */}
-                    <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <h4 className="font-semibold text-lg">{employee.full_name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          CPF: {formatCPF(employee.cpf)}
-                        </p>
+                    {/* Nome, CPF e Status */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <User className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <h4 className="font-semibold text-lg">{employee.full_name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            CPF: {formatCPF(employee.cpf)}
+                          </p>
+                        </div>
                       </div>
                       <Badge className={getStatusColor(employee.status)}>
                         {employee.status}
@@ -337,53 +486,54 @@ export const EmployeesList: React.FC = () => {
                             Dependentes ({employee.dependents.length})
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {employee.dependents.map((dependent) => (
-                            <Badge key={dependent.id} variant="outline" className="text-xs">
-                              {dependent.full_name} ({dependent.relationship})
-                            </Badge>
+                        <div className="space-y-1">
+                          {employee.dependents.map((dependent, index) => (
+                            <div key={dependent.id} className="text-sm text-muted-foreground">
+                              • {dependent.full_name} ({dependent.relationship})
+                            </div>
                           ))}
                         </div>
                       </div>
                     )}
-                  </div>
 
-                  {/* Ações */}
-                  <div className="flex gap-2 ml-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        // TODO: Implementar edição
-                        console.log('Editar colaborador:', employee.id);
-                      }}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </Button>
-                    
-                    <Sheet>
-                      <SheetTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="px-3"
-                          onClick={() => setSelectedEmployeeId(employee.id)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto max-h-screen">
-                        <div className="h-full overflow-y-auto pb-6">
-                          {selectedEmployeeId === employee.id && (
-                            <EmployeeDetailsDrawer 
-                              employeeId={selectedEmployeeId}
-                              onClose={() => setSelectedEmployeeId(null)}
-                            />
-                          )}
-                        </div>
-                      </SheetContent>
-                    </Sheet>
+                    {/* Ações */}
+                    <div className="flex gap-2 pt-3 border-t">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          // TODO: Implementar edição do colaborador
+                          console.log('Editar colaborador:', employee.id);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
+                      
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="px-3"
+                            onClick={() => setSelectedEmployeeId(employee.id)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto max-h-screen">
+                          <div className="h-full overflow-y-auto pb-6">
+                            {selectedEmployeeId === employee.id && (
+                              <EmployeeDetailsDrawer 
+                                employeeId={selectedEmployeeId}
+                                onClose={() => setSelectedEmployeeId(null)}
+                              />
+                            )}
+                          </div>
+                        </SheetContent>
+                      </Sheet>
+                    </div>
                   </div>
                 </div>
               </CardContent>
