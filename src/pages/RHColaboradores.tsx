@@ -110,7 +110,9 @@ export default function RHColaboradores() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Colaboradores Cadastrados</h1>
-          <p className="text-muted-foreground">Gestão de colaboradores e benefícios</p>
+          <p className="text-muted-foreground">
+            {isLoading ? 'Carregando...' : `${employees.length} colaboradores encontrados`}
+          </p>
         </div>
         
         {/* Search */}
