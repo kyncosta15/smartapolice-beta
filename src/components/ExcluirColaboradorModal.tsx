@@ -24,8 +24,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { UserX, Search, Trash2, User, Calendar, Building, Phone, Mail, Users } from 'lucide-react';
+import { UserX, Search, Trash2, User, Calendar, Building, Phone, Mail, Users, Loader2 } from 'lucide-react';
 import { useCollaborators } from '@/hooks/useCollaborators';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -38,6 +39,10 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deletionProgress, setDeletionProgress] = useState(0);
+  const [currentDeletionStep, setCurrentDeletionStep] = useState('');
+  const [deletedCount, setDeletedCount] = useState(0);
+  const [totalToDelete, setTotalToDelete] = useState(0);
   
   const { employees, updateEmployee, isLoading, refetch } = useCollaborators();
 
@@ -51,34 +56,71 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
     if (selectedEmployees.size === 0) return;
     
     setIsDeleting(true);
+    setDeletionProgress(0);
+    setDeletedCount(0);
+    
+    const employeeIds = Array.from(selectedEmployees);
+    setTotalToDelete(employeeIds.length);
+    
     try {
-      const employeeIds = Array.from(selectedEmployees);
-      
-      // Delete dependents first
+      let completed = 0;
+
+      // Primeiro passo: Excluir dependentes
+      setCurrentDeletionStep('Excluindo dependentes...');
       for (const employeeId of employeeIds) {
-        await supabase
+        const { error: depError } = await supabase
           .from('dependentes')
           .delete()
           .eq('colaborador_id', employeeId);
+          
+        if (depError) {
+          console.error(`Erro ao excluir dependentes do colaborador ${employeeId}:`, depError);
+        }
       }
-      
-      // Delete employees
-      const { error } = await supabase
-        .from('colaboradores')
-        .delete()
-        .in('id', employeeIds);
 
-      if (error) throw error;
+      // Segundo passo: Excluir colaboradores um por um
+      setCurrentDeletionStep('Excluindo colaboradores...');
+      for (const [index, employeeId] of employeeIds.entries()) {
+        const { error } = await supabase
+          .from('colaboradores')
+          .delete()
+          .eq('id', employeeId);
 
-      toast.success(`${employeeIds.length} colaborador(es) foram excluídos com sucesso`);
+        if (error) {
+          console.error(`Erro ao excluir colaborador ${employeeId}:`, error);
+          toast.error(`Erro ao excluir colaborador ${index + 1}/${employeeIds.length}`);
+        } else {
+          completed++;
+          setDeletedCount(completed);
+          const progress = Math.round((completed / employeeIds.length) * 100);
+          setDeletionProgress(progress);
+          setCurrentDeletionStep(`Excluído ${completed} de ${employeeIds.length} colaboradores...`);
+          
+          // Pequena pausa para mostrar o progresso
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      if (completed > 0) {
+        toast.success(`${completed} colaborador(es) foram excluídos com sucesso`);
+      }
+
+      if (completed < employeeIds.length) {
+        toast.error(`Apenas ${completed} de ${employeeIds.length} colaboradores foram excluídos`);
+      }
 
       setSelectedEmployees(new Set());
       await refetch();
+      
     } catch (error) {
-      console.error('Erro ao excluir colaboradores:', error);
-      toast.error("Não foi possível excluir os colaboradores selecionados");
+      console.error('Erro durante a exclusão em massa:', error);
+      toast.error("Erro durante o processo de exclusão");
     } finally {
       setIsDeleting(false);
+      setDeletionProgress(0);
+      setCurrentDeletionStep('');
+      setDeletedCount(0);
+      setTotalToDelete(0);
     }
   };
 
@@ -160,11 +202,19 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
+                       <AlertDialogAction
                           onClick={deleteSelectedEmployees}
                           className="bg-destructive hover:bg-destructive/90"
+                          disabled={isDeleting}
                         >
-                          {isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}
+                          {isDeleting ? (
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Excluindo...
+                            </div>
+                          ) : (
+                            'Confirmar Exclusão'
+                          )}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -183,6 +233,25 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
                   className="w-full"
                 />
               </div>
+
+              {/* Progress Section - aparece apenas quando está excluindo */}
+              {isDeleting && (
+                <Card className="border-destructive/20 bg-destructive/5">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-destructive">Exclusão em Progresso</span>
+                      <span className="text-muted-foreground">{deletionProgress}%</span>
+                    </div>
+                    
+                    <Progress value={deletionProgress} className="w-full" />
+                    
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{currentDeletionStep}</span>
+                      <span>{deletedCount}/{totalToDelete} concluído</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Controle de seleção */}
               {filteredEmployees.length > 0 && (
