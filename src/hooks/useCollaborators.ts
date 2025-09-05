@@ -83,7 +83,15 @@ export function useCollaborators() {
         .from('colaboradores')
         .select(`
           *,
-          empresas(*)
+          empresas(*),
+          dependentes:dependentes(
+            id,
+            nome,
+            cpf,
+            data_nascimento,
+            grau_parentesco,
+            status
+          )
         `);
       
       if (search) {
@@ -106,12 +114,20 @@ export function useCollaborators() {
         status: colaborador.status,
         companies: colaborador.empresas ? {
           id: colaborador.empresas.id,
-          cnpj: colaborador.empresas.cnpj,
+          cnpj: colaborador.empresas.cnpj || '',
           legal_name: colaborador.empresas.nome,
           trade_name: colaborador.empresas.nome
         } : undefined,
         employee_plans: [], // TODO: Implementar se necessário
-        dependents: [] // TODO: Buscar dependentes se necessário
+        dependents: colaborador.dependentes?.filter((dep: any) => dep.status === 'ativo').map((dep: any) => ({
+          id: dep.id,
+          employee_id: colaborador.id,
+          full_name: dep.nome,
+          cpf: dep.cpf,
+          birth_date: dep.data_nascimento,
+          relationship: dep.grau_parentesco,
+          status: dep.status
+        })) || []
       })) || [];
 
       setEmployees(employees);
@@ -294,9 +310,19 @@ export function useCollaborators() {
 
   const updateEmployee = async (id: string, updates: Partial<Employee>) => {
     try {
+      // Map Employee interface fields to colaboradores table fields
+      const colaboradorUpdates: any = {};
+      
+      if (updates.full_name) colaboradorUpdates.nome = updates.full_name;
+      if (updates.email) colaboradorUpdates.email = updates.email;
+      if (updates.phone) colaboradorUpdates.telefone = updates.phone;
+      if (updates.birth_date) colaboradorUpdates.data_nascimento = updates.birth_date;
+      if (updates.status) colaboradorUpdates.status = updates.status;
+      if (updates.cpf) colaboradorUpdates.cpf = updates.cpf;
+
       const { error } = await supabase
-        .from('employees')
-        .update(updates)
+        .from('colaboradores')
+        .update(colaboradorUpdates)
         .eq('id', id);
 
       if (error) throw error;
