@@ -79,6 +79,7 @@ export const EmployeesList: React.FC = () => {
   const fetchEmployees = async () => {
     try {
       setIsLoading(true);
+      console.log('🔍 Buscando colaboradores para:', user?.company);
 
       // Buscar empresa do usuário
       const { data: empresaData, error: empresaError } = await supabase
@@ -92,49 +93,60 @@ export const EmployeesList: React.FC = () => {
         return;
       }
 
-      // Buscar colaboradores da empresa
-      const { data: employeesData, error: employeesError } = await supabase
-        .from('employees')
+      console.log('✅ Empresa encontrada:', empresaData);
+
+      // Buscar colaboradores da empresa (tabela colaboradores)
+      const { data: colaboradoresData, error: colaboradoresError } = await supabase
+        .from('colaboradores')
         .select(`
           *,
-          employee_plans(
+          empresas(*),
+          dependentes:dependentes(
             id,
-            plan_id,
-            monthly_premium,
-            status,
-            plans(
-              id,
-              name,
-              type,
-              operator
-            )
-          ),
-          dependents(
-            id,
-            full_name,
-            relationship
+            nome,
+            cpf,
+            data_nascimento,
+            grau_parentesco,
+            status
           )
         `)
-        .eq('company_id', empresaData.id)
-        .order('full_name', { ascending: true });
+        .eq('empresa_id', empresaData.id)
+        .order('nome', { ascending: true });
 
-      if (employeesError) {
-        console.error('Erro ao buscar colaboradores:', employeesError);
+      console.log('📊 Colaboradores encontrados:', colaboradoresData?.length || 0);
+      console.log('❌ Erro (se houver):', colaboradoresError);
+
+      if (colaboradoresError) {
+        console.error('Erro ao buscar colaboradores:', colaboradoresError);
         return;
       }
 
-      // Buscar dados das empresas/companies separadamente
-      const { data: companiesData } = await supabase
-        .from('companies')
-        .select('*');
-
-      // Combinar dados
-      const employeesWithCompanies = (employeesData || []).map(emp => ({
-        ...emp,
-        status: emp.status as 'ativo' | 'inativo' | 'pendente',
-        companies: companiesData?.find(company => company.id === emp.company_id)
+      // Transform colaboradores data to match Employee interface
+      const employeesWithCompanies = (colaboradoresData || []).map(colaborador => ({
+        id: colaborador.id,
+        cpf: colaborador.cpf,
+        full_name: colaborador.nome,
+        email: colaborador.email,
+        phone: colaborador.telefone,
+        birth_date: colaborador.data_nascimento,
+        status: colaborador.status as 'ativo' | 'inativo' | 'pendente',
+        created_at: colaborador.created_at,
+        company_id: colaborador.empresa_id,
+        companies: colaborador.empresas ? {
+          id: colaborador.empresas.id,
+          cnpj: colaborador.empresas.cnpj || '',
+          legal_name: colaborador.empresas.nome,
+          trade_name: colaborador.empresas.nome
+        } : undefined,
+        employee_plans: [], // TODO: Implementar se necessário
+        dependents: colaborador.dependentes?.filter((dep: any) => dep.status === 'ativo').map((dep: any) => ({
+          id: dep.id,
+          full_name: dep.nome,
+          relationship: dep.grau_parentesco
+        })) || []
       }));
 
+      console.log('✅ Colaboradores transformados:', employeesWithCompanies.length);
       setEmployees(employeesWithCompanies);
     } catch (error) {
       console.error('Erro ao carregar colaboradores:', error);
