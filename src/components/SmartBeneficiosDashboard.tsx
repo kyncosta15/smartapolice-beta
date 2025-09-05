@@ -200,11 +200,6 @@ export const SmartBeneficiosDashboard = () => {
               </div>
             )}
             
-            <Button variant="outline" size="sm" className="hidden sm:flex text-xs">
-              <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:block">Exportar</span>
-            </Button>
-            
             <Button 
               variant="outline" 
               size="sm" 
