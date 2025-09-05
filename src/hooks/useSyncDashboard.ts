@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useToast } from "@/hooks/use-toast";
 
 interface SyncResult {
   requests: number;
@@ -10,6 +10,7 @@ interface SyncResult {
 
 export function useSyncDashboard() {
   const [isSyncing, setIsSyncing] = useState(false);
+  const { toast } = useToast();
 
   const syncDashboardData = async (): Promise<SyncResult | null> => {
     setIsSyncing(true);
@@ -18,7 +19,11 @@ export function useSyncDashboard() {
       // Verificar se o usuário está autenticado
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
-        toast.error('Usuário não autenticado');
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Usuário não autenticado"
+        });
         return null;
       }
 
@@ -30,7 +35,11 @@ export function useSyncDashboard() {
         .single();
 
       if (!userProfile?.company) {
-        toast.error('Empresa do usuário não encontrada');
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Empresa do usuário não encontrada"
+        });
         return null;
       }
 
@@ -42,7 +51,11 @@ export function useSyncDashboard() {
         .single();
 
       if (!companyData) {
-        toast.error('Empresa não encontrada no sistema');
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Empresa não encontrada no sistema"
+        });
         return null;
       }
 
@@ -87,16 +100,26 @@ export function useSyncDashboard() {
       console.log(`✅ Sincronização concluída:`, syncResult);
       
       if (recentRequests && recentRequests > 0) {
-        toast.success(`✅ Sincronização concluída! ${recentRequests} solicitações recentes encontradas`);
+        toast({
+          title: "Sucesso",
+          description: `✅ Sincronização concluída! ${recentRequests} solicitações recentes encontradas`
+        });
       } else {
-        toast.success(`✅ Sincronização concluída! ${requestCount} solicitações no total`);
+        toast({
+          title: "Sucesso",
+          description: `✅ Sincronização concluída! ${requestCount} solicitações no total`
+        });
       }
 
       return syncResult;
 
     } catch (error) {
       console.error('❌ Erro na sincronização:', error);
-      toast.error('Erro ao sincronizar dados do dashboard');
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao sincronizar dados do dashboard"
+      });
       return null;
     } finally {
       setIsSyncing(false);
@@ -122,11 +145,18 @@ export function useSyncDashboard() {
         window.location.reload();
       }, 1000);
 
-      toast.success('🔄 Dados sendo atualizados...');
+      toast({
+        title: "Atualizando",
+        description: "🔄 Dados sendo atualizados..."
+      });
       
     } catch (error) {
       console.error('Erro ao forçar refresh:', error);
-      toast.error('Erro ao atualizar dados');
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao atualizar dados"
+      });
     }
   };
 
