@@ -395,7 +395,7 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
                     />
                   </div>
                   <Badge variant="outline">
-                    {filteredColaboradores.length} colaboradores
+                    {colaboradores.length} colaboradores • {colaboradores.filter(c => c.status === 'ativo').length} ativos • {colaboradores.filter(c => c.status !== 'ativo').length} inativos
                   </Badge>
                 </div>
               </CardHeader>

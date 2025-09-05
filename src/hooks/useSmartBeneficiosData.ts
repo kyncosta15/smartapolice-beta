@@ -195,12 +195,11 @@ export const useSmartBeneficiosData = () => {
         return;
       }
 
-      // Buscar colaboradores da empresa
+      // Buscar colaboradores da empresa (todos os status)
       const { data, error } = await supabase
         .from('colaboradores')
         .select('*')
         .eq('empresa_id', empresa.id)
-        .eq('status', 'ativo')
         .order('nome');
 
       if (error) throw error;
