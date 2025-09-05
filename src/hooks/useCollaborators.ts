@@ -80,6 +80,11 @@ export function useCollaborators() {
   const fetchEmployees = async (search?: string) => {
     try {
       console.log('🔍 Fetching employees with search:', search);
+      
+      // Verificar usuário atual
+      const { data: currentUser } = await supabase.auth.getUser();
+      console.log('👤 Current user:', currentUser?.user?.id);
+      
       let query = supabase
         .from('colaboradores')
         .select(`
@@ -99,9 +104,11 @@ export function useCollaborators() {
         query = query.or(`nome.ilike.%${search}%,cpf.ilike.%${search}%,email.ilike.%${search}%`);
       }
 
+      console.log('🔄 Executing query...');
       const { data: colaboradoresData, error } = await query.order('nome');
 
       console.log('📊 Raw colaboradores data:', colaboradoresData);
+      console.log('📊 Data length:', colaboradoresData?.length || 0);
       console.log('❌ Error (if any):', error);
 
       if (error) throw error;
