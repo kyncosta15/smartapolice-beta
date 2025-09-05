@@ -379,9 +379,19 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
     let uploadRecord: any = null;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Usuário não autenticado');
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente para continuar",
+          variant: "destructive"
+        });
+        // Limpar dados locais e redirecionar para login
+        setFile(null);
+        setPreviewData(null);
+        setShowPreview(false);
+        window.location.href = '/auth/smartbeneficios';
+        return;
       }
 
       // Salvar arquivo no storage
