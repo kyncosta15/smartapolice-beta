@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
@@ -12,7 +12,7 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  if (req.method !== 'DELETE') {
+  if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
   }
 
@@ -22,9 +22,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Obter ID do colaborador da URL
-    const url = new URL(req.url);
-    const colaboradorId = url.searchParams.get('id');
+    // Obter ID do colaborador do body da requisição
+    const { id: colaboradorId } = await req.json();
     
     if (!colaboradorId) {
       return new Response(
@@ -33,6 +32,8 @@ serve(async (req) => {
       );
     }
 
+    console.log(`Iniciando exclusão do colaborador: ${colaboradorId}`);
+
     // Verificar se o colaborador existe
     const { data: colaborador, error: selectError } = await supabase
       .from('colaboradores')
@@ -40,14 +41,20 @@ serve(async (req) => {
       .eq('id', colaboradorId)
       .maybeSingle();
 
-    if (selectError) throw selectError;
+    if (selectError) {
+      console.error('Erro ao buscar colaborador:', selectError);
+      throw selectError;
+    }
     
     if (!colaborador) {
+      console.log(`Colaborador ${colaboradorId} não encontrado`);
       return new Response(
         JSON.stringify({ ok: false, error: { code: 'NOT_FOUND', message: 'Colaborador não encontrado' } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
       );
     }
+
+    console.log(`Excluindo colaborador: ${colaborador.nome} (${colaboradorId})`);
 
     // Excluir o colaborador (CASCADE irá excluir dependentes e planos automaticamente)
     const { error: deleteError } = await supabase
@@ -55,7 +62,12 @@ serve(async (req) => {
       .delete()
       .eq('id', colaboradorId);
 
-    if (deleteError) throw deleteError;
+    if (deleteError) {
+      console.error('Erro ao excluir colaborador:', deleteError);
+      throw deleteError;
+    }
+
+    console.log(`Colaborador ${colaborador.nome} (${colaboradorId}) excluído com sucesso`);
 
     return new Response(
       JSON.stringify({ ok: true, message: 'Colaborador excluído com sucesso' }),
