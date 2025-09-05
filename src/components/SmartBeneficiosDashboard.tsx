@@ -225,47 +225,50 @@ export const SmartBeneficiosDashboard = () => {
       {/* Main Content */}
       <main className="p-3 sm:p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="relative mb-4">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 bg-transparent p-0 h-auto relative">
+          <div className="relative mb-6">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 bg-white/60 backdrop-blur-xl border border-white/20 shadow-lg shadow-black/5 rounded-2xl p-1 h-auto relative overflow-hidden">
+              {/* Background blur effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-50/40 via-white/40 to-purple-50/40 rounded-2xl"></div>
+              
               <TabsTrigger 
                 value="dashboard" 
-                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-blue-50 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 transition-all duration-300 py-3 px-4 rounded-lg hover:scale-105 active:scale-95"
+                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
                 Dashboard
               </TabsTrigger>
               <TabsTrigger 
                 value="apolices" 
-                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-blue-50 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 transition-all duration-300 py-3 px-4 rounded-lg hover:scale-105 active:scale-95"
+                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
                 Apólices
               </TabsTrigger>
               <TabsTrigger 
                 value="colaboradores" 
-                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-blue-50 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 transition-all duration-300 py-3 px-4 rounded-lg hover:scale-105 active:scale-95"
+                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
                 Colaboradores
               </TabsTrigger>
               <TabsTrigger 
                 value="solicitacoes" 
-                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-blue-50 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 transition-all duration-300 py-3 px-4 rounded-lg hover:scale-105 active:scale-95"
+                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
                 Solicitações
               </TabsTrigger>
               <TabsTrigger 
                 value="tickets" 
-                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-blue-50 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 transition-all duration-300 py-3 px-4 rounded-lg hover:scale-105 active:scale-95"
+                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
                 Tickets
               </TabsTrigger>
               <TabsTrigger 
                 value="relatorios" 
-                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-blue-50 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 transition-all duration-300 py-3 px-4 rounded-lg hover:scale-105 active:scale-95"
+                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
                 Relatórios
               </TabsTrigger>
               <TabsTrigger 
                 value="upload" 
-                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-blue-50 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 transition-all duration-300 py-3 px-4 rounded-lg hover:scale-105 active:scale-95"
+                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
                 Upload
               </TabsTrigger>
