@@ -15,7 +15,10 @@ import {
   X,
   Calendar,
   HardDrive,
-  Send
+  Send,
+  Eye,
+  Save,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,12 +30,42 @@ interface SpreadsheetUploadProps {
   onDataUpdate?: () => void;
 }
 
+interface ColaboradorData {
+  nome: string;
+  cpf: string;
+  email?: string;
+  telefone?: string;
+  data_nascimento?: string;
+  cargo?: string;
+  centro_custo?: string;
+  data_admissao?: string;
+  custo_mensal?: number;
+  status: 'ativo' | 'inativo';
+}
+
+interface DependenteData {
+  nome: string;
+  cpf: string;
+  data_nascimento: string;
+  grau_parentesco: 'conjuge' | 'filho' | 'filha' | 'mae' | 'pai' | 'outros';
+  colaborador_cpf: string;
+  custo_mensal?: number;
+}
+
+interface PreviewData {
+  colaboradores: ColaboradorData[];
+  dependentes: DependenteData[];
+  errors: string[];
+}
+
 export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
   const { createUpload, updateUploadStatus } = usePlanilhaUploads();
 
@@ -71,9 +104,225 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
     return true;
   };
 
-  const handleFileSelect = (selectedFile: File) => {
+  const normalizeFieldName = (field: string): string => {
+    return field
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "");
+  };
+
+  const mapColaboradorFields = (row: any): ColaboradorData | null => {
+    const fieldMappings: { [key: string]: string[] } = {
+      nome: ['nome', 'nome_completo', 'funcionario', 'colaborador'],
+      cpf: ['cpf', 'documento'],
+      email: ['email', 'e_mail', 'correio_eletronico'],
+      telefone: ['telefone', 'celular', 'fone', 'tel'],
+      data_nascimento: ['data_nascimento', 'nascimento', 'dt_nascimento', 'data_nasc'],
+      cargo: ['cargo', 'funcao', 'posicao'],
+      centro_custo: ['centro_custo', 'cc', 'centro_de_custo'],
+      data_admissao: ['data_admissao', 'admissao', 'dt_admissao', 'data_adm'],
+      custo_mensal: ['custo_mensal', 'valor', 'preco', 'custo']
+    };
+
+    const mapped: any = {
+      status: 'ativo' as const
+    };
+
+    const normalizedRow: { [key: string]: any } = {};
+    Object.keys(row).forEach(key => {
+      normalizedRow[normalizeFieldName(key)] = row[key];
+    });
+
+    Object.entries(fieldMappings).forEach(([targetField, possibleNames]) => {
+      for (const possibleName of possibleNames) {
+        if (normalizedRow[possibleName] !== undefined && normalizedRow[possibleName] !== '') {
+          let value = normalizedRow[possibleName];
+          
+          if (targetField === 'custo_mensal') {
+            value = parseFloat(String(value).replace(/[^0-9.,]/g, '').replace(',', '.')) || 0;
+          } else if (targetField.includes('data_') && value) {
+            if (typeof value === 'number') {
+              const date = new Date((value - 25569) * 86400 * 1000);
+              value = date.toISOString().split('T')[0];
+            } else if (typeof value === 'string') {
+              const dateFormats = [
+                /(\d{1,2})\/(\d{1,2})\/(\d{4})/,
+                /(\d{4})-(\d{1,2})-(\d{1,2})/,
+                /(\d{1,2})-(\d{1,2})-(\d{4})/
+              ];
+              
+              for (const format of dateFormats) {
+                const match = value.match(format);
+                if (match) {
+                  if (format.source.includes('\\d{4}.*\\d{1,2}.*\\d{1,2}')) {
+                    value = `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+                  } else {
+                    value = `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+                  }
+                  break;
+                }
+              }
+            }
+          }
+          
+          mapped[targetField] = value;
+          break;
+        }
+      }
+    });
+
+    if (!mapped.nome || !mapped.cpf) {
+      return null;
+    }
+
+    if (mapped.cpf) {
+      mapped.cpf = mapped.cpf.replace(/[^0-9]/g, '');
+    }
+
+    return mapped as ColaboradorData;
+  };
+
+  const mapDependenteFields = (row: any): DependenteData | null => {
+    const fieldMappings: { [key: string]: string[] } = {
+      nome: ['dependente_nome', 'nome_dependente', 'nome'],
+      cpf: ['dependente_cpf', 'cpf_dependente', 'cpf'],
+      data_nascimento: ['dependente_nascimento', 'data_nascimento', 'nascimento'],
+      grau_parentesco: ['parentesco', 'grau_parentesco', 'relacao'],
+      colaborador_cpf: ['colaborador_cpf', 'cpf_colaborador', 'titular_cpf'],
+      custo_mensal: ['custo_dependente', 'valor_dependente', 'custo_mensal']
+    };
+
+    const mapped: any = {};
+
+    const normalizedRow: { [key: string]: any } = {};
+    Object.keys(row).forEach(key => {
+      normalizedRow[normalizeFieldName(key)] = row[key];
+    });
+
+    Object.entries(fieldMappings).forEach(([targetField, possibleNames]) => {
+      for (const possibleName of possibleNames) {
+        if (normalizedRow[possibleName] !== undefined && normalizedRow[possibleName] !== '') {
+          let value = normalizedRow[possibleName];
+          
+          if (targetField === 'custo_mensal') {
+            value = parseFloat(String(value).replace(/[^0-9.,]/g, '').replace(',', '.')) || 0;
+          } else if (targetField === 'data_nascimento' && value) {
+            if (typeof value === 'number') {
+              const date = new Date((value - 25569) * 86400 * 1000);
+              value = date.toISOString().split('T')[0];
+            }
+          } else if (targetField === 'grau_parentesco') {
+            const parentescoMap: { [key: string]: DependenteData['grau_parentesco'] } = {
+              'conjuge': 'conjuge',
+              'esposa': 'conjuge',
+              'esposo': 'conjuge',
+              'cônjuge': 'conjuge',
+              'filho': 'filho',
+              'filha': 'filha',
+              'enteado': 'outros',
+              'enteada': 'outros',
+              'mae': 'mae',
+              'mãe': 'mae',
+              'pai': 'pai'
+            };
+            const normalized = normalizeFieldName(String(value));
+            value = parentescoMap[normalized] || 'outros';
+          } else if (targetField === 'colaborador_cpf') {
+            value = String(value).replace(/[^0-9]/g, '');
+          }
+          
+          mapped[targetField] = value;
+          break;
+        }
+      }
+    });
+
+    if (!mapped.nome || !mapped.cpf || !mapped.colaborador_cpf || !mapped.data_nascimento) {
+      return null;
+    }
+
+    if (mapped.cpf) {
+      mapped.cpf = mapped.cpf.replace(/[^0-9]/g, '');
+    }
+    if (mapped.colaborador_cpf) {
+      mapped.colaborador_cpf = mapped.colaborador_cpf.replace(/[^0-9]/g, '');
+    }
+
+    return mapped as DependenteData;
+  };
+
+  const previewSpreadsheetData = async (file: File): Promise<PreviewData> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const arrayBuffer = e.target?.result as ArrayBuffer;
+          const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+          
+          const colaboradores: ColaboradorData[] = [];
+          const dependentes: DependenteData[] = [];
+          const errors: string[] = [];
+          
+          workbook.SheetNames.forEach((sheetName, sheetIndex) => {
+            const worksheet = workbook.Sheets[sheetName];
+            const data = XLSX.utils.sheet_to_json(worksheet);
+            
+            data.forEach((row: any, rowIndex) => {
+              const colaborador = mapColaboradorFields(row);
+              if (colaborador) {
+                colaboradores.push(colaborador);
+                return;
+              }
+              
+              const dependente = mapDependenteFields(row);
+              if (dependente) {
+                dependentes.push(dependente);
+                return;
+              }
+              
+              if (Object.values(row).some(val => val !== null && val !== undefined && val !== '')) {
+                errors.push(`Linha ${rowIndex + 2} da aba "${sheetName}": dados não reconhecidos`);
+              }
+            });
+          });
+          
+          resolve({ colaboradores, dependentes, errors });
+        } catch (error) {
+          console.error('Erro ao processar planilha:', error);
+          resolve({ colaboradores: [], dependentes: [], errors: ['Erro ao processar arquivo'] });
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  const handleFileSelect = async (selectedFile: File) => {
     if (validateFile(selectedFile)) {
       setFile(selectedFile);
+      setIsProcessing(true);
+      
+      try {
+        const preview = await previewSpreadsheetData(selectedFile);
+        setPreviewData(preview);
+        setShowPreview(true);
+        
+        toast({
+          title: "Arquivo carregado",
+          description: `Encontrados: ${preview.colaboradores.length} colaboradores e ${preview.dependentes.length} dependentes`,
+        });
+      } catch (error) {
+        toast({
+          title: "Erro ao processar arquivo",
+          description: "Não foi possível ler os dados da planilha",
+          variant: "destructive"
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+      
       onFileSelect?.(selectedFile);
     }
   };
@@ -123,24 +372,22 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const processSpreadsheet = async () => {
-    if (!file) return;
+  const processAndSaveData = async () => {
+    if (!file || !previewData) return;
 
     setIsProcessing(true);
     let uploadRecord: any = null;
 
     try {
-      // Obter usuário atual
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('Usuário não autenticado');
       }
 
-      // 1. Primeiro salvar arquivo no Supabase Storage
+      // Salvar arquivo no storage
       const fileName = `${Date.now()}_${file.name}`;
       const filePath = `${user.id}/${fileName}`;
 
-      console.log('💾 Salvando arquivo no storage:', filePath);
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('smartbeneficios')
         .upload(filePath, file);
@@ -149,244 +396,140 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
         throw new Error(`Erro ao salvar arquivo: ${uploadError.message}`);
       }
 
-      console.log('✅ Arquivo salvo no storage:', uploadData.path);
-
-      // 2. Buscar empresa do usuário
-      const { data: userProfile, error: userError } = await supabase
+      // Buscar/criar empresa
+      const { data: userProfile } = await supabase
         .from('users')
         .select('company, name')
         .eq('id', user.id)
         .single();
 
-      if (userError) {
-        throw new Error(`Erro ao buscar perfil do usuário: ${userError.message}`);
-      }
-
-      // Se usuário não tem empresa, usar o nome do usuário como empresa
       let companyName = userProfile?.company;
-      if (!companyName || companyName.trim() === '') {
+      if (!companyName) {
         companyName = userProfile?.name || 'Empresa Padrão';
-        
-        // Atualizar o perfil do usuário com a empresa
         await supabase
           .from('users')
           .update({ company: companyName })
           .eq('id', user.id);
       }
 
-      console.log('🏢 Empresa do usuário:', companyName);
-
-      // Verificar se empresa existe, se não criar
-      let { data: empresa, error: empresaError } = await supabase
+      let { data: empresa } = await supabase
         .from('empresas')
         .select('id')
         .eq('nome', companyName)
         .maybeSingle();
 
-      if (empresaError) {
-        console.error('Erro ao buscar empresa:', empresaError);
-      }
-
       if (!empresa) {
-        console.log('🆕 Criando nova empresa:', companyName);
-        const { data: novaEmpresa, error: empresaError } = await supabase
+        const { data: novaEmpresa } = await supabase
           .from('empresas')
           .insert([{ nome: companyName }])
           .select('id')
           .single();
-
-        if (empresaError) {
-          console.error('Erro ao criar empresa:', empresaError);
-          throw new Error(`Erro ao criar empresa: ${empresaError.message}`);
-        }
         empresa = novaEmpresa;
       }
 
-      console.log('✅ Empresa configurada:', empresa.id);
+      // Criar registro de upload
+      const { data: uploadRecord } = await createUpload(file, uploadData.path, empresa?.id);
+      if (!uploadRecord) throw new Error('Erro ao criar registro de upload');
 
-      // 3. Salvar metadados do upload no banco
-      const { data: uploadRecord, error: uploadRecordError } = await createUpload(
-        file,
-        uploadData.path,
-        empresa?.id
-      );
+      let colaboradoresImportados = 0;
+      let dependentesImportados = 0;
 
-      if (uploadRecordError || !uploadRecord) {
-        throw new Error(`Erro ao criar registro de upload: ${uploadRecordError}`);
+      // Importar colaboradores
+      if (previewData.colaboradores.length > 0) {
+        const colaboradores = previewData.colaboradores.map(col => ({
+          ...col,
+          empresa_id: empresa.id
+        }));
+
+        const { error } = await supabase
+          .from('colaboradores')
+          .upsert(colaboradores, { onConflict: 'cpf,empresa_id' });
+
+        if (error) throw error;
+        colaboradoresImportados = colaboradores.length;
       }
 
-      // 4. Processar a planilha e extrair dados
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const arrayBuffer = e.target?.result as ArrayBuffer;
-          const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const data = XLSX.utils.sheet_to_json(worksheet);
+      // Importar dependentes
+      if (previewData.dependentes.length > 0) {
+        // Primeiro buscar IDs dos colaboradores pelos CPFs
+        const colaboradorCpfs = [...new Set(previewData.dependentes.map(d => d.colaborador_cpf))];
+        
+        const { data: colaboradoresIds } = await supabase
+          .from('colaboradores')
+          .select('id, cpf')
+          .eq('empresa_id', empresa.id)
+          .in('cpf', colaboradorCpfs);
 
-          console.log('📊 Dados extraídos da planilha:', data);
+        const cpfToIdMap = new Map(colaboradoresIds?.map(c => [c.cpf, c.id]) || []);
 
-          // Processar dados da planilha e inserir colaboradores
-          const colaboradores = data.map((row: any) => ({
-            empresa_id: empresa.id,
-            nome: row.nome || row.Nome || row.NOME || '',
-            cpf: row.cpf || row.CPF || '',
-            email: row.email || row.Email || row.EMAIL || '',
-            telefone: row.telefone || row.Telefone || row.TELEFONE || '',
-            data_nascimento: row.data_nascimento || row['Data Nascimento'] || null,
-            cargo: row.cargo || row.Cargo || row.CARGO || '',
-            centro_custo: row.centro_custo || row['Centro de Custo'] || '',
-            data_admissao: row.data_admissao || row['Data Admissão'] || null,
-            status: 'ativo' as const,
-            custo_mensal: parseFloat(row.custo_mensal || row['Custo Mensal'] || '0') || 0
-          })).filter(col => col.nome && col.cpf);
+        const dependentesComId = previewData.dependentes
+          .map(dep => ({
+            nome: dep.nome,
+            cpf: dep.cpf,
+            data_nascimento: dep.data_nascimento,
+            grau_parentesco: dep.grau_parentesco,
+            colaborador_id: cpfToIdMap.get(dep.colaborador_cpf),
+            custo_mensal: dep.custo_mensal || 0,
+            status: 'ativo' as const
+          }))
+          .filter(dep => dep.colaborador_id);
 
-          let colaboradoresImportados = 0;
-          if (colaboradores.length > 0) {
-            const { error: colaboradoresError } = await supabase
-              .from('colaboradores')
-              .upsert(colaboradores, { onConflict: 'cpf,empresa_id' });
+        if (dependentesComId.length > 0) {
+          const { error } = await supabase
+            .from('dependentes')
+            .upsert(dependentesComId, { onConflict: 'cpf,colaborador_id' });
 
-            if (colaboradoresError) throw colaboradoresError;
-            colaboradoresImportados = colaboradores.length;
-          }
-
-          // 5. Atualizar status do upload para processado
-          await updateUploadStatus(
-            uploadRecord.id, 
-            'processado', 
-            colaboradoresImportados, 
-            0
-          );
-
-          toast({
-            title: "Planilha processada com sucesso!",
-            description: `${colaboradoresImportados} colaboradores foram importados e o arquivo foi salvo no sistema`,
-          });
-
-          // Recarregar dados do dashboard
-          onDataUpdate?.();
-          
-          // Limpar arquivo
-          setFile(null);
-
-        } catch (error) {
-          console.error('❌ Erro ao processar dados da planilha:', error);
-          
-          // Atualizar status para erro
-          if (uploadRecord) {
-            await updateUploadStatus(uploadRecord.id, 'erro');
-          }
-          
-          toast({
-            title: "Erro ao processar dados",
-            description: "Verifique o formato da planilha e tente novamente",
-            variant: "destructive",
-          });
-        } finally {
-          setIsProcessing(false);
+          if (error) throw error;
+          dependentesImportados = dependentesComId.length;
         }
-      };
-      reader.readAsArrayBuffer(file);
+      }
+
+      // Atualizar status do upload
+      await updateUploadStatus(
+        uploadRecord.id,
+        'processado',
+        colaboradoresImportados,
+        dependentesImportados
+      );
+
+      toast({
+        title: "Dados importados com sucesso!",
+        description: `${colaboradoresImportados} colaboradores e ${dependentesImportados} dependentes foram importados`,
+      });
+
+      onDataUpdate?.();
+      setFile(null);
+      setPreviewData(null);
+      setShowPreview(false);
 
     } catch (error) {
-      console.error('❌ Erro ao processar planilha:', error);
+      console.error('Erro ao processar dados:', error);
       
-      // Atualizar status para erro se houver upload record
       if (uploadRecord) {
         await updateUploadStatus(uploadRecord.id, 'erro');
       }
       
       toast({
-        title: "Erro ao processar planilha",
+        title: "Erro ao processar dados",
         description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
+    } finally {
       setIsProcessing(false);
     }
   };
 
-  const sendToWebhook = async () => {
-    if (!file || !webhookUrl) {
-      toast({
-        title: "Dados incompletos",
-        description: "Selecione um arquivo e informe a URL do webhook",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsUploading(true);
-
-    try {
-      // Primeiro, salvar arquivo no Supabase Storage
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const fileName = `${Date.now()}_${file.name}`;
-      const filePath = `${user.id}/${fileName}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('smartbeneficios')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // Agora enviar para webhook
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('fileName', file.name);
-      formData.append('fileSize', file.size.toString());
-      formData.append('lastModified', file.lastModified.toString());
-      formData.append('timestamp', new Date().toISOString());
-      formData.append('source', 'SmartBeneficios');
-      formData.append('userId', user.id);
-      formData.append('storagePath', uploadData.path);
-
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Arquivo enviado com sucesso",
-          description: "O arquivo foi salvo no sistema e enviado para processamento",
-        });
-        
-        setFile(null);
-        setWebhookUrl('');
-      } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-    } catch (error) {
-      console.error('Erro ao enviar para webhook:', error);
-      toast({
-        title: "Erro no envio",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const downloadTemplate = () => {
-    const csvContent = `nome,cpf,email,telefone,data_nascimento,cargo,centro_custo,data_admissao,custo_mensal
-João Silva,123.456.789-00,joao@empresa.com.br,71999887766,1985-01-15,Analista,Financeiro,2024-01-10,350.00
-Maria Santos,987.654.321-00,maria@empresa.com.br,71988776655,1990-03-22,Coordenadora,RH,2024-02-01,420.00`;
+    const csvContent = `nome,cpf,email,telefone,data_nascimento,cargo,centro_custo,data_admissao,custo_mensal,dependente_nome,dependente_cpf,dependente_nascimento,parentesco,colaborador_cpf
+João Silva,12345678900,joao@empresa.com,71999887766,1985-01-15,Analista,Financeiro,2024-01-10,350.00,,,,,
+Maria Santos,98765432100,maria@empresa.com,71988776655,1990-03-22,Coordenadora,RH,2024-02-01,420.00,,,,,
+,,,,,,,,,Ana Silva,12345678901,2010-05-10,filho,12345678900`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', 'template_colaboradores.csv');
+    link.setAttribute('download', 'template_colaboradores_dependentes.csv');
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -408,38 +551,10 @@ Maria Santos,987.654.321-00,maria@empresa.com.br,71988776655,1990-03-22,Coordena
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5" />
-            Importar Colaboradores
+            Importar Colaboradores e Dependentes
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Configuração do Webhook n8n */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2">
-                <Label htmlFor="webhook-url">URL do Webhook n8n (opcional)</Label>
-                <Input
-                  id="webhook-url"
-                  type="url"
-                  placeholder="https://your-n8n-instance.com/webhook/your-webhook-id"
-                  value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex items-end">
-                <Button 
-                  onClick={sendToWebhook}
-                  disabled={!file || !webhookUrl || isUploading}
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {isUploading ? 'Enviando...' : 'Enviar para n8n'}
-                </Button>
-              </div>
-            </div>
-          </div>
-
           {/* Área de Upload com Drag and Drop */}
           {!file ? (
             <div 
@@ -471,54 +586,142 @@ Maria Santos,987.654.321-00,maria@empresa.com.br,71988776655,1990-03-22,Coordena
               <Button 
                 asChild 
                 className="bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={isProcessing}
               >
                 <label htmlFor="file-input" className="cursor-pointer">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Selecionar Arquivo
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Selecionar Arquivo
+                    </>
+                  )}
                 </label>
               </Button>
             </div>
           ) : (
-            <div className="border rounded-lg p-6 bg-green-50 border-green-200">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
+            <div className="space-y-4">
+              {/* Informações do arquivo */}
+              <div className="border rounded-lg p-6 bg-green-50 border-green-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
                     <CheckCircle className="h-8 w-8 text-green-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
-                      {file.name}
-                    </p>
-                    <div className="flex items-center mt-1 space-x-4 text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <HardDrive className="h-4 w-4 mr-1" />
-                        {formatFileSize(file.size)}
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {formatFileDate(new Date(file.lastModified))}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                      <div className="flex items-center mt-1 space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <HardDrive className="h-4 w-4 mr-1" />
+                          {formatFileSize(file.size)}
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {formatFileDate(new Date(file.lastModified))}
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setFile(null);
+                      setPreviewData(null);
+                      setShowPreview(false);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setFile(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
               </div>
+
+              {/* Preview dos dados */}
+              {showPreview && previewData && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Eye className="h-5 w-5" />
+                      Preview dos Dados
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Colaboradores ({previewData.colaboradores.length})
+                        </h4>
+                        <div className="max-h-32 overflow-y-auto border rounded p-2 text-sm">
+                          {previewData.colaboradores.slice(0, 5).map((col, idx) => (
+                            <div key={idx} className="py-1">{col.nome} - {col.cpf}</div>
+                          ))}
+                          {previewData.colaboradores.length > 5 && (
+                            <div className="text-muted-foreground">
+                              ... e mais {previewData.colaboradores.length - 5}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <UserPlus className="h-4 w-4" />
+                          Dependentes ({previewData.dependentes.length})
+                        </h4>
+                        <div className="max-h-32 overflow-y-auto border rounded p-2 text-sm">
+                          {previewData.dependentes.slice(0, 5).map((dep, idx) => (
+                            <div key={idx} className="py-1">{dep.nome} - {dep.grau_parentesco}</div>
+                          ))}
+                          {previewData.dependentes.length > 5 && (
+                            <div className="text-muted-foreground">
+                              ... e mais {previewData.dependentes.length - 5}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {previewData.errors.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-red-600 flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4" />
+                          Avisos ({previewData.errors.length})
+                        </h4>
+                        <div className="max-h-24 overflow-y-auto border rounded p-2 text-sm text-red-600 bg-red-50">
+                          {previewData.errors.slice(0, 3).map((error, idx) => (
+                            <div key={idx} className="py-1">{error}</div>
+                          ))}
+                          {previewData.errors.length > 3 && (
+                            <div>... e mais {previewData.errors.length - 3} avisos</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
               
-              <div className="mt-4 flex gap-2">
+              <div className="flex gap-2">
                 <Button 
-                  onClick={processSpreadsheet}
-                  disabled={isProcessing}
+                  onClick={processAndSaveData}
+                  disabled={isProcessing || !previewData}
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  <Users className="h-4 w-4 mr-2" />
-                  {isProcessing ? 'Processando...' : 'Processar e Importar'}
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Salvar Dados
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
