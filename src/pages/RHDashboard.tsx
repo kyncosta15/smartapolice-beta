@@ -1,4 +1,3 @@
-console.log('🔍 Starting RHDashboard.tsx import');
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,22 +27,12 @@ import {
   LineChart,
   Line
 } from 'recharts';
-console.log('🔍 About to import useRHDashboardData');
 import { useRHDashboardData } from '@/hooks/useRHDashboardData';
-console.log('🔍 About to import useSyncDashboard');
 import { useSyncDashboard } from '@/hooks/useSyncDashboard';
-console.log('🔍 All imports completed');
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-console.log('🔍 About to define RHDashboard function');
-
-// Add a simple test export to verify export mechanism works
-export const testExport = 'RHDashboard test export working';
-console.log('🔍 Test export defined:', testExport);
-
 export default function RHDashboard() {
-  console.log('🔍 Inside RHDashboard function');
   const { 
     kpis, 
     renewals, 
@@ -378,5 +367,4 @@ export default function RHDashboard() {
       </div>
     </div>
   );
-  console.log('🔍 RHDashboard function completed');
 }
