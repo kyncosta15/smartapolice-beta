@@ -23,9 +23,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
-import { UserX, Search, Trash2, User, Calendar, Building, Phone, Mail } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from '@/hooks/use-toast';
+import { UserX, Search, Trash2, User, Calendar, Building, Phone, Mail, Users } from 'lucide-react';
 import { useCollaborators } from '@/hooks/useCollaborators';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ExcluirColaboradorModalProps {
   children: React.ReactNode;
@@ -34,9 +36,10 @@ interface ExcluirColaboradorModalProps {
 export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalProps) => {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
   
-  const { employees, updateEmployee, isLoading } = useCollaborators();
+  const { employees, updateEmployee, isLoading, refetch } = useCollaborators();
 
   const filteredEmployees = employees.filter(emp => 
     emp.status === 'ativo' && 
@@ -44,16 +47,63 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
      emp.cpf.includes(searchTerm.replace(/\D/g, '')))
   );
 
-  const handleInactivateEmployee = async (employeeId: string) => {
+  const deleteSelectedEmployees = async () => {
+    if (selectedEmployees.size === 0) return;
+    
+    setIsDeleting(true);
     try {
-      await updateEmployee(employeeId, { status: 'inativo' });
+      const employeeIds = Array.from(selectedEmployees);
       
-      toast.success("Colaborador inativado com sucesso!");
+      // Delete dependents first
+      for (const employeeId of employeeIds) {
+        await supabase
+          .from('dependentes')
+          .delete()
+          .eq('colaborador_id', employeeId);
+      }
       
-      setSelectedEmployee(null);
+      // Delete employees
+      const { error } = await supabase
+        .from('colaboradores')
+        .delete()
+        .in('id', employeeIds);
+
+      if (error) throw error;
+
+      toast({
+        title: "Colaboradores excluídos",
+        description: `${employeeIds.length} colaborador(es) foram excluídos com sucesso`,
+      });
+
+      setSelectedEmployees(new Set());
+      await refetch();
     } catch (error) {
-      console.error('Erro ao inativar colaborador:', error);
-      toast.error("Erro ao inativar colaborador. Tente novamente.");
+      console.error('Erro ao excluir colaboradores:', error);
+      toast({
+        title: "Erro ao excluir colaboradores",
+        description: "Não foi possível excluir os colaboradores selecionados",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const toggleEmployeeSelection = (employeeId: string) => {
+    const newSelected = new Set(selectedEmployees);
+    if (newSelected.has(employeeId)) {
+      newSelected.delete(employeeId);
+    } else {
+      newSelected.add(employeeId);
+    }
+    setSelectedEmployees(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedEmployees.size === filteredEmployees.length) {
+      setSelectedEmployees(new Set());
+    } else {
+      setSelectedEmployees(new Set(filteredEmployees.map(emp => emp.id)));
     }
   };
 
@@ -76,20 +126,60 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserX className="h-5 w-5" />
-            Inativar Colaborador
+            Excluir Colaboradores
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Busca */}
+          {/* Busca e Ações */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Search className="h-4 w-4" />
-                Buscar Colaborador
+              <CardTitle className="text-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4" />
+                  Buscar e Gerenciar Colaboradores
+                </div>
+                {selectedEmployees.size > 0 && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        disabled={isDeleting}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Excluir ({selectedEmployees.size})
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir permanentemente {selectedEmployees.size} colaborador(es)?
+                          <br /><br />
+                          <strong>Esta ação não pode ser desfeita e irá:</strong>
+                          <ul className="list-disc list-inside mt-2 space-y-1 text-red-600">
+                            <li>Remover os colaboradores completamente do sistema</li>
+                            <li>Excluir todos os dependentes associados</li>
+                            <li>Apagar todo o histórico permanentemente</li>
+                          </ul>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={deleteSelectedEmployees}
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                          {isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="search">Nome ou CPF</Label>
                 <Input
@@ -100,6 +190,28 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
                   className="w-full"
                 />
               </div>
+
+              {/* Controle de seleção */}
+              {filteredEmployees.length > 0 && (
+                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                  <Checkbox
+                    checked={selectedEmployees.size === filteredEmployees.length && filteredEmployees.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                    id="select-all-modal"
+                  />
+                  <label htmlFor="select-all-modal" className="text-sm font-medium cursor-pointer">
+                    {selectedEmployees.size === filteredEmployees.length && filteredEmployees.length > 0
+                      ? 'Desmarcar todos'
+                      : 'Selecionar todos'
+                    }
+                  </label>
+                  {selectedEmployees.size > 0 && (
+                    <span className="text-sm text-muted-foreground ml-auto">
+                      {selectedEmployees.size} selecionado{selectedEmployees.size !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -116,18 +228,27 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
               ) : (
                 <div className="space-y-3">
                   {filteredEmployees.map((employee) => (
-                    <Card key={employee.id} className="p-4">
-                      <div className="flex items-start justify-between">
+                    <Card key={employee.id} className={`p-4 ${selectedEmployees.has(employee.id) ? 'ring-2 ring-primary' : ''}`}>
+                      <div className="flex items-start gap-3">
+                        {/* Checkbox de seleção */}
+                        <Checkbox
+                          checked={selectedEmployees.has(employee.id)}
+                          onCheckedChange={() => toggleEmployeeSelection(employee.id)}
+                          className="mt-1"
+                        />
+                        
                         <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-3">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <div>
-                              <h3 className="font-medium">{employee.full_name}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                CPF: {formatCPF(employee.cpf)}
-                              </p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <h3 className="font-medium">{employee.full_name}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  CPF: {formatCPF(employee.cpf)}
+                                </p>
+                              </div>
                             </div>
-                            <Badge variant="outline" className="ml-auto">
+                            <Badge variant="outline">
                               {employee.status}
                             </Badge>
                           </div>
@@ -167,7 +288,8 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
                           {/* Dependentes */}
                           {employee.dependents && employee.dependents.length > 0 && (
                             <div className="mt-3">
-                              <p className="text-sm font-medium text-muted-foreground mb-2">
+                              <p className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                                <Users className="h-3 w-3" />
                                 Dependentes ({employee.dependents.length}):
                               </p>
                               <div className="flex flex-wrap gap-1">
@@ -180,43 +302,6 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
                             </div>
                           )}
                         </div>
-                        
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              className="ml-4"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Inativar
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Confirmar Inativação</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Tem certeza que deseja inativar o colaborador <strong>{employee.full_name}</strong>?
-                                <br /><br />
-                                Esta ação irá:
-                                <ul className="list-disc list-inside mt-2 space-y-1">
-                                  <li>Alterar o status para "inativo"</li>
-                                  <li>Manter o histórico no sistema</li>
-                                  <li>Permitir reativação futura se necessário</li>
-                                </ul>
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleInactivateEmployee(employee.id)}
-                                className="bg-destructive hover:bg-destructive/90"
-                              >
-                                Confirmar Inativação
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
                       </div>
                     </Card>
                   ))}
