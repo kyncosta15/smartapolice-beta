@@ -110,9 +110,18 @@ export default function RHColaboradores() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Colaboradores Cadastrados</h1>
-          <p className="text-muted-foreground">
-            {isLoading ? 'Carregando...' : `${employees.length} colaboradores encontrados`}
-          </p>
+          {isLoading ? (
+            <p className="text-muted-foreground">Carregando estatísticas...</p>
+          ) : (
+            <div className="space-y-1">
+              <p className="text-muted-foreground">
+                {employees.length} colaboradores • {employees.filter(emp => emp.status === 'ativo').length} ativos • {employees.filter(emp => emp.status !== 'ativo').length} inativos
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {employees.reduce((total, emp) => total + getDependentsCount(emp), 0)} dependentes cadastrados
+              </p>
+            </div>
+          )}
         </div>
         
         {/* Search */}
