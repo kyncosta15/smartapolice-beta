@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { UserX, Search, Trash2, User, Calendar, Building, Phone, Mail, Users } from 'lucide-react';
 import { useCollaborators } from '@/hooks/useCollaborators';
 import { supabase } from '@/integrations/supabase/client';
@@ -70,20 +70,13 @@ export const ExcluirColaboradorModal = ({ children }: ExcluirColaboradorModalPro
 
       if (error) throw error;
 
-      toast({
-        title: "Colaboradores excluídos",
-        description: `${employeeIds.length} colaborador(es) foram excluídos com sucesso`,
-      });
+      toast.success(`${employeeIds.length} colaborador(es) foram excluídos com sucesso`);
 
       setSelectedEmployees(new Set());
       await refetch();
     } catch (error) {
       console.error('Erro ao excluir colaboradores:', error);
-      toast({
-        title: "Erro ao excluir colaboradores",
-        description: "Não foi possível excluir os colaboradores selecionados",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível excluir os colaboradores selecionados");
     } finally {
       setIsDeleting(false);
     }
