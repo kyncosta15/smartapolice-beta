@@ -292,9 +292,19 @@ export const EmployeesList: React.FC = () => {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Colaboradores Cadastrados</h3>
-          <p className="text-muted-foreground">
-            {isLoading ? 'Carregando...' : `${filteredEmployees.length} colaborador${filteredEmployees.length !== 1 ? 'es' : ''} encontrado${filteredEmployees.length !== 1 ? 's' : ''}`}
-          </p>
+          {isLoading ? (
+            <p className="text-muted-foreground">Carregando estatísticas...</p>
+          ) : (
+            <div className="space-y-1">
+              <p className="text-muted-foreground">
+                {employees.length} colaboradores • {employees.filter(emp => emp.status === 'ativo').length} ativos • {employees.filter(emp => emp.status !== 'ativo').length} inativos
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {employees.reduce((total, emp) => total + emp.dependents.length, 0)} dependentes cadastrados
+                {searchTerm && ` • ${filteredEmployees.length} resultados na busca`}
+              </p>
+            </div>
+          )}
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
