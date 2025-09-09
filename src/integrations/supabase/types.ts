@@ -118,6 +118,13 @@ export type Database = {
             referencedRelation: "policies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "coberturas_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies_ui"
+            referencedColumns: ["id"]
+          },
         ]
       }
       colaborador_apolice_vinculo: {
@@ -720,10 +727,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_installments_policy_id"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies_ui"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "installments_policy_id_fkey"
             columns: ["policy_id"]
             isOneToOne: false
             referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installments_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies_ui"
             referencedColumns: ["id"]
           },
           {
@@ -810,6 +831,13 @@ export type Database = {
             columns: ["policy_id"]
             isOneToOne: false
             referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parcelas_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies_ui"
             referencedColumns: ["id"]
           },
         ]
@@ -931,11 +959,16 @@ export type Database = {
           responsavel_user_id: string | null
           segurado: string | null
           seguradora: string | null
+          seguradora_empresa: string | null
+          seguradora_entidade: string | null
           status: string | null
           telefone: string | null
+          tipo_categoria: string | null
+          tipo_cobertura: string | null
           tipo_seguro: string | null
           uf: string | null
           user_id: string
+          valor_mensal_num: number | null
           valor_parcela: number | null
           valor_premio: number | null
         }
@@ -969,11 +1002,16 @@ export type Database = {
           responsavel_user_id?: string | null
           segurado?: string | null
           seguradora?: string | null
+          seguradora_empresa?: string | null
+          seguradora_entidade?: string | null
           status?: string | null
           telefone?: string | null
+          tipo_categoria?: string | null
+          tipo_cobertura?: string | null
           tipo_seguro?: string | null
           uf?: string | null
           user_id: string
+          valor_mensal_num?: number | null
           valor_parcela?: number | null
           valor_premio?: number | null
         }
@@ -1007,11 +1045,16 @@ export type Database = {
           responsavel_user_id?: string | null
           segurado?: string | null
           seguradora?: string | null
+          seguradora_empresa?: string | null
+          seguradora_entidade?: string | null
           status?: string | null
           telefone?: string | null
+          tipo_categoria?: string | null
+          tipo_cobertura?: string | null
           tipo_seguro?: string | null
           uf?: string | null
           user_id?: string
+          valor_mensal_num?: number | null
           valor_parcela?: number | null
           valor_premio?: number | null
         }
@@ -1417,7 +1460,74 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      policies_ui: {
+        Row: {
+          created_at: string | null
+          end_date: string | null
+          expiration_date: string | null
+          extraction_timestamp: string | null
+          id: string | null
+          name: string | null
+          pdf_path: string | null
+          placa: string | null
+          policy_number: string | null
+          seguradora_empresa: string | null
+          seguradora_entidade: string | null
+          start_date: string | null
+          status: string | null
+          tipo_categoria: string | null
+          tipo_cobertura: string | null
+          user_id: string | null
+          valor_mensal: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date?: string | null
+          expiration_date?: string | null
+          extraction_timestamp?: string | null
+          id?: string | null
+          name?: string | null
+          pdf_path?: string | null
+          placa?: string | null
+          policy_number?: string | null
+          seguradora_empresa?: never
+          seguradora_entidade?: string | null
+          start_date?: string | null
+          status?: never
+          tipo_categoria?: never
+          tipo_cobertura?: never
+          user_id?: string | null
+          valor_mensal?: never
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string | null
+          expiration_date?: string | null
+          extraction_timestamp?: string | null
+          id?: string | null
+          name?: string | null
+          pdf_path?: string | null
+          placa?: string | null
+          policy_number?: string | null
+          seguradora_empresa?: never
+          seguradora_entidade?: string | null
+          start_date?: string | null
+          status?: never
+          tipo_categoria?: never
+          tipo_cobertura?: never
+          user_id?: string | null
+          valor_mensal?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_access_requests: {
