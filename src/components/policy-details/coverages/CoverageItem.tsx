@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Shield, Edit3, Save, X, Trash2 } from 'lucide-react';
+import { renderValue, renderValueAsString } from '@/utils/renderValue';
 
 interface Coverage {
   id?: string;
@@ -47,7 +48,7 @@ export const CoverageItem = ({
           <div>
             <label className="text-sm font-medium text-blue-700 mb-1 block">Descrição</label>
             <Input
-              value={coverage.descricao}
+              value={renderValueAsString(coverage.descricao)}
               onChange={(e) => onUpdate(coverage.id!, 'descricao', e.target.value)}
               placeholder="Descrição da cobertura"
               className="w-full"
@@ -96,7 +97,7 @@ export const CoverageItem = ({
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-gray-900 font-sf-pro mb-1 leading-tight">
-              {coverage.descricao}
+              {renderValue(coverage.descricao)}
             </h4>
             <div className="flex items-center gap-2">
               <span className="text-sm text-blue-600 font-medium">LMI:</span>

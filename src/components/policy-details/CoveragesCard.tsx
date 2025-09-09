@@ -29,7 +29,8 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
   const { toast } = useToast();
 
   console.log('🔍 CoveragesCard: Recebendo dados:', {
-    initialCoverages,
+    initialCoveragesCount: Array.isArray(initialCoverages) ? initialCoverages.length : 0,
+    initialCoveragesType: Array.isArray(initialCoverages) ? 'array' : typeof initialCoverages,
     policyId,
     readOnly
   });
@@ -44,9 +45,13 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
   } = useCoveragesData(initialCoverages, policyId);
 
   console.log('📊 CoveragesCard: Estado atual das coberturas:', {
-    coverages,
+    coverageCount: coverages.length,
     isLoaded,
-    count: coverages.length
+    sampleCoverage: coverages.length > 0 ? {
+      id: coverages[0].id,
+      descricao: typeof coverages[0].descricao === 'string' ? coverages[0].descricao : 'objeto complexo',
+      lmi: coverages[0].lmi
+    } : null
   });
 
   if (!isLoaded) {

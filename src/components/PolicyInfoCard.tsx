@@ -195,7 +195,14 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
           <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium font-sans`}>Cobertura</p>
           <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 font-sans`}>
             {policy.coberturas && policy.coberturas.length > 0 
-              ? policy.coberturas.map(c => c.descricao).join(', ')
+              ? policy.coberturas.map(c => {
+                  // Usar renderização segura para evitar objetos React
+                  if (typeof c === 'string') return c;
+                  if (typeof c === 'object' && c.descricao) {
+                    return typeof c.descricao === 'string' ? c.descricao : extractFieldValue(c.descricao);
+                  }
+                  return extractFieldValue(c);
+                }).filter(desc => desc && desc !== 'Não informado').join(', ') || 'Cobertura Básica'
               : 'Cobertura Básica'
             }
           </p>

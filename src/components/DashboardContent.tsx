@@ -12,6 +12,7 @@ import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { usePersistedUsers } from '@/hooks/usePersistedUsers';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { extractFieldValue } from '@/utils/extractFieldValue';
 import { 
   createExtendedInstallments,
   filterOverdueInstallments,
@@ -85,7 +86,14 @@ export function DashboardContent() {
                policy.type === 'vida' ? 'Pessoal' : 
                policy.type === 'saude' ? 'Saúde' : 
                policy.type === 'empresarial' ? 'Empresarial' : 'Geral',
-      coverage: policy.coberturas?.map((c: any) => c.descricao) || ['Cobertura Básica'],
+      coverage: policy.coberturas?.map((c: any) => {
+        // Usar renderização segura para evitar objetos React
+        if (typeof c === 'string') return c;
+        if (typeof c === 'object' && c.descricao) {
+          return typeof c.descricao === 'string' ? c.descricao : extractFieldValue(c.descricao);
+        }
+        return extractFieldValue(c);
+      }).filter(desc => desc && desc !== 'Não informado') || ['Cobertura Básica'],
       monthlyAmount: policy.monthlyAmount || (parseFloat(policy.premium) / 12) || 0,
       premium: policy.premium || 0,
       deductible: policy.deductible || Math.floor(Math.random() * 5000) + 1000,

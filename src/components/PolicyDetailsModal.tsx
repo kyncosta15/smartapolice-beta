@@ -50,14 +50,22 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
   if (policy.coberturas && Array.isArray(policy.coberturas)) {
     // Coberturas do N8N com estrutura {descricao, lmi}
     coverages = policy.coberturas;
-    console.log('📋 Usando coberturas do N8N:', coverages);
+    console.log('📋 Usando coberturas do N8N:', coverages.map(c => ({ 
+      id: c.id, 
+      descricao: typeof c.descricao === 'string' ? c.descricao : 'objeto complexo',
+      lmi: c.lmi 
+    })));
   } else if (policy.coverage && Array.isArray(policy.coverage)) {
     // Fallback para coverage legacy (apenas strings)
     coverages = policy.coverage.map((desc: string) => ({ 
       descricao: desc,
       lmi: undefined 
     }));
-    console.log('📋 Usando coberturas legacy:', coverages);
+    console.log('📋 Usando coberturas legacy:', coverages.map(c => ({ 
+      id: c.id, 
+      descricao: typeof c.descricao === 'string' ? c.descricao : 'objeto complexo',
+      lmi: c.lmi 
+    })));
   } else {
     // Array vazio se não há coberturas
     coverages = [];
