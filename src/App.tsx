@@ -45,11 +45,7 @@ const App = () => {
               <Route path="/dashboard" element={<AuthGuard />} />
               <Route
                 path="/smartbeneficios/dashboard"
-                element={
-                  <ProtectedRoute requiredRoles={['rh', 'admin', 'administrador', 'financeiro', 'corretora_admin']}>
-                    <SmartBeneficiosGuard />
-                  </ProtectedRoute>
-                }
+                element={<SmartBeneficiosGuard />}
               />
 
               {/* Admin only routes (future) */}
