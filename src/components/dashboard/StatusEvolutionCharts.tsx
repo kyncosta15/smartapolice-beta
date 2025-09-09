@@ -81,7 +81,7 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
                   innerRadius={isMobile ? 15 : 40}
                   fill="#8884d8"
                   dataKey="value"
-                  label={isMobile ? false : ({ name, percent, value }) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
+                  label={isMobile ? false : ({ name, percent, value }: { name: string; percent: number; value: number }) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
                   labelLine={false}
                   fontSize={isMobile ? 8 : 12}
                 >
