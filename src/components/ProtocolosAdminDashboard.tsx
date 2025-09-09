@@ -251,56 +251,74 @@ export const ProtocolosAdminDashboard = ({ submissoes, isLoading }: ProtocolosAd
           ) : (
             <div className="space-y-3">
               {protocolosRecentes.map((submissao) => (
-                <Card key={submissao.id} className="border-l-4 border-l-blue-500">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-lg font-bold text-blue-600">
-                            {submissao.numero_protocolo}
-                          </span>
+                <Card key={submissao.id} className="group relative overflow-hidden border-0 bg-gradient-to-br from-white/80 via-white/60 to-blue-50/40 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  {/* Gradient border effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 rounded-lg opacity-20 group-hover:opacity-30 transition-opacity duration-300" />
+                  <div className="absolute inset-[1px] bg-white/90 backdrop-blur-sm rounded-lg" />
+                  
+                  <CardContent className="relative p-6 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-4 flex-1">
+                        {/* Protocol header with modern badge */}
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <span className="font-mono text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                              {submissao.numero_protocolo}
+                            </span>
+                            <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 opacity-30" />
+                          </div>
                           {getStatusBadge(submissao.status)}
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-500" />
-                            <span className="font-medium">
-                              {submissao.dados_preenchidos?.nome || 'Nome não informado'}
+                        {/* Info grid with modern styling */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100/50">
+                            <div className="p-1.5 rounded-lg bg-blue-500/10">
+                              <User className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <span className="font-medium text-gray-800 text-sm">
+                              {submissao.dados_preenchidos?.nome || "Nome não informado"}
                             </span>
                           </div>
                           
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-gray-500" />
-                            <span>
-                              {new Date(submissao.created_at).toLocaleString('pt-BR')}
+                          <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100/50">
+                            <div className="p-1.5 rounded-lg bg-purple-500/10">
+                              <Calendar className="h-4 w-4 text-purple-600" />
+                            </div>
+                            <span className="text-gray-700 text-sm">
+                              {new Date(submissao.created_at).toLocaleString("pt-BR")}
                             </span>
                           </div>
 
                           {submissao.dados_preenchidos?.cpf && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                            <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100/50">
+                              <div className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-medium rounded-full shadow-sm">
                                 CPF: {submissao.dados_preenchidos.cpf}
-                              </span>
+                              </div>
                             </div>
                           )}
                         </div>
 
                         {submissao.observacoes && (
-                          <p className="text-sm text-muted-foreground mt-2">
-                            {submissao.observacoes}
-                          </p>
+                          <div className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100/50">
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {submissao.observacoes}
+                            </p>
+                          </div>
                         )}
                       </div>
                       
-                      <div className="ml-4">
+                      {/* Modern action button */}
+                      <div className="ml-6">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewDetails(submissao)}
+                          className="group/btn relative overflow-hidden border-2 border-blue-200 hover:border-blue-400 bg-white/80 backdrop-blur-sm hover:bg-blue-50 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
                         >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Ver Detalhes
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+                          <Eye className="h-4 w-4 mr-2 text-blue-600 group-hover/btn:text-blue-700 transition-colors" />
+                          <span className="relative font-medium">Ver Detalhes</span>
                         </Button>
                       </div>
                     </div>
