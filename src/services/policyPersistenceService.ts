@@ -346,9 +346,9 @@ export class PolicyPersistenceService {
     try {
       console.log(`📖 [loadUserPolicies-${sessionId}] Carregando apólices do usuário: ${userId}`);
 
-      // Use the safe UI view that always returns normalized strings
+      // Use the main policies table to get all fields including documento and documento_tipo
       const { data: policies, error: policiesError } = await supabase
-        .from('policies_ui')
+        .from('policies')
         .select(`
           *,
           installments!fk_installments_policy_id (
@@ -382,9 +382,10 @@ export class PolicyPersistenceService {
       const parsedPolicies: ParsedPolicyData[] = policies.map((policy, index) => {
         console.log(`🔍 [loadUserPolicies-${sessionId}] Processando apólice ${index + 1}:`, {
           id: policy.id,
-          name: policy.name,
+          name: policy.segurado,
           status_db: policy.status,
-          expiration_date: policy.expiration_date
+          documento_tipo: policy.documento_tipo,
+          documento: policy.documento
         });
 
         // Status already normalized by view
@@ -392,24 +393,24 @@ export class PolicyPersistenceService {
 
         console.log(`🎯 [loadUserPolicies-${sessionId}] Status da apólice ${policy.id}: ${finalStatus}`);
 
-        // Data from policies_ui is already normalized as strings
+        // Data from policies table with all fields - CORRECTED FIELD MAPPING
         const convertedPolicy = {
           id: policy.id,
-          name: policy.name || 'N/A',
-          type: policy.tipo_categoria || 'N/A', // Already normalized string
-          insurer: policy.seguradora_empresa || 'N/A', // Already normalized string
-          premium: 0, // Not available in current view
-          monthlyAmount: Number(policy.valor_mensal) || 0,
-          startDate: policy.start_date || new Date().toISOString().split('T')[0],
-          endDate: policy.end_date || new Date().toISOString().split('T')[0], 
-          policyNumber: policy.policy_number || 'N/A',
+          name: policy.segurado || 'N/A',
+          type: policy.tipo_seguro || 'auto',
+          insurer: policy.seguradora || 'N/A',
+          premium: 0,
+          monthlyAmount: Number(policy.valor_mensal_num || policy.custo_mensal) || 0,
+          startDate: policy.inicio_vigencia || new Date().toISOString().split('T')[0],
+          endDate: policy.fim_vigencia || new Date().toISOString().split('T')[0], 
+          policyNumber: policy.numero_apolice || 'N/A',
           paymentFrequency: 'mensal',
           status: finalStatus,
-          pdfPath: policy.pdf_path,
+          pdfPath: policy.arquivo_url,
           extractedAt: policy.extraction_timestamp || policy.created_at || new Date().toISOString(),
           
           // Required fields
-          expirationDate: policy.expiration_date || policy.end_date || new Date().toISOString().split('T')[0],
+          expirationDate: policy.expiration_date || policy.fim_vigencia || new Date().toISOString().split('T')[0],
           policyStatus: finalStatus as any,
           quantidade_parcelas: 12,
           
@@ -428,20 +429,20 @@ export class PolicyPersistenceService {
             lmi: cob.lmi ? Number(cob.lmi) : undefined
           })) || [],
           
-          // Other fields
-          insuredName: policy.name || 'N/A',
-          documento: '',
-          documento_tipo: undefined,
-          deductible: undefined,
-          vehicleModel: '',
-          uf: '',
-          entity: 'Não informado',
-          category: policy.tipo_categoria === 'auto' ? 'Veicular' : 
-                   policy.tipo_categoria === 'vida' ? 'Pessoal' : 
-                   policy.tipo_categoria === 'saude' ? 'Saúde' : 
-                   policy.tipo_categoria === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
+          // Other fields - USE REAL DATA FROM DATABASE
+          insuredName: policy.segurado || 'N/A',
+          documento: policy.documento || '',
+          documento_tipo: (policy.documento_tipo === 'CPF' || policy.documento_tipo === 'CNPJ') ? policy.documento_tipo as 'CPF' | 'CNPJ' : undefined,
+          deductible: policy.franquia || undefined,
+          vehicleModel: policy.modelo_veiculo || '',
+          uf: policy.uf || '',
+          entity: policy.corretora || 'Não informado',
+          category: policy.tipo_seguro === 'auto' ? 'Veicular' : 
+                   policy.tipo_seguro === 'vida' ? 'Pessoal' : 
+                   policy.tipo_seguro === 'saude' ? 'Saúde' : 
+                   policy.tipo_seguro === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
           coverage: (policy.coberturas as any[])?.map(cob => cob.descricao) || ['Cobertura Básica'],
-          totalCoverage: Number(policy.valor_mensal) * 12 || 0,
+          totalCoverage: Number(policy.valor_mensal_num || policy.custo_mensal) * 12 || 0,
           limits: 'R$ 100.000 por sinistro'
         };
 
