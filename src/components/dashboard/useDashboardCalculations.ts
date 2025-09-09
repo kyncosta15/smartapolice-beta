@@ -112,28 +112,28 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
     const personTypeDistribution = policies.reduce((acc, policy) => {
       console.log('📋 Analisando política:', {
         id: policy.id,
-        name: policy.name,
-        documento_tipo: policy.documento_tipo,
-        documento: policy.documento
+        name: String(policy.name || 'N/A'),
+        documento_tipo: String(policy.documento_tipo || 'N/A'),
+        documento: String(policy.documento || 'N/A')
       });
       
       const documentoTipo = extractFieldValue(policy.documento_tipo);
       
       if (!documentoTipo || documentoTipo === 'undefined' || documentoTipo === '' || documentoTipo === 'Não informado') {
-        console.log(`⚠️ Política "${policy.name}": campo documento_tipo não encontrado, vazio ou undefined`);
+        console.log(`⚠️ Política "${String(policy.name || 'N/A')}": campo documento_tipo não encontrado, vazio ou undefined`);
         console.log('⚠️ Dados disponíveis:', Object.keys(policy));
-        console.log('⚠️ Valor do campo documento_tipo:', policy.documento_tipo);
+        console.log('⚠️ Valor do campo documento_tipo:', String(policy.documento_tipo || 'N/A'));
         return acc;
       }
       
       if (documentoTipo === 'CPF') {
-        console.log(`✅ Política "${policy.name}": classificada como Pessoa Física`);
+        console.log(`✅ Política "${String(policy.name || 'N/A')}": classificada como Pessoa Física`);
         acc.pessoaFisica++;
       } else if (documentoTipo === 'CNPJ') {
-        console.log(`✅ Política "${policy.name}": classificada como Pessoa Jurídica`);
+        console.log(`✅ Política "${String(policy.name || 'N/A')}": classificada como Pessoa Jurídica`);
         acc.pessoaJuridica++;
       } else {
-        console.log(`⚠️ Política "${policy.name}": tipo de documento desconhecido: ${documentoTipo}`);
+        console.log(`⚠️ Política "${String(policy.name || 'N/A')}": tipo de documento desconhecido: ${documentoTipo}`);
       }
       
       return acc;
@@ -196,8 +196,8 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       .slice(0, 10)
       .map(policy => ({
         id: policy.id,
-        name: policy.name,
-        insurer: getInsurerName(policy.insurer),
+        name: String(policy.name || 'N/A'),
+        insurer: String(getInsurerName(policy.insurer) || 'N/A'),
         premium: policy.premium || 0,
         monthlyAmount: policy.monthlyAmount || 0,
         endDate: policy.endDate,

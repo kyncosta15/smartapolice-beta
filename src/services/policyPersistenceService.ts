@@ -382,10 +382,10 @@ export class PolicyPersistenceService {
       const parsedPolicies: ParsedPolicyData[] = policies.map((policy, index) => {
         console.log(`🔍 [loadUserPolicies-${sessionId}] Processando apólice ${index + 1}:`, {
           id: policy.id,
-          name: policy.segurado,
-          status_db: policy.status,
-          documento_tipo: policy.documento_tipo,
-          documento: policy.documento
+          name: String(policy.segurado || 'N/A'),
+          status_db: String(policy.status || 'N/A'),
+          documento_tipo: String(policy.documento_tipo || 'N/A'),
+          documento: String(policy.documento || 'N/A')
         });
 
         // Normalize policy data first to ensure all objects become strings

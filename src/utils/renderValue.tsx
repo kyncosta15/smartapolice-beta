@@ -58,17 +58,18 @@ export function renderValue(value: any): React.ReactNode {
       return renderValue(value.value);
     }
 
-    // Se nada foi encontrado, tentar stringify de forma segura
+    // Se nada foi encontrado, retornar string segura
     try {
-      const stringified = JSON.stringify(value);
-      if (stringified !== "{}") {
-        return stringified;
+      // Tentar extrair qualquer valor string válido do objeto
+      const values = Object.values(value).filter(v => v != null && v !== "");
+      if (values.length > 0) {
+        return values.map(v => String(v)).join(" - ");
       }
     } catch (error) {
-      console.warn("Erro ao stringify objeto:", error);
+      console.warn("Erro ao processar objeto:", error);
     }
 
-    return "Objeto complexo";
+    return "Não informado";
   }
 
   // Fallback para outros tipos
@@ -126,17 +127,18 @@ export function renderValueAsString(value: any): string {
       return renderValueAsString(value.value);
     }
 
-    // Se nada foi encontrado, tentar stringify de forma segura
+    // Se nada foi encontrado, retornar uma representação textual segura
     try {
-      const stringified = JSON.stringify(value);
-      if (stringified !== "{}") {
-        return stringified;
+      // Tentar extrair qualquer valor string válido do objeto
+      const values = Object.values(value).filter(v => v != null && v !== "");
+      if (values.length > 0) {
+        return values.map(v => renderValueAsString(v)).join(" - ");
       }
     } catch (error) {
-      console.warn("Erro ao stringify objeto:", error);
+      console.warn("Erro ao processar objeto:", error);
     }
 
-    return "Objeto complexo";
+    return "Não informado";
   }
 
   // Fallback para outros tipos

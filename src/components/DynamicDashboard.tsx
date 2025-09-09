@@ -56,16 +56,16 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     color: COLORS[index % COLORS.length]
   }));
 
-  // Transform insurer data to match expected format
+  // Transform insurer data to match expected format - ENSURE ALL STRINGS
   const insurerDistributionFormatted = insurerChartData.map(item => ({
-    name: item.insurer,
+    name: String(item.insurer || 'N/A'),
     value: item.count,
     color: item.color
   }));
 
-  // Transform status data to match expected format  
+  // Transform status data to match expected format - ENSURE ALL STRINGS
   const statusDistributionFormatted = statusChartData.map(item => ({
-    name: item.name,
+    name: String(item.name || 'N/A'),
     value: item.count
   }));
 
@@ -75,13 +75,13 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     const originalPolicy = policies.find(p => p.id === policy.id);
     
     return {
-      name: policy.name,
-      insurer: policy.insurer,
+      name: String(policy.name || 'N/A'),
+      insurer: String(policy.insurer || 'N/A'),
       value: policy.premium || policy.monthlyAmount || 0,
       dueDate: policy.endDate,
       insertDate: policy.extractedAt,
-      type: originalPolicy?.type || 'Não informado',
-      status: originalPolicy?.status || 'Ativa'
+      type: String(originalPolicy?.type || 'Não informado'),
+      status: String(originalPolicy?.status || 'Ativa')
     };
   });
 
