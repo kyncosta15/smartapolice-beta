@@ -49,18 +49,25 @@ export const RequestsNewDashboard = () => {
   // Função para buscar dados das submissões
   const fetchRequests = useCallback(async () => {
     try {
-      const { data: userCompany } = await supabase
-        .from('users')
-        .select('company')
-        .eq('id', user?.id)
-        .single();
+      // Verificar dados do usuário em ambas as tabelas
+      const [{ data: userData }, { data: profileData }] = await Promise.all([
+        supabase.from('users').select('company').eq('id', user?.id).maybeSingle(),
+        supabase.from('profiles').select('company').eq('id', user?.id).maybeSingle()
+      ]);
 
-      if (!userCompany?.company) return;
+      // Usar dados da tabela que tiver informações válidas
+      const userInfo = userData || profileData;
+      const companyName = userInfo?.company;
+
+      if (!companyName) {
+        console.log('Empresa não encontrada para o usuário');
+        return;
+      }
 
       const { data: empresa } = await supabase
         .from('empresas')
         .select('id')
-        .eq('nome', userCompany.company)
+        .eq('nome', companyName)
         .single();
 
       if (!empresa?.id) return;
@@ -140,32 +147,42 @@ export const RequestsNewDashboard = () => {
       console.log('Tentando aprovar request:', requestId);
       console.log('Usuário atual:', user);
 
-      // Verificar se o usuário tem permissões adequadas
-      const { data: userData } = await supabase
-        .from('users')
-        .select('role, company')
-        .eq('id', user?.id)
-        .single();
-
-      console.log('Dados do usuário:', userData);
-
-      if (!userData?.role || !['rh', 'admin', 'administrador', 'corretora_admin'].includes(userData.role)) {
-        throw new Error('Usuário não tem permissão para aprovar solicitações');
+      // Verificar se o usuário está autenticado
+      if (!user?.id) {
+        throw new Error('Usuário não autenticado');
       }
 
-      const { error } = await supabase
+      // Verificar dados do usuário em ambas as tabelas
+      const [{ data: userData }, { data: profileData }] = await Promise.all([
+        supabase.from('users').select('role, company').eq('id', user.id).maybeSingle(),
+        supabase.from('profiles').select('role, company').eq('id', user.id).maybeSingle()
+      ]);
+
+      console.log('Dados do usuário (users):', userData);
+      console.log('Dados do usuário (profiles):', profileData);
+
+      // Usar dados da tabela que tiver informações válidas
+      const userInfo = userData || profileData;
+      
+      if (!userInfo?.role || !['rh', 'admin', 'administrador', 'corretora_admin', 'gestor_rh'].includes(userInfo.role)) {
+        throw new Error('Usuário não tem permissão para aprovar solicitações. Role atual: ' + (userInfo?.role || 'não encontrado'));
+      }
+
+      const { data, error } = await supabase
         .from('colaborador_submissoes')
         .update({ 
           status: 'concluida',
           updated_at: new Date().toISOString()
         })
-        .eq('id', requestId);
+        .eq('id', requestId)
+        .select();
 
       if (error) {
         console.error('Erro do Supabase:', error);
         throw new Error(error.message || 'Erro ao aprovar');
       }
 
+      console.log('Atualização bem-sucedida:', data);
       toast.success('Solicitação aprovada com sucesso!');
       
       // Recarregar dados após delay para garantir que a atualização seja refletida
@@ -184,32 +201,42 @@ export const RequestsNewDashboard = () => {
       console.log('Tentando recusar request:', requestId);
       console.log('Usuário atual:', user);
 
-      // Verificar se o usuário tem permissões adequadas
-      const { data: userData } = await supabase
-        .from('users')
-        .select('role, company')
-        .eq('id', user?.id)
-        .single();
-
-      console.log('Dados do usuário:', userData);
-
-      if (!userData?.role || !['rh', 'admin', 'administrador', 'corretora_admin'].includes(userData.role)) {
-        throw new Error('Usuário não tem permissão para recusar solicitações');
+      // Verificar se o usuário está autenticado
+      if (!user?.id) {
+        throw new Error('Usuário não autenticado');
       }
 
-      const { error } = await supabase
+      // Verificar dados do usuário em ambas as tabelas
+      const [{ data: userData }, { data: profileData }] = await Promise.all([
+        supabase.from('users').select('role, company').eq('id', user.id).maybeSingle(),
+        supabase.from('profiles').select('role, company').eq('id', user.id).maybeSingle()
+      ]);
+
+      console.log('Dados do usuário (users):', userData);
+      console.log('Dados do usuário (profiles):', profileData);
+
+      // Usar dados da tabela que tiver informações válidas
+      const userInfo = userData || profileData;
+      
+      if (!userInfo?.role || !['rh', 'admin', 'administrador', 'corretora_admin', 'gestor_rh'].includes(userInfo.role)) {
+        throw new Error('Usuário não tem permissão para recusar solicitações. Role atual: ' + (userInfo?.role || 'não encontrado'));
+      }
+
+      const { data, error } = await supabase
         .from('colaborador_submissoes')
         .update({ 
           status: 'rejeitada',
           updated_at: new Date().toISOString()
         })
-        .eq('id', requestId);
+        .eq('id', requestId)
+        .select();
 
       if (error) {
         console.error('Erro do Supabase:', error);
         throw new Error(error.message || 'Erro ao recusar');
       }
 
+      console.log('Recusa bem-sucedida:', data);
       toast.success('Solicitação recusada.');
       
       // Recarregar dados após delay para garantir que a atualização seja refletida
