@@ -5,7 +5,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NewPolicyModal } from '../NewPolicyModal';
 import { FileText, Calendar, DollarSign, Clock } from 'lucide-react';
-import { renderValueAsString } from '@/utils/renderValue';
 
 interface ClassificationChartsProps {
   typeDistribution: Array<{ name: string; value: number; color: string }>;
@@ -80,6 +79,16 @@ export function ClassificationCharts({
   const isMobile = useIsMobile();
   const [selectedPolicy, setSelectedPolicy] = useState<typeof recentPolicies[0] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Helper function to safely render insurer values
+  const safeRenderInsurer = (insurer: any): string => {
+    if (!insurer) return "Não informado";
+    if (typeof insurer === "string") return insurer;
+    if (typeof insurer === "object") {
+      return insurer.empresa || insurer.name || insurer.categoria || "Seguradora";
+    }
+    return String(insurer);
+  };
 
   const handlePolicyClick = (policy: typeof recentPolicies[0]) => {
     setSelectedPolicy(policy);
@@ -229,7 +238,7 @@ export function ClassificationCharts({
                           {policy.name}
                         </p>
                         <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                          {renderValueAsString(policy.insurer)}
+                          {safeRenderInsurer(policy.insurer)}
                         </p>
                       </div>
                     </div>
