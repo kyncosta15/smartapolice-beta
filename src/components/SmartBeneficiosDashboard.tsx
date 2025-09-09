@@ -537,26 +537,6 @@ export const SmartBeneficiosDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base sm:text-lg">Custo por Centro</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 sm:space-y-4">
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    Análise de custos segmentada por centro de custo
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <Button className="w-full text-xs sm:text-sm h-8 sm:h-10">
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                      Exportar PDF
-                    </Button>
-                    <Button variant="outline" className="w-full text-xs sm:text-sm h-8 sm:h-10">
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                      Exportar Excel
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
 
