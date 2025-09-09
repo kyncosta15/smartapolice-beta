@@ -91,6 +91,14 @@ export function usePersistedPolicies() {
       
       console.log(`✅ Apólices carregadas do serviço: ${loadedPolicies.length}`);
       
+      // DEBUG: Verificar documento_tipo nas apólices carregadas
+      console.log('🔍 DEBUG APÓLICES DO BANCO:', loadedPolicies.map(p => ({
+        id: p.id,
+        name: p.name,
+        documento_tipo: p.documento_tipo,
+        documento: p.documento
+      })));
+      
       // Normalizar e mapear status para novos valores
       const mappedPolicies = loadedPolicies.map(policy => {
         const normalized = normalizePolicy(policy);

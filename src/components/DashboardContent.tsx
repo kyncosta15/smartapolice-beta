@@ -275,6 +275,14 @@ export function DashboardContent() {
 
   console.log(`🔍 DashboardContent: Total de apólices (incluindo persistidas): ${allPolicies.length}`);
   console.log(`📊 Apólices persistidas: ${persistedPolicies.length}, Extraídas: ${extractedPolicies.length}`);
+  
+  // DEBUG: Verificar se as apólices têm documento_tipo
+  console.log('🔍 DEBUG DOCUMENTO_TIPO:', normalizedPolicies.map(p => ({
+    id: p.id,
+    name: p.name,
+    documento_tipo: p.documento_tipo,
+    documento: p.documento
+  })));
 
   return (
     <SidebarProvider>
