@@ -327,7 +327,7 @@ export const SmartBeneficiosDashboard = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Vidas Ativas</p>
-                      <p className="text-2xl font-bold">{mockData.vidasAtivas}</p>
+                      <p className="text-2xl font-bold">{metrics?.colaboradoresAtivos || 0}</p>
                     </div>
                     <Users className="h-8 w-8 text-blue-500" />
                   </div>
@@ -346,7 +346,7 @@ export const SmartBeneficiosDashboard = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Custo Mensal</p>
-                      <p className="text-2xl font-bold">R$ {mockData.custoMensal.toLocaleString()}</p>
+                      <p className="text-2xl font-bold">R$ {(metrics?.custoMensal || 0).toLocaleString()}</p>
                     </div>
                     <DollarSign className="h-8 w-8 text-green-500" />
                   </div>
@@ -367,7 +367,7 @@ export const SmartBeneficiosDashboard = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Custo Médio/Vida</p>
-                      <p className="text-2xl font-bold">R$ {mockData.custoMedioVida}</p>
+                      <p className="text-2xl font-bold">R$ {(metrics?.custoMedioVida || 0).toFixed(2)}</p>
                     </div>
                     <Heart className="h-8 w-8 text-orange-500" />
                   </div>
@@ -385,8 +385,8 @@ export const SmartBeneficiosDashboard = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Sinistros Abertos</p>
-                      <p className="text-2xl font-bold">{mockData.ticketsAbertos}</p>
+                      <p className="text-sm font-medium text-muted-foreground">Tickets Abertos</p>
+                      <p className="text-2xl font-bold">{metrics?.ticketsAbertos || 0}</p>
                     </div>
                     <FileText className="h-8 w-8 text-red-500" />
                   </div>
@@ -394,7 +394,7 @@ export const SmartBeneficiosDashboard = () => {
                     <div className="relative w-12 h-12">
                       <div className="absolute inset-0 bg-red-100 rounded-full"></div>
                       <div className="absolute inset-1 bg-red-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">12</span>
+                        <span className="text-white text-xs font-bold">{metrics?.ticketsAbertos || 0}</span>
                       </div>
                     </div>
                   </div>
