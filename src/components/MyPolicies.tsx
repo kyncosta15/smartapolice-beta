@@ -24,7 +24,7 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { useToast } from '@/hooks/use-toast';
 import { renderValue, renderValueAsString, renderCurrency } from '@/utils/renderValue';
-import { toText } from '@/lib/policies';
+import { toText, moedaBR } from '@/lib/policies';
 
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -37,15 +37,15 @@ export function MyPolicies() {
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
     const finalStatus = policy.status as PolicyStatus;
     
-    console.log(`✅ [MyPolicies] Apólice ${renderValueAsString(policy.name)}: status do banco = ${finalStatus}`);
+    console.log(`✅ [MyPolicies] Apólice ${toText(policy.name)}: status do banco = ${finalStatus}`);
     
     return {
       id: policy.id,
-      name: renderValueAsString(policy.name),
-      insurer: renderValueAsString(policy.insurer),
-      policyNumber: renderValueAsString(policy.policyNumber),
-      type: renderValueAsString(policy.type),
-      monthlyAmount: policy.monthlyAmount,
+      name: toText(policy.name),
+      insurer: toText(policy.insurer),
+      policyNumber: toText(policy.policyNumber),
+      type: toText(policy.type),
+      monthlyAmount: typeof policy.monthlyAmount === 'number' ? policy.monthlyAmount : 0,
       startDate: policy.startDate,
       endDate: policy.endDate,
       expirationDate: policy.expirationDate || policy.endDate,
@@ -188,7 +188,7 @@ export function MyPolicies() {
                   <div>
                     <p className="text-gray-500">Valor Mensal</p>
                     <p className="font-semibold text-green-600">
-                      {renderCurrency(policy.monthlyAmount)}
+                      {moedaBR(policy.monthlyAmount)}
                     </p>
                   </div>
                 </div>

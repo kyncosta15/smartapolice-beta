@@ -153,13 +153,32 @@ export class PolicyPersistenceService {
 
       // NORMALIZAR DADOS ANTES DE SALVAR NO BANCO
       const { normalizePolicy } = await import('@/lib/policies');
-      const normalizedData = normalizePolicy(policyData);
+      
+      // Parse potential JSON objects to extract flat string values
+      const parseMaybe = (v: any) => {
+        if (v == null) return null;
+        if (typeof v === 'string') {
+          try { return JSON.parse(v); } catch { return null; }
+        }
+        if (typeof v === 'object') return v;
+        return null;
+      };
+
+      const seguradoraObj = parseMaybe(policyData.insurer) || {};
+      const tipoObj = parseMaybe(policyData.type) || {};
 
       const policyInsert: PolicyInsert = {
         user_id: userId,
         segurado: policyData.insuredName || policyData.name,
-        seguradora: normalizedData.seguradoraEmpresa, // ✅ Salvar string normalizada
-        tipo_seguro: normalizedData.tipoCategoria, // ✅ Salvar string normalizada
+        // Save original fields for backward compatibility
+        seguradora: policyData.insurer,
+        tipo_seguro: policyData.type,
+        // Save normalized flat fields for safe UI rendering
+        seguradora_empresa: typeof seguradoraObj === 'object' ? seguradoraObj.empresa : policyData.insurer || 'N/A',
+        seguradora_entidade: typeof seguradoraObj === 'object' ? seguradoraObj.entidade : null,
+        tipo_categoria: typeof tipoObj === 'object' ? tipoObj.categoria : policyData.type || 'N/A', 
+        tipo_cobertura: typeof tipoObj === 'object' ? tipoObj.cobertura : 'N/A',
+        valor_mensal_num: Number(policyData.monthlyAmount || 0),
         numero_apolice: policyData.policyNumber,
         valor_premio: policyData.premium,
         custo_mensal: policyData.monthlyAmount,
@@ -320,15 +339,16 @@ export class PolicyPersistenceService {
     }
   }
 
-  // MÉTODO MELHORADO: Carregar e processar apólices do usuário - PRESERVA STATUS DO BANCO
+  // MÉTODO MELHORADO: Carregar e processar apólices do usuário - USA VIEW SEGURA
   static async loadUserPolicies(userId: string): Promise<ParsedPolicyData[]> {
     const sessionId = crypto.randomUUID();
     const { normalizePolicy } = await import('@/lib/policies');
     try {
       console.log(`📖 [loadUserPolicies-${sessionId}] Carregando apólices do usuário: ${userId}`);
 
+      // Use the safe UI view that always returns normalized strings
       const { data: policies, error: policiesError } = await supabase
-        .from('policies')
+        .from('policies_ui')
         .select(`
           *,
           installments!fk_installments_policy_id (
@@ -356,49 +376,44 @@ export class PolicyPersistenceService {
         return [];
       }
 
-      console.log(`✅ [loadUserPolicies-${sessionId}] ${policies.length} apólices carregadas`);
+      console.log(`✅ [loadUserPolicies-${sessionId}] ${policies.length} apólices carregadas da view segura`);
 
-      // Processar apólices PRESERVANDO o status do banco
+      // Process policies with normalized data from the UI view
       const parsedPolicies: ParsedPolicyData[] = policies.map((policy, index) => {
         console.log(`🔍 [loadUserPolicies-${sessionId}] Processando apólice ${index + 1}:`, {
           id: policy.id,
-          segurado: policy.segurado,
+          name: policy.name,
           status_db: policy.status,
           expiration_date: policy.expiration_date
         });
 
-        // PRESERVAR o status que está no banco - NÃO SOBRESCREVER
+        // Status already normalized by view
         const finalStatus = this.mapToValidStatus(policy.status || 'vigente');
 
-        console.log(`🎯 [loadUserPolicies-${sessionId}] Status PRESERVADO da apólice ${policy.id}: ${finalStatus}`);
+        console.log(`🎯 [loadUserPolicies-${sessionId}] Status da apólice ${policy.id}: ${finalStatus}`);
 
-        // Detectar e corrigir dados misturados (legacy fix)
-        let cleanedData = this.fixMixedData(policy);
-        
-        // NORMALIZAR DADOS AO CARREGAR DO BANCO
-        const normalizedPolicy = normalizePolicy(policy);
-
+        // Data from policies_ui is already normalized as strings
         const convertedPolicy = {
           id: policy.id,
-          name: cleanedData.policyName,
-          type: normalizedPolicy.tipoCategoria, // ✅ Usar valor normalizado
-          insurer: normalizedPolicy.seguradoraEmpresa, // ✅ Usar valor normalizado
-          premium: Number(policy.valor_premio) || 0,
-          monthlyAmount: Number(policy.custo_mensal) || 0,
-          startDate: policy.inicio_vigencia || new Date().toISOString().split('T')[0],
-          endDate: policy.fim_vigencia || new Date().toISOString().split('T')[0],
-          policyNumber: policy.numero_apolice || 'N/A',
-          paymentFrequency: policy.forma_pagamento || 'mensal',
-          status: finalStatus, // Status PRESERVADO do banco
-          pdfPath: policy.arquivo_url,
-          extractedAt: policy.extraido_em || policy.created_at || new Date().toISOString(),
+          name: policy.name || 'N/A',
+          type: policy.tipo_categoria || 'N/A', // Already normalized string
+          insurer: policy.seguradora_empresa || 'N/A', // Already normalized string
+          premium: 0, // Not available in current view
+          monthlyAmount: Number(policy.valor_mensal) || 0,
+          startDate: policy.start_date || new Date().toISOString().split('T')[0],
+          endDate: policy.end_date || new Date().toISOString().split('T')[0], 
+          policyNumber: policy.policy_number || 'N/A',
+          paymentFrequency: 'mensal',
+          status: finalStatus,
+          pdfPath: policy.pdf_path,
+          extractedAt: policy.extraction_timestamp || policy.created_at || new Date().toISOString(),
           
-          // Campos obrigatórios
-          expirationDate: policy.expiration_date || policy.fim_vigencia || new Date().toISOString().split('T')[0],
+          // Required fields
+          expirationDate: policy.expiration_date || policy.end_date || new Date().toISOString().split('T')[0],
           policyStatus: finalStatus as any,
-          quantidade_parcelas: policy.quantidade_parcelas || 12,
+          quantidade_parcelas: 12,
           
-          // Parcelas
+          // Installments
           installments: (policy.installments as any[])?.map(inst => ({
             numero: inst.numero_parcela,
             valor: Number(inst.valor),
@@ -406,36 +421,36 @@ export class PolicyPersistenceService {
             status: inst.status
           })) || [],
           
-          // Coberturas
+          // Coverages
           coberturas: (policy.coberturas as any[])?.map(cob => ({
             id: cob.id,
             descricao: cob.descricao,
             lmi: cob.lmi ? Number(cob.lmi) : undefined
           })) || [],
           
-          // Outros campos
-          insuredName: cleanedData.insuredName,
-          documento: cleanedData.documento,
-          documento_tipo: cleanedData.documento_tipo,
-          deductible: Number(policy.franquia) || undefined,
-          vehicleModel: policy.modelo_veiculo,
-          uf: policy.uf,
-          entity: policy.corretora || 'Não informado',
-          category: policy.tipo_seguro === 'auto' ? 'Veicular' : 
-                   policy.tipo_seguro === 'vida' ? 'Pessoal' : 
-                   policy.tipo_seguro === 'saude' ? 'Saúde' : 
-                   policy.tipo_seguro === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
+          // Other fields
+          insuredName: policy.name || 'N/A',
+          documento: '',
+          documento_tipo: undefined,
+          deductible: undefined,
+          vehicleModel: '',
+          uf: '',
+          entity: 'Não informado',
+          category: policy.tipo_categoria === 'auto' ? 'Veicular' : 
+                   policy.tipo_categoria === 'vida' ? 'Pessoal' : 
+                   policy.tipo_categoria === 'saude' ? 'Saúde' : 
+                   policy.tipo_categoria === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
           coverage: (policy.coberturas as any[])?.map(cob => cob.descricao) || ['Cobertura Básica'],
-          totalCoverage: Number(policy.valor_premio) || 0,
+          totalCoverage: Number(policy.valor_mensal) * 12 || 0,
           limits: 'R$ 100.000 por sinistro'
         };
 
-        console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada com status PRESERVADO: ${finalStatus}`);
+        console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada com dados normalizados`);
 
         return convertedPolicy;
       });
 
-      console.log(`✅ [loadUserPolicies-${sessionId}] Processamento concluído:`, {
+      console.log(`✅ [loadUserPolicies-${sessionId}] Processamento concluído com dados seguros:`, {
         total: parsedPolicies.length,
         statusDistribution: parsedPolicies.reduce((acc, p) => {
           acc[p.status] = (acc[p.status] || 0) + 1;
