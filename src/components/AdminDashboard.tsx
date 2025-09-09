@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Users, Shield, FileText, TrendingUp, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { renderValueAsString } from '@/utils/renderValue';
 
 interface AdminDashboardProps {
   allUsers: any[];
@@ -193,7 +194,7 @@ export function AdminDashboard({
                 <div key={policy.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">{policy.name}</h4>
-                    <p className="text-sm text-gray-600">{policy.insurer}</p>
+                    <p className="text-sm text-gray-600">{renderValueAsString(policy.insurer)}</p>
                     <div className="flex items-center space-x-2 mt-1">
                       <Badge variant={policy.status === 'active' ? 'default' : 'secondary'}>
                         {policy.status === 'active' ? 'Ativa' : 'Inativa'}

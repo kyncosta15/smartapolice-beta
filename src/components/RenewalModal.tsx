@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { PolicyWithStatus, PolicyStatus } from '@/types/policyStatus';
 import { Calendar, AlertCircle } from 'lucide-react';
+import { renderValueAsString } from '@/utils/renderValue';
 
 interface RenewalModalProps {
   policy: PolicyWithStatus;
@@ -27,7 +28,7 @@ export function RenewalModal({ policy, onDecision, onClose }: RenewalModalProps)
         <div className="space-y-4">
           <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
             <h3 className="font-semibold text-gray-900">{policy.name}</h3>
-            <p className="text-sm text-gray-600">{policy.insurer}</p>
+            <p className="text-sm text-gray-600">{renderValueAsString(policy.insurer)}</p>
             <div className="flex items-center gap-2 mt-2 text-orange-700">
               <Calendar className="h-4 w-4" />
               <span className="text-sm font-medium">

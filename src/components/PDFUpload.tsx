@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { renderValueAsString } from '@/utils/renderValue';
 
 interface ExtractedPolicyData {
   name: string;
@@ -252,7 +253,7 @@ export const PDFUpload = ({ onPolicyExtracted }: PDFUploadProps) => {
                       <h4 className="font-semibold">{policy.name}</h4>
                       <div className="flex items-center space-x-2 mt-1">
                         <Badge variant="outline">{getTypeLabel(policy.type)}</Badge>
-                        <Badge variant="outline">{policy.insurer}</Badge>
+                        <Badge variant="outline">{renderValueAsString(policy.insurer)}</Badge>
                       </div>
                       <p className="text-sm text-gray-600 mt-1">
                         Número: {policy.policyNumber} | Prêmio: R$ {parseFloat(policy.premium).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}

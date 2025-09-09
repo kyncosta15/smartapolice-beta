@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { formatCurrency } from '@/utils/currencyFormatter';
+import { renderValueAsString } from '@/utils/renderValue';
 
 interface PolicyInstallmentsCardProps {
   policy: ParsedPolicyData;
@@ -66,7 +67,7 @@ export function PolicyInstallmentsCard({ policy, index }: PolicyInstallmentsCard
             <span className="text-lg">{policy.name}</span>
             <span className="text-sm font-normal text-gray-600">{policy.policyNumber}</span>
           </div>
-          <Badge variant="outline">{policy.insurer}</Badge>
+          <Badge variant="outline">{renderValueAsString(policy.insurer)}</Badge>
         </CardTitle>
         <div className="flex flex-wrap gap-2 text-sm text-gray-600">
           <span>{totalInstallments} parcelas totais</span>

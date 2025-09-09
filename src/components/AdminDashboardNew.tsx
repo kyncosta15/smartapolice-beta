@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { useAdminDashboardData } from '@/hooks/useAdminDashboardData';
+import { renderValueAsString } from '@/utils/renderValue';
 import { Button } from '@/components/ui/button';
 
 interface AdminDashboardNewProps {
@@ -328,7 +329,7 @@ export function AdminDashboardNew({ policies, allUsers }: AdminDashboardNewProps
                 <div key={policy.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium">{policy.segurado}</p>
-                    <p className="text-sm text-gray-600">{policy.seguradora} • {policy.tipo_seguro}</p>
+                    <p className="text-sm text-gray-600">{renderValueAsString(policy.seguradora)} • {policy.tipo_seguro}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-green-600">

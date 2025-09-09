@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Edit, Trash2 } from 'lucide-react';
 import { PolicyEditModal } from './PolicyEditModal';
+import { renderValueAsString } from '@/utils/renderValue';
 
 interface PolicyTableProps {
   searchTerm: string;
@@ -132,7 +133,7 @@ export const PolicyTable = ({
                       <p className="text-sm text-gray-500">{policy.policyNumber}</p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-gray-700">{policy.insurer}</TableCell>
+                  <TableCell className="text-gray-700">{renderValueAsString(policy.insurer)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
                       {policy.type === 'auto' ? 'Auto' : 

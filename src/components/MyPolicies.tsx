@@ -175,7 +175,7 @@ export function MyPolicies() {
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500">{policy.insurer}</p>
+                <p className="text-sm text-gray-500">{renderValueAsString(policy.insurer)}</p>
               </CardHeader>
               
               <CardContent className="space-y-3">

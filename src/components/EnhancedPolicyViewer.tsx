@@ -8,6 +8,7 @@ import { Eye, Edit, Trash2, Search, Filter, Download, TrendingUp, AlertTriangle 
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { PolicyEditModal } from './PolicyEditModal';
+import { renderValueAsString } from '@/utils/renderValue';
 
 interface EnhancedPolicyViewerProps {
   policies: ParsedPolicyData[];
@@ -400,7 +401,7 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-gray-500">Seguradora</p>
-                  <p className="font-medium">{policy.insurer}</p>
+                  <p className="font-medium">{renderValueAsString(policy.insurer)}</p>
                 </div>
                 <div>
                   <p className="text-gray-500">Tipo</p>

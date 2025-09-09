@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, DollarSign, Building, User } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
+import { renderValueAsString } from '@/utils/renderValue';
 
 interface NewPolicyModalProps {
   isOpen: boolean;
@@ -77,7 +78,7 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
               <Building className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm text-gray-500">Seguradora</p>
-                <p className="font-medium text-gray-900">{policy.insurer}</p>
+                <p className="font-medium text-gray-900">{renderValueAsString(policy.insurer)}</p>
               </div>
             </div>
 

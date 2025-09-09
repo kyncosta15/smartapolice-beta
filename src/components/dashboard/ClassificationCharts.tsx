@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NewPolicyModal } from '../NewPolicyModal';
 import { FileText, Calendar, DollarSign, Clock } from 'lucide-react';
+import { renderValueAsString } from '@/utils/renderValue';
 
 interface ClassificationChartsProps {
   typeDistribution: Array<{ name: string; value: number; color: string }>;
@@ -228,7 +229,7 @@ export function ClassificationCharts({
                           {policy.name}
                         </p>
                         <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                          {policy.insurer}
+                          {renderValueAsString(policy.insurer)}
                         </p>
                       </div>
                     </div>
