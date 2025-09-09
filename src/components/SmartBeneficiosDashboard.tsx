@@ -328,36 +328,6 @@ export const SmartBeneficiosDashboard = () => {
               metrics={metrics}
             />
 
-            {/* Cards de métricas adicionais */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Crédito Atual</p>
-                  <p className="text-xl font-bold text-green-600">R$ 325.400</p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Crédito Registrado</p>
-                  <p className="text-xl font-bold text-blue-600">R$ 299.200</p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Média Diária</p>
-                  <p className="text-xl font-bold text-purple-600">R$ 520</p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Prazo Médio</p>
-                  <p className="text-xl font-bold text-orange-600">13 dias</p>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
 
           {/* Colaboradores Tab */}
