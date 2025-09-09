@@ -60,7 +60,10 @@ export function normalizePolicy(raw: any) {
     tipo: tipoCategoria,
     type: tipoCategoria,
     name: typeof raw.name === "string" ? raw.name : (typeof raw.segurado === "string" ? raw.segurado : "N/A"),
-    policyNumber: typeof raw.policyNumber === "string" ? raw.policyNumber : (typeof raw.numero_apolice === "string" ? raw.numero_apolice : "N/A")
+    policyNumber: typeof raw.policyNumber === "string" ? raw.policyNumber : (typeof raw.numero_apolice === "string" ? raw.numero_apolice : "N/A"),
+    // Garantir que documento e documento_tipo sejam preservados
+    documento: raw.documento,
+    documento_tipo: raw.documento_tipo
   };
 }
 
