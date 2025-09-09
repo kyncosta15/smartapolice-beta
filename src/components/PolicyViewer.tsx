@@ -8,6 +8,7 @@ import { LocationFilter } from './LocationFilter'
 import { PolicyEditModal } from './PolicyEditModal'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { renderValue, renderValueAsString } from '@/utils/renderValue'
+import { toDisplay } from '@/lib/policies'
 
 interface Policy {
   id: string
@@ -44,7 +45,7 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
       a.href     = url
-      a.download = `${renderValue(policy.name)}.pdf`
+      a.download = `${toDisplay(policy.name)}.pdf`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -56,9 +57,9 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
   }
 
   const getSearchableText = (policy: Policy) => {
-    const name = renderValueAsString(policy.name);
-    const insurer = renderValueAsString(policy.insurer);
-    const policyNumber = renderValueAsString(policy.policyNumber);
+    const name = toDisplay(policy.name);
+    const insurer = toDisplay(policy.insurer);
+    const policyNumber = toDisplay(policy.policyNumber);
     
     return `${name} ${insurer} ${policyNumber}`.toLowerCase();
   };
@@ -82,9 +83,9 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
           .map(policy => (
             <Card key={policy.id}>
               <CardContent>
-                <h3 className="text-lg font-semibold">{renderValueAsString(policy.name)}</h3>
-                <p className="text-sm">{renderValueAsString(policy.insurer)}</p>
-                <p className="text-xs text-gray-500">Apólice: {renderValueAsString(policy.policyNumber)}</p>
+                <h3 className="text-lg font-semibold">{toDisplay(policy.name)}</h3>
+                <p className="text-sm">{toDisplay(policy.insurer)}</p>
+                <p className="text-xs text-gray-500">Apólice: {toDisplay(policy.policyNumber)}</p>
 
                 <div className="flex space-x-2 mt-4">
                   <Button size="sm" onClick={() => handleDownload(policy)}>

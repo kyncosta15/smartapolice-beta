@@ -4,6 +4,7 @@ import { PolicyPersistenceService } from '@/services/policyPersistenceService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { normalizePolicy } from '@/lib/policies';
 
 export function usePersistedPolicies() {
   const [policies, setPolicies] = useState<ParsedPolicyData[]>([]);
@@ -90,11 +91,14 @@ export function usePersistedPolicies() {
       
       console.log(`✅ Apólices carregadas do serviço: ${loadedPolicies.length}`);
       
-      // Mapear status para novos valores
-      const mappedPolicies = loadedPolicies.map(policy => ({
-        ...policy,
-        status: mapLegacyStatus(policy.status)
-      }));
+      // Normalizar e mapear status para novos valores
+      const mappedPolicies = loadedPolicies.map(policy => {
+        const normalized = normalizePolicy(policy);
+        return {
+          ...normalized,
+          status: mapLegacyStatus(normalized.status)
+        };
+      });
       
       console.log(`📝 Definindo políticas no estado: ${mappedPolicies.length} apólices`);
       setPolicies(mappedPolicies);
@@ -139,9 +143,10 @@ export function usePersistedPolicies() {
   const addPolicy = (policy: ParsedPolicyData) => {
     console.log('➕ Adicionando nova apólice ao estado:', policy.name);
     
+    const normalized = normalizePolicy(policy);
     const mappedPolicy = {
-      ...policy,
-      status: mapLegacyStatus(policy.status)
+      ...normalized,
+      status: mapLegacyStatus(normalized.status)
     };
     
     setPolicies(prev => {

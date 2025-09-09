@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { normalizePolicy } from '@/lib/policies';
 
 interface DashboardMetrics {
   totalPolicies: number;
@@ -43,22 +44,25 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
 
     console.log('🔍 Recalculando métricas do dashboard para', policies.length, 'apólices');
 
-    const totalPolicies = policies.length;
-    const totalMonthlyCost = policies.reduce((sum, p) => sum + (p.monthlyAmount || 0), 0);
-    const totalInsuredValue = policies.reduce((sum, p) => sum + (p.totalCoverage || p.premium || 0), 0);
+    // Normalize all policies first to ensure safe data handling
+    const normalizedPolicies = policies.map(normalizePolicy);
+
+    const totalPolicies = normalizedPolicies.length;
+    const totalMonthlyCost = normalizedPolicies.reduce((sum, p) => sum + (p.monthlyAmount || 0), 0);
+    const totalInsuredValue = normalizedPolicies.reduce((sum, p) => sum + (p.totalCoverage || p.premium || 0), 0);
     
     // Calcular apólices vencendo nos próximos 30 dias
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
     
-    const expiringPolicies = policies.filter(p => {
+    const expiringPolicies = normalizedPolicies.filter(p => {
       if (!p.endDate) return false;
       const endDate = new Date(p.endDate);
       return endDate <= thirtyDaysFromNow && endDate >= new Date();
     }).length;
 
     // Calcular total de parcelas - corrigindo o erro TypeScript
-    const totalInstallments = policies.reduce((sum, p) => {
+    const totalInstallments = normalizedPolicies.reduce((sum, p) => {
       const installmentCount = Array.isArray(p.installments) 
         ? p.installments.length 
         : (typeof p.installments === 'number' ? p.installments : 12);
@@ -66,57 +70,40 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     }, 0);
 
     // Distribuição por seguradora
-    const insurerCounts = policies.reduce((acc, policy) => {
-      // Use extractFieldValue to safely extract insurer name from N8N objects
-      const extractFieldValue = (field: any): string => {
-        if (!field) return 'Não informado';
-        if (typeof field === 'string') return field;
-        if (typeof field === 'object' && field !== null) {
-          // Handle N8N structure with empresa, categoria, cobertura, entidade
-          if ('empresa' in field && field.empresa) {
-            return typeof field.empresa === 'string' ? field.empresa : 'Seguradora Desconhecida';
-          }
-          if ('value' in field && field.value) {
-            return typeof field.value === 'string' ? field.value : 'Seguradora Desconhecida';
-          }
-          // If it's an object, try to stringify safely
-          return 'Seguradora Desconhecida';
-        }
-        return String(field);
-      };
-      
-      const insurerName = extractFieldValue(policy.insurer);
+    const insurerCounts = normalizedPolicies.reduce((acc, policy) => {
+      // Use normalized data which has safe string values
+      const insurerName = policy.seguradoraEmpresa || 'Não informado';
       acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
 
     const insurerDistribution = Object.entries(insurerCounts).map(([name, value]) => ({
       name,
-      value: Math.round(value),
-      percentage: totalMonthlyCost > 0 ? Math.round((value / totalMonthlyCost) * 100) : 0
+      value: Math.round(Number(value) || 0),
+      percentage: totalMonthlyCost > 0 ? Math.round((Number(value) / totalMonthlyCost) * 100) : 0
     }));
 
     // Distribuição por tipo
-    const typeCounts = policies.reduce((acc, policy) => {
-      const typeName = policy.type === 'auto' ? 'Seguro Auto' :
+    const typeCounts = normalizedPolicies.reduce((acc, policy) => {
+      const typeName = policy.tipoCategoria || (policy.type === 'auto' ? 'Seguro Auto' :
                        policy.type === 'vida' ? 'Seguro de Vida' :
                        policy.type === 'saude' ? 'Seguro Saúde' :
                        policy.type === 'patrimonial' ? 'Patrimonial' :
                        policy.type === 'empresarial' ? 'Empresarial' : 
-                       policy.type || 'Outros';
+                       policy.type) || 'Outros';
       acc[typeName] = (acc[typeName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
 
     const typeDistribution = Object.entries(typeCounts).map(([name, value]) => ({
       name,
-      value: Math.round(value)
+      value: Math.round(Number(value) || 0)
     }));
 
     // 🚨 LÓGICA CORRIGIDA - Distribuição pessoa física/jurídica
     console.log('🔍 Iniciando classificação de pessoa física/jurídica...');
     
-    const personTypeDistribution = policies.reduce((acc, policy) => {
+    const personTypeDistribution = normalizedPolicies.reduce((acc, policy) => {
       console.log('📋 Analisando política:', {
         id: policy.id,
         name: policy.name,
@@ -166,10 +153,10 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     });
 
     // Evolução mensal - PROJEÇÃO DINÂMICA DE 12 MESES A PARTIR DO MÊS ATUAL
-    const monthlyEvolution = generateMonthlyEvolution(policies);
+    const monthlyEvolution = generateMonthlyEvolution(normalizedPolicies);
 
     // Insights
-    const insights = generateBasicInsights(policies);
+    const insights = generateBasicInsights(normalizedPolicies);
 
     const result = {
       totalPolicies,

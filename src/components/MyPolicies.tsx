@@ -24,6 +24,7 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { useToast } from '@/hooks/use-toast';
 import { renderValue, renderValueAsString, renderCurrency } from '@/utils/renderValue';
+import { toDisplay } from '@/lib/policies';
 
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -158,7 +159,7 @@ export function MyPolicies() {
             <Card key={policy.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{policy.name}</CardTitle>
+                  <CardTitle className="text-lg">{toDisplay(policy.name)}</CardTitle>
                   <div className="flex items-center gap-2">
                     <Badge className={STATUS_COLORS[policy.status] || STATUS_COLORS.vigente}>
                       {formatStatusText(policy.status)}
@@ -175,7 +176,7 @@ export function MyPolicies() {
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500">{renderValueAsString(policy.insurer)}</p>
+                <p className="text-sm text-gray-500">{toDisplay(policy.insurer)}</p>
               </CardHeader>
               
               <CardContent className="space-y-3">
