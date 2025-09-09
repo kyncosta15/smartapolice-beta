@@ -137,19 +137,42 @@ export const RequestsNewDashboard = () => {
 
   const handleApproveRequest = async (requestId: string) => {
     try {
+      console.log('Tentando aprovar request:', requestId);
+      console.log('Usuário atual:', user);
+
+      // Verificar se o usuário tem permissões adequadas
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role, company')
+        .eq('id', user?.id)
+        .single();
+
+      console.log('Dados do usuário:', userData);
+
+      if (!userData?.role || !['rh', 'admin', 'administrador', 'corretora_admin'].includes(userData.role)) {
+        throw new Error('Usuário não tem permissão para aprovar solicitações');
+      }
+
       const { error } = await supabase
         .from('colaborador_submissoes')
         .update({ 
-          status: 'concluida'
+          status: 'concluida',
+          updated_at: new Date().toISOString()
         })
         .eq('id', requestId);
 
       if (error) {
+        console.error('Erro do Supabase:', error);
         throw new Error(error.message || 'Erro ao aprovar');
       }
 
       toast.success('Solicitação aprovada com sucesso!');
-      fetchRequests();
+      
+      // Recarregar dados após delay para garantir que a atualização seja refletida
+      setTimeout(() => {
+        fetchRequests();
+      }, 500);
+      
     } catch (error: any) {
       console.error('Erro ao aprovar:', error);
       toast.error(error.message || 'Falha ao aprovar. Tente novamente.');
@@ -158,19 +181,42 @@ export const RequestsNewDashboard = () => {
 
   const handleDeclineRequest = async (requestId: string) => {
     try {
+      console.log('Tentando recusar request:', requestId);
+      console.log('Usuário atual:', user);
+
+      // Verificar se o usuário tem permissões adequadas
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role, company')
+        .eq('id', user?.id)
+        .single();
+
+      console.log('Dados do usuário:', userData);
+
+      if (!userData?.role || !['rh', 'admin', 'administrador', 'corretora_admin'].includes(userData.role)) {
+        throw new Error('Usuário não tem permissão para recusar solicitações');
+      }
+
       const { error } = await supabase
         .from('colaborador_submissoes')
         .update({ 
-          status: 'rejeitada'
+          status: 'rejeitada',
+          updated_at: new Date().toISOString()
         })
         .eq('id', requestId);
 
       if (error) {
+        console.error('Erro do Supabase:', error);
         throw new Error(error.message || 'Erro ao recusar');
       }
 
       toast.success('Solicitação recusada.');
-      fetchRequests();
+      
+      // Recarregar dados após delay para garantir que a atualização seja refletida
+      setTimeout(() => {
+        fetchRequests();
+      }, 500);
+      
     } catch (error: any) {
       console.error('Erro ao recusar:', error);
       toast.error(error.message || 'Falha ao recusar. Tente novamente.');
