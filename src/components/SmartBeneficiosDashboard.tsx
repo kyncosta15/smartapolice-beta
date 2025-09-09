@@ -25,6 +25,7 @@ import { ExcluirColaboradorModal } from '@/components/ExcluirColaboradorModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
 import { useRHDashboardData } from '@/hooks/useRHDashboardData';
+import { DynamicCharts } from '@/components/dashboard/DynamicCharts';
 import RHDashboard from '@/pages/RHDashboard';
 import { SpreadsheetUpload } from '@/components/SpreadsheetUpload';
 import { PlanilhaHistorico } from '@/components/PlanilhaHistorico';
@@ -319,179 +320,13 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
-            {/* Cards principais com gráficos */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Vidas Ativas */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Vidas Ativas</p>
-                      <p className="text-2xl font-bold">{metrics?.colaboradoresAtivos || 0}</p>
-                    </div>
-                    <Users className="h-8 w-8 text-blue-500" />
-                  </div>
-                  <div className="flex items-center space-x-1 h-2">
-                    <div className="flex-1 bg-blue-100 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full w-4/5"></div>
-                    </div>
-                    <span className="text-xs text-green-600">+2.5%</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Custo Mensal */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Custo Mensal</p>
-                      <p className="text-2xl font-bold">R$ {(metrics?.custoMensal || 0).toLocaleString()}</p>
-                    </div>
-                    <DollarSign className="h-8 w-8 text-green-500" />
-                  </div>
-                  <div className="flex space-x-1 h-8 items-end">
-                    <div className="bg-green-500 w-2 h-4 rounded-t"></div>
-                    <div className="bg-green-500 w-2 h-5 rounded-t"></div>
-                    <div className="bg-green-500 w-2 h-6 rounded-t"></div>
-                    <div className="bg-green-500 w-2 h-8 rounded-t"></div>
-                    <div className="bg-green-500 w-2 h-6 rounded-t"></div>
-                    <div className="bg-green-500 w-2 h-8 rounded-t"></div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Custo Médio/Vida */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Custo Médio/Vida</p>
-                      <p className="text-2xl font-bold">R$ {(metrics?.custoMedioVida || 0).toFixed(2)}</p>
-                    </div>
-                    <Heart className="h-8 w-8 text-orange-500" />
-                  </div>
-                  <div className="flex items-center space-x-1 h-2">
-                    <div className="flex-1 bg-orange-100 rounded-full h-2">
-                      <div className="bg-orange-500 h-2 rounded-full w-3/5"></div>
-                    </div>
-                    <span className="text-xs text-red-600">-1.2%</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Sinistros Abertos */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Tickets Abertos</p>
-                      <p className="text-2xl font-bold">{metrics?.ticketsAbertos || 0}</p>
-                    </div>
-                    <FileText className="h-8 w-8 text-red-500" />
-                  </div>
-                  <div className="flex justify-center">
-                    <div className="relative w-12 h-12">
-                      <div className="absolute inset-0 bg-red-100 rounded-full"></div>
-                      <div className="absolute inset-1 bg-red-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">{metrics?.ticketsAbertos || 0}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Segunda linha - Cards menores */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Vencimentos Próximos */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Vencimentos Próximos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">Plano de Saúde - Janeiro</p>
-                        <p className="text-xs text-muted-foreground">Vence em 5 dias</p>
-                      </div>
-                      <Badge className="bg-yellow-100 text-yellow-800 text-xs">Urgente</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">Plano Odontológico - Janeiro</p>
-                        <p className="text-xs text-muted-foreground">Vence em 8 dias</p>
-                      </div>
-                      <Badge className="bg-blue-100 text-blue-800 text-xs">Normal</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Status dos Ingressos */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Status dos Ingressos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-center mb-4">
-                    <div className="relative w-24 h-24">
-                      <div className="absolute inset-0 rounded-full" style={{
-                        background: 'conic-gradient(#10b981 0deg 126deg, #f59e0b 126deg 180deg, #ef4444 180deg 216deg, transparent 216deg)'
-                      }}></div>
-                      <div className="absolute inset-3 bg-white rounded-full flex items-center justify-center">
-                        <span className="text-lg font-bold">60</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">Aprovados: 35</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                      <span className="text-sm">Em análise: 15</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <span className="text-sm">Pendentes: 10</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Centros de Custo */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Custos por Centro</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {centrosCustoData.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{item.name}</span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="h-2 rounded-full"
-                              style={{ 
-                                backgroundColor: item.cor,
-                                width: `${(item.valor / 85000) * 100}%`
-                              }}
-                            ></div>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            R$ {(item.valor / 1000).toFixed(0)}k
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <DynamicCharts 
+              colaboradores={colaboradores}
+              dependentes={dependentes}
+              tickets={tickets}
+              apolices={apolices}
+              metrics={metrics}
+            />
 
             {/* Cards de métricas adicionais */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
