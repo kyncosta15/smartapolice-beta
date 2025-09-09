@@ -20,21 +20,6 @@ import {
   MessageCircle,
   RefreshCw
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  ResponsiveContainer, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend 
-} from 'recharts';
 import { IncluirDependenteModal } from '@/components/IncluirDependenteModal';
 import { ExcluirColaboradorModal } from '@/components/ExcluirColaboradorModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
@@ -346,12 +331,11 @@ export const SmartBeneficiosDashboard = () => {
                     </div>
                     <Users className="h-8 w-8 text-blue-500" />
                   </div>
-                  <div className="h-[60px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={vidasAtivasData}>
-                        <Line type="monotone" dataKey="valor" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
+                  <div className="flex items-center space-x-1 h-2">
+                    <div className="flex-1 bg-blue-100 rounded-full h-2">
+                      <div className="bg-blue-500 h-2 rounded-full w-4/5"></div>
+                    </div>
+                    <span className="text-xs text-green-600">+2.5%</span>
                   </div>
                 </CardContent>
               </Card>
@@ -366,12 +350,13 @@ export const SmartBeneficiosDashboard = () => {
                     </div>
                     <DollarSign className="h-8 w-8 text-green-500" />
                   </div>
-                  <div className="h-[60px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={custoMensalData}>
-                        <Bar dataKey="valor" fill="#10b981" radius={[2, 2, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="flex space-x-1 h-8 items-end">
+                    <div className="bg-green-500 w-2 h-4 rounded-t"></div>
+                    <div className="bg-green-500 w-2 h-5 rounded-t"></div>
+                    <div className="bg-green-500 w-2 h-6 rounded-t"></div>
+                    <div className="bg-green-500 w-2 h-8 rounded-t"></div>
+                    <div className="bg-green-500 w-2 h-6 rounded-t"></div>
+                    <div className="bg-green-500 w-2 h-8 rounded-t"></div>
                   </div>
                 </CardContent>
               </Card>
@@ -386,12 +371,11 @@ export const SmartBeneficiosDashboard = () => {
                     </div>
                     <Heart className="h-8 w-8 text-orange-500" />
                   </div>
-                  <div className="h-[60px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={custoMedioVidaData}>
-                        <Line type="monotone" dataKey="valor" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
+                  <div className="flex items-center space-x-1 h-2">
+                    <div className="flex-1 bg-orange-100 rounded-full h-2">
+                      <div className="bg-orange-500 h-2 rounded-full w-3/5"></div>
+                    </div>
+                    <span className="text-xs text-red-600">-1.2%</span>
                   </div>
                 </CardContent>
               </Card>
@@ -406,16 +390,13 @@ export const SmartBeneficiosDashboard = () => {
                     </div>
                     <FileText className="h-8 w-8 text-red-500" />
                   </div>
-                  <div className="h-[60px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={sinistrosData} dataKey="value" cx="50%" cy="50%" outerRadius={25} fill="#8884d8">
-                          {sinistrosData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
+                  <div className="flex justify-center">
+                    <div className="relative w-12 h-12">
+                      <div className="absolute inset-0 bg-red-100 rounded-full"></div>
+                      <div className="absolute inset-1 bg-red-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">12</span>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -454,33 +435,29 @@ export const SmartBeneficiosDashboard = () => {
                   <CardTitle className="text-lg">Status dos Ingressos</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="h-[120px] w-[120px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie 
-                            data={statusIngressosData} 
-                            dataKey="value" 
-                            cx="50%" 
-                            cy="50%" 
-                            outerRadius={50} 
-                            fill="#8884d8"
-                          >
-                            {statusIngressosData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                        </PieChart>
-                      </ResponsiveContainer>
+                  <div className="flex justify-center mb-4">
+                    <div className="relative w-24 h-24">
+                      <div className="absolute inset-0 rounded-full" style={{
+                        background: 'conic-gradient(#10b981 0deg 126deg, #f59e0b 126deg 180deg, #ef4444 180deg 216deg, transparent 216deg)'
+                      }}></div>
+                      <div className="absolute inset-3 bg-white rounded-full flex items-center justify-center">
+                        <span className="text-lg font-bold">60</span>
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {statusIngressosData.map((item, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                        <span className="text-sm">{item.name}: {item.value}</span>
-                      </div>
-                    ))}
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span className="text-sm">Aprovados: 35</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                      <span className="text-sm">Em análise: 15</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <span className="text-sm">Pendentes: 10</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -491,18 +468,26 @@ export const SmartBeneficiosDashboard = () => {
                   <CardTitle className="text-lg">Custos por Centro</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[180px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={centrosCustoData} layout="horizontal">
-                        <XAxis type="number" hide />
-                        <YAxis dataKey="name" type="category" width={80} fontSize={12} />
-                        <Bar dataKey="valor" fill="#3b82f6" radius={[0, 4, 4, 0]}>
-                          {centrosCustoData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.cor} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="space-y-3">
+                    {centrosCustoData.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{item.name}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="h-2 rounded-full"
+                              style={{ 
+                                backgroundColor: item.cor,
+                                width: `${(item.valor / 85000) * 100}%`
+                              }}
+                            ></div>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            R$ {(item.valor / 1000).toFixed(0)}k
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
