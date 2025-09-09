@@ -1,6 +1,6 @@
-
 import { useMemo } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { safeString } from '@/utils/safeDataRenderer';
 import { extractFieldValue } from '@/utils/extractFieldValue';
 
 interface DashboardData {
@@ -29,14 +29,14 @@ interface DashboardData {
 
 export const useDashboardCalculations = (policies: ParsedPolicyData[]): DashboardData => {
   return useMemo(() => {
-    console.log('🔍 Recalculando métricas do dashboard para', policies.length, 'apólices');
+    console.log('🔍 Recalculando métricas do dashboard para', policies.length, 'apólices - MODO SUPER SEGURO');
     
-    // Função para extrair nome da seguradora de forma segura
+    // Função para extrair nome da seguradora de forma SUPER SEGURA
     const getInsurerName = (insurerData: any): string => {
       const extracted = extractFieldValue(insurerData);
-      // Ensure we always return a string, never an object
-      if (typeof extracted === 'string' && extracted !== 'Não informado') {
-        return extracted;
+      const safeName = safeString(extracted);
+      if (safeName && safeName !== 'Não informado') {
+        return safeName;
       }
       return 'Seguradora Desconhecida';
     };
@@ -70,20 +70,20 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       return sum + (policy.installments?.length || 0);
     }, 0);
 
-    // Distribuição por seguradora
+    // Distribuição por seguradora - CONVERSÃO TOTAL PARA STRINGS
     const insurerCounts = policies.reduce((acc, policy) => {
-      const insurerName = getInsurerName(policy.insurer);
+      const insurerName = safeString(getInsurerName(policy.insurer));
       acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
 
     const insurerDistribution = Object.entries(insurerCounts).map(([name, value]) => ({
-      name,
+      name: safeString(name),
       value,
       percentage: totalMonthlyCost > 0 ? (value / totalMonthlyCost) * 100 : 0
     }));
 
-    // Distribuição por tipo
+    // Distribuição por tipo - CONVERSÃO TOTAL PARA STRINGS
     const getTypeLabel = (type: string) => {
       const types = {
         auto: 'Seguro Auto',
@@ -97,55 +97,59 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
     };
 
     const typeCounts = policies.reduce((acc, policy) => {
-      const typeLabel = getTypeLabel(policy.type);
+      const typeLabel = safeString(getTypeLabel(policy.type));
       acc[typeLabel] = (acc[typeLabel] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
 
     const typeDistribution = Object.entries(typeCounts).map(([name, value]) => ({
-      name,
+      name: safeString(name),
       value
     }));
 
-    // Classificação por pessoa física/jurídica
-    console.log('🔍 Iniciando classificação de pessoa física/jurídica...');
+    // Classificação por pessoa física/jurídica - VERSÃO SUPER SEGURA
+    console.log('🔍 Iniciando classificação de pessoa física/jurídica - MODO SUPER SEGURO...');
     const personTypeDistribution = policies.reduce((acc, policy) => {
-      console.log('📋 Analisando política:', {
+      const safeName = safeString(policy.name);
+      const safeDocumentoTipo = safeString(policy.documento_tipo);
+      const safeDocumento = safeString(policy.documento);
+      
+      console.log('📋 Analisando política (SUPER SEGURO):', {
         id: policy.id,
-        name: String(policy.name || 'N/A'),
-        documento_tipo: String(policy.documento_tipo || 'N/A'),
-        documento: String(policy.documento || 'N/A')
+        name: safeName,
+        documento_tipo: safeDocumentoTipo,
+        documento: safeDocumento
       });
       
-      const documentoTipo = extractFieldValue(policy.documento_tipo);
+      // Usar safeString para garantir que não há objetos
+      const documentoTipo = safeString(extractFieldValue(policy.documento_tipo));
       
       if (!documentoTipo || documentoTipo === 'undefined' || documentoTipo === '' || documentoTipo === 'Não informado') {
-        console.log(`⚠️ Política "${String(policy.name || 'N/A')}": campo documento_tipo não encontrado, vazio ou undefined`);
-        console.log('⚠️ Dados disponíveis:', Object.keys(policy));
-        console.log('⚠️ Valor do campo documento_tipo:', String(policy.documento_tipo || 'N/A'));
+        console.log(`⚠️ Política "${safeName}": campo documento_tipo não encontrado, vazio ou undefined`);
+        console.log('⚠️ Valor do campo documento_tipo:', safeDocumentoTipo);
         return acc;
       }
       
       if (documentoTipo === 'CPF') {
-        console.log(`✅ Política "${String(policy.name || 'N/A')}": classificada como Pessoa Física`);
+        console.log(`✅ Política "${safeName}": classificada como Pessoa Física`);
         acc.pessoaFisica++;
       } else if (documentoTipo === 'CNPJ') {
-        console.log(`✅ Política "${String(policy.name || 'N/A')}": classificada como Pessoa Jurídica`);
+        console.log(`✅ Política "${safeName}": classificada como Pessoa Jurídica`);
         acc.pessoaJuridica++;
       } else {
-        console.log(`⚠️ Política "${String(policy.name || 'N/A')}": tipo de documento desconhecido: ${documentoTipo}`);
+        console.log(`⚠️ Política "${safeName}": tipo de documento desconhecido: ${documentoTipo}`);
       }
       
       return acc;
     }, { pessoaFisica: 0, pessoaJuridica: 0 });
 
-    console.log('🎯 RESULTADO FINAL da classificação:', {
+    console.log('🎯 RESULTADO FINAL da classificação (SUPER SEGURO):', {
       pessoaFisica: personTypeDistribution.pessoaFisica,
       pessoaJuridica: personTypeDistribution.pessoaJuridica,
       total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica
     });
 
-    // Evolução mensal (projeção de 12 meses) - Fixed type
+    // Evolução mensal (projeção de 12 meses)
     const currentDate = new Date();
     const monthlyEvolution = [];
     
@@ -185,7 +189,7 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
 
     console.log('📊 Projeção mensal dinâmica gerada:', monthlyEvolution);
 
-    // Recent policies (last 30 days)
+    // Recent policies (last 30 days) - CONVERSÃO TOTAL PARA STRINGS
     const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
     const recentPolicies = policies
       .filter(policy => {
@@ -196,12 +200,12 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       .slice(0, 10)
       .map(policy => ({
         id: policy.id,
-        name: String(policy.name || 'N/A'),
-        insurer: String(getInsurerName(policy.insurer) || 'N/A'),
+        name: safeString(policy.name),
+        insurer: safeString(getInsurerName(policy.insurer)),
         premium: policy.premium || 0,
         monthlyAmount: policy.monthlyAmount || 0,
-        endDate: policy.endDate,
-        extractedAt: policy.extractedAt
+        endDate: safeString(policy.endDate),
+        extractedAt: safeString(policy.extractedAt)
       }));
 
     // Insights
@@ -239,7 +243,7 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       recentPolicies
     };
 
-    console.log('📊 Dashboard data final:', dashboardData);
+    console.log('📊 Dashboard data final (SUPER SEGURO):', dashboardData);
     
     return dashboardData;
   }, [policies]);

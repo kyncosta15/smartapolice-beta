@@ -6,6 +6,8 @@ type PolicyInsert = Database['public']['Tables']['policies']['Insert'];
 type InstallmentInsert = Database['public']['Tables']['installments']['Insert'];
 type CoberturaInsert = Database['public']['Tables']['coberturas']['Insert'];
 
+import { safeString, safeConvertArray } from '@/utils/safeDataRenderer';
+
 export class PolicyPersistenceService {
   
   // FUNÇÃO PRINCIPAL: Determinar status baseado na data de vencimento
@@ -378,14 +380,14 @@ export class PolicyPersistenceService {
 
       console.log(`✅ [loadUserPolicies-${sessionId}] ${policies.length} apólices carregadas da view segura`);
 
-      // Process policies with proper normalization to prevent React rendering errors
+      // Process policies with COMPLETE SAFE CONVERSION
       const parsedPolicies: ParsedPolicyData[] = policies.map((policy, index) => {
         console.log(`🔍 [loadUserPolicies-${sessionId}] Processando apólice ${index + 1}:`, {
           id: policy.id,
-          name: String(policy.segurado || 'N/A'),
-          status_db: String(policy.status || 'N/A'),
-          documento_tipo: String(policy.documento_tipo || 'N/A'),
-          documento: String(policy.documento || 'N/A')
+          name: safeString(policy.segurado),
+          status_db: safeString(policy.status),
+          documento_tipo: safeString(policy.documento_tipo),
+          documento: safeString(policy.documento)
         });
 
         // Normalize policy data first to ensure all objects become strings
@@ -396,57 +398,57 @@ export class PolicyPersistenceService {
 
         console.log(`🎯 [loadUserPolicies-${sessionId}] Status da apólice ${policy.id}: ${finalStatus}`);
 
-        // Data from policies table with all fields - USING NORMALIZED DATA
+        // CONVERSÃO SEGURA - GARANTIR QUE NÃO RENDERIZAMOS OBJETOS
         const convertedPolicy = {
           id: policy.id,
-          name: normalizedPolicy.name || 'N/A',
-          type: normalizedPolicy.type || 'auto',
-          insurer: normalizedPolicy.insurer || 'N/A',
+          name: safeString(normalizedPolicy.name),
+          type: safeString(normalizedPolicy.type),
+          insurer: safeString(normalizedPolicy.insurer),
           premium: 0,
           monthlyAmount: Number(policy.valor_mensal_num || policy.custo_mensal) || 0,
-          startDate: policy.inicio_vigencia || new Date().toISOString().split('T')[0],
-          endDate: policy.fim_vigencia || new Date().toISOString().split('T')[0], 
-          policyNumber: policy.numero_apolice || 'N/A',
+          startDate: safeString(policy.inicio_vigencia || new Date().toISOString().split('T')[0]),
+          endDate: safeString(policy.fim_vigencia || new Date().toISOString().split('T')[0]), 
+          policyNumber: safeString(policy.numero_apolice),
           paymentFrequency: 'mensal',
           status: finalStatus,
-          pdfPath: policy.arquivo_url,
-          extractedAt: policy.extraction_timestamp || policy.created_at || new Date().toISOString(),
+          pdfPath: safeString(policy.arquivo_url),
+          extractedAt: safeString(policy.extraction_timestamp || policy.created_at || new Date().toISOString()),
           
           // Required fields
-          expirationDate: policy.expiration_date || policy.fim_vigencia || new Date().toISOString().split('T')[0],
+          expirationDate: safeString(policy.expiration_date || policy.fim_vigencia || new Date().toISOString().split('T')[0]),
           policyStatus: finalStatus as any,
           quantidade_parcelas: 12,
           
-          // Installments
+          // Installments - fix type
           installments: (policy.installments as any[])?.map(inst => ({
-            numero: inst.numero_parcela,
-            valor: Number(inst.valor),
-            data: inst.data_vencimento,
-            status: inst.status
+            numero: Number(inst.numero_parcela) || 0,
+            valor: Number(inst.valor) || 0,
+            data: safeString(inst.data_vencimento),
+            status: (inst.status === 'paga' || inst.status === 'pendente') ? inst.status : 'pendente'
           })) || [],
           
           // Coverages
           coberturas: (policy.coberturas as any[])?.map(cob => ({
             id: cob.id,
-            descricao: cob.descricao,
+            descricao: safeString(cob.descricao),
             lmi: cob.lmi ? Number(cob.lmi) : undefined
           })) || [],
           
-          // Other fields - USE REAL DATA FROM DATABASE WITH STRING CONVERSION
-          insuredName: String(policy.segurado || 'N/A'),
-          documento: String(policy.documento || ''),
+          // Other fields
+          insuredName: safeString(policy.segurado),
+          documento: safeString(policy.documento),
           documento_tipo: (policy.documento_tipo === 'CPF' || policy.documento_tipo === 'CNPJ') ? policy.documento_tipo as 'CPF' | 'CNPJ' : undefined,
           deductible: policy.franquia || undefined,
-          vehicleModel: String(policy.modelo_veiculo || ''),
-          uf: String(policy.uf || ''),
-          entity: String(policy.corretora || 'Não informado'),
-          category: String(normalizedPolicy.category || 'Geral'),
-          coverage: (policy.coberturas as any[])?.map(cob => String(cob.descricao || '')) || ['Cobertura Básica'],
+          vehicleModel: safeString(policy.modelo_veiculo),
+          uf: safeString(policy.uf),
+          entity: safeString(policy.corretora || 'Não informado'),
+          category: safeString(normalizedPolicy.category || 'Geral'),
+          coverage: (policy.coberturas as any[])?.map(cob => safeString(cob.descricao)) || ['Cobertura Básica'],
           totalCoverage: Number(policy.valor_mensal_num || policy.custo_mensal) * 12 || 0,
           limits: 'R$ 100.000 por sinistro'
         };
 
-        console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada com dados normalizados`);
+        console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada e CONVERTIDA COM SEGURANÇA`);
 
         return convertedPolicy;
       });

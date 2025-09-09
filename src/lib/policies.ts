@@ -1,13 +1,13 @@
-import { safeStringValue } from '@/utils/extractFieldValue';
+import { safeString } from '@/utils/safeDataRenderer';
 
-// lib/policies.ts
+// lib/policies.ts - CORREÇÃO CONSERVADORA
 type SeguradoraObj = { empresa?: string; entidade?: string | null };
 type TipoObj = { categoria?: string; cobertura?: string };
 
 function parseMaybeJson<T = any>(v: unknown): T | null {
   if (v == null) return null;
   if (typeof v === "string") {
-    try { return JSON.parse(v) as T; } catch { /* não era JSON */ return null; }
+    try { return JSON.parse(v) as T; } catch { return null; }
   }
   if (typeof v === "object") return v as T;
   return null;
@@ -26,27 +26,21 @@ export function normalizePolicy(raw: any) {
   const segParsed = parseMaybeJson<SeguradoraObj>(raw.seguradora || raw.insurer);
   const tipoParsed = parseMaybeJson<TipoObj>(raw.tipo || raw.type);
 
-  const seguradoraEmpresa = safeStringValue(
-    segParsed?.empresa ??
-    ((typeof (raw.seguradora || raw.insurer) === "string" ? (raw.seguradora || raw.insurer) : "") ||
-    "N/A")
+  // CONVERSÃO SEGURA - SEMPRE STRINGS
+  const seguradoraEmpresa = safeString(
+    segParsed?.empresa ?? raw.seguradora ?? raw.insurer ?? "N/A"
   );
 
-  const seguradoraEntidade = safeStringValue(
-    segParsed?.entidade ??
-    (typeof (raw.seguradora || raw.insurer) === "object" ? (raw.seguradora || raw.insurer)?.entidade : null)
+  const seguradoraEntidade = safeString(
+    segParsed?.entidade ?? null
   );
 
-  const tipoCategoria = safeStringValue(
-    tipoParsed?.categoria ??
-    ((typeof (raw.tipo || raw.type) === "string" ? (raw.tipo || raw.type) : "") ||
-    "N/A")
+  const tipoCategoria = safeString(
+    tipoParsed?.categoria ?? raw.tipo ?? raw.type ?? "N/A"
   );
 
-  const tipoCobertura = safeStringValue(
-    tipoParsed?.cobertura ??
-    ((typeof (raw.tipo || raw.type) === "object" ? (raw.tipo || raw.type)?.cobertura : "") ||
-    "N/A")
+  const tipoCobertura = safeString(
+    tipoParsed?.cobertura ?? "N/A"
   );
 
   const valorMensal = toNumberSafe(raw.valorMensal || raw.monthlyAmount) ?? 0;
@@ -60,15 +54,14 @@ export function normalizePolicy(raw: any) {
     tipoCobertura,
     valorMensal,
     premio,
-    // Also normalize the original fields to prevent rendering issues - ENSURE ALL STRINGS
+    // Campos principais - SEMPRE STRINGS
     seguradora: seguradoraEmpresa,
     insurer: seguradoraEmpresa,
     tipo: tipoCategoria,
     type: tipoCategoria,
-    name: safeStringValue(typeof raw.name === "string" ? raw.name : (typeof raw.segurado === "string" ? raw.segurado : "N/A")),
-    policyNumber: safeStringValue(typeof raw.policyNumber === "string" ? raw.policyNumber : (typeof raw.numero_apolice === "string" ? raw.numero_apolice : "N/A")),
-    // Garantir que documento e documento_tipo sejam preservados como strings
-    documento: safeStringValue(raw.documento),
+    name: safeString(raw.name ?? raw.segurado ?? "N/A"),
+    policyNumber: safeString(raw.policyNumber ?? raw.numero_apolice ?? "N/A"),
+    documento: safeString(raw.documento ?? ""),
     documento_tipo: raw.documento_tipo
   };
 }
@@ -79,26 +72,12 @@ export const moedaBR = (v?: number | null) =>
     ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
     : "N/A";
 
-// "Airbag" imediato para valores problemáticos
-export const toDisplay = (v: any) => {
-  if (v == null) return "N/A";
-  if (typeof v === "object") {
-    // tenta montar algo legível
-    return Object.values(v).filter(Boolean).join(" · ") || "N/A";
-  }
-  return String(v);
+// Helper adicional para renderização segura de texto - VERSÃO REFATORADA
+export const toText = (v: any): string => {
+  return safeString(v);
 };
 
-// Helper adicional para renderização segura de texto
-export const toText = (v: any): string => {
-  if (v == null) return "N/A";
-  if (typeof v === "object") {
-    try {
-      // monte algo legível: empresa · cobertura etc.
-      return Object.values(v).filter(Boolean).join(" · ") || "N/A";
-    } catch { 
-      return "N/A"; 
-    }
-  }
-  return String(v);
+// "Airbag" imediato para valores problemáticos - VERSÃO REFATORADA  
+export const toDisplay = (v: any) => {
+  return safeString(v);
 };
