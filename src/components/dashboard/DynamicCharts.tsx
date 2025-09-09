@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Users, DollarSign, Heart, FileText, Clock, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyFormatter';
-import { PersonTypeDistribution } from '@/components/dashboard/PersonTypeDistribution';
+
 
 interface Colaborador {
   id: string;
@@ -102,17 +102,6 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
 
   const totalTickets = statusData.reduce((sum, item) => sum + item.value, 0);
 
-  // Calcular distribuição por tipo de documento (pessoa física vs jurídica)
-  const personTypeDistribution = colaboradores.reduce((acc, col) => {
-    const cpf = col.cpf || '';
-    // CPF tem 11 dígitos (pessoa física), CNPJ tem 14 dígitos (pessoa jurídica)
-    if (cpf.replace(/\D/g, '').length === 11) {
-      acc.pessoaFisica += 1;
-    } else if (cpf.replace(/\D/g, '').length === 14) {
-      acc.pessoaJuridica += 1;
-    }
-    return acc;
-  }, { pessoaFisica: 0, pessoaJuridica: 0 });
 
   // Calcular porcentagem de crescimento (mock - pode ser calculado com dados históricos)
   const crescimentoVidas = totalVidas > 0 ? 2.5 : 0;
@@ -338,10 +327,6 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
           </CardContent>
         </Card>
 
-        {/* Distribuição por Tipo de Pessoa */}
-        <div className="lg:col-span-2">
-          <PersonTypeDistribution personTypeDistribution={personTypeDistribution} />
-        </div>
       </div>
     </>
   );
