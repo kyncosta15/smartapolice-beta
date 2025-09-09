@@ -16,11 +16,16 @@ import {
   Download,
   Upload,
   CreditCard,
-  Menu
+  Menu,
+  ArrowLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-export function OptimizedSettings() {
+interface OptimizedSettingsProps {
+  onBackToHome?: () => void;
+}
+
+export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
   const [settings, setSettings] = useState({
     notifications: {
       email: true,
@@ -466,6 +471,21 @@ export function OptimizedSettings() {
               <Menu className="h-6 w-6" />
             </SidebarTrigger>
             <h1 className="text-xl font-semibold">Configurações</h1>
+          </div>
+          
+          {/* Header para desktop com botão voltar */}
+          <div className="hidden md:flex items-center gap-4 mb-6">
+            {onBackToHome && (
+              <Button
+                variant="ghost" 
+                onClick={onBackToHome}
+                className="flex items-center gap-2 text-muted-foreground hover:text-primary"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar ao Dashboard
+              </Button>
+            )}
+            <h1 className="text-xl font-semibold ml-auto">Configurações</h1>
           </div>
           
           {/* Conteúdo principal */}

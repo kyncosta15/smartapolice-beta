@@ -168,7 +168,7 @@ export function ContentRenderer({
     case 'settings':
       return (
         <div className="p-6">
-          <OptimizedSettings />
+          <OptimizedSettings onBackToHome={() => onSectionChange('home')} />
         </div>
       );
 
