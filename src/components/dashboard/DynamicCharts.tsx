@@ -109,7 +109,87 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
 
   return (
     <>
-      {/* Cards com distribuição por tipo */}
+      {/* Cards principais com gráficos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Vidas Ativas */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Vidas Ativas</p>
+                <p className="text-2xl font-bold">{totalVidas}</p>
+              </div>
+              <Users className="h-8 w-8 text-blue-500" />
+            </div>
+            <div className="flex items-center space-x-1 h-2">
+              <Progress value={Math.min((totalVidas / 1000) * 100, 100)} className="flex-1" />
+              <span className="text-xs text-green-600">+{crescimentoVidas}%</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Custo Mensal */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Custo Mensal</p>
+                <p className="text-2xl font-bold">{formatCurrency(metrics.custoMensal)}</p>
+              </div>
+              <DollarSign className="h-8 w-8 text-green-500" />
+            </div>
+            <div className="flex space-x-1 h-8 items-end">
+              {[...Array(6)].map((_, i) => (
+                <div 
+                  key={i}
+                  className="bg-green-500 w-2 rounded-t flex-1"
+                  style={{ height: `${20 + (i * 10)}px` }}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Custo Médio/Vida */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Custo Médio/Vida</p>
+                <p className="text-2xl font-bold">{formatCurrency(custoMedioFormatted)}</p>
+              </div>
+              <Heart className="h-8 w-8 text-orange-500" />
+            </div>
+            <div className="flex items-center space-x-1 h-2">
+              <Progress value={60} className="flex-1" />
+              <span className="text-xs text-red-600">{variacaoCusto}%</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tickets Abertos */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Tickets Abertos</p>
+                <p className="text-2xl font-bold">{metrics.ticketsAbertos}</p>
+              </div>
+              <FileText className="h-8 w-8 text-red-500" />
+            </div>
+            <div className="flex justify-center">
+              <div className="relative w-12 h-12">
+                <div className="absolute inset-0 bg-red-100 rounded-full"></div>
+                <div className="absolute inset-1 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">{metrics.ticketsAbertos}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Terceira linha - Cards com distribuição por tipo */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Vencimentos Próximos */}
         <Card>
