@@ -1,4 +1,34 @@
 
+// Safety function to ensure all values are converted to strings for React rendering
+export function safeStringValue(value: any): string {
+  if (value === null || value === undefined) {
+    return 'Não informado';
+  }
+  
+  if (typeof value === 'string') {
+    return value;
+  }
+  
+  if (typeof value === 'number') {
+    return value.toString();
+  }
+  
+  if (typeof value === 'object') {
+    try {
+      // Try to extract meaningful values from object
+      const values = Object.values(value).filter(v => v !== null && v !== undefined);
+      if (values.length > 0) {
+        return values.map(v => String(v)).join(' - ');
+      }
+    } catch (error) {
+      console.warn('Error processing object value:', error);
+    }
+  }
+  
+  // Fallback - convert to string
+  return String(value);
+}
+
 export const extractFieldValue = (field: any): string | null => {
   console.log('🔍 Extraindo valor do campo:', field);
   

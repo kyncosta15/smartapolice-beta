@@ -1,3 +1,5 @@
+import { safeStringValue } from '@/utils/extractFieldValue';
+
 // lib/policies.ts
 type SeguradoraObj = { empresa?: string; entidade?: string | null };
 type TipoObj = { categoria?: string; cobertura?: string };
@@ -24,24 +26,28 @@ export function normalizePolicy(raw: any) {
   const segParsed = parseMaybeJson<SeguradoraObj>(raw.seguradora || raw.insurer);
   const tipoParsed = parseMaybeJson<TipoObj>(raw.tipo || raw.type);
 
-  const seguradoraEmpresa =
+  const seguradoraEmpresa = safeStringValue(
     segParsed?.empresa ??
     ((typeof (raw.seguradora || raw.insurer) === "string" ? (raw.seguradora || raw.insurer) : "") ||
-    "N/A");
+    "N/A")
+  );
 
-  const seguradoraEntidade =
+  const seguradoraEntidade = safeStringValue(
     segParsed?.entidade ??
-    (typeof (raw.seguradora || raw.insurer) === "object" ? (raw.seguradora || raw.insurer)?.entidade : null);
+    (typeof (raw.seguradora || raw.insurer) === "object" ? (raw.seguradora || raw.insurer)?.entidade : null)
+  );
 
-  const tipoCategoria =
+  const tipoCategoria = safeStringValue(
     tipoParsed?.categoria ??
     ((typeof (raw.tipo || raw.type) === "string" ? (raw.tipo || raw.type) : "") ||
-    "N/A");
+    "N/A")
+  );
 
-  const tipoCobertura =
+  const tipoCobertura = safeStringValue(
     tipoParsed?.cobertura ??
     ((typeof (raw.tipo || raw.type) === "object" ? (raw.tipo || raw.type)?.cobertura : "") ||
-    "N/A");
+    "N/A")
+  );
 
   const valorMensal = toNumberSafe(raw.valorMensal || raw.monthlyAmount) ?? 0;
   const premio = toNumberSafe(raw.premio || raw.premium) ?? 0;
@@ -54,15 +60,15 @@ export function normalizePolicy(raw: any) {
     tipoCobertura,
     valorMensal,
     premio,
-    // Also normalize the original fields to prevent rendering issues
+    // Also normalize the original fields to prevent rendering issues - ENSURE ALL STRINGS
     seguradora: seguradoraEmpresa,
     insurer: seguradoraEmpresa,
     tipo: tipoCategoria,
     type: tipoCategoria,
-    name: typeof raw.name === "string" ? raw.name : (typeof raw.segurado === "string" ? raw.segurado : "N/A"),
-    policyNumber: typeof raw.policyNumber === "string" ? raw.policyNumber : (typeof raw.numero_apolice === "string" ? raw.numero_apolice : "N/A"),
-    // Garantir que documento e documento_tipo sejam preservados
-    documento: raw.documento,
+    name: safeStringValue(typeof raw.name === "string" ? raw.name : (typeof raw.segurado === "string" ? raw.segurado : "N/A")),
+    policyNumber: safeStringValue(typeof raw.policyNumber === "string" ? raw.policyNumber : (typeof raw.numero_apolice === "string" ? raw.numero_apolice : "N/A")),
+    // Garantir que documento e documento_tipo sejam preservados como strings
+    documento: safeStringValue(raw.documento),
     documento_tipo: raw.documento_tipo
   };
 }

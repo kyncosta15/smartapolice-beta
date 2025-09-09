@@ -378,7 +378,7 @@ export class PolicyPersistenceService {
 
       console.log(`✅ [loadUserPolicies-${sessionId}] ${policies.length} apólices carregadas da view segura`);
 
-      // Process policies with normalized data from the UI view
+      // Process policies with proper normalization to prevent React rendering errors
       const parsedPolicies: ParsedPolicyData[] = policies.map((policy, index) => {
         console.log(`🔍 [loadUserPolicies-${sessionId}] Processando apólice ${index + 1}:`, {
           id: policy.id,
@@ -388,17 +388,20 @@ export class PolicyPersistenceService {
           documento: policy.documento
         });
 
+        // Normalize policy data first to ensure all objects become strings
+        const normalizedPolicy = normalizePolicy(policy);
+
         // Status already normalized by view
         const finalStatus = this.mapToValidStatus(policy.status || 'vigente');
 
         console.log(`🎯 [loadUserPolicies-${sessionId}] Status da apólice ${policy.id}: ${finalStatus}`);
 
-        // Data from policies table with all fields - CORRECTED FIELD MAPPING
+        // Data from policies table with all fields - USING NORMALIZED DATA
         const convertedPolicy = {
           id: policy.id,
-          name: policy.segurado || 'N/A',
-          type: policy.tipo_seguro || 'auto',
-          insurer: policy.seguradora || 'N/A',
+          name: normalizedPolicy.name || 'N/A',
+          type: normalizedPolicy.type || 'auto',
+          insurer: normalizedPolicy.insurer || 'N/A',
           premium: 0,
           monthlyAmount: Number(policy.valor_mensal_num || policy.custo_mensal) || 0,
           startDate: policy.inicio_vigencia || new Date().toISOString().split('T')[0],
@@ -429,19 +432,16 @@ export class PolicyPersistenceService {
             lmi: cob.lmi ? Number(cob.lmi) : undefined
           })) || [],
           
-          // Other fields - USE REAL DATA FROM DATABASE
-          insuredName: policy.segurado || 'N/A',
-          documento: policy.documento || '',
+          // Other fields - USE REAL DATA FROM DATABASE WITH STRING CONVERSION
+          insuredName: String(policy.segurado || 'N/A'),
+          documento: String(policy.documento || ''),
           documento_tipo: (policy.documento_tipo === 'CPF' || policy.documento_tipo === 'CNPJ') ? policy.documento_tipo as 'CPF' | 'CNPJ' : undefined,
           deductible: policy.franquia || undefined,
-          vehicleModel: policy.modelo_veiculo || '',
-          uf: policy.uf || '',
-          entity: policy.corretora || 'Não informado',
-          category: policy.tipo_seguro === 'auto' ? 'Veicular' : 
-                   policy.tipo_seguro === 'vida' ? 'Pessoal' : 
-                   policy.tipo_seguro === 'saude' ? 'Saúde' : 
-                   policy.tipo_seguro === 'acidentes_pessoais' ? 'Pessoal' : 'Geral',
-          coverage: (policy.coberturas as any[])?.map(cob => cob.descricao) || ['Cobertura Básica'],
+          vehicleModel: String(policy.modelo_veiculo || ''),
+          uf: String(policy.uf || ''),
+          entity: String(policy.corretora || 'Não informado'),
+          category: String(normalizedPolicy.category || 'Geral'),
+          coverage: (policy.coberturas as any[])?.map(cob => String(cob.descricao || '')) || ['Cobertura Básica'],
           totalCoverage: Number(policy.valor_mensal_num || policy.custo_mensal) * 12 || 0,
           limits: 'R$ 100.000 por sinistro'
         };
