@@ -20,6 +20,21 @@ import {
   MessageCircle,
   RefreshCw
 } from 'lucide-react';
+import { 
+  LineChart, 
+  Line, 
+  BarChart, 
+  Bar, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend 
+} from 'recharts';
 import { IncluirDependenteModal } from '@/components/IncluirDependenteModal';
 import { ExcluirColaboradorModal } from '@/components/ExcluirColaboradorModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
@@ -35,7 +50,6 @@ import { ProtocolosAdminDashboard } from '@/components/ProtocolosAdminDashboard'
 import { RequestsNewDashboard } from '@/components/RequestsNewDashboard';
 import { AdminRequestsDashboard } from '@/components/AdminRequestsDashboard';
 import { AdminTicketsDashboard } from '@/components/AdminTicketsDashboard';
-// Link generator removed - now using public page
 import { EmployeesList } from '@/components/EmployeesList';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -44,15 +58,64 @@ import { useSyncDashboard } from '@/hooks/useSyncDashboard';
 
 // Dados mock para demonstração
 const mockData = {
-  vidasAtivas: 145,
-  custoMensal: 48500.00,
-  custoMedioVida: 334.48,
+  vidasAtivas: 615,
+  custoMensal: 325400.00,
+  custoMedioVida: 520.00,
   vencimentosProximos: 8,
   ticketsAbertos: 12,
   colaboradoresAtivos: 98,
   dependentesAtivos: 47,
   ticketsPendentes: 5
 };
+
+// Dados para gráficos
+const vidasAtivasData = [
+  { mes: 'Jan', valor: 580 },
+  { mes: 'Fev', valor: 590 },
+  { mes: 'Mar', valor: 605 },
+  { mes: 'Abr', valor: 615 },
+  { mes: 'Mai', valor: 610 },
+  { mes: 'Jun', valor: 615 }
+];
+
+const custoMensalData = [
+  { mes: 'Jan', valor: 310000 },
+  { mes: 'Fev', valor: 315000 },
+  { mes: 'Mar', valor: 320000 },
+  { mes: 'Abr', valor: 325400 },
+  { mes: 'Mai', valor: 322000 },
+  { mes: 'Jun', valor: 325400 }
+];
+
+const custoMedioVidaData = [
+  { mes: 'Jan', valor: 534 },
+  { mes: 'Fev', valor: 533 },
+  { mes: 'Mar', valor: 528 },
+  { mes: 'Abr', valor: 520 },
+  { mes: 'Mai', valor: 527 },
+  { mes: 'Jun', valor: 520 }
+];
+
+const sinistrosData = [
+  { name: 'Consultas', value: 45, color: '#3b82f6' },
+  { name: 'Exames', value: 25, color: '#10b981' },
+  { name: 'Internações', value: 20, color: '#f59e0b' },
+  { name: 'Outros', value: 10, color: '#ef4444' }
+];
+
+const statusIngressosData = [
+  { name: 'Aprovados', value: 35, color: '#10b981' },
+  { name: 'Em análise', value: 15, color: '#f59e0b' },
+  { name: 'Pendentes', value: 10, color: '#ef4444' }
+];
+
+const centrosCustoData = [
+  { name: 'Administração', valor: 85000, cor: '#3b82f6' },
+  { name: 'Vendas', valor: 75000, cor: '#10b981' },
+  { name: 'TI', valor: 65000, cor: '#f59e0b' },
+  { name: 'RH', valor: 45000, cor: '#ef4444' },
+  { name: 'Operações', valor: 55000, cor: '#8b5cf6' }
+];
 
 const mockColaboradores = [
   {
@@ -125,7 +188,6 @@ const getTipoTicketLabel = (tipo: string) => {
   }
 };
 
-// Atualizar o dashboard para usar dados reais
 export const SmartBeneficiosDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
@@ -232,12 +294,6 @@ export const SmartBeneficiosDashboard = () => {
                 Dashboard
               </TabsTrigger>
               <TabsTrigger 
-                value="apolices" 
-                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
-              >
-                Apólices
-              </TabsTrigger>
-              <TabsTrigger 
                 value="colaboradores" 
                 className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
@@ -250,10 +306,16 @@ export const SmartBeneficiosDashboard = () => {
                 Solicitações
               </TabsTrigger>
               <TabsTrigger 
-                value="tickets" 
+                value="protocolos" 
                 className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
-                Tickets
+                Protocolos
+              </TabsTrigger>
+              <TabsTrigger 
+                value="admin" 
+                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
+              >
+                Admin
               </TabsTrigger>
               <TabsTrigger 
                 value="relatorios" 
@@ -272,229 +334,235 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
+            {/* Cards principais com gráficos */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Vidas Ativas */}
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Vidas Ativas</p>
-                      <p className="text-2xl font-bold">{isLoading ? '...' : metrics.vidasAtivas}</p>
+                      <p className="text-2xl font-bold">{mockData.vidasAtivas}</p>
                     </div>
                     <Users className="h-8 w-8 text-blue-500" />
                   </div>
+                  <div className="h-[60px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={vidasAtivasData}>
+                        <Line type="monotone" dataKey="valor" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                 </CardContent>
               </Card>
 
+              {/* Custo Mensal */}
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Custo Mensal</p>
-                      <p className="text-2xl font-bold">{isLoading ? '...' : formatCurrency(metrics.custoMensal)}</p>
+                      <p className="text-2xl font-bold">R$ {mockData.custoMensal.toLocaleString()}</p>
                     </div>
                     <DollarSign className="h-8 w-8 text-green-500" />
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Custo Médio/Vida</p>
-                      <p className="text-2xl font-bold">{isLoading ? '...' : formatCurrency(metrics.custoMedioVida)}</p>
-                    </div>
-                    <Heart className="h-8 w-8 text-red-500" />
+                  <div className="h-[60px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={custoMensalData}>
+                        <Bar dataKey="valor" fill="#10b981" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Custo Médio/Vida */}
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Tickets Abertos</p>
-                      <p className="text-2xl font-bold">{isLoading ? '...' : metrics.ticketsAbertos}</p>
+                      <p className="text-sm font-medium text-muted-foreground">Custo Médio/Vida</p>
+                      <p className="text-2xl font-bold">R$ {mockData.custoMedioVida}</p>
                     </div>
-                    <FileText className="h-8 w-8 text-orange-500" />
+                    <Heart className="h-8 w-8 text-orange-500" />
+                  </div>
+                  <div className="h-[60px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={custoMedioVidaData}>
+                        <Line type="monotone" dataKey="valor" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sinistros Abertos */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Sinistros Abertos</p>
+                      <p className="text-2xl font-bold">{mockData.ticketsAbertos}</p>
+                    </div>
+                    <FileText className="h-8 w-8 text-red-500" />
+                  </div>
+                  <div className="h-[60px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={sinistrosData} dataKey="value" cx="50%" cy="50%" outerRadius={25} fill="#8884d8">
+                          {sinistrosData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Vencimentos e Alerts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Segunda linha - Cards menores */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Vencimentos Próximos */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5" />
-                    Vencimentos Próximos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Plano de Saúde - Janeiro</p>
-                        <p className="text-sm text-muted-foreground">Vence em 5 dias</p>
-                      </div>
-                      <Badge className="bg-yellow-100 text-yellow-800">Urgente</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Plano Odontológico - Janeiro</p>
-                        <p className="text-sm text-muted-foreground">Vence em 8 dias</p>
-                      </div>
-                      <Badge className="bg-blue-100 text-blue-800">Normal</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
-                    Status dos Tickets
-                  </CardTitle>
+                  <CardTitle className="text-lg">Vencimentos Próximos</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {submissoes.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Carregando dados dos tickets...</p>
-                    ) : (
-                      [
-                        { 
-                          status: 'Recebidos', 
-                          count: submissoes.filter(s => s.status === 'recebida').length, 
-                          color: 'blue' 
-                        },
-                        { 
-                          status: 'Processados', 
-                          count: submissoes.filter(s => s.status === 'processada').length, 
-                          color: 'green' 
-                        },
-                        { 
-                          status: 'Com Erro', 
-                          count: submissoes.filter(s => s.status === 'erro').length, 
-                          color: 'red' 
-                        },
-                        { 
-                          status: 'Total', 
-                          count: submissoes.length, 
-                          color: 'purple' 
-                        }
-                      ].map((item) => (
-                        <div key={item.status} className="flex items-center justify-between">
-                          <span className="text-sm">{item.status}</span>
-                          <Badge className={`bg-${item.color}-100 text-${item.color}-800`}>
-                            {item.count}
-                          </Badge>
-                        </div>
-                      ))
-                    )}
+                    <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Plano de Saúde - Janeiro</p>
+                        <p className="text-xs text-muted-foreground">Vence em 5 dias</p>
+                      </div>
+                      <Badge className="bg-yellow-100 text-yellow-800 text-xs">Urgente</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Plano Odontológico - Janeiro</p>
+                        <p className="text-xs text-muted-foreground">Vence em 8 dias</p>
+                      </div>
+                      <Badge className="bg-blue-100 text-blue-800 text-xs">Normal</Badge>
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Status dos Ingressos */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Status dos Ingressos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="h-[120px] w-[120px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie 
+                            data={statusIngressosData} 
+                            dataKey="value" 
+                            cx="50%" 
+                            cy="50%" 
+                            outerRadius={50} 
+                            fill="#8884d8"
+                          >
+                            {statusIngressosData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {statusIngressosData.map((item, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                        <span className="text-sm">{item.name}: {item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Centros de Custo */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Custos por Centro</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[180px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={centrosCustoData} layout="horizontal">
+                        <XAxis type="number" hide />
+                        <YAxis dataKey="name" type="category" width={80} fontSize={12} />
+                        <Bar dataKey="valor" fill="#3b82f6" radius={[0, 4, 4, 0]}>
+                          {centrosCustoData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.cor} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Cards de métricas adicionais */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-sm text-muted-foreground">Crédito Atual</p>
+                  <p className="text-xl font-bold text-green-600">R$ 325.400</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-sm text-muted-foreground">Crédito Registrado</p>
+                  <p className="text-xl font-bold text-blue-600">R$ 299.200</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-sm text-muted-foreground">Média Diária</p>
+                  <p className="text-xl font-bold text-purple-600">R$ 520</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-sm text-muted-foreground">Prazo Médio</p>
+                  <p className="text-xl font-bold text-orange-600">13 dias</p>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          {/* Apólices Tab */}
-          <TabsContent value="apolices" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Gestão de Apólices</h2>
-              <Badge className="bg-blue-100 text-blue-800">
-                {isLoading ? '...' : `${apolices.length} apólice${apolices.length !== 1 ? 's' : ''}`}
-              </Badge>
-            </div>
-            
-            <ApoliceCNPJView apolices={apolices} isLoading={isLoading} />
-          </TabsContent>
-
-
           {/* Colaboradores Tab */}
-          <TabsContent value="colaboradores" className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">Colaboradores</h2>
-                <p className="text-muted-foreground">Gerencie colaboradores e dependentes</p>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-2">
-                <IncluirDependenteModal>
-                  <Button className="w-full sm:w-auto">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Incluir Colaborador
-                  </Button>
-                </IncluirDependenteModal>
-                
-                <ExcluirColaboradorModal>
-                  <Button 
-                    variant="outline"
-                    className="w-full sm:w-auto"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Excluir Colaboradores
-                  </Button>
-                </ExcluirColaboradorModal>
-              </div>
-            </div>
-            
+          <TabsContent value="colaboradores">
             <EmployeesList />
           </TabsContent>
 
           {/* Solicitações Tab */}
-          <TabsContent value="solicitacoes" className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">Solicitações</h2>
-                <p className="text-muted-foreground">Gerencie as solicitações de benefícios</p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={loadData}
-                  disabled={isLoading}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                  Atualizar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={syncDashboardData}
-                  disabled={isSyncing}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-                  Sincronizar
-                </Button>
-              </div>
-            </div>
-            {(profile as any)?.role === 'corretora_admin' ? (
-              <AdminRequestsDashboard />
-            ) : (
-              <RequestsNewDashboard />
-            )}
+          <TabsContent value="solicitacoes">
+            <RequestsNewDashboard />
           </TabsContent>
 
-          {/* Tickets Tab */}
-          <TabsContent value="tickets" className="space-y-6">
-            {/* Mostrar dashboard admin para corretora_admin */}
-            {(profile as any)?.role === 'corretora_admin' ? (
-              <AdminTicketsDashboard />
-            ) : (
-              <ProtocolosAdminDashboard submissoes={submissoes} isLoading={isLoading} />
-            )}
+          {/* Protocolos Tab */}
+          <TabsContent value="protocolos">
+            <ProtocolosAdminDashboard submissoes={submissoes} isLoading={isLoading} />
+          </TabsContent>
+
+          {/* Admin Tab */}
+          <TabsContent value="admin">
+            <AdminTicketsDashboard />
           </TabsContent>
 
           {/* Relatórios Tab */}
-          <TabsContent value="relatorios" className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold">Relatórios e Exportações</h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <TabsContent value="relatorios">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base sm:text-lg">Relatório Consolidado</CardTitle>
@@ -536,7 +604,6 @@ export const SmartBeneficiosDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-
             </div>
           </TabsContent>
 
@@ -547,7 +614,6 @@ export const SmartBeneficiosDashboard = () => {
                 onFileSelect={(file) => console.log('Arquivo selecionado:', file)}
                 onDataUpdate={loadData}
               />
-              
               <PlanilhaHistorico />
             </div>
           </TabsContent>
