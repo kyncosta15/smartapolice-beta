@@ -37,6 +37,7 @@ interface KPIs {
 }
 
 export const RequestsNewDashboard = () => {
+  console.log('RequestsNewDashboard rendered'); // Force recompilation
   const { user } = useAuth();
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [requests, setRequests] = useState<Request[]>([]);
