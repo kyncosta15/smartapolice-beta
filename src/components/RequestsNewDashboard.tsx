@@ -10,7 +10,8 @@ import {
   XCircle,
   FileText,
   Copy,
-  AlertTriangle
+  AlertTriangle,
+  Eye
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtime } from '@/hooks/useRealtime';
@@ -37,9 +38,10 @@ interface KPIs {
 }
 
 export const RequestsNewDashboard = () => {
-  console.log('RequestsNewDashboard rendered'); // Force recompilation
   const { user } = useAuth();
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [requests, setRequests] = useState<Request[]>([]);
   const [kpis, setKpis] = useState<KPIs>({ total: 0, recebidos: 0, em_validacao: 0, concluidos: 0, recusados: 0, tickets: 0 });
   const [loading, setLoading] = useState(true);
@@ -198,6 +200,11 @@ export const RequestsNewDashboard = () => {
 
   const canTakeAction = (status: string) => {
     return status === 'recebida' || status === 'processando';
+  };
+
+  const handleViewDetails = (request: Request) => {
+    setSelectedRequest(request);
+    setIsDetailsModalOpen(true);
   };
 
   if (loading) {
@@ -412,39 +419,137 @@ export const RequestsNewDashboard = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        {getStatusBadge(request.status)}
-                      </td>
-                      <td className="py-3 px-4">
-                        {canTakeAction(request.status) && (
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleApproveRequest(request.id)}
-                            >
-                              <CheckCircle2 className="h-4 w-4 mr-1" />
-                              Aprovar
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeclineRequest(request.id)}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Recusar
-                            </Button>
-                          </div>
-                        )}
-                      </td>
+                       <td className="py-3 px-4">
+                         {getStatusBadge(request.status)}
+                       </td>
+                       <td className="py-3 px-4">
+                         <div className="flex gap-2">
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => handleViewDetails(request)}
+                           >
+                             <Eye className="h-4 w-4" />
+                           </Button>
+                           {canTakeAction(request.status) && (
+                             <>
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => handleApproveRequest(request.id)}
+                               >
+                                 <CheckCircle2 className="h-4 w-4 mr-1" />
+                                 Aprovar
+                               </Button>
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => handleDeclineRequest(request.id)}
+                               >
+                                 <XCircle className="h-4 w-4 mr-1" />
+                                 Recusar
+                               </Button>
+                             </>
+                           )}
+                         </div>
+                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+           )}
+         </CardContent>
+       </Card>
+       
+       {/* Modal de Detalhes da Solicitação */}
+       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+         <DialogContent className="max-w-2xl">
+           <DialogHeader>
+             <DialogTitle>Detalhes da Solicitação</DialogTitle>
+             <DialogDescription>
+               Informações completas sobre a solicitação de beneficiários
+             </DialogDescription>
+           </DialogHeader>
+           {selectedRequest && (
+             <div className="space-y-4">
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <label className="text-sm font-medium text-muted-foreground">Protocolo</label>
+                   <p className="font-mono font-medium">{selectedRequest.numero_protocolo}</p>
+                 </div>
+                 <div>
+                   <label className="text-sm font-medium text-muted-foreground">Status</label>
+                   <div className="mt-1">
+                     {getStatusBadge(selectedRequest.status)}
+                   </div>
+                 </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <label className="text-sm font-medium text-muted-foreground">Colaborador</label>
+                   <p className="font-medium">{selectedRequest.colaborador}</p>
+                 </div>
+                 <div>
+                   <label className="text-sm font-medium text-muted-foreground">CPF</label>
+                   <p className="font-medium">{selectedRequest.cpf}</p>
+                 </div>
+               </div>
+
+               <div>
+                 <label className="text-sm font-medium text-muted-foreground">Data da Solicitação</label>
+                 <p className="font-medium">
+                   {new Date(selectedRequest.created_at).toLocaleDateString('pt-BR')} às {' '}
+                   {new Date(selectedRequest.created_at).toLocaleTimeString('pt-BR')}
+                 </p>
+               </div>
+
+               {selectedRequest.dados_preenchidos && (
+                 <div>
+                   <label className="text-sm font-medium text-muted-foreground">Dados Preenchidos</label>
+                   <div className="mt-2 p-3 bg-gray-50 rounded-md">
+                     <pre className="text-sm whitespace-pre-wrap">
+                       {JSON.stringify(selectedRequest.dados_preenchidos, null, 2)}
+                     </pre>
+                   </div>
+                 </div>
+               )}
+
+               {canTakeAction(selectedRequest.status) && (
+                 <div className="flex gap-2 pt-4 border-t">
+                   <Button
+                     onClick={() => {
+                       handleApproveRequest(selectedRequest.id);
+                       setIsDetailsModalOpen(false);
+                     }}
+                     className="flex-1"
+                   >
+                     <CheckCircle2 className="h-4 w-4 mr-2" />
+                     Aprovar Solicitação
+                   </Button>
+                   <Button
+                     variant="destructive"
+                     onClick={() => {
+                       handleDeclineRequest(selectedRequest.id);
+                       setIsDetailsModalOpen(false);
+                     }}
+                     className="flex-1"
+                   >
+                     <XCircle className="h-4 w-4 mr-2" />
+                     Recusar Solicitação
+                   </Button>
+                 </div>
+               )}
+             </div>
+           )}
+           <DialogFooter>
+             <DialogClose asChild>
+               <Button variant="ghost">Fechar</Button>
+             </DialogClose>
+           </DialogFooter>
+         </DialogContent>
+       </Dialog>
+     </div>
   );
 };
