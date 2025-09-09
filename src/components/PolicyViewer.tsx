@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { Download, Eye, Edit, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -8,7 +7,7 @@ import { LocationFilter } from './LocationFilter'
 import { PolicyEditModal } from './PolicyEditModal'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { renderValue, renderValueAsString } from '@/utils/renderValue'
-import { toDisplay } from '@/lib/policies'
+import { toText } from '@/lib/policies'
 
 interface Policy {
   id: string
@@ -45,7 +44,7 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
       a.href     = url
-      a.download = `${toDisplay(policy.name)}.pdf`
+      a.download = `${toText(policy.name)}.pdf`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -57,9 +56,9 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
   }
 
   const getSearchableText = (policy: Policy) => {
-    const name = toDisplay(policy.name);
-    const insurer = toDisplay(policy.insurer);
-    const policyNumber = toDisplay(policy.policyNumber);
+    const name = toText(policy.name);
+    const insurer = toText(policy.insurer);
+    const policyNumber = toText(policy.policyNumber);
     
     return `${name} ${insurer} ${policyNumber}`.toLowerCase();
   };
@@ -83,9 +82,9 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
           .map(policy => (
             <Card key={policy.id}>
               <CardContent>
-                <h3 className="text-lg font-semibold">{toDisplay(policy.name)}</h3>
-                <p className="text-sm">{toDisplay(policy.insurer)}</p>
-                <p className="text-xs text-gray-500">Apólice: {toDisplay(policy.policyNumber)}</p>
+                <h3 className="text-lg font-semibold">{toText(policy.name)}</h3>
+                <p className="text-sm">{toText(policy.insurer)}</p>
+                <p className="text-xs text-gray-500">Apólice: {toText(policy.policyNumber)}</p>
 
                 <div className="flex space-x-2 mt-4">
                   <Button size="sm" onClick={() => handleDownload(policy)}>

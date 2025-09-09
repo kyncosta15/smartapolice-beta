@@ -151,11 +151,15 @@ export class PolicyPersistenceService {
         ? policyData.installments.length 
         : (policyData.installments || 12);
 
+      // NORMALIZAR DADOS ANTES DE SALVAR NO BANCO
+      const { normalizePolicy } = await import('@/lib/policies');
+      const normalizedData = normalizePolicy(policyData);
+
       const policyInsert: PolicyInsert = {
         user_id: userId,
         segurado: policyData.insuredName || policyData.name,
-        seguradora: policyData.insurer,
-        tipo_seguro: policyData.type,
+        seguradora: normalizedData.seguradoraEmpresa, // ✅ Salvar string normalizada
+        tipo_seguro: normalizedData.tipoCategoria, // ✅ Salvar string normalizada
         numero_apolice: policyData.policyNumber,
         valor_premio: policyData.premium,
         custo_mensal: policyData.monthlyAmount,
@@ -319,6 +323,7 @@ export class PolicyPersistenceService {
   // MÉTODO MELHORADO: Carregar e processar apólices do usuário - PRESERVA STATUS DO BANCO
   static async loadUserPolicies(userId: string): Promise<ParsedPolicyData[]> {
     const sessionId = crypto.randomUUID();
+    const { normalizePolicy } = await import('@/lib/policies');
     try {
       console.log(`📖 [loadUserPolicies-${sessionId}] Carregando apólices do usuário: ${userId}`);
 
@@ -370,11 +375,14 @@ export class PolicyPersistenceService {
         // Detectar e corrigir dados misturados (legacy fix)
         let cleanedData = this.fixMixedData(policy);
         
+        // NORMALIZAR DADOS AO CARREGAR DO BANCO
+        const normalizedPolicy = normalizePolicy(policy);
+
         const convertedPolicy = {
           id: policy.id,
           name: cleanedData.policyName,
-          type: policy.tipo_seguro || 'auto',
-          insurer: policy.seguradora || 'Seguradora',
+          type: normalizedPolicy.tipoCategoria, // ✅ Usar valor normalizado
+          insurer: normalizedPolicy.seguradoraEmpresa, // ✅ Usar valor normalizado
           premium: Number(policy.valor_premio) || 0,
           monthlyAmount: Number(policy.custo_mensal) || 0,
           startDate: policy.inicio_vigencia || new Date().toISOString().split('T')[0],

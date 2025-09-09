@@ -79,3 +79,17 @@ export const toDisplay = (v: any) => {
   }
   return String(v);
 };
+
+// Helper adicional para renderização segura de texto
+export const toText = (v: any): string => {
+  if (v == null) return "N/A";
+  if (typeof v === "object") {
+    try {
+      // monte algo legível: empresa · cobertura etc.
+      return Object.values(v).filter(Boolean).join(" · ") || "N/A";
+    } catch { 
+      return "N/A"; 
+    }
+  }
+  return String(v);
+};

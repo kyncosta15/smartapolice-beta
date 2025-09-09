@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, Edit, Trash2 } from 'lucide-react';
 import { PolicyEditModal } from './PolicyEditModal';
 import { renderValueAsString } from '@/utils/renderValue';
-import { toDisplay } from '@/lib/policies';
+import { toText } from '@/lib/policies';
 
 interface PolicyTableProps {
   searchTerm: string;
@@ -129,12 +129,12 @@ export const PolicyTable = ({
               {filteredPolicies.map((policy) => (
                 <TableRow key={policy.id} className="hover:bg-gray-50/50 transition-colors">
                   <TableCell>
-                    <div>
-                       <p className="font-medium text-gray-900">{toDisplay(policy.name)}</p>
-                       <p className="text-sm text-gray-500">{toDisplay(policy.policyNumber)}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-gray-700">{toDisplay(policy.insurer)}</TableCell>
+                     <div>
+                        <p className="font-medium text-gray-900">{toText(policy.name)}</p>
+                        <p className="text-sm text-gray-500">{toText(policy.policyNumber)}</p>
+                     </div>
+                   </TableCell>
+                   <TableCell className="text-gray-700">{toText(policy.insurer)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
                       {policy.type === 'auto' ? 'Auto' : 
