@@ -501,7 +501,7 @@ export const SmartBeneficiosDashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-3 sm:space-y-4">
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    Relatório completo com todos os colaboradores, dependentes e custos
+                    Relatório consolidado geral
                   </p>
                   <div className="flex flex-col gap-2">
                     <Button className="w-full text-xs sm:text-sm h-8 sm:h-10">
