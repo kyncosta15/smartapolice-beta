@@ -1,71 +1,30 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose, DrawerFooter } from '@/components/ui/drawer';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { 
-  Eye, 
   Link as LinkIcon, 
-  Users, 
   Clock, 
   CheckCircle2, 
   XCircle,
   FileText,
-  Download,
   Copy,
-  User,
-  Calendar,
-  Phone,
-  Mail,
   AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtime } from '@/hooks/useRealtime';
 import { toast } from 'sonner';
-import useSWR from 'swr';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Request {
   id: string;
-  protocol_code: string;
+  numero_protocolo: string;
   colaborador: string;
   cpf: string;
-  tipo: 'inclusao' | 'exclusao';
-  status: 'recebido' | 'em_validacao' | 'concluido' | 'recusado';
-  submitted_at: string;
-  qtd_itens: number;
-}
-
-interface RequestDetail {
-  id: string;
-  protocol_code: string;
-  kind: string;
-  status: string;
-  submitted_at: string;
-  metadata: any;
-  employee: {
-    full_name: string;
-    cpf: string;
-    email?: string;
-    phone?: string;
-  };
-  request_items: Array<{
-    id: string;
-    target: string;
-    action: string;
-    notes?: string;
-    dependent_id?: string;
-  }>;
-  files: Array<{
-    id: string;
-    original_name: string;
-    mime_type: string;
-    size: number;
-    path: string;
-  }>;
+  status: 'recebida' | 'processando' | 'concluida' | 'rejeitada';
+  created_at: string;
+  dados_preenchidos: any;
 }
 
 interface KPIs {
@@ -77,102 +36,138 @@ interface KPIs {
   tickets: number;
 }
 
-const fetcher = async (url: string) => {
-  const { data, error } = await supabase.functions.invoke(url.replace('/functions/v1/', ''));
-  if (error) throw error;
-  return data;
-};
-
 export const RequestsNewDashboard = () => {
   const { user } = useAuth();
-  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-  const [approveNote, setApproveNote] = useState('');
-  const [declineReason, setDeclineReason] = useState('');
+  const [requests, setRequests] = useState<Request[]>([]);
+  const [kpis, setKpis] = useState<KPIs>({ total: 0, recebidos: 0, em_validacao: 0, concluidos: 0, recusados: 0, tickets: 0 });
+  const [loading, setLoading] = useState(true);
 
-  // SWR para dados
-  const { data: requestsRes, mutate: mutateRequests } = useSWR('rh-requests-list', fetcher);
-  const { data: kpisRes, mutate: mutateKpis } = useSWR('rh-requests-kpis', fetcher);
-  const { data: detailRes, mutate: mutateDetail } = useSWR(
-    selectedRequestId ? `rh-requests-detail/${selectedRequestId}` : null,
-    fetcher
-  );
+  // Função para buscar dados das submissões
+  const fetchRequests = useCallback(async () => {
+    try {
+      const { data: userCompany } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user?.id)
+        .single();
+
+      if (!userCompany?.company) return;
+
+      const { data: empresa } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userCompany.company)
+        .single();
+
+      if (!empresa?.id) return;
+
+      const { data: submissoes, error } = await supabase
+        .from('colaborador_submissoes')
+        .select(`
+          *,
+          colaborador_links!inner(
+            titulo,
+            empresa_id
+          )
+        `)
+        .eq('colaborador_links.empresa_id', empresa.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar submissões:', error);
+        return;
+      }
+
+      const formattedRequests: Request[] = (submissoes || []).map((sub: any) => ({
+        id: sub.id,
+        numero_protocolo: sub.numero_protocolo || 'N/A',
+        colaborador: sub.dados_preenchidos?.nome || 'Nome não informado',
+        cpf: sub.dados_preenchidos?.cpf || '',
+        status: sub.status,
+        created_at: sub.created_at,
+        dados_preenchidos: sub.dados_preenchidos
+      }));
+
+      setRequests(formattedRequests);
+
+      // Calcular KPIs
+      const total = formattedRequests.length;
+      const recebidos = formattedRequests.filter(r => r.status === 'recebida').length;
+      const em_validacao = formattedRequests.filter(r => r.status === 'processando').length;
+      const concluidos = formattedRequests.filter(r => r.status === 'concluida').length;
+      const recusados = formattedRequests.filter(r => r.status === 'rejeitada').length;
+
+      // Buscar tickets
+      const { count: ticketsCount } = await supabase
+        .from('tickets')
+        .select('*', { count: 'exact', head: true });
+
+      setKpis({
+        total,
+        recebidos,
+        em_validacao,
+        concluidos,
+        recusados,
+        tickets: ticketsCount || 0
+      });
+
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error);
+      toast.error('Erro ao carregar dados do dashboard');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchRequests();
+    }
+  }, [user?.id, fetchRequests]);
 
   // Realtime
-  const mutateAll = useCallback(() => {
-    mutateRequests();
-    mutateKpis();
-    if (selectedRequestId) mutateDetail();
-  }, [mutateRequests, mutateKpis, mutateDetail, selectedRequestId]);
-
-  useRealtime(mutateAll, [
-    { table: 'requests' },
+  useRealtime(fetchRequests, [
+    { table: 'colaborador_submissoes' },
     { table: 'tickets' }
   ]);
 
-  const requests: Request[] = requestsRes?.data ?? [];
-  const kpis: KPIs = kpisRes?.data ?? { total: 0, recebidos: 0, em_validacao: 0, concluidos: 0, recusados: 0, tickets: 0 };
-  const requestDetail: RequestDetail | null = detailRes?.data ?? null;
-
-  // Handlers
-  const handleViewRequest = (requestId: string) => {
-    setSelectedRequestId(requestId);
-    setIsDrawerOpen(true);
-  };
-
-  const handleApproveRequest = async () => {
-    if (!selectedRequestId) return;
-    
+  const handleApproveRequest = async (requestId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('rh-approve-request', {
-        body: { 
-          requestId: selectedRequestId, 
-          note: approveNote || undefined 
-        }
-      });
+      const { error } = await supabase
+        .from('colaborador_submissoes')
+        .update({ 
+          status: 'concluida'
+        })
+        .eq('id', requestId);
 
       if (error) {
         throw new Error(error.message || 'Erro ao aprovar');
       }
 
-      if (!data.ok) {
-        throw new Error(data.error?.message || 'Erro ao aprovar');
-      }
-
-      toast.success('Solicitação aprovada pelo RH! Enviada para análise da Administração.');
-      setApproveNote('');
-      setIsDrawerOpen(false);
-      mutateAll();
+      toast.success('Solicitação aprovada com sucesso!');
+      fetchRequests();
     } catch (error: any) {
       console.error('Erro ao aprovar:', error);
       toast.error(error.message || 'Falha ao aprovar. Tente novamente.');
     }
   };
 
-  const handleDeclineRequest = async () => {
-    if (!selectedRequestId) return;
-    
+  const handleDeclineRequest = async (requestId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('rh-requests-decline', {
-        body: { 
-          requestId: selectedRequestId, 
-          reason: declineReason || undefined 
-        }
-      });
+      const { error } = await supabase
+        .from('colaborador_submissoes')
+        .update({ 
+          status: 'rejeitada'
+        })
+        .eq('id', requestId);
 
       if (error) {
         throw new Error(error.message || 'Erro ao recusar');
       }
 
-      if (!data.ok) {
-        throw new Error(data.error?.message || 'Erro ao recusar');
-      }
-
       toast.success('Solicitação recusada.');
-      setDeclineReason('');
-      setIsDrawerOpen(false);
-      mutateAll();
+      fetchRequests();
     } catch (error: any) {
       console.error('Erro ao recusar:', error);
       toast.error(error.message || 'Falha ao recusar. Tente novamente.');
@@ -186,22 +181,14 @@ export const RequestsNewDashboard = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      recebido: { label: 'Recebido', className: 'bg-blue-100 text-blue-800' },
-      em_validacao: { label: 'Em Validação', className: 'bg-orange-100 text-orange-800' },
-      concluido: { label: 'Concluído', className: 'bg-green-100 text-green-800' },
-      recusado: { label: 'Recusado', className: 'bg-red-100 text-red-800' }
+      recebida: { label: 'Recebida', className: 'bg-blue-100 text-blue-800' },
+      processando: { label: 'Processando', className: 'bg-orange-100 text-orange-800' },
+      concluida: { label: 'Concluída', className: 'bg-green-100 text-green-800' },
+      rejeitada: { label: 'Rejeitada', className: 'bg-red-100 text-red-800' }
     };
     
     const config = statusMap[status as keyof typeof statusMap] || { label: status, className: 'bg-gray-100 text-gray-800' };
     return <Badge className={config.className}>{config.label}</Badge>;
-  };
-
-  const getTipoBadge = (tipo: string) => {
-    return (
-      <Badge variant="outline">
-        {tipo === 'inclusao' ? 'Inclusão' : 'Exclusão'}
-      </Badge>
-    );
   };
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
@@ -209,8 +196,24 @@ export const RequestsNewDashboard = () => {
   const whatsappMessage = `Olá! Para incluir ou excluir beneficiários do seu plano, acesse este link seguro: ${publicLink}. Informe seu CPF e nome, siga os passos e, ao final, você receberá o protocolo.`;
 
   const canTakeAction = (status: string) => {
-    return status === 'recebido' || status === 'em_validacao';
+    return status === 'recebida' || status === 'processando';
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Dashboard da Corretora — Solicitações</h1>
+            <p className="text-muted-foreground">Gerencie as solicitações de beneficiários</p>
+          </div>
+        </div>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -377,9 +380,8 @@ export const RequestsNewDashboard = () => {
                   <tr className="border-b">
                     <th className="text-left py-3 px-4">Protocolo</th>
                     <th className="text-left py-3 px-4">Colaborador</th>
-                    <th className="text-left py-3 px-4">Tipo</th>
+                    <th className="text-left py-3 px-4">CPF</th>
                     <th className="text-left py-3 px-4">Data</th>
-                    <th className="text-left py-3 px-4">Itens</th>
                     <th className="text-left py-3 px-4">Status</th>
                     <th className="text-left py-3 px-4">Ações</th>
                   </tr>
@@ -389,46 +391,50 @@ export const RequestsNewDashboard = () => {
                     <tr key={request.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <span className="font-mono text-sm font-medium">
-                          {request.protocol_code}
+                          {request.numero_protocolo}
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium">{request.colaborador}</p>
-                          <p className="text-sm text-muted-foreground">
-                            CPF: {request.cpf}
-                          </p>
-                        </div>
+                        <p className="font-medium">{request.colaborador}</p>
                       </td>
                       <td className="py-3 px-4">
-                        {getTipoBadge(request.tipo)}
+                        <p className="text-sm text-muted-foreground">
+                          {request.cpf}
+                        </p>
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm">
-                          {new Date(request.submitted_at).toLocaleDateString('pt-BR')}
+                          {new Date(request.created_at).toLocaleDateString('pt-BR')}
                           <br />
                           <span className="text-muted-foreground">
-                            {new Date(request.submitted_at).toLocaleTimeString('pt-BR')}
+                            {new Date(request.created_at).toLocaleTimeString('pt-BR')}
                           </span>
                         </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-sm">
-                          {request.qtd_itens} {request.qtd_itens === 1 ? 'item' : 'itens'}
-                        </span>
                       </td>
                       <td className="py-3 px-4">
                         {getStatusBadge(request.status)}
                       </td>
                       <td className="py-3 px-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewRequest(request.id)}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Ver
-                        </Button>
+                        {canTakeAction(request.status) && (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleApproveRequest(request.id)}
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-1" />
+                              Aprovar
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeclineRequest(request.id)}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Recusar
+                            </Button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -438,168 +444,6 @@ export const RequestsNewDashboard = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Drawer de Detalhes */}
-      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>
-              Protocolo {requestDetail?.protocol_code}
-            </DrawerTitle>
-            <p className="text-sm text-muted-foreground">
-              Status: {requestDetail && getStatusBadge(requestDetail.status)}
-            </p>
-          </DrawerHeader>
-          
-          <div className="p-4 space-y-6 max-h-[70vh] overflow-auto">
-            {requestDetail ? (
-              <>
-                {/* Colaborador */}
-                <div>
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Colaborador
-                  </h3>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                    <p><strong>Nome:</strong> {requestDetail.employee.full_name}</p>
-                    <p><strong>CPF:</strong> {requestDetail.employee.cpf}</p>
-                    {requestDetail.employee.email && (
-                      <p><strong>E-mail:</strong> {requestDetail.employee.email}</p>
-                    )}
-                    {requestDetail.employee.phone && (
-                      <p><strong>Telefone:</strong> {requestDetail.employee.phone}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Solicitação */}
-                <div>
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Solicitação
-                  </h3>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                    <p><strong>Tipo:</strong> {requestDetail.kind === 'inclusao' ? 'Inclusão' : 'Exclusão'}</p>
-                    <p><strong>Data de envio:</strong> {new Date(requestDetail.submitted_at).toLocaleString('pt-BR')}</p>
-                  </div>
-                </div>
-
-                {/* Itens */}
-                <div>
-                  <h3 className="font-semibold mb-3">Itens</h3>
-                  <div className="space-y-2">
-                    {requestDetail.request_items.map((item) => (
-                      <div key={item.id} className="bg-gray-50 p-3 rounded-lg">
-                        <p><strong>Alvo:</strong> {item.target === 'titular' ? 'Titular' : 'Dependente'}</p>
-                        <p><strong>Ação:</strong> {item.action === 'incluir' ? 'Incluir' : 'Excluir'}</p>
-                        {item.notes && <p><strong>Observações:</strong> {item.notes}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Anexos */}
-                {requestDetail.files.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-3">Anexos</h3>
-                    <div className="space-y-2">
-                      {requestDetail.files.map((file) => (
-                        <div key={file.id} className="bg-gray-50 p-3 rounded-lg flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{file.original_name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {file.mime_type} • {Math.round(file.size / 1024)} KB
-                            </p>
-                          </div>
-                          <Button variant="outline" size="sm">
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-8">
-                <p>Carregando detalhes...</p>
-              </div>
-            )}
-          </div>
-
-          <DrawerFooter className="flex justify-between">
-            <div className="flex gap-2">
-              {requestDetail && canTakeAction(requestDetail.status) && (
-                <>
-                  {/* Botão Recusar */}
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive">Recusar</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Recusar solicitação?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Esta ação marcará o protocolo como Recusado.
-                          Deseja informar um motivo? (opcional)
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <div className="my-4">
-                        <Textarea
-                          placeholder="Motivo da recusa (opcional)"
-                          value={declineReason}
-                          onChange={(e) => setDeclineReason(e.target.value)}
-                          maxLength={2000}
-                        />
-                      </div>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeclineRequest}>
-                          Recusar
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-
-                  {/* Botão Aprovar */}
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button>Aprovar e Enviar</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Aprovar solicitação?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Ao aprovar, esta solicitação será enviada ao backoffice como um ticket, 
-                          e o status mudará para Em Validação.
-                          Você deseja adicionar uma observação para o backoffice? (opcional)
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <div className="my-4">
-                        <Textarea
-                          placeholder="Observação para o backoffice (opcional)"
-                          value={approveNote}
-                          onChange={(e) => setApproveNote(e.target.value)}
-                          maxLength={2000}
-                        />
-                      </div>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleApproveRequest}>
-                          Aprovar e Enviar
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              )}
-            </div>
-            <DrawerClose asChild>
-              <Button variant="ghost">Fechar</Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
     </div>
   );
 };
