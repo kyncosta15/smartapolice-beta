@@ -301,7 +301,7 @@ export const SmartBeneficiosDashboard = () => {
                 value="admin" 
                 className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
-                Admin
+                Gestão
               </TabsTrigger>
               <TabsTrigger 
                 value="relatorios" 
