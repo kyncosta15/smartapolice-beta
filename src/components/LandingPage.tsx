@@ -8,7 +8,7 @@ export const LandingPage = () => {
   return (
     <div className="min-h-screen flex relative overflow-hidden">
       {/* Left side - Content */}
-      <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/10 via-off-white to-secondary/10 flex flex-col relative z-10">
+      <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/10 via-[hsl(var(--off-white-dark))] to-secondary/10 flex flex-col relative z-10">
         {/* Header */}
         <header className="p-6 md:p-6 pt-8 md:pt-6 text-center">
           {/* Animated Logo above RCorp */}
