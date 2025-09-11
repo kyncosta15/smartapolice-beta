@@ -5,14 +5,15 @@ import { RobustPolicyPersistence } from '@/services/robustPolicyPersistence';
 import { useToast } from '@/hooks/use-toast';
 
 /**
- * HOOK ATUALIZADO PARA USAR SISTEMA ROBUSTO
+ * HOOK ROBUSTO PARA DADOS DE APÓLICES
+ * 
  * - Sempre carrega do banco (nunca do cache)
- * - Recarrega automaticamente no login/logout  
+ * - Recarrega automaticamente no login/logout
  * - Garante consistência de dados
+ * - Implementa controle de concorrência
  */
-export function usePolicyDataFetch() {
-  const [policyData, setPolicyData] = useState<ParsedPolicyData | null>(null);
-  const [allPolicies, setAllPolicies] = useState<ParsedPolicyData[]>([]);
+export function useRobustPolicyData() {
+  const [policies, setPolicies] = useState<ParsedPolicyData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastLoadTime, setLastLoadTime] = useState<Date | null>(null);
@@ -26,8 +27,7 @@ export function usePolicyDataFetch() {
   const loadPoliciesFromDatabase = async (forceReload = false) => {
     if (!user?.id) {
       console.log('👤 Usuário não autenticado, limpando dados');
-      setAllPolicies([]);
-      setPolicyData(null);
+      setPolicies([]);
       setError(null);
       return;
     }
@@ -47,8 +47,7 @@ export function usePolicyDataFetch() {
       console.log(`✅ ${loadedPolicies.length} apólices carregadas do banco`);
       console.log('🕒 Horário do carregamento:', new Date().toISOString());
       
-      setAllPolicies(loadedPolicies);
-      setPolicyData(loadedPolicies[0] || null); // Primeira apólice como principal
+      setPolicies(loadedPolicies);
       setLastLoadTime(new Date());
 
       // Log de auditoria
@@ -67,9 +66,12 @@ export function usePolicyDataFetch() {
       
       toast({
         title: "Erro ao Carregar Dados",
-        description: "Não foi possível carregar suas apólices do banco de dados.",
+        description: "Não foi possível carregar suas apólices. Tentando novamente...",
         variant: "destructive",
       });
+
+      // Tentar novamente após 2 segundos
+      setTimeout(() => loadPoliciesFromDatabase(true), 2000);
 
     } finally {
       setIsLoading(false);
@@ -85,6 +87,21 @@ export function usePolicyDataFetch() {
   };
 
   /**
+   * ADICIONAR NOVA APÓLICE E RECARREGAR DO BANCO
+   */
+  const addPolicyAndReload = async (newPolicy: ParsedPolicyData) => {
+    console.log('➕ Nova apólice adicionada, recarregando do banco:', newPolicy.name);
+    
+    // Não adicionar ao state local - sempre recarregar do banco
+    await forceReloadFromDatabase();
+    
+    toast({
+      title: "✅ Apólice Processada",
+      description: `${newPolicy.name} foi salva com sucesso`,
+    });
+  };
+
+  /**
    * AUTO-RELOAD EM LOGIN/LOGOUT E MUDANÇAS DE USUÁRIO
    */
   useEffect(() => {
@@ -95,8 +112,7 @@ export function usePolicyDataFetch() {
       loadPoliciesFromDatabase(true);
     } else {
       // Usuário deslogou - limpar dados
-      setAllPolicies([]);
-      setPolicyData(null);
+      setPolicies([]);
       setError(null);
       setLastLoadTime(null);
     }
@@ -124,12 +140,35 @@ export function usePolicyDataFetch() {
     return () => clearInterval(consistencyInterval);
   }, [user?.id, lastLoadTime]);
 
-  return { 
-    policyData, 
-    allPolicies,
-    isLoading, 
+  /**
+   * STATISTICS E DEBUGGING
+   */
+  const getLoadingStats = () => ({
+    policiesCount: policies.length,
+    lastLoadTime: lastLoadTime?.toISOString(),
+    isLoading,
+    hasError: !!error,
+    userId: user?.id,
+    cacheSource: 'database_only' // Sempre do banco
+  });
+
+  return {
+    // Dados principais
+    policies,
+    isLoading,
     error,
+    lastLoadTime,
+    
+    // Métodos de controle
     forceReloadFromDatabase,
-    loadPoliciesFromDatabase: () => loadPoliciesFromDatabase(true)
+    addPolicyAndReload,
+    loadPoliciesFromDatabase: () => loadPoliciesFromDatabase(true),
+    
+    // Debugging
+    getLoadingStats,
+    
+    // Estado de loading para UI
+    isEmpty: policies.length === 0 && !isLoading,
+    hasData: policies.length > 0
   };
 }

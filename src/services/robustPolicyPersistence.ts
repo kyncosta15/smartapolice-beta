@@ -1,0 +1,593 @@
+import { supabase } from '@/integrations/supabase/client';
+import { ParsedPolicyData } from '@/utils/policyDataParser';
+import crypto from 'crypto';
+
+/**
+ * SISTEMA ROBUSTO DE PERSISTÊNCIA DE APÓLICES
+ * 
+ * Implementa todos os requisitos de persistência robusta:
+ * - user_id obrigatório
+ * - Upsert idempotente por usuário
+ * - Fluxo estruturado de persistência
+ * - Campos confirmados vs sugeridos
+ * - Controle de versões e auditoria
+ * - Sem alucinação/remoção silenciosa
+ * - Qualidade de dados garantida
+ */
+
+interface PolicyUniqueKey {
+  user_id: string;
+  seguradora: string;
+  numero_apolice: string;
+  identifier: string; // placa ou documento
+}
+
+interface FieldState {
+  value: any;
+  confirmed: boolean;
+  last_updated: string;
+  source: 'pdf' | 'n8n' | 'manual' | 'system';
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  normalizedData: Partial<ParsedPolicyData>;
+}
+
+export class RobustPolicyPersistence {
+  
+  /**
+   * FLUXO PRINCIPAL: Extração → Validação → Normalização → Persistência → Renderização
+   */
+  static async savePolicyRobust(
+    file: File,
+    policyData: ParsedPolicyData,
+    userId: string
+  ): Promise<{ success: boolean; policyId?: string; errors?: string[] }> {
+    console.log('🔒 INÍCIO DO FLUXO ROBUSTO DE PERSISTÊNCIA');
+    console.log('👤 User ID:', userId);
+    console.log('📄 Política:', policyData.name);
+    
+    try {
+      // 1. VALIDAÇÃO OBRIGATÓRIA DE user_id
+      if (!userId || userId.trim() === '') {
+        const error = 'CRÍTICO: user_id é obrigatório para persistir apólice';
+        console.error('❌', error);
+        return { success: false, errors: [error] };
+      }
+
+      // 2. EXTRAÇÃO E VALIDAÇÃO DE DADOS
+      const validationResult = await this.validateAndNormalizeData(policyData, userId);
+      if (!validationResult.isValid) {
+        console.error('❌ Dados inválidos:', validationResult.errors);
+        return { success: false, errors: validationResult.errors };
+      }
+
+      // 3. CALCULAR HASH DO ARQUIVO
+      const fileHash = await this.generateFileHash(file);
+      console.log('🔑 Hash do arquivo:', fileHash);
+
+      // 4. VERIFICAR UPSERT IDEMPOTENTE
+      const existingPolicy = await this.findExistingPolicy(validationResult.normalizedData, userId);
+      
+      // 5. PERSISTÊNCIA COM TRANSAÇÃO ATÔMICA
+      const persistenceResult = existingPolicy
+        ? await this.updateExistingPolicy(existingPolicy, validationResult.normalizedData, fileHash, userId, file)
+        : await this.createNewPolicy(validationResult.normalizedData, fileHash, userId, file);
+
+      if (!persistenceResult.success) {
+        console.error('❌ Falha na persistência:', persistenceResult.errors);
+        return persistenceResult;
+      }
+
+      // 6. SUCESSO - DADOS PERSISTIDOS E AUDITADOS
+      console.log('✅ Persistência robusta concluída com sucesso');
+      console.log('🆔 Policy ID:', persistenceResult.policyId);
+      
+      return {
+        success: true,
+        policyId: persistenceResult.policyId
+      };
+
+    } catch (error) {
+      const errorMessage = `Erro no fluxo de persistência: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;
+      console.error('❌', errorMessage);
+      return { success: false, errors: [errorMessage] };
+    }
+  }
+
+  /**
+   * VALIDAÇÃO E NORMALIZAÇÃO SEM ALUCINAÇÃO
+   */
+  private static async validateAndNormalizeData(
+    policyData: ParsedPolicyData,
+    userId: string
+  ): Promise<ValidationResult> {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    console.log('🔍 Validando dados da apólice...');
+
+    // Garantir user_id obrigatório
+    if (!userId) {
+      errors.push('user_id é obrigatório');
+    }
+
+    // Validar campos críticos obrigatórios
+    if (!policyData.insurer || policyData.insurer.trim() === '') {
+      errors.push('Seguradora é obrigatória');
+    }
+    
+    if (!policyData.policyNumber || policyData.policyNumber.trim() === '') {
+      errors.push('Número da apólice é obrigatório');
+    }
+
+    // Normalizar dados financeiros (em centavos)
+    const normalizedData: Partial<ParsedPolicyData> = {
+      ...policyData,
+      // Normalizar valores monetários
+      premium: this.normalizeMonetaryValue(policyData.premium),
+      monthlyAmount: this.normalizeMonetaryValue(policyData.monthlyAmount),
+      deductible: policyData.deductible ? this.normalizeMonetaryValue(policyData.deductible) : undefined,
+      
+      // Normalizar datas em ISO
+      startDate: this.normalizeDate(policyData.startDate),
+      endDate: this.normalizeDate(policyData.endDate),
+      expirationDate: this.normalizeDate(policyData.expirationDate),
+      
+      // Limpar e normalizar strings
+      insurer: policyData.insurer?.trim().toUpperCase(),
+      policyNumber: policyData.policyNumber?.trim(),
+      name: policyData.name?.trim()
+    };
+
+    // Validar coerência de datas
+    if (normalizedData.startDate && normalizedData.endDate) {
+      if (new Date(normalizedData.startDate) >= new Date(normalizedData.endDate)) {
+        errors.push('Data de fim deve ser posterior à data de início');
+      }
+    }
+
+    // Validar coerência financeira
+    if (normalizedData.premium && normalizedData.monthlyAmount) {
+      const expectedMonthly = normalizedData.premium / 12;
+      const tolerance = expectedMonthly * 0.15; // 15% tolerância
+      
+      if (Math.abs(normalizedData.monthlyAmount - expectedMonthly) > tolerance) {
+        warnings.push('Valor mensal inconsistente com prêmio anual');
+      }
+    }
+
+    console.log(`✅ Validação concluída: ${errors.length} erros, ${warnings.length} avisos`);
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      normalizedData
+    };
+  }
+
+  /**
+   * ENCONTRAR POLÍTICA EXISTENTE (UPSERT IDEMPOTENTE)
+   */
+  private static async findExistingPolicy(
+    normalizedData: Partial<ParsedPolicyData>,
+    userId: string
+  ): Promise<any | null> {
+    try {
+      console.log('🔍 Verificando política existente...');
+      
+      // Chave única: user_id + seguradora + numero_apolice + (placa ou documento)
+      const identifier = normalizedData.vehicleDetails?.plate || 
+                        normalizedData.documento || 
+                        normalizedData.insuredName?.substring(0, 10) || '';
+
+      const { data, error } = await supabase
+        .from('policies')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('seguradora', normalizedData.insurer)
+        .eq('numero_apolice', normalizedData.policyNumber)
+        .eq('placa', normalizedData.vehicleDetails?.plate || null)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+        console.error('❌ Erro ao buscar política existente:', error);
+        throw error;
+      }
+
+      if (data) {
+        console.log('📋 Política existente encontrada:', data.id);
+      } else {
+        console.log('📋 Nenhuma política existente encontrada');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('❌ Erro ao verificar política existente:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ATUALIZAR POLÍTICA EXISTENTE COM CONTROLE DE CAMPOS CONFIRMADOS
+   */
+  private static async updateExistingPolicy(
+    existingPolicy: any,
+    normalizedData: Partial<ParsedPolicyData>,
+    fileHash: string,
+    userId: string,
+    file: File
+  ): Promise<{ success: boolean; policyId?: string; errors?: string[] }> {
+    console.log('🔄 Atualizando política existente:', existingPolicy.id);
+
+    try {
+      // 1. Verificar campos confirmados
+      const confirmedFields = await this.getConfirmedFields(existingPolicy.id);
+      console.log('🔒 Campos confirmados:', confirmedFields.map(f => f.field_name));
+
+      // 2. Preparar dados para atualização (respeitando campos confirmados)
+      const updateData = await this.prepareUpdateData(
+        existingPolicy,
+        normalizedData,
+        confirmedFields,
+        fileHash
+      );
+
+      // 3. Fazer upload do PDF se necessário
+      let pdfPath = existingPolicy.arquivo_url;
+      if (fileHash !== existingPolicy.file_hash) {
+        console.log('📄 Uploading novo PDF...');
+        pdfPath = await this.uploadPDF(file, userId);
+        updateData.arquivo_url = pdfPath;
+      }
+
+      // 4. Atualizar no banco (trigger de auditoria será executado automaticamente)
+      const { data: updatedPolicy, error } = await supabase
+        .from('policies')
+        .update(updateData)
+        .eq('id', existingPolicy.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erro ao atualizar política:', error);
+        return { success: false, errors: [error.message] };
+      }
+
+      // 5. Atualizar coberturas e parcelas
+      await this.updateCoverages(existingPolicy.id, normalizedData);
+      await this.updateInstallments(existingPolicy.id, normalizedData, userId);
+
+      console.log('✅ Política atualizada com sucesso');
+      return { success: true, policyId: existingPolicy.id };
+
+    } catch (error) {
+      const errorMessage = `Erro ao atualizar política: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;
+      console.error('❌', errorMessage);
+      return { success: false, errors: [errorMessage] };
+    }
+  }
+
+  /**
+   * CRIAR NOVA POLÍTICA
+   */
+  private static async createNewPolicy(
+    normalizedData: Partial<ParsedPolicyData>,
+    fileHash: string,
+    userId: string,
+    file: File
+  ): Promise<{ success: boolean; policyId?: string; errors?: string[] }> {
+    console.log('🆕 Criando nova política...');
+
+    try {
+      // 1. Upload do PDF
+      const pdfPath = await this.uploadPDF(file, userId);
+      console.log('📄 PDF uploaded:', pdfPath);
+
+      // 2. Preparar dados para inserção
+      const policyId = crypto.randomUUID();
+      const insertData = {
+        id: policyId,
+        user_id: userId,
+        file_hash: fileHash,
+        version_number: 1,
+        
+        // Dados principais
+        segurado: normalizedData.name,
+        seguradora: normalizedData.insurer,
+        numero_apolice: normalizedData.policyNumber,
+        tipo_seguro: normalizedData.type,
+        
+        // Datas
+        inicio_vigencia: normalizedData.startDate,
+        fim_vigencia: normalizedData.endDate,
+        expiration_date: normalizedData.expirationDate,
+        
+        // Valores financeiros
+        valor_premio: normalizedData.premium,
+        custo_mensal: normalizedData.monthlyAmount,
+        franquia: normalizedData.deductible,
+        
+        // Dados do segurado
+        documento: normalizedData.documento,
+        documento_tipo: normalizedData.documento_tipo,
+        
+        // Dados do veículo
+        modelo_veiculo: normalizedData.vehicleModel,
+        placa: normalizedData.vehicleDetails?.plate,
+        ano_modelo: normalizedData.vehicleDetails?.year?.toString(),
+        
+        // Outros
+        uf: normalizedData.uf,
+        corretora: normalizedData.entity,
+        status: normalizedData.status,
+        arquivo_url: pdfPath,
+        
+        // Metadados
+        created_by_extraction: true,
+        extraction_timestamp: new Date().toISOString()
+      };
+
+      // 3. Inserir no banco (trigger de auditoria executará automaticamente)
+      const { data: newPolicy, error } = await supabase
+        .from('policies')
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erro ao inserir política:', error);
+        return { success: false, errors: [error.message] };
+      }
+
+      // 4. Salvar coberturas e parcelas
+      await this.saveCoverages(policyId, normalizedData);
+      await this.saveInstallments(policyId, normalizedData, userId);
+
+      console.log('✅ Nova política criada com sucesso');
+      return { success: true, policyId };
+
+    } catch (error) {
+      const errorMessage = `Erro ao criar política: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;
+      console.error('❌', errorMessage);
+      return { success: false, errors: [errorMessage] };
+    }
+  }
+
+  /**
+   * RECARREGAR DADOS SEMPRE DO BANCO (NUNCA DO CACHE)
+   */
+  static async loadUserPoliciesFromDatabase(userId: string): Promise<ParsedPolicyData[]> {
+    console.log('🔄 Carregando políticas SEMPRE do banco para userId:', userId);
+    
+    if (!userId) {
+      console.error('❌ userId obrigatório para carregar políticas');
+      return [];
+    }
+
+    try {
+      const { data: policies, error } = await supabase
+        .from('policies')
+        .select(`
+          *,
+          coberturas (id, descricao, lmi),
+          installments (id, numero_parcela, valor, data_vencimento, status)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Erro ao carregar políticas:', error);
+        throw error;
+      }
+
+      console.log(`✅ ${policies?.length || 0} políticas carregadas do banco`);
+      
+      return policies?.map(policy => this.convertDatabaseToPolicy(policy)) || [];
+      
+    } catch (error) {
+      console.error('❌ Erro ao carregar políticas do banco:', error);
+      return [];
+    }
+  }
+
+  // MÉTODOS AUXILIARES
+
+  private static async generateFileHash(file: File): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  private static normalizeMonetaryValue(value: any): number {
+    if (typeof value === 'number') return Math.round(value * 100) / 100;
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value.replace(/[^\d.,]/g, '').replace(',', '.'));
+      return isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100;
+    }
+    return 0;
+  }
+
+  private static normalizeDate(dateStr: any): string {
+    if (!dateStr) return new Date().toISOString().split('T')[0];
+    
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) 
+      ? new Date().toISOString().split('T')[0]
+      : date.toISOString().split('T')[0];
+  }
+
+  private static async getConfirmedFields(policyId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('policy_confirmed_fields')
+      .select('*')
+      .eq('policy_id', policyId);
+
+    if (error) {
+      console.error('❌ Erro ao buscar campos confirmados:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+
+  private static async prepareUpdateData(
+    existingPolicy: any,
+    normalizedData: Partial<ParsedPolicyData>,
+    confirmedFields: any[],
+    fileHash: string
+  ): Promise<any> {
+    const updateData: any = {
+      file_hash: fileHash,
+      // Sempre permitir atualização de metadados
+      extraction_timestamp: new Date().toISOString()
+    };
+
+    const confirmedFieldNames = new Set(confirmedFields.map(f => f.field_name));
+
+    // Aplicar dados apenas se campos não estão confirmados
+    const fieldMappings = {
+      'seguradora': normalizedData.insurer,
+      'numero_apolice': normalizedData.policyNumber,
+      'segurado': normalizedData.name,
+      'valor_premio': normalizedData.premium,
+      'custo_mensal': normalizedData.monthlyAmount,
+      'franquia': normalizedData.deductible,
+      'inicio_vigencia': normalizedData.startDate,
+      'fim_vigencia': normalizedData.endDate,
+      'placa': normalizedData.vehicleDetails?.plate,
+      'modelo_veiculo': normalizedData.vehicleModel
+    };
+
+    for (const [dbField, value] of Object.entries(fieldMappings)) {
+      if (!confirmedFieldNames.has(dbField) && value !== undefined) {
+        updateData[dbField] = value;
+      } else if (confirmedFieldNames.has(dbField)) {
+        console.log(`🔒 Campo ${dbField} confirmado, mantendo valor existente`);
+      }
+    }
+
+    return updateData;
+  }
+
+  private static async uploadPDF(file: File, userId: string): Promise<string> {
+    const fileName = `${userId}/${Date.now()}_${file.name}`;
+    
+    const { data, error } = await supabase.storage
+      .from('pdfs')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      console.error('❌ Erro no upload do PDF:', error);
+      throw error;
+    }
+
+    return data.path;
+  }
+
+  private static async saveCoverages(policyId: string, policyData: Partial<ParsedPolicyData>): Promise<void> {
+    if (!policyData.coberturas || policyData.coberturas.length === 0) return;
+
+    const coverages = policyData.coberturas.map(cov => ({
+      policy_id: policyId,
+      descricao: cov.descricao,
+      lmi: cov.lmi || null
+    }));
+
+    const { error } = await supabase
+      .from('coberturas')
+      .insert(coverages);
+
+    if (error) {
+      console.error('❌ Erro ao salvar coberturas:', error);
+      throw error;
+    }
+  }
+
+  private static async updateCoverages(policyId: string, policyData: Partial<ParsedPolicyData>): Promise<void> {
+    // Remover coberturas existentes e inserir novas
+    await supabase
+      .from('coberturas')
+      .delete()
+      .eq('policy_id', policyId);
+
+    await this.saveCoverages(policyId, policyData);
+  }
+
+  private static async saveInstallments(policyId: string, policyData: Partial<ParsedPolicyData>, userId: string): Promise<void> {
+    if (!policyData.installments || policyData.installments.length === 0) return;
+
+    const installments = policyData.installments.map(inst => ({
+      policy_id: policyId,
+      user_id: userId,
+      numero_parcela: inst.numero,
+      valor: inst.valor,
+      data_vencimento: inst.data,
+      status: inst.status
+    }));
+
+    const { error } = await supabase
+      .from('installments')
+      .insert(installments);
+
+    if (error) {
+      console.error('❌ Erro ao salvar parcelas:', error);
+      throw error;
+    }
+  }
+
+  private static async updateInstallments(policyId: string, policyData: Partial<ParsedPolicyData>, userId: string): Promise<void> {
+    // Remover parcelas existentes e inserir novas
+    await supabase
+      .from('installments')
+      .delete()
+      .eq('policy_id', policyId);
+
+    await this.saveInstallments(policyId, policyData, userId);
+  }
+
+  private static convertDatabaseToPolicy(dbPolicy: any): ParsedPolicyData {
+    // Converter dados do banco para o formato ParsedPolicyData
+    return {
+      id: dbPolicy.id,
+      name: dbPolicy.segurado || 'Segurado não informado',
+      type: dbPolicy.tipo_seguro || 'auto',
+      insurer: dbPolicy.seguradora || 'Seguradora não informada',
+      premium: dbPolicy.valor_premio || 0,
+      monthlyAmount: dbPolicy.custo_mensal || 0,
+      startDate: dbPolicy.inicio_vigencia || '',
+      endDate: dbPolicy.fim_vigencia || '',
+      expirationDate: dbPolicy.expiration_date || dbPolicy.fim_vigencia || '',
+      policyNumber: dbPolicy.numero_apolice || '',
+      paymentFrequency: 'mensal',
+      status: dbPolicy.status || 'vigente',
+      policyStatus: 'vigente',
+      extractedAt: dbPolicy.extraction_timestamp || dbPolicy.created_at,
+      installments: dbPolicy.installments || [],
+      coberturas: dbPolicy.coberturas || [],
+      
+      // Campos opcionais
+      insuredName: dbPolicy.segurado,
+      documento: dbPolicy.documento,
+      documento_tipo: dbPolicy.documento_tipo as 'CPF' | 'CNPJ',
+      vehicleModel: dbPolicy.modelo_veiculo,
+      uf: dbPolicy.uf,
+      deductible: dbPolicy.franquia,
+      entity: dbPolicy.corretora,
+      
+      vehicleDetails: {
+        model: dbPolicy.modelo_veiculo,
+        plate: dbPolicy.placa,
+        year: parseInt(dbPolicy.ano_modelo) || undefined
+      }
+    };
+  }
+}

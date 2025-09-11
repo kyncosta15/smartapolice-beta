@@ -93,16 +93,17 @@ export class BatchFileProcessor {
             const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[Math.min(index, files.length - 1)], userId);
             allResults.push(parsedPolicy);
             
-            // Salvar no banco
+            // Salvar no banco usando sistema robusto
             const relatedFile = files[Math.min(index, files.length - 1)];
             if (relatedFile) {
-              console.log(`💾 Salvando apólice completa no banco: ${parsedPolicy.name}`);
-              const saveResult = await PolicyPersistenceService.savePolicyComplete(relatedFile, parsedPolicy, userId);
+              console.log(`💾 Salvando apólice com sistema robusto: ${parsedPolicy.name}`);
+              const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
+              const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, userId);
               
-              if (saveResult) {
+              if (saveResult.success) {
                 console.log(`✅ Apólice salva com sucesso: ${parsedPolicy.name}`);
               } else {
-                console.warn(`⚠️ Falha ao salvar apólice: ${parsedPolicy.name}`);
+                console.warn(`⚠️ Falha ao salvar apólice: ${parsedPolicy.name}`, saveResult.errors);
               }
             }
             
@@ -191,7 +192,7 @@ export class BatchFileProcessor {
   }
 
   private convertToParsedPolicy(data: any, fileName: string, file: File, userId: string): ParsedPolicyData {
-    console.log('🔄 Convertendo dados para ParsedPolicy:', data);
+    console.log('🔄 Convertendo dados para ParsedPolicy com validação robusta:', data);
     console.log('👤 userId para conversão:', userId);
     
     // CORREÇÃO CRÍTICA: Garantir que userId esteja sempre presente
@@ -200,16 +201,29 @@ export class BatchFileProcessor {
       throw new Error('user_id é obrigatório para converter dados de apólice');
     }
     
+    // Usar validador robusto sem alucinação
+    const { RobustDataValidator } = require('@/utils/robustDataValidator');
+    const validationResult = RobustDataValidator.validateWithoutHallucination(data);
+    
+    if (!validationResult.isValid) {
+      console.error('❌ Dados inválidos:', validationResult.errors);
+      throw new Error(`Dados inválidos: ${validationResult.errors.join(', ')}`);
+    }
+    
+    if (validationResult.warnings.length > 0) {
+      console.warn('⚠️ Avisos na validação:', validationResult.warnings);
+    }
+    
     // Verificar formato dos dados e converter adequadamente
     if (data.numero_apolice && data.segurado && data.seguradora) {
-      console.log('📋 Convertendo dados diretos do N8N');
+      console.log('📋 Convertendo dados diretos do N8N com validação');
       return N8NDataConverter.convertN8NDirectData(data, fileName, file, userId);
     } else if (data.informacoes_gerais && data.seguradora && data.vigencia) {
-      console.log('📋 Convertendo dados estruturados');
+      console.log('📋 Convertendo dados estruturados com validação');
       return StructuredDataConverter.convertStructuredData(data, fileName, file);
     } else {
-      console.warn('📋 Dados em formato não reconhecido, criando fallback');
-      return this.createFallbackPolicy(file, userId, data);
+      console.warn('📋 Dados em formato não reconhecido, criando fallback validado');
+      return this.createFallbackPolicy(file, userId, validationResult.normalizedData);
     }
   }
 
