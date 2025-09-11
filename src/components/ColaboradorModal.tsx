@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -61,9 +61,10 @@ interface ColaboradorFormData {
 
 interface ColaboradorModalProps {
   children: React.ReactNode;
+  employeeToEdit?: any; // Employee data to edit
 }
 
-export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
+export const ColaboradorModal = ({ children, employeeToEdit }: ColaboradorModalProps) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('cadastro');
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,15 +79,15 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
 
   const form = useForm<ColaboradorFormData>({
     defaultValues: {
-      nome: '',
-      cpf: '',
-      email: '',
-      telefone: '',
-      cargo: '',
-      centro_custo: '',
-      data_admissao: '',
-      data_nascimento: '',
-      custo_mensal: 0,
+      nome: employeeToEdit?.full_name || '',
+      cpf: employeeToEdit?.cpf || '',
+      email: employeeToEdit?.email || '',
+      telefone: employeeToEdit?.phone || '',
+      cargo: employeeToEdit?.cargo || '',
+      centro_custo: employeeToEdit?.centro_custo || '',
+      data_admissao: employeeToEdit?.data_admissao || '',
+      data_nascimento: employeeToEdit?.birth_date || '',
+      custo_mensal: employeeToEdit?.custo_mensal || 0,
       observacoes: '',
       documento_pessoal: undefined,
       comprovante_residencia: undefined,
@@ -94,13 +95,67 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
     }
   });
 
+  // Update form when employeeToEdit changes
+  useEffect(() => {
+    if (employeeToEdit) {
+      form.reset({
+        nome: employeeToEdit.full_name || '',
+        cpf: employeeToEdit.cpf || '',
+        email: employeeToEdit.email || '',
+        telefone: employeeToEdit.phone || '',
+        cargo: employeeToEdit.cargo || '',
+        centro_custo: employeeToEdit.centro_custo || '',
+        data_admissao: employeeToEdit.data_admissao || '',
+        data_nascimento: employeeToEdit.birth_date || '',
+        custo_mensal: employeeToEdit.custo_mensal || 0,
+        observacoes: '',
+        documento_pessoal: undefined,
+        comprovante_residencia: undefined,
+        comprovacao_vinculo: undefined
+      });
+    } else {
+      form.reset({
+        nome: '',
+        cpf: '',
+        email: '',
+        telefone: '',
+        cargo: '',
+        centro_custo: '',
+        data_admissao: '',
+        data_nascimento: '',
+        custo_mensal: 0,
+        observacoes: '',
+        documento_pessoal: undefined,
+        comprovante_residencia: undefined,
+        comprovacao_vinculo: undefined
+      });
+    }
+  }, [employeeToEdit, form]);
+
   const onSubmit = async (data: ColaboradorFormData) => {
     try {
-      // Primeiro, buscar a empresa do usuário
-      if (!user) {
-        toast.error('Usuário não encontrado');
-        return;
-      }
+      if (employeeToEdit) {
+        // Modo edição
+        await updateColaborador(employeeToEdit.id, {
+          full_name: data.nome,
+          cpf: data.cpf,
+          email: data.email,
+          phone: data.telefone,
+          birth_date: data.data_nascimento,
+          cargo: data.cargo,
+          centro_custo: data.centro_custo,
+          data_admissao: data.data_admissao,
+          custo_mensal: data.custo_mensal
+        });
+
+        toast.success('Colaborador atualizado com sucesso!');
+      } else {
+        // Modo criação
+        // Primeiro, buscar a empresa do usuário
+        if (!user) {
+          toast.error('Usuário não encontrado');
+          return;
+        }
 
       const { data: userProfile, error: userError } = await supabase
         .from('users')
@@ -150,12 +205,14 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
       });
 
       toast.success('Colaborador cadastrado com sucesso!');
+      }
+
       form.reset();
       await loadData();
       setOpen(false);
     } catch (error) {
-      console.error('Erro ao cadastrar colaborador:', error);
-      toast.error('Erro ao cadastrar colaborador');
+      console.error('Erro ao salvar colaborador:', error);
+      toast.error(employeeToEdit ? 'Erro ao atualizar colaborador' : 'Erro ao cadastrar colaborador');
     }
   };
 
@@ -205,7 +262,7 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Cadastrar Novo Colaborador
+                  {employeeToEdit ? 'Editar Colaborador' : 'Cadastrar Novo Colaborador'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -458,7 +515,10 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
                         Cancelar
                       </Button>
                       <Button type="submit" disabled={isLoading}>
-                        {isLoading ? 'Cadastrando...' : 'Cadastrar Colaborador'}
+                        {isLoading 
+                          ? (employeeToEdit ? 'Atualizando...' : 'Cadastrando...') 
+                          : (employeeToEdit ? 'Atualizar Colaborador' : 'Cadastrar Colaborador')
+                        }
                       </Button>
                     </div>
                   </form>

@@ -285,13 +285,13 @@ export const EmployeesListNew: React.FC = () => {
                   )}
 
                   {/* Botão Visualizar */}
-                  <div className="pt-3 border-t">
+                  <div className="pt-3 border-t flex gap-2">
                     <Sheet>
                       <SheetTrigger asChild>
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="w-full sm:w-auto"
+                          className="flex-1"
                           onClick={() => setSelectedEmployeeId(employee.id)}
                         >
                           <Eye className="h-4 w-4 mr-2" />
@@ -309,6 +309,18 @@ export const EmployeesListNew: React.FC = () => {
                         </div>
                       </SheetContent>
                     </Sheet>
+
+                    {/* Botão Editar Colaborador */}
+                    <ColaboradorModal key={`edit-${employee.id}`} employeeToEdit={employee}>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        className="flex-1"
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
+                    </ColaboradorModal>
                   </div>
                 </div>
               </CardContent>
