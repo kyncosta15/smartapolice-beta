@@ -266,9 +266,9 @@ export function useCollaborators() {
         console.log('📎 Uploading documents...');
         
         for (const file of employeeData.documents) {
-          const fileName = `${newColaborador.id}/${Date.now()}-${file.name}`;
+          const fileName = `colaboradores/${newColaborador.id}/${Date.now()}-${file.name}`;
           
-          const { error: uploadError } = await supabase.storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
             .from('smartbeneficios')
             .upload(fileName, file);
 
@@ -276,6 +276,24 @@ export function useCollaborators() {
             console.error('❌ Error uploading file:', uploadError);
           } else {
             console.log('✅ Uploaded file:', fileName);
+            
+            // Store document metadata in colaborador_documentos table
+            const documentType = getDocumentTypeFromFileName(file.name);
+            
+            const { error: docError } = await supabase
+              .from('colaborador_documentos')
+              .insert({
+                colaborador_id: newColaborador.id,
+                tipo_documento: documentType,
+                nome_arquivo: file.name,
+                storage_path: fileName,
+                tamanho_arquivo: file.size,
+                tipo_mime: file.type
+              });
+
+            if (docError) {
+              console.error('❌ Error storing document metadata:', docError);
+            }
           }
         }
       }
@@ -466,6 +484,18 @@ export function useCollaborators() {
       });
       throw err;
     }
+  };
+
+  const getDocumentTypeFromFileName = (fileName: string): string => {
+    const name = fileName.toLowerCase();
+    if (name.includes('rg') || name.includes('cpf') || name.includes('cnh') || name.includes('identidade')) {
+      return 'documento_pessoal';
+    } else if (name.includes('comprovante') || name.includes('residencia') || name.includes('endereco')) {
+      return 'comprovante_residencia';  
+    } else if (name.includes('vinculo') || name.includes('trabalho') || name.includes('emprego')) {
+      return 'comprovacao_vinculo';
+    }
+    return 'documento_pessoal'; // default
   };
 
   const loadData = async (search?: string) => {

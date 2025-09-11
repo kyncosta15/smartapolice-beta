@@ -46,10 +46,12 @@ import {
   ExternalLink, 
   Plus, 
   Edit, 
-  Trash2 
+  Trash2,
+  FileText
 } from 'lucide-react';
 import { useCollaborators } from '@/hooks/useCollaborators';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DocumentsSection } from './DocumentsSection';
 
 interface EmployeeDetailsDrawerProps {
   employeeId: string;
@@ -201,7 +203,7 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
         </SheetDescription>
       </SheetHeader>
 
-      <Accordion type="multiple" defaultValue={["profile", "company", "plan", "dependents"]} className="space-y-2">
+      <Accordion type="multiple" defaultValue={["profile", "company", "plan", "dependents", "documents"]} className="space-y-2">
         {/* Perfil */}
         <AccordionItem value="profile">
           <AccordionTrigger className="py-3">
@@ -537,6 +539,19 @@ export function EmployeeDetailsDrawer({ employeeId, onClose }: EmployeeDetailsDr
                 </div>
               </div>
             )}
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Documentos */}
+        <AccordionItem value="documents">
+          <AccordionTrigger className="py-3">
+            <div className="flex items-center">
+              <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="text-sm sm:text-base">Documentos</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="space-y-3 sm:space-y-4 px-1">
+            <DocumentsSection colaboradorId={employeeId} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

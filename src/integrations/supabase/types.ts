@@ -175,6 +175,50 @@ export type Database = {
           },
         ]
       }
+      colaborador_documentos: {
+        Row: {
+          colaborador_id: string
+          created_at: string | null
+          id: string
+          nome_arquivo: string
+          storage_path: string
+          tamanho_arquivo: number | null
+          tipo_documento: string
+          tipo_mime: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          colaborador_id: string
+          created_at?: string | null
+          id?: string
+          nome_arquivo: string
+          storage_path: string
+          tamanho_arquivo?: number | null
+          tipo_documento: string
+          tipo_mime?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          colaborador_id?: string
+          created_at?: string | null
+          id?: string
+          nome_arquivo?: string
+          storage_path?: string
+          tamanho_arquivo?: number | null
+          tipo_documento?: string
+          tipo_mime?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colaborador_documentos_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       colaborador_links: {
         Row: {
           ativo: boolean | null
