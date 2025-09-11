@@ -47,6 +47,10 @@ interface Employee {
   phone?: string;
   birth_date?: string;
   status: string;
+  cargo?: string;
+  centro_custo?: string;
+  data_admissao?: string;
+  custo_mensal?: number;
   companies?: Company;
   employee_plans?: EmployeePlan[];
   dependents?: Dependent[];
@@ -58,6 +62,11 @@ interface CreateEmployeeData {
   email?: string;
   phone?: string;
   birthDate?: string;
+  cargo?: string;
+  centro_custo?: string;
+  data_admissao?: string;
+  custo_mensal?: number;
+  observacoes?: string;
   company: {
     cnpj: string;
     tradeName?: string;
@@ -253,6 +262,11 @@ export function useCollaborators() {
           email: employeeData.email,
           telefone: employeeData.phone,
           data_nascimento: employeeData.birthDate,
+          cargo: employeeData.cargo,
+          centro_custo: employeeData.centro_custo,
+          data_admissao: employeeData.data_admissao,
+          custo_mensal: employeeData.custo_mensal,
+          observacoes: employeeData.observacoes,
           status: 'ativo'
         })
         .select()
@@ -361,6 +375,10 @@ export function useCollaborators() {
         phone: colaboradorData.telefone,
         birth_date: colaboradorData.data_nascimento,
         status: colaboradorData.status,
+        cargo: colaboradorData.cargo,
+        centro_custo: colaboradorData.centro_custo,
+        data_admissao: colaboradorData.data_admissao,
+        custo_mensal: colaboradorData.custo_mensal,
         companies: {
           id: colaboradorData.empresas.id,
           cnpj: colaboradorData.empresas.cnpj,
@@ -399,6 +417,10 @@ export function useCollaborators() {
       if (updates.birth_date) colaboradorUpdates.data_nascimento = updates.birth_date;
       if (updates.status) colaboradorUpdates.status = updates.status;
       if (updates.cpf) colaboradorUpdates.cpf = updates.cpf;
+      if (updates.cargo) colaboradorUpdates.cargo = updates.cargo;
+      if (updates.centro_custo) colaboradorUpdates.centro_custo = updates.centro_custo;
+      if (updates.data_admissao) colaboradorUpdates.data_admissao = updates.data_admissao;
+      if (updates.custo_mensal !== undefined) colaboradorUpdates.custo_mensal = updates.custo_mensal;
 
       const { error } = await supabase
         .from('colaboradores')

@@ -253,26 +253,34 @@ export const EmployeesListNew: React.FC = () => {
                     )}
 
                     {/* Cargo */}
-                    {(employee as any).cargo && (
+                    {employee.cargo && (
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        <span>{(employee as any).cargo}</span>
+                        <span>{employee.cargo}</span>
+                      </div>
+                    )}
+
+                    {/* Centro de Custo */}
+                    {employee.centro_custo && (
+                      <div className="flex items-center gap-2">
+                        <Building className="h-4 w-4" />
+                        <span>{employee.centro_custo}</span>
                       </div>
                     )}
 
                     {/* Data de Admissão */}
-                    {(employee as any).data_admissao && (
+                    {employee.data_admissao && (
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        <span>Admissão: {formatDate((employee as any).data_admissao)}</span>
+                        <span>Admissão: {formatDate(employee.data_admissao)}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Custo Mensal em destaque */}
-                  {(employee as any).custo_mensal && (
+                  {employee.custo_mensal && (
                     <div className="text-green-600 font-semibold text-base">
-                      Custo: {formatCurrency((employee as any).custo_mensal)}
+                      Custo: {formatCurrency(employee.custo_mensal)}
                     </div>
                   )}
 

@@ -136,6 +136,11 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
         email: data.email,
         phone: data.telefone,
         birthDate: data.data_nascimento,
+        cargo: data.cargo,
+        centro_custo: data.centro_custo,
+        data_admissao: data.data_admissao,
+        custo_mensal: data.custo_mensal,
+        observacoes: data.observacoes,
         company: {
           cnpj: empresa?.cnpj || '',
           tradeName: empresa?.nome || userProfile.company,
