@@ -1689,7 +1689,7 @@ export type Database = {
       generate_session_token: {
         Args: {
           p_employee_id: string
-          p_ip_address?: unknown
+          p_ip_address: unknown
           p_user_agent?: string
         }
         Returns: {
