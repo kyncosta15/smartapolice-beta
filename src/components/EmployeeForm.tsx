@@ -23,7 +23,8 @@ const employeeSchema = z.object({
     planId: z.string(),
     monthlyPremium: z.number().positive('Valor deve ser positivo'),
     startDate: z.string()
-  }).optional()
+  }).optional(),
+  documents: z.any().optional()
 });
 
 interface Company {
@@ -62,6 +63,7 @@ export function EmployeeForm({ plans, companies, onSubmit, onCancel }: EmployeeF
     monthlyPremium: '',
     startDate: new Date().toISOString().split('T')[0]
   });
+  const [documents, setDocuments] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatCPF = (value: string) => {
@@ -130,7 +132,8 @@ export function EmployeeForm({ plans, companies, onSubmit, onCancel }: EmployeeF
           planId: formData.planId,
           monthlyPremium: parseFloat(formData.monthlyPremium),
           startDate: formData.startDate
-        } : undefined
+        } : undefined,
+        documents
       };
 
       const validated = employeeSchema.parse(cleanedData);
@@ -150,6 +153,7 @@ export function EmployeeForm({ plans, companies, onSubmit, onCancel }: EmployeeF
         monthlyPremium: '',
         startDate: new Date().toISOString().split('T')[0]
       });
+      setDocuments([]);
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
@@ -257,6 +261,42 @@ export function EmployeeForm({ plans, companies, onSubmit, onCancel }: EmployeeF
               onChange={(e) => setFormData(prev => ({ ...prev, legalName: e.target.value }))}
               required
             />
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Documentos */}
+      <div>
+        <h3 className="text-lg font-medium mb-4">Documentos</h3>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="documents">Anexar Documentos *</Label>
+            <Input
+              id="documents"
+              type="file"
+              multiple
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                setDocuments(files);
+              }}
+              required
+            />
+            <p className="text-sm text-muted-foreground">
+              Formatos aceitos: PDF, JPG, PNG. Máximo 5MB por arquivo.
+            </p>
+            {documents.length > 0 && (
+              <div className="mt-2">
+                <p className="text-sm font-medium">Arquivos selecionados:</p>
+                <ul className="text-sm text-muted-foreground">
+                  {documents.map((file, index) => (
+                    <li key={index}>• {file.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -188,7 +188,7 @@ export function useCollaborators() {
     }
   };
 
-  const createEmployee = async (employeeData: CreateEmployeeData) => {
+  const createEmployee = async (employeeData: CreateEmployeeData & { documents?: File[] }) => {
     try {
       console.log('🚀 Creating employee with data:', employeeData);
       
@@ -261,6 +261,25 @@ export function useCollaborators() {
 
       console.log('✅ Created colaborador:', newColaborador);
 
+      // Upload documents if provided
+      if (employeeData.documents && employeeData.documents.length > 0) {
+        console.log('📎 Uploading documents...');
+        
+        for (const file of employeeData.documents) {
+          const fileName = `${newColaborador.id}/${Date.now()}-${file.name}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('smartbeneficios')
+            .upload(fileName, file);
+
+          if (uploadError) {
+            console.error('❌ Error uploading file:', uploadError);
+          } else {
+            console.log('✅ Uploaded file:', fileName);
+          }
+        }
+      }
+
       // Se há plano inicial, criar o vínculo (adaptar para colaboradores se necessário)
       if (employeeData.initialPlan) {
         console.log('🔄 Creating employee plan...');
@@ -284,38 +303,63 @@ export function useCollaborators() {
 
   const getEmployee = async (id: string): Promise<Employee | null> => {
     try {
-      const { data: employeeData, error } = await supabase
-        .from('employees')
+      const { data: currentUserData } = await supabase.auth.getUser();
+      console.log('👤 Current user:', currentUserData.user?.id);
+      console.log('🔄 Executing query...');
+      
+      const { data: colaboradorData, error } = await supabase
+        .from('colaboradores')
         .select(`
           *,
-          employee_plans(
-            *,
-            plans(*)
+          empresas!inner(
+            id,
+            nome,
+            cnpj
           ),
-          dependents(*)
+          dependentes(*)
         `)
         .eq('id', id)
         .single();
 
       if (error) throw error;
 
-      // Fetch company separately
-      let company = null;
-      if (employeeData.company_id) {
-        const { data: companyData } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('id', employeeData.company_id)
-          .single();
-        company = companyData;
-      }
+      console.log('📊 Raw colaboradores data:', [colaboradorData]);
+      console.log('📊 Data length:', colaboradorData ? 1 : 0);
+      console.log('❌ Error (if any):', error);
 
-      return {
-        ...employeeData,
-        companies: company
+      // Transform colaborador data to match Employee interface
+      const transformedEmployee: Employee = {
+        id: colaboradorData.id,
+        company_id: colaboradorData.empresa_id,
+        cpf: colaboradorData.cpf,
+        full_name: colaboradorData.nome,
+        email: colaboradorData.email,
+        phone: colaboradorData.telefone,
+        birth_date: colaboradorData.data_nascimento,
+        status: colaboradorData.status,
+        companies: {
+          id: colaboradorData.empresas.id,
+          cnpj: colaboradorData.empresas.cnpj,
+          legal_name: colaboradorData.empresas.nome,
+          trade_name: colaboradorData.empresas.nome
+        },
+        employee_plans: [], // TODO: Implement if needed
+        dependents: colaboradorData.dependentes?.map((dep: any) => ({
+          id: dep.id,
+          employee_id: colaboradorData.id,
+          full_name: dep.nome,
+          cpf: dep.cpf,
+          birth_date: dep.data_nascimento,
+          relationship: dep.grau_parentesco,
+          created_at: dep.created_at
+        })) || []
       };
+
+      console.log('✅ Transformed employee:', transformedEmployee);
+      return transformedEmployee;
     } catch (err) {
       console.error('Error fetching employee:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao buscar colaborador');
       return null;
     }
   };
