@@ -13,6 +13,74 @@ function validateCPF(cpf: string): boolean {
   return true;
 }
 
+// Rate limiting function
+async function checkRateLimit(ip: string, cpf: string): Promise<{ allowed: boolean; message?: string }> {
+  const now = new Date();
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  
+  // Check existing rate limit record
+  const { data: rateLimit } = await supabase
+    .from('submission_rate_limits')
+    .select('*')
+    .eq('ip_address', ip)
+    .eq('employee_cpf', cpf)
+    .single();
+
+  if (rateLimit) {
+    // Check if blocked
+    if (rateLimit.blocked_until && new Date(rateLimit.blocked_until) > now) {
+      return {
+        allowed: false,
+        message: `Muitas tentativas. Tente novamente em ${Math.ceil((new Date(rateLimit.blocked_until).getTime() - now.getTime()) / (1000 * 60))} minutos.`
+      };
+    }
+
+    // Check if within rate limit (max 5 attempts per hour)
+    if (new Date(rateLimit.first_attempt_at) > oneHourAgo && rateLimit.submission_count >= 5) {
+      const blockUntil = new Date(now.getTime() + 30 * 60 * 1000); // Block for 30 minutes
+      
+      await supabase
+        .from('submission_rate_limits')
+        .update({
+          submission_count: rateLimit.submission_count + 1,
+          last_attempt_at: now.toISOString(),
+          blocked_until: blockUntil.toISOString()
+        })
+        .eq('id', rateLimit.id);
+
+      return {
+        allowed: false,
+        message: 'Muitas tentativas. Conta temporariamente bloqueada por 30 minutos.'
+      };
+    }
+
+    // Update existing record
+    const isNewHour = new Date(rateLimit.first_attempt_at) <= oneHourAgo;
+    await supabase
+      .from('submission_rate_limits')
+      .update({
+        submission_count: isNewHour ? 1 : rateLimit.submission_count + 1,
+        first_attempt_at: isNewHour ? now.toISOString() : rateLimit.first_attempt_at,
+        last_attempt_at: now.toISOString(),
+        blocked_until: null
+      })
+      .eq('id', rateLimit.id);
+  } else {
+    // Create new rate limit record
+    await supabase
+      .from('submission_rate_limits')
+      .insert({
+        ip_address: ip,
+        employee_cpf: cpf,
+        submission_count: 1,
+        first_attempt_at: now.toISOString(),
+        last_attempt_at: now.toISOString()
+      });
+  }
+
+  return { allowed: true };
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -42,10 +110,17 @@ serve(async (req) => {
     
     // Extract first IP from comma-separated list for INET type compatibility
     const forwardedFor = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '';
-    const clientIP = forwardedFor.split(',')[0].trim() || null;
+    const clientIP = forwardedFor.split(',')[0].trim() || '127.0.0.1';
     const userAgent = req.headers.get('user-agent') || '';
 
-    // Note: We'll check for duplicates after finding/creating the employee
+    // Rate limiting check
+    const rateLimitResult = await checkRateLimit(clientIP, cleanCPF);
+    if (!rateLimitResult.allowed) {
+      return Response.json({
+        ok: false,
+        error: { code: 'RATE_LIMIT_EXCEEDED', message: rateLimitResult.message }
+      }, { headers: corsHeaders });
+    }
 
     // Find or create employee
     let { data: employee, error: employeeError } = await supabase
@@ -113,8 +188,6 @@ serve(async (req) => {
     }
 
     // Check for active request in last 24h to prevent duplicates
-    // Only consider 'recebido' and 'em_validacao' as active statuses
-    // 'concluido' and 'recusado' should allow new requests
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
@@ -144,30 +217,23 @@ serve(async (req) => {
       .select('*')
       .eq('employee_id', employee.id);
 
-    // Create session
-    const sessionData: any = {
-      employee_id: employee.id,
-      user_agent: userAgent
-    };
-    
-    // Only add IP if it's valid
-    if (clientIP) {
-      sessionData.ip = clientIP;
-    }
+    // Generate secure session token
+    const { data: tokenData, error: tokenError } = await supabase
+      .rpc('generate_session_token', {
+        p_employee_id: employee.id,
+        p_ip_address: clientIP,
+        p_user_agent: userAgent
+      });
 
-    const { data: session, error: sessionError } = await supabase
-      .from('public_sessions')
-      .insert(sessionData)
-      .select()
-      .single();
-
-    if (sessionError) {
-      console.error('Error creating session:', sessionError);
+    if (tokenError || !tokenData || tokenData.length === 0) {
+      console.error('Error generating token:', tokenError);
       return Response.json({
         ok: false,
-        error: { code: 'DATABASE_ERROR', message: 'Erro ao criar sessão' }
+        error: { code: 'DATABASE_ERROR', message: 'Erro ao criar sessão segura' }
       }, { headers: corsHeaders });
     }
+
+    const { token, session_id, expires_at } = tokenData[0];
 
     // Create draft request  
     const protocolCode = `DRAFT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -176,12 +242,12 @@ serve(async (req) => {
       .from('requests')
       .insert({
         employee_id: employee.id,
-        session_id: session.id,
+        session_id: session_id,
         protocol_code: protocolCode,
         kind: 'inclusao', // Default, will be updated
         channel: 'form',
         draft: true,
-        metadata: { sessionId: session.id }
+        metadata: { sessionId: session_id, token: token }
       })
       .select()
       .single();
@@ -197,8 +263,10 @@ serve(async (req) => {
     return Response.json({
       ok: true,
       data: {
-        sessionId: session.id,
+        sessionId: session_id,
         requestId: request.id,
+        token: token,
+        expiresAt: expires_at,
         employee: {
           id: employee.id,
           fullName: employee.full_name

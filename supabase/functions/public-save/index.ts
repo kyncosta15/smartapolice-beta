@@ -14,27 +14,34 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId, requestId, payload } = await req.json();
+    const { sessionId, requestId, token, payload } = await req.json();
 
     // Validate input
-    if (!sessionId || !requestId || !payload) {
+    if (!sessionId || !requestId || !token || !payload) {
       return Response.json({
         ok: false,
         error: { code: 'VALIDATION_ERROR', message: 'Dados incompletos' }
       }, { headers: corsHeaders });
     }
 
-    // Verify session exists and update last_seen_at
-    const { data: session, error: sessionError } = await supabase
-      .from('public_sessions')
-      .select('employee_id')
-      .eq('id', sessionId)
-      .single();
+    // Validate session token
+    const { data: tokenValidation, error: tokenError } = await supabase
+      .rpc('validate_session_token', { p_token: token });
 
-    if (sessionError || !session) {
+    if (tokenError || !tokenValidation || tokenValidation.length === 0 || !tokenValidation[0].valid) {
       return Response.json({
         ok: false,
-        error: { code: 'NOT_FOUND', message: 'Sessão não encontrada' }
+        error: { code: 'INVALID_TOKEN', message: 'Token de sessão inválido ou expirado' }
+      }, { headers: corsHeaders });
+    }
+
+    const validatedSessionId = tokenValidation[0].session_id;
+    
+    // Ensure the session matches
+    if (validatedSessionId !== sessionId) {
+      return Response.json({
+        ok: false,
+        error: { code: 'SESSION_MISMATCH', message: 'Sessão não corresponde ao token' }
       }, { headers: corsHeaders });
     }
 
@@ -50,7 +57,7 @@ serve(async (req) => {
     };
 
     if (payload.kind) updateData.kind = payload.kind;
-    if (payload.metadata) updateData.metadata = payload.metadata;
+    if (payload.metadata) updateData.metadata = { ...payload.metadata, token };
 
     const { error: updateError } = await supabase
       .from('requests')

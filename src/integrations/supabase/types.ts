@@ -1369,6 +1369,87 @@ export type Database = {
           },
         ]
       }
+      session_tokens: {
+        Row: {
+          created_at: string | null
+          employee_id: string | null
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          session_id: string | null
+          token: string
+          used_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          token: string
+          used_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          token?: string
+          used_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_tokens_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_tokens_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "public_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submission_rate_limits: {
+        Row: {
+          blocked_until: string | null
+          employee_cpf: string | null
+          first_attempt_at: string | null
+          id: string
+          ip_address: unknown
+          last_attempt_at: string | null
+          submission_count: number | null
+        }
+        Insert: {
+          blocked_until?: string | null
+          employee_cpf?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          ip_address: unknown
+          last_attempt_at?: string | null
+          submission_count?: number | null
+        }
+        Update: {
+          blocked_until?: string | null
+          employee_cpf?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          ip_address?: unknown
+          last_attempt_at?: string | null
+          submission_count?: number | null
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           created_at: string | null
@@ -1558,6 +1639,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_session_token: {
+        Args: {
+          p_employee_id: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+        }
+        Returns: {
+          expires_at: string
+          session_id: string
+          token: string
+        }[]
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1569,6 +1662,14 @@ export type Database = {
           file_owner: string
           reason: string
           user_id: string
+        }[]
+      }
+      validate_session_token: {
+        Args: { p_token: string }
+        Returns: {
+          employee_id: string
+          session_id: string
+          valid: boolean
         }[]
       }
     }

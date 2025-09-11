@@ -59,6 +59,8 @@ interface FormData {
 interface SessionData {
   sessionId: string;
   requestId: string;
+  token: string;
+  expiresAt: string;
   employee: Employee;
   dependents: Dependent[];
 }
@@ -171,6 +173,14 @@ export const NewSolicitacaoPage: React.FC = () => {
   const saveDraft = async () => {
     if (!sessionData) return;
 
+    // Check token expiration
+    if (new Date(sessionData.expiresAt) <= new Date()) {
+      setError('Sessão expirada. Por favor, reinicie o processo.');
+      setSessionData(null);
+      setStep(0);
+      return;
+    }
+
     const payload = {
       kind: formData.kind,
       items: getRequestItems(),
@@ -185,12 +195,21 @@ export const NewSolicitacaoPage: React.FC = () => {
         body: {
           sessionId: sessionData.sessionId,
           requestId: sessionData.requestId,
+          token: sessionData.token,
           payload
         }
       });
 
       if (error) throw error;
-      if (!data.ok) throw new Error(data.error?.message);
+      if (!data.ok) {
+        if (data.error?.code === 'INVALID_TOKEN') {
+          setError('Sessão expirada. Por favor, reinicie o processo.');
+          setSessionData(null);
+          setStep(0);
+          return;
+        }
+        throw new Error(data.error?.message);
+      }
     } catch (error) {
       console.error('Error saving draft:', error);
     }
@@ -225,6 +244,14 @@ export const NewSolicitacaoPage: React.FC = () => {
   const handleSubmit = async () => {
     if (!sessionData) return;
 
+    // Check token expiration
+    if (new Date(sessionData.expiresAt) <= new Date()) {
+      setError('Sessão expirada. Por favor, reinicie o processo.');
+      setSessionData(null);
+      setStep(0);
+      return;
+    }
+
     // Validate that we have at least one item selected
     const items = getRequestItems();
     if (items.length === 0) {
@@ -241,7 +268,8 @@ export const NewSolicitacaoPage: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('public-submit', {
         body: {
           sessionId: sessionData.sessionId,
-          requestId: sessionData.requestId
+          requestId: sessionData.requestId,
+          token: sessionData.token
         }
       });
 
@@ -252,6 +280,12 @@ export const NewSolicitacaoPage: React.FC = () => {
         localStorage.removeItem('sb:draft');
         toast.success('Solicitação enviada com sucesso!');
       } else {
+        if (data.error?.code === 'INVALID_TOKEN') {
+          setError('Sessão expirada. Por favor, reinicie o processo.');
+          setSessionData(null);
+          setStep(0);
+          return;
+        }
         throw new Error(data.error?.message || 'Erro ao enviar solicitação');
       }
     } catch (error) {

@@ -21,13 +21,34 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId, requestId } = await req.json();
+    const { sessionId, requestId, token } = await req.json();
 
     // Validate input
-    if (!sessionId || !requestId) {
+    if (!sessionId || !requestId || !token) {
       return Response.json({
         ok: false,
         error: { code: 'VALIDATION_ERROR', message: 'Dados incompletos' }
+      }, { headers: corsHeaders });
+    }
+
+    // Validate session token
+    const { data: tokenValidation, error: tokenError } = await supabase
+      .rpc('validate_session_token', { p_token: token });
+
+    if (tokenError || !tokenValidation || tokenValidation.length === 0 || !tokenValidation[0].valid) {
+      return Response.json({
+        ok: false,
+        error: { code: 'INVALID_TOKEN', message: 'Token de sessão inválido ou expirado' }
+      }, { headers: corsHeaders });
+    }
+
+    const validatedSessionId = tokenValidation[0].session_id;
+    
+    // Ensure the session matches
+    if (validatedSessionId !== sessionId) {
+      return Response.json({
+        ok: false,
+        error: { code: 'SESSION_MISMATCH', message: 'Sessão não corresponde ao token' }
       }, { headers: corsHeaders });
     }
 
@@ -57,6 +78,12 @@ serve(async (req) => {
 
     // Generate unique protocol code
     const protocolCode = generateProtocolCode();
+
+    // Mark token as used
+    await supabase
+      .from('session_tokens')
+      .update({ used_at: new Date().toISOString() })
+      .eq('token', token);
 
     // Update request to submitted status
     const { error: updateError } = await supabase
