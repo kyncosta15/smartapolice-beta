@@ -532,6 +532,19 @@ export function useCollaborators() {
     }
   };
 
+  // Helper function to determine document type from file name
+  const getDocumentTypeFromFileName = (fileName: string): string => {
+    const name = fileName.toLowerCase();
+    if (name.includes('rg') || name.includes('cpf') || name.includes('cnh') || name.includes('identidade')) {
+      return 'documento_pessoal';
+    } else if (name.includes('comprovante') || name.includes('residencia') || name.includes('endereco')) {
+      return 'comprovante_residencia';  
+    } else if (name.includes('vinculo') || name.includes('trabalho') || name.includes('emprego')) {
+      return 'comprovacao_vinculo';
+    }
+    return 'documento_pessoal'; // default
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -558,17 +571,5 @@ export function useCollaborators() {
     deleteEmployee,
     searchEmployees: (search: string) => loadData(search),
     refetch: () => loadData()
-  };
-
-  const getDocumentTypeFromFileName = (fileName: string): string => {
-    const name = fileName.toLowerCase();
-    if (name.includes('rg') || name.includes('cpf') || name.includes('cnh') || name.includes('identidade')) {
-      return 'documento_pessoal';
-    } else if (name.includes('comprovante') || name.includes('residencia') || name.includes('endereco')) {
-      return 'comprovante_residencia';  
-    } else if (name.includes('vinculo') || name.includes('trabalho') || name.includes('emprego')) {
-      return 'comprovacao_vinculo';
-    }
-    return 'documento_pessoal'; // default
   };
 }
