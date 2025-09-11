@@ -64,6 +64,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       description: "Gerenciar suas apólices"
     },
     {
+      title: "Sinistros",
+      icon: Calculator,
+      id: "sinistros",
+      description: "Abertura e acompanhamento de sinistros"
+    },
+    {
       title: "Veículos",
       icon: Car,
       id: "veiculos",
@@ -96,6 +102,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       icon: BarChart3,
       id: "reports",
       description: "Análises e métricas"
+    },
+    {
+      title: "Sinistros",
+      icon: Calculator,
+      id: "sinistros",
+      description: "Gestão de sinistros e tickets"
     },
     {
       title: "Regiões",

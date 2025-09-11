@@ -14,6 +14,7 @@ import { PolicyInstallmentsCard } from './installments/PolicyInstallmentsCard';
 import { RegionalMetrics } from './dashboard/RegionalMetrics';
 import { ExportDashboard } from './ExportDashboard';
 import { VeiculosManagement } from './VeiculosManagement';
+import { SinistrosManagement } from './SinistrosManagement';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 
@@ -193,6 +194,17 @@ export function ContentRenderer({
       return (
         <div className="p-6">
           <ChartsSection detailed={true} policies={convertToChartData(extractedPolicies)} />
+        </div>
+      );
+
+    case 'sinistros':
+      return (
+        <div className="p-6">
+          <SinistrosManagement 
+            allPolicies={allPolicies}
+            onPolicyUpdate={onPolicyUpdate}
+            onPolicySelect={onPolicySelect}
+          />
         </div>
       );
 
