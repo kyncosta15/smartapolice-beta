@@ -1,4 +1,3 @@
-
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { DynamicPDFExtractor } from '../dynamicPdfExtractor';
 import { N8NDataConverter } from '@/utils/parsers/n8nDataConverter';
@@ -55,89 +54,107 @@ export class BatchFileProcessor {
 
       console.log('🔄 Iniciando extração de dados');
       const extractedDataArray = await DynamicPDFExtractor.extractFromMultiplePDFs(files, userId);
+      
+      console.log(`📦 DADOS BRUTOS EXTRAÍDOS:`, extractedDataArray);
+      console.log(`📊 Tipo dos dados extraídos:`, typeof extractedDataArray);
+      console.log(`📏 Quantidade de dados extraídos: ${extractedDataArray.length}`);
 
       console.log(`📦 Dados extraídos: ${extractedDataArray.length} itens`);
 
-      if (extractedDataArray.length === 0) {
-        console.warn('⚠️ Nenhum dado extraído');
+      if (!extractedDataArray || extractedDataArray.length === 0) {
+        console.warn('⚠️ Nenhum dado extraído - Array vazio ou null');
+        console.warn('⚠️ Valor exato do array:', extractedDataArray);
         throw new Error('Nenhum dado foi extraído dos arquivos');
-      } else {
-        // Processar dados extraídos
-        for (let index = 0; index < extractedDataArray.length; index++) {
-          const singleData = extractedDataArray[index];
-          console.log(`🔄 Processando item ${index + 1}/${extractedDataArray.length}:`, singleData);
+      } 
+      
+      console.log('✅ Dados extraídos com sucesso, iniciando processamento individual');
+      
+      // Processar dados extraídos
+      for (let index = 0; index < extractedDataArray.length; index++) {
+        const singleData = extractedDataArray[index];
+        console.log(`🔄 Processando item ${index + 1}/${extractedDataArray.length}`);
+        console.log(`📊 DADOS DO ITEM ${index + 1}:`, JSON.stringify(singleData, null, 2));
+        
+        // CORREÇÃO CRÍTICA: Resolver user_id usando estratégias robustas
+        const { UserIdResolver } = await import('@/utils/userIdResolver');
+        let resolvedUserId: string;
+        
+        try {
+          console.log(`🔍 Resolvendo user_id para item ${index + 1}`);
+          console.log(`👤 userId do contexto: ${userId}`);
+          console.log(`👤 user_id nos dados: ${singleData.user_id}`);
           
-          // CORREÇÃO CRÍTICA: Resolver user_id usando estratégias robustas
-          const { UserIdResolver } = await import('@/utils/userIdResolver');
-          let resolvedUserId: string;
+          resolvedUserId = await UserIdResolver.resolveUserId(singleData, userId);
+          console.log(`✅ User ID resolvido para item ${index + 1}: ${resolvedUserId}`);
+        } catch (error) {
+          console.error(`❌ Falha ao resolver user_id para item ${index + 1}:`, error);
           
-          try {
-            resolvedUserId = await UserIdResolver.resolveUserId(singleData, userId);
-            console.log(`✅ User ID resolvido: ${resolvedUserId}`);
-          } catch (error) {
-            console.error('❌ Falha ao resolver user_id:', error);
+          // Debug detalhado para troubleshooting
+          await UserIdResolver.debugUserResolution(singleData, userId);
+          
+          this.updateFileStatus(files[Math.min(index, files.length - 1)]?.name || `Item ${index + 1}`, {
+            progress: 100,
+            status: 'failed',
+            message: `❌ Erro: ${error instanceof Error ? error.message : 'Não foi possível identificar o usuário'}`
+          });
+          continue; // Pular este item e continuar com os próximos
+        }
+        
+        const dataWithUserId = {
+          ...singleData,
+          user_id: resolvedUserId // Garantir userId nos dados
+        };
+        
+        const relatedFileName = this.findRelatedFileNameSafely(singleData, files) || files[Math.min(index, files.length - 1)]?.name || `Arquivo ${index + 1}`;
+        
+        this.updateFileStatus(relatedFileName, {
+          progress: 60 + (index * 15),
+          status: 'processing',
+          message: 'Convertendo dados...'
+        });
+        
+        try {
+          console.log(`✅ Convertendo dados para apólice com userId: ${resolvedUserId}`);
+          console.log(`📋 Dados com userId adicionado:`, JSON.stringify(dataWithUserId, null, 2));
+          
+          const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[Math.min(index, files.length - 1)], resolvedUserId);
+          console.log(`✅ Apólice convertida com sucesso:`, parsedPolicy.name);
+          
+          allResults.push(parsedPolicy);
+          
+          // Salvar no banco usando sistema robusto
+          const relatedFile = files[Math.min(index, files.length - 1)];
+          if (relatedFile) {
+            console.log(`💾 Salvando apólice com sistema robusto: ${parsedPolicy.name}`);
+            const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
+            const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, resolvedUserId);
             
-            // Debug detalhado para troubleshooting
-            await UserIdResolver.debugUserResolution(singleData, userId);
-            
-            this.updateFileStatus(files[Math.min(index, files.length - 1)]?.name || `Item ${index + 1}`, {
-              progress: 100,
-              status: 'failed',
-              message: `❌ Erro: ${error instanceof Error ? error.message : 'Não foi possível identificar o usuário'}`
-            });
-            continue; // Pular este item e continuar com os próximos
+            if (saveResult.success) {
+              console.log(`✅ Apólice salva com sucesso no banco: ${parsedPolicy.name}`);
+            } else {
+              console.warn(`⚠️ Falha ao salvar apólice no banco: ${parsedPolicy.name}`, saveResult.errors);
+            }
           }
           
-          const dataWithUserId = {
-            ...singleData,
-            user_id: resolvedUserId // Garantir userId nos dados
-          };
-          
-          const relatedFileName = this.findRelatedFileNameSafely(singleData, files) || files[Math.min(index, files.length - 1)]?.name || `Arquivo ${index + 1}`;
+          // Notificar componente pai
+          console.log(`📢 Notificando componente pai sobre nova apólice: ${parsedPolicy.name}`);
+          this.onPolicyExtracted(parsedPolicy);
           
           this.updateFileStatus(relatedFileName, {
-            progress: 60 + (index * 15),
+            progress: 90 + (index * 2),
             status: 'processing',
-            message: 'Convertendo dados...'
+            message: `✅ Processado: ${parsedPolicy.insurer}`
           });
           
-          try {
-            console.log(`✅ Convertendo dados para apólice com userId: ${resolvedUserId}`);
-            const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[Math.min(index, files.length - 1)], resolvedUserId);
-            allResults.push(parsedPolicy);
-            
-            // Salvar no banco usando sistema robusto
-            const relatedFile = files[Math.min(index, files.length - 1)];
-            if (relatedFile) {
-              console.log(`💾 Salvando apólice com sistema robusto: ${parsedPolicy.name}`);
-              const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
-              const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, resolvedUserId);
-              
-              if (saveResult.success) {
-                console.log(`✅ Apólice salva com sucesso: ${parsedPolicy.name}`);
-              } else {
-                console.warn(`⚠️ Falha ao salvar apólice: ${parsedPolicy.name}`, saveResult.errors);
-              }
-            }
-            
-            // Notificar componente pai
-            this.onPolicyExtracted(parsedPolicy);
-            
-            this.updateFileStatus(relatedFileName, {
-              progress: 90 + (index * 2),
-              status: 'processing',
-              message: `✅ Processado: ${parsedPolicy.insurer}`
-            });
-            
-          } catch (conversionError) {
-            console.error(`❌ Erro na conversão do item ${index + 1}:`, conversionError);
-            // Marcar como erro mas continuar processamento
-            this.updateFileStatus(relatedFileName, {
-              progress: 100,
-              status: 'failed',
-              message: `❌ Erro na conversão: ${conversionError instanceof Error ? conversionError.message : 'Erro desconhecido'}`
-            });
-          }
+        } catch (conversionError) {
+          console.error(`❌ Erro na conversão do item ${index + 1}:`, conversionError);
+          console.error(`❌ Stack trace:`, conversionError instanceof Error ? conversionError.stack : 'N/A');
+          // Marcar como erro mas continuar processamento
+          this.updateFileStatus(relatedFileName, {
+            progress: 100,
+            status: 'failed',
+            message: `❌ Erro na conversão: ${conversionError instanceof Error ? conversionError.message : 'Erro desconhecido'}`
+          });
         }
       }
 
