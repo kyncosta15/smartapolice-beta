@@ -110,10 +110,10 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
   return (
     <>
       {/* Cards principais com gráficos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 xl:gap-6">
         {/* Vidas Ativas */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Vidas Ativas</p>
@@ -130,7 +130,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
 
         {/* Custo Mensal */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Custo Mensal</p>
@@ -142,8 +142,8 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
               {[...Array(6)].map((_, i) => (
                 <div 
                   key={i}
-                  className="bg-green-500 w-2 rounded-t flex-1"
-                  style={{ height: `${20 + (i * 10)}px` }}
+                  className="bg-primary w-1 sm:w-2 rounded-t flex-1 transition-all duration-300"
+                  style={{ height: `${15 + (i * 8)}px` }}
                 />
               ))}
             </div>
@@ -152,7 +152,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
 
         {/* Custo Médio/Vida */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Custo Médio/Vida</p>
@@ -169,7 +169,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
 
         {/* Tickets Abertos */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Tickets Abertos</p>
@@ -190,7 +190,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
       </div>
 
       {/* Terceira linha - Cards com distribuição por tipo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 xl:gap-6">
         {/* Vencimentos Próximos */}
         <Card>
           <CardHeader>
