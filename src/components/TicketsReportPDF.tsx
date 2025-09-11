@@ -113,60 +113,109 @@ export function TicketsReportPDF({ className }: TicketsReportPDFProps) {
         styles: { fontSize: 10 }
       });
 
-      // Add donut chart for status distribution
+      // Add professional donut chart for status distribution
       currentY = (pdf as any).lastAutoTable.finalY + 30;
-      if (currentY > pageHeight - 100) {
+      if (currentY > pageHeight - 120) {
         pdf.addPage();
         currentY = 30;
       }
 
-      pdf.setFontSize(12);
-      pdf.text('Gráfico de Status dos Tickets', 20, currentY);
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Distribuição de Status dos Tickets', 20, currentY);
       
-      // Create donut chart
-      const centerX = pageWidth / 2;
-      const centerY = currentY + 40;
-      const outerRadius = 35;
-      const innerRadius = 20;
-      let startAngle = 0;
+      // Professional donut chart
+      const chartCenterX = pageWidth / 2;
+      const chartCenterY = currentY + 50;
+      const outerRadius = 40;
+      const innerRadius = 25;
+      let totalAngle = 0;
       
       const statusColors = [
         [33, 150, 243],   // Blue for received
-        [76, 175, 80],    // Green for processed
+        [76, 175, 80],    // Green for processed  
         [244, 67, 54]     // Red for errors
       ];
       
       const statusValues = [stats.recebidas, stats.processadas, stats.erros];
       const statusLabels = ['Recebidas', 'Processadas', 'Com Erro'];
       
+      // Draw donut segments
       statusValues.forEach((value, index) => {
         if (value > 0) {
-          const angle = (value / stats.total) * 2 * Math.PI;
+          const percentage = value / stats.total;
+          const angle = percentage * 2 * Math.PI;
           const color = statusColors[index];
           
-          pdf.setFillColor(color[0], color[1], color[2]);
+          // Draw outer circle segments
+          const steps = Math.max(5, Math.floor(angle * 15));
+          for (let i = 0; i < steps; i++) {
+            const a1 = totalAngle + (angle * i / steps);
+            const a2 = totalAngle + (angle * (i + 1) / steps);
+            
+            // Outer points
+            const x1_outer = chartCenterX + outerRadius * Math.cos(a1);
+            const y1_outer = chartCenterY + outerRadius * Math.sin(a1);
+            const x2_outer = chartCenterX + outerRadius * Math.cos(a2);
+            const y2_outer = chartCenterY + outerRadius * Math.sin(a2);
+            
+            // Inner points
+            const x1_inner = chartCenterX + innerRadius * Math.cos(a1);
+            const y1_inner = chartCenterY + innerRadius * Math.sin(a1);
+            const x2_inner = chartCenterX + innerRadius * Math.cos(a2);
+            const y2_inner = chartCenterY + innerRadius * Math.sin(a2);
+            
+            // Draw trapezoid segment
+            pdf.setFillColor(color[0], color[1], color[2]);
+            pdf.setDrawColor(255, 255, 255);
+            pdf.setLineWidth(1);
+            
+            // Create path for donut segment
+            pdf.lines([
+              [x1_outer - chartCenterX, y1_outer - chartCenterY],
+              [x2_outer - chartCenterX, y2_outer - chartCenterY],
+              [x2_inner - chartCenterX, y2_inner - chartCenterY],
+              [x1_inner - chartCenterX, y1_inner - chartCenterY]
+            ], chartCenterX, chartCenterY, [1, 1], 'FD');
+          }
           
-          // Draw donut segment (simplified as rectangles for better compatibility)
-          const midAngle = startAngle + angle / 2;
-          const x = centerX + (outerRadius - 10) * Math.cos(midAngle);
-          const y = centerY + (outerRadius - 10) * Math.sin(midAngle);
-          
-          pdf.circle(x, y, 8, 'F');
-          
-          startAngle += angle;
+          totalAngle += angle;
         }
       });
 
-      // Add legend for donut chart
-      let legendY = centerY + 60;
-      statusLabels.forEach((label, index) => {
-        const color = statusColors[index];
-        pdf.setFillColor(color[0], color[1], color[2]);
-        pdf.rect(centerX - 60, legendY, 5, 5, 'F');
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(10);
-        pdf.text(`${label}: ${statusValues[index]}`, centerX - 50, legendY + 4);
-        legendY += 12;
+      // Add center circle (white)
+      pdf.setFillColor(255, 255, 255);
+      pdf.circle(chartCenterX, chartCenterY, innerRadius, 'F');
+      
+      // Add total in center
+      pdf.setFontSize(16);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`${stats.total}`, chartCenterX - 8, chartCenterY - 5);
+      pdf.setFontSize(10);
+      pdf.text('Total', chartCenterX - 8, chartCenterY + 5);
+
+      // Professional legend
+      let legendX = 20;
+      let legendY = chartCenterY + 70;
+      
+      pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+      
+      statusValues.forEach((value, index) => {
+        if (value > 0) {
+          const color = statusColors[index];
+          const percentage = ((value / stats.total) * 100).toFixed(1);
+          
+          // Legend color box
+          pdf.setFillColor(color[0], color[1], color[2]);
+          pdf.rect(legendX, legendY - 3, 8, 6, 'F');
+          
+          // Legend text
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(`${statusLabels[index]}: ${value} (${percentage}%)`, legendX + 12, legendY);
+          
+          legendX += 80;
+        }
       });
 
       // Monthly Trend (last 6 months)
@@ -209,63 +258,110 @@ export function TicketsReportPDF({ className }: TicketsReportPDFProps) {
           styles: { fontSize: 10 }
         });
 
-        // Add line chart for monthly trend
+        // Add professional line chart for monthly trend
         currentY = (pdf as any).lastAutoTable.finalY + 30;
-        if (currentY > pageHeight - 100) {
+        if (currentY > pageHeight - 120) {
           pdf.addPage();
           currentY = 30;
         }
 
-        pdf.setFontSize(12);
-        pdf.text('Gráfico de Tendência Mensal', 20, currentY);
+        pdf.setFontSize(14);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Tendência Mensal de Tickets', 20, currentY);
         
-        // Create line chart
-        const chartStartX = 30;
-        const chartStartY = currentY + 20;
-        const chartWidth = pageWidth - 60;
-        const chartHeight = 50;
+        // Chart dimensions
+        const chartX = 40;
+        const chartY = currentY + 25;
+        const chartWidth = pageWidth - 80;
+        const chartHeight = 70;
         const maxTickets = Math.max(...Object.values(monthlyData) as number[]);
+        const months = Object.keys(monthlyData);
+        
+        // Draw chart background
+        pdf.setFillColor(250, 250, 250);
+        pdf.rect(chartX, chartY, chartWidth, chartHeight, 'F');
         
         // Draw axes
-        pdf.setDrawColor(0, 0, 0);
-        pdf.line(chartStartX, chartStartY + chartHeight, chartStartX + chartWidth, chartStartY + chartHeight); // X-axis
-        pdf.line(chartStartX, chartStartY, chartStartX, chartStartY + chartHeight); // Y-axis
+        pdf.setDrawColor(100, 100, 100);
+        pdf.setLineWidth(1);
         
-        // Draw line
-        const months = Object.keys(monthlyData);
-        const stepX = chartWidth / (months.length - 1);
-        let prevX = chartStartX;
-        let prevY = chartStartY + chartHeight - ((Object.values(monthlyData)[0] as number / maxTickets) * chartHeight);
+        // Y-axis
+        pdf.line(chartX, chartY, chartX, chartY + chartHeight);
+        // X-axis  
+        pdf.line(chartX, chartY + chartHeight, chartX + chartWidth, chartY + chartHeight);
         
-        pdf.setDrawColor(33, 150, 243);
-        pdf.setLineWidth(2);
-        
-        Object.values(monthlyData).forEach((count, index) => {
-          if (index > 0) {
-            const currentX = chartStartX + index * stepX;
-            const currentY = chartStartY + chartHeight - ((count as number / maxTickets) * chartHeight);
-            
-            pdf.line(prevX, prevY, currentX, currentY);
-            
-            // Draw points
-            pdf.setFillColor(33, 150, 243);
-            pdf.circle(currentX, currentY, 2, 'F');
-            
-            prevX = currentX;
-            prevY = currentY;
-          } else {
-            // First point
-            pdf.setFillColor(33, 150, 243);
-            pdf.circle(prevX, prevY, 2, 'F');
-          }
-        });
-        
-        // Add month labels
+        // Y-axis grid and labels
         pdf.setFontSize(8);
-        pdf.setTextColor(0, 0, 0);
+        pdf.setTextColor(100, 100, 100);
+        for (let i = 0; i <= 5; i++) {
+          const value = Math.ceil((maxTickets * i) / 5);
+          const y = chartY + chartHeight - (i * chartHeight / 5);
+          
+          // Grid lines
+          if (i > 0) {
+            pdf.setDrawColor(220, 220, 220);
+            pdf.setLineWidth(0.3);
+            pdf.line(chartX, y, chartX + chartWidth, y);
+          }
+          
+          // Y-axis labels
+          pdf.setDrawColor(100, 100, 100);
+          pdf.setLineWidth(1);
+          pdf.line(chartX - 3, y, chartX, y);
+          pdf.text(value.toString(), chartX - 15, y + 2);
+        }
+        
+        // Draw line chart
+        if (months.length > 1) {
+          const stepX = chartWidth / (months.length - 1);
+          let prevX = chartX;
+          let prevY = chartY + chartHeight - ((Object.values(monthlyData)[0] as number / maxTickets) * chartHeight);
+          
+          // Draw line segments
+          pdf.setDrawColor(33, 150, 243);
+          pdf.setLineWidth(2);
+          
+          Object.values(monthlyData).forEach((count, index) => {
+            if (index > 0) {
+              const currentX = chartX + index * stepX;
+              const currentY = chartY + chartHeight - ((count as number / maxTickets) * chartHeight);
+              
+              // Draw line segment
+              pdf.line(prevX, prevY, currentX, currentY);
+              
+              prevX = currentX;
+              prevY = currentY;
+            }
+          });
+          
+          // Draw data points
+          pdf.setFillColor(33, 150, 243);
+          Object.values(monthlyData).forEach((count, index) => {
+            const x = chartX + index * stepX;
+            const y = chartY + chartHeight - ((count as number / maxTickets) * chartHeight);
+            
+            // Data point circle
+            pdf.circle(x, y, 3, 'F');
+            
+            // Value label above point
+            pdf.setFontSize(7);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text(count.toString(), x - 3, y - 5);
+          });
+        }
+        
+        // X-axis labels
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 100, 100);
         months.forEach((month, index) => {
-          const x = chartStartX + index * stepX;
-          pdf.text(month, x - 10, chartStartY + chartHeight + 10);
+          const x = chartX + (index * chartWidth / (months.length - 1));
+          
+          // Tick mark
+          pdf.setDrawColor(100, 100, 100);
+          pdf.line(x, chartY + chartHeight, x, chartY + chartHeight + 3);
+          
+          // Month label
+          pdf.text(month, x - 10, chartY + chartHeight + 12);
         });
       } else {
         pdf.setFontSize(10);

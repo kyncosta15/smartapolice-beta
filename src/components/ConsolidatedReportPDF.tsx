@@ -120,58 +120,86 @@ export function ConsolidatedReportPDF({ className }: ConsolidatedReportPDFProps)
         styles: { fontSize: 10 }
       });
 
-      // Add pie chart for status distribution
+      // Add professional pie chart for status distribution
       currentY = (pdf as any).lastAutoTable.finalY + 30;
-      if (currentY > pageHeight - 100) {
+      if (currentY > pageHeight - 120) {
         pdf.addPage();
         currentY = 30;
       }
 
-      pdf.setFontSize(12);
-      pdf.text('Gráfico de Distribuição por Status', 20, currentY);
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Distribuição de Colaboradores por Status', 20, currentY);
       
-      // Create pie chart
-      const centerX = pageWidth / 2;
-      const centerY = currentY + 40;
-      const radius = 30;
-      let startAngle = 0;
+      // Create professional pie chart
+      const chartCenterX = pageWidth / 2;
+      const chartCenterY = currentY + 50;
+      const chartRadius = 35;
+      let totalAngle = 0;
       
-      const colors = [
-        [76, 175, 80],   // Green for active
-        [255, 152, 0],   // Orange for inactive
-        [244, 67, 54],   // Red for others
-        [33, 150, 243]   // Blue for additional
+      const statusColors = [
+        [76, 175, 80],    // Green for ativo
+        [255, 152, 0],    // Orange for inativo
+        [244, 67, 54],    // Red for suspenso
+        [33, 150, 243],   // Blue for outros
+        [156, 39, 176]    // Purple for additional
       ];
       
+      // Draw pie slices
       Object.entries(statusCounts).forEach(([status, count], index) => {
-        const angle = (count as number / stats.totalColaboradores) * 2 * Math.PI;
-        const color = colors[index % colors.length];
+        const percentage = (count as number) / stats.totalColaboradores;
+        const angle = percentage * 2 * Math.PI;
+        const color = statusColors[index % statusColors.length];
+        
+        // Draw pie slice using path
+        const startX = chartCenterX + chartRadius * Math.cos(totalAngle);
+        const startY = chartCenterY + chartRadius * Math.sin(totalAngle);
+        const endX = chartCenterX + chartRadius * Math.cos(totalAngle + angle);
+        const endY = chartCenterY + chartRadius * Math.sin(totalAngle + angle);
         
         pdf.setFillColor(color[0], color[1], color[2]);
+        pdf.setDrawColor(255, 255, 255);
+        pdf.setLineWidth(1);
         
-        // Draw pie slice
-        const endAngle = startAngle + angle;
-        const x1 = centerX + radius * Math.cos(startAngle);
-        const y1 = centerY + radius * Math.sin(startAngle);
-        const x2 = centerX + radius * Math.cos(endAngle);
-        const y2 = centerY + radius * Math.sin(endAngle);
+        // Create path for pie slice
+        const path = `M ${chartCenterX} ${chartCenterY} L ${startX} ${startY} A ${chartRadius} ${chartRadius} 0 ${angle > Math.PI ? 1 : 0} 1 ${endX} ${endY} Z`;
         
-        // Simple pie slice representation using triangles
-        pdf.triangle(centerX, centerY, x1, y1, x2, y2, 'F');
+        // Simplified pie slice using triangular approximation
+        const steps = Math.max(3, Math.floor(angle * 10));
+        for (let i = 0; i < steps; i++) {
+          const a1 = totalAngle + (angle * i / steps);
+          const a2 = totalAngle + (angle * (i + 1) / steps);
+          const x1 = chartCenterX + chartRadius * Math.cos(a1);
+          const y1 = chartCenterY + chartRadius * Math.sin(a1);
+          const x2 = chartCenterX + chartRadius * Math.cos(a2);
+          const y2 = chartCenterY + chartRadius * Math.sin(a2);
+          
+          pdf.triangle(chartCenterX, chartCenterY, x1, y1, x2, y2, 'FD');
+        }
         
-        startAngle = endAngle;
+        totalAngle += angle;
       });
 
-      // Add legend
-      let legendY = centerY + radius + 20;
+      // Add professional legend
+      let legendX = 20;
+      let legendY = chartCenterY + 60;
+      
+      pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+      
       Object.entries(statusCounts).forEach(([status, count], index) => {
-        const color = colors[index % colors.length];
+        const color = statusColors[index % statusColors.length];
+        const percentage = ((count as number) / stats.totalColaboradores * 100).toFixed(1);
+        
+        // Legend color box
         pdf.setFillColor(color[0], color[1], color[2]);
-        pdf.rect(centerX - 60, legendY, 5, 5, 'F');
+        pdf.rect(legendX, legendY - 3, 8, 6, 'F');
+        
+        // Legend text
         pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(10);
-        pdf.text(`${status}: ${count}`, centerX - 50, legendY + 4);
-        legendY += 10;
+        pdf.text(`${status.charAt(0).toUpperCase() + status.slice(1)}: ${count} (${percentage}%)`, legendX + 12, legendY);
+        
+        legendY += 12;
       });
 
       // Cost Distribution by Department
@@ -207,53 +235,105 @@ export function ConsolidatedReportPDF({ className }: ConsolidatedReportPDFProps)
         styles: { fontSize: 10 }
       });
 
-      // Add bar chart for cost distribution
+      // Add professional bar chart for cost distribution
       currentY = (pdf as any).lastAutoTable.finalY + 30;
-      if (currentY > pageHeight - 100) {
+      if (currentY > pageHeight - 120) {
         pdf.addPage();
         currentY = 30;
       }
 
-      pdf.setFontSize(12);
-      pdf.text('Gráfico de Custos por Centro de Custo', 20, currentY);
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Custos por Centro de Custo', 20, currentY);
       
-      // Create bar chart
-      const chartStartX = 30;
-      const chartStartY = currentY + 20;
-      const chartWidth = pageWidth - 60;
-      const chartHeight = 60;
+      // Chart dimensions
+      const chartX = 40;
+      const chartY = currentY + 25;
+      const chartWidth = pageWidth - 80;
+      const chartHeight = 70;
       const maxCost = Math.max(...Object.values(costsByDept) as number[]);
       
-      // Draw axes
-      pdf.setDrawColor(0, 0, 0);
-      pdf.line(chartStartX, chartStartY + chartHeight, chartStartX + chartWidth, chartStartY + chartHeight); // X-axis
-      pdf.line(chartStartX, chartStartY, chartStartX, chartStartY + chartHeight); // Y-axis
+      // Draw chart background
+      pdf.setFillColor(250, 250, 250);
+      pdf.rect(chartX, chartY, chartWidth, chartHeight, 'F');
       
-      // Draw bars
-      const barWidth = chartWidth / Object.keys(costsByDept).length - 10;
-      let barX = chartStartX + 5;
+      // Draw axes with proper formatting
+      pdf.setDrawColor(100, 100, 100);
+      pdf.setLineWidth(1);
       
-      Object.entries(costsByDept).forEach(([dept, cost], index) => {
-        const barHeight = ((cost as number) / maxCost) * chartHeight;
+      // Y-axis
+      pdf.line(chartX, chartY, chartX, chartY + chartHeight);
+      // X-axis
+      pdf.line(chartX, chartY + chartHeight, chartX + chartWidth, chartY + chartHeight);
+      
+      // Y-axis labels (cost values)
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
+      for (let i = 0; i <= 5; i++) {
+        const value = (maxCost * i) / 5;
+        const y = chartY + chartHeight - (i * chartHeight / 5);
+        
+        // Grid lines
+        if (i > 0) {
+          pdf.setDrawColor(220, 220, 220);
+          pdf.setLineWidth(0.5);
+          pdf.line(chartX, y, chartX + chartWidth, y);
+        }
+        
+        // Y-axis labels
+        pdf.setDrawColor(100, 100, 100);
+        pdf.line(chartX - 3, y, chartX, y);
+        pdf.text(`R$ ${(value / 1000).toFixed(0)}k`, chartX - 25, y + 2);
+      }
+      
+      // Draw bars with proper spacing
+      const departments = Object.keys(costsByDept);
+      const barSpacing = 10;
+      const totalBarWidth = chartWidth - (barSpacing * (departments.length + 1));
+      const barWidth = totalBarWidth / departments.length;
+      
+      departments.forEach((dept, index) => {
+        const cost = costsByDept[dept] as number;
+        const barHeight = (cost / maxCost) * chartHeight;
+        const barX = chartX + barSpacing + (index * (barWidth + barSpacing / departments.length));
+        const barY = chartY + chartHeight - barHeight;
+        
+        // Bar color
         const colors = [
           [33, 150, 243],   // Blue
           [76, 175, 80],    // Green
           [255, 152, 0],    // Orange
           [156, 39, 176],   // Purple
-          [244, 67, 54]     // Red
+          [244, 67, 54],    // Red
+          [0, 150, 136],    // Teal
+          [255, 193, 7]     // Amber
         ];
         const color = colors[index % colors.length];
         
+        // Draw bar with gradient effect
         pdf.setFillColor(color[0], color[1], color[2]);
-        pdf.rect(barX, chartStartY + chartHeight - barHeight, barWidth, barHeight, 'F');
+        pdf.rect(barX, barY, barWidth, barHeight, 'F');
         
-        // Add label
+        // Bar border
+        pdf.setDrawColor(color[0] - 20, color[1] - 20, color[2] - 20);
+        pdf.setLineWidth(1);
+        pdf.rect(barX, barY, barWidth, barHeight, 'S');
+        
+        // Value on top of bar
         pdf.setFontSize(8);
         pdf.setTextColor(0, 0, 0);
-        const labelText = dept.length > 8 ? dept.substring(0, 8) + '...' : dept;
-        pdf.text(labelText, barX, chartStartY + chartHeight + 10, { angle: 45 });
+        const valueText = `R$ ${cost.toLocaleString('pt-BR')}`;
+        pdf.text(valueText, barX + barWidth/2 - 10, barY - 3);
         
-        barX += barWidth + 10;
+        // X-axis labels (department names) - simpler approach
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 100, 100);
+        const labelText = dept.length > 8 ? dept.substring(0, 8) + '...' : dept;
+        
+        // Place label horizontally below bar
+        const textX = barX + barWidth/2 - (labelText.length * 2);
+        const textY = chartY + chartHeight + 15;
+        pdf.text(labelText, textX, textY);
       });
 
       // Footer
