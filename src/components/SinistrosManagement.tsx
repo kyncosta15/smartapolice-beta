@@ -13,6 +13,7 @@ import { SinistrosCRLV } from './sinistros/SinistrosCRLV';
 import { SinistrosRelatorios } from './sinistros/SinistrosRelatorios';
 import { SinistrosConfiguracoes } from './sinistros/SinistrosConfiguracoes';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
+import { normalizePolicy } from '@/lib/policies';
 import { 
   Search, 
   Filter,
@@ -43,21 +44,26 @@ export function SinistrosManagement({
 
   // Extract vehicles from policies for sinistros context
   const vehicles = useMemo(() => {
-    return allPolicies.map(policy => ({
-      id: policy.id,
-      placa: policy.vehicleDetails?.plate || 'N/A',
-      marca: policy.vehicleDetails?.brand || 'N/A',
-      modelo: policy.vehicleDetails?.model || policy.vehicleModel || 'N/A',
-      year: policy.vehicleDetails?.year || 'N/A',
-      categoria: 'PASSEIO', // Default category
-      apoliceNumero: policy.policyNumber || 'N/A',
-      seguradora: policy.insurer || 'N/A',
-      cliente: {
-        nome: policy.insuredName || policy.name || 'N/A',
-        cpf: policy.documento_tipo === 'CPF' ? policy.documento : null,
-        cnpj: policy.documento_tipo === 'CNPJ' ? policy.documento : null
-      }
-    }));
+    return allPolicies.map(policy => {
+      // Normalize policy to ensure all fields are strings
+      const normalized = normalizePolicy(policy);
+      
+      return {
+        id: policy.id,
+        placa: policy.vehicleDetails?.plate || 'N/A',
+        marca: policy.vehicleDetails?.brand || 'N/A',
+        modelo: policy.vehicleDetails?.model || policy.vehicleModel || 'N/A',
+        year: policy.vehicleDetails?.year || 'N/A',
+        categoria: 'PASSEIO', // Default category
+        apoliceNumero: normalized.policyNumber || 'N/A',
+        seguradora: normalized.insurer || 'N/A',
+        cliente: {
+          nome: normalized.name || 'N/A',
+          cpf: policy.documento_tipo === 'CPF' ? policy.documento : null,
+          cnpj: policy.documento_tipo === 'CNPJ' ? policy.documento : null
+        }
+      };
+    });
   }, [allPolicies]);
 
   // Mock sinistros data for demo
