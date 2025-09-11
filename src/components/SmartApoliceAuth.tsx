@@ -25,7 +25,6 @@ const SmartApoliceAuthContent = () => {
           Voltar
         </Link>
         <div className="flex items-center gap-4">
-          <SmartApóliceLogo size="sm" showText={true} />
         </div>
         <div className="w-16"></div>
       </header>
