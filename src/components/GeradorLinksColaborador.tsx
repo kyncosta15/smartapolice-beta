@@ -39,7 +39,9 @@ interface GeradorLinksColaboradorProps {
 
 const CAMPOS_DISPONIVEIS = [
   { id: 'nome', label: 'Nome Completo', tipo: 'text', obrigatorio: true },
-  { id: 'cpf', label: 'CPF', tipo: 'text', obrigatorio: true }
+  { id: 'cpf', label: 'CPF', tipo: 'text', obrigatorio: true },
+  { id: 'documento_pessoal', label: 'Documento Pessoal (RG, CPF, CNH)', tipo: 'file', obrigatorio: true },
+  { id: 'comprovante_residencia', label: 'Comprovante de Residência', tipo: 'file', obrigatorio: true }
 ];
 
 export const GeradorLinksColaborador = ({ colaboradorLinks, submissoes, isLoading }: GeradorLinksColaboradorProps) => {

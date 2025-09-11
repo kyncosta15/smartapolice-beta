@@ -46,6 +46,8 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
     cpf: '',
     birth_date: '',
     relationship: '',
+    documento_pessoal: null as File | null,
+    comprovante_residencia: null as File | null,
   });
   
   const { createEmployee, createDependent, isLoading, plans } = useCollaborators();
@@ -108,6 +110,8 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
         cpf: '',
         birth_date: '',
         relationship: '',
+        documento_pessoal: null,
+        comprovante_residencia: null,
       });
       setIncluirDependente(false);
       setOpen(false);
@@ -403,6 +407,48 @@ export const IncluirDependenteModal = ({ children }: IncluirDependenteModalProps
                       value={dependentData.birth_date}
                       onChange={(e) => setDependentData(prev => ({ ...prev, birth_date: e.target.value }))}
                     />
+                  </div>
+                </div>
+
+                {/* Seção de Documentos do Dependente */}
+                <div className="border-t pt-4 mt-6">
+                  <h4 className="text-md font-medium mb-4 text-primary">
+                    📄 Documentos Obrigatórios (Dependente)
+                  </h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="dependent_documento_pessoal">Documento Pessoal (RG, CPF, CNH) *</Label>
+                      <Input
+                        id="dependent_documento_pessoal"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => setDependentData(prev => ({ 
+                          ...prev, 
+                          documento_pessoal: e.target.files?.[0] || null 
+                        }))}
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Formatos aceitos: PDF, JPG, PNG (máx. 5MB)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="dependent_comprovante_residencia">Comprovante de Residência *</Label>
+                      <Input
+                        id="dependent_comprovante_residencia"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => setDependentData(prev => ({ 
+                          ...prev, 
+                          comprovante_residencia: e.target.files?.[0] || null 
+                        }))}
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Conta de luz, água, telefone (máx. 90 dias)
+                      </p>
+                    </div>
                   </div>
                 </div>
               </CardContent>

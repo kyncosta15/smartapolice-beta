@@ -54,6 +54,9 @@ interface ColaboradorFormData {
   data_nascimento: string;
   custo_mensal: number;
   observacoes?: string;
+  documento_pessoal?: File;
+  comprovante_residencia?: File;
+  comprovacao_vinculo?: File;
 }
 
 interface ColaboradorModalProps {
@@ -84,7 +87,10 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
       data_admissao: '',
       data_nascimento: '',
       custo_mensal: 0,
-      observacoes: ''
+      observacoes: '',
+      documento_pessoal: undefined,
+      comprovante_residencia: undefined,
+      comprovacao_vinculo: undefined
     }
   });
 
@@ -343,6 +349,85 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
                           </FormItem>
                         )}
                       />
+                    </div>
+
+                    {/* Seção de Documentos */}
+                    <div className="space-y-4">
+                      <div className="border-t pt-4">
+                        <h3 className="text-lg font-medium mb-4 text-primary">
+                          📋 Documentos Obrigatórios (RH)
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="documento_pessoal"
+                            render={({ field: { onChange, value, ...field } }) => (
+                              <FormItem>
+                                <FormLabel>Documento Pessoal (RG, CPF, CNH) *</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field}
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onChange={(e) => onChange(e.target.files?.[0])}
+                                    className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
+                                  />
+                                </FormControl>
+                                <p className="text-xs text-muted-foreground">
+                                  Formatos aceitos: PDF, JPG, PNG (máx. 5MB)
+                                </p>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="comprovante_residencia"
+                            render={({ field: { onChange, value, ...field } }) => (
+                              <FormItem>
+                                <FormLabel>Comprovante de Residência *</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field}
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onChange={(e) => onChange(e.target.files?.[0])}
+                                    className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
+                                  />
+                                </FormControl>
+                                <p className="text-xs text-muted-foreground">
+                                  Conta de luz, água, telefone (máx. 90 dias)
+                                </p>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="comprovacao_vinculo"
+                            render={({ field: { onChange, value, ...field } }) => (
+                              <FormItem>
+                                <FormLabel>Comprovação de Vínculo (e-Social) *</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field}
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onChange={(e) => onChange(e.target.files?.[0])}
+                                    className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
+                                  />
+                                </FormControl>
+                                <p className="text-xs text-muted-foreground">
+                                  Documento que comprove vínculo com a empresa
+                                </p>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     <FormField
