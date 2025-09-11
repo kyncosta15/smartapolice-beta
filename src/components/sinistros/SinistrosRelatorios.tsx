@@ -155,7 +155,7 @@ export function SinistrosRelatorios({ sinistros, vehicles, policies }: Sinistros
                     <SelectValue placeholder="Todas as seguradoras" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     <SelectItem value="Porto Seguro">Porto Seguro</SelectItem>
                     <SelectItem value="Bradesco Seguros">Bradesco Seguros</SelectItem>
                     <SelectItem value="Suhai Seguradora">Suhai Seguradora</SelectItem>
@@ -172,7 +172,7 @@ export function SinistrosRelatorios({ sinistros, vehicles, policies }: Sinistros
                     <SelectValue placeholder="Todos os status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="ABERTO">Aberto</SelectItem>
                     <SelectItem value="EM_ANALISE">Em Análise</SelectItem>
                     <SelectItem value="EM_REGULACAO">Em Regulação</SelectItem>
@@ -189,7 +189,7 @@ export function SinistrosRelatorios({ sinistros, vehicles, policies }: Sinistros
                     <SelectValue placeholder="Todos os tipos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="COLISAO">Colisão</SelectItem>
                     <SelectItem value="ROUBO">Roubo</SelectItem>
                     <SelectItem value="FURTO">Furto</SelectItem>
@@ -207,7 +207,7 @@ export function SinistrosRelatorios({ sinistros, vehicles, policies }: Sinistros
                     <SelectValue placeholder="Todas as categorias" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     <SelectItem value="PASSEIO">Passeio</SelectItem>
                     <SelectItem value="UTILITARIO">Utilitário</SelectItem>
                     <SelectItem value="CAMINHAO">Caminhão</SelectItem>

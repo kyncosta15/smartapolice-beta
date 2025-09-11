@@ -95,8 +95,8 @@ export function SinistrosCasos({
       sinistro.ticket_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sinistro.numero_sinistro?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = !statusFilter || sinistro.status === statusFilter;
-    const matchesSeguradora = !seguradoraFilter || sinistro.seguradora === seguradoraFilter;
+    const matchesStatus = !statusFilter || statusFilter === 'all' || sinistro.status === statusFilter;
+    const matchesSeguradora = !seguradoraFilter || seguradoraFilter === 'all' || sinistro.seguradora === seguradoraFilter;
     
     return matchesSearch && matchesStatus && matchesSeguradora;
   });

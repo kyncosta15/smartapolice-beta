@@ -114,7 +114,7 @@ export function SinistrosManagement({
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os status</SelectItem>
+            <SelectItem value="all">Todos os status</SelectItem>
             <SelectItem value="ABERTO">Aberto</SelectItem>
             <SelectItem value="EM_ANALISE">Em Análise</SelectItem>
             <SelectItem value="DOCUMENTACAO_PENDENTE">Doc. Pendente</SelectItem>
@@ -129,7 +129,7 @@ export function SinistrosManagement({
             <SelectValue placeholder="Seguradora" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as seguradoras</SelectItem>
+            <SelectItem value="all">Todas as seguradoras</SelectItem>
             <SelectItem value="Porto Seguro">Porto Seguro</SelectItem>
             <SelectItem value="Bradesco Seguros">Bradesco Seguros</SelectItem>
             <SelectItem value="Suhai Seguradora">Suhai Seguradora</SelectItem>
