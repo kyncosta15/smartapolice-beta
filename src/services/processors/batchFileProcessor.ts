@@ -117,7 +117,7 @@ export class BatchFileProcessor {
           console.log(`✅ Convertendo dados para apólice com userId: ${resolvedUserId}`);
           console.log(`📋 Dados com userId adicionado:`, JSON.stringify(dataWithUserId, null, 2));
           
-          const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[Math.min(index, files.length - 1)], resolvedUserId);
+          const parsedPolicy = await this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[Math.min(index, files.length - 1)], resolvedUserId);
           console.log(`✅ Apólice convertida com sucesso:`, parsedPolicy.name);
           
           allResults.push(parsedPolicy);
@@ -221,7 +221,7 @@ export class BatchFileProcessor {
     }
   }
 
-  private convertToParsedPolicy(data: any, fileName: string, file: File, userId: string): ParsedPolicyData {
+  private async convertToParsedPolicy(data: any, fileName: string, file: File, userId: string): Promise<ParsedPolicyData> {
     console.log('🔄 Convertendo dados para ParsedPolicy com validação robusta:', data);
     console.log('👤 userId para conversão:', userId);
     
@@ -232,7 +232,7 @@ export class BatchFileProcessor {
     }
     
     // Usar validador robusto sem alucinação
-    const { RobustDataValidator } = require('@/utils/robustDataValidator');
+    const { RobustDataValidator } = await import('@/utils/robustDataValidator');
     const validationResult = RobustDataValidator.validateWithoutHallucination(data);
     
     if (!validationResult.isValid) {
