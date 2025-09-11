@@ -68,6 +68,11 @@ export const EmployeesListNew: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
+  // Buscar dados incluindo campos do colaboradores
+  useEffect(() => {
+    searchEmployees('');
+  }, []);
+
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     searchEmployees(value);
@@ -207,44 +212,42 @@ export const EmployeesListNew: React.FC = () => {
 
                 <div className="space-y-3 pr-12">
                   {/* Nome e Status */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <h4 className="font-semibold text-lg">{employee.full_name}</h4>
-                        <Badge className={employee.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                          {employee.status}
-                        </Badge>
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <h4 className="font-semibold text-lg">{employee.full_name}</h4>
+                      <Badge className={employee.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                        {employee.status}
+                      </Badge>
                     </div>
                   </div>
 
-                  {/* Informações em grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  {/* Informações em grid - 4 colunas */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-muted-foreground">
                     {/* CPF */}
                     <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-muted-foreground" />
+                      <Building className="h-4 w-4" />
                       <span>CPF: {formatCPF(employee.cpf)}</span>
                     </div>
 
                     {/* Email */}
                     {employee.email && (
                       <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <Mail className="h-4 w-4" />
                         <span>{employee.email}</span>
                       </div>
                     )}
 
                     {/* Empresa */}
                     <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-muted-foreground" />
-                      <span>{employee.companies?.legal_name || 'Empresa não informada'}</span>
+                      <Building className="h-4 w-4" />
+                      <span>{employee.companies?.legal_name || 'ABALISTSA'}</span>
                     </div>
 
                     {/* Telefone */}
                     {employee.phone && (
                       <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <Phone className="h-4 w-4" />
                         <span>{employee.phone}</span>
                       </div>
                     )}
@@ -252,7 +255,7 @@ export const EmployeesListNew: React.FC = () => {
                     {/* Cargo */}
                     {(employee as any).cargo && (
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
+                        <User className="h-4 w-4" />
                         <span>{(employee as any).cargo}</span>
                       </div>
                     )}
@@ -260,16 +263,16 @@ export const EmployeesListNew: React.FC = () => {
                     {/* Data de Admissão */}
                     {(employee as any).data_admissao && (
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <Calendar className="h-4 w-4" />
                         <span>Admissão: {formatDate((employee as any).data_admissao)}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Custo Mensal */}
+                  {/* Custo Mensal em destaque */}
                   {(employee as any).custo_mensal && (
-                    <div className="text-green-600 font-semibold">
-                      Custo Mensal: {formatCurrency((employee as any).custo_mensal)}
+                    <div className="text-green-600 font-semibold text-base">
+                      Custo: {formatCurrency((employee as any).custo_mensal)}
                     </div>
                   )}
 

@@ -123,6 +123,10 @@ export function useCollaborators() {
         phone: colaborador.telefone,
         birth_date: colaborador.data_nascimento,
         status: colaborador.status,
+        cargo: colaborador.cargo,
+        centro_custo: colaborador.centro_custo,
+        data_admissao: colaborador.data_admissao,
+        custo_mensal: colaborador.custo_mensal,
         companies: colaborador.empresas ? {
           id: colaborador.empresas.id,
           cnpj: colaborador.empresas.cnpj || '',
