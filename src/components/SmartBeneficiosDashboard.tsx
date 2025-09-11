@@ -37,6 +37,8 @@ import { RequestsNewDashboard } from '@/components/RequestsNewDashboard';
 import { AdminRequestsDashboard } from '@/components/AdminRequestsDashboard';
 import { AdminTicketsDashboard } from '@/components/AdminTicketsDashboard';
 import { EmployeesListNew } from '@/components/EmployeesListNew';
+import { ConsolidatedReportPDF } from '@/components/ConsolidatedReportPDF';
+import { TicketsReportPDF } from '@/components/TicketsReportPDF';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -362,10 +364,7 @@ export const SmartBeneficiosDashboard = () => {
                     Relatório consolidado geral
                   </p>
                   <div className="flex flex-col gap-2">
-                    <Button className="w-full text-xs sm:text-sm h-8 sm:h-10">
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                      Exportar PDF
-                    </Button>
+                    <ConsolidatedReportPDF className="w-full text-xs sm:text-sm h-8 sm:h-10" />
                     <Button variant="outline" className="w-full text-xs sm:text-sm h-8 sm:h-10">
                       <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Exportar Excel
@@ -383,10 +382,7 @@ export const SmartBeneficiosDashboard = () => {
                     Histórico completo de solicitações por período
                   </p>
                   <div className="flex flex-col gap-2">
-                    <Button className="w-full text-xs sm:text-sm h-8 sm:h-10">
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                      Exportar PDF
-                    </Button>
+                    <TicketsReportPDF className="w-full text-xs sm:text-sm h-8 sm:h-10" />
                     <Button variant="outline" className="w-full text-xs sm:text-sm h-8 sm:h-10">
                       <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Exportar Excel
