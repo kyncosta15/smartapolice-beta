@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -78,7 +78,7 @@ export function TicketsReportPDF({ className }: TicketsReportPDFProps) {
         ['Taxa de Rejeição', stats.total > 0 ? `${((stats.rejeitadas / stats.total) * 100).toFixed(1)}%` : '0%']
       ];
 
-      pdf.autoTable({
+      autoTable(pdf, {
         startY: 90,
         head: [['Métrica', 'Valor']],
         body: summaryData,
@@ -104,7 +104,7 @@ export function TicketsReportPDF({ className }: TicketsReportPDFProps) {
         ['Com Erro', stats.erros.toString(), stats.total > 0 ? `${((stats.erros / stats.total) * 100).toFixed(1)}%` : '0%']
       ];
 
-      pdf.autoTable({
+      autoTable(pdf, {
         startY: currentY + 10,
         head: [['Status', 'Quantidade', 'Percentual']],
         body: statusData,
@@ -144,7 +144,7 @@ export function TicketsReportPDF({ className }: TicketsReportPDFProps) {
       ]);
 
       if (monthlyTrendData.length > 0) {
-        pdf.autoTable({
+        autoTable(pdf, {
           startY: currentY + 10,
           head: [['Mês', 'Quantidade de Tickets']],
           body: monthlyTrendData,
@@ -185,7 +185,7 @@ export function TicketsReportPDF({ className }: TicketsReportPDFProps) {
       });
 
       if (ticketsTableData.length > 0) {
-        pdf.autoTable({
+        autoTable(pdf, {
           startY: currentY + 10,
           head: [['Protocolo', 'Status', 'Colaborador', 'Data']],
           body: ticketsTableData,

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -80,7 +80,7 @@ export function ConsolidatedReportPDF({ className }: ConsolidatedReportPDFProps)
         ['Tickets Processados', stats.ticketsProcessados.toString()]
       ];
 
-      pdf.autoTable({
+      autoTable(pdf, {
         startY: 80,
         head: [['Métrica', 'Valor']],
         body: summaryData,
@@ -111,7 +111,7 @@ export function ConsolidatedReportPDF({ className }: ConsolidatedReportPDFProps)
         `${((count as number / stats.totalColaboradores) * 100).toFixed(1)}%`
       ]);
 
-      pdf.autoTable({
+      autoTable(pdf, {
         startY: currentY + 10,
         head: [['Status', 'Quantidade', 'Percentual']],
         body: statusData,
@@ -144,7 +144,7 @@ export function ConsolidatedReportPDF({ className }: ConsolidatedReportPDFProps)
         `${(((cost as number) / stats.custoMensalTotal) * 100).toFixed(1)}%`
       ]);
 
-      pdf.autoTable({
+      autoTable(pdf, {
         startY: currentY + 10,
         head: [['Centro de Custo', 'Custo Mensal', 'Percentual']],
         body: costData,
