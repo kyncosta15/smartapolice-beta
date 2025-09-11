@@ -992,11 +992,13 @@ export type Database = {
           expiration_date: string | null
           extraction_timestamp: string | null
           extraido_em: string | null
+          file_hash: string | null
           fim_vigencia: string | null
           forma_pagamento: string | null
           franquia: number | null
           id: string
           inicio_vigencia: string | null
+          last_audit_id: string | null
           modelo_veiculo: string | null
           numero_apolice: string | null
           placa: string | null
@@ -1018,6 +1020,7 @@ export type Database = {
           valor_mensal_num: number | null
           valor_parcela: number | null
           valor_premio: number | null
+          version_number: number | null
         }
         Insert: {
           ano_modelo?: string | null
@@ -1035,11 +1038,13 @@ export type Database = {
           expiration_date?: string | null
           extraction_timestamp?: string | null
           extraido_em?: string | null
+          file_hash?: string | null
           fim_vigencia?: string | null
           forma_pagamento?: string | null
           franquia?: number | null
           id?: string
           inicio_vigencia?: string | null
+          last_audit_id?: string | null
           modelo_veiculo?: string | null
           numero_apolice?: string | null
           placa?: string | null
@@ -1061,6 +1066,7 @@ export type Database = {
           valor_mensal_num?: number | null
           valor_parcela?: number | null
           valor_premio?: number | null
+          version_number?: number | null
         }
         Update: {
           ano_modelo?: string | null
@@ -1078,11 +1084,13 @@ export type Database = {
           expiration_date?: string | null
           extraction_timestamp?: string | null
           extraido_em?: string | null
+          file_hash?: string | null
           fim_vigencia?: string | null
           forma_pagamento?: string | null
           franquia?: number | null
           id?: string
           inicio_vigencia?: string | null
+          last_audit_id?: string | null
           modelo_veiculo?: string | null
           numero_apolice?: string | null
           placa?: string | null
@@ -1104,6 +1112,7 @@ export type Database = {
           valor_mensal_num?: number | null
           valor_parcela?: number | null
           valor_premio?: number | null
+          version_number?: number | null
         }
         Relationships: [
           {
@@ -1121,6 +1130,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      policy_audit: {
+        Row: {
+          changed_fields: string[] | null
+          created_at: string
+          created_by: string | null
+          data_after: Json | null
+          data_before: Json | null
+          file_hash: string | null
+          id: string
+          operation: string
+          policy_id: string
+          user_id: string
+          version_number: number
+        }
+        Insert: {
+          changed_fields?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          data_after?: Json | null
+          data_before?: Json | null
+          file_hash?: string | null
+          id?: string
+          operation: string
+          policy_id: string
+          user_id: string
+          version_number?: number
+        }
+        Update: {
+          changed_fields?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          data_after?: Json | null
+          data_before?: Json | null
+          file_hash?: string | null
+          id?: string
+          operation?: string
+          policy_id?: string
+          user_id?: string
+          version_number?: number
+        }
+        Relationships: []
+      }
+      policy_confirmed_fields: {
+        Row: {
+          confirmed_at: string
+          confirmed_by: string | null
+          field_name: string
+          field_value: string
+          id: string
+          policy_id: string
+        }
+        Insert: {
+          confirmed_at?: string
+          confirmed_by?: string | null
+          field_name: string
+          field_value: string
+          id?: string
+          policy_id: string
+        }
+        Update: {
+          confirmed_at?: string
+          confirmed_by?: string | null
+          field_name?: string
+          field_value?: string
+          id?: string
+          policy_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1681,6 +1759,10 @@ export type Database = {
       delete_user_completely: {
         Args: { user_id_param: string }
         Returns: boolean
+      }
+      generate_file_hash: {
+        Args: { file_content: string }
+        Returns: string
       }
       generate_protocol_code: {
         Args: Record<PropertyKey, never>
