@@ -37,23 +37,48 @@ const analyzeInstallmentStatus = (dueDate: string): 'paga' | 'pendente' => {
 const generateInstallmentsFromN8NData = (data: any): Array<{numero: number, valor: number, data: string, status: 'paga' | 'pendente'}> => {
   const installments = [];
   
-  // CORREÇÃO: Verificar se parcelas é um número válido e valor_parcela existe
-  const numParcelas = Number(data.parcelas) || 1;
-  const valorParcela = Number(data.valor_parcela) || Number(data.premio) || 0;
+  // Usar custo_mensal como valor prioritário da parcela
+  const valorParcela = Number(data.custo_mensal) || Number(data.valor_parcela) || (Number(data.premio) / Number(data.parcelas)) || 0;
   
-  // Se temos vencimentos_futuros e valor_parcela, usar esses dados
+  console.log('📊 Processando parcelas N8N:', {
+    vencimentos_futuros: data.vencimentos_futuros,
+    parcelas: data.parcelas,
+    custo_mensal: data.custo_mensal,
+    valorParcela
+  });
+  
+  // PRIORIDADE 1: Se temos vencimentos_futuros do N8N, usar exatamente como recebido
   if (data.vencimentos_futuros && Array.isArray(data.vencimentos_futuros) && data.vencimentos_futuros.length > 0) {
-    data.vencimentos_futuros.forEach((vencimento: string, index: number) => {
+    console.log('✅ Usando vencimentos_futuros do N8N');
+    data.vencimentos_futuros.forEach((vencimento: any, index: number) => {
+      let dataVencimento: string;
+      let valorVencimento = valorParcela;
+      
+      // Processar diferentes formatos de vencimento
+      if (typeof vencimento === 'string') {
+        dataVencimento = vencimento;
+      } else if (vencimento && typeof vencimento === 'object') {
+        dataVencimento = vencimento.data || vencimento.date || vencimento.vencimento;
+        valorVencimento = Number(vencimento.valor) || Number(vencimento.value) || valorParcela;
+      } else {
+        // Fallback para datas mensais
+        const baseDate = new Date(data.inicio || new Date());
+        baseDate.setMonth(baseDate.getMonth() + index);
+        dataVencimento = baseDate.toISOString().split('T')[0];
+      }
+      
       installments.push({
         numero: index + 1,
-        valor: valorParcela,
-        data: vencimento,
-        status: analyzeInstallmentStatus(vencimento)
+        valor: Math.round(valorVencimento * 100) / 100,
+        data: dataVencimento,
+        status: analyzeInstallmentStatus(dataVencimento)
       });
     });
   }
-  // NOVA LÓGICA: Se não há vencimentos mas há parcelas > 0, gerar parcelas mensais
-  else if (numParcelas > 0) {
+  // PRIORIDADE 2: Usar número de parcelas do N8N
+  else if (data.parcelas && Number(data.parcelas) > 0) {
+    console.log('✅ Gerando parcelas baseado no número informado pelo N8N');
+    const numParcelas = Number(data.parcelas);
     const startDate = new Date(data.inicio || new Date());
     
     for (let i = 0; i < numParcelas; i++) {
@@ -62,23 +87,25 @@ const generateInstallmentsFromN8NData = (data: any): Array<{numero: number, valo
       
       installments.push({
         numero: i + 1,
-        valor: valorParcela,
+        valor: Math.round(valorParcela * 100) / 100,
         data: installmentDate.toISOString().split('T')[0],
         status: analyzeInstallmentStatus(installmentDate.toISOString().split('T')[0])
       });
     }
   }
-  // FALLBACK: Criar ao menos uma parcela com o valor total
+  // FALLBACK: Parcela única
   else {
+    console.log('⚠️ Criando parcela única de fallback');
     const startDate = new Date(data.inicio || new Date());
     installments.push({
       numero: 1,
-      valor: Number(data.premio) || 0,
+      valor: Math.round((Number(data.premio) || 0) * 100) / 100,
       data: startDate.toISOString().split('T')[0],
       status: 'pendente' as const
     });
   }
   
+  console.log('✅ Parcelas geradas:', installments);
   return installments;
 };
 
