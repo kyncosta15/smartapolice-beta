@@ -11,7 +11,9 @@ import {
   Gauge,
   Map,
   Settings,
-  Users2
+  Users2,
+  Car,
+  Calculator
 } from "lucide-react"
 
 interface AppSidebarProps {
@@ -62,6 +64,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       description: "Gerenciar suas apólices"
     },
     {
+      title: "Veículos",
+      icon: Car,
+      id: "veiculos",
+      description: "Gestão de veículos e documentos"
+    },
+    {
       title: "Upload",
       icon: FileText,
       id: "upload",
@@ -94,6 +102,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       icon: Map,
       id: "regions",
       description: "Distribuição regional"
+    },
+    {
+      title: "Veículos & FIPE",
+      icon: Car,
+      id: "veiculos",
+      description: "Gestão de veículos e cálculos FIPE"
     },
     {
       title: "Upload",

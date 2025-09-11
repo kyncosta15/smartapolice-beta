@@ -13,6 +13,7 @@ import { InstallmentsDashboard } from './InstallmentsDashboard';
 import { PolicyInstallmentsCard } from './installments/PolicyInstallmentsCard';
 import { RegionalMetrics } from './dashboard/RegionalMetrics';
 import { ExportDashboard } from './ExportDashboard';
+import { VeiculosManagement } from './VeiculosManagement';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 
@@ -195,6 +196,16 @@ export function ContentRenderer({
         </div>
       );
 
+    case 'veiculos':
+      return (
+        <div className="p-6">
+          <VeiculosManagement 
+            allPolicies={allPolicies}
+            onPolicyUpdate={onPolicyUpdate}
+            onPolicySelect={onPolicySelect}
+          />
+        </div>
+      );
 
     case 'regions':
       return (

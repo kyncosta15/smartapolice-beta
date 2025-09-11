@@ -9,7 +9,6 @@ import { AuthPage } from '@/pages/AuthPage';
 import { LandingPage } from "@/components/LandingPage";
 import { SystemSelection } from "@/components/SystemSelection";
 import { SmartApoliceAuth } from "@/components/SmartApoliceAuth";
-import { SmartApoliceMain } from "@/pages/SmartApoliceMain";
 import { SmartBeneficiosAuthFunctional } from "@/components/SmartBeneficiosAuthFunctional";
 import { SmartBeneficiosGuard } from "@/components/SmartBeneficiosGuard";
 import { ColaboradorSolicitacao } from "@/components/ColaboradorSolicitacao";
@@ -44,7 +43,6 @@ const App = () => {
               
               {/* Protected routes */}
               <Route path="/dashboard" element={<AuthGuard />} />
-              <Route path="/smartapolice" element={<SmartApoliceMain />} />
               <Route
                 path="/smartbeneficios/dashboard"
                 element={<SmartBeneficiosGuard />}
