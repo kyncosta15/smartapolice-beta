@@ -29,15 +29,8 @@ export class BatchFileProcessor {
     console.log(`🚀 BatchFileProcessor iniciando processamento de ${files.length} arquivos`);
     console.log(`👤 userId recebido:`, userId);
     
-    if (!userId) {
-      console.error('❌ ERRO CRÍTICO: userId é obrigatório para processamento');
-      this.toast({
-        title: "❌ Erro de Autenticação",
-        description: "Usuário não autenticado. Faça login para continuar.",
-        variant: "destructive",
-      });
-      throw new Error('Usuário não autenticado. Faça login para continuar.');
-    }
+    // NOTA: userId pode ser null se os dados vierem do N8N com user_id nos dados
+    // Verificaremos e resolveremos o user_id durante o processamento
     
     // Inicializar status dos arquivos
     files.forEach(file => {
@@ -74,10 +67,30 @@ export class BatchFileProcessor {
           const singleData = extractedDataArray[index];
           console.log(`🔄 Processando item ${index + 1}/${extractedDataArray.length}:`, singleData);
           
-          // CORREÇÃO CRÍTICA: Garantir que userId está sempre presente nos dados
+          // CORREÇÃO CRÍTICA: Resolver user_id usando estratégias robustas
+          const { UserIdResolver } = await import('@/utils/userIdResolver');
+          let resolvedUserId: string;
+          
+          try {
+            resolvedUserId = await UserIdResolver.resolveUserId(singleData, userId);
+            console.log(`✅ User ID resolvido: ${resolvedUserId}`);
+          } catch (error) {
+            console.error('❌ Falha ao resolver user_id:', error);
+            
+            // Debug detalhado para troubleshooting
+            await UserIdResolver.debugUserResolution(singleData, userId);
+            
+            this.updateFileStatus(files[Math.min(index, files.length - 1)]?.name || `Item ${index + 1}`, {
+              progress: 100,
+              status: 'failed',
+              message: `❌ Erro: ${error instanceof Error ? error.message : 'Não foi possível identificar o usuário'}`
+            });
+            continue; // Pular este item e continuar com os próximos
+          }
+          
           const dataWithUserId = {
             ...singleData,
-            user_id: userId // Forçar userId nos dados
+            user_id: resolvedUserId // Garantir userId nos dados
           };
           
           const relatedFileName = this.findRelatedFileNameSafely(singleData, files) || files[Math.min(index, files.length - 1)]?.name || `Arquivo ${index + 1}`;
@@ -89,8 +102,8 @@ export class BatchFileProcessor {
           });
           
           try {
-            console.log(`✅ Convertendo dados para apólice com userId: ${userId}`);
-            const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[Math.min(index, files.length - 1)], userId);
+            console.log(`✅ Convertendo dados para apólice com userId: ${resolvedUserId}`);
+            const parsedPolicy = this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[Math.min(index, files.length - 1)], resolvedUserId);
             allResults.push(parsedPolicy);
             
             // Salvar no banco usando sistema robusto
@@ -98,7 +111,7 @@ export class BatchFileProcessor {
             if (relatedFile) {
               console.log(`💾 Salvando apólice com sistema robusto: ${parsedPolicy.name}`);
               const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
-              const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, userId);
+              const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, resolvedUserId);
               
               if (saveResult.success) {
                 console.log(`✅ Apólice salva com sucesso: ${parsedPolicy.name}`);

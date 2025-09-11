@@ -13,7 +13,8 @@ import {
   Settings,
   Users2,
   Car,
-  Calculator
+  Calculator,
+  TestTube
 } from "lucide-react"
 
 interface AppSidebarProps {
@@ -138,6 +139,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       icon: Settings,
       id: "settings",
       description: "Ajustes do sistema"
+    },
+    {
+      title: "Teste N8N",
+      icon: TestTube,
+      id: "n8n-test",
+      description: "Testar dados do N8N"
     }
   ];
 

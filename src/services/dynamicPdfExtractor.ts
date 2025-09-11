@@ -98,6 +98,9 @@ export class DynamicPDFExtractor {
 
   static async extractFromMultiplePDFs(files: File[], userId?: string): Promise<any[]> {
     console.log(`🔄 Processando ${files.length} arquivos individualmente (método mais confiável)`);
+    console.log(`👤 userId recebido:`, userId);
+    
+    // IMPORTANTE: userId pode ser null se vier do N8N, será resolvido posteriormente
     
     const results: any[] = [];
     

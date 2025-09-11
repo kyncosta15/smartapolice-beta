@@ -15,6 +15,7 @@ import { RegionalMetrics } from './dashboard/RegionalMetrics';
 import { ExportDashboard } from './ExportDashboard';
 import { VeiculosManagement } from './VeiculosManagement';
 import { SinistrosManagement } from './SinistrosManagement';
+import { N8NDataTester } from './N8NDataTester';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 
@@ -223,6 +224,13 @@ export function ContentRenderer({
       return (
         <div className="p-6">
           <RegionalMetrics />
+        </div>
+      );
+
+    case 'n8n-test':
+      return (
+        <div className="p-6">
+          <N8NDataTester />
         </div>
       );
 
