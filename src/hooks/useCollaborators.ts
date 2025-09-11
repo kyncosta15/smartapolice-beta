@@ -486,16 +486,26 @@ export function useCollaborators() {
     }
   };
 
-  const getDocumentTypeFromFileName = (fileName: string): string => {
-    const name = fileName.toLowerCase();
-    if (name.includes('rg') || name.includes('cpf') || name.includes('cnh') || name.includes('identidade')) {
-      return 'documento_pessoal';
-    } else if (name.includes('comprovante') || name.includes('residencia') || name.includes('endereco')) {
-      return 'comprovante_residencia';  
-    } else if (name.includes('vinculo') || name.includes('trabalho') || name.includes('emprego')) {
-      return 'comprovacao_vinculo';
+  const deleteEmployee = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('colaboradores')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({ title: 'Colaborador excluído com sucesso!' });
+      await fetchEmployees();
+    } catch (err) {
+      console.error('Error deleting employee:', err);
+      toast({
+        title: 'Erro ao excluir colaborador',
+        description: err instanceof Error ? err.message : 'Erro desconhecido',
+        variant: 'destructive'
+      });
+      throw err;
     }
-    return 'documento_pessoal'; // default
   };
 
   const loadData = async (search?: string) => {
@@ -539,7 +549,20 @@ export function useCollaborators() {
     createDependent,
     updateDependent,
     deleteDependent,
+    deleteEmployee,
     searchEmployees: (search: string) => loadData(search),
     refetch: () => loadData()
+  };
+
+  const getDocumentTypeFromFileName = (fileName: string): string => {
+    const name = fileName.toLowerCase();
+    if (name.includes('rg') || name.includes('cpf') || name.includes('cnh') || name.includes('identidade')) {
+      return 'documento_pessoal';
+    } else if (name.includes('comprovante') || name.includes('residencia') || name.includes('endereco')) {
+      return 'comprovante_residencia';  
+    } else if (name.includes('vinculo') || name.includes('trabalho') || name.includes('emprego')) {
+      return 'comprovacao_vinculo';
+    }
+    return 'documento_pessoal'; // default
   };
 }

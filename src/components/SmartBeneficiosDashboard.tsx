@@ -36,7 +36,7 @@ import { ProtocolosAdminDashboard } from '@/components/ProtocolosAdminDashboard'
 import { RequestsNewDashboard } from '@/components/RequestsNewDashboard';
 import { AdminRequestsDashboard } from '@/components/AdminRequestsDashboard';
 import { AdminTicketsDashboard } from '@/components/AdminTicketsDashboard';
-import { EmployeesList } from '@/components/EmployeesList';
+import { EmployeesListNew } from '@/components/EmployeesListNew';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -332,7 +332,7 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Colaboradores Tab */}
           <TabsContent value="colaboradores">
-            <EmployeesList />
+            <EmployeesListNew />
           </TabsContent>
 
           {/* Solicitações Tab */}

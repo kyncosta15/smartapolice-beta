@@ -184,14 +184,10 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-1">
             <TabsTrigger value="cadastro" className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Cadastrar
-            </TabsTrigger>
-            <TabsTrigger value="gerenciar" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Gerenciar
+              Cadastrar Novo Colaborador
             </TabsTrigger>
           </TabsList>
 
@@ -458,150 +454,6 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
                     </div>
                   </form>
                 </Form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="gerenciar" className="space-y-4 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Colaboradores Cadastrados
-                </CardTitle>
-                <div className="flex items-center gap-2 mt-4">
-                  <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar colaborador..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Badge variant="outline">
-                    {colaboradores.length} colaboradores • {colaboradores.filter(c => c.status === 'ativo').length} ativos • {colaboradores.filter(c => c.status !== 'ativo').length} inativos
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="text-center py-8">
-                    <p>Carregando colaboradores...</p>
-                  </div>
-                ) : filteredColaboradores.length === 0 ? (
-                  <div className="text-center py-8">
-                    <User className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">
-                      {searchTerm ? 'Nenhum colaborador encontrado' : 'Nenhum colaborador cadastrado'}
-                    </h3>
-                    <p className="text-muted-foreground">
-                      {searchTerm 
-                        ? 'Tente alterar os termos de busca' 
-                        : 'Use a aba "Cadastrar" para adicionar colaboradores'
-                      }
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {filteredColaboradores.map((colaborador) => (
-                      <div 
-                        key={colaborador.id} 
-                        className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1 flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-medium">{colaborador.nome}</h4>
-                              <Badge 
-                                className={
-                                  colaborador.status === 'ativo' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-gray-100 text-gray-800'
-                                }
-                              >
-                                {colaborador.status}
-                              </Badge>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <CreditCard className="h-3 w-3" />
-                                CPF: {colaborador.cpf}
-                              </div>
-                              {colaborador.email && (
-                                <div className="flex items-center gap-1">
-                                  <Mail className="h-3 w-3" />
-                                  {colaborador.email}
-                                </div>
-                              )}
-                              {colaborador.cargo && (
-                                <div className="flex items-center gap-1">
-                                  <Briefcase className="h-3 w-3" />
-                                  {colaborador.cargo}
-                                </div>
-                              )}
-                              {colaborador.telefone && (
-                                <div className="flex items-center gap-1">
-                                  <Phone className="h-3 w-3" />
-                                  {colaborador.telefone}
-                                </div>
-                              )}
-                              {colaborador.centro_custo && (
-                                <div className="flex items-center gap-1">
-                                  <Building className="h-3 w-3" />
-                                  {colaborador.centro_custo}
-                                </div>
-                              )}
-                              {colaborador.data_admissao && (
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  Admissão: {new Date(colaborador.data_admissao).toLocaleDateString('pt-BR')}
-                                </div>
-                              )}
-                            </div>
-                            
-                            {colaborador.custo_mensal && (
-                              <div className="text-sm font-medium text-green-600">
-                                Custo: R$ {colaborador.custo_mensal.toFixed(2).replace('.', ',')}
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {colaborador.status === 'ativo' && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                                    <UserX className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Inativar Colaborador</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Tem certeza que deseja inativar <strong>{colaborador.nome}</strong>? 
-                                      Esta ação marcará o colaborador como inativo no sistema.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                      onClick={() => handleInativar(colaborador.id)}
-                                      className="bg-red-600 hover:bg-red-700"
-                                    >
-                                      Inativar
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
