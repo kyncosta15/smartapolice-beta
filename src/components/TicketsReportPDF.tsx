@@ -113,6 +113,62 @@ export function TicketsReportPDF({ className }: TicketsReportPDFProps) {
         styles: { fontSize: 10 }
       });
 
+      // Add donut chart for status distribution
+      currentY = (pdf as any).lastAutoTable.finalY + 30;
+      if (currentY > pageHeight - 100) {
+        pdf.addPage();
+        currentY = 30;
+      }
+
+      pdf.setFontSize(12);
+      pdf.text('Gráfico de Status dos Tickets', 20, currentY);
+      
+      // Create donut chart
+      const centerX = pageWidth / 2;
+      const centerY = currentY + 40;
+      const outerRadius = 35;
+      const innerRadius = 20;
+      let startAngle = 0;
+      
+      const statusColors = [
+        [33, 150, 243],   // Blue for received
+        [76, 175, 80],    // Green for processed
+        [244, 67, 54]     // Red for errors
+      ];
+      
+      const statusValues = [stats.recebidas, stats.processadas, stats.erros];
+      const statusLabels = ['Recebidas', 'Processadas', 'Com Erro'];
+      
+      statusValues.forEach((value, index) => {
+        if (value > 0) {
+          const angle = (value / stats.total) * 2 * Math.PI;
+          const color = statusColors[index];
+          
+          pdf.setFillColor(color[0], color[1], color[2]);
+          
+          // Draw donut segment (simplified as rectangles for better compatibility)
+          const midAngle = startAngle + angle / 2;
+          const x = centerX + (outerRadius - 10) * Math.cos(midAngle);
+          const y = centerY + (outerRadius - 10) * Math.sin(midAngle);
+          
+          pdf.circle(x, y, 8, 'F');
+          
+          startAngle += angle;
+        }
+      });
+
+      // Add legend for donut chart
+      let legendY = centerY + 60;
+      statusLabels.forEach((label, index) => {
+        const color = statusColors[index];
+        pdf.setFillColor(color[0], color[1], color[2]);
+        pdf.rect(centerX - 60, legendY, 5, 5, 'F');
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(10);
+        pdf.text(`${label}: ${statusValues[index]}`, centerX - 50, legendY + 4);
+        legendY += 12;
+      });
+
       // Monthly Trend (last 6 months)
       currentY = (pdf as any).lastAutoTable.finalY + 20;
       
@@ -151,6 +207,65 @@ export function TicketsReportPDF({ className }: TicketsReportPDFProps) {
           theme: 'grid',
           headStyles: { fillColor: [255, 152, 0] },
           styles: { fontSize: 10 }
+        });
+
+        // Add line chart for monthly trend
+        currentY = (pdf as any).lastAutoTable.finalY + 30;
+        if (currentY > pageHeight - 100) {
+          pdf.addPage();
+          currentY = 30;
+        }
+
+        pdf.setFontSize(12);
+        pdf.text('Gráfico de Tendência Mensal', 20, currentY);
+        
+        // Create line chart
+        const chartStartX = 30;
+        const chartStartY = currentY + 20;
+        const chartWidth = pageWidth - 60;
+        const chartHeight = 50;
+        const maxTickets = Math.max(...Object.values(monthlyData) as number[]);
+        
+        // Draw axes
+        pdf.setDrawColor(0, 0, 0);
+        pdf.line(chartStartX, chartStartY + chartHeight, chartStartX + chartWidth, chartStartY + chartHeight); // X-axis
+        pdf.line(chartStartX, chartStartY, chartStartX, chartStartY + chartHeight); // Y-axis
+        
+        // Draw line
+        const months = Object.keys(monthlyData);
+        const stepX = chartWidth / (months.length - 1);
+        let prevX = chartStartX;
+        let prevY = chartStartY + chartHeight - ((Object.values(monthlyData)[0] as number / maxTickets) * chartHeight);
+        
+        pdf.setDrawColor(33, 150, 243);
+        pdf.setLineWidth(2);
+        
+        Object.values(monthlyData).forEach((count, index) => {
+          if (index > 0) {
+            const currentX = chartStartX + index * stepX;
+            const currentY = chartStartY + chartHeight - ((count as number / maxTickets) * chartHeight);
+            
+            pdf.line(prevX, prevY, currentX, currentY);
+            
+            // Draw points
+            pdf.setFillColor(33, 150, 243);
+            pdf.circle(currentX, currentY, 2, 'F');
+            
+            prevX = currentX;
+            prevY = currentY;
+          } else {
+            // First point
+            pdf.setFillColor(33, 150, 243);
+            pdf.circle(prevX, prevY, 2, 'F');
+          }
+        });
+        
+        // Add month labels
+        pdf.setFontSize(8);
+        pdf.setTextColor(0, 0, 0);
+        months.forEach((month, index) => {
+          const x = chartStartX + index * stepX;
+          pdf.text(month, x - 10, chartStartY + chartHeight + 10);
         });
       } else {
         pdf.setFontSize(10);

@@ -120,6 +120,60 @@ export function ConsolidatedReportPDF({ className }: ConsolidatedReportPDFProps)
         styles: { fontSize: 10 }
       });
 
+      // Add pie chart for status distribution
+      currentY = (pdf as any).lastAutoTable.finalY + 30;
+      if (currentY > pageHeight - 100) {
+        pdf.addPage();
+        currentY = 30;
+      }
+
+      pdf.setFontSize(12);
+      pdf.text('Gráfico de Distribuição por Status', 20, currentY);
+      
+      // Create pie chart
+      const centerX = pageWidth / 2;
+      const centerY = currentY + 40;
+      const radius = 30;
+      let startAngle = 0;
+      
+      const colors = [
+        [76, 175, 80],   // Green for active
+        [255, 152, 0],   // Orange for inactive
+        [244, 67, 54],   // Red for others
+        [33, 150, 243]   // Blue for additional
+      ];
+      
+      Object.entries(statusCounts).forEach(([status, count], index) => {
+        const angle = (count as number / stats.totalColaboradores) * 2 * Math.PI;
+        const color = colors[index % colors.length];
+        
+        pdf.setFillColor(color[0], color[1], color[2]);
+        
+        // Draw pie slice
+        const endAngle = startAngle + angle;
+        const x1 = centerX + radius * Math.cos(startAngle);
+        const y1 = centerY + radius * Math.sin(startAngle);
+        const x2 = centerX + radius * Math.cos(endAngle);
+        const y2 = centerY + radius * Math.sin(endAngle);
+        
+        // Simple pie slice representation using triangles
+        pdf.triangle(centerX, centerY, x1, y1, x2, y2, 'F');
+        
+        startAngle = endAngle;
+      });
+
+      // Add legend
+      let legendY = centerY + radius + 20;
+      Object.entries(statusCounts).forEach(([status, count], index) => {
+        const color = colors[index % colors.length];
+        pdf.setFillColor(color[0], color[1], color[2]);
+        pdf.rect(centerX - 60, legendY, 5, 5, 'F');
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(10);
+        pdf.text(`${status}: ${count}`, centerX - 50, legendY + 4);
+        legendY += 10;
+      });
+
       // Cost Distribution by Department
       currentY = (pdf as any).lastAutoTable.finalY + 20;
       
@@ -151,6 +205,55 @@ export function ConsolidatedReportPDF({ className }: ConsolidatedReportPDFProps)
         theme: 'grid',
         headStyles: { fillColor: [255, 152, 0] },
         styles: { fontSize: 10 }
+      });
+
+      // Add bar chart for cost distribution
+      currentY = (pdf as any).lastAutoTable.finalY + 30;
+      if (currentY > pageHeight - 100) {
+        pdf.addPage();
+        currentY = 30;
+      }
+
+      pdf.setFontSize(12);
+      pdf.text('Gráfico de Custos por Centro de Custo', 20, currentY);
+      
+      // Create bar chart
+      const chartStartX = 30;
+      const chartStartY = currentY + 20;
+      const chartWidth = pageWidth - 60;
+      const chartHeight = 60;
+      const maxCost = Math.max(...Object.values(costsByDept) as number[]);
+      
+      // Draw axes
+      pdf.setDrawColor(0, 0, 0);
+      pdf.line(chartStartX, chartStartY + chartHeight, chartStartX + chartWidth, chartStartY + chartHeight); // X-axis
+      pdf.line(chartStartX, chartStartY, chartStartX, chartStartY + chartHeight); // Y-axis
+      
+      // Draw bars
+      const barWidth = chartWidth / Object.keys(costsByDept).length - 10;
+      let barX = chartStartX + 5;
+      
+      Object.entries(costsByDept).forEach(([dept, cost], index) => {
+        const barHeight = ((cost as number) / maxCost) * chartHeight;
+        const colors = [
+          [33, 150, 243],   // Blue
+          [76, 175, 80],    // Green
+          [255, 152, 0],    // Orange
+          [156, 39, 176],   // Purple
+          [244, 67, 54]     // Red
+        ];
+        const color = colors[index % colors.length];
+        
+        pdf.setFillColor(color[0], color[1], color[2]);
+        pdf.rect(barX, chartStartY + chartHeight - barHeight, barWidth, barHeight, 'F');
+        
+        // Add label
+        pdf.setFontSize(8);
+        pdf.setTextColor(0, 0, 0);
+        const labelText = dept.length > 8 ? dept.substring(0, 8) + '...' : dept;
+        pdf.text(labelText, barX, chartStartY + chartHeight + 10, { angle: 45 });
+        
+        barX += barWidth + 10;
       });
 
       // Footer
