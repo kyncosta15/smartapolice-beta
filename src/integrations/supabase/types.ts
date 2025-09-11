@@ -230,6 +230,7 @@ export type Database = {
           created_at: string
           dados_preenchidos: Json
           data_protocolo: string | null
+          documentos_anexados: Json | null
           id: string
           ip_origem: string | null
           link_id: string | null
@@ -243,6 +244,7 @@ export type Database = {
           created_at?: string
           dados_preenchidos?: Json
           data_protocolo?: string | null
+          documentos_anexados?: Json | null
           id?: string
           ip_origem?: string | null
           link_id?: string | null
@@ -256,6 +258,7 @@ export type Database = {
           created_at?: string
           dados_preenchidos?: Json
           data_protocolo?: string | null
+          documentos_anexados?: Json | null
           id?: string
           ip_origem?: string | null
           link_id?: string | null
