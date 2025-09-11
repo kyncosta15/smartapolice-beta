@@ -297,6 +297,8 @@ export function useCollaborators() {
 
             if (docError) {
               console.error('❌ Error storing document metadata:', docError);
+            } else {
+              console.log('✅ Document metadata saved:', documentType);
             }
           }
         }

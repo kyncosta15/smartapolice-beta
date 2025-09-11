@@ -41,7 +41,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
+import { useCollaborators } from '@/hooks/useCollaborators';
 
 interface ColaboradorFormData {
   nome: string;
@@ -69,12 +69,12 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
   const { 
-    colaboradores, 
-    addColaborador, 
-    updateColaborador, 
+    employees: colaboradores, 
+    createEmployee: addColaborador, 
+    updateEmployee: updateColaborador, 
     isLoading,
-    loadData 
-  } = useSmartBeneficiosData();
+    refetch: loadData 
+  } = useCollaborators();
 
   const form = useForm<ColaboradorFormData>({
     defaultValues: {
@@ -115,7 +115,7 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
 
       const { data: empresa, error: empresaError } = await supabase
         .from('empresas')
-        .select('id')
+        .select('*')
         .eq('nome', userProfile.company)
         .single();
 
@@ -124,19 +124,24 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
         return;
       }
 
+      // Preparar documentos para upload
+      const documents: File[] = [];
+      if (data.documento_pessoal) documents.push(data.documento_pessoal);
+      if (data.comprovante_residencia) documents.push(data.comprovante_residencia);
+      if (data.comprovacao_vinculo) documents.push(data.comprovacao_vinculo);
+
       await addColaborador({
-        empresa_id: empresa.id,
-        nome: data.nome,
+        fullName: data.nome,
         cpf: data.cpf,
         email: data.email,
-        telefone: data.telefone,
-        cargo: data.cargo,
-        centro_custo: data.centro_custo,
-        data_admissao: data.data_admissao,
-        data_nascimento: data.data_nascimento,
-        custo_mensal: Number(data.custo_mensal),
-        observacoes: data.observacoes,
-        status: 'ativo'
+        phone: data.telefone,
+        birthDate: data.data_nascimento,
+        company: {
+          cnpj: empresa?.cnpj || '',
+          tradeName: empresa?.nome || userProfile.company,
+          legalName: empresa?.nome || userProfile.company
+        },
+        documents: documents.length > 0 ? documents : undefined
       });
 
       toast.success('Colaborador cadastrado com sucesso!');
@@ -152,8 +157,7 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
   const handleInativar = async (colaboradorId: string) => {
     try {
       await updateColaborador(colaboradorId, {
-        status: 'inativo',
-        data_demissao: new Date().toISOString().split('T')[0]
+        status: 'inativo'
       });
 
       toast.success('Colaborador inativado com sucesso!');
@@ -165,9 +169,9 @@ export const ColaboradorModal = ({ children }: ColaboradorModalProps) => {
   };
 
   const filteredColaboradores = colaboradores.filter(colaborador =>
-    colaborador.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    colaborador.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     colaborador.cpf.includes(searchTerm) ||
-    colaborador.cargo?.toLowerCase().includes(searchTerm.toLowerCase())
+    (colaborador.email && colaborador.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (

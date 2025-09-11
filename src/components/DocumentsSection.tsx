@@ -34,6 +34,7 @@ export function DocumentsSection({ colaboradorId }: DocumentsSectionProps) {
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    console.log('🔄 DocumentsSection loaded for colaborador:', colaboradorId);
     fetchDocuments();
   }, [colaboradorId]);
 
