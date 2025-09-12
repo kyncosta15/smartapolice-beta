@@ -244,9 +244,6 @@ export const ColaboradorModal = ({ children, employeeToEdit }: ColaboradorModalP
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gestão de Colaboradores</DialogTitle>
-          <DialogDescription>
-            Cadastre novos colaboradores ou gerencie os existentes
-          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 mt-6">
