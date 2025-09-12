@@ -1,13 +1,10 @@
-
 import { useState } from 'react';
-import { Bell, Menu, LogOut, ChevronDown, PanelLeft, AlertCircle, Calendar } from 'lucide-react';
+import { Bell, LogOut, ChevronDown, AlertCircle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSidebar } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
 
 interface NavbarProps {
@@ -15,14 +12,14 @@ interface NavbarProps {
   onSearchChange: (value: string) => void;
   notificationCount: number;
   policies: any[];
+  onMobileMenuToggle: () => void;
 }
 
-export function Navbar({ searchTerm, onSearchChange, notificationCount, policies }: NavbarProps) {
+export function Navbar({ searchTerm, onSearchChange, notificationCount, policies, onMobileMenuToggle }: NavbarProps) {
   
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
-  const { toggleSidebar } = useSidebar();
   const { toast } = useToast();
 
   const getRoleLabel = (role: string) => {
@@ -54,7 +51,6 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
 
   const handleLogout = async () => {
     try {
-      console.log('Navbar: Starting logout process...');
       setShowUserMenu(false);
       
       toast({
@@ -64,7 +60,6 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
       
       await logout();
     } catch (error) {
-      console.error('Navbar: Logout failed:', error);
       toast({
         title: "Erro no logout",
         description: "Ocorreu um erro ao sair. Tente novamente.",
@@ -93,148 +88,143 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   const notifications = getNotifications();
 
   return (
-    <nav className="bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-      <div className="px-2 sm:px-4 lg:px-6">
-        <div className="flex justify-between items-center h-12 sm:h-16">
-          {/* Left side - Sidebar Toggle and Mobile Menu */}
-          <div className="flex items-center space-x-1 sm:space-x-3">
-            {/* Sidebar Toggle for Desktop */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleSidebar}
-              className="hidden md:flex p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              <div className="w-4 h-4 flex flex-col justify-center gap-[3px]">
-                <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
-                <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
-                <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
-              </div>
-            </Button>
-
-            {/* Mobile Menu Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleSidebar}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 md:hidden transition-colors"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
+    <header className="sticky top-0 z-20 bg-white/70 backdrop-blur border-b border-gray-200">
+      <div className="h-14 flex items-center justify-between px-4 max-w-[1440px] mx-auto">
+        {/* Left side - Brand and Mobile Menu */}
+        <div className="flex items-center gap-2">
+          {/* Mobile Menu Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMobileMenuToggle}
+            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            aria-label="Abrir menu"
+          >
+            <div className="w-5 h-5 flex flex-col justify-center gap-[3px]">
+              <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
+              <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
+              <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
+            </div>
+          </Button>
+          
+          {/* Brand */}
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-semibold text-gray-900">Apólice</span>
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded tracking-wider">
+              BETA
+            </span>
           </div>
+        </div>
 
-          {/* Right side - Notifications and User Menu */}
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            {/* Notifications */}
-            <div className="relative">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                {notificationCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center text-xs p-0 bg-red-500 hover:bg-red-500">
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </Badge>
-                )}
-              </Button>
+        {/* Right side - Notifications and User Menu */}
+        <div className="flex items-center gap-3">
+          {/* Notifications */}
+          <div className="relative">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors rounded-full"
+              aria-label="Notificações"
+            >
+              <Bell className="w-5 h-5" />
+              {notificationCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 hover:bg-red-500">
+                  {notificationCount > 9 ? '9+' : notificationCount}
+                </Badge>
+              )}
+            </Button>
 
-              {/* Notifications Dropdown */}
-              {showNotifications && (
-                <Card className="absolute right-0 mt-2 w-72 sm:w-80 bg-white shadow-xl border max-h-96 overflow-y-auto z-[9999]">
-                  <CardContent className="p-0">
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <h3 className="font-semibold text-gray-900">Notificações</h3>
-                      <p className="text-xs text-gray-500">{notifications.length} ativas</p>
+            {/* Notifications Dropdown */}
+            {showNotifications && (
+              <Card className="absolute right-0 mt-2 w-80 bg-white shadow-xl border max-h-96 overflow-y-auto z-[9999]">
+                <CardContent className="p-0">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <h3 className="font-semibold text-gray-900">Notificações</h3>
+                    <p className="text-xs text-gray-500">{notifications.length} ativas</p>
+                  </div>
+                  
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-6 text-center">
+                      <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Nenhuma notificação</p>
                     </div>
-                    
-                    {notifications.length === 0 ? (
-                      <div className="px-4 py-6 text-center">
-                        <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                        <p className="text-sm text-gray-500">Nenhuma notificação</p>
-                      </div>
-                    ) : (
-                      <div className="max-h-64 overflow-y-auto">
-                        {notifications.map((notification) => (
-                          <div key={notification.id} className="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-b-0">
-                            <div className="flex items-start space-x-3">
-                              <div className={`p-1 rounded-full ${
-                                notification.priority === 'high' ? 'bg-red-100' : 'bg-yellow-100'
-                              }`}>
-                                {notification.priority === 'high' ? (
-                                  <AlertCircle className="w-3 h-3 text-red-600" />
-                                ) : (
-                                  <Calendar className="w-3 h-3 text-yellow-600" />
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 break-words">
-                                  {notification.title}
-                                </p>
-                                <p className="text-xs text-gray-600 mt-1 break-words">
-                                  {notification.message}
-                                </p>
-                                <p className="text-xs text-gray-400 mt-1">
-                                  {new Date(notification.date).toLocaleDateString('pt-BR')}
-                                </p>
-                              </div>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto">
+                      {notifications.map((notification) => (
+                        <div key={notification.id} className="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-b-0">
+                          <div className="flex items-start space-x-3">
+                            <div className={`p-1 rounded-full ${
+                              notification.priority === 'high' ? 'bg-red-100' : 'bg-yellow-100'
+                            }`}>
+                              {notification.priority === 'high' ? (
+                                <AlertCircle className="w-3 h-3 text-red-600" />
+                              ) : (
+                                <Calendar className="w-3 h-3 text-yellow-600" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 break-words">
+                                {notification.title}
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1 break-words">
+                                {notification.message}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {new Date(notification.date).toLocaleDateString('pt-BR')}
+                              </p>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            {/* User Menu */}
-            <div className="relative">
-              <Button
-                variant="ghost"
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-1 sm:space-x-3 p-1 sm:p-2 hover:bg-gray-50 transition-colors"
-              >
-                <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-xs sm:text-sm">
-                    {user?.name ? getInitials(user.name) : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-right hidden lg:block">
-                  <p className="text-sm font-medium text-gray-900 truncate max-w-24 xl:max-w-32 break-words">
-                    {user?.name}
-                  </p>
-                </div>
-                <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-              </Button>
-
-              {/* User Dropdown */}
-              {showUserMenu && (
-                <Card className="absolute right-0 mt-2 w-44 sm:w-48 bg-white shadow-xl border z-[9999]">
-                  <CardContent className="p-1">
-                    <div className="px-3 py-2 border-b border-gray-100 sm:hidden">
-                      <p className="text-sm font-medium text-gray-900 break-words">{user?.name}</p>
-                      <Badge variant={getRoleBadgeVariant(user?.role || '')} className="text-xs mt-1">
-                        {getRoleLabel(user?.role || '')}
-                      </Badge>
+                        </div>
+                      ))}
                     </div>
-                    <Button
-                      variant="ghost"
-                      onClick={handleLogout}
-                      className="w-full justify-start space-x-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sair</span>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* User Menu */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors rounded-full"
+              aria-haspopup="menu"
+              aria-expanded={showUserMenu}
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+                  {user?.name ? getInitials(user.name) : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
+            </Button>
+
+            {/* User Dropdown */}
+            {showUserMenu && (
+              <Card className="absolute right-0 mt-2 w-48 bg-white shadow-xl border z-[9999]">
+                <CardContent className="p-1">
+                  <div className="px-3 py-2 border-b border-gray-100 sm:hidden">
+                    <p className="text-sm font-medium text-gray-900 break-words">{user?.name}</p>
+                    <Badge variant={getRoleBadgeVariant(user?.role || '')} className="text-xs mt-1">
+                      {getRoleLabel(user?.role || '')}
+                    </Badge>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    onClick={handleLogout}
+                    className="w-full justify-start space-x-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sair</span>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

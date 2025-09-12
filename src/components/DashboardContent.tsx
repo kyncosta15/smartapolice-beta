@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from '@/components/AppSidebar';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { MobileDrawer } from '@/components/MobileDrawer';
 import { Navbar } from '@/components/Navbar';
-import { WelcomeSection } from '@/components/WelcomeSection';
+import { DashboardCards } from '@/components/DashboardCards';
 import { ContentRenderer } from '@/components/ContentRenderer';
 import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,16 @@ import {
   filterOverdueInstallments,
   calculateDuingNext30Days
 } from '@/utils/installmentUtils';
+import { 
+  Home,
+  FileText, 
+  BarChart3, 
+  Users2,
+  Car,
+  Calculator,
+  TestTube,
+  Settings
+} from "lucide-react";
 
 export function DashboardContent() {
   const { user } = useAuth();
@@ -26,7 +36,8 @@ export function DashboardContent() {
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [extractedPolicies, setExtractedPolicies] = useState<ParsedPolicyData[]>([]);
-  const [activeSection, setActiveSection] = useState('home');
+  const [activeSection, setActiveSection] = useState('dashboard');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -69,6 +80,29 @@ export function DashboardContent() {
     overdueInstallments: overdueInstallments.length,
     duingNext30Days: duingNext30Days
   };
+
+  // Navigation items
+  const clientNavigation = [
+    { id: 'dashboard', title: 'Dashboard', icon: Home },
+    { id: 'policies', title: 'Apólices', icon: FileText },
+    { id: 'installments', title: 'Prestações', icon: Calculator },
+    { id: 'users', title: 'Vidas', icon: Users2 },
+    { id: 'vehicles', title: 'Veículos', icon: Car },
+    { id: 'reports', title: 'Relatórios', icon: BarChart3 },
+  ];
+
+  const adminNavigation = [
+    { id: 'dashboard', title: 'Dashboard', icon: Home },
+    { id: 'policies', title: 'Apólices', icon: FileText },
+    { id: 'installments', title: 'Prestações', icon: Calculator },
+    { id: 'users', title: 'Vidas', icon: Users2 },
+    { id: 'vehicles', title: 'Veículos', icon: Car },
+    { id: 'claims', title: 'Sinistros', icon: TestTube },
+    { id: 'reports', title: 'Relatórios', icon: BarChart3 },
+    { id: 'settings', title: 'Configurações', icon: Settings },
+  ];
+
+  const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
 
   const handlePolicyExtracted = async (policy: any) => {
     console.log('🚀 handlePolicyExtracted CHAMADO para persistência!');
@@ -268,8 +302,6 @@ export function DashboardContent() {
     // O toast já é mostrado no hook usePersistedUsers
   };
 
-  // Removido handleClientRegister - agora usamos hook direto
-
   // Normalizar dados das apólices para garantir compatibilidade com todos os componentes
   // IMPORTANTE: Usar allPolicies (que inclui persistidas) e não apenas extractedPolicies
   const normalizedPolicies = allPolicies.map(policy => ({
@@ -290,53 +322,67 @@ export function DashboardContent() {
   })));
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50 relative">
-        <AppSidebar onSectionChange={setActiveSection} activeSection={activeSection} />
-        
-        {/* Overlay para mobile quando sidebar está aberta */}
-        <div className="md:hidden fixed inset-0 bg-black/50 z-[60] sidebar-overlay" />
-        
-        <SidebarInset className="flex-1">
-          <Navbar 
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            notificationCount={enhancedDashboardStats.duingNext30Days}
-            policies={normalizedPolicies}
-          />
+    <div className="min-h-screen flex bg-gray-50">
+      {/* Desktop Sidebar */}
+      <AppSidebar 
+        onSectionChange={setActiveSection} 
+        activeSection={activeSection} 
+      />
+      
+      {/* Mobile Drawer */}
+      <MobileDrawer
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        navigation={navigation}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+      />
+      
+      {/* Main Content */}
+      <main className="flex-1 lg:ml-64">
+        <Navbar 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          notificationCount={enhancedDashboardStats.duingNext30Days}
+          policies={normalizedPolicies}
+          onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
+        />
 
-          <div className="flex-1 px-2 sm:px-4 lg:px-6">
-            <WelcomeSection />
-            
-            <div id="dashboard-content" className="dashboard-content">
-              <ContentRenderer
-                activeSection={activeSection}
-                searchTerm={searchTerm}
-                filterType={filterType}
-                allPolicies={normalizedPolicies}
-                extractedPolicies={normalizedPolicies}
-                allUsers={persistedUsers}
-                usersLoading={usersLoading}
-                onPolicySelect={handlePolicySelect}
-                onPolicyUpdate={handlePolicyUpdate}
-                onPolicyDelete={handleDeletePolicy}
-                onPolicyDownload={downloadPersistedPDF}
-                onPolicyExtracted={handlePolicyExtracted}
-                onUserUpdate={handleUserUpdate}
-                onUserDelete={handleUserDelete}
-                onSectionChange={setActiveSection}
-              />
-            </div>
-          </div>
+        <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-6">
+          {/* Dashboard Cards - only show on dashboard section */}
+          {activeSection === 'dashboard' && (
+            <DashboardCards dashboardStats={enhancedDashboardStats} />
+          )}
+          
+          {/* Other Content */}
+          {activeSection !== 'dashboard' && (
+            <ContentRenderer
+              activeSection={activeSection}
+              searchTerm={searchTerm}
+              filterType={filterType}
+              allPolicies={normalizedPolicies}
+              extractedPolicies={normalizedPolicies}
+              allUsers={persistedUsers}
+              usersLoading={usersLoading}
+              onPolicySelect={handlePolicySelect}
+              onPolicyUpdate={handlePolicyUpdate}
+              onPolicyDelete={handleDeletePolicy}
+              onPolicyDownload={downloadPersistedPDF}
+              onPolicyExtracted={handlePolicyExtracted}
+              onUserUpdate={handleUserUpdate}
+              onUserDelete={handleUserDelete}
+              onSectionChange={setActiveSection}
+            />
+          )}
+        </div>
 
-          <PolicyDetailsModal 
-            isOpen={isDetailsModalOpen}
-            onClose={() => setIsDetailsModalOpen(false)}
-            policy={selectedPolicy}
-            onDelete={handleDeletePolicy}
-          />
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+        <PolicyDetailsModal 
+          isOpen={isDetailsModalOpen}
+          onClose={() => setIsDetailsModalOpen(false)}
+          policy={selectedPolicy}
+          onDelete={handleDeletePolicy}
+        />
+      </main>
+    </div>
   );
 }
