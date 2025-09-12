@@ -351,7 +351,13 @@ export function DashboardContent() {
         <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-6">
           {/* Dashboard Cards - only show on dashboard section */}
           {activeSection === 'dashboard' && (
-            <DashboardCards dashboardStats={enhancedDashboardStats} />
+            <DashboardCards dashboardStats={{
+              totalPolicies: enhancedDashboardStats.totalPolicies,
+              expiringPolicies: enhancedDashboardStats.expiringPolicies || 0,
+              duingNext30Days: enhancedDashboardStats.duingNext30Days,
+              totalMonthlyCost: enhancedDashboardStats.totalMonthlyCost || 0,
+              totalInsuredValue: enhancedDashboardStats.totalInsuredValue || 0,
+            }} />
           )}
           
           {/* Other Content */}

@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
 interface MobileDrawerProps {
@@ -93,27 +92,27 @@ export function MobileDrawer({
 
         {/* Navigation */}
         <nav className="p-4">
-          <SidebarMenu>
+          <ul className="space-y-1">
             {navigation.map((item) => (
-              <SidebarMenuItem key={item.id}>
-                <SidebarMenuButton
+              <li key={item.id}>
+                <Button
+                  variant="ghost"
                   onClick={() => handleNavigation(item.id)}
-                  isActive={activeSection === item.id}
                   className={cn(
                     "w-full justify-start h-12 text-base rounded-xl",
                     "hover:bg-gray-50 transition-colors",
-                    activeSection === item.id && [
+                    activeSection === item.id ? [
                       "bg-blue-50 text-blue-700 border-l-2 border-blue-600",
                       "font-semibold"
-                    ]
+                    ] : "text-gray-700"
                   )}
                 >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  <item.icon className="h-5 w-5 flex-shrink-0 mr-3" />
                   <span className="truncate">{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                </Button>
+              </li>
             ))}
-          </SidebarMenu>
+          </ul>
         </nav>
       </aside>
     </>
