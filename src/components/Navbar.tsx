@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Bell, LogOut, ChevronDown, AlertCircle, Calendar, Menu } from 'lucide-react';
+import { Bell, LogOut, ChevronDown, AlertCircle, Calendar, Menu, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface NavbarProps {
   searchTerm: string;
@@ -21,6 +22,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const getRoleLabel = (role: string) => {
     const roles = {
@@ -101,6 +103,18 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             aria-label="Abrir menu"
           >
             <Menu className="w-5 h-5" />
+          </Button>
+          
+          {/* Back to Systems Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/system-selection')}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-slate-50 transition-colors rounded-lg"
+            aria-label="Voltar para seleção de sistemas"
+            title="Voltar para seleção de sistemas"
+          >
+            <ArrowLeft className="w-4 h-4" />
           </Button>
           
           {/* Brand */}
