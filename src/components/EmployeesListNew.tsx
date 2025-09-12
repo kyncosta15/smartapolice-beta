@@ -9,22 +9,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Search, 
   Plus,
-  UserMinus,
-  UserPlus,
   Filter,
   Download,
   Eye,
   Edit,
   Trash2,
   Users,
-  FileText,
-  ClipboardList
+  FileText
 } from 'lucide-react';
 import { ColaboradorModal } from './ColaboradorModal';
 import { ExcluirColaboradorModal } from './ExcluirColaboradorModal';
 import { IncluirDependenteModal } from './IncluirDependenteModal';
-import { EmployeeRequestForm } from './EmployeeRequestForm';
-import { EmployeeRequestsDashboard } from './EmployeeRequestsDashboard';
 import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { toast } from 'sonner';
@@ -38,9 +33,6 @@ export const EmployeesListNew = () => {
   const [editingColaborador, setEditingColaborador] = useState<any>(null);
   const [selectedColaborador, setSelectedColaborador] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('colaboradores');
-  const [requestFormType, setRequestFormType] = useState<'add' | 'remove'>('add');
-  const [isRequestFormOpen, setIsRequestFormOpen] = useState(false);
-  const [selectedEmployeeForRemoval, setSelectedEmployeeForRemoval] = useState<any>(null);
   
   const { colaboradores, dependentes, isLoading, error, loadData } = useSmartBeneficiosData();
 
@@ -114,14 +106,10 @@ export const EmployeesListNew = () => {
 
       {/* Tabs para diferentes seções */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="colaboradores" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Colaboradores
-          </TabsTrigger>
-          <TabsTrigger value="solicitacoes" className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" />
-            Solicitações RH
           </TabsTrigger>
           <TabsTrigger value="dependentes" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -140,21 +128,10 @@ export const EmployeesListNew = () => {
                   Gestão de Colaboradores
                 </CardTitle>
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => {
-                      setRequestFormType('add');
-                      setSelectedEmployeeForRemoval(null);
-                      setIsRequestFormOpen(true);
-                    }}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Solicitar Inclusão
-                  </Button>
                   <ColaboradorModal>
-                    <Button variant="outline">
+                    <Button className="bg-green-600 hover:bg-green-700">
                       <Plus className="h-4 w-4 mr-2" />
-                      Cadastro Direto
+                      Cadastrar Colaborador
                     </Button>
                   </ColaboradorModal>
                   <Button variant="outline">
@@ -241,20 +218,6 @@ export const EmployeesListNew = () => {
                             </Button>
                           </ColaboradorModal>
                           
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setRequestFormType('remove');
-                              setSelectedEmployeeForRemoval(colaborador);
-                              setIsRequestFormOpen(true);
-                            }}
-                            className="text-orange-600 border-orange-300 hover:bg-orange-50"
-                          >
-                            <UserMinus className="h-4 w-4 mr-1" />
-                            Solicitar Exclusão
-                          </Button>
-                          
                           <ExcluirColaboradorModal>
                             <Button
                               variant="outline"
@@ -262,7 +225,7 @@ export const EmployeesListNew = () => {
                               className="text-red-600 border-red-300 hover:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
-                              Excluir Direto
+                              Excluir Colaborador
                             </Button>
                           </ExcluirColaboradorModal>
                         </div>
@@ -276,11 +239,6 @@ export const EmployeesListNew = () => {
           </Card>
         </TabsContent>
 
-        {/* Tab de Solicitações RH */}
-        <TabsContent value="solicitacoes">
-          <EmployeeRequestsDashboard />
-        </TabsContent>
-
         {/* Tab de Dependentes */}
         <TabsContent value="dependentes">
           <Card>
@@ -291,12 +249,9 @@ export const EmployeesListNew = () => {
                   Dependentes ({dependentesAtivos.length})
                 </CardTitle>
                 <IncluirDependenteModal>
-                  <Button
-                    onClick={() => setIsDependenteModalOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
+                  <Button className="bg-blue-600 hover:bg-blue-700">
                     <Plus className="h-4 w-4 mr-2" />
-                    Incluir Dependente
+                    Cadastrar Dependente
                   </Button>
                 </IncluirDependenteModal>
               </div>
@@ -335,20 +290,6 @@ export const EmployeesListNew = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Modals */}
-      {/* Modal de Solicitação RH */}
-      <EmployeeRequestForm 
-        type={requestFormType}
-        isOpen={isRequestFormOpen}
-        onClose={() => {
-          setIsRequestFormOpen(false);
-          setSelectedEmployeeForRemoval(null);
-        }}
-        onSuccess={() => {
-          loadData();
-        }}
-        selectedEmployee={selectedEmployeeForRemoval}
-      />
     </div>
   );
 };
