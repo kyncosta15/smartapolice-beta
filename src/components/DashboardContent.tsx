@@ -291,8 +291,12 @@ export function DashboardContent() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-gray-50 relative">
         <AppSidebar onSectionChange={setActiveSection} activeSection={activeSection} />
+        
+        {/* Overlay para mobile quando sidebar está aberta */}
+        <div className="md:hidden fixed inset-0 bg-black/50 z-[60] sidebar-overlay" />
+        
         <SidebarInset className="flex-1">
           <Navbar 
             searchTerm={searchTerm}
@@ -301,7 +305,7 @@ export function DashboardContent() {
             policies={normalizedPolicies}
           />
 
-          <div className="flex-1">
+          <div className="flex-1 px-2 sm:px-4 lg:px-6">
             <WelcomeSection />
             
             <div id="dashboard-content" className="dashboard-content">

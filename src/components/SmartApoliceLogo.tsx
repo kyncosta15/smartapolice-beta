@@ -11,15 +11,15 @@ interface SmartApóliceLogoProps {
 
 export function SmartApóliceLogo({ size = 'md', showText = true, className = '', documentNumber }: SmartApóliceLogoProps) {
   const sizeClasses = {
-    sm: 'h-10 w-10',
-    md: 'h-12 w-12', 
-    lg: 'h-16 w-16'
+    sm: 'h-8 w-8 sm:h-10 sm:w-10',
+    md: 'h-10 w-10 sm:h-12 sm:w-12', 
+    lg: 'h-12 w-12 sm:h-16 sm:w-16'
   };
 
   const textSizeClasses = {
-    sm: 'text-lg',
-    md: 'text-xl',
-    lg: 'text-2xl'
+    sm: 'text-base sm:text-lg',
+    md: 'text-lg sm:text-xl',
+    lg: 'text-xl sm:text-2xl'
   };
 
   const letterSizeClasses = {

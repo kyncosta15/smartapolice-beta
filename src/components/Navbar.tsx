@@ -93,11 +93,11 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   const notifications = getNotifications();
 
   return (
-    <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <nav className="sticky top-0 z-[100] bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+      <div className="px-2 sm:px-4 lg:px-6">
+        <div className="flex justify-between items-center h-12 sm:h-16">
           {/* Left side - Sidebar Toggle and Mobile Menu */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-1 sm:space-x-3">
             {/* Sidebar Toggle for Desktop */}
             <Button
               variant="ghost"
@@ -124,18 +124,18 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
           </div>
 
           {/* Right side - Notifications and User Menu */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Notifications */}
             <div className="relative">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                className="relative p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
               >
-                <Bell className="w-4 h-4" />
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 {notificationCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 hover:bg-red-500">
+                  <Badge className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center text-xs p-0 bg-red-500 hover:bg-red-500">
                     {notificationCount > 9 ? '9+' : notificationCount}
                   </Badge>
                 )}
@@ -143,7 +143,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
 
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <Card className="absolute right-0 mt-2 w-80 bg-white shadow-xl border max-h-96 overflow-y-auto z-50">
+                <Card className="absolute right-0 mt-2 w-72 sm:w-80 bg-white shadow-xl border max-h-96 overflow-y-auto z-[9999]">
                   <CardContent className="p-0">
                     <div className="px-4 py-3 border-b border-gray-100">
                       <h3 className="font-semibold text-gray-900">Notificações</h3>
@@ -195,24 +195,24 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
               <Button
                 variant="ghost"
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-3 p-2 hover:bg-gray-50 transition-colors"
+                className="flex items-center space-x-1 sm:space-x-3 p-1 sm:p-2 hover:bg-gray-50 transition-colors"
               >
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+                <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-xs sm:text-sm">
                     {user?.name ? getInitials(user.name) : 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-gray-900 truncate max-w-32 break-words">
+                <div className="text-right hidden lg:block">
+                  <p className="text-sm font-medium text-gray-900 truncate max-w-24 xl:max-w-32 break-words">
                     {user?.name}
                   </p>
                 </div>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
+                <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
               </Button>
 
               {/* User Dropdown */}
               {showUserMenu && (
-                <Card className="absolute right-0 mt-2 w-48 bg-white shadow-xl border z-50">
+                <Card className="absolute right-0 mt-2 w-44 sm:w-48 bg-white shadow-xl border z-[9999]">
                   <CardContent className="p-1">
                     <div className="px-3 py-2 border-b border-gray-100 sm:hidden">
                       <p className="text-sm font-medium text-gray-900 break-words">{user?.name}</p>

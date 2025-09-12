@@ -151,9 +151,9 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
   
   return (
-    <Sidebar className="bg-white border-r z-30">
-      <SidebarHeader className="space-y-6 p-6 flex justify-center">
-        <SmartApóliceLogo size="md" showText={true} />
+    <Sidebar className="bg-white border-r z-30 w-64 sm:w-72" collapsible="icon">
+      <SidebarHeader className="space-y-4 sm:space-y-6 p-4 sm:p-6 flex justify-center">
+        <SmartApóliceLogo size="sm" showText={!isMobile} />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
@@ -162,10 +162,10 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
               <SidebarMenuButton
                 onClick={() => handleNavigation(item.id)}
                 isActive={activeSection === item.id}
-                className="w-full justify-start"
+                className="w-full justify-start text-sm sm:text-base h-10 sm:h-12"
               >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
+                <item.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="truncate">{item.title}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
