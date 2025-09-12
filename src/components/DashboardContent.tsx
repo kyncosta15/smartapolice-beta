@@ -366,6 +366,7 @@ export function DashboardContent() {
                   totalInsuredValue: enhancedDashboardStats.totalInsuredValue || 0,
                 }} 
                 isLoading={false}
+                onSectionChange={setActiveSection}
               />
               
               {/* Complete Dashboard with Charts - hide cards section to avoid duplication */}

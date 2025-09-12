@@ -22,9 +22,10 @@ interface DashboardCardsProps {
     totalInsuredValue: number;
   };
   isLoading?: boolean;
+  onSectionChange?: (section: string) => void;
 }
 
-export function DashboardCards({ dashboardStats, isLoading = false }: DashboardCardsProps) {
+export function DashboardCards({ dashboardStats, isLoading = false, onSectionChange }: DashboardCardsProps) {
   
   // Loading skeleton component
   const CardSkeleton = () => (
@@ -42,7 +43,8 @@ export function DashboardCards({ dashboardStats, isLoading = false }: DashboardC
     </Card>
   );
 
-  const cards = [
+  // First row cards - white background
+  const firstRowCards = [
     {
       id: 'total',
       title: 'Total de Apólices',
@@ -50,7 +52,8 @@ export function DashboardCards({ dashboardStats, isLoading = false }: DashboardC
       subtitle: 'Apólices gerenciadas',
       icon: FileText,
       badgeColor: 'bg-blue-50 text-blue-700',
-      iconColor: 'text-blue-600'
+      iconColor: 'text-blue-600',
+      clickable: true
     },
     {
       id: 'premium',
@@ -61,15 +64,6 @@ export function DashboardCards({ dashboardStats, isLoading = false }: DashboardC
       }).format(dashboardStats.totalMonthlyCost || 0),
       subtitle: 'Valor total dos prêmios',
       icon: DollarSign,
-      badgeColor: 'bg-emerald-50 text-emerald-700',
-      iconColor: 'text-emerald-600'
-    },
-    {
-      id: 'active',
-      title: 'Apólices Ativas',
-      value: Math.max(0, dashboardStats.totalPolicies - dashboardStats.expiringPolicies).toString(),
-      subtitle: 'Em vigor atualmente',
-      icon: CheckCircle,
       badgeColor: 'bg-emerald-50 text-emerald-700',
       iconColor: 'text-emerald-600'
     },
@@ -86,6 +80,19 @@ export function DashboardCards({ dashboardStats, isLoading = false }: DashboardC
       icon: Shield,
       badgeColor: 'bg-purple-50 text-purple-700',
       iconColor: 'text-purple-600'
+    }
+  ];
+
+  // Second row cards - gradient background
+  const secondRowCards = [
+    {
+      id: 'active',
+      title: 'Apólices Ativas',
+      value: Math.max(0, dashboardStats.totalPolicies - dashboardStats.expiringPolicies).toString(),
+      subtitle: 'Em vigor atualmente',
+      icon: CheckCircle,
+      gradient: 'bg-gradient-to-br from-blue-500 to-blue-600',
+      textColor: 'text-white'
     },
     {
       id: 'expired',
@@ -93,8 +100,8 @@ export function DashboardCards({ dashboardStats, isLoading = false }: DashboardC
       value: dashboardStats.expiringPolicies.toString(),
       subtitle: 'Necessitam renovação',
       icon: AlertTriangle,
-      badgeColor: 'bg-rose-50 text-rose-700',
-      iconColor: 'text-rose-600'
+      gradient: 'bg-gradient-to-br from-rose-500 to-rose-600',
+      textColor: 'text-white'
     },
     {
       id: 'expiring',
@@ -102,16 +109,23 @@ export function DashboardCards({ dashboardStats, isLoading = false }: DashboardC
       value: dashboardStats.duingNext30Days.toString(),
       subtitle: 'Próximos 30 dias',
       icon: Clock,
-      badgeColor: 'bg-amber-50 text-amber-700',
-      iconColor: 'text-amber-600'
+      gradient: 'bg-gradient-to-br from-amber-500 to-orange-500',
+      textColor: 'text-white'
     }
   ];
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+        {/* First row skeletons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+        {/* Second row skeletons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
             <CardSkeleton key={i} />
           ))}
         </div>
@@ -154,15 +168,20 @@ export function DashboardCards({ dashboardStats, isLoading = false }: DashboardC
         </div>
       </div>
 
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {cards.map((card) => {
+      {/* Cards Grid - Two Rows Layout */}
+      
+      {/* First Row: Total, Premium, Coverage */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        {firstRowCards.map((card) => {
           const IconComponent = card.icon;
           
           return (
             <Card 
               key={card.id} 
-              className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200"
+              className={`bg-white border border-gray-200 rounded-2xl p-4 shadow-sm transition-all duration-200 ${
+                card.clickable ? 'hover:shadow-md cursor-pointer hover:scale-[1.02]' : 'hover:shadow-md'
+              }`}
+              onClick={() => card.clickable && onSectionChange?.('policies')}
             >
               <CardContent className="p-0">
                 <div className="flex items-center gap-2 mb-3">
@@ -177,6 +196,37 @@ export function DashboardCards({ dashboardStats, isLoading = false }: DashboardC
                 </div>
                 
                 <div className="text-[12px] text-gray-400">
+                  {card.subtitle}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Second Row: Status Cards with Gradients */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {secondRowCards.map((card) => {
+          const IconComponent = card.icon;
+          
+          return (
+            <Card 
+              key={card.id} 
+              className={`${card.gradient} rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200 border-0`}
+            >
+              <CardContent className="p-0">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs bg-white/20 text-white">
+                    <IconComponent className="size-3" />
+                    {card.title}
+                  </span>
+                </div>
+                
+                <div className={`text-2xl md:text-3xl font-bold tracking-tight mb-1 ${card.textColor}`}>
+                  {card.value}
+                </div>
+                
+                <div className={`text-[12px] ${card.textColor} opacity-80`}>
                   {card.subtitle}
                 </div>
               </CardContent>
