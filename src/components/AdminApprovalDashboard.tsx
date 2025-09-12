@@ -213,8 +213,80 @@ export const AdminApprovalDashboard: React.FC = () => {
     await fetchRequestDetail(requestId);
   };
 
+  const handleApproveRequest = async (requestId: string) => {
+    setIsProcessing(true);
+    try {
+      console.log('🚀 Iniciando aprovação da solicitação:', requestId);
+
+      const { data, error } = await supabase.functions.invoke('adm-approve-request', {
+        body: {
+          requestId: requestId,
+          note: ''
+        }
+      });
+
+      console.log('📨 Resposta da edge function:', { data, error });
+
+      if (error) {
+        console.error('❌ Erro da edge function:', error);
+        throw new Error(error.message || 'Erro ao aprovar solicitação');
+      }
+
+      if (!data?.ok) {
+        console.error('❌ Resposta negativa da edge function:', data);
+        throw new Error(data?.error?.message || 'Erro ao aprovar solicitação');
+      }
+
+      console.log('✅ Aprovação processada com sucesso!');
+      toast.success('Solicitação aprovada e convertida em ticket!');
+      fetchRequests(); // Atualizar lista
+      
+      // Aguardar um pouco e mostrar detalhes
+      setTimeout(async () => {
+        await fetchRequestDetail(requestId);
+      }, 500);
+    } catch (error: any) {
+      console.error('💥 Erro no processo de aprovação:', error);
+      toast.error(error.message || 'Falha ao aprovar solicitação');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDeclineRequest = async (requestId: string) => {
+    setIsProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('adm-requests-decline', {
+        body: {
+          requestId: requestId,
+          reason: 'Recusado pelo Administrador'
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Erro ao recusar solicitação');
+      }
+
+      if (!data?.ok) {
+        throw new Error(data?.error?.message || 'Erro ao recusar solicitação');
+      }
+
+      toast.success('Solicitação recusada pela Administração.');
+      fetchRequests(); // Atualizar lista
+      
+      // Aguardar um pouco e mostrar detalhes
+      setTimeout(async () => {
+        await fetchRequestDetail(requestId);
+      }, 500);
+    } catch (error: any) {
+      console.error('Erro ao recusar:', error);
+      toast.error(error.message || 'Falha ao recusar solicitação');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleApprove = async () => {
-    if (!selectedRequest) return;
 
     setIsProcessing(true);
     try {
@@ -542,10 +614,7 @@ export const AdminApprovalDashboard: React.FC = () => {
              <Button 
                variant="default" 
                size="sm"
-               onClick={() => {
-                 handleViewRequest(request.id);
-                 setShowApprovalDialog(true);
-               }}
+               onClick={() => handleApproveRequest(request.id)}
                disabled={isProcessing}
                className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700"
              >
@@ -558,10 +627,7 @@ export const AdminApprovalDashboard: React.FC = () => {
              <Button 
                variant="destructive" 
                size="sm"
-               onClick={() => {
-                 handleViewRequest(request.id);
-                 setShowDeclineDialog(true);
-               }}
+               onClick={() => handleDeclineRequest(request.id)}
                disabled={isProcessing}
                className="h-8 w-8 p-0"
              >
