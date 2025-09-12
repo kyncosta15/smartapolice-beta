@@ -516,8 +516,8 @@ export const ColaboradorModal = ({ children, employeeToEdit }: ColaboradorModalP
                       </Button>
                       <Button type="submit" disabled={isLoading}>
                         {isLoading 
-                          ? (employeeToEdit ? 'Atualizando...' : 'Cadastrando...') 
-                          : (employeeToEdit ? 'Atualizar Colaborador' : 'Cadastrar Colaborador')
+                          ? (employeeToEdit ? 'Solicitando...' : 'Solicitando...') 
+                          : 'Solicitar'
                         }
                       </Button>
                     </div>
