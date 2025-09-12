@@ -37,7 +37,7 @@ export function MobileDrawer({
     };
   }, [isOpen]);
 
-  // ESC to close
+  // ESC to close and focus trap
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -45,8 +45,13 @@ export function MobileDrawer({
       }
     };
     
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
+    if (isOpen) {
+      document.addEventListener('keydown', handleEsc);
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+    };
   }, [isOpen, onClose]);
 
   const handleNavigation = (sectionId: string) => {
@@ -70,49 +75,46 @@ export function MobileDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="Menu de navegação"
-        className={cn(
-          "fixed inset-y-0 left-0 w-[85%] max-w-[320px] bg-white z-50 shadow-2xl",
-          "transform transition-transform duration-200 ease-out",
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        )}
+        className="fixed inset-y-0 left-0 w-[85%] max-w-[320px] bg-white z-50 shadow-2xl transform transition-transform duration-200 ease-out"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <SmartApóliceLogo size="sm" showText={true} />
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
             aria-label="Fechar menu"
-            className="p-2 hover:bg-gray-100"
+            className="p-2 hover:bg-gray-100 rounded-full"
           >
             <X className="h-5 w-5" />
           </Button>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4">
-          <ul className="space-y-1">
-            {navigation.map((item) => (
-              <li key={item.id}>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleNavigation(item.id)}
-                  className={cn(
-                    "w-full justify-start h-12 text-base rounded-xl",
-                    "hover:bg-gray-50 transition-colors",
-                    activeSection === item.id ? [
-                      "bg-blue-50 text-blue-700 border-l-2 border-blue-600",
-                      "font-semibold"
-                    ] : "text-gray-700"
-                  )}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0 mr-3" />
-                  <span className="truncate">{item.title}</span>
-                </Button>
-              </li>
-            ))}
-          </ul>
+        <nav className="p-3 space-y-1">
+          {navigation.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleNavigation(item.id)}
+              aria-current={activeSection === item.id ? 'page' : undefined}
+              className={cn(
+                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm w-full text-left",
+                "text-gray-700 hover:bg-slate-50 transition-colors",
+                activeSection === item.id && [
+                  "bg-slate-100 border-l-2 border-blue-600 text-blue-700"
+                ]
+              )}
+            >
+              <item.icon className={cn(
+                "size-4 transition-colors",
+                activeSection === item.id 
+                  ? "text-blue-600" 
+                  : "text-gray-400 group-hover:text-gray-600"
+              )} />
+              <span className="truncate font-medium">{item.title}</span>
+            </button>
+          ))}
         </nav>
       </aside>
     </>

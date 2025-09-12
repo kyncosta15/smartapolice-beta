@@ -9,7 +9,8 @@ import {
   CheckCircle,
   Clock,
   Download,
-  Mail
+  Mail,
+  TrendingUp
 } from 'lucide-react';
 
 interface DashboardCardsProps {
@@ -20,16 +21,33 @@ interface DashboardCardsProps {
     totalMonthlyCost: number;
     totalInsuredValue: number;
   };
+  isLoading?: boolean;
 }
 
-export function DashboardCards({ dashboardStats }: DashboardCardsProps) {
+export function DashboardCards({ dashboardStats, isLoading = false }: DashboardCardsProps) {
   
+  // Loading skeleton component
+  const CardSkeleton = () => (
+    <Card className="bg-white border border-gray-200 rounded-2xl p-4">
+      <CardContent className="p-0">
+        <div className="animate-pulse">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+            <div className="h-3 w-16 bg-gray-200 rounded"></div>
+          </div>
+          <div className="h-8 w-20 bg-gray-200 rounded mb-1"></div>
+          <div className="h-3 w-24 bg-gray-200 rounded"></div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   const cards = [
     {
       id: 'total',
-      title: 'Total',
-      value: dashboardStats.totalPolicies,
-      subtitle: 'Apólices',
+      title: 'Total de Apólices',
+      value: dashboardStats.totalPolicies.toString(),
+      subtitle: 'Apólices gerenciadas',
       icon: FileText,
       badgeColor: 'bg-blue-50 text-blue-700',
       iconColor: 'text-blue-600'
@@ -41,16 +59,16 @@ export function DashboardCards({ dashboardStats }: DashboardCardsProps) {
         style: 'currency', 
         currency: 'BRL' 
       }).format(dashboardStats.totalMonthlyCost || 0),
-      subtitle: 'Prêmio Total',
+      subtitle: 'Valor total dos prêmios',
       icon: DollarSign,
       badgeColor: 'bg-emerald-50 text-emerald-700',
       iconColor: 'text-emerald-600'
     },
     {
       id: 'active',
-      title: 'Ativas',
-      value: dashboardStats.totalPolicies - dashboardStats.expiringPolicies,
-      subtitle: 'Em vigor',
+      title: 'Apólices Ativas',
+      value: Math.max(0, dashboardStats.totalPolicies - dashboardStats.expiringPolicies).toString(),
+      subtitle: 'Em vigor atualmente',
       icon: CheckCircle,
       badgeColor: 'bg-emerald-50 text-emerald-700',
       iconColor: 'text-emerald-600'
@@ -72,16 +90,16 @@ export function DashboardCards({ dashboardStats }: DashboardCardsProps) {
     {
       id: 'expired',
       title: 'Vencidas',
-      value: dashboardStats.expiringPolicies,
-      subtitle: 'Expiradas',
+      value: dashboardStats.expiringPolicies.toString(),
+      subtitle: 'Necessitam renovação',
       icon: AlertTriangle,
       badgeColor: 'bg-rose-50 text-rose-700',
       iconColor: 'text-rose-600'
     },
     {
       id: 'expiring',
-      title: 'Vencendo',
-      value: dashboardStats.duingNext30Days,
+      title: 'Vencendo 30d',
+      value: dashboardStats.duingNext30Days.toString(),
       subtitle: 'Próximos 30 dias',
       icon: Clock,
       badgeColor: 'bg-amber-50 text-amber-700',
@@ -89,23 +107,35 @@ export function DashboardCards({ dashboardStats }: DashboardCardsProps) {
     }
   ];
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Dashboard Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
             Dashboard de Apólices
           </h1>
-          <p className="text-gray-600 mt-1">
-            Visão geral das suas apólices e métricas
+          <p className="text-gray-600 mt-1 text-sm">
+            Visão executiva das apólices e métricas da empresa
           </p>
         </div>
         
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
           <Button 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm"
             size="sm"
           >
             <Download className="w-4 h-4 mr-2" />
@@ -114,8 +144,9 @@ export function DashboardCards({ dashboardStats }: DashboardCardsProps) {
           <Button 
             variant="outline" 
             size="sm"
-            className="rounded-xl border-gray-200"
+            className="rounded-xl border-gray-200 shadow-sm"
             disabled
+            title="Em breve"
           >
             <Mail className="w-4 h-4 mr-2" />
             Enviar por Email
@@ -124,32 +155,28 @@ export function DashboardCards({ dashboardStats }: DashboardCardsProps) {
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {cards.map((card) => {
           const IconComponent = card.icon;
           
           return (
             <Card 
               key={card.id} 
-              className="bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-shadow duration-200"
+              className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200"
             >
               <CardContent className="p-0">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full ${card.badgeColor}`}>
-                      <IconComponent className={`w-4 h-4 ${card.iconColor}`} />
-                    </span>
-                    <span className="text-sm font-medium text-gray-600">
-                      {card.title}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor}`}>
+                    <IconComponent className="size-3" />
+                    {card.title}
+                  </span>
                 </div>
                 
-                <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+                <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 mb-1">
                   {card.value}
                 </div>
                 
-                <div className="text-sm text-gray-500">
+                <div className="text-[12px] text-gray-400">
                   {card.subtitle}
                 </div>
               </CardContent>

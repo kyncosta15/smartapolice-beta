@@ -81,11 +81,10 @@ export function DashboardContent() {
     duingNext30Days: duingNext30Days
   };
 
-  // Navigation items
+  // Navigation items - removed Prestações, restored Veículos and Sinistros
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Apólices', icon: FileText },
-    { id: 'installments', title: 'Prestações', icon: Calculator },
     { id: 'users', title: 'Vidas', icon: Users2 },
     { id: 'vehicles', title: 'Veículos', icon: Car },
     { id: 'reports', title: 'Relatórios', icon: BarChart3 },
@@ -94,7 +93,6 @@ export function DashboardContent() {
   const adminNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Apólices', icon: FileText },
-    { id: 'installments', title: 'Prestações', icon: Calculator },
     { id: 'users', title: 'Vidas', icon: Users2 },
     { id: 'vehicles', title: 'Veículos', icon: Car },
     { id: 'claims', title: 'Sinistros', icon: TestTube },
@@ -339,7 +337,7 @@ export function DashboardContent() {
       />
       
       {/* Main Content */}
-      <main className="flex-1 lg:ml-64">
+      <main className="flex-1 lg:ml-60">
         <Navbar 
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -348,16 +346,19 @@ export function DashboardContent() {
           onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
         />
 
-        <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-6">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-6">
           {/* Dashboard Cards - only show on dashboard section */}
           {activeSection === 'dashboard' && (
-            <DashboardCards dashboardStats={{
-              totalPolicies: enhancedDashboardStats.totalPolicies,
-              expiringPolicies: enhancedDashboardStats.expiringPolicies || 0,
-              duingNext30Days: enhancedDashboardStats.duingNext30Days,
-              totalMonthlyCost: enhancedDashboardStats.totalMonthlyCost || 0,
-              totalInsuredValue: enhancedDashboardStats.totalInsuredValue || 0,
-            }} />
+            <DashboardCards 
+              dashboardStats={{
+                totalPolicies: enhancedDashboardStats.totalPolicies,
+                expiringPolicies: enhancedDashboardStats.expiringPolicies || 0,
+                duingNext30Days: enhancedDashboardStats.duingNext30Days,
+                totalMonthlyCost: enhancedDashboardStats.totalMonthlyCost || 0,
+                totalInsuredValue: enhancedDashboardStats.totalInsuredValue || 0,
+              }} 
+              isLoading={false}
+            />
           )}
           
           {/* Other Content */}

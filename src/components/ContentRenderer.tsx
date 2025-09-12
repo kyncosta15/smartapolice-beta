@@ -151,10 +151,22 @@ export function ContentRenderer({
         </div>
       );
 
-    case 'contact':
+    case 'users':
       return (
         <div className="p-6">
-          <ContactSection />
+          <UserManagement 
+            users={allUsers}
+            isLoading={usersLoading}
+            onUserUpdate={onUserUpdate}
+            onUserDelete={onUserDelete}
+          />
+        </div>
+      );
+
+    case 'reports':
+      return (
+        <div className="p-6">
+          <ExportDashboard />
         </div>
       );
 
@@ -188,6 +200,7 @@ export function ContentRenderer({
         </div>
       );
 
+    case 'claims':
     case 'sinistros':
       return (
         <div className="p-6">
@@ -199,6 +212,7 @@ export function ContentRenderer({
         </div>
       );
 
+    case 'vehicles':
     case 'veiculos':
       return (
         <div className="p-6">

@@ -6,12 +6,10 @@ import {
   BarChart3, 
   Users2,
   Car,
-  Calculator,
   TestTube,
   Settings
 } from "lucide-react";
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface AppSidebarProps {
@@ -25,7 +23,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Apólices', icon: FileText },
-    { id: 'installments', title: 'Prestações', icon: Calculator },
     { id: 'users', title: 'Vidas', icon: Users2 },
     { id: 'vehicles', title: 'Veículos', icon: Car },
     { id: 'reports', title: 'Relatórios', icon: BarChart3 },
@@ -34,7 +31,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const adminNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Apólices', icon: FileText },
-    { id: 'installments', title: 'Prestações', icon: Calculator },
     { id: 'users', title: 'Vidas', icon: Users2 },
     { id: 'vehicles', title: 'Veículos', icon: Car },
     { id: 'claims', title: 'Sinistros', icon: TestTube },
@@ -49,35 +45,36 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   };
 
   return (
-    <aside className="hidden lg:block fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-200 z-30 overflow-y-auto">
+    <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 border-r border-gray-200 bg-white z-30 overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center justify-center p-6 border-b border-gray-200">
+      <div className="flex items-center justify-center p-4 border-b border-gray-100">
         <SmartApóliceLogo size="sm" showText={true} />
       </div>
 
       {/* Navigation */}
-      <nav className="p-4">
-        <ul className="space-y-1">
-          {navigation.map((item) => (
-            <li key={item.id}>
-              <Button
-                variant="ghost"
-                onClick={() => handleNavigation(item.id)}
-                className={cn(
-                  "w-full justify-start h-12 text-base rounded-xl",
-                  "hover:bg-gray-50 transition-colors",
-                  activeSection === item.id ? [
-                    "bg-blue-50 text-blue-700 border-l-2 border-blue-600",
-                    "font-semibold"
-                  ] : "text-gray-700"
-                )}
-              >
-                <item.icon className="h-5 w-5 flex-shrink-0 mr-3" />
-                <span className="truncate">{item.title}</span>
-              </Button>
-            </li>
-          ))}
-        </ul>
+      <nav className="p-3 space-y-1">
+        {navigation.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => handleNavigation(item.id)}
+            aria-current={activeSection === item.id ? 'page' : undefined}
+            className={cn(
+              "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm w-full text-left",
+              "text-gray-700 hover:bg-slate-50 transition-colors",
+              activeSection === item.id && [
+                "bg-slate-100 border-l-2 border-blue-600 text-blue-700"
+              ]
+            )}
+          >
+            <item.icon className={cn(
+              "size-4 transition-colors",
+              activeSection === item.id 
+                ? "text-blue-600" 
+                : "text-gray-400 group-hover:text-gray-600"
+            )} />
+            <span className="truncate font-medium">{item.title}</span>
+          </button>
+        ))}
       </nav>
     </aside>
   );

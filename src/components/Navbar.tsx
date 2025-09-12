@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, LogOut, ChevronDown, AlertCircle, Calendar } from 'lucide-react';
+import { Bell, LogOut, ChevronDown, AlertCircle, Calendar, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -88,8 +88,8 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   const notifications = getNotifications();
 
   return (
-    <header className="sticky top-0 z-20 bg-white/70 backdrop-blur border-b border-gray-200">
-      <div className="h-14 flex items-center justify-between px-4 max-w-[1440px] mx-auto">
+    <header className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
+      <div className="h-14 flex items-center justify-between px-4">
         {/* Left side - Brand and Mobile Menu */}
         <div className="flex items-center gap-2">
           {/* Mobile Menu Toggle */}
@@ -97,20 +97,16 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             variant="ghost"
             size="sm"
             onClick={onMobileMenuToggle}
-            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-slate-50 transition-colors rounded-lg"
             aria-label="Abrir menu"
           >
-            <div className="w-5 h-5 flex flex-col justify-center gap-[3px]">
-              <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
-              <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
-              <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
-            </div>
+            <Menu className="w-5 h-5" />
           </Button>
           
           {/* Brand */}
           <div className="flex items-center gap-2">
             <span className="text-lg font-semibold text-gray-900">Apólice</span>
-            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded tracking-wider">
+            <span className="ml-2 text-xs rounded bg-rose-500 text-white px-2 py-0.5 font-medium">
               BETA
             </span>
           </div>
@@ -124,12 +120,12 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
               variant="ghost" 
               size="sm" 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors rounded-full"
+              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-slate-50 transition-colors rounded-full"
               aria-label="Notificações"
             >
               <Bell className="w-5 h-5" />
               {notificationCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 hover:bg-red-500">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-rose-500 hover:bg-rose-500 text-white border-0">
                   {notificationCount > 9 ? '9+' : notificationCount}
                 </Badge>
               )}
@@ -137,10 +133,10 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
 
             {/* Notifications Dropdown */}
             {showNotifications && (
-              <Card className="absolute right-0 mt-2 w-80 bg-white shadow-xl border max-h-96 overflow-y-auto z-[9999]">
+              <Card className="absolute right-0 mt-2 w-80 bg-white shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-[9999] rounded-2xl">
                 <CardContent className="p-0">
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <h3 className="font-semibold text-gray-900">Notificações</h3>
+                    <h3 className="font-semibold text-gray-900 text-sm">Notificações</h3>
                     <p className="text-xs text-gray-500">{notifications.length} ativas</p>
                   </div>
                   
@@ -151,16 +147,16 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
                     </div>
                   ) : (
                     <div className="max-h-64 overflow-y-auto">
-                      {notifications.map((notification) => (
-                        <div key={notification.id} className="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-b-0">
+                      {notifications.map((notification, index) => (
+                        <div key={notification.id || index} className="px-4 py-3 hover:bg-slate-50 border-b border-gray-50 last:border-b-0 transition-colors">
                           <div className="flex items-start space-x-3">
                             <div className={`p-1 rounded-full ${
-                              notification.priority === 'high' ? 'bg-red-100' : 'bg-yellow-100'
+                              notification.priority === 'high' ? 'bg-rose-100' : 'bg-amber-100'
                             }`}>
                               {notification.priority === 'high' ? (
-                                <AlertCircle className="w-3 h-3 text-red-600" />
+                                <AlertCircle className="w-3 h-3 text-rose-600" />
                               ) : (
-                                <Calendar className="w-3 h-3 text-yellow-600" />
+                                <Calendar className="w-3 h-3 text-amber-600" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -189,12 +185,12 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             <Button
               variant="ghost"
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors rounded-full"
+              className="flex items-center gap-2 p-2 hover:bg-slate-50 transition-colors rounded-full"
               aria-haspopup="menu"
               aria-expanded={showUserMenu}
             >
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-sm">
                   {user?.name ? getInitials(user.name) : 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -203,8 +199,8 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
 
             {/* User Dropdown */}
             {showUserMenu && (
-              <Card className="absolute right-0 mt-2 w-48 bg-white shadow-xl border z-[9999]">
-                <CardContent className="p-1">
+              <Card className="absolute right-0 mt-2 w-48 bg-white shadow-xl border border-gray-200 z-[9999] rounded-2xl">
+                <CardContent className="p-2">
                   <div className="px-3 py-2 border-b border-gray-100 sm:hidden">
                     <p className="text-sm font-medium text-gray-900 break-words">{user?.name}</p>
                     <Badge variant={getRoleBadgeVariant(user?.role || '')} className="text-xs mt-1">
@@ -214,7 +210,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
                   <Button
                     variant="ghost"
                     onClick={handleLogout}
-                    className="w-full justify-start space-x-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="w-full justify-start gap-2 text-sm text-gray-700 hover:bg-slate-50 transition-colors rounded-lg"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Sair</span>
