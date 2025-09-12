@@ -114,17 +114,6 @@ const SmartBeneficiosAuthContent = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Link>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-            <img src="/lovable-uploads/f99f90ec-93c1-4e2a-a2b2-892e655192bf.png" alt="Logo" className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-primary">SmartBenefícios</h1>
-            <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded tracking-wider">
-              MVP
-            </span>
-          </div>
-        </div>
         <div className="w-16"></div>
       </header>
 
