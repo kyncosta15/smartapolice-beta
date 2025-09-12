@@ -1,6 +1,6 @@
 
 import { DocumentValidator } from '@/utils/documentValidator';
-import { Shield } from 'lucide-react';
+import smartapolice3DShield from '@/assets/smartapolice-3d-shield.png';
 
 interface SmartApóliceLogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -42,10 +42,8 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
 
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
-      {/* Círculo azul com ícone Shield */}
-      <div className={`${sizeClasses[size]} bg-blue-600 rounded-full flex items-center justify-center`}>
-        <Shield className={`${letterSizeClasses[size]} text-white`} />
-      </div>
+      {/* Escudo 3D */}
+      <img src={smartapolice3DShield} alt="SmartApólice Shield" className={`${sizeClasses[size]} object-contain`} />
       
       {showText && (
         <div className="flex items-center gap-2">
