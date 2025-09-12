@@ -281,6 +281,7 @@ export const AdminApprovalDashboard: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const variants = {
+      aguardando_aprovacao: { variant: 'secondary' as const, label: 'Aguardando Aprovação', icon: AlertTriangle },
       aprovado_rh: { variant: 'default' as const, label: 'Aprovado pelo RH', icon: CheckCircle },
       em_validacao_adm: { variant: 'secondary' as const, label: 'Aguardando Análise', icon: AlertTriangle },
       aprovado_adm: { variant: 'outline' as const, label: 'Aprovado (Ticket)', icon: Ticket },
@@ -314,7 +315,7 @@ export const AdminApprovalDashboard: React.FC = () => {
   // Estatísticas
   const stats = {
     total: requests.length,
-    pendentes: requests.filter(r => r.status === 'aprovado_rh').length,
+    pendentes: requests.filter(r => r.status === 'aprovado_rh' || r.status === 'aguardando_aprovacao').length,
     em_analise: requests.filter(r => r.status === 'em_validacao_adm').length,
     aprovados: requests.filter(r => r.status === 'aprovado_adm').length,
     recusados: requests.filter(r => r.status === 'recusado_adm').length
@@ -343,7 +344,7 @@ export const AdminApprovalDashboard: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold">Portal Administrativo - Aprovação Final</h1>
           <p className="text-muted-foreground">
-            Solicitações aprovadas pelo RH aguardando decisão final
+            Solicitações aguardando decisão final
           </p>
         </div>
         <Badge variant="outline" className="bg-red-50">
@@ -441,6 +442,7 @@ export const AdminApprovalDashboard: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="aguardando_aprovacao">Aguardando Aprovação</SelectItem>
                 <SelectItem value="aprovado_rh">Aprovado pelo RH</SelectItem>
                 <SelectItem value="em_validacao_adm">Em Análise Admin</SelectItem>
                 <SelectItem value="aprovado_adm">Aprovado (Ticket)</SelectItem>
@@ -521,43 +523,45 @@ export const AdminApprovalDashboard: React.FC = () => {
                       </span>
                     </TableCell>
                     <TableCell>{getStatusBadge(request.status)}</TableCell>
-                    <TableCell className="space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewRequest(request.id)}
-                        disabled={isLoadingDetail}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Analisar
-                      </Button>
-                      
-                      {request.status === 'aprovado_rh' && (
-                        <div className="flex gap-2 mt-2">
-                          <Button 
-                            variant="default" 
-                            size="sm"
-                            onClick={() => {
-                              handleViewRequest(request.id);
-                              setShowApprovalDialog(true);
-                            }}
-                          >
-                            <Ticket className="h-4 w-4 mr-2" />
-                            Criar Ticket
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={() => {
-                              handleViewRequest(request.id);
-                              setShowDeclineDialog(true);
-                            }}
-                          >
-                            <XCircle className="h-4 w-4 mr-2" />
-                            Recusar
-                          </Button>
-                        </div>
-                      )}
+                    <TableCell>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewRequest(request.id)}
+                          disabled={isLoadingDetail}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Analisar
+                        </Button>
+                        
+                        {(request.status === 'aprovado_rh' || request.status === 'aguardando_aprovacao') && (
+                          <>
+                            <Button 
+                              variant="default" 
+                              size="sm"
+                              onClick={() => {
+                                handleViewRequest(request.id);
+                                setShowApprovalDialog(true);
+                              }}
+                            >
+                              <Ticket className="h-4 w-4 mr-1" />
+                              Criar Ticket
+                            </Button>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              onClick={() => {
+                                handleViewRequest(request.id);
+                                setShowDeclineDialog(true);
+                              }}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Recusar
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -572,7 +576,7 @@ export const AdminApprovalDashboard: React.FC = () => {
                 Nenhuma solicitação pendente para aprovação
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                As solicitações aprovadas pelo RH aparecerão aqui
+                As solicitações aguardando aprovação aparecerão aqui
               </p>
             </div>
           )}
@@ -588,96 +592,82 @@ export const AdminApprovalDashboard: React.FC = () => {
           
           {selectedRequest && (
             <div className="space-y-6">
-              {/* Informações do Colaborador */}
-              <div>
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Colaborador
-                </h3>
-                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                  <p><strong>Nome:</strong> {selectedRequest.employee.full_name}</p>
-                  <p><strong>CPF:</strong> {selectedRequest.employee.cpf}</p>
-                  {selectedRequest.employee.email && (
-                    <p><strong>E-mail:</strong> {selectedRequest.employee.email}</p>
-                  )}
-                  {selectedRequest.employee.phone && (
-                    <p><strong>Telefone:</strong> {selectedRequest.employee.phone}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Detalhes da Solicitação */}
-              <div>
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Detalhes da Solicitação
-                </h3>
-                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                  <p><strong>Tipo:</strong> {selectedRequest.kind === 'inclusao' ? 'Inclusão de Beneficiário' : 'Exclusão de Beneficiário'}</p>
-                  <p><strong>Status:</strong> {getStatusBadge(selectedRequest.status)}</p>
-                  <p><strong>Data de envio:</strong> {format(new Date(selectedRequest.submitted_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
-                  <p><strong>Quantidade de itens:</strong> {selectedRequest.request_items.length}</p>
-                </div>
-              </div>
-
-              {/* Itens detalhados */}
-              <div>
-                <h3 className="font-semibold mb-3">Itens da Solicitação</h3>
-                <div className="space-y-3">
-                  {selectedRequest.request_items.map((item, index) => (
-                    <div key={item.id} className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium">
-                            {item.target === 'titular' ? 'Titular' : 'Dependente'}
-                            {item.dependent_name && ` - ${item.dependent_name}`}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Ação: <span className="font-medium">{item.action === 'incluir' ? 'Incluir' : 'Excluir'}</span>
-                          </p>
-                          {item.notes && (
-                            <p className="text-sm mt-1">
-                              <strong>Observações:</strong> {item.notes}
-                            </p>
-                          )}
-                        </div>
-                        <Badge variant="secondary">#{index + 1}</Badge>
-                      </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2 flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Dados do Colaborador
+                    </h3>
+                    <div className="bg-muted p-4 rounded-md space-y-2">
+                      <p><strong>Nome:</strong> {selectedRequest.employee.full_name}</p>
+                      <p><strong>CPF:</strong> {selectedRequest.employee.cpf}</p>
+                      {selectedRequest.employee.email && (
+                        <p><strong>Email:</strong> {selectedRequest.employee.email}</p>
+                      )}
+                      {selectedRequest.employee.phone && (
+                        <p><strong>Telefone:</strong> {selectedRequest.employee.phone}</p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
 
-              {/* Histórico de Aprovações */}
-              {selectedRequest.approvals && selectedRequest.approvals.length > 0 && (
-                <div>
-                  <h3 className="font-semibold mb-3">Histórico de Aprovações</h3>
-                  <div className="space-y-2">
-                    {selectedRequest.approvals.map((approval) => (
-                      <div key={approval.id} className="bg-blue-50 p-3 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">
-                              {approval.role === 'rh' ? 'RH' : 'Administração'} - {approval.decision === 'aprovado' ? 'Aprovado' : 'Recusado'}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(approval.decided_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                            </p>
-                          </div>
-                          <Badge className={approval.decision === 'aprovado' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                            {approval.decision === 'aprovado' ? 'Aprovado' : 'Recusado'}
-                          </Badge>
-                        </div>
-                        {approval.note && (
-                          <p className="text-sm mt-2 p-2 bg-white rounded">
-                            <strong>Observação:</strong> {approval.note}
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                  <div>
+                    <h3 className="font-semibold mb-2 flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Detalhes da Solicitação
+                    </h3>
+                    <div className="bg-muted p-4 rounded-md space-y-2">
+                      <p><strong>Tipo:</strong> {getTipoBadge(selectedRequest.kind)}</p>
+                      <p><strong>Status:</strong> {getStatusBadge(selectedRequest.status)}</p>
+                      <p><strong>Data de Envio:</strong> {format(new Date(selectedRequest.submitted_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
+                    </div>
                   </div>
                 </div>
-              )}
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2 flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Itens da Solicitação
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedRequest.request_items.map((item) => (
+                        <div key={item.id} className="bg-muted p-3 rounded-md">
+                          <p><strong>Alvo:</strong> {item.target === 'titular' ? 'Titular' : 'Dependente'}</p>
+                          <p><strong>Ação:</strong> {item.action === 'incluir' ? 'Incluir' : 'Excluir'}</p>
+                          {item.dependent_name && (
+                            <p><strong>Nome do Dependente:</strong> {item.dependent_name}</p>
+                          )}
+                          {item.notes && (
+                            <p><strong>Observações:</strong> {item.notes}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selectedRequest.approvals && selectedRequest.approvals.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2 flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Histórico de Aprovações
+                      </h3>
+                      <div className="space-y-2">
+                        {selectedRequest.approvals.map((approval) => (
+                          <div key={approval.id} className="bg-muted p-3 rounded-md">
+                            <p><strong>Perfil:</strong> {approval.role.toUpperCase()}</p>
+                            <p><strong>Decisão:</strong> {approval.decision}</p>
+                            <p><strong>Data:</strong> {format(new Date(approval.decided_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
+                            {approval.note && (
+                              <p><strong>Observação:</strong> {approval.note}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
@@ -687,24 +677,43 @@ export const AdminApprovalDashboard: React.FC = () => {
       <AlertDialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Converter em Ticket</AlertDialogTitle>
+            <AlertDialogTitle>Aprovar Solicitação</AlertDialogTitle>
             <AlertDialogDescription>
-              Ao aprovar, esta solicitação será convertida em um ticket e enviada para o sistema de processamento.
-              Deseja adicionar uma observação?
+              Você está prestes a aprovar a solicitação <strong>{selectedRequest?.protocol_code}</strong>.
+              Esta ação criará um ticket no sistema.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          
           <div className="my-4">
+            <label className="text-sm font-medium mb-2 block">
+              Observação da Aprovação (Opcional)
+            </label>
             <Textarea
-              placeholder="Observação para o ticket (opcional)"
+              placeholder="Adicione uma observação sobre a aprovação..."
               value={approvalNote}
               onChange={(e) => setApprovalNote(e.target.value)}
-              maxLength={500}
+              rows={3}
             />
           </div>
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleApprove} disabled={isProcessing}>
-              {isProcessing ? 'Criando Ticket...' : 'Aprovar e Criar Ticket'}
+            <AlertDialogAction 
+              onClick={handleApprove}
+              disabled={isProcessing}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isProcessing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <Ticket className="h-4 w-4 mr-2" />
+                  Aprovar e Criar Ticket
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -716,27 +725,42 @@ export const AdminApprovalDashboard: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Recusar Solicitação</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação marcará a solicitação como recusada pela Administração.
-              Informe o motivo da recusa:
+              Você está prestes a recusar a solicitação <strong>{selectedRequest?.protocol_code}</strong>.
+              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          
           <div className="my-4">
+            <label className="text-sm font-medium mb-2 block">
+              Motivo da Recusa <span className="text-red-500">*</span>
+            </label>
             <Textarea
-              placeholder="Motivo da recusa *"
+              placeholder="Descreva o motivo da recusa..."
               value={declineReason}
               onChange={(e) => setDeclineReason(e.target.value)}
-              maxLength={500}
+              rows={3}
               required
             />
           </div>
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={handleDecline} 
+              onClick={handleDecline}
               disabled={isProcessing || !declineReason.trim()}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isProcessing ? 'Recusando...' : 'Recusar Solicitação'}
+              {isProcessing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Recusar Solicitação
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

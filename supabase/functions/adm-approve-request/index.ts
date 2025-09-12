@@ -63,15 +63,15 @@ serve(async (req) => {
     console.log('Request found:', request.protocol_code, 'Status:', request.status);
     console.log('Request metadata:', JSON.stringify(request.metadata, null, 2));
 
-    if (request.status !== 'aguardando_aprovacao') {
-      console.error('Invalid status for admin approval. Expected: aguardando_aprovacao, Got:', request.status);
+    if (!['aguardando_aprovacao', 'aprovado_rh'].includes(request.status)) {
+      console.error('Invalid status for admin approval. Expected: aguardando_aprovacao or aprovado_rh, Got:', request.status);
       console.error('Full request data:', JSON.stringify(request, null, 2));
       return new Response(
         JSON.stringify({ 
           ok: false, 
           error: { 
             code: 'INVALID_STATUS', 
-            message: `Solicitação deve estar aguardando aprovação. Status atual: ${request.status}` 
+            message: `Solicitação deve estar aguardando aprovação ou aprovada pelo RH. Status atual: ${request.status}` 
           } 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
