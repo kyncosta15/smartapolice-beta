@@ -262,7 +262,7 @@ export const ColaboradorModal = ({ children, employeeToEdit }: ColaboradorModalP
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  {employeeToEdit ? 'Solicitação Edição de Colaborador' : 'Solicitação Adição de Novo Colaborador'}
+                  {employeeToEdit ? 'Solicitar Edição de Colaborador' : 'Solicitar Adição de Novo Colaborador'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
