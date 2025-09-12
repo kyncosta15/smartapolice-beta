@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Search, 
   Plus,
+  UserPlus,
   Filter,
   Download,
   Eye,
@@ -20,11 +21,14 @@ import {
 import { ColaboradorModal } from './ColaboradorModal';
 import { ExcluirColaboradorModal } from './ExcluirColaboradorModal';
 import { IncluirDependenteModal } from './IncluirDependenteModal';
+import { EmployeeRequestForm } from './EmployeeRequestForm';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { toast } from 'sonner';
 
 export const EmployeesListNew = () => {
+  const { profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [isColaboradorModalOpen, setIsColaboradorModalOpen] = useState(false);
@@ -33,8 +37,13 @@ export const EmployeesListNew = () => {
   const [editingColaborador, setEditingColaborador] = useState<any>(null);
   const [selectedColaborador, setSelectedColaborador] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('colaboradores');
+  const [isRequestFormOpen, setIsRequestFormOpen] = useState(false);
   
   const { colaboradores, dependentes, isLoading, error, loadData } = useSmartBeneficiosData();
+
+  // Verificar se o usuário é Admin (pode cadastrar direto) ou RH (precisa solicitar)
+  const isAdmin = profile?.role && ['admin', 'administrador', 'corretora_admin'].includes(profile.role);
+  const isRH = profile?.role === 'rh';
 
   const filteredColaboradores = colaboradores.filter(colaborador => {
     const matchesSearch = searchTerm === '' || 
@@ -128,12 +137,26 @@ export const EmployeesListNew = () => {
                   Gestão de Colaboradores
                 </CardTitle>
                 <div className="flex flex-wrap gap-2">
-                  <ColaboradorModal>
-                    <Button className="bg-green-600 hover:bg-green-700">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Cadastrar Colaborador
+                  {/* Botão condicional baseado no perfil */}
+                  {isAdmin ? (
+                    // Admin: Cadastro direto
+                    <ColaboradorModal>
+                      <Button className="bg-green-600 hover:bg-green-700">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Cadastrar Colaborador
+                      </Button>
+                    </ColaboradorModal>
+                  ) : isRH ? (
+                    // RH: Solicitação para aprovação
+                    <Button
+                      onClick={() => setIsRequestFormOpen(true)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Solicitar Colaborador
                     </Button>
-                  </ColaboradorModal>
+                  ) : null}
+                  
                   <Button variant="outline">
                     <Download className="h-4 w-4 mr-2" />
                     Exportar
@@ -211,6 +234,7 @@ export const EmployeesListNew = () => {
                         </TableCell>
                         <TableCell className="space-x-2">
                         <div className="flex flex-wrap gap-1">
+                          {/* Sempre pode editar */}
                           <ColaboradorModal employeeToEdit={colaborador}>
                             <Button variant="outline" size="sm">
                               <Edit className="h-4 w-4 mr-1" />
@@ -218,16 +242,23 @@ export const EmployeesListNew = () => {
                             </Button>
                           </ColaboradorModal>
                           
-                          <ExcluirColaboradorModal>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-600 border-red-300 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Excluir Colaborador
-                            </Button>
-                          </ExcluirColaboradorModal>
+                          {/* Botão de exclusão condicional */}
+                          {isAdmin ? (
+                            // Admin: Exclusão direta
+                            <ExcluirColaboradorModal>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 border-red-300 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Excluir Colaborador
+                              </Button>
+                            </ExcluirColaboradorModal>
+                          ) : isRH ? (
+                            // RH: Solicitação de exclusão (não implementado ainda, mas pode ser adicionado)
+                            null
+                          ) : null}
                         </div>
                         </TableCell>
                       </TableRow>
@@ -248,12 +279,26 @@ export const EmployeesListNew = () => {
                   <Users className="h-5 w-5" />
                   Dependentes ({dependentesAtivos.length})
                 </CardTitle>
-                <IncluirDependenteModal>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
+                {/* Botão condicional para dependentes */}
+                {isAdmin ? (
+                  // Admin: Cadastro direto de dependente
+                  <IncluirDependenteModal>
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Cadastrar Dependente
+                    </Button>
+                  </IncluirDependenteModal>
+                ) : isRH ? (
+                  // RH: Solicitação de dependente (pode ser implementado futuramente)
+                  <Button
+                    disabled
+                    variant="outline"
+                    className="bg-gray-100 text-gray-500 cursor-not-allowed"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
-                    Cadastrar Dependente
+                    Solicitar Dependente (Em desenvolvimento)
                   </Button>
-                </IncluirDependenteModal>
+                ) : null}
               </div>
             </CardHeader>
             <CardContent>
@@ -290,6 +335,18 @@ export const EmployeesListNew = () => {
         </TabsContent>
       </Tabs>
 
+      {/* Modal de Solicitação para RH */}
+      {isRH && (
+        <EmployeeRequestForm 
+          type="add"
+          isOpen={isRequestFormOpen}
+          onClose={() => setIsRequestFormOpen(false)}
+          onSuccess={() => {
+            loadData();
+            toast.success('Solicitação enviada para aprovação do Admin!');
+          }}
+        />
+      )}
     </div>
   );
 };
