@@ -21,7 +21,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Buscar solicitações aprovadas pelo RH
+    // Buscar solicitações que precisam de aprovação do Admin
+    // - Status 'aguardando_aprovacao': Solicitações do RH aguardando aprovação
+    // - Status 'aprovado_rh': Solicitações já aprovadas pelo RH (se houver um fluxo duplo)
     const { data: requests, error } = await supabase
       .from('requests')
       .select(`
@@ -33,7 +35,7 @@ serve(async (req) => {
         metadata
       `)
       .eq('draft', false)
-      .in('status', ['aprovado_rh', 'em_validacao_adm'])
+      .in('status', ['aguardando_aprovacao', 'aprovado_rh'])
       .order('submitted_at', { ascending: false });
 
     if (error) {
