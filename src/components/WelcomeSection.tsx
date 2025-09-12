@@ -52,7 +52,7 @@ export function WelcomeSection() {
   };
 
   return (
-    <div className="sticky top-16 z-40 bg-gradient-to-r from-slate-50 to-blue-50 border-b border-gray-200 shadow-sm">
+    <div className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-gray-200 shadow-sm">
       <div className={`${isMobile ? 'p-3' : 'p-4'}`}>
         <Card className="bg-white/95 backdrop-blur-sm shadow-lg border border-gray-200/50">
           <CardContent className={`${isMobile ? 'p-4' : 'p-5'}`}>
