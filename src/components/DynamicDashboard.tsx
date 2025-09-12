@@ -94,48 +94,9 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
   }
 
   return (
-    <div className={`w-full ${isMobile ? 'space-y-2 px-0' : 'space-y-6'} overflow-hidden max-w-full`}>
-      {/* Cabeçalho com título e botão de exportar */}
-      <div className="bg-white border border-gray-200 rounded-md shadow-sm" data-exclude-pdf="true">
-        <div className={`${isMobile ? 'p-2' : 'p-6'}`}>
-          <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center justify-between'}`}>
-            <div>
-              <h1 className={`${isMobile ? 'text-sm' : 'text-2xl'} font-bold text-gray-900 mb-1`}>
-                Dashboard de Apólices
-              </h1>
-              <p className={`${isMobile ? 'text-xs' : 'text-base'} text-gray-600`}>
-                Visão geral das suas apólices e métricas
-              </p>
-            </div>
-            
-            {/* Botão de exportação */}
-            {!isMobile && (
-              <div className="flex items-center gap-3">
-                <PDFReportGenerator 
-                  policies={policies} 
-                  dashboardData={dashboardData}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Container principal do dashboard */}
-      <div id="dashboard-pdf-content" className={`w-full ${isMobile ? 'space-y-2' : 'space-y-6'} bg-white ${isMobile ? 'p-1' : 'p-6'} print-container overflow-hidden max-w-full`}>
-        {/* KPIs principais - com dados reais para admin */}
-        <div className="w-full overflow-hidden">
-          <KPICards
-            totalPolicies={displayMetrics.totalPolicies}
-            totalMonthlyCost={displayMetrics.totalMonthlyCost}
-            totalInsuredValue={displayMetrics.totalInsuredValue}
-            expiringPolicies={displayMetrics.expiringPolicies}
-            expiredPolicies={dashboardData.expiredPolicies}
-            activePolicies={dashboardData.activePolicies}
-            onTotalClick={handleTotalClick}
-          />
-        </div>
-
+    <div className={`w-full ${isMobile ? 'space-y-4 px-0' : 'space-y-6'} overflow-hidden max-w-full`}>
+      {/* Container principal do dashboard - sem cabeçalho duplicado */}
+      <div id="dashboard-pdf-content" className={`w-full ${isMobile ? 'space-y-4' : 'space-y-6'} overflow-hidden max-w-full`}>
         {/* A. Classificação e identificação - Um embaixo do outro */}
         <div className="w-full overflow-hidden">
           <ClassificationCharts

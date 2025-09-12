@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { MobileDrawer } from '@/components/MobileDrawer';
 import { Navbar } from '@/components/Navbar';
 import { DashboardCards } from '@/components/DashboardCards';
+import { DynamicDashboard } from '@/components/DynamicDashboard';
 import { ContentRenderer } from '@/components/ContentRenderer';
 import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
 import { useToast } from '@/hooks/use-toast';
@@ -320,7 +321,7 @@ export function DashboardContent() {
   })));
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50 overflow-hidden">
       {/* Desktop Sidebar */}
       <AppSidebar 
         onSectionChange={setActiveSection} 
@@ -347,18 +348,30 @@ export function DashboardContent() {
         />
 
         <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-6">
-          {/* Dashboard Cards - only show on dashboard section */}
+          {/* Complete Dashboard Content */}
           {activeSection === 'dashboard' && (
-            <DashboardCards 
-              dashboardStats={{
-                totalPolicies: enhancedDashboardStats.totalPolicies,
-                expiringPolicies: enhancedDashboardStats.expiringPolicies || 0,
-                duingNext30Days: enhancedDashboardStats.duingNext30Days,
-                totalMonthlyCost: enhancedDashboardStats.totalMonthlyCost || 0,
-                totalInsuredValue: enhancedDashboardStats.totalInsuredValue || 0,
-              }} 
-              isLoading={false}
-            />
+            <div className="space-y-6 overflow-hidden">
+              {/* Dashboard Cards */}
+              <DashboardCards 
+                dashboardStats={{
+                  totalPolicies: enhancedDashboardStats.totalPolicies,
+                  expiringPolicies: enhancedDashboardStats.expiringPolicies || 0,
+                  duingNext30Days: enhancedDashboardStats.duingNext30Days,
+                  totalMonthlyCost: enhancedDashboardStats.totalMonthlyCost || 0,
+                  totalInsuredValue: enhancedDashboardStats.totalInsuredValue || 0,
+                }} 
+                isLoading={false}
+              />
+              
+              {/* Complete Dashboard with Charts - hide cards section to avoid duplication */}
+              <div className="mt-8">
+                <DynamicDashboard 
+                  policies={normalizedPolicies}
+                  viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
+                  onSectionChange={setActiveSection}
+                />
+              </div>
+            </div>
           )}
           
           {/* Other Content */}

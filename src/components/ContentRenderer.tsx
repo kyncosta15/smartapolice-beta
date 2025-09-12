@@ -4,7 +4,7 @@ import { DynamicDashboard } from './DynamicDashboard';
 import { AdminDashboardNew } from './AdminDashboardNew';
 import { EnhancedPDFUpload } from './EnhancedPDFUpload';
 import { EnhancedPolicyViewer } from './EnhancedPolicyViewer';
-import { UserManagement } from './UserManagement';
+import { VidasBeneficiarios } from './VidasBeneficiarios';
 import { ClientsList } from './ClientsList';
 import { ContactSection } from './ContactSection';
 import { OptimizedSettings } from './OptimizedSettings';
@@ -154,12 +154,7 @@ export function ContentRenderer({
     case 'users':
       return (
         <div className="p-6">
-          <UserManagement 
-            users={allUsers}
-            isLoading={usersLoading}
-            onUserUpdate={onUserUpdate}
-            onUserDelete={onUserDelete}
-          />
+          <VidasBeneficiarios allPolicies={allPolicies} />
         </div>
       );
 
