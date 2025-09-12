@@ -6,7 +6,7 @@ import {
   BarChart3, 
   Users2,
   Car,
-  TestTube,
+  ShieldAlert,
   Settings,
   Upload,
   Mail
@@ -25,7 +25,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Minhas Apólices', icon: FileText },
-    { id: 'claims', title: 'Sinistros', icon: TestTube },
+    { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'vehicles', title: 'Veículos', icon: Car },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
@@ -36,7 +36,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Minhas Apólices', icon: FileText },
     { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
-    { id: 'claims', title: 'Sinistros', icon: TestTube },
+    { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'vehicles', title: 'Veículos', icon: Car },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
