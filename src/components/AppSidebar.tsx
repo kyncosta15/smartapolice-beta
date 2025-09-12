@@ -151,7 +151,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
   
   return (
-    <Sidebar className="bg-white border-r">
+    <Sidebar className="bg-white border-r z-30">
       <SidebarHeader className="space-y-6 p-6">
         <SmartApóliceLogo size="md" showText={true} />
       </SidebarHeader>

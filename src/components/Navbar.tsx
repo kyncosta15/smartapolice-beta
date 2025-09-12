@@ -93,7 +93,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   const notifications = getNotifications();
 
   return (
-    <nav className="bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm z-50">
+    <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left side - Sidebar Toggle and Mobile Menu */}
