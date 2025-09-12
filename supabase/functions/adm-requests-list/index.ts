@@ -11,7 +11,8 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  if (req.method !== 'GET') {
+  // Accept both GET and POST methods for Supabase functions invoke
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
   }
 
