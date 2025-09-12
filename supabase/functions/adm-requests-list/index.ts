@@ -33,7 +33,7 @@ serve(async (req) => {
         metadata
       `)
       .eq('draft', false)
-      .in('status', ['aguardando_aprovacao'])
+      .in('status', ['aprovado_rh', 'em_validacao_adm'])
       .order('submitted_at', { ascending: false });
 
     if (error) {
