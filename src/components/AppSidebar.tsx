@@ -9,10 +9,13 @@ import {
   ShieldAlert,
   Settings,
   Upload,
-  Mail
+  Mail,
+  ArrowLeft
 } from "lucide-react";
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface AppSidebarProps {
   onSectionChange: (section: string) => void;
@@ -21,6 +24,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
@@ -81,6 +85,21 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
           </button>
         ))}
       </nav>
+
+      {/* Bottom Section - Back Button */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 bg-white">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/system-selection')}
+          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-gray-600 hover:bg-slate-50 transition-colors rounded-lg"
+          aria-label="Voltar para seleção de sistemas"
+          title="Voltar para seleção de sistemas"
+        >
+          <ArrowLeft className="size-4" />
+          <span className="truncate font-medium">Voltar aos sistemas</span>
+        </Button>
+      </div>
     </aside>
   );
 }
