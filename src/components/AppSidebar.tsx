@@ -152,7 +152,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   
   return (
     <Sidebar className="bg-white border-r">
-      <SidebarHeader className="space-y-4 p-4">
+      <SidebarHeader className="space-y-6 p-6">
         <SmartApóliceLogo size="md" showText={true} />
       </SidebarHeader>
       <SidebarContent>
