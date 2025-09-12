@@ -249,16 +249,8 @@ export const ColaboradorModal = ({ children, employeeToEdit }: ColaboradorModalP
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-1">
-            <TabsTrigger value="cadastro" className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Cadastrar Novo Colaborador
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="cadastro" className="space-y-4 mt-6">
-            <Card>
+        <div className="space-y-6 mt-6">
+          <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
@@ -525,8 +517,7 @@ export const ColaboradorModal = ({ children, employeeToEdit }: ColaboradorModalP
                 </Form>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+        </div>
       </DialogContent>
     </Dialog>
   );
