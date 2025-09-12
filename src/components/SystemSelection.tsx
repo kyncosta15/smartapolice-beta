@@ -47,8 +47,8 @@ export const SystemSelection = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
               
               <CardHeader className="text-center pb-4 relative z-10">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
-                  <img src={smartapoliceShield} alt="SmartApólice Shield" className="h-14 w-14 object-contain group-hover:scale-110 transition-transform duration-300" />
+                <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
+                  <img src={smartapoliceShield} alt="SmartApólice Shield" className="h-16 w-16 object-contain group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">SmartApólice</CardTitle>
               </CardHeader>
@@ -76,8 +76,8 @@ export const SystemSelection = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
               
               <CardHeader className="text-center pb-4 relative z-10">
-                <div className="w-20 h-20 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-secondary/30 group-hover:to-secondary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
-                  <img src={smartbeneficiosPeopleHeart} alt="SmartBenefícios People and Heart" className="h-14 w-14 object-contain group-hover:scale-110 transition-transform duration-300" />
+                <div className="w-24 h-24 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-secondary/30 group-hover:to-secondary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
+                  <img src={smartbeneficiosPeopleHeart} alt="SmartBenefícios People and Heart" className="h-16 w-16 object-contain group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-secondary bg-clip-text text-transparent">SmartBenefícios</CardTitle>
               </CardHeader>
