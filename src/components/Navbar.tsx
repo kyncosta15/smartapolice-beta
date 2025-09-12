@@ -16,6 +16,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ searchTerm, onSearchChange, notificationCount, policies, onMobileMenuToggle }: NavbarProps) {
+  // Fixed ArrowLeft reference error - force rebuild
   
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
