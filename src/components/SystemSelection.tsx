@@ -18,16 +18,11 @@ export const SystemSelection = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex flex-col">
       {/* Header */}
-      <header className="p-6 flex items-center justify-between">
+      <header className="p-6">
         <Link to="/" className="flex items-center text-muted-foreground hover:text-primary transition-colors">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Link>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-primary">RCorp</h1>
-          <p className="text-sm text-muted-foreground">Soluções corporativas inteligentes</p>
-        </div>
-        <div className="w-16"></div> {/* Spacer for centering */}
       </header>
 
       {/* Main Content */}
