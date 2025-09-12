@@ -40,6 +40,7 @@ import { EmployeesListNew } from '@/components/EmployeesListNew';
 import { ConsolidatedReportPDF } from '@/components/ConsolidatedReportPDF';
 import { TicketsReportPDF } from '@/components/TicketsReportPDF';
 import { RequestsApprovalFlow } from '@/components/RequestsApprovalFlow';
+import { RealtimeDashboardMetrics } from '@/components/RealtimeDashboardMetrics';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -323,6 +324,7 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
+            <RealtimeDashboardMetrics />
             <DynamicCharts 
               colaboradores={colaboradores}
               dependentes={dependentes}
@@ -330,7 +332,6 @@ export const SmartBeneficiosDashboard = () => {
               apolices={apolices}
               metrics={metrics}
             />
-
           </TabsContent>
 
           {/* Colaboradores Tab */}
