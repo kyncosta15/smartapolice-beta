@@ -268,10 +268,7 @@ export function DashboardContent() {
     // O toast já é mostrado no hook usePersistedUsers
   };
 
-  const handleClientRegister = async (client: any) => {
-    await addUser(client);
-    // O toast já é mostrado no hook usePersistedUsers
-  };
+  // Removido handleClientRegister - agora usamos hook direto
 
   // Normalizar dados das apólices para garantir compatibilidade com todos os componentes
   // IMPORTANTE: Usar allPolicies (que inclui persistidas) e não apenas extractedPolicies
@@ -323,7 +320,6 @@ export function DashboardContent() {
                 onPolicyExtracted={handlePolicyExtracted}
                 onUserUpdate={handleUserUpdate}
                 onUserDelete={handleUserDelete}
-                onClientRegister={handleClientRegister}
                 onSectionChange={setActiveSection}
               />
             </div>

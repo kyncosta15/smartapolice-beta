@@ -85,6 +85,63 @@ export type Database = {
           },
         ]
       }
+      clients: {
+        Row: {
+          address: string | null
+          city: string | null
+          company: string | null
+          created_at: string
+          created_by: string | null
+          document: string | null
+          document_type: string | null
+          email: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          state: string | null
+          status: string | null
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          document?: string | null
+          document_type?: string | null
+          email: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       coberturas: {
         Row: {
           created_at: string | null

@@ -6,71 +6,58 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { UserPlus, Building, Phone, Mail, MapPin } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { UserPlus, Building, Phone, Mail, MapPin, Loader2 } from 'lucide-react';
+import { useClients, CreateClientData } from '@/hooks/useClients';
 
 interface ClientRegistrationProps {
-  onClientRegister: (client: any) => void;
+  onSuccess?: (client: any) => void;
 }
 
-export function ClientRegistration({ onClientRegister }: ClientRegistrationProps) {
-  const [formData, setFormData] = useState({
+export function ClientRegistration({ onSuccess }: ClientRegistrationProps) {
+  const [formData, setFormData] = useState<CreateClientData>({
     name: '',
     email: '',
     phone: '',
     company: '',
     document: '',
-    documentType: 'cpf',
+    document_type: 'cpf',
     address: '',
     city: '',
     state: '',
-    zipCode: '',
+    zip_code: '',
     notes: ''
   });
 
-  const { toast } = useToast();
+  const { createClient, isLoading } = useClients();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.phone) {
-      toast({
-        title: "Erro",
-        description: "Preencha os campos obrigatórios",
-        variant: "destructive"
-      });
+    if (!formData.name || !formData.email) {
       return;
     }
 
-    const newClient = {
-      id: Date.now().toString(),
-      ...formData,
-      role: 'cliente',
-      createdAt: new Date().toISOString(),
-      status: 'active'
-    };
-
-    onClientRegister(newClient);
+    const result = await createClient(formData);
     
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      company: '',
-      document: '',
-      documentType: 'cpf',
-      address: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      notes: ''
-    });
+    if (result.success) {
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        company: '',
+        document: '',
+        document_type: 'cpf',
+        address: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        notes: ''
+      });
 
-    toast({
-      title: "Cliente Cadastrado",
-      description: `${formData.name} foi cadastrado com sucesso`,
-    });
+      // Call success callback if provided
+      onSuccess?.(result.data);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -153,7 +140,7 @@ export function ClientRegistration({ onClientRegister }: ClientRegistrationProps
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="documentType">Tipo de Documento</Label>
-                <Select value={formData.documentType} onValueChange={(value) => handleInputChange('documentType', value)}>
+                <Select value={formData.document_type} onValueChange={(value) => handleInputChange('document_type', value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -170,7 +157,7 @@ export function ClientRegistration({ onClientRegister }: ClientRegistrationProps
                   id="document"
                   value={formData.document}
                   onChange={(e) => handleInputChange('document', e.target.value)}
-                  placeholder={formData.documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0001-00'}
+                  placeholder={formData.document_type === 'cpf' ? '000.000.000-00' : '00.000.000/0001-00'}
                 />
               </div>
             </div>
@@ -217,8 +204,8 @@ export function ClientRegistration({ onClientRegister }: ClientRegistrationProps
                   <Label htmlFor="zipCode">CEP</Label>
                   <Input
                     id="zipCode"
-                    value={formData.zipCode}
-                    onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                  value={formData.zip_code}
+                  onChange={(e) => handleInputChange('zip_code', e.target.value)}
                     placeholder="00000-000"
                   />
                 </div>
@@ -239,9 +226,18 @@ export function ClientRegistration({ onClientRegister }: ClientRegistrationProps
 
             {/* Botão de Submit */}
             <div className="flex justify-end pt-6">
-              <Button type="submit" className="px-8">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Cadastrar Cliente
+              <Button type="submit" className="px-8" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Cadastrar Cliente
+                  </>
+                )}
               </Button>
             </div>
           </form>

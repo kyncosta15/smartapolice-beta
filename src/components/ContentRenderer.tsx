@@ -5,7 +5,7 @@ import { AdminDashboardNew } from './AdminDashboardNew';
 import { EnhancedPDFUpload } from './EnhancedPDFUpload';
 import { EnhancedPolicyViewer } from './EnhancedPolicyViewer';
 import { UserManagement } from './UserManagement';
-import { ClientRegister } from './ClientRegister';
+import { ClientsList } from './ClientsList';
 import { ContactSection } from './ContactSection';
 import { OptimizedSettings } from './OptimizedSettings';
 import { ChartsSection } from './ChartsSection';
@@ -34,7 +34,6 @@ interface ContentRendererProps {
   onPolicyExtracted: (policy: any) => void;
   onUserUpdate: (user: any) => void;
   onUserDelete: (userId: string) => void;
-  onClientRegister: (client: any) => void;
   onSectionChange: (section: string) => void;
 }
 
@@ -53,7 +52,6 @@ export function ContentRenderer({
   onPolicyExtracted,
   onUserUpdate,
   onUserDelete,
-  onClientRegister,
   onSectionChange
 }: ContentRendererProps) {
   const { user } = useAuth();
@@ -135,17 +133,9 @@ export function ContentRenderer({
     case 'clients':
       if (user?.role === 'administrador') {
         return (
-          <div className="p-6">
-            <UserManagement 
-              users={allUsers}
-              onUserUpdate={onUserUpdate}
-              onUserDelete={onUserDelete}
-              isLoading={usersLoading}
-            />
-            <div className="mt-8">
-              <ClientRegister onClientRegister={onClientRegister} />
+            <div className="p-6">
+              <ClientsList />
             </div>
-          </div>
         );
       }
       return (
