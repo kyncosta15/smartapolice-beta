@@ -133,7 +133,7 @@ export const EmployeesListNew: React.FC = () => {
           <ColaboradorModal>
             <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Adicionar Colaborador
+              Solicitar adição de colaborador
             </Button>
           </ColaboradorModal>
           
@@ -168,7 +168,7 @@ export const EmployeesListNew: React.FC = () => {
               <ColaboradorModal>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Primeiro Colaborador
+                  Solicitar Primeiro Colaborador
                 </Button>
               </ColaboradorModal>
             )}
