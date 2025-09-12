@@ -41,23 +41,25 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
   const personTypeLabel = getPersonTypeLabel();
 
   return (
-    <div className={`flex items-center space-x-3 ${className}`}>
+    <div className={`flex flex-col items-center space-y-3 ${className}`}>
       {/* Escudo 3D */}
       <img src={smartapolice3DShield} alt="SmartApólice Shield" className={`${sizeClasses[size]} object-contain`} />
       
       {showText && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-center gap-2 text-center">
           <h1 className={`${textSizeClasses[size]} font-semibold text-gray-900`}>
             Smart<span className="text-blue-600">Apólice</span>
           </h1>
-          <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded tracking-wider">
-            BETA
-          </span>
-          {personTypeLabel && (
-            <span className="text-xs font-normal text-gray-500 ml-2">
-              {personTypeLabel}
+          <div className="flex items-center gap-2 justify-center">
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded tracking-wider">
+              BETA
             </span>
-          )}
+            {personTypeLabel && (
+              <span className="text-xs font-normal text-gray-500">
+                {personTypeLabel}
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>
