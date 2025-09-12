@@ -105,7 +105,11 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
               onClick={toggleSidebar}
               className="hidden md:flex p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             >
-              <PanelLeft className="w-4 h-4" />
+              <div className="w-4 h-4 flex flex-col justify-center gap-[3px]">
+                <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
+                <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
+                <div className="h-[2px] w-full bg-current rounded-full transition-all"></div>
+              </div>
             </Button>
 
             {/* Mobile Menu Toggle */}
