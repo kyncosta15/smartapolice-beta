@@ -1784,6 +1784,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      rh_employee_request: {
+        Args: {
+          employee_data: Json
+          observacoes?: string
+          request_kind: string
+        }
+        Returns: Json
+      }
       test_file_access: {
         Args: { file_path: string }
         Returns: {

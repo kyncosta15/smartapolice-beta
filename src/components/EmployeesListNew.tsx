@@ -1,111 +1,67 @@
-// Lista de colaboradores com novo layout baseado na imagem referência
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { 
-  User, 
-  Users, 
   Search, 
-  Mail,
-  Phone,
-  Building,
-  Calendar,
-  X,
+  Plus,
+  UserMinus,
+  UserPlus,
+  Filter,
+  Download,
   Eye,
-  Plus
+  Edit,
+  Trash2,
+  Users,
+  FileText,
+  ClipboardList
 } from 'lucide-react';
-import { useCollaborators } from '@/hooks/useCollaborators';
-import { toast } from '@/hooks/use-toast';
-import { EmployeeDetailsDrawer } from './EmployeeDetailsDrawer';
 import { ColaboradorModal } from './ColaboradorModal';
+import { ExcluirColaboradorModal } from './ExcluirColaboradorModal';
+import { IncluirDependenteModal } from './IncluirDependenteModal';
+import { EmployeeRequestForm } from './EmployeeRequestForm';
+import { EmployeeRequestsDashboard } from './EmployeeRequestsDashboard';
+import { useSmartBeneficiosData } from '@/hooks/useSmartBeneficiosData';
+import { formatCurrency } from '@/utils/currencyFormatter';
+import { toast } from 'sonner';
 
-interface Employee {
-  id: string;
-  cpf: string;
-  full_name: string;
-  email?: string;
-  phone?: string;
-  birth_date?: string;
-  status: 'ativo' | 'inativo' | 'pendente';
-  created_at: string;
-  company_id: string;
-  companies?: {
-    legal_name: string;
-    trade_name?: string;
-  };
-  dependents: {
-    full_name: string;
-    relationship: string;
-  }[];
-  // Campos adicionais do colaboradores
-  cargo?: string;
-  centro_custo?: string;
-  data_admissao?: string;
-  custo_mensal?: number;
-}
-
-export const EmployeesListNew: React.FC = () => {
-  const { employees, isLoading, searchEmployees, deleteEmployee } = useCollaborators();
+export const EmployeesListNew = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [isColaboradorModalOpen, setIsColaboradorModalOpen] = useState(false);
+  const [isExcluirModalOpen, setIsExcluirModalOpen] = useState(false);
+  const [isDependenteModalOpen, setIsDependenteModalOpen] = useState(false);
+  const [editingColaborador, setEditingColaborador] = useState<any>(null);
+  const [selectedColaborador, setSelectedColaborador] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('colaboradores');
+  const [requestFormType, setRequestFormType] = useState<'add' | 'remove'>('add');
+  const [isRequestFormOpen, setIsRequestFormOpen] = useState(false);
+  const [selectedEmployeeForRemoval, setSelectedEmployeeForRemoval] = useState<any>(null);
+  
+  const { colaboradores, dependentes, isLoading, error, loadData } = useSmartBeneficiosData();
 
-  // Buscar dados incluindo campos do colaboradores
-  useEffect(() => {
-    searchEmployees('');
-  }, []);
+  const filteredColaboradores = colaboradores.filter(colaborador => {
+    const matchesSearch = searchTerm === '' || 
+      colaborador.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      colaborador.cpf?.includes(searchTerm);
+    const matchesStatus = selectedStatus === 'all' || colaborador.status === selectedStatus;
+    return matchesSearch && matchesStatus;
+  });
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    searchEmployees(value);
+  const dependentesAtivos = dependentes.filter(dep => dep.status === 'ativo');
+
+  const stats = {
+    colaboradores: colaboradores.filter(col => col.status === 'ativo').length,
+    dependentes: dependentesAtivos.length,
+    custoTotal: colaboradores
+      .filter(col => col.status === 'ativo')
+      .reduce((sum, col) => sum + (col.custo_mensal || 0), 0) +
+      dependentesAtivos.reduce((sum, dep) => sum + (dep.custo_mensal || 0), 0)
   };
-
-  const formatCPF = (cpf: string) => {
-    const cleaned = cpf.replace(/\D/g, '');
-    return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.***.***-$4');
-  };
-
-  const formatCurrency = (value?: number) => {
-    if (!value) return 'R$ 0,00';
-    return `R$ ${value.toFixed(2).replace('.', ',')}`;
-  };
-
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'Não informado';
-    return new Date(dateStr).toLocaleDateString('pt-BR');
-  };
-
-  const handleDelete = async (employeeId: string, employeeName: string) => {
-    try {
-      await deleteEmployee(employeeId);
-    } catch (error) {
-      console.error('Error deleting employee:', error);
-    }
-  };
-
-  const filteredEmployees = employees.filter(employee =>
-    employee.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.cpf?.includes(searchTerm) ||
-    employee.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   if (isLoading) {
     return (
@@ -117,217 +73,282 @@ export const EmployeesListNew: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header com busca e ações */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Colaboradores Cadastrados</h3>
-          <div className="space-y-1">
-            <p className="text-muted-foreground">
-              {employees.length} colaboradores • {employees.filter(emp => emp.status === 'ativo').length} ativos • {employees.filter(emp => emp.status !== 'ativo').length} inativos
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          {/* Botão Adicionar Colaborador */}
-          <ColaboradorModal>
-            <Button className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              Solicitar adição de colaborador
-            </Button>
-          </ColaboradorModal>
-          
-          {/* Busca */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar colaborador..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 w-full sm:w-80"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Lista de colaboradores */}
-      {filteredEmployees.length === 0 ? (
+      {/* Header com estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardContent className="text-center py-8">
-            <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <h3 className="text-lg font-medium mb-2">
-              {searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum colaborador cadastrado'}
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              {searchTerm 
-                ? 'Tente ajustar os termos de busca'
-                : 'Os colaboradores aparecerão aqui quando cadastrados'
-              }
-            </p>
-            {!searchTerm && (
-              <ColaboradorModal>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Solicitar Primeiro Colaborador
-                </Button>
-              </ColaboradorModal>
-            )}
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Users className="h-8 w-8 text-blue-600" />
+              <div>
+                <p className="text-2xl font-bold">{stats.colaboradores}</p>
+                <p className="text-sm text-muted-foreground">Colaboradores Ativos</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-4">
-          {filteredEmployees.map((employee) => (
-            <Card key={employee.id} className="hover:shadow-md transition-all relative">
-              <CardContent className="p-6">
-                {/* Botão excluir no canto superior direito */}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-4 right-4 h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <X className="h-4 w-4" />
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Users className="h-8 w-8 text-green-600" />
+              <div>
+                <p className="text-2xl font-bold">{stats.dependentes}</p>
+                <p className="text-sm text-muted-foreground">Dependentes Ativos</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <FileText className="h-8 w-8 text-purple-600" />
+              <div>
+                <p className="text-2xl font-bold">{formatCurrency(stats.custoTotal)}</p>
+                <p className="text-sm text-muted-foreground">Custo Mensal Total</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs para diferentes seções */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="colaboradores" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Colaboradores
+          </TabsTrigger>
+          <TabsTrigger value="solicitacoes" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Solicitações RH
+          </TabsTrigger>
+          <TabsTrigger value="dependentes" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Dependentes
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab de Colaboradores */}
+        <TabsContent value="colaboradores" className="space-y-6">
+          {/* Controles e Filtros */}
+          <Card>
+            <CardHeader className="pb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Gestão de Colaboradores
+                </CardTitle>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => {
+                      setRequestFormType('add');
+                      setSelectedEmployeeForRemoval(null);
+                      setIsRequestFormOpen(true);
+                    }}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Solicitar Inclusão
+                  </Button>
+                  <ColaboradorModal>
+                    <Button variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Cadastro Direto
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Excluir Colaborador</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Tem certeza que deseja excluir <strong>{employee.full_name}</strong>? 
-                        Esta ação não pode ser desfeita e removerá permanentemente o colaborador do sistema.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={() => handleDelete(employee.id, employee.full_name)}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        Excluir
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-
-                <div className="space-y-3 pr-12">
-                  {/* Nome e Status */}
-                  <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <h4 className="font-semibold text-lg">{employee.full_name}</h4>
-                      <Badge className={employee.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                        {employee.status}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {/* Informações em grid - 4 colunas */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-muted-foreground">
-                    {/* CPF */}
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4" />
-                      <span>CPF: {formatCPF(employee.cpf)}</span>
-                    </div>
-
-                    {/* Email */}
-                    {employee.email && (
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        <span>{employee.email}</span>
-                      </div>
-                    )}
-
-                    {/* Empresa */}
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4" />
-                      <span>{employee.companies?.legal_name || 'ABALISTSA'}</span>
-                    </div>
-
-                    {/* Telefone */}
-                    {employee.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        <span>{employee.phone}</span>
-                      </div>
-                    )}
-
-                    {/* Cargo */}
-                    {employee.cargo && (
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        <span>{employee.cargo}</span>
-                      </div>
-                    )}
-
-                    {/* Centro de Custo */}
-                    {employee.centro_custo && (
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
-                        <span>{employee.centro_custo}</span>
-                      </div>
-                    )}
-
-                    {/* Data de Admissão */}
-                    {employee.data_admissao && (
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        <span>Admissão: {formatDate(employee.data_admissao)}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Custo Mensal em destaque */}
-                  {employee.custo_mensal && (
-                    <div className="text-green-600 font-semibold text-base">
-                      Custo: {formatCurrency(employee.custo_mensal)}
-                    </div>
-                  )}
-
-                  {/* Botão Visualizar */}
-                  <div className="pt-3 border-t flex gap-2">
-                    <Sheet>
-                      <SheetTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="flex-1"
-                          onClick={() => setSelectedEmployeeId(employee.id)}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Visualizar Detalhes
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto max-h-screen">
-                        <div className="h-full overflow-y-auto pb-6">
-                          {selectedEmployeeId === employee.id && (
-                            <EmployeeDetailsDrawer 
-                              employeeId={selectedEmployeeId}
-                              onClose={() => setSelectedEmployeeId(null)}
-                            />
-                          )}
-                        </div>
-                      </SheetContent>
-                    </Sheet>
-
-                    {/* Botão Editar Colaborador */}
-                    <ColaboradorModal key={`edit-${employee.id}`} employeeToEdit={employee}>
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        className="flex-1"
-                      >
-                        <User className="h-4 w-4 mr-2" />
-                        Editar
-                      </Button>
-                    </ColaboradorModal>
-                  </div>
+                  </ColaboradorModal>
+                  <Button variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome ou CPF..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Status</SelectItem>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tabela de Colaboradores */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Colaboradores ({filteredColaboradores.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>CPF</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Cargo</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Custo</TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredColaboradores.map((colaborador) => (
+                      <TableRow key={colaborador.id}>
+                        <TableCell className="font-medium">{colaborador.nome}</TableCell>
+                        <TableCell className="font-mono text-sm">{colaborador.cpf}</TableCell>
+                        <TableCell>{colaborador.email || '-'}</TableCell>
+                        <TableCell>{colaborador.cargo || '-'}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={
+                              colaborador.status === 'ativo' 
+                                ? 'default' 
+                                : colaborador.status === 'inativo' 
+                                  ? 'secondary' 
+                                  : 'outline'
+                            }
+                          >
+                            {colaborador.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {colaborador.custo_mensal ? formatCurrency(colaborador.custo_mensal) : '-'}
+                        </TableCell>
+                        <TableCell className="space-x-2">
+                        <div className="flex flex-wrap gap-1">
+                          <ColaboradorModal employeeToEdit={colaborador}>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Editar
+                            </Button>
+                          </ColaboradorModal>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setRequestFormType('remove');
+                              setSelectedEmployeeForRemoval(colaborador);
+                              setIsRequestFormOpen(true);
+                            }}
+                            className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                          >
+                            <UserMinus className="h-4 w-4 mr-1" />
+                            Solicitar Exclusão
+                          </Button>
+                          
+                          <ExcluirColaboradorModal>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 border-red-300 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Excluir Direto
+                            </Button>
+                          </ExcluirColaboradorModal>
+                        </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab de Solicitações RH */}
+        <TabsContent value="solicitacoes">
+          <EmployeeRequestsDashboard />
+        </TabsContent>
+
+        {/* Tab de Dependentes */}
+        <TabsContent value="dependentes">
+          <Card>
+            <CardHeader className="pb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Dependentes ({dependentesAtivos.length})
+                </CardTitle>
+                <IncluirDependenteModal>
+                  <Button
+                    onClick={() => setIsDependenteModalOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Incluir Dependente
+                  </Button>
+                </IncluirDependenteModal>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>CPF</TableHead>
+                      <TableHead>Parentesco</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Custo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dependentesAtivos.map((dependente) => (
+                      <TableRow key={dependente.id}>
+                        <TableCell className="font-medium">{dependente.nome}</TableCell>
+                        <TableCell className="font-mono text-sm">{dependente.cpf}</TableCell>
+                        <TableCell>{dependente.grau_parentesco}</TableCell>
+                        <TableCell>
+                          <Badge variant="default">{dependente.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {dependente.custo_mensal ? formatCurrency(dependente.custo_mensal) : '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Modals */}
+      {/* Modal de Solicitação RH */}
+      <EmployeeRequestForm 
+        type={requestFormType}
+        isOpen={isRequestFormOpen}
+        onClose={() => {
+          setIsRequestFormOpen(false);
+          setSelectedEmployeeForRemoval(null);
+        }}
+        onSuccess={() => {
+          loadData();
+        }}
+        selectedEmployee={selectedEmployeeForRemoval}
+      />
     </div>
   );
 };
