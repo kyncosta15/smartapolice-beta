@@ -45,13 +45,29 @@ serve(async (req) => {
     }
 
     const formattedRequests = (requests || []).map((req: any) => {
-      const employeeData = req.metadata?.employee_data || {};
+      // Handle metadata structure - check if it exists and has the expected format
+      let colaboradorName = 'Nome não informado';
+      let cpfValue = '';
+      
+      if (req.metadata) {
+        // If metadata has employee_data (new format)
+        if (req.metadata.employee_data) {
+          colaboradorName = req.metadata.employee_data.nome || 'Nome não informado';
+          cpfValue = req.metadata.employee_data.cpf || '';
+        }
+        // If metadata has direct employee info (alternative format)
+        else if (req.metadata.nome) {
+          colaboradorName = req.metadata.nome;
+          cpfValue = req.metadata.cpf || '';
+        }
+      }
+
       return {
         id: req.id,
         protocol_code: req.protocol_code,
-        colaborador: employeeData.nome || 'Nome não informado',
-        cpf: employeeData.cpf || '',
-        tipo: req.kind,
+        colaborador: colaboradorName,
+        cpf: cpfValue,
+        tipo: req.kind === 'inclusao' ? 'inclusao' : 'exclusao',
         status: req.status,
         submitted_at: req.submitted_at,
         qtd_itens: 1 // Para requests de funcionários, sempre 1 item
