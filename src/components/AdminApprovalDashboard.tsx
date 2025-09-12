@@ -499,13 +499,11 @@ export const AdminApprovalDashboard: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Protocolo</TableHead>
-                  <TableHead>Colaborador</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Itens</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
+                   <TableHead>Protocolo</TableHead>
+                   <TableHead>Informações</TableHead>
+                   <TableHead>Tipo</TableHead>
+                   <TableHead>Status</TableHead>
+                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -514,84 +512,69 @@ export const AdminApprovalDashboard: React.FC = () => {
                     <TableCell className="font-mono text-sm text-primary">
                       {request.protocol_code}
                     </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{request.colaborador}</p>
-                        <p className="text-sm text-muted-foreground">
-                          CPF: {request.cpf}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getTipoBadge(request.tipo)}</TableCell>
-                    <TableCell>
-                      {format(new Date(request.submitted_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm">
-                        {request.qtd_itens} {request.qtd_itens === 1 ? 'item' : 'itens'}
-                      </span>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(request.status)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleViewRequest(request.id)}
-                          disabled={isLoadingDetail}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Analisar
-                        </Button>
-                        
-                        {(request.status === 'aprovado_rh' || request.status === 'aguardando_aprovacao') && (
-                          <>
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={() => {
-                handleViewRequest(request.id);
-                setShowApprovalDialog(true);
-              }}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <Ticket className="h-4 w-4 mr-1" />
-                  Criar Ticket
-                </>
-              )}
-            </Button>
-            <Button 
-              variant="destructive" 
-              size="sm"
-              onClick={() => {
-                handleViewRequest(request.id);
-                setShowDeclineDialog(true);
-              }}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <XCircle className="h-4 w-4 mr-1" />
-                  Recusar
-                </>
-              )}
-            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
+                     <TableCell>
+                       <div className="flex flex-col gap-1">
+                         <span className="font-medium text-sm">{request.colaborador}</span>
+                         <span className="text-xs text-muted-foreground">CPF: {request.cpf}</span>
+                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                           <span>{format(new Date(request.submitted_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                           <span>•</span>
+                           <span>{request.qtd_itens} {request.qtd_itens === 1 ? 'item' : 'itens'}</span>
+                         </div>
+                       </div>
+                     </TableCell>
+                     <TableCell>{getTipoBadge(request.tipo)}</TableCell>
+                     <TableCell>{getStatusBadge(request.status)}</TableCell>
+                     <TableCell>
+                       <div className="flex items-center gap-1">
+                         <Button 
+                           variant="outline" 
+                           size="sm"
+                           onClick={() => handleViewRequest(request.id)}
+                           disabled={isLoadingDetail}
+                           className="h-8 w-8 p-0"
+                         >
+                           <Eye className="h-4 w-4" />
+                         </Button>
+                         
+                         {(request.status === 'aprovado_rh' || request.status === 'aguardando_aprovacao') && (
+                           <>
+             <Button 
+               variant="default" 
+               size="sm"
+               onClick={() => {
+                 handleViewRequest(request.id);
+                 setShowApprovalDialog(true);
+               }}
+               disabled={isProcessing}
+               className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700"
+             >
+               {isProcessing ? (
+                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+               ) : (
+                 <CheckCircle className="h-4 w-4" />
+               )}
+             </Button>
+             <Button 
+               variant="destructive" 
+               size="sm"
+               onClick={() => {
+                 handleViewRequest(request.id);
+                 setShowDeclineDialog(true);
+               }}
+               disabled={isProcessing}
+               className="h-8 w-8 p-0"
+             >
+               {isProcessing ? (
+                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+               ) : (
+                 <XCircle className="h-4 w-4" />
+               )}
+             </Button>
+                           </>
+                         )}
+                       </div>
+                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
