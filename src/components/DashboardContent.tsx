@@ -291,47 +291,51 @@ export function DashboardContent() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar onSectionChange={setActiveSection} activeSection={activeSection} />
-        <SidebarInset>
-          <Navbar 
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            notificationCount={enhancedDashboardStats.duingNext30Days}
-            policies={normalizedPolicies}
-          />
-
-          <div className="flex-1">
-            <WelcomeSection />
-            
-            <div id="dashboard-content" className="dashboard-content">
-              <ContentRenderer
-                activeSection={activeSection}
-                searchTerm={searchTerm}
-                filterType={filterType}
-                allPolicies={normalizedPolicies}
-                extractedPolicies={normalizedPolicies}
-                allUsers={persistedUsers}
-                usersLoading={usersLoading}
-                onPolicySelect={handlePolicySelect}
-                onPolicyUpdate={handlePolicyUpdate}
-                onPolicyDelete={handleDeletePolicy}
-                onPolicyDownload={downloadPersistedPDF}
-                onPolicyExtracted={handlePolicyExtracted}
-                onUserUpdate={handleUserUpdate}
-                onUserDelete={handleUserDelete}
-                onSectionChange={setActiveSection}
-              />
+      <div className="min-h-screen flex flex-col w-full bg-gray-50">
+        {/* Navbar fixa no topo */}
+        <Navbar 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          notificationCount={enhancedDashboardStats.duingNext30Days}
+          policies={normalizedPolicies}
+        />
+        
+        {/* Container principal com sidebar e conteúdo */}
+        <div className="flex flex-1">
+          <AppSidebar onSectionChange={setActiveSection} activeSection={activeSection} />
+          <SidebarInset className="flex-1">
+            <div className="flex-1">
+              <WelcomeSection />
+              
+              <div id="dashboard-content" className="dashboard-content">
+                <ContentRenderer
+                  activeSection={activeSection}
+                  searchTerm={searchTerm}
+                  filterType={filterType}
+                  allPolicies={normalizedPolicies}
+                  extractedPolicies={normalizedPolicies}
+                  allUsers={persistedUsers}
+                  usersLoading={usersLoading}
+                  onPolicySelect={handlePolicySelect}
+                  onPolicyUpdate={handlePolicyUpdate}
+                  onPolicyDelete={handleDeletePolicy}
+                  onPolicyDownload={downloadPersistedPDF}
+                  onPolicyExtracted={handlePolicyExtracted}
+                  onUserUpdate={handleUserUpdate}
+                  onUserDelete={handleUserDelete}
+                  onSectionChange={setActiveSection}
+                />
+              </div>
             </div>
-          </div>
 
-          <PolicyDetailsModal 
-            isOpen={isDetailsModalOpen}
-            onClose={() => setIsDetailsModalOpen(false)}
-            policy={selectedPolicy}
-            onDelete={handleDeletePolicy}
-          />
-        </SidebarInset>
+            <PolicyDetailsModal 
+              isOpen={isDetailsModalOpen}
+              onClose={() => setIsDetailsModalOpen(false)}
+              policy={selectedPolicy}
+              onDelete={handleDeletePolicy}
+            />
+          </SidebarInset>
+        </div>
       </div>
     </SidebarProvider>
   );
