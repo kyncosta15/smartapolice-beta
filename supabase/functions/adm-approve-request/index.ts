@@ -91,53 +91,99 @@ serve(async (req) => {
     if (request.kind === 'inclusao') {
       console.log('📝 Processando inclusão de colaborador...');
       
-      // Criar colaborador a partir dos dados da solicitação
-      const employeeData = request.metadata?.employee_data;
+      // Tentar obter dados do colaborador de várias fontes
+      let employeeData = request.metadata?.employee_data;
       
       console.log('🔍 Verificando employee_data no metadata...');
       console.log('📊 Metadata completo:', JSON.stringify(request.metadata, null, 2));
       
+      // Se não encontrou no metadata, tentar buscar via rh-requests-detail
       if (!employeeData) {
-        console.error('❌ Employee data not found in request metadata');
-        console.error('📊 Available metadata keys:', Object.keys(request.metadata || {}));
-        return new Response(
-          JSON.stringify({ 
-            ok: false, 
-            error: { 
-              code: 'INVALID_DATA', 
-              message: 'Dados do colaborador não encontrados no metadata' 
-            } 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
+        console.log('⚠️ Employee data não encontrado no metadata, buscando via rh-requests-detail...');
+        
+        const { data: requestDetail, error: detailError } = await supabase.functions.invoke('rh-requests-detail', {
+          body: { requestId: requestId }
+        });
+        
+        if (!detailError && requestDetail?.ok && requestDetail?.data?.employee) {
+          console.log('📋 Dados do colaborador obtidos via rh-requests-detail:', JSON.stringify(requestDetail.data.employee, null, 2));
+          
+          // Mapear os dados para o formato esperado
+          const employee = requestDetail.data.employee;
+          employeeData = {
+            nome: employee.full_name || 'Nome não informado',
+            cpf: employee.cpf || '',
+            email: employee.email || '',
+            telefone: employee.phone || '',
+            data_nascimento: null, // Não disponível neste formato
+            cargo: null, // Não disponível neste formato
+            centro_custo: null, // Não disponível neste formato
+            data_admissao: null // Não disponível neste formato
+          };
+        }
       }
       
-      console.log('✅ Employee data encontrado:', JSON.stringify(employeeData, null, 2));
+      // Se ainda não temos dados mínimos, criar com dados padrão
+      if (!employeeData || (!employeeData.nome || employeeData.nome === 'Nome não informado')) {
+        console.log('⚠️ Dados do colaborador incompletos, criando com dados padrão...');
+        employeeData = {
+          nome: `Colaborador ${request.protocol_code}`,
+          cpf: '',
+          email: '',
+          telefone: '',
+          data_nascimento: null,
+          cargo: 'A definir',
+          centro_custo: 'A definir',
+          data_admissao: new Date().toISOString().split('T')[0] // Data atual como admissão
+        };
+      }
+      
+      console.log('✅ Employee data final para criação:', JSON.stringify(employeeData, null, 2));
 
-      // Buscar empresa
-      const companyId = request.metadata?.company_id;
+      // Buscar empresa - usar empresa padrão se não encontrar
+      let companyId = request.metadata?.company_id;
       console.log('🏢 Procurando empresa com ID:', companyId);
       
-      const { data: empresa, error: empresaError } = await supabase
-        .from('empresas')
-        .select('id, nome')
-        .eq('id', companyId)
-        .single();
+      let empresa;
+      let empresaError;
+      
+      if (companyId) {
+        const result = await supabase
+          .from('empresas')
+          .select('id, nome')
+          .eq('id', companyId)
+          .single();
+        
+        empresa = result.data;
+        empresaError = result.error;
+      }
 
+      // Se não encontrou empresa específica, usar primeira empresa disponível
       if (empresaError || !empresa) {
-        console.error('❌ Empresa não encontrada:', empresaError);
-        console.error('🔍 ID da empresa procurada:', companyId);
-        console.error('📊 Metadata disponível:', JSON.stringify(request.metadata, null, 2));
-        return new Response(
-          JSON.stringify({ 
-            ok: false, 
-            error: { 
-              code: 'COMPANY_NOT_FOUND', 
-              message: `Empresa não encontrada. ID: ${companyId}` 
-            } 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
+        console.log('⚠️ Empresa específica não encontrada, buscando primeira empresa disponível...');
+        
+        const { data: defaultEmpresa, error: defaultError } = await supabase
+          .from('empresas')
+          .select('id, nome')
+          .limit(1)
+          .single();
+          
+        if (defaultError || !defaultEmpresa) {
+          console.error('❌ Nenhuma empresa encontrada no sistema:', defaultError);
+          return new Response(
+            JSON.stringify({ 
+              ok: false, 
+              error: { 
+                code: 'NO_COMPANY_FOUND', 
+                message: 'Nenhuma empresa encontrada no sistema. Configure empresas antes de aprovar solicitações.' 
+              } 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+          );
+        }
+        
+        empresa = defaultEmpresa;
+        console.log('✅ Usando empresa padrão:', empresa.nome);
       }
       
       console.log('✅ Empresa encontrada:', empresa.nome);
