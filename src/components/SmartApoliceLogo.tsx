@@ -1,6 +1,6 @@
 
 import { DocumentValidator } from '@/utils/documentValidator';
-import { Shield } from 'lucide-react';
+import shieldIcon from '@/assets/shield-icon.png';
 
 interface SmartApóliceLogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -10,22 +10,10 @@ interface SmartApóliceLogoProps {
 }
 
 export function SmartApóliceLogo({ size = 'md', showText = true, className = '', documentNumber }: SmartApóliceLogoProps) {
-  const sizeClasses = {
-    sm: 'h-8 w-8',
-    md: 'h-10 w-10', 
-    lg: 'h-12 w-12'
-  };
-
   const textSizeClasses = {
     sm: 'text-lg',
     md: 'text-xl',
     lg: 'text-2xl'
-  };
-
-  const letterSizeClasses = {
-    sm: 'text-sm',
-    md: 'text-lg',
-    lg: 'text-xl'
   };
 
   // Detectar tipo de pessoa baseado no documento
@@ -42,10 +30,8 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
 
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
-      {/* Círculo azul com ícone Shield */}
-      <div className={`${sizeClasses[size]} bg-blue-600 rounded-full flex items-center justify-center`}>
-        <Shield className={`${letterSizeClasses[size]} text-white`} />
-      </div>
+      {/* Imagem do escudo */}
+      <img src={shieldIcon} alt="SmartApólice Shield" className="h-20 w-20 object-contain" />
       
       {showText && (
         <div className="flex items-center gap-2">
