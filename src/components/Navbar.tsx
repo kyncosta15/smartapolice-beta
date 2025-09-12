@@ -105,7 +105,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
           
           {/* Brand */}
           <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold text-gray-900">Apólice</span>
+            <span className="text-lg font-semibold text-gray-900">SmartApólice</span>
             <span className="ml-2 text-xs rounded bg-rose-500 text-white px-2 py-0.5 font-medium">
               BETA
             </span>

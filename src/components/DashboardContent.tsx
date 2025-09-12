@@ -27,7 +27,9 @@ import {
   Car,
   Calculator,
   TestTube,
-  Settings
+  Settings,
+  Upload,
+  Mail
 } from "lucide-react";
 
 export function DashboardContent() {
@@ -82,22 +84,25 @@ export function DashboardContent() {
     duingNext30Days: duingNext30Days
   };
 
-  // Navigation items - removed Prestações, restored Veículos and Sinistros
+  // Navigation items - role-based visibility per specifications
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'policies', title: 'Apólices', icon: FileText },
-    { id: 'users', title: 'Vidas', icon: Users2 },
+    { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+    { id: 'claims', title: 'Sinistros', icon: TestTube },
     { id: 'vehicles', title: 'Veículos', icon: Car },
-    { id: 'reports', title: 'Relatórios', icon: BarChart3 },
+    { id: 'upload', title: 'Upload', icon: Upload },
+    { id: 'contatos', title: 'Contatos', icon: Mail },
+    { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 
   const adminNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'policies', title: 'Apólices', icon: FileText },
-    { id: 'users', title: 'Vidas', icon: Users2 },
-    { id: 'vehicles', title: 'Veículos', icon: Car },
+    { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+    { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
     { id: 'claims', title: 'Sinistros', icon: TestTube },
-    { id: 'reports', title: 'Relatórios', icon: BarChart3 },
+    { id: 'vehicles', title: 'Veículos', icon: Car },
+    { id: 'upload', title: 'Upload', icon: Upload },
+    { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 

@@ -152,9 +152,31 @@ export function ContentRenderer({
       );
 
     case 'users':
+      // Only show for admins
+      if (user?.role === 'administrador') {
+        return (
+          <div className="p-6">
+            <VidasBeneficiarios allPolicies={allPolicies} />
+          </div>
+        );
+      }
       return (
         <div className="p-6">
-          <VidasBeneficiarios allPolicies={allPolicies} />
+          <div className="text-center py-12">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Acesso Restrito
+            </h3>
+            <p className="text-gray-600">
+              Esta seção é disponível apenas para administradores.
+            </p>
+          </div>
+        </div>
+      );
+
+    case 'contatos':
+      return (
+        <div className="p-6">
+          <ContactSection />
         </div>
       );
 
