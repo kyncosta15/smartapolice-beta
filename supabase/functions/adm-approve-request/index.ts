@@ -61,11 +61,19 @@ serve(async (req) => {
     }
 
     console.log('Request found:', request.protocol_code, 'Status:', request.status);
+    console.log('Request metadata:', JSON.stringify(request.metadata, null, 2));
 
     if (request.status !== 'aguardando_aprovacao') {
-      console.error('Invalid status for admin approval:', request.status);
+      console.error('Invalid status for admin approval. Expected: aguardando_aprovacao, Got:', request.status);
+      console.error('Full request data:', JSON.stringify(request, null, 2));
       return new Response(
-        JSON.stringify({ ok: false, error: { code: 'INVALID_STATUS', message: 'Solicitação deve estar aguardando aprovação' } }),
+        JSON.stringify({ 
+          ok: false, 
+          error: { 
+            code: 'INVALID_STATUS', 
+            message: `Solicitação deve estar aguardando aprovação. Status atual: ${request.status}` 
+          } 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -79,26 +87,46 @@ serve(async (req) => {
       
       if (!employeeData) {
         console.error('Employee data not found in request metadata');
+        console.error('Available metadata:', JSON.stringify(request.metadata, null, 2));
         return new Response(
-          JSON.stringify({ ok: false, error: { code: 'INVALID_DATA', message: 'Dados do colaborador não encontrados' } }),
+          JSON.stringify({ 
+            ok: false, 
+            error: { 
+              code: 'INVALID_DATA', 
+              message: 'Dados do colaborador não encontrados no metadata' 
+            } 
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         );
       }
+      
+      console.log('Employee data found:', JSON.stringify(employeeData, null, 2));
 
       // Buscar empresa
+      console.log('Looking for company ID:', request.metadata?.company_id);
       const { data: empresa, error: empresaError } = await supabase
         .from('empresas')
-        .select('id')
+        .select('id, nome')
         .eq('id', request.metadata?.company_id)
         .single();
 
       if (empresaError || !empresa) {
         console.error('Company not found:', empresaError);
+        console.error('Searched company_id:', request.metadata?.company_id);
+        console.error('Available metadata:', JSON.stringify(request.metadata, null, 2));
         return new Response(
-          JSON.stringify({ ok: false, error: { code: 'COMPANY_NOT_FOUND', message: 'Empresa não encontrada' } }),
+          JSON.stringify({ 
+            ok: false, 
+            error: { 
+              code: 'COMPANY_NOT_FOUND', 
+              message: `Empresa não encontrada. ID: ${request.metadata?.company_id}` 
+            } 
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         );
       }
+      
+      console.log('Company found:', empresa.nome);
 
       // Criar colaborador
       const { data: colaborador, error: colaboradorError } = await supabase
