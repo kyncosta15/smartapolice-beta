@@ -39,6 +39,7 @@ import { AdminTicketsDashboard } from '@/components/AdminTicketsDashboard';
 import { EmployeesListNew } from '@/components/EmployeesListNew';
 import { ConsolidatedReportPDF } from '@/components/ConsolidatedReportPDF';
 import { TicketsReportPDF } from '@/components/TicketsReportPDF';
+import { RequestsApprovalFlow } from '@/components/RequestsApprovalFlow';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -339,7 +340,7 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Solicitações Tab */}
           <TabsContent value="solicitacoes">
-            <RequestsNewDashboard />
+            <RequestsApprovalFlow />
           </TabsContent>
 
           {/* Protocolos Tab */}
