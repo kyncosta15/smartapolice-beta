@@ -19,7 +19,8 @@ serve(async (req) => {
     const body = await req.json();
     const { requestId, note } = body;
 
-    console.log('Processing admin approval for request:', requestId);
+    console.log('📥 Processing admin approval for request:', requestId);
+    console.log('📄 Request body:', JSON.stringify(body, null, 2));
 
     if (!requestId) {
       console.error('Missing requestId in request body');
@@ -63,9 +64,12 @@ serve(async (req) => {
     console.log('Request found:', request.protocol_code, 'Status:', request.status);
     console.log('Request metadata:', JSON.stringify(request.metadata, null, 2));
 
+    console.log('🔄 Validando status da solicitação:', request.status);
+    console.log('✅ Status válidos aceitos: aguardando_aprovacao, aprovado_rh');
+    
     if (!['aguardando_aprovacao', 'aprovado_rh'].includes(request.status)) {
-      console.error('Invalid status for admin approval. Expected: aguardando_aprovacao or aprovado_rh, Got:', request.status);
-      console.error('Full request data:', JSON.stringify(request, null, 2));
+      console.error('❌ Invalid status for admin approval. Expected: aguardando_aprovacao or aprovado_rh, Got:', request.status);
+      console.error('📊 Full request data:', JSON.stringify(request, null, 2));
       return new Response(
         JSON.stringify({ 
           ok: false, 
@@ -77,17 +81,25 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+    
+    console.log('✅ Status válido para aprovação admin:', request.status);
 
-    console.log('Processing admin approval and creating employee/updating status');
+    console.log('✅ Status válido para aprovação admin:', request.status);
+    console.log('🏭 Processando aprovação admin e criando colaborador/atualizando status');
 
     // Processar a solicitação baseada no tipo
     if (request.kind === 'inclusao') {
+      console.log('📝 Processando inclusão de colaborador...');
+      
       // Criar colaborador a partir dos dados da solicitação
       const employeeData = request.metadata?.employee_data;
       
+      console.log('🔍 Verificando employee_data no metadata...');
+      console.log('📊 Metadata completo:', JSON.stringify(request.metadata, null, 2));
+      
       if (!employeeData) {
-        console.error('Employee data not found in request metadata');
-        console.error('Available metadata:', JSON.stringify(request.metadata, null, 2));
+        console.error('❌ Employee data not found in request metadata');
+        console.error('📊 Available metadata keys:', Object.keys(request.metadata || {}));
         return new Response(
           JSON.stringify({ 
             ok: false, 
@@ -100,35 +112,51 @@ serve(async (req) => {
         );
       }
       
-      console.log('Employee data found:', JSON.stringify(employeeData, null, 2));
+      console.log('✅ Employee data encontrado:', JSON.stringify(employeeData, null, 2));
 
       // Buscar empresa
-      console.log('Looking for company ID:', request.metadata?.company_id);
+      const companyId = request.metadata?.company_id;
+      console.log('🏢 Procurando empresa com ID:', companyId);
+      
       const { data: empresa, error: empresaError } = await supabase
         .from('empresas')
         .select('id, nome')
-        .eq('id', request.metadata?.company_id)
+        .eq('id', companyId)
         .single();
 
       if (empresaError || !empresa) {
-        console.error('Company not found:', empresaError);
-        console.error('Searched company_id:', request.metadata?.company_id);
-        console.error('Available metadata:', JSON.stringify(request.metadata, null, 2));
+        console.error('❌ Empresa não encontrada:', empresaError);
+        console.error('🔍 ID da empresa procurada:', companyId);
+        console.error('📊 Metadata disponível:', JSON.stringify(request.metadata, null, 2));
         return new Response(
           JSON.stringify({ 
             ok: false, 
             error: { 
               code: 'COMPANY_NOT_FOUND', 
-              message: `Empresa não encontrada. ID: ${request.metadata?.company_id}` 
+              message: `Empresa não encontrada. ID: ${companyId}` 
             } 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         );
       }
       
-      console.log('Company found:', empresa.nome);
+      console.log('✅ Empresa encontrada:', empresa.nome);
 
       // Criar colaborador
+      console.log('👤 Criando colaborador...');
+      console.log('📋 Dados para inserção:', {
+        nome: employeeData.nome,
+        cpf: employeeData.cpf?.replace(/\D/g, ''),
+        email: employeeData.email,
+        telefone: employeeData.telefone,
+        data_nascimento: employeeData.data_nascimento,
+        cargo: employeeData.cargo,
+        centro_custo: employeeData.centro_custo,
+        data_admissao: employeeData.data_admissao,
+        empresa_id: empresa.id,
+        status: 'ativo'
+      });
+      
       const { data: colaborador, error: colaboradorError } = await supabase
         .from('colaboradores')
         .insert({
@@ -148,13 +176,15 @@ serve(async (req) => {
 
       if (colaboradorError) {
         console.error('❌ Erro ao criar colaborador:', colaboradorError);
+        console.error('📊 Detalhes do erro:', JSON.stringify(colaboradorError, null, 2));
         return new Response(
           JSON.stringify({ ok: false, error: { code: 'DATABASE_ERROR', message: 'Erro ao criar colaborador: ' + colaboradorError.message } }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         );
       }
 
-      console.log('✅ Colaborador criado:', colaborador.id);
+      console.log('✅ Colaborador criado com sucesso! ID:', colaborador.id);
+      console.log('📊 Dados do colaborador criado:', JSON.stringify(colaborador, null, 2));
 
     } else if (request.kind === 'exclusao') {
       // Processar exclusão de colaborador
@@ -188,7 +218,7 @@ serve(async (req) => {
       console.log('✅ Colaborador inativado:', employeeId);
     }
 
-    console.log('Updating request status to aprovado_adm');
+    console.log('🔄 Atualizando status da solicitação para aprovado_adm...');
 
     // Atualizar status para aprovado_adm
     const { error: updateError } = await supabase
@@ -200,15 +230,16 @@ serve(async (req) => {
       .eq('id', requestId);
 
     if (updateError) {
-      console.error('Error updating request status:', updateError);
+      console.error('❌ Erro ao atualizar status da request:', updateError);
+      console.error('📊 Detalhes do erro:', JSON.stringify(updateError, null, 2));
       return new Response(
         JSON.stringify({ ok: false, error: { code: 'UPDATE_ERROR', message: 'Erro ao aprovar solicitação' } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
-    console.log('Request status updated successfully');
-    console.log('Creating ticket snapshot');
+    console.log('✅ Status da solicitação atualizado com sucesso!');
+    console.log('🎫 Preparando criação de ticket...');
 
     // Criar snapshot simplificado do request para o ticket
     const employeeData = request.metadata?.employee_data;
@@ -260,7 +291,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Creating ticket for protocol:', request.protocol_code);
+    console.log('🎫 Criando ticket para protocolo:', request.protocol_code);
 
     // Criar ticket
     const { data: ticket, error: ticketError } = await supabase
@@ -275,15 +306,16 @@ serve(async (req) => {
       .single();
 
     if (ticketError) {
-      console.error('Error creating ticket:', ticketError);
+      console.error('❌ Erro ao criar ticket:', ticketError);
+      console.error('📊 Detalhes do erro:', JSON.stringify(ticketError, null, 2));
       return new Response(
         JSON.stringify({ ok: false, error: { code: 'TICKET_ERROR', message: 'Erro ao criar ticket' } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
-    console.log('Ticket created successfully:', ticket.id);
-    console.log('Creating approval trail');
+    console.log('✅ Ticket criado com sucesso! ID:', ticket.id);
+    console.log('📋 Criando trilha de aprovação...');
 
     // Criar trilha de aprovação
     const { error: approvalError } = await supabase
@@ -339,22 +371,34 @@ serve(async (req) => {
       }
     }
 
+    console.log('🎉 Processo de aprovação completado com sucesso!');
+    console.log('📊 Retornando resposta final...');
+    
     return new Response(
       JSON.stringify({ 
         ok: true,
+        message: 'Solicitação aprovada e ticket criado com sucesso!',
         data: {
           ticketId: ticket.id,
           protocolCode: request.protocol_code,
-          externalRef: ticket.external_ref
+          externalRef: ticket.external_ref || null,
+          requestStatus: 'aprovado_adm'
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Function error:', error);
+    console.error('💥 Erro crítico na função:', error);
+    console.error('📊 Stack trace:', error.stack);
     return new Response(
-      JSON.stringify({ ok: false, error: { code: 'INTERNAL_ERROR', message: 'Erro interno do servidor' } }),
+      JSON.stringify({ 
+        ok: false, 
+        error: { 
+          code: 'INTERNAL_ERROR', 
+          message: 'Erro interno do servidor' 
+        } 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

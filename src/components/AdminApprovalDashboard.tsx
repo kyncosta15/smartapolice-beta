@@ -218,6 +218,10 @@ export const AdminApprovalDashboard: React.FC = () => {
 
     setIsProcessing(true);
     try {
+      console.log('🚀 Iniciando aprovação da solicitação:', selectedRequest.id);
+      console.log('📝 Status atual da solicitação:', selectedRequest.status);
+      console.log('📋 Dados da solicitação:', selectedRequest);
+
       const { data, error } = await supabase.functions.invoke('adm-approve-request', {
         body: {
           requestId: selectedRequest.id,
@@ -225,21 +229,26 @@ export const AdminApprovalDashboard: React.FC = () => {
         }
       });
 
+      console.log('📨 Resposta da edge function:', { data, error });
+
       if (error) {
+        console.error('❌ Erro da edge function:', error);
         throw new Error(error.message || 'Erro ao aprovar solicitação');
       }
 
       if (!data?.ok) {
+        console.error('❌ Resposta negativa da edge function:', data);
         throw new Error(data?.error?.message || 'Erro ao aprovar solicitação');
       }
 
+      console.log('✅ Aprovação processada com sucesso!');
       toast.success('Solicitação aprovada e convertida em ticket!');
       setShowApprovalDialog(false);
       setApprovalNote('');
       setSelectedRequest(null);
       fetchRequests();
     } catch (error: any) {
-      console.error('Erro ao aprovar:', error);
+      console.error('💥 Erro no processo de aprovação:', error);
       toast.error(error.message || 'Falha ao aprovar solicitação');
     } finally {
       setIsProcessing(false);
@@ -537,28 +546,48 @@ export const AdminApprovalDashboard: React.FC = () => {
                         
                         {(request.status === 'aprovado_rh' || request.status === 'aguardando_aprovacao') && (
                           <>
-                            <Button 
-                              variant="default" 
-                              size="sm"
-                              onClick={() => {
-                                handleViewRequest(request.id);
-                                setShowApprovalDialog(true);
-                              }}
-                            >
-                              <Ticket className="h-4 w-4 mr-1" />
-                              Criar Ticket
-                            </Button>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              onClick={() => {
-                                handleViewRequest(request.id);
-                                setShowDeclineDialog(true);
-                              }}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Recusar
-                            </Button>
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={() => {
+                handleViewRequest(request.id);
+                setShowApprovalDialog(true);
+              }}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <Ticket className="h-4 w-4 mr-1" />
+                  Criar Ticket
+                </>
+              )}
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => {
+                handleViewRequest(request.id);
+                setShowDeclineDialog(true);
+              }}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Recusar
+                </>
+              )}
+            </Button>
                           </>
                         )}
                       </div>
