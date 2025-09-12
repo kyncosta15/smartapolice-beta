@@ -30,22 +30,10 @@ serve(async (req) => {
         kind,
         status,
         submitted_at,
-        employee_id,
-        employees!inner(
-          full_name,
-          cpf,
-          email,
-          phone
-        ),
-        request_items(
-          id,
-          target,
-          action,
-          notes
-        )
+        metadata
       `)
       .eq('draft', false)
-      .in('status', ['aprovado_rh', 'em_validacao_adm'])
+      .in('status', ['aguardando_aprovacao'])
       .order('submitted_at', { ascending: false });
 
     if (error) {
@@ -56,16 +44,19 @@ serve(async (req) => {
       );
     }
 
-    const formattedRequests = (requests || []).map((req: any) => ({
-      id: req.id,
-      protocol_code: req.protocol_code,
-      colaborador: req.employees?.full_name || 'Nome não informado',
-      cpf: req.employees?.cpf || '',
-      tipo: req.kind,
-      status: req.status,
-      submitted_at: req.submitted_at,
-      qtd_itens: req.request_items?.length || 0
-    }));
+    const formattedRequests = (requests || []).map((req: any) => {
+      const employeeData = req.metadata?.employee_data || {};
+      return {
+        id: req.id,
+        protocol_code: req.protocol_code,
+        colaborador: employeeData.nome || 'Nome não informado',
+        cpf: employeeData.cpf || '',
+        tipo: req.kind,
+        status: req.status,
+        submitted_at: req.submitted_at,
+        qtd_itens: 1 // Para requests de funcionários, sempre 1 item
+      };
+    });
 
     return new Response(
       JSON.stringify({ ok: true, data: formattedRequests }),

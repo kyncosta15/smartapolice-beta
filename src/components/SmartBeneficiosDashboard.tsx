@@ -324,7 +324,6 @@ export const SmartBeneficiosDashboard = () => {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
-            <RealtimeDashboardMetrics />
             <DynamicCharts 
               colaboradores={colaboradores}
               dependentes={dependentes}

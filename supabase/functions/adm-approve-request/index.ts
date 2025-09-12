@@ -36,38 +36,18 @@ serve(async (req) => {
 
     console.log('Fetching request details for:', requestId);
 
-    // Buscar request completo para criar ticket
+    // Buscar request completo
     const { data: request, error: requestError } = await supabase
       .from('requests')
       .select(`
-        *,
-        employees!inner(
-          full_name,
-          cpf,
-          email,
-          phone,
-          company_id
-        ),
-        request_items(
-          id,
-          target,
-          action,
-          notes,
-          dependent_id,
-          dependents(
-            full_name,
-            relationship,
-            cpf,
-            birth_date
-          )
-        ),
-        files(
-          id,
-          original_name,
-          mime_type,
-          size,
-          path
-        )
+        id,
+        protocol_code,
+        kind,
+        status,
+        submitted_at,
+        channel,
+        metadata,
+        updated_at
       `)
       .eq('id', requestId)
       .single();
@@ -82,12 +62,102 @@ serve(async (req) => {
 
     console.log('Request found:', request.protocol_code, 'Status:', request.status);
 
-    if (request.status !== 'aprovado_rh') {
+    if (request.status !== 'aguardando_aprovacao') {
       console.error('Invalid status for admin approval:', request.status);
       return new Response(
-        JSON.stringify({ ok: false, error: { code: 'INVALID_STATUS', message: 'Solicitação deve estar aprovada pelo RH' } }),
+        JSON.stringify({ ok: false, error: { code: 'INVALID_STATUS', message: 'Solicitação deve estar aguardando aprovação' } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
+    }
+
+    console.log('Processing admin approval and creating employee/updating status');
+
+    // Processar a solicitação baseada no tipo
+    if (request.kind === 'inclusao') {
+      // Criar colaborador a partir dos dados da solicitação
+      const employeeData = request.metadata?.employee_data;
+      
+      if (!employeeData) {
+        console.error('Employee data not found in request metadata');
+        return new Response(
+          JSON.stringify({ ok: false, error: { code: 'INVALID_DATA', message: 'Dados do colaborador não encontrados' } }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+
+      // Buscar empresa
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('id', request.metadata?.company_id)
+        .single();
+
+      if (empresaError || !empresa) {
+        console.error('Company not found:', empresaError);
+        return new Response(
+          JSON.stringify({ ok: false, error: { code: 'COMPANY_NOT_FOUND', message: 'Empresa não encontrada' } }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+
+      // Criar colaborador
+      const { data: colaborador, error: colaboradorError } = await supabase
+        .from('colaboradores')
+        .insert({
+          nome: employeeData.nome,
+          cpf: employeeData.cpf?.replace(/\D/g, ''),
+          email: employeeData.email,
+          telefone: employeeData.telefone,
+          data_nascimento: employeeData.data_nascimento,
+          cargo: employeeData.cargo,
+          centro_custo: employeeData.centro_custo,
+          data_admissao: employeeData.data_admissao,
+          empresa_id: empresa.id,
+          status: 'ativo'
+        })
+        .select()
+        .single();
+
+      if (colaboradorError) {
+        console.error('❌ Erro ao criar colaborador:', colaboradorError);
+        return new Response(
+          JSON.stringify({ ok: false, error: { code: 'DATABASE_ERROR', message: 'Erro ao criar colaborador: ' + colaboradorError.message } }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+
+      console.log('✅ Colaborador criado:', colaborador.id);
+
+    } else if (request.kind === 'exclusao') {
+      // Processar exclusão de colaborador
+      const employeeId = request.metadata?.employee_data?.employee_id;
+      
+      if (!employeeId) {
+        console.error('Employee ID not found for exclusion request');
+        return new Response(
+          JSON.stringify({ ok: false, error: { code: 'INVALID_DATA', message: 'ID do colaborador não encontrado' } }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+
+      // Atualizar status do colaborador
+      const { error: updateError } = await supabase
+        .from('colaboradores')
+        .update({
+          status: 'inativo',
+          data_demissao: request.metadata?.employee_data?.data_desligamento
+        })
+        .eq('id', employeeId);
+
+      if (updateError) {
+        console.error('❌ Erro ao inativar colaborador:', updateError);
+        return new Response(
+          JSON.stringify({ ok: false, error: { code: 'DATABASE_ERROR', message: 'Erro ao inativar colaborador' } }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+
+      console.log('✅ Colaborador inativado:', employeeId);
     }
 
     console.log('Updating request status to aprovado_adm');
@@ -112,18 +182,17 @@ serve(async (req) => {
     console.log('Request status updated successfully');
     console.log('Creating ticket snapshot');
 
-    // Criar snapshot do request para o ticket
+    // Criar snapshot simplificado do request para o ticket
+    const employeeData = request.metadata?.employee_data;
     const snapshot = {
       request_id: request.id,
       protocol_code: request.protocol_code,
-      employee: request.employees,
-      items: request.request_items,
-      files: request.files,
-      metadata: request.metadata,
+      employee_data: employeeData,
       kind: request.kind,
       channel: request.channel,
       submitted_at: request.submitted_at,
-      approved_at: new Date().toISOString()
+      approved_at: new Date().toISOString(),
+      metadata: request.metadata
     };
 
     console.log('Checking if ticket already exists for request:', requestId);
