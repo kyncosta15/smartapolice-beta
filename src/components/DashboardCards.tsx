@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -10,8 +10,12 @@ import {
   Clock,
   Download,
   Mail,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from 'lucide-react';
+import { usePDFDashboardData } from '@/hooks/usePDFDashboardData';
+import { DashboardPDFGenerator } from '@/utils/pdfGenerator';
+import { useToast } from '@/hooks/use-toast';
 
 interface DashboardCardsProps {
   dashboardStats: {
@@ -26,6 +30,47 @@ interface DashboardCardsProps {
 }
 
 export function DashboardCards({ dashboardStats, isLoading = false, onSectionChange }: DashboardCardsProps) {
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const { fetchDashboardData, isLoading: isDashboardLoading } = usePDFDashboardData();
+  const { toast } = useToast();
+
+  // Função para gerar o PDF
+  const handleGeneratePDF = async () => {
+    try {
+      setIsGeneratingPDF(true);
+      
+      toast({
+        title: "Gerando relatório...",
+        description: "Coletando dados e preparando o PDF",
+      });
+
+      // Buscar dados atuais do Supabase
+      const dashboardData = await fetchDashboardData();
+      
+      if (!dashboardData) {
+        throw new Error('Não foi possível obter os dados do dashboard');
+      }
+
+      // Gerar e baixar o PDF
+      const pdfGenerator = new DashboardPDFGenerator();
+      pdfGenerator.download(dashboardData);
+      
+      toast({
+        title: "✅ Relatório gerado com sucesso!",
+        description: "O download foi iniciado automaticamente",
+      });
+
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        title: "❌ Erro ao gerar relatório",
+        description: error instanceof Error ? error.message : "Tente novamente em alguns instantes",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
   
   // Loading skeleton component
   const CardSkeleton = () => (
@@ -151,9 +196,15 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
           <Button 
             className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm"
             size="sm"
+            onClick={handleGeneratePDF}
+            disabled={isGeneratingPDF || isDashboardLoading}
           >
-            <Download className="w-4 h-4 mr-2" />
-            Gerar Relatório PDF
+            {isGeneratingPDF ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            {isGeneratingPDF ? 'Gerando...' : 'Gerar Relatório PDF'}
           </Button>
           <Button 
             variant="outline" 

@@ -1,0 +1,239 @@
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/AuthContext';
+
+export interface PDFDashboardData {
+  // Métricas gerais
+  totalPolicies: number;
+  activePolicies: number;
+  expiredPolicies: number;
+  expiringNext30Days: number;
+  totalMonthlyCost: number;
+  totalInsuredValue: number;
+  
+  // Distribuições
+  insurerDistribution: Array<{ name: string; value: number; percentage: number; count: number }>;
+  typeDistribution: Array<{ name: string; value: number; count: number }>;
+  
+  // Apólices recentes (últimos 30 dias)
+  recentPolicies: Array<{
+    id: string;
+    numero_apolice: string;
+    segurado: string;
+    seguradora: string;
+    valor_mensal: number;
+    status: string;
+    created_at: string;
+  }>;
+  
+  // Metadados
+  generatedAt: Date;
+  generatedBy: {
+    name: string;
+    email: string;
+    company?: string;
+  };
+  
+  // Indicadores complementares
+  personTypeDistribution: {
+    pessoaFisica: number;
+    pessoaJuridica: number;
+  };
+  
+  monthlyEvolution: Array<{ month: string; cost: number }>;
+}
+
+export function usePDFDashboardData() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuthContext();
+
+  const fetchDashboardData = async (): Promise<PDFDashboardData | null> => {
+    if (!user) {
+      console.error('Usuário não autenticado');
+      return null;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      console.log('🔍 Buscando dados do dashboard para PDF...');
+      
+      // Buscar todas as apólices do usuário
+      const { data: policies, error } = await supabase
+        .from('policies')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar apólices:', error);
+        return null;
+      }
+
+      console.log(`✅ ${policies?.length || 0} apólices encontradas`);
+
+      const generatedBy = {
+        name: user.name || user.email?.split('@')[0] || 'Usuário',
+        email: user.email || '',
+        company: user.company
+      };
+
+      // Calcular métricas
+      const totalPolicies = policies?.length || 0;
+      const now = new Date();
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(now.getDate() + 30);
+
+      // Políticas ativas vs vencidas vs vencendo
+      let activePolicies = 0;
+      let expiredPolicies = 0;
+      let expiringNext30Days = 0;
+
+      policies?.forEach(policy => {
+        if (policy.fim_vigencia) {
+          const endDate = new Date(policy.fim_vigencia);
+          if (endDate < now) {
+            expiredPolicies++;
+          } else if (endDate <= thirtyDaysFromNow) {
+            expiringNext30Days++;
+          } else {
+            activePolicies++;
+          }
+        } else {
+          activePolicies++; // Assumir ativa se não tem data de fim
+        }
+      });
+
+      // Calcular custos
+      const totalMonthlyCost = policies?.reduce((sum, p) => 
+        sum + (p.custo_mensal || p.valor_mensal_num || 0), 0) || 0;
+      
+      const totalInsuredValue = policies?.reduce((sum, p) => 
+        sum + (p.valor_premio || p.valor_parcela || 0), 0) || 0;
+
+      // Distribuição por seguradora
+      const insurerCounts = new Map<string, { value: number; count: number }>();
+      policies?.forEach(policy => {
+        const insurer = policy.seguradora || policy.seguradora_empresa || 'Não informado';
+        const cost = policy.custo_mensal || policy.valor_mensal_num || 0;
+        
+        if (insurerCounts.has(insurer)) {
+          const current = insurerCounts.get(insurer)!;
+          insurerCounts.set(insurer, {
+            value: current.value + cost,
+            count: current.count + 1
+          });
+        } else {
+          insurerCounts.set(insurer, { value: cost, count: 1 });
+        }
+      });
+
+      const insurerDistribution = Array.from(insurerCounts.entries()).map(([name, data]) => ({
+        name,
+        value: data.value,
+        count: data.count,
+        percentage: totalMonthlyCost > 0 ? Math.round((data.value / totalMonthlyCost) * 100) : 0
+      }));
+
+      // Distribuição por tipo
+      const typeCounts = new Map<string, { value: number; count: number }>();
+      policies?.forEach(policy => {
+        const type = policy.tipo_seguro || policy.tipo_categoria || 'Outros';
+        const cost = policy.custo_mensal || policy.valor_mensal_num || 0;
+        
+        if (typeCounts.has(type)) {
+          const current = typeCounts.get(type)!;
+          typeCounts.set(type, {
+            value: current.value + cost,
+            count: current.count + 1
+          });
+        } else {
+          typeCounts.set(type, { value: cost, count: 1 });
+        }
+      });
+
+      const typeDistribution = Array.from(typeCounts.entries()).map(([name, data]) => ({
+        name,
+        value: data.value,
+        count: data.count
+      }));
+
+      // Apólices recentes (últimos 30 dias)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+
+      const recentPolicies = policies
+        ?.filter(policy => new Date(policy.created_at) >= thirtyDaysAgo)
+        .slice(0, 10)
+        .map(policy => ({
+          id: policy.id,
+          numero_apolice: policy.numero_apolice || 'N/A',
+          segurado: policy.segurado || 'Não informado',
+          seguradora: policy.seguradora || policy.seguradora_empresa || 'Não informado',
+          valor_mensal: policy.custo_mensal || policy.valor_mensal_num || 0,
+          status: policy.status || 'Ativo',
+          created_at: policy.created_at
+        })) || [];
+
+      // Distribuição pessoa física/jurídica
+      let pessoaFisica = 0;
+      let pessoaJuridica = 0;
+
+      policies?.forEach(policy => {
+        const docType = policy.documento_tipo?.toString().toUpperCase();
+        if (docType === 'CPF') {
+          pessoaFisica++;
+        } else if (docType === 'CNPJ') {
+          pessoaJuridica++;
+        }
+      });
+
+      // Evolução mensal (projeção 12 meses)
+      const monthlyEvolution = [];
+      for (let i = 0; i < 12; i++) {
+        const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        const monthKey = date.toLocaleDateString('pt-BR', { 
+          month: 'short', 
+          year: 'numeric' 
+        });
+        monthlyEvolution.push({
+          month: monthKey,
+          cost: totalMonthlyCost // Projeção simples, pode ser refinada
+        });
+      }
+
+      const dashboardData: PDFDashboardData = {
+        totalPolicies,
+        activePolicies,
+        expiredPolicies,
+        expiringNext30Days,
+        totalMonthlyCost,
+        totalInsuredValue,
+        insurerDistribution,
+        typeDistribution,
+        recentPolicies,
+        personTypeDistribution: {
+          pessoaFisica,
+          pessoaJuridica
+        },
+        monthlyEvolution,
+        generatedAt: new Date(),
+        generatedBy
+      };
+
+      console.log('✅ Dados do dashboard compilados:', dashboardData);
+      return dashboardData;
+
+    } catch (error) {
+      console.error('Erro ao buscar dados do dashboard:', error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    fetchDashboardData,
+    isLoading
+  };
+}
