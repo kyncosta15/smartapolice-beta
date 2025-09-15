@@ -23,17 +23,9 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
   const isMobile = useIsMobile();
 
   const dashboardData = useDashboardCalculations(policies);
-  const { metrics: realMetrics, isLoading: realDataLoading } = useRealDashboardData();
-
-  // Para administradores, usar dados reais quando disponíveis
-  const shouldUseRealData = viewMode === 'admin' && !realDataLoading;
   
-  const displayMetrics = shouldUseRealData ? {
-    totalPolicies: realMetrics.totalPolicies,
-    totalMonthlyCost: realMetrics.monthlyPremium,
-    totalInsuredValue: dashboardData.totalInsuredValue, // Manter calculado pois não temos no real
-    expiringPolicies: dashboardData.expiringPolicies, // Manter calculado pois não temos no real
-  } : {
+  // Sempre usar dados calculados das apólices carregadas
+  const displayMetrics = {
     totalPolicies: dashboardData.totalPolicies,
     totalMonthlyCost: dashboardData.totalMonthlyCost,
     totalInsuredValue: dashboardData.totalInsuredValue,
@@ -85,7 +77,7 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     };
   });
 
-  if (policies.length === 0 && !shouldUseRealData) {
+  if (policies.length === 0) {
     return (
       <div className="space-y-2">
         <EmptyState />
