@@ -316,6 +316,20 @@ export function DashboardContent() {
 
   console.log(`🔍 DashboardContent: Total de apólices (incluindo persistidas): ${allPolicies.length}`);
   console.log(`📊 Apólices persistidas: ${persistedPolicies.length}, Extraídas: ${extractedPolicies.length}`);
+  console.log(`🔍 Status dos hooks - Persisted loading:`, hasPersistedData);
+  console.log(`🔍 Dashboard Stats:`, enhancedDashboardStats);
+  console.log(`🔍 Normalized Policies (primeiras 3):`, normalizedPolicies.slice(0, 3));
+  console.log(`🔍 Usuário atual:`, { id: user?.id, email: user?.email, role: user?.role });
+  
+  // Verificação crítica de autenticação
+  if (!user?.id) {
+    console.error('❌ ERRO CRÍTICO: Usuário não autenticado! Redirecionando para login...');
+    toast({
+      title: "Sessão Expirada",
+      description: "Faça login novamente para acessar suas apólices",
+      variant: "destructive",
+    });
+  }
   
   // DEBUG: Verificar se as apólices têm documento_tipo - SAFE LOGGING
   console.log('🔍 DEBUG DOCUMENTO_TIPO:', normalizedPolicies.map(p => ({

@@ -216,7 +216,7 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
                 <SelectItem value="">Todos os veículos</SelectItem>
                 {veiculos.map((veiculo) => (
                   <SelectItem key={veiculo.id} value={veiculo.id}>
-                    {veiculo.placa} - {veiculo.marca} {veiculo.modelo}
+                    {veiculo.placa || 'Sem placa'} - {veiculo.marca || ''} {veiculo.modelo || ''}
                   </SelectItem>
                 ))}
               </SelectContent>
