@@ -62,25 +62,38 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
     return diffDays <= 30 && diffDays > 0;
   });
 
-  // Agrupar colaboradores por centro de custo
+  // Agrupar colaboradores por centro de custo (normalizando case)
   const centrosCusto: Record<string, { count: number; custo: number }> = {};
   
   colaboradores.forEach(col => {
-    const centro = col.centro_custo || 'Não definido';
-    if (!centrosCusto[centro]) {
-      centrosCusto[centro] = { count: 0, custo: 0 };
+    const centroOriginal = col.centro_custo || 'Não definido';
+    // Normalizar para lowercase para agrupar corretamente
+    const centroNormalizado = centroOriginal.toLowerCase().trim();
+    
+    if (!centrosCusto[centroNormalizado]) {
+      centrosCusto[centroNormalizado] = { count: 0, custo: 0 };
     }
-    centrosCusto[centro].count += 1;
-    centrosCusto[centro].custo += col.custo_mensal || 0;
+    centrosCusto[centroNormalizado].count += 1;
+    centrosCusto[centroNormalizado].custo += col.custo_mensal || 0;
   });
 
   const centrosCustoArray = Object.entries(centrosCusto)
-    .map(([nome, data]) => ({
-      name: nome,
-      valor: data.custo,
-      count: data.count,
-      cor: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`
-    }))
+    .map(([centroNormalizado, data]) => {
+      // Encontrar o nome original mais comum para exibição
+      const centrosOriginais = colaboradores
+        .filter(col => (col.centro_custo || 'Não definido').toLowerCase().trim() === centroNormalizado)
+        .map(col => col.centro_custo || 'Não definido');
+      
+      // Usar o nome original mais frequente ou o primeiro encontrado
+      const nomeParaExibir = centrosOriginais.length > 0 ? centrosOriginais[0] : centroNormalizado;
+      
+      return {
+        name: nomeParaExibir,
+        valor: data.custo,
+        count: data.count,
+        cor: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`
+      };
+    })
     .sort((a, b) => b.valor - a.valor)
     .slice(0, 5);
 
