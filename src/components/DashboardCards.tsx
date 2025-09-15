@@ -31,7 +31,7 @@ interface DashboardCardsProps {
 
 export function DashboardCards({ dashboardStats, isLoading = false, onSectionChange }: DashboardCardsProps) {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const { fetchDashboardData, isLoading: isDashboardLoading } = usePDFDashboardData();
+  const { fetchDashboardData } = usePDFDashboardData();
   const { toast } = useToast();
 
   // Função para gerar o PDF
@@ -197,7 +197,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
             className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm"
             size="sm"
             onClick={handleGeneratePDF}
-            disabled={isGeneratingPDF || isDashboardLoading}
+            disabled={isGeneratingPDF}
           >
             {isGeneratingPDF ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -1,17 +1,7 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { PDFDashboardData } from '@/hooks/usePDFDashboardData';
 import { formatCurrency } from '@/utils/currencyFormatter';
-
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    lastAutoTable: {
-      finalY: number;
-    };
-  }
-}
 
 export class DashboardPDFGenerator {
   private doc: jsPDF;
@@ -103,7 +93,7 @@ export class DashboardPDFGenerator {
       ['Vencendo (30d)', data.expiringNext30Days.toString(), 'Próximos 30 dias']
     ];
 
-    this.doc.autoTable({
+    autoTable(this.doc, {
       startY: this.currentY,
       head: [cardData[0]],
       body: cardData.slice(1),
@@ -124,7 +114,7 @@ export class DashboardPDFGenerator {
       margin: { left: this.margin, right: this.margin }
     });
 
-    this.currentY = this.doc.lastAutoTable.finalY + 15;
+    this.currentY = (this.doc as any).lastAutoTable.finalY + 15;
   }
 
   private addDistributionCharts(data: PDFDashboardData) {
@@ -143,7 +133,7 @@ export class DashboardPDFGenerator {
         ])
       ];
 
-      this.doc.autoTable({
+      autoTable(this.doc, {
         startY: this.currentY,
         head: [insurerData[0]],
         body: insurerData.slice(1),
@@ -157,7 +147,7 @@ export class DashboardPDFGenerator {
         margin: { left: this.margin, right: this.margin }
       });
 
-      this.currentY = this.doc.lastAutoTable.finalY + 15;
+      this.currentY = (this.doc as any).lastAutoTable.finalY + 15;
     } else {
       this.doc.setFontSize(10);
       this.doc.setTextColor(107, 114, 128);
@@ -179,7 +169,7 @@ export class DashboardPDFGenerator {
         ])
       ];
 
-      this.doc.autoTable({
+      autoTable(this.doc, {
         startY: this.currentY,
         head: [typeData[0]],
         body: typeData.slice(1),
@@ -193,7 +183,7 @@ export class DashboardPDFGenerator {
         margin: { left: this.margin, right: this.margin }
       });
 
-      this.currentY = this.doc.lastAutoTable.finalY + 15;
+      this.currentY = (this.doc as any).lastAutoTable.finalY + 15;
     }
   }
 
@@ -214,7 +204,7 @@ export class DashboardPDFGenerator {
         ])
       ];
 
-      this.doc.autoTable({
+      autoTable(this.doc, {
         startY: this.currentY,
         head: [policiesData[0]],
         body: policiesData.slice(1),
@@ -236,7 +226,7 @@ export class DashboardPDFGenerator {
         margin: { left: this.margin, right: this.margin }
       });
 
-      this.currentY = this.doc.lastAutoTable.finalY + 15;
+      this.currentY = (this.doc as any).lastAutoTable.finalY + 15;
     } else {
       this.doc.setFontSize(10);
       this.doc.setTextColor(107, 114, 128);
@@ -258,7 +248,7 @@ export class DashboardPDFGenerator {
        `${Math.round((data.personTypeDistribution.pessoaJuridica / data.totalPolicies) * 100)}%`]
     ];
 
-    this.doc.autoTable({
+    autoTable(this.doc, {
       startY: this.currentY,
       head: [personTypeData[0]],
       body: personTypeData.slice(1),
@@ -272,7 +262,7 @@ export class DashboardPDFGenerator {
       margin: { left: this.margin, right: this.margin }
     });
 
-    this.currentY = this.doc.lastAutoTable.finalY + 15;
+    this.currentY = (this.doc as any).lastAutoTable.finalY + 15;
 
     // Métricas adicionais
     this.doc.setFontSize(10);
