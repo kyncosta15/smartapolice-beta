@@ -791,6 +791,222 @@ export type Database = {
           },
         ]
       }
+      frota_documentos: {
+        Row: {
+          created_at: string
+          id: string
+          nome_arquivo: string
+          origem: string
+          tamanho_arquivo: number | null
+          tipo: string
+          tipo_mime: string | null
+          url: string
+          veiculo_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome_arquivo: string
+          origem?: string
+          tamanho_arquivo?: number | null
+          tipo: string
+          tipo_mime?: string | null
+          url: string
+          veiculo_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome_arquivo?: string
+          origem?: string
+          tamanho_arquivo?: number | null
+          tipo?: string
+          tipo_mime?: string | null
+          url?: string
+          veiculo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "frota_documentos_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      frota_pagamentos: {
+        Row: {
+          created_at: string
+          id: string
+          observacoes: string | null
+          status: string
+          tipo: string
+          updated_at: string
+          valor: number
+          veiculo_id: string
+          vencimento: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+          valor: number
+          veiculo_id: string
+          vencimento: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+          valor?: number
+          veiculo_id?: string
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "frota_pagamentos_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      frota_responsaveis: {
+        Row: {
+          cnh_numero: string | null
+          cnh_url: string | null
+          cnh_validade: string | null
+          created_at: string
+          id: string
+          nome: string
+          telefone: string | null
+          updated_at: string
+          veiculo_id: string
+        }
+        Insert: {
+          cnh_numero?: string | null
+          cnh_url?: string | null
+          cnh_validade?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+          telefone?: string | null
+          updated_at?: string
+          veiculo_id: string
+        }
+        Update: {
+          cnh_numero?: string | null
+          cnh_url?: string | null
+          cnh_validade?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+          telefone?: string | null
+          updated_at?: string
+          veiculo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "frota_responsaveis_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      frota_veiculos: {
+        Row: {
+          ano_modelo: number | null
+          categoria: string | null
+          consorcio_cota: string | null
+          consorcio_grupo: string | null
+          consorcio_taxa_adm: number | null
+          created_at: string
+          data_venc_emplacamento: string | null
+          data_venc_ultima_parcela: string | null
+          empresa_id: string
+          id: string
+          marca: string | null
+          modalidade_compra: string | null
+          modelo: string | null
+          observacoes: string | null
+          percentual_tabela: number | null
+          placa: string
+          preco_fipe: number | null
+          preco_nf: number | null
+          proprietario_doc: string | null
+          proprietario_nome: string | null
+          proprietario_tipo: string | null
+          renavam: string | null
+          status_seguro: string | null
+          uf_emplacamento: string | null
+          updated_at: string
+        }
+        Insert: {
+          ano_modelo?: number | null
+          categoria?: string | null
+          consorcio_cota?: string | null
+          consorcio_grupo?: string | null
+          consorcio_taxa_adm?: number | null
+          created_at?: string
+          data_venc_emplacamento?: string | null
+          data_venc_ultima_parcela?: string | null
+          empresa_id: string
+          id?: string
+          marca?: string | null
+          modalidade_compra?: string | null
+          modelo?: string | null
+          observacoes?: string | null
+          percentual_tabela?: number | null
+          placa: string
+          preco_fipe?: number | null
+          preco_nf?: number | null
+          proprietario_doc?: string | null
+          proprietario_nome?: string | null
+          proprietario_tipo?: string | null
+          renavam?: string | null
+          status_seguro?: string | null
+          uf_emplacamento?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ano_modelo?: number | null
+          categoria?: string | null
+          consorcio_cota?: string | null
+          consorcio_grupo?: string | null
+          consorcio_taxa_adm?: number | null
+          created_at?: string
+          data_venc_emplacamento?: string | null
+          data_venc_ultima_parcela?: string | null
+          empresa_id?: string
+          id?: string
+          marca?: string | null
+          modalidade_compra?: string | null
+          modelo?: string | null
+          observacoes?: string | null
+          percentual_tabela?: number | null
+          placa?: string
+          preco_fipe?: number | null
+          preco_nf?: number | null
+          proprietario_doc?: string | null
+          proprietario_nome?: string | null
+          proprietario_tipo?: string | null
+          renavam?: string | null
+          status_seguro?: string | null
+          uf_emplacamento?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       installments: {
         Row: {
           created_at: string | null
