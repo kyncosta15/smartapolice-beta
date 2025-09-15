@@ -66,7 +66,7 @@ export function MobileDrawer({
       {/* Overlay */}
       <div 
         className={cn(
-          "fixed inset-0 z-40 lg:hidden transition-all duration-300 ease-out",
+          "fixed inset-0 z-40 lg:hidden transition-opacity duration-300 ease-out",
           isOpen 
             ? "bg-black/40 opacity-100" 
             : "bg-black/0 opacity-0 pointer-events-none"
@@ -81,10 +81,10 @@ export function MobileDrawer({
         aria-modal="true"
         aria-label="Menu de navegação"
         className={cn(
-          "fixed inset-y-0 left-0 w-[85%] max-w-[320px] bg-white z-50 shadow-2xl transition-all duration-300 ease-out",
+          "fixed inset-y-0 left-0 w-[85%] max-w-[320px] bg-white z-50 shadow-2xl transition-transform duration-300 ease-out",
           isOpen 
-            ? "translate-x-0 opacity-100" 
-            : "-translate-x-full opacity-0"
+            ? "translate-x-0" 
+            : "-translate-x-full"
         )}
       >
         {/* Header */}
@@ -103,21 +103,16 @@ export function MobileDrawer({
 
         {/* Navigation */}
         <nav className="p-3 space-y-1">
-          {navigation.map((item, index) => (
+          {navigation.map((item) => (
             <button
               key={item.id}
               onClick={() => handleNavigation(item.id)}
               aria-current={activeSection === item.id ? 'page' : undefined}
-              style={{ 
-                animationDelay: isOpen ? `${index * 50}ms` : '0ms' 
-              }}
               className={cn(
                 "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm w-full text-left",
-                "text-gray-700 hover:bg-slate-50 transition-all duration-200 hover:scale-[1.02]",
-                "transform translate-x-0 opacity-100",
-                isOpen ? "animate-fade-in" : "",
+                "text-gray-700 hover:bg-slate-50 transition-colors duration-200",
                 activeSection === item.id && [
-                  "bg-slate-100 border-l-2 border-blue-600 text-blue-700 shadow-sm"
+                  "bg-slate-100 border-l-2 border-blue-600 text-blue-700"
                 ]
               )}
             >
