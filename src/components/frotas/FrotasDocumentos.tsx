@@ -51,8 +51,8 @@ const tipoDocumentoOptions = [
 
 export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [tipoFilter, setTipoFilter] = useState<string>('');
-  const [selectedVeiculo, setSelectedVeiculo] = useState<string>('');
+  const [tipoFilter, setTipoFilter] = useState<string>('all');
+  const [selectedVeiculo, setSelectedVeiculo] = useState<string>('all');
 
   // Extrair todos os documentos de todos os veículos
   const allDocuments = React.useMemo(() => {
@@ -86,8 +86,8 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
         item.veiculo.marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.veiculo.modelo?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesTipo = !tipoFilter || item.documento.tipo === tipoFilter;
-      const matchesVeiculo = !selectedVeiculo || item.veiculo.id === selectedVeiculo;
+      const matchesTipo = tipoFilter === 'all' || item.documento.tipo === tipoFilter;
+      const matchesVeiculo = selectedVeiculo === 'all' || item.veiculo.id === selectedVeiculo;
 
       return matchesSearch && matchesTipo && matchesVeiculo;
     });
@@ -213,7 +213,7 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
                 <SelectValue placeholder="Todos os veículos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os veículos</SelectItem>
+                <SelectItem value="all">Todos os veículos</SelectItem>
                 {veiculos.map((veiculo) => (
                   <SelectItem key={veiculo.id} value={veiculo.id}>
                     {veiculo.placa || 'Sem placa'} - {veiculo.marca || ''} {veiculo.modelo || ''}
@@ -227,7 +227,7 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
                 <SelectValue placeholder="Tipo de documento" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
+                <SelectItem value="all">Todos os tipos</SelectItem>
                 {tipoDocumentoOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
