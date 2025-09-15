@@ -120,7 +120,29 @@ export class DashboardPDFGenerator {
   private addDistributionCharts(data: PDFDashboardData) {
     // Distribuição por Seguradora
     this.addTitle('Distribuição por Seguradora');
-    this.checkPageBreak(60);
+    this.checkPageBreak(120);
+
+    // Adicionar gráfico se disponível
+    if (data.chartImages.insurerDistribution) {
+      try {
+        const imgWidth = 150;
+        const imgHeight = 80;
+        const xPosition = (this.pageWidth - imgWidth) / 2;
+        
+        this.doc.addImage(
+          data.chartImages.insurerDistribution,
+          'PNG',
+          xPosition,
+          this.currentY,
+          imgWidth,
+          imgHeight
+        );
+        
+        this.currentY += imgHeight + 10;
+      } catch (error) {
+        console.error('Erro ao adicionar gráfico de seguradoras:', error);
+      }
+    }
 
     if (data.insurerDistribution.length > 0) {
       const insurerData = [
@@ -157,7 +179,29 @@ export class DashboardPDFGenerator {
 
     // Distribuição por Tipo
     this.addTitle('Distribuição por Tipo de Seguro');
-    this.checkPageBreak(60);
+    this.checkPageBreak(120);
+
+    // Adicionar gráfico se disponível
+    if (data.chartImages.typeDistribution) {
+      try {
+        const imgWidth = 150;
+        const imgHeight = 80;
+        const xPosition = (this.pageWidth - imgWidth) / 2;
+        
+        this.doc.addImage(
+          data.chartImages.typeDistribution,
+          'PNG',
+          xPosition,
+          this.currentY,
+          imgWidth,
+          imgHeight
+        );
+        
+        this.currentY += imgHeight + 10;
+      } catch (error) {
+        console.error('Erro ao adicionar gráfico de tipos:', error);
+      }
+    }
 
     if (data.typeDistribution.length > 0) {
       const typeData = [
@@ -184,6 +228,31 @@ export class DashboardPDFGenerator {
       });
 
       this.currentY = (this.doc as any).lastAutoTable.finalY + 15;
+    }
+
+    // Gráfico de Evolução Mensal se disponível
+    if (data.chartImages.monthlyEvolution) {
+      this.addTitle('Evolução de Custos Mensais');
+      this.checkPageBreak(100);
+      
+      try {
+        const imgWidth = 150;
+        const imgHeight = 80;
+        const xPosition = (this.pageWidth - imgWidth) / 2;
+        
+        this.doc.addImage(
+          data.chartImages.monthlyEvolution,
+          'PNG',
+          xPosition,
+          this.currentY,
+          imgWidth,
+          imgHeight
+        );
+        
+        this.currentY += imgHeight + 15;
+      } catch (error) {
+        console.error('Erro ao adicionar gráfico de evolução:', error);
+      }
     }
   }
 
@@ -239,6 +308,31 @@ export class DashboardPDFGenerator {
     this.addTitle('Indicadores Complementares');
     this.checkPageBreak(40);
 
+    // Gráfico de Status das Apólices se disponível
+    if (data.chartImages.statusDistribution) {
+      this.addTitle('Status das Apólices');
+      this.checkPageBreak(100);
+      
+      try {
+        const imgWidth = 120;
+        const imgHeight = 80;
+        const xPosition = (this.pageWidth - imgWidth) / 2;
+        
+        this.doc.addImage(
+          data.chartImages.statusDistribution,
+          'PNG',
+          xPosition,
+          this.currentY,
+          imgWidth,
+          imgHeight
+        );
+        
+        this.currentY += imgHeight + 15;
+      } catch (error) {
+        console.error('Erro ao adicionar gráfico de status:', error);
+      }
+    }
+
     // Distribuição PF/PJ
     const personTypeData = [
       ['Tipo', 'Quantidade', 'Percentual'],
@@ -284,9 +378,9 @@ export class DashboardPDFGenerator {
     
     const summaryItems = [
       'Visão Geral • Cards principais do dashboard',
-      'Distribuições • Por seguradora e tipo de seguro',  
+      'Distribuições • Por seguradora e tipo de seguro (com gráficos)',  
       'Apólices Recentes • Últimos 30 dias',
-      'Indicadores Complementares • Pessoa Física/Jurídica e métricas'
+      'Indicadores Complementares • Status e Pessoa Física/Jurídica'
     ];
 
     this.doc.setFontSize(10);
@@ -302,7 +396,7 @@ export class DashboardPDFGenerator {
 
   public generate(data: PDFDashboardData): Uint8Array {
     try {
-      console.log('🎯 Iniciando geração do PDF...');
+      console.log('🎯 Iniciando geração do PDF com gráficos...');
       
       // Capa
       this.addHeader(data);
@@ -319,7 +413,7 @@ export class DashboardPDFGenerator {
       // Rodapé da última página
       this.addPageFooter();
       
-      console.log('✅ PDF gerado com sucesso');
+      console.log('✅ PDF com gráficos gerado com sucesso');
       return new Uint8Array(this.doc.output('arraybuffer'));
       
     } catch (error) {
@@ -346,7 +440,7 @@ export class DashboardPDFGenerator {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      console.log('✅ Download do PDF iniciado:', filename || defaultFilename);
+      console.log('✅ Download do PDF com gráficos iniciado:', filename || defaultFilename);
     } catch (error) {
       console.error('❌ Erro no download do PDF:', error);
       throw error;

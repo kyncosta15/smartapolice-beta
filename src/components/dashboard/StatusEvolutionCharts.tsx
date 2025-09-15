@@ -45,7 +45,7 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
 
   return (
     <div className={`w-full ${isMobile ? 'space-y-3 px-1' : 'grid grid-cols-1 lg:grid-cols-2 gap-6'} print-status-charts overflow-hidden`}>
-      <Card className="print-chart-card bg-gradient-to-br from-white to-red-50/30 border border-red-100 shadow-lg backdrop-blur-sm w-full overflow-hidden">
+      <Card className="print-chart-card bg-gradient-to-br from-white to-red-50/30 border border-red-100 shadow-lg backdrop-blur-sm w-full overflow-hidden" data-chart="status-distribution">
         <CardHeader className={`border-b border-red-100 bg-gradient-to-r from-red-50/50 to-white ${isMobile ? 'p-2 pb-1' : 'p-4'}`}>
           <CardTitle className={`flex items-center ${isMobile ? 'text-xs' : 'text-lg'}`}>
             <div className={`p-1 bg-gradient-to-br from-red-100 to-red-200 rounded-lg mr-2 shadow-sm ${isMobile ? 'p-1' : 'p-2'}`}>
@@ -136,7 +136,7 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
         </CardContent>
       </Card>
 
-      <Card className="print-chart-card bg-gradient-to-br from-white to-blue-50/30 border border-blue-100 shadow-lg backdrop-blur-sm w-full overflow-hidden">
+      <Card className="print-chart-card bg-gradient-to-br from-white to-blue-50/30 border border-blue-100 shadow-lg backdrop-blur-sm w-full overflow-hidden" data-chart="monthly-evolution">
         <CardHeader className={`border-b border-blue-100 bg-gradient-to-r from-blue-50/50 to-white ${isMobile ? 'p-2 pb-1' : 'p-4'}`}>
           <CardTitle className={`flex items-center ${isMobile ? 'text-xs' : 'text-lg'}`}>
             <div className={`p-1 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg mr-2 shadow-sm ${isMobile ? 'p-1' : 'p-2'}`}>
