@@ -12,16 +12,16 @@ export interface FrotaVeiculo {
   modelo?: string;
   ano_modelo?: number;
   categoria?: string;
-  proprietario_tipo?: 'pj' | 'pf';
+  proprietario_tipo?: string;
   proprietario_doc?: string;
   proprietario_nome?: string;
   uf_emplacamento?: string;
   data_venc_emplacamento?: string;
-  status_seguro: 'segurado' | 'sem_seguro' | 'cotacao';
+  status_seguro: string;
   preco_fipe?: number;
   preco_nf?: number;
   percentual_tabela?: number;
-  modalidade_compra?: 'financiado' | 'avista' | 'consorcio';
+  modalidade_compra?: string;
   consorcio_grupo?: string;
   consorcio_cota?: string;
   consorcio_taxa_adm?: number;
@@ -51,10 +51,10 @@ export interface FrotaResponsavel {
 export interface FrotaPagamento {
   id: string;
   veiculo_id: string;
-  tipo: 'parcela' | 'licenciamento' | 'seguro' | 'outros';
+  tipo: string;
   valor: number;
   vencimento: string;
-  status: 'pago' | 'pendente' | 'atrasado';
+  status: string;
   observacoes?: string;
   created_at: string;
   updated_at: string;
@@ -63,10 +63,10 @@ export interface FrotaPagamento {
 export interface FrotaDocumento {
   id: string;
   veiculo_id: string;
-  tipo: 'nf' | 'crlv' | 'termo_responsabilidade' | 'termo_devolucao' | 'contrato' | 'outro';
+  tipo: string;
   nome_arquivo: string;
   url: string;
-  origem: 'upload' | 'extracao';
+  origem: string;
   tamanho_arquivo?: number;
   tipo_mime?: string;
   created_at: string;

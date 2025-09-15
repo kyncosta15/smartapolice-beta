@@ -14,6 +14,7 @@ import { PolicyInstallmentsCard } from './installments/PolicyInstallmentsCard';
 import { RegionalMetrics } from './dashboard/RegionalMetrics';
 import { ExportDashboard } from './ExportDashboard';
 import { VeiculosManagement } from './VeiculosManagement';
+import { GestaoFrotas } from './GestaoFrotas';
 import { SinistrosManagement } from './SinistrosManagement';
 import { N8NDataTester } from './N8NDataTester';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
@@ -227,6 +228,11 @@ export function ContentRenderer({
             onPolicySelect={onPolicySelect}
           />
         </div>
+      );
+
+    case 'frotas':
+      return (
+        <GestaoFrotas />
       );
 
     case 'vehicles':
