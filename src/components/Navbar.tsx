@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface NavbarProps {
   searchTerm: string;
@@ -13,9 +14,10 @@ interface NavbarProps {
   notificationCount: number;
   policies: any[];
   onMobileMenuToggle: () => void;
+  isMobileMenuOpen?: boolean;
 }
 
-export function Navbar({ searchTerm, onSearchChange, notificationCount, policies, onMobileMenuToggle }: NavbarProps) {
+export function Navbar({ searchTerm, onSearchChange, notificationCount, policies, onMobileMenuToggle, isMobileMenuOpen = false }: NavbarProps) {
   // Fixed ArrowLeft reference error - force rebuild
   
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -98,10 +100,13 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             variant="ghost"
             size="sm"
             onClick={onMobileMenuToggle}
-            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-slate-50 transition-colors rounded-lg"
+            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-slate-50 transition-all duration-300 rounded-lg group"
             aria-label="Abrir menu"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className={cn(
+              "w-5 h-5 transition-all duration-300 ease-out",
+              isMobileMenuOpen && "rotate-90 scale-110"
+            )} />
           </Button>
           
           {/* Brand */}
