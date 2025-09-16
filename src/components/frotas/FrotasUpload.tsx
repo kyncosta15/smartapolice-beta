@@ -292,8 +292,8 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
           
           <div className="text-xs text-gray-400 bg-gray-50 p-2 rounded">
             <strong>URL atual:</strong> {environment === 'test' 
-              ? 'webhook-test/testewebhook2' 
-              : 'webhook/testewebhook2'
+              ? 'webhook-test/testewebhook1' 
+              : 'webhook/testewebhook1'
             }
           </div>
         </CardContent>

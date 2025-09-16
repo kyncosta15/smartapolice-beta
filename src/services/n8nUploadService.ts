@@ -3,8 +3,8 @@ const N8N_BASE_URL = 'https://oficialsmartapolice.app.n8n.cloud';
 
 // URLs para diferentes ambientes
 export const N8N_URLS = {
-  test: `${N8N_BASE_URL}/webhook-test/testewebhook2`,
-  production: `${N8N_BASE_URL}/webhook/testewebhook2`
+  test: `${N8N_BASE_URL}/webhook-test/testewebhook1`,
+  production: `${N8N_BASE_URL}/webhook/testewebhook1`
 };
 
 export interface N8NUploadMetadata {
