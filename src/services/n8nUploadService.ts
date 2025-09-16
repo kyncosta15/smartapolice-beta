@@ -307,14 +307,17 @@ export class N8NUploadService {
         console.log(`\n[${i + 1}/${n8nResponse.veiculos.length}] 🔄 Processando veículo:`, veiculo.placa || 'SEM PLACA');
 
         try {
-          // Preparar dados do veículo
+          // Preparar dados do veículo - CORRIGIR VALORES PARA CONSTRAINTS
+          const categoria = this.mapCategoria(veiculo.familia);
+          const statusSeguro = veiculo.status === 'ativo' ? 'segurado' : 'sem_seguro';
+          
           const veiculoData = {
             empresa_id: empresaId,
             placa: veiculo.placa || `VEICULO-${i + 1}`,
             marca: this.extractMarcaFromModelo(veiculo.modelo || 'Não informado'),
             modelo: veiculo.modelo || 'Não informado',
-            categoria: veiculo.familia || 'automovel',
-            status_seguro: veiculo.status === 'ativo' ? 'com_seguro' : 'sem_seguro',
+            categoria: categoria,
+            status_seguro: statusSeguro,
             proprietario_tipo: 'pj',
             proprietario_nome: n8nResponse.empresa?.nome || userData.company,
             proprietario_doc: n8nResponse.empresa?.cnpj || metadata?.cnpj,
@@ -399,6 +402,29 @@ export class N8NUploadService {
       console.error('💥 Erro geral ao salvar dados no Supabase:', error);
       throw new Error(`Falha ao salvar no banco: ${error.message}`);
     }
+  }
+
+  private static mapCategoria(familia: string): string {
+    if (!familia) return 'outros';
+    
+    const familiaLower = familia.toLowerCase();
+    
+    // Mapear família do N8N para categorias válidas do banco
+    if (familiaLower.includes('carro') || familiaLower.includes('automovel') || familiaLower.includes('passeio')) {
+      return 'passeio';
+    }
+    if (familiaLower.includes('caminhao') || familiaLower.includes('caminhão') || familiaLower.includes('compactador')) {
+      return 'caminhao';
+    }
+    if (familiaLower.includes('utilitario') || familiaLower.includes('utilitário') || familiaLower.includes('van') || familiaLower.includes('pickup')) {
+      return 'utilitario';
+    }
+    if (familiaLower.includes('moto') || familiaLower.includes('motocicleta')) {
+      return 'moto';
+    }
+    
+    // Default para outros casos
+    return 'outros';
   }
 
   private static extractMarcaFromModelo(modelo: string): string {
