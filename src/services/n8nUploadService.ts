@@ -177,7 +177,7 @@ export class N8NUploadService {
 
         console.log('Resposta processada:', result);
 
-        // Salvar dados no Supabase após processar N8N
+        // Salvar dados nas tabelas de frota do Supabase
         if (result.veiculos && Array.isArray(result.veiculos) && result.veiculos.length > 0) {
           console.log('Salvando dados da frota no Supabase...');
           await this.saveFleetDataToSupabase(result, metadata);
