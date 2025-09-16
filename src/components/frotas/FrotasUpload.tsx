@@ -14,12 +14,14 @@ import {
   RefreshCw,
   X,
   Brain,
-  Settings
+  Settings,
+  TestTube,
+  Rocket
 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { N8NFrotaWebhookService } from '@/services/n8nFrotaWebhook';
+import { N8NUploadService, N8NUploadMetadata, N8NResponse } from '@/services/n8nUploadService';
 
 interface FrotasUploadProps {
   onSuccess: () => void;
@@ -31,41 +33,50 @@ interface UploadFile {
   status: 'pending' | 'uploading' | 'processing' | 'completed' | 'error';
   progress: number;
   error?: string;
-  result?: {
-    veiculosImportados: number;
-    documentosAnexados: number;
-    erros: string[];
-  };
+  result?: N8NResponse;
 }
 
 export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [files, setFiles] = useState<UploadFile[]>([]);
-  const [useAI, setUseAI] = useState(true);
+  const [environment, setEnvironment] = useState<'test' | 'production'>('test');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles: UploadFile[] = acceptedFiles.map((file) => ({
-      file,
-      id: Math.random().toString(36).substr(2, 9),
-      status: 'pending',
-      progress: 0,
-    }));
+    const validFiles: UploadFile[] = [];
+    
+    acceptedFiles.forEach((file) => {
+      const validation = N8NUploadService.validateFile(file);
+      
+      if (validation.valid) {
+        validFiles.push({
+          file,
+          id: Math.random().toString(36).substr(2, 9),
+          status: 'pending',
+          progress: 0,
+        });
+      } else {
+        toast({
+          title: "Arquivo rejeitado",
+          description: `${file.name}: ${validation.error}`,
+          variant: "destructive",
+        });
+      }
+    });
 
-    setFiles(prev => [...prev, ...newFiles]);
-  }, []);
+    setFiles(prev => [...prev, ...validFiles]);
+  }, [toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'application/vnd.ms-excel': ['.xls'],
       'text/csv': ['.csv'],
-      'image/*': ['.jpg', '.jpeg', '.png'],
+      'application/pdf': ['.pdf'],
     },
-    maxFiles: 10,
+    maxFiles: 5,
     maxSize: 20 * 1024 * 1024, // 20MB
   });
 
@@ -74,97 +85,100 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   };
 
   const processFiles = async () => {
-    if (files.length === 0 || !user?.company) return;
+    if (files.length === 0 || !user?.company) {
+      toast({
+        title: "Nenhum arquivo",
+        description: "Adicione pelo menos um arquivo para processar",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsProcessing(true);
     
     try {
-      // Atualizar todos os arquivos para uploading
-      setFiles(prev => prev.map(f => 
-        f.status === 'pending' 
-          ? { ...f, status: 'uploading', progress: 10 }
-          : f
-      ));
+      // Preparar metadados do usuário
+      const metadata: N8NUploadMetadata = {
+        empresa_id: user.id,
+        empresa_nome: user.company,
+        user_id: user.id,
+        razao_social: user.company,
+      };
 
-      const filesToProcess = files
-        .filter(f => f.status === 'uploading')
-        .map(f => f.file);
+      // Processar cada arquivo individualmente
+      for (const fileItem of files) {
+        if (fileItem.status !== 'pending') continue;
 
-      // Simular progresso do upload
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setFiles(prev => prev.map(f => 
-        f.status === 'uploading'
-          ? { ...f, progress: 30 }
-          : f
-      ));
+        try {
+          // Status: Uploading
+          setFiles(prev => prev.map(f => 
+            f.id === fileItem.id 
+              ? { ...f, status: 'uploading', progress: 20 }
+              : f
+          ));
 
-      // Chamar webhook N8N
-      setFiles(prev => prev.map(f => 
-        f.status === 'uploading'
-          ? { ...f, status: 'processing', progress: 50 }
-          : f
-      ));
+          await new Promise(resolve => setTimeout(resolve, 800));
 
-      console.log('Iniciando processamento N8N...');
-      
-      const result = await N8NFrotaWebhookService.processarDadosFrota(
-        filesToProcess, 
-        user.company
-      );
+          // Status: Processing
+          setFiles(prev => prev.map(f => 
+            f.id === fileItem.id 
+              ? { ...f, status: 'processing', progress: 60 }
+              : f
+          ));
 
-      // Aguardar tempo adicional para o N8N processar completamente
-      console.log('Aguardando processamento completo...');
-      setFiles(prev => prev.map(f => 
-        f.status === 'processing'
-          ? { ...f, progress: 80 }
-          : f
-      ));
-      
-      // Dar tempo para o N8N processar os dados
-      await new Promise(resolve => setTimeout(resolve, 2000));
+          console.log(`Processando arquivo: ${fileItem.file.name} no ambiente ${environment}`);
+          
+          const result = await N8NUploadService.uploadToN8N(
+            fileItem.file,
+            metadata,
+            environment
+          );
 
-      if (result.success) {
-        // Atualizar status para completed
-        setFiles(prev => prev.map(f => 
-          f.status === 'processing'
-            ? { 
-                ...f, 
-                status: 'completed', 
-                progress: 100, 
-                result: {
-                  veiculosImportados: result.data?.length || 0,
-                  documentosAnexados: filesToProcess.length,
-                  erros: []
+          // Status: Completed
+          setFiles(prev => prev.map(f => 
+            f.id === fileItem.id 
+              ? { 
+                  ...f, 
+                  status: 'completed', 
+                  progress: 100, 
+                  result 
                 }
-              }
-            : f
-        ));
+              : f
+          ));
 
-        toast({
-          title: "✅ Processamento concluído",
-          description: `${result.data?.length || 0} registros processados via N8N webhook`,
-        });
+          toast({
+            title: "✅ Arquivo processado",
+            description: `${result.metrics?.totalVeiculos || 0} veículos encontrados em ${fileItem.file.name}`,
+          });
 
-        // Aguardar um pouco mais antes de disparar onSuccess para garantir que tudo foi processado
-        setTimeout(() => {
-          onSuccess();
-        }, 1000);
-      } else {
-        throw new Error(result.message || 'Falha no processamento N8N');
+        } catch (error: any) {
+          console.error(`Erro ao processar ${fileItem.file.name}:`, error);
+          
+          setFiles(prev => prev.map(f => 
+            f.id === fileItem.id 
+              ? { ...f, status: 'error', progress: 0, error: error.message }
+              : f
+          ));
+
+          toast({
+            title: "❌ Erro no processamento",
+            description: `${fileItem.file.name}: ${error.message}`,
+            variant: "destructive",
+          });
+        }
       }
 
-    } catch (error: any) {
-      console.error('Erro ao processar arquivos:', error);
-      
-      setFiles(prev => prev.map(f => 
-        f.status === 'uploading' || f.status === 'processing'
-          ? { ...f, status: 'error', progress: 0, error: error.message }
-          : f
-      ));
+      // Aguardar um pouco antes de chamar onSuccess
+      setTimeout(() => {
+        onSuccess();
+      }, 1000);
 
+    } catch (error: any) {
+      console.error('Erro geral no processamento:', error);
+      
       toast({
         title: "❌ Erro no processamento",
-        description: error.message,
+        description: error.message || "Erro desconhecido",
         variant: "destructive",
       });
     } finally {
@@ -241,24 +255,46 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Settings className="h-5 w-5" />
-            Configurações de Processamento
+            Configurações de Upload N8N
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Brain className="h-4 w-4 text-purple-600" />
-                <span className="font-medium">Usar Extração por IA (recomendado)</span>
+                {environment === 'test' ? (
+                  <TestTube className="h-4 w-4 text-orange-600" />
+                ) : (
+                  <Rocket className="h-4 w-4 text-green-600" />
+                )}
+                <span className="font-medium">Ambiente N8N</span>
               </div>
               <p className="text-sm text-gray-500">
-                A IA irá extrair automaticamente os dados dos documentos PDF
+                {environment === 'test' 
+                  ? 'Modo de teste - usar quando estiver "Listen for test event" no N8N'
+                  : 'Modo produção - usar com fluxo publicado no N8N'
+                }
               </p>
             </div>
-            <Switch
-              checked={useAI}
-              onCheckedChange={setUseAI}
-            />
+            <div className="flex items-center gap-2">
+              <span className={`text-sm ${environment === 'test' ? 'text-orange-600' : 'text-gray-500'}`}>
+                Test
+              </span>
+              <Switch
+                checked={environment === 'production'}
+                onCheckedChange={(checked) => setEnvironment(checked ? 'production' : 'test')}
+              />
+              <span className={`text-sm ${environment === 'production' ? 'text-green-600' : 'text-gray-500'}`}>
+                Prod
+              </span>
+            </div>
+          </div>
+          
+          <div className="text-xs text-gray-400 bg-gray-50 p-2 rounded">
+            <strong>URL atual:</strong> {environment === 'test' 
+              ? 'webhook-test/testewebhook2' 
+              : 'webhook/testewebhook2'
+            }
           </div>
         </CardContent>
       </Card>
@@ -294,10 +330,10 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
                   Arraste arquivos aqui ou clique para selecionar
                 </p>
                 <p className="text-sm text-gray-500 mb-4">
-                  Suporte para PDF, Excel (XLSX/XLS), CSV e imagens
+                  Suporte para XLSX, CSV e PDF (máximo 20MB cada)
                 </p>
                 <p className="text-xs text-gray-400">
-                  Máximo 10 arquivos, 20MB cada
+                  Máximo 5 arquivos, 20MB cada
                 </p>
               </div>
             )}
@@ -324,12 +360,12 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
                   {isProcessing ? (
                     <>
                       <RefreshCw className="h-4 w-4 animate-spin" />
-                      Processando no N8N...
+                      Enviando para N8N ({environment})...
                     </>
                   ) : (
                     <>
                       <Upload className="h-4 w-4" />
-                      Processar e Inserir
+                      Processar no N8N
                     </>
                   )}
                 </Button>
@@ -396,15 +432,43 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
                     )}
                     
                     {fileItem.result && (
-                      <div className="text-sm text-green-600 bg-green-50 p-2 rounded border">
-                        <p>
-                          ✓ {fileItem.result.veiculosImportados} veículos importados, 
-                          {fileItem.result.documentosAnexados} documentos anexados
-                        </p>
-                        {fileItem.result.erros.length > 0 && (
-                          <p className="text-red-600 mt-1">
-                            Avisos: {fileItem.result.erros.join(', ')}
-                          </p>
+                      <div className="text-sm text-green-600 bg-green-50 p-3 rounded border space-y-2">
+                        <div className="font-semibold">📊 Resultado do Processamento:</div>
+                        <div className="grid grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <span className="font-medium">Total de Veículos:</span>
+                            <div className="text-lg font-bold text-green-700">
+                              {fileItem.result.metrics?.totalVeiculos || 0}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="font-medium">Total de Linhas:</span>
+                            <div className="text-lg font-bold text-blue-700">
+                              {fileItem.result.metrics?.totalLinhas || 0}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {fileItem.result.metrics?.porFamilia && (
+                          <div>
+                            <span className="font-medium">Por Família:</span>
+                            <div className="mt-1 space-y-1">
+                              {Object.entries(fileItem.result.metrics.porFamilia)
+                                .slice(0, 3)
+                                .map(([familia, count]) => (
+                                <div key={familia} className="flex justify-between text-xs">
+                                  <span className="truncate">{familia}:</span>
+                                  <span className="font-medium">{count}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {fileItem.result.metrics?.processadoEm && (
+                          <div className="text-xs text-gray-600">
+                            Processado em: {fileItem.result.metrics.processadoEm}
+                          </div>
                         )}
                       </div>
                     )}
@@ -420,20 +484,23 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
       <Card className="border-0 shadow-sm bg-blue-50 border-blue-200">
         <CardContent className="pt-6">
           <h3 className="font-semibold text-blue-900 mb-3">
-            Como funciona a extração automática?
+            Como funciona o processamento N8N?
           </h3>
           <div className="space-y-2 text-sm text-blue-800">
             <p>
-              • <strong>PDFs:</strong> Extraímos automaticamente dados como placa, CNPJ/CPF, proprietário, marca/modelo, valores, etc.
+              • <strong>Formato de arquivo:</strong> O campo deve se chamar exatamente "file" no N8N
             </p>
             <p>
-              • <strong>Excel/CSV:</strong> Mapeamos as colunas automaticamente e permitimos ajustes manuais.
+              • <strong>XLSX/CSV:</strong> Planilhas são processadas automaticamente para extrair dados da frota
             </p>
             <p>
-              • <strong>Imagens:</strong> Usamos OCR para extrair texto de documentos fotografados.
+              • <strong>PDF:</strong> Documentos são analisados para identificar informações de veículos
             </p>
             <p>
-              • <strong>FIPE:</strong> Consultamos automaticamente o preço FIPE atual para cada veículo.
+              • <strong>Ambiente Test:</strong> Use quando estiver "Listen for test event" no N8N
+            </p>
+            <p>
+              • <strong>Ambiente Prod:</strong> Use com fluxo publicado e ativo no N8N
             </p>
           </div>
         </CardContent>
