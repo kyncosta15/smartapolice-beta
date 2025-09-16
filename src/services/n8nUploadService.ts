@@ -224,77 +224,117 @@ export class N8NUploadService {
   private static async saveFleetDataToSupabase(n8nResponse: N8NResponse, metadata?: N8NUploadMetadata) {
     try {
       console.log('=== SALVANDO DADOS DA FROTA NO SUPABASE ===');
+      console.log('Resposta N8N:', n8nResponse);
+      console.log('Metadata recebida:', metadata);
       
-      // Buscar empresa_id baseado no nome da empresa do usuário
-      let empresaId: string | null = null;
-      
-      if (metadata?.empresa_nome) {
-        const { data: empresa, error: empresaError } = await supabase
-          .from('empresas')
-          .select('id')
-          .eq('nome', metadata.empresa_nome)
-          .single();
-          
-        if (empresa && !empresaError) {
-          empresaId = empresa.id;
-        } else {
-          console.log('Empresa não encontrada, criando nova...');
-          const { data: novaEmpresa, error: novaEmpresaError } = await supabase
-            .from('empresas')
-            .insert([{
-              nome: metadata.empresa_nome,
-              cnpj: metadata.cnpj || null,
-            }])
-            .select('id')
-            .single();
-            
-          if (novaEmpresa && !novaEmpresaError) {
-            empresaId = novaEmpresa.id;
-          }
-        }
+      // Buscar empresa_id do usuário atual
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Usuário não autenticado');
       }
 
-      if (!empresaId) {
-        throw new Error('Não foi possível determinar ou criar a empresa');
+      const { data: userData, error: userDataError } = await supabase
+        .from('users')
+        .select('company')
+        .eq('id', user.id)
+        .single();
+
+      if (userDataError || !userData?.company) {
+        throw new Error('Empresa do usuário não encontrada');
+      }
+
+      console.log('Empresa do usuário:', userData.company);
+
+      // Buscar empresa_id baseado no nome da empresa do usuário
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', userData.company)
+        .maybeSingle();
+        
+      if (empresaError) {
+        console.error('Erro ao buscar empresa:', empresaError);
+        throw new Error('Erro ao buscar empresa');
+      }
+
+      let empresaId: string;
+      
+      if (empresa) {
+        empresaId = empresa.id;
+        console.log('Empresa encontrada:', empresaId);
+      } else {
+        console.log('Empresa não encontrada, criando nova...');
+        const { data: novaEmpresa, error: novaEmpresaError } = await supabase
+          .from('empresas')
+          .insert([{
+            nome: userData.company,
+            cnpj: metadata?.cnpj || null,
+          }])
+          .select('id')
+          .single();
+          
+        if (novaEmpresaError || !novaEmpresa) {
+          console.error('Erro ao criar empresa:', novaEmpresaError);
+          throw new Error('Não foi possível criar a empresa');
+        }
+        
+        empresaId = novaEmpresa.id;
+        console.log('Nova empresa criada:', empresaId);
       }
 
       // Processar cada veículo
-      for (const veiculo of n8nResponse.veiculos) {
-        console.log(`Processando veículo: ${veiculo.placa}`);
+      console.log(`Processando ${n8nResponse.veiculos.length} veículos...`);
+      
+      for (let i = 0; i < n8nResponse.veiculos.length; i++) {
+        const veiculo = n8nResponse.veiculos[i];
+        console.log(`[${i + 1}/${n8nResponse.veiculos.length}] Processando veículo:`, veiculo.placa);
+
+        // Preparar dados do veículo
+        const veiculoData = {
+          empresa_id: empresaId,
+          placa: veiculo.placa || '',
+          marca: this.extractMarcaFromModelo(veiculo.modelo),
+          modelo: veiculo.modelo || 'Não informado',
+          categoria: veiculo.familia || 'automovel',
+          status_seguro: veiculo.status === 'ativo' ? 'com_seguro' : 'sem_seguro',
+          proprietario_tipo: 'pj',
+          proprietario_nome: n8nResponse.empresa?.nome || userData.company,
+          proprietario_doc: n8nResponse.empresa?.cnpj || metadata?.cnpj,
+        };
+
+        console.log('Dados do veículo para inserir:', veiculoData);
 
         // Inserir veículo
         const { data: veiculoInserido, error: veiculoError } = await supabase
           .from('frota_veiculos')
-          .insert([{
-            empresa_id: empresaId,
-            placa: veiculo.placa || '',
-            chassi: veiculo.chassi,
-            marca: this.extractMarcaFromModelo(veiculo.modelo),
-            modelo: veiculo.modelo,
-            categoria: veiculo.familia || 'automovel',
-            status_seguro: veiculo.status === 'ativo' ? 'com_seguro' : 'sem_seguro',
-            proprietario_tipo: 'pj', // assumindo pessoa jurídica
-            proprietario_nome: n8nResponse.empresa?.nome || metadata?.empresa_nome,
-            proprietario_doc: n8nResponse.empresa?.cnpj || metadata?.cnpj,
-          }])
+          .insert([veiculoData])
           .select('id')
           .single();
 
         if (veiculoError) {
           console.error('Erro ao inserir veículo:', veiculoError);
+          console.error('Dados que causaram erro:', veiculoData);
           continue;
         }
+
+        console.log('Veículo inserido com sucesso:', veiculoInserido.id);
 
         const veiculoId = veiculoInserido.id;
 
         // Inserir responsável se houver informação
         if (veiculo.localizacao) {
-          await supabase
+          const { error: responsavelError } = await supabase
             .from('frota_responsaveis')
             .insert([{
               veiculo_id: veiculoId,
               nome: `Responsável - ${veiculo.localizacao}`,
             }]);
+            
+          if (responsavelError) {
+            console.error('Erro ao inserir responsável:', responsavelError);
+          } else {
+            console.log('Responsável inserido para veículo:', veiculoId);
+          }
         }
 
         // Inserir pagamento de seguro se ativo
@@ -302,7 +342,7 @@ export class N8NUploadService {
           const proximoVencimento = new Date();
           proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
           
-          await supabase
+          const { error: pagamentoError } = await supabase
             .from('frota_pagamentos')
             .insert([{
               veiculo_id: veiculoId,
@@ -312,6 +352,12 @@ export class N8NUploadService {
               status: 'pendente',
               observacoes: `Importado do N8N - ${veiculo.familia}`,
             }]);
+            
+          if (pagamentoError) {
+            console.error('Erro ao inserir pagamento:', pagamentoError);
+          } else {
+            console.log('Pagamento inserido para veículo:', veiculoId);
+          }
         }
       }
 
