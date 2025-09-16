@@ -171,6 +171,20 @@ export function useFrotasData(filters: FrotaFilters) {
     fetchVeiculos();
   }, [user?.company, filters]);
 
+  // Escutar eventos de atualização da frota
+  useEffect(() => {
+    const handleFrotaUpdate = () => {
+      console.log('Evento de atualização da frota recebido');
+      fetchVeiculos();
+    };
+
+    window.addEventListener('frota-data-updated', handleFrotaUpdate);
+    
+    return () => {
+      window.removeEventListener('frota-data-updated', handleFrotaUpdate);
+    };
+  }, []);
+
   // Calcular KPIs
   const kpis = useMemo((): FrotaKPIs => {
     const today = new Date();

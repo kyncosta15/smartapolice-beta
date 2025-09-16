@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 // Configuração de URLs do N8N
 const N8N_BASE_URL = 'https://oficialsmartapolice.app.n8n.cloud';
 
@@ -174,6 +176,13 @@ export class N8NUploadService {
         }
 
         console.log('Resposta processada:', result);
+
+        // Salvar dados no Supabase após processar N8N
+        if (result.veiculos && Array.isArray(result.veiculos) && result.veiculos.length > 0) {
+          console.log('Salvando dados da frota no Supabase...');
+          await this.saveFleetDataToSupabase(result, metadata);
+        }
+
         return result;
 
       } catch (error: any) {
@@ -210,5 +219,128 @@ export class N8NUploadService {
       console.error('Erro ao testar conexão N8N:', error);
       return false;
     }
+  }
+
+  private static async saveFleetDataToSupabase(n8nResponse: N8NResponse, metadata?: N8NUploadMetadata) {
+    try {
+      console.log('=== SALVANDO DADOS DA FROTA NO SUPABASE ===');
+      
+      // Buscar empresa_id baseado no nome da empresa do usuário
+      let empresaId: string | null = null;
+      
+      if (metadata?.empresa_nome) {
+        const { data: empresa, error: empresaError } = await supabase
+          .from('empresas')
+          .select('id')
+          .eq('nome', metadata.empresa_nome)
+          .single();
+          
+        if (empresa && !empresaError) {
+          empresaId = empresa.id;
+        } else {
+          console.log('Empresa não encontrada, criando nova...');
+          const { data: novaEmpresa, error: novaEmpresaError } = await supabase
+            .from('empresas')
+            .insert([{
+              nome: metadata.empresa_nome,
+              cnpj: metadata.cnpj || null,
+            }])
+            .select('id')
+            .single();
+            
+          if (novaEmpresa && !novaEmpresaError) {
+            empresaId = novaEmpresa.id;
+          }
+        }
+      }
+
+      if (!empresaId) {
+        throw new Error('Não foi possível determinar ou criar a empresa');
+      }
+
+      // Processar cada veículo
+      for (const veiculo of n8nResponse.veiculos) {
+        console.log(`Processando veículo: ${veiculo.placa}`);
+
+        // Inserir veículo
+        const { data: veiculoInserido, error: veiculoError } = await supabase
+          .from('frota_veiculos')
+          .insert([{
+            empresa_id: empresaId,
+            placa: veiculo.placa || '',
+            chassi: veiculo.chassi,
+            marca: this.extractMarcaFromModelo(veiculo.modelo),
+            modelo: veiculo.modelo,
+            categoria: veiculo.familia || 'automovel',
+            status_seguro: veiculo.status === 'ativo' ? 'com_seguro' : 'sem_seguro',
+            proprietario_tipo: 'pj', // assumindo pessoa jurídica
+            proprietario_nome: n8nResponse.empresa?.nome || metadata?.empresa_nome,
+            proprietario_doc: n8nResponse.empresa?.cnpj || metadata?.cnpj,
+          }])
+          .select('id')
+          .single();
+
+        if (veiculoError) {
+          console.error('Erro ao inserir veículo:', veiculoError);
+          continue;
+        }
+
+        const veiculoId = veiculoInserido.id;
+
+        // Inserir responsável se houver informação
+        if (veiculo.localizacao) {
+          await supabase
+            .from('frota_responsaveis')
+            .insert([{
+              veiculo_id: veiculoId,
+              nome: `Responsável - ${veiculo.localizacao}`,
+            }]);
+        }
+
+        // Inserir pagamento de seguro se ativo
+        if (veiculo.status === 'ativo') {
+          const proximoVencimento = new Date();
+          proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
+          
+          await supabase
+            .from('frota_pagamentos')
+            .insert([{
+              veiculo_id: veiculoId,
+              tipo: 'seguro',
+              valor: 500, // valor padrão - ajustar conforme necessário
+              vencimento: proximoVencimento.toISOString().split('T')[0],
+              status: 'pendente',
+              observacoes: `Importado do N8N - ${veiculo.familia}`,
+            }]);
+        }
+      }
+
+      console.log(`✅ ${n8nResponse.veiculos.length} veículos salvos no Supabase com sucesso`);
+      
+    } catch (error: any) {
+      console.error('Erro ao salvar dados no Supabase:', error);
+      throw new Error(`Falha ao salvar no banco: ${error.message}`);
+    }
+  }
+
+  private static extractMarcaFromModelo(modelo: string): string {
+    if (!modelo) return 'Não informado';
+    
+    // Extrair marca comum do modelo (primeiras palavras)
+    const marcasComuns = [
+      'VOLKSWAGEN', 'VW', 'FIAT', 'CHEVROLET', 'FORD', 'TOYOTA', 'HONDA', 
+      'HYUNDAI', 'NISSAN', 'RENAULT', 'PEUGEOT', 'CITROEN', 'MERCEDES',
+      'BMW', 'AUDI', 'VOLVO', 'SCANIA', 'IVECO', 'MAN'
+    ];
+    
+    const modeloUpper = modelo.toUpperCase();
+    for (const marca of marcasComuns) {
+      if (modeloUpper.includes(marca)) {
+        return marca;
+      }
+    }
+    
+    // Se não encontrar marca conhecida, pegar primeira palavra
+    return modelo.split(' ')[0];
   }
 }

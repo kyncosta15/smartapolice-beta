@@ -148,8 +148,13 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
 
           toast({
             title: "✅ Arquivo processado",
-            description: `${result.metrics?.totalVeiculos || 0} veículos encontrados em ${fileItem.file.name}`,
+            description: `${result.metrics?.totalVeiculos || 0} veículos processados e salvos no dashboard`,
           });
+
+          // Forçar atualização do dashboard de frotas
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('frota-data-updated'));
+          }, 1000);
 
         } catch (error: any) {
           console.error(`Erro ao processar ${fileItem.file.name}:`, error);
@@ -295,6 +300,10 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
               ? 'webhook-test/testewebhook1' 
               : 'webhook/testewebhook1'
             }
+          </div>
+
+          <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
+            <strong>💾 Auto-save:</strong> Os dados processados serão automaticamente salvos no dashboard de frotas
           </div>
         </CardContent>
       </Card>
@@ -484,23 +493,20 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
       <Card className="border-0 shadow-sm bg-blue-50 border-blue-200">
         <CardContent className="pt-6">
           <h3 className="font-semibold text-blue-900 mb-3">
-            Como funciona o processamento N8N?
+            🚗 Gestão de Frotas Integrada
           </h3>
           <div className="space-y-2 text-sm text-blue-800">
             <p>
-              • <strong>Formato de arquivo:</strong> O campo deve se chamar exatamente "file" no N8N
+              • <strong>Processamento automático:</strong> Dados extraídos pelo N8N são salvos diretamente no Supabase
             </p>
             <p>
-              • <strong>XLSX/CSV:</strong> Planilhas são processadas automaticamente para extrair dados da frota
+              • <strong>Dashboard atualizado:</strong> Após o processamento, os dados aparecem imediatamente no painel
             </p>
             <p>
-              • <strong>PDF:</strong> Documentos são analisados para identificar informações de veículos
+              • <strong>Estrutura completa:</strong> Veículos, responsáveis e pagamentos são organizados automaticamente
             </p>
             <p>
-              • <strong>Ambiente Test:</strong> Use quando estiver "Listen for test event" no N8N
-            </p>
-            <p>
-              • <strong>Ambiente Prod:</strong> Use com fluxo publicado e ativo no N8N
+              • <strong>Empresas vinculadas:</strong> Dados são associados à sua empresa no sistema
             </p>
           </div>
         </CardContent>
