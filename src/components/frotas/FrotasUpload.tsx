@@ -82,7 +82,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
       // Atualizar todos os arquivos para uploading
       setFiles(prev => prev.map(f => 
         f.status === 'pending' 
-          ? { ...f, status: 'uploading', progress: 20 }
+          ? { ...f, status: 'uploading', progress: 10 }
           : f
       ));
 
@@ -90,17 +90,38 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
         .filter(f => f.status === 'uploading')
         .map(f => f.file);
 
-      // Chamar webhook N8N
+      // Simular progresso do upload
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setFiles(prev => prev.map(f => 
         f.status === 'uploading'
-          ? { ...f, status: 'processing', progress: 60 }
+          ? { ...f, progress: 30 }
           : f
       ));
 
+      // Chamar webhook N8N
+      setFiles(prev => prev.map(f => 
+        f.status === 'uploading'
+          ? { ...f, status: 'processing', progress: 50 }
+          : f
+      ));
+
+      console.log('Iniciando processamento N8N...');
+      
       const result = await N8NFrotaWebhookService.processarDadosFrota(
         filesToProcess, 
         user.company
       );
+
+      // Aguardar tempo adicional para o N8N processar completamente
+      console.log('Aguardando processamento completo...');
+      setFiles(prev => prev.map(f => 
+        f.status === 'processing'
+          ? { ...f, progress: 80 }
+          : f
+      ));
+      
+      // Dar tempo para o N8N processar os dados
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       if (result.success) {
         // Atualizar status para completed
@@ -120,11 +141,16 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
         ));
 
         toast({
-          title: "Processamento concluído",
-          description: `${result.data?.length || 0} veículos importados com sucesso via N8N`,
+          title: "✅ Processamento concluído",
+          description: `${result.data?.length || 0} registros processados via N8N webhook`,
         });
+
+        // Aguardar um pouco mais antes de disparar onSuccess para garantir que tudo foi processado
+        setTimeout(() => {
+          onSuccess();
+        }, 1000);
       } else {
-        throw new Error(result.message || 'Erro no processamento');
+        throw new Error(result.message || 'Falha no processamento N8N');
       }
 
     } catch (error: any) {
@@ -137,13 +163,12 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
       ));
 
       toast({
-        title: "Erro no processamento",
+        title: "❌ Erro no processamento",
         description: error.message,
         variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
-      onSuccess();
     }
   };
 
@@ -175,15 +200,15 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'Aguardando';
+        return 'Aguardando processamento';
       case 'uploading':
-        return 'Enviando...';
+        return 'Enviando para N8N...';
       case 'processing':
-        return useAI ? 'Processando com IA...' : 'Processando...';
+        return 'N8N processando arquivo...';
       case 'completed':
-        return 'Concluído';
+        return 'Processado com sucesso';
       case 'error':
-        return 'Erro';
+        return 'Erro no processamento';
       default:
         return status;
     }
@@ -290,18 +315,24 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
                 Arquivos para Processamento ({files.length})
               </CardTitle>
               
-              <Button
-                onClick={processFiles}
-                disabled={isProcessing || files.every(f => f.status !== 'pending')}
-                className="flex items-center gap-2"
-              >
-                {isProcessing ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="h-4 w-4" />
-                )}
-                Processar e Inserir
-              </Button>
+                <Button
+                  onClick={processFiles}
+                  disabled={isProcessing || files.every(f => f.status !== 'pending')}
+                  className="flex items-center gap-2"
+                  size="default"
+                >
+                  {isProcessing ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Processando no N8N...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4" />
+                      Processar e Inserir
+                    </>
+                  )}
+                </Button>
             </div>
             
             {totalFiles > 0 && (

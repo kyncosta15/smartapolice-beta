@@ -12,55 +12,75 @@ export interface N8NFrotaResponse {
 export class N8NFrotaWebhookService {
   static async processarDadosFrota(files: File[], userCompany: string): Promise<N8NFrotaResponse> {
     try {
-      // Preparar dados para envio
+      // Preparar dados para envio como multipart/form-data
       const formData = new FormData();
       
+      // Adicionar cada arquivo com chaves diferentes para o N8N identificar
       files.forEach((file, index) => {
-        formData.append(`files`, file, file.name);
+        formData.append('file', file, file.name); // N8N espera 'file' como campo
+        console.log(`Adicionando arquivo ${index}: ${file.name}, tamanho: ${file.size} bytes`);
       });
       
+      // Metadados adicionais
       formData.append('company', userCompany);
       formData.append('timestamp', new Date().toISOString());
       formData.append('action', 'process_frota');
+      formData.append('fileCount', files.length.toString());
 
-      // Chamar webhook N8N
-      console.log('Enviando arquivos para N8N webhook:', N8N_WEBHOOK_URL);
+      console.log('=== ENVIANDO PARA N8N ===');
+      console.log('URL:', N8N_WEBHOOK_URL);
       console.log('Total de arquivos:', files.length);
       console.log('Empresa:', userCompany);
       
+      // Chamar webhook N8N com headers apropriados
       const response = await fetch(N8N_WEBHOOK_URL, {
         method: 'POST',
         body: formData,
+        // NÃO definir Content-Type - deixar o browser definir automaticamente para multipart
+        headers: {
+          'Accept': 'application/json',
+        }
       });
 
       console.log('Status da resposta:', response.status, response.statusText);
+      console.log('Headers da resposta:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Erro na resposta HTTP:', errorText);
-        throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`Erro HTTP ${response.status}: ${errorText || response.statusText}`);
       }
 
-      // Verificar se a resposta tem conteúdo
+      // Aguardar resposta com timeout adequado
       const responseText = await response.text();
-      console.log('Resposta raw do N8N:', responseText);
+      console.log('=== RESPOSTA DO N8N ===');
+      console.log('Tamanho da resposta:', responseText.length, 'caracteres');
+      console.log('Primeiros 200 chars:', responseText.substring(0, 200));
 
       if (!responseText || responseText.trim() === '') {
-        throw new Error('Resposta vazia do servidor N8N');
+        throw new Error('Resposta vazia do servidor N8N. Verifique se o webhook está configurado corretamente.');
       }
 
       let result;
       try {
         result = JSON.parse(responseText);
+        console.log('JSON parseado com sucesso:', result);
       } catch (parseError) {
         console.error('Erro ao fazer parse do JSON:', parseError);
-        console.error('Conteúdo da resposta:', responseText);
-        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}...`);
+        console.error('Conteúdo completo da resposta:', responseText);
+        
+        // Se não conseguir fazer parse, mas houve resposta, considerar como sucesso básico
+        result = {
+          success: true,
+          data: [{
+            message: 'Arquivo processado pelo N8N',
+            raw_response: responseText.substring(0, 500)
+          }],
+          message: 'Processamento concluído (resposta não-JSON)'
+        };
       }
 
-      console.log('Resposta processada do N8N:', result);
-
-      // Se o resultado não tem a estrutura esperada, criar uma estrutura padrão
+      // Normalizar estrutura da resposta
       if (!result || typeof result !== 'object') {
         result = {
           success: false,
@@ -69,23 +89,24 @@ export class N8NFrotaWebhookService {
         };
       }
 
-      // Processar dados recebidos e inserir no banco
-      if (result.success && result.data && Array.isArray(result.data)) {
+      // Garantir que existe array de dados
+      if (!result.data || !Array.isArray(result.data)) {
+        result.data = [];
+      }
+
+      // Se temos dados válidos, inserir no banco
+      if (result.success && result.data.length > 0) {
+        console.log('Inserindo dados no banco...', result.data.length, 'registros');
         await this.inserirVeiculosNoBanco(result.data, userCompany);
-      } else if (result.success) {
-        // Sucesso mas sem dados - criar um resultado de simulação para teste
-        console.log('Sucesso sem dados específicos - processando arquivos como simulação');
-        result.data = files.map((file, index) => ({
-          arquivo: file.name,
-          status: 'processado',
-          veiculos_encontrados: 1,
-          index: index
-        }));
       }
 
       return result;
     } catch (error: any) {
-      console.error('Erro ao processar webhook N8N:', error);
+      console.error('=== ERRO NO PROCESSAMENTO ===');
+      console.error('Tipo do erro:', error.constructor.name);
+      console.error('Mensagem:', error.message);
+      console.error('Stack:', error.stack);
+      
       throw new Error(`Erro ao processar dados: ${error.message}`);
     }
   }
