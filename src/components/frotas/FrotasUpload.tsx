@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { N8NFrotaWebhookService } from '@/services/n8nFrotaWebhook';
 
 interface FrotasUploadProps {
   onSuccess: () => void;
@@ -38,6 +40,7 @@ interface UploadFile {
 
 export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [useAI, setUseAI] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -71,103 +74,77 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   };
 
   const processFiles = async () => {
-    if (files.length === 0) return;
+    if (files.length === 0 || !user?.company) return;
 
     setIsProcessing(true);
     
-    for (const fileItem of files) {
-      if (fileItem.status !== 'pending') continue;
+    try {
+      // Atualizar todos os arquivos para uploading
+      setFiles(prev => prev.map(f => 
+        f.status === 'pending' 
+          ? { ...f, status: 'uploading', progress: 20 }
+          : f
+      ));
 
-      try {
-        // Atualizar status para uploading
-        setFiles(prev => prev.map(f => 
-          f.id === fileItem.id 
-            ? { ...f, status: 'uploading', progress: 10 }
-            : f
-        ));
+      const filesToProcess = files
+        .filter(f => f.status === 'uploading')
+        .map(f => f.file);
 
-        // Simular upload
-        await simulateUpload(fileItem.id);
+      // Chamar webhook N8N
+      setFiles(prev => prev.map(f => 
+        f.status === 'uploading'
+          ? { ...f, status: 'processing', progress: 60 }
+          : f
+      ));
 
-        // Atualizar status para processing
-        setFiles(prev => prev.map(f => 
-          f.id === fileItem.id 
-            ? { ...f, status: 'processing', progress: 50 }
-            : f
-        ));
+      const result = await N8NFrotaWebhookService.processarDadosFrota(
+        filesToProcess, 
+        user.company
+      );
 
-        // Simular processamento
-        const result = await simulateProcessing(fileItem.file, useAI);
-
+      if (result.success) {
         // Atualizar status para completed
         setFiles(prev => prev.map(f => 
-          f.id === fileItem.id 
-            ? { ...f, status: 'completed', progress: 100, result }
+          f.status === 'processing'
+            ? { 
+                ...f, 
+                status: 'completed', 
+                progress: 100, 
+                result: {
+                  veiculosImportados: result.data?.length || 0,
+                  documentosAnexados: filesToProcess.length,
+                  erros: []
+                }
+              }
             : f
         ));
 
         toast({
-          title: "Arquivo processado",
-          description: `${result.veiculosImportados} veículos importados, ${result.documentosAnexados} documentos anexados`,
+          title: "Processamento concluído",
+          description: `${result.data?.length || 0} veículos importados com sucesso via N8N`,
         });
-
-      } catch (error: any) {
-        setFiles(prev => prev.map(f => 
-          f.id === fileItem.id 
-            ? { ...f, status: 'error', progress: 0, error: error.message }
-            : f
-        ));
-
-        toast({
-          title: "Erro no processamento",
-          description: error.message,
-          variant: "destructive",
-        });
+      } else {
+        throw new Error(result.message || 'Erro no processamento');
       }
+
+    } catch (error: any) {
+      console.error('Erro ao processar arquivos:', error);
+      
+      setFiles(prev => prev.map(f => 
+        f.status === 'uploading' || f.status === 'processing'
+          ? { ...f, status: 'error', progress: 0, error: error.message }
+          : f
+      ));
+
+      toast({
+        title: "Erro no processamento",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+      onSuccess();
     }
-
-    setIsProcessing(false);
-    onSuccess();
-  };
-
-  const simulateUpload = (fileId: string) => {
-    return new Promise((resolve) => {
-      let progress = 10;
-      const interval = setInterval(() => {
-        progress += 10;
-        setFiles(prev => prev.map(f => 
-          f.id === fileId 
-            ? { ...f, progress: Math.min(progress, 40) }
-            : f
-        ));
-        
-        if (progress >= 40) {
-          clearInterval(interval);
-          resolve(true);
-        }
-      }, 200);
-    });
-  };
-
-  const simulateProcessing = (file: File, useAI: boolean): Promise<any> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const isSuccess = Math.random() > 0.1; // 90% de sucesso
-        
-        if (isSuccess) {
-          const veiculosImportados = Math.floor(Math.random() * 5) + 1;
-          const documentosAnexados = Math.floor(Math.random() * 3) + 1;
-          
-          resolve({
-            veiculosImportados,
-            documentosAnexados,
-            erros: [],
-          });
-        } else {
-          reject(new Error('Erro ao processar arquivo: formato inválido'));
-        }
-      }, 2000);
-    });
   };
 
   const getFileIcon = (file: File) => {
