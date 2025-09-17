@@ -45,6 +45,7 @@ export function GestaoFrotas() {
   const { 
     veiculos, 
     loading, 
+    searchLoading,
     error, 
     refetch,
     kpis 
@@ -185,6 +186,7 @@ export function GestaoFrotas() {
                 kpis={kpis} 
                 veiculos={veiculos} 
                 loading={loading} 
+                searchLoading={searchLoading}
                 onRefetch={refetch}
                 filters={filters}
                 onFilterChange={handleFilterChange}

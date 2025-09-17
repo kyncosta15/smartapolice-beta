@@ -11,12 +11,13 @@ interface FrotasDashboardProps {
   kpis: FrotaKPIs;
   veiculos: FrotaVeiculo[];
   loading: boolean;
+  searchLoading: boolean;
   onRefetch?: () => void;
   filters: FrotaFilters;
   onFilterChange: (filters: Partial<FrotaFilters>) => void;
 }
 
-export function FrotasDashboard({ kpis, veiculos, loading, onRefetch, filters, onFilterChange }: FrotasDashboardProps) {
+export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefetch, filters, onFilterChange }: FrotasDashboardProps) {
 
   // Preparar dados para gráficos
   const categoriaData = React.useMemo(() => {
@@ -151,20 +152,42 @@ export function FrotasDashboard({ kpis, veiculos, loading, onRefetch, filters, o
           </CardTitle>
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-0 space-y-4">
-          {/* Filtros */}
-          <FrotasFilters
-            filters={filters}
-            onFilterChange={onFilterChange}
-            loading={loading}
-          />
+          <div className="relative">
+            {/* Search loading overlay */}
+            {searchLoading && (
+              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 rounded-lg flex items-center justify-center">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+                  Buscando veículos...
+                </div>
+              </div>
+            )}
+            
+            <FrotasFilters
+              filters={filters}
+              onFilterChange={onFilterChange}
+              loading={loading}
+            />
+          </div>
           
-          {/* Tabela */}
-          <FrotasTable 
-            veiculos={veiculos} 
-            loading={loading} 
-            onRefetch={onRefetch}
-            hideHeader={true}
-          />
+            <div className="relative">
+              {/* Search loading overlay for table */}
+              {searchLoading && (
+                <div className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 rounded-lg flex items-center justify-center">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground bg-background rounded-lg px-4 py-2 shadow-lg">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+                    Atualizando lista...
+                  </div>
+                </div>
+              )}
+              
+              <FrotasTable 
+                veiculos={veiculos} 
+                loading={loading} 
+                onRefetch={onRefetch}
+                hideHeader={true}
+              />
+            </div>
         </CardContent>
       </Card>
     </div>

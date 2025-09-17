@@ -1,7 +1,24 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export interface FrotaVeiculo {
   id: string;
@@ -97,13 +114,28 @@ export function useFrotasData(filters: FrotaFilters) {
   const { toast } = useToast();
   const [veiculos, setVeiculos] = useState<FrotaVeiculo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchVeiculos = async () => {
+  // Debounce search to avoid too many requests
+  const debouncedSearch = useDebounce(filters.search, 500);
+  
+  // Separate debounced filters for API calls
+  const debouncedFilters = useMemo(() => ({
+    ...filters,
+    search: debouncedSearch
+  }), [filters.categoria, filters.status, filters.marcaModelo, debouncedSearch]);
+
+  const fetchVeiculos = useCallback(async (isSearch = false) => {
     if (!user?.company) return;
 
     try {
-      setLoading(true);
+      // For search operations, show search loading instead of main loading
+      if (isSearch) {
+        setSearchLoading(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
 
       // Buscar empresa
@@ -129,17 +161,17 @@ export function useFrotasData(filters: FrotaFilters) {
         .eq('empresa_id', empresa.id);
 
       // Aplicar filtros
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
+      if (debouncedFilters.search) {
+        const searchTerm = debouncedFilters.search.toLowerCase();
         query = query.or(`placa.ilike.%${searchTerm}%,proprietario_doc.ilike.%${searchTerm}%,proprietario_nome.ilike.%${searchTerm}%,marca.ilike.%${searchTerm}%,modelo.ilike.%${searchTerm}%`);
       }
 
-      if (filters.categoria.length > 0) {
-        query = query.in('categoria', filters.categoria);
+      if (debouncedFilters.categoria.length > 0) {
+        query = query.in('categoria', debouncedFilters.categoria);
       }
 
-      if (filters.status.length > 0) {
-        query = query.in('status_seguro', filters.status);
+      if (debouncedFilters.status.length > 0) {
+        query = query.in('status_seguro', debouncedFilters.status);
       }
 
       const { data, error: fetchError } = await query
@@ -158,18 +190,40 @@ export function useFrotasData(filters: FrotaFilters) {
       });
     } finally {
       setLoading(false);
+      setSearchLoading(false);
     }
-  };
+  }, [user?.company, debouncedFilters, toast]);
 
+  // Initial load - only once when company changes
   useEffect(() => {
-    fetchVeiculos();
-  }, [user?.company, filters]);
+    if (user?.company) {
+      fetchVeiculos(false);
+    }
+  }, [user?.company]); // Only depend on company, not fetchVeiculos
+
+  // Handle all filter changes - only when actual filter values change
+  useEffect(() => {
+    if (!user?.company) return;
+
+    // Skip if this is the initial empty state
+    const hasAnyFilter = filters.search !== '' || filters.categoria.length > 0 || filters.status.length > 0 || filters.marcaModelo.length > 0;
+    if (!hasAnyFilter) return;
+
+    // For search, wait for debounce to complete
+    if (filters.search !== '' && debouncedSearch !== filters.search) {
+      return;
+    }
+
+    // Determine if this is a search operation
+    const isSearchOperation = debouncedSearch !== '';
+    fetchVeiculos(isSearchOperation);
+  }, [user?.company, debouncedSearch, filters.categoria, filters.status, filters.marcaModelo]); // Direct dependencies, not debouncedFilters
 
   // Escutar eventos de atualização da frota
   useEffect(() => {
     const handleFrotaUpdate = () => {
       console.log('Evento de atualização da frota recebido');
-      fetchVeiculos();
+      fetchVeiculos(false);
     };
 
     window.addEventListener('frota-data-updated', handleFrotaUpdate);
@@ -177,7 +231,7 @@ export function useFrotasData(filters: FrotaFilters) {
     return () => {
       window.removeEventListener('frota-data-updated', handleFrotaUpdate);
     };
-  }, []);
+  }, []); // No dependencies to avoid re-creating the listener
 
   // Calcular KPIs
   const kpis = useMemo((): FrotaKPIs => {
@@ -222,13 +276,14 @@ export function useFrotasData(filters: FrotaFilters) {
     };
   }, [veiculos]);
 
-  const refetch = () => {
-    fetchVeiculos();
-  };
+  const refetch = useCallback(() => {
+    fetchVeiculos(false);
+  }, [fetchVeiculos]);
 
   return {
     veiculos,
     loading,
+    searchLoading,
     error,
     refetch,
     kpis,
