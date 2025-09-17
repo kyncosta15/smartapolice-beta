@@ -70,7 +70,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'vi
 
     try {
       setFipeLoading(true);
-      const result = await updateFipePrice({
+      const result = await fipeService.getPrice({
         placa: formData.placa,
         marca: formData.marca,
         modelo: formData.modelo,
@@ -79,8 +79,17 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'vi
 
       handleInputChange('preco_fipe', result.valor);
       setFipeLastUpdate(result.atualizadoEm);
-    } catch (error) {
-      // Error is handled by the hook
+      
+      toast({
+        title: "Valor FIPE atualizado",
+        description: `Valor: R$ ${result.valor.toLocaleString('pt-BR')}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao consultar FIPE",
+        description: error.message || "Não foi possível obter o valor FIPE",
+        variant: "destructive"
+      });
     } finally {
       setFipeLoading(false);
     }
