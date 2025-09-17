@@ -18,7 +18,9 @@ import {
   Calendar,
   Upload,
   RefreshCw,
-  X
+  X,
+  Eye,
+  Edit
 } from 'lucide-react';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { formatCurrency } from '@/utils/currencyFormatter';
@@ -168,15 +170,30 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'vi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <Car className="h-5 w-5" />
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span>{formData.marca} {formData.modelo}</span>
-              <span className="text-sm font-mono text-muted-foreground">{formData.placa}</span>
-              <div className="flex gap-2">
-                {getCategoriaBadge(formData.categoria)}
-                {getStatusBadge(formData.status_seguro || 'sem_seguro')}
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Car className="h-5 w-5" />
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <span>{formData.marca} {formData.modelo}</span>
+                <span className="text-sm font-mono text-muted-foreground">{formData.placa}</span>
+                <div className="flex gap-2">
+                  {getCategoriaBadge(formData.categoria)}
+                  {getStatusBadge(formData.status_seguro || 'sem_seguro')}
+                </div>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {mode === 'view' ? (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  <Eye className="h-3 w-3 mr-1" />
+                  Visualização
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                  <Edit className="h-3 w-3 mr-1" />
+                  Editando
+                </Badge>
+              )}
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -495,15 +512,49 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'vi
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Fechar
-          </Button>
-          {mode === 'edit' && (
-            <Button onClick={handleSave} disabled={loading}>
-              {loading ? 'Salvando...' : 'Salvar'}
+        <div className="flex justify-between items-center gap-2 pt-4 border-t">
+          <div>
+            {mode === 'view' && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  // Switch to edit mode
+                  if (onSave) {
+                    onOpenChange(false);
+                    // Reopen in edit mode by calling parent handler
+                    setTimeout(() => {
+                      // This will be handled by the parent component
+                      window.dispatchEvent(new CustomEvent('editVehicle', { detail: veiculo?.id }));
+                    }, 100);
+                  }
+                }}
+                className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Editar Veículo
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              {mode === 'edit' ? 'Cancelar' : 'Fechar'}
             </Button>
-          )}
+            {mode === 'edit' && (
+              <Button onClick={handleSave} disabled={loading} className="bg-green-600 hover:bg-green-700">
+                {loading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Car className="h-4 w-4 mr-2" />
+                    Salvar Alterações
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

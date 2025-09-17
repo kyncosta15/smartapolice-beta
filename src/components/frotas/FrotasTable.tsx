@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -85,10 +85,10 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" sideOffset={6} className="z-50 bg-background">
-          <DropdownMenuItem onClick={() => onEdit(veiculo.id)}>
-            <Edit className="mr-2 h-4 w-4" /> Editar
+          <DropdownMenuItem onClick={() => onEdit(veiculo.id)} className="text-blue-700 focus:text-blue-800">
+            <Edit className="mr-2 h-4 w-4" /> Editar Veículo
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onDocs(veiculo.id)}>
+          <DropdownMenuItem onClick={() => onDocs(veiculo.id)} className="text-gray-600 focus:text-gray-800">
             <FileText className="mr-2 h-4 w-4" /> Documentos
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -101,6 +101,21 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   const [selectedVeiculo, setSelectedVeiculo] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
+  // Add event listener for edit mode switching
+  useEffect(() => {
+    const handleEditEvent = (event: any) => {
+      if (event.detail && veiculos.length > 0) {
+        const currentVeiculo = veiculos.find(v => v.id === event.detail);
+        if (currentVeiculo) {
+          handleEdit(event.detail);
+        }
+      }
+    };
+
+    window.addEventListener('editVehicle', handleEditEvent);
+    return () => window.removeEventListener('editVehicle', handleEditEvent);
+  }, [veiculos]);
+
   const isMobile = useIsMobile();
 
   const handleView = (id: string) => {
