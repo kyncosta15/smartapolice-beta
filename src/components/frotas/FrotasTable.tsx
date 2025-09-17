@@ -284,19 +284,19 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
               ) : (
                 // Versão desktop: tabela
                 <div className="w-full overflow-x-auto">
-                  <Table className="min-w-[900px]">
+                  <Table className="min-w-[1200px] w-full">
                     <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                       <TableRow>
                         <TableHead className="min-w-[200px] bg-background" scope="col">Veículo</TableHead>
-                        <TableHead className="bg-background" scope="col">Placa</TableHead>
-                        <TableHead className="bg-background" scope="col">Proprietário</TableHead>
-                        <TableHead className="bg-background" scope="col">Emplacamento</TableHead>
-                        <TableHead className="bg-background" scope="col">Status Seguro</TableHead>
-                        <TableHead className="bg-background" scope="col">FIPE</TableHead>
-                        <TableHead className="bg-background" scope="col">Valor NF</TableHead>
-                        <TableHead className="bg-background" scope="col">Modalidade</TableHead>
-                        <TableHead className="bg-background" scope="col">Responsável</TableHead>
-                        <TableHead className="w-24 bg-background text-right" scope="col">Ações</TableHead>
+                        <TableHead className="min-w-[120px] bg-background" scope="col">Placa</TableHead>
+                        <TableHead className="min-w-[150px] bg-background" scope="col">Proprietário</TableHead>
+                        <TableHead className="min-w-[120px] bg-background" scope="col">Emplacamento</TableHead>
+                        <TableHead className="min-w-[120px] bg-background" scope="col">Status Seguro</TableHead>
+                        <TableHead className="min-w-[100px] bg-background" scope="col">FIPE</TableHead>
+                        <TableHead className="min-w-[100px] bg-background" scope="col">Valor NF</TableHead>
+                        <TableHead className="min-w-[120px] bg-background" scope="col">Modalidade</TableHead>
+                        <TableHead className="min-w-[120px] bg-background" scope="col">Responsável</TableHead>
+                        <TableHead className="w-[120px] min-w-[120px] bg-background text-right sticky right-0 bg-background border-l shadow-sm" scope="col">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                   <TableBody className="[&_tr:hover]:bg-muted/50">
@@ -408,7 +408,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
                             )}
                           </TableCell>
 
-                          <TableCell className="relative text-right">
+                          <TableCell className="w-[120px] min-w-[120px] text-right sticky right-0 bg-background border-l">
                             <VehicleActions
                               veiculo={veiculo}
                               onView={handleView}
