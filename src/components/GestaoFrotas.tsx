@@ -165,36 +165,36 @@ export function GestaoFrotas() {
       <div className="flex-1 min-h-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col min-h-0">
           <div className="flex-none border-b border-gray-200 bg-white px-3 sm:px-4 md:px-6">
-            <div className="overflow-x-auto scrollbar-gutter-stable">
-              <nav className="inline-flex gap-2 pr-2">
-                <TabsList className="h-12 p-1 bg-gray-100 rounded-lg">
+            <div className="overflow-x-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300">
+              <nav className="inline-flex gap-1 pr-2 py-2">
+                <TabsList className="h-10 sm:h-12 p-1 bg-gray-100 rounded-lg flex-shrink-0">
                   <TabsTrigger 
                     value="frotas" 
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm"
+                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
                   >
-                    <Car className="h-4 w-4" />
-                    <span className="hidden sm:inline">Frotas</span>
+                    <Car className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span>Frotas</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="fipe" 
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm"
+                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
                   >
-                    <TrendingUp className="h-4 w-4" />
-                    <span className="hidden sm:inline">FIPE</span>
+                    <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span>FIPE</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="documentos" 
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm"
+                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
                   >
-                    <FileText className="h-4 w-4" />
-                    <span className="hidden sm:inline">Docs</span>
+                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span>Docs</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="upload" 
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm"
+                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
                   >
-                    <Upload className="h-4 w-4" />
-                    <span className="hidden sm:inline">Upload</span>
+                    <Upload className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span>Upload</span>
                   </TabsTrigger>
                 </TabsList>
               </nav>
@@ -202,13 +202,13 @@ export function GestaoFrotas() {
           </div>
         
           {/* KPI Cards - shown right after tabs */}
-          <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200">
+          <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 bg-gray-50">
             <FrotasKPICards kpis={kpis} loading={loading} />
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 min-h-0">
-            <TabsContent value="frotas" className="h-full flex flex-col min-h-0 p-3 sm:p-4 md:p-6">
+          <div className="flex-1 min-h-0 bg-gray-50">
+            <TabsContent value="frotas" className="h-full flex flex-col min-h-0 p-3 sm:p-4 md:p-6 m-0">
               <FrotasDashboard 
                 kpis={kpis} 
                 veiculos={veiculos} 
@@ -220,23 +220,23 @@ export function GestaoFrotas() {
               />
             </TabsContent>
 
-            <TabsContent value="sinistros" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">
+            <TabsContent value="sinistros" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
               <SinistrosDashboard loading={loading} />
             </TabsContent>
 
-            <TabsContent value="assistencia" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">
+            <TabsContent value="assistencia" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
               <AssistenciaDashboard loading={loading} />
             </TabsContent>
 
-            <TabsContent value="fipe" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">
+            <TabsContent value="fipe" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
               <FrotasFipe veiculos={veiculos} loading={loading} />
             </TabsContent>
 
-            <TabsContent value="documentos" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">
+            <TabsContent value="documentos" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
               <FrotasDocumentos veiculos={veiculos} loading={loading} />
             </TabsContent>
 
-            <TabsContent value="upload" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">
+            <TabsContent value="upload" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
               <FrotasUpload onSuccess={refetch} />
             </TabsContent>
           </div>

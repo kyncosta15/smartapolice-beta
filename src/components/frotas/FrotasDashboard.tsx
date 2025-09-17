@@ -96,17 +96,17 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Charts and Analytics */}
-      <div className="grid grid-cols-1 gap-4 lg:gap-6 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
         {/* Categories Distribution Chart */}
-        <Card className="rounded-xl border bg-white p-3 md:p-4">
-          <CardHeader className="pb-2">
+        <Card className="rounded-xl border bg-white">
+          <CardHeader className="pb-2 p-3 md:p-4">
             <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
               <PieChartIcon className="h-5 w-5 text-blue-600" />
               Distribuição por Categoria
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-64">
+          <CardContent className="p-3 md:p-4">
+            <div className="h-64 md:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -115,7 +115,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 768 ? 70 : 80}
                     fill="#8884d8"
                   >
                     {categoriaData.map((entry, index) => (
