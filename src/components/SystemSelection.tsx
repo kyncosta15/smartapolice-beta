@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import smartapoliceShield from '@/assets/smartapolice-shield.png';
+import smartapoliceShield from '@/assets/smartapolice-new-shield.png';
 import smartbeneficiosPeopleHeart from '@/assets/smartbeneficios-people-heart.png';
 
 export const SystemSelection = () => {
