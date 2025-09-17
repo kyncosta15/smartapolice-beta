@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import smartapoliceShield from '@/assets/smartapolice-new-shield.png';
+import smartapoliceShield from '@/assets/smartapolice-shield-transparent.png';
 import smartbeneficiosPeopleHeart from '@/assets/smartbeneficios-people-heart.png';
 
 export const SystemSelection = () => {
@@ -48,7 +48,7 @@ export const SystemSelection = () => {
               
               <CardHeader className="text-center pb-4 relative z-10">
                 <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
-                  <img src={smartapoliceShield} alt="SmartApólice Shield" className="h-20 w-20 object-contain group-hover:scale-110 transition-transform duration-300" />
+                  <img src={smartapoliceShield} alt="SmartApólice Shield" className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">SmartApólice</CardTitle>
               </CardHeader>
