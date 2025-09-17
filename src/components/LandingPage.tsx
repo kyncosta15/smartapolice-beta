@@ -9,84 +9,120 @@ export const LandingPage = () => {
     <div className="min-h-screen flex relative overflow-hidden">
       {/* Left side - Content */}
       <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/10 via-[hsl(var(--off-white-dark))] to-secondary/10 flex flex-col relative z-10">
-        {/* Header */}
-        <header className="p-6 md:p-6 pt-8 md:pt-6 text-center">
-          {/* Animated Logo above RCorp */}
-          <div className="flex justify-center mb-6 md:mb-6">
-            <div className="relative">
-              {/* Outer glow ring */}
-              <div className="absolute inset-0 w-44 h-44 md:w-24 md:h-24 bg-primary/20 rounded-2xl animate-ping" style={{ animationDuration: '2s' }}></div>
-              
-              {/* Main container */}
-               <div className="relative w-40 h-40 md:w-20 md:h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
+        <section className="isolate">
+          <div className="mx-auto max-w-screen-md px-6 py-12 sm:py-16 text-center min-h-[75vh]">
+            {/* Logo */}
+            <div className="mx-auto mb-8">
+              <div className="relative inline-block">
                 <picture>
                   <source 
                     srcSet="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414-optimized.webp" 
                     type="image/webp"
-                    sizes="(max-width: 768px) 160px, 80px"
+                    sizes="(max-width: 768px) 80px, 96px"
                   />
                   <img 
                     src="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414.png" 
-                    alt="RCorp Logo" 
-                    className="w-full h-full object-cover rounded-2xl" 
-                    width="160"
-                    height="160"
+                    alt="RCorp — soluções corporativas inteligentes" 
+                    className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-2xl shadow-sm mx-auto" 
+                    width="96"
+                    height="96"
                     loading="eager"
                     decoding="sync"
-                    style={{ 
-                      filter: 'drop-shadow(0 0 12px rgba(59, 130, 246, 0.4))'
-                    }} 
                   />
                 </picture>
               </div>
             </div>
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-primary mb-1 relative overflow-hidden">
-            <span className="relative inline-block">
-              RCorp
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent" 
-                   style={{ 
-                     animation: 'shimmer 2.5s ease-in-out infinite'
-                   }}>
-              </div>
-            </span>
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            Soluções corporativas inteligentes
-          </p>
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 flex items-center justify-center p-6">
-          <div className="max-w-md w-full text-center space-y-12">
-            {/* Hero Section */}
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-semibold text-foreground">
-                Transforme a gestão da sua empresa
-              </h2>
-              <p className="text-lg text-muted-foreground">
-                Acesse nossas soluções inteligentes para otimizar processos e maximizar resultados
+            
+            {/* Brand */}
+            <div className="mb-6">
+              <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2 relative overflow-hidden">
+                <span className="relative inline-block">
+                  RCorp
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent" 
+                       style={{ 
+                         animation: 'shimmer 2.5s ease-in-out infinite'
+                       }}>
+                  </div>
+                </span>
+              </h1>
+              <p className="text-base text-muted-foreground">
+                Soluções corporativas inteligentes
               </p>
             </div>
 
-            {/* CTA Button */}
-            <div>
+            {/* Hero Title */}
+            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground mb-4" 
+                style={{ textWrap: 'balance' as any }}>
+              Transforme a gestão da sua empresa
+            </h2>
+
+            {/* Description */}
+            <p className="mx-auto mt-4 max-w-prose text-base sm:text-lg text-muted-foreground mb-6">
+              Acesse soluções inteligentes para otimizar processos e maximizar resultados
+            </p>
+
+            {/* Value Props */}
+            <ul className="mx-auto mt-5 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground mb-8">
+              <li className="rounded-full bg-background/80 backdrop-blur-sm px-3 py-1 border border-border/50">
+                Reduza custos
+              </li>
+              <li className="rounded-full bg-background/80 backdrop-blur-sm px-3 py-1 border border-border/50">
+                Centralize documentos
+              </li>
+              <li className="rounded-full bg-background/80 backdrop-blur-sm px-3 py-1 border border-border/50">
+                Monitore sinistros
+              </li>
+            </ul>
+
+            {/* CTAs */}
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
               <Link to="/system-selection">
-                <Button variant="gradient" size="lg" className="text-lg px-8 py-4 group">
-                  Entrar
+                <Button 
+                  variant="gradient" 
+                  size="lg" 
+                  className="text-base font-medium px-6 py-3 min-h-[44px] group w-full sm:w-auto"
+                >
+                  Entrar no painel
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="text-base font-medium px-4 py-3 min-h-[44px] w-full sm:w-auto"
+                asChild
+              >
+                <Link to="/system-selection">
+                  Ver soluções
+                </Link>
+              </Button>
             </div>
-          </div>
-        </main>
 
-         {/* Footer */}
-         <footer className="p-6 text-center text-muted-foreground">
-           <p>&copy; 2025 RCorp. Todos os direitos reservados.</p>
-         </footer>
+            {/* Trust Elements */}
+            <div className="mt-10 text-center">
+              <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <span>Sistema seguro</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Heart className="h-4 w-4 text-primary" />
+                  <span>Fácil de usar</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-primary">277+</span>
+                  <span>veículos gerenciados</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <footer className="mt-10 text-xs text-muted-foreground">
+              <p>&copy; 2025 RCorp. Todos os direitos reservados.</p>
+            </footer>
+          </div>
+        </section>
       </div>
 
       {/* Right side - Background Image */}
