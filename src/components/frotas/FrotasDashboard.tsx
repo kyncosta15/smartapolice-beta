@@ -83,7 +83,7 @@ export function FrotasDashboard({ kpis, veiculos, loading }: FrotasDashboardProp
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card className="rounded-xl border bg-white p-4 md:p-5 min-h-[88px] flex flex-col justify-between">
           <div className="flex items-center justify-between space-y-0 pb-2">
             <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
@@ -154,7 +154,7 @@ export function FrotasDashboard({ kpis, veiculos, loading }: FrotasDashboardProp
       </div>
 
       {/* Additional KPIs */}
-      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Card className="rounded-xl border bg-white p-3 md:p-4 min-h-[88px] flex flex-col justify-between">
           <div className="flex items-center justify-between space-y-0 pb-2">
             <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
@@ -199,14 +199,15 @@ export function FrotasDashboard({ kpis, veiculos, loading }: FrotasDashboardProp
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* Chart Wrapper with responsive heights */}
         {/* Distribuição por Categoria */}
         <Card className="rounded-xl border bg-white p-3 md:p-4">
           <h3 className="font-semibold mb-3 flex items-center gap-2 text-base md:text-lg">
             <PieChart className="h-5 w-5 text-blue-600 flex-shrink-0" />
             <span className="break-words leading-tight">Distribuição por Categoria</span>
           </h3>
-          <div className="w-full h-[240px] sm:h-[300px] md:h-[360px]">
+          <div className="w-full h-48 md:h-64 xl:h-80 overflow-x-auto">
             {categoriaData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
@@ -241,7 +242,7 @@ export function FrotasDashboard({ kpis, veiculos, loading }: FrotasDashboardProp
             <Car className="h-5 w-5 text-green-600 flex-shrink-0" />
             <span className="break-words leading-tight">Top Marcas/Modelos</span>
           </h3>
-          <div className="w-full h-[240px] sm:h-[300px] md:h-[360px]">
+          <div className="w-full h-48 md:h-64 xl:h-80 overflow-x-auto">
             {marcasData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={marcasData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>

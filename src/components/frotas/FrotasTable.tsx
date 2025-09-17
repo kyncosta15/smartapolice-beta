@@ -78,9 +78,6 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onSelect={() => onView(veiculo.id)}>
-            <Eye className="mr-2 h-4 w-4" /> Ver detalhes
-          </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => onEdit(veiculo.id)}>
             <Edit className="mr-2 h-4 w-4" /> Editar
           </DropdownMenuItem>

@@ -203,9 +203,6 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs }: VehicleCardProps) {
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="min-w-44">
-              <DropdownMenuItem onClick={() => onView(veiculo.id)}>
-                <Eye className="mr-2 h-4 w-4" /> Ver detalhes
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(veiculo.id)}>
                 <Edit className="mr-2 h-4 w-4" /> Editar
               </DropdownMenuItem>
