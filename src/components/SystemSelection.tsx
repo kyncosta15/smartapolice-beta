@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import smartapoliceShield from '@/assets/smartapolice-shield-transparent.png';
-import smartbeneficiosPeopleHeart from '@/assets/smartbeneficios-people-heart.png';
+import smartbeneficiosPeopleHeart from '@/assets/smartbeneficios-transparent.png';
 
 export const SystemSelection = () => {
   const navigate = useNavigate();
@@ -76,8 +76,8 @@ export const SystemSelection = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
               
               <CardHeader className="text-center pb-4 relative z-10">
-                <div className="w-24 h-24 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-secondary/30 group-hover:to-secondary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
-                  <img src={smartbeneficiosPeopleHeart} alt="SmartBenefícios People and Heart" className="h-20 w-20 object-contain group-hover:scale-110 transition-transform duration-300" />
+                <div className="w-28 h-28 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-secondary/30 group-hover:to-secondary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
+                  <img src={smartbeneficiosPeopleHeart} alt="SmartBenefícios People and Heart" className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-secondary bg-clip-text text-transparent">SmartBenefícios</CardTitle>
               </CardHeader>
