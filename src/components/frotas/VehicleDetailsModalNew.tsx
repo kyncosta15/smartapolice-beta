@@ -211,60 +211,60 @@ export function VehicleDetailsModalNew({
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             <div className="shrink-0 px-1 py-4">
-              <div className="flex flex-wrap gap-2 md:gap-1">
+              <TabsList className="grid grid-cols-4 md:grid-cols-7 gap-1 h-auto p-1 bg-gray-100">
                 <TabsTrigger 
                   value="veiculo" 
-                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-2 py-2 text-xs md:text-sm"
                 >
-                  <Car className="h-4 w-4 mr-2" />
+                  <Car className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                   <span className="hidden sm:inline">Veículo</span>
                   <span className="sm:hidden">Info</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="proprietario" 
-                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-2 py-2 text-xs md:text-sm"
                 >
-                  <User className="h-4 w-4 mr-2" />
+                  <User className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                   <span className="hidden sm:inline">Proprietário</span>
                   <span className="sm:hidden">Dono</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="emplacamento" 
-                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-2 py-2 text-xs md:text-sm"
                 >
-                  <FileText className="h-4 w-4 mr-2" />
+                  <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                   <span className="hidden sm:inline">Emplacamento</span>
                   <span className="sm:hidden">Docs</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="seguro" 
-                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-2 py-2 text-xs md:text-sm"
                 >
-                  <Shield className="h-4 w-4 mr-2" />
+                  <Shield className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                   <span>Seguro</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="operacao" 
-                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-2 py-2 text-xs md:text-sm"
                 >
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                   <span>Operação</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="valores" 
-                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-2 py-2 text-xs md:text-sm"
                 >
-                  <DollarSign className="h-4 w-4 mr-2" />
+                  <DollarSign className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                   <span>Valores</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="sinistros" 
-                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-2 py-2 text-xs md:text-sm"
                 >
-                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                   <span>Sinistros</span>
                 </TabsTrigger>
-              </div>
+              </TabsList>
             </div>
 
             <div className="flex-1 overflow-y-auto px-2">
