@@ -42,6 +42,8 @@ interface FrotasTableProps {
   onRefetch: () => void;
   /** Altura máxima da área da tabela. Ex: '60vh' ou 'calc(100vh - 220px)' */
   maxHeight?: string;
+  /** Ocultar o header do card (quando usado dentro de outro card) */
+  hideHeader?: boolean;
 }
 
 interface VehicleActionsProps {
@@ -95,7 +97,7 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps
   );
 }
 
-export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }: FrotasTableProps) {
+export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', hideHeader = false }: FrotasTableProps) {
   const [selectedVeiculo, setSelectedVeiculo] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -202,6 +204,22 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
   };
 
   if (loading) {
+    if (hideHeader) {
+      return (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="animate-pulse flex space-x-3 p-3 border rounded-lg">
+              <div className="rounded-full bg-gray-200 h-10 w-10 flex-shrink-0"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
     return (
       <Card className="border-0 shadow-sm rounded-xl">
         <CardHeader className="p-3 md:p-4">
@@ -228,6 +246,25 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
   }
 
   if (veiculos.length === 0 && !loading) {
+    const emptyContent = (
+      <div className="text-center py-8 sm:py-12">
+        <Car className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Nenhum veículo encontrado
+        </h3>
+        <p className="text-gray-500 mb-4 text-sm sm:text-base break-words">
+          Não há veículos cadastrados ou que correspondam aos filtros aplicados.
+        </p>
+        <Button onClick={onRefetch} variant="outline" size="sm">
+          Recarregar dados
+        </Button>
+      </div>
+    );
+
+    if (hideHeader) {
+      return emptyContent;
+    }
+    
     return (
       <Card className="border-0 shadow-sm rounded-xl">
         <CardHeader className="p-3 md:p-4">
@@ -237,49 +274,28 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
           </CardTitle>
         </CardHeader>
         <CardContent className="p-3 md:p-4">
-          <div className="text-center py-8 sm:py-12">
-            <Car className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Nenhum veículo encontrado
-            </h3>
-            <p className="text-gray-500 mb-4 text-sm sm:text-base break-words">
-              Não há veículos cadastrados ou que correspondam aos filtros aplicados.
-            </p>
-            <Button onClick={onRefetch} variant="outline" size="sm">
-              Recarregar dados
-            </Button>
-          </div>
+          {emptyContent}
         </CardContent>
       </Card>
     );
   }
 
-  return (
-    <>
-      <Card className="border-0 shadow-sm rounded-xl">
-        <CardHeader className="p-3 md:p-4">
-          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-            <Car className="h-5 w-5" />
-            Lista de Veículos ({veiculos.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Wrapper com scroll próprio */}
-          <div
-            className="w-full overflow-x-auto max-h-[60vh] md:max-h-[50vh] overflow-y-auto overscroll-contain pr-1 -mr-1"
-            tabIndex={0}
-            aria-label="Lista de veículos rolável"
-          >
-            <div className="p-3 md:p-4">
-              {isMobile ? (
-                // Versão mobile: cards
-                <VehicleListMobile
-                  veiculos={veiculos}
-                  onView={handleView}
-                  onEdit={handleEdit}
-                  onDocs={handleDocs}
-                />
-              ) : (
+  const tableContent = (
+    <div
+      className="w-full overflow-x-auto max-h-[60vh] md:max-h-[50vh] overflow-y-auto overscroll-contain pr-1 -mr-1"
+      tabIndex={0}
+      aria-label="Lista de veículos rolável"
+    >
+      <div className="p-3 md:p-4">
+        {isMobile ? (
+          // Versão mobile: cards
+          <VehicleListMobile
+            veiculos={veiculos}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDocs={handleDocs}
+          />
+        ) : (
                 // Versão desktop: tabela
                 <div className="w-full overflow-x-auto">
                   <Table className="min-w-[1200px] w-full">
@@ -419,10 +435,36 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
                     })}
                   </TableBody>
                   </Table>
-                </div>
-              )}
-            </div>
           </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (hideHeader) {
+    return (
+      <>
+        {tableContent}
+        <VehicleDetailsModal 
+          veiculo={selectedVeiculo}
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Card className="border-0 shadow-sm rounded-xl">
+        <CardHeader className="p-3 md:p-4">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Car className="h-5 w-5" />
+            Lista de Veículos ({veiculos.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {tableContent}
         </CardContent>
       </Card>
 

@@ -178,19 +178,17 @@ export function GestaoFrotas() {
             <FrotasKPICards kpis={kpis} loading={loading} />
           </div>
 
-          {/* Filters */}
-          <div className="flex-none border-b border-gray-200 bg-gray-50 p-3 sm:p-4 md:p-6">
-            <FrotasFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              loading={loading}
-            />
-          </div>
-
           {/* Tab Content */}
           <div className="flex-1 min-h-0">
             <TabsContent value="frotas" className="h-full flex flex-col min-h-0 p-3 sm:p-4 md:p-6">
-              <FrotasDashboard kpis={kpis} veiculos={veiculos} loading={loading} onRefetch={refetch} />
+              <FrotasDashboard 
+                kpis={kpis} 
+                veiculos={veiculos} 
+                loading={loading} 
+                onRefetch={refetch}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+              />
             </TabsContent>
 
             <TabsContent value="fipe" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">

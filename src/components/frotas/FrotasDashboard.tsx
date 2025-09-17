@@ -1,29 +1,22 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Car, 
-  AlertTriangle, 
-  Calendar, 
-  TrendingUp,
-  CreditCard,
-  PieChart
-} from 'lucide-react';
-import { formatCurrency } from '@/utils/currencyFormatter';
-import { FrotaVeiculo, FrotaKPIs } from '@/hooks/useFrotasData';
-import { ResponsiveContainer, PieChart as RechartsPieChart, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Pie } from 'recharts';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { FrotasTable } from './FrotasTable';
+import { FrotasFilters } from './FrotasFilters';
+import { FrotaVeiculo, FrotaKPIs } from '@/hooks/useFrotasData';
+import { FrotaFilters } from '../GestaoFrotas';
+import { Pie, PieChart, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { Car, PieChart as PieChartIcon } from 'lucide-react';
 
 interface FrotasDashboardProps {
   kpis: FrotaKPIs;
   veiculos: FrotaVeiculo[];
   loading: boolean;
   onRefetch?: () => void;
+  filters: FrotaFilters;
+  onFilterChange: (filters: Partial<FrotaFilters>) => void;
 }
 
-export function FrotasDashboard({ kpis, veiculos, loading, onRefetch }: FrotasDashboardProps) {
-  const isMobile = useIsMobile();
+export function FrotasDashboard({ kpis, veiculos, loading, onRefetch, filters, onFilterChange }: FrotasDashboardProps) {
 
   // Preparar dados para gráficos
   const categoriaData = React.useMemo(() => {
@@ -90,14 +83,14 @@ export function FrotasDashboard({ kpis, veiculos, loading, onRefetch }: FrotasDa
         <Card className="rounded-xl border bg-white p-3 md:p-4">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-blue-600" />
+              <PieChartIcon className="h-5 w-5 text-blue-600" />
               Distribuição por Categoria
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart>
+                <PieChart>
                   <Pie
                     data={categoriaData}
                     dataKey="value"
@@ -113,7 +106,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, onRefetch }: FrotasDa
                   </Pie>
                   <Tooltip />
                   <Legend />
-                </RechartsPieChart>
+                </PieChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -149,14 +142,31 @@ export function FrotasDashboard({ kpis, veiculos, loading, onRefetch }: FrotasDa
         </Card>
       </div>
 
-      {/* Vehicle List Table */}
-      <div className="mt-6">
-        <FrotasTable 
-          veiculos={veiculos}
-          loading={loading}
-          onRefetch={onRefetch || (() => {})}
-        />
-      </div>
+      {/* Lista de Veículos com Filtros */}
+      <Card className="border-0 shadow-sm rounded-xl">
+        <CardHeader className="p-3 md:p-4">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Car className="h-5 w-5" />
+            Lista de Veículos ({veiculos.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 md:p-4 pt-0 space-y-4">
+          {/* Filtros */}
+          <FrotasFilters
+            filters={filters}
+            onFilterChange={onFilterChange}
+            loading={loading}
+          />
+          
+          {/* Tabela */}
+          <FrotasTable 
+            veiculos={veiculos} 
+            loading={loading} 
+            onRefetch={onRefetch}
+            hideHeader={true}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
