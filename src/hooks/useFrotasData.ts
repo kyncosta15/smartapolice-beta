@@ -131,13 +131,7 @@ export function useFrotasData(filters: FrotaFilters) {
       // Aplicar filtros
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();
-        query = query.or(`
-          placa.ilike.%${searchTerm}%,
-          proprietario_doc.ilike.%${searchTerm}%,
-          proprietario_nome.ilike.%${searchTerm}%,
-          marca.ilike.%${searchTerm}%,
-          modelo.ilike.%${searchTerm}%
-        `);
+        query = query.or(`placa.ilike.%${searchTerm}%,proprietario_doc.ilike.%${searchTerm}%,proprietario_nome.ilike.%${searchTerm}%,marca.ilike.%${searchTerm}%,modelo.ilike.%${searchTerm}%`);
       }
 
       if (filters.categoria.length > 0) {

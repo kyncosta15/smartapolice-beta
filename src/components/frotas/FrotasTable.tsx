@@ -20,8 +20,7 @@ import {
   User,
   Shield,
   Calendar,
-  DollarSign,
-  Search
+  DollarSign
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -43,10 +42,6 @@ interface FrotasTableProps {
   onRefetch: () => void;
   /** Altura máxima da área da tabela. Ex: '60vh' ou 'calc(100vh - 220px)' */
   maxHeight?: string;
-  /** Valor da busca atual */
-  searchValue?: string;
-  /** Callback para mudança na busca */
-  onSearchChange?: (value: string) => void;
 }
 
 interface VehicleActionsProps {
@@ -100,32 +95,10 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps
   );
 }
 
-export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', searchValue = '', onSearchChange }: FrotasTableProps) {
+export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }: FrotasTableProps) {
   const [selectedVeiculo, setSelectedVeiculo] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const isMobile = useIsMobile();
-
-  // Filtrar veículos baseado na busca local
-  const filteredVeiculos = React.useMemo(() => {
-    if (!searchValue.trim()) return veiculos;
-    
-    const searchTerm = searchValue.toLowerCase().trim();
-    return veiculos.filter((veiculo) => {
-      const searchFields = [
-        veiculo.marca,
-        veiculo.modelo,
-        veiculo.placa,
-        veiculo.proprietario_nome,
-        veiculo.proprietario_doc,
-        veiculo.ano_modelo?.toString(),
-        veiculo.categoria
-      ].filter(Boolean);
-      
-      return searchFields.some(field => 
-        field?.toString().toLowerCase().includes(searchTerm)
-      );
-    });
-  }, [veiculos, searchValue]);
 
   const handleView = (id: string) => {
     const veiculo = veiculos.find(v => v.id === id);
@@ -254,7 +227,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
     );
   }
 
-  if (filteredVeiculos.length === 0 && !loading) {
+  if (veiculos.length === 0 && !loading) {
     return (
       <Card className="border-0 shadow-sm rounded-xl">
         <CardHeader className="p-3 md:p-4">
@@ -267,23 +240,14 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
           <div className="text-center py-8 sm:py-12">
             <Car className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {searchValue ? 'Nenhum veículo encontrado' : 'Nenhum veículo cadastrado'}
+              Nenhum veículo encontrado
             </h3>
             <p className="text-gray-500 mb-4 text-sm sm:text-base break-words">
-              {searchValue 
-                ? `Não há veículos que correspondam à busca "${searchValue}".`
-                : 'Não há veículos cadastrados ou que correspondam aos filtros aplicados.'
-              }
+              Não há veículos cadastrados ou que correspondam aos filtros aplicados.
             </p>
-            {searchValue ? (
-              <Button onClick={() => onSearchChange?.('')} variant="outline" size="sm">
-                Limpar busca
-              </Button>
-            ) : (
-              <Button onClick={onRefetch} variant="outline" size="sm">
-                Recarregar dados
-              </Button>
-            )}
+            <Button onClick={onRefetch} variant="outline" size="sm">
+              Recarregar dados
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -296,7 +260,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
         <CardHeader className="p-3 md:p-4">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <Car className="h-5 w-5" />
-            Lista de Veículos ({filteredVeiculos.length}{filteredVeiculos.length !== veiculos.length ? ` de ${veiculos.length}` : ''})
+            Lista de Veículos ({veiculos.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -307,31 +271,10 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
             aria-label="Lista de veículos rolável"
           >
             <div className="p-3 md:p-4">
-              {/* Search Bar - only show in frotas tab and not mobile */}
-              {onSearchChange && !isMobile && (
-                <div className="mb-4 flex items-center gap-2">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      type="text"
-                      placeholder="Buscar por placa, CNPJ, CPF ou proprietário..."
-                      value={searchValue}
-                      onChange={(e) => onSearchChange(e.target.value)}
-                      className="pl-10 h-10"
-                    />
-                  </div>
-                  {searchValue && (
-                    <div className="text-sm text-gray-500">
-                      {filteredVeiculos.length} de {veiculos.length} veículos
-                    </div>
-                  )}
-                </div>
-              )}
-
               {isMobile ? (
                 // Versão mobile: cards
                 <VehicleListMobile
-                  veiculos={filteredVeiculos}
+                  veiculos={veiculos}
                   onView={handleView}
                   onEdit={handleEdit}
                   onDocs={handleDocs}
@@ -354,8 +297,8 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                         <TableHead className="w-[120px] min-w-[120px] bg-background text-right sticky right-0 bg-background border-l shadow-sm" scope="col">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
-                  <TableBody className="[&_tr:hover]:bg-muted/50">
-                    {filteredVeiculos.map((veiculo) => {
+                   <TableBody className="[&_tr:hover]:bg-muted/50">
+                     {veiculos.map((veiculo) => {
                       const emplacamentoStatus = getEmplacamentoStatus(veiculo.data_venc_emplacamento);
                       const responsavel = veiculo.responsaveis?.[0];
 
