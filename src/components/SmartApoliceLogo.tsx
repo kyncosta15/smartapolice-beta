@@ -1,6 +1,6 @@
 
 import { DocumentValidator } from '@/utils/documentValidator';
-import smartapolice3DShield from '@/assets/smartapolice-3d-shield.png';
+import smartapolice3DShield from '@/assets/smartapolice-logo-new.png';
 
 interface SmartApóliceLogoProps {
   size?: 'sm' | 'md' | 'lg';
