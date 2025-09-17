@@ -31,6 +31,8 @@ import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { VehicleListMobile } from './VehicleListMobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FrotasTableProps {
   veiculos: FrotaVeiculo[];
@@ -92,6 +94,7 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps
 
 export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }: FrotasTableProps) {
   const [selectedVeiculo, setSelectedVeiculo] = useState<FrotaVeiculo | null>(null);
+  const isMobile = useIsMobile();
 
   const handleView = (id: string) => {
     const veiculo = veiculos.find(v => v.id === id);
@@ -197,18 +200,18 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
 
   if (loading) {
     return (
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="border-0 shadow-sm rounded-xl">
+        <CardHeader className="p-3 md:p-4">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <Car className="h-5 w-5" />
             Lista de Veículos
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className="p-3 md:p-4">
+          <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="animate-pulse flex space-x-4 p-4 border rounded-lg">
-                <div className="rounded-full bg-gray-200 h-10 w-10"></div>
+              <div key={i} className="animate-pulse flex space-x-3 p-3 border rounded-lg">
+                <div className="rounded-full bg-gray-200 h-10 w-10 flex-shrink-0"></div>
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                   <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -223,23 +226,23 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
 
   if (veiculos.length === 0) {
     return (
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="border-0 shadow-sm rounded-xl">
+        <CardHeader className="p-3 md:p-4">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <Car className="h-5 w-5" />
             Lista de Veículos
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-12">
+        <CardContent className="p-3 md:p-4">
+          <div className="text-center py-8 sm:py-12">
             <Car className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Nenhum veículo encontrado
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-gray-500 mb-4 text-sm sm:text-base break-words">
               Não há veículos cadastrados ou que correspondam aos filtros aplicados.
             </p>
-            <Button onClick={onRefetch} variant="outline">
+            <Button onClick={onRefetch} variant="outline" size="sm">
               Recarregar dados
             </Button>
           </div>
@@ -249,158 +252,170 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
   }
 
   return (
-    <Card className="border-0 shadow-sm flex flex-col min-h-0">
-      <CardHeader className="shrink-0">
-        <CardTitle className="flex items-center gap-2">
+    <Card className="border-0 shadow-sm rounded-xl">
+      <CardHeader className="p-3 md:p-4">
+        <CardTitle className="flex items-center gap-2 text-base md:text-lg">
           <Car className="h-5 w-5" />
           Lista de Veículos ({veiculos.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0 p-0">
-        {/* Wrapper com scroll interno */}
+      <CardContent className="p-0">
+        {/* Wrapper com scroll próprio */}
         <div
-          className="overflow-y-auto overscroll-contain"
-          style={{ maxHeight }}
+          className="max-h-[60vh] md:max-h-[50vh] overflow-y-auto overscroll-contain pr-1 -mr-1"
           tabIndex={0}
-          aria-label="Tabela de veículos rolável"
+          aria-label="Lista de veículos rolável"
         >
-          <Table>
-            <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
-              <TableRow>
-                <TableHead className="min-w-[200px] bg-background" scope="col">Veículo</TableHead>
-                <TableHead className="bg-background" scope="col">Placa</TableHead>
-                <TableHead className="bg-background" scope="col">Proprietário</TableHead>
-                <TableHead className="bg-background" scope="col">Emplacamento</TableHead>
-                <TableHead className="bg-background" scope="col">Status Seguro</TableHead>
-                <TableHead className="bg-background" scope="col">FIPE</TableHead>
-                <TableHead className="bg-background" scope="col">Valor NF</TableHead>
-                <TableHead className="bg-background" scope="col">Modalidade</TableHead>
-                <TableHead className="bg-background" scope="col">Responsável</TableHead>
-                <TableHead className="w-[50px] bg-background" scope="col">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="[&_tr:hover]:bg-muted/50">
-              {veiculos.map((veiculo) => {
-                const emplacamentoStatus = getEmplacamentoStatus(veiculo.data_venc_emplacamento);
-                const responsavel = veiculo.responsaveis?.[0];
+          <div className="p-3 md:p-4">
+            {isMobile ? (
+              // Versão mobile: cards
+              <VehicleListMobile
+                veiculos={veiculos}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDocs={handleDocs}
+              />
+            ) : (
+              // Versão desktop: tabela
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                  <TableRow>
+                    <TableHead className="min-w-[200px] bg-background" scope="col">Veículo</TableHead>
+                    <TableHead className="bg-background" scope="col">Placa</TableHead>
+                    <TableHead className="bg-background" scope="col">Proprietário</TableHead>
+                    <TableHead className="bg-background" scope="col">Emplacamento</TableHead>
+                    <TableHead className="bg-background" scope="col">Status Seguro</TableHead>
+                    <TableHead className="bg-background" scope="col">FIPE</TableHead>
+                    <TableHead className="bg-background" scope="col">Valor NF</TableHead>
+                    <TableHead className="bg-background" scope="col">Modalidade</TableHead>
+                    <TableHead className="bg-background" scope="col">Responsável</TableHead>
+                    <TableHead className="w-[50px] bg-background" scope="col">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="[&_tr:hover]:bg-muted/50">
+                  {veiculos.map((veiculo) => {
+                    const emplacamentoStatus = getEmplacamentoStatus(veiculo.data_venc_emplacamento);
+                    const responsavel = veiculo.responsaveis?.[0];
 
-                return (
-                  <TableRow key={veiculo.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="font-medium text-foreground">
-                          {veiculo.marca} {veiculo.modelo}
-                        </div>
-                        {veiculo.ano_modelo && (
-                          <div className="text-sm text-muted-foreground">
-                            {veiculo.ano_modelo}
+                    return (
+                      <TableRow key={veiculo.id} className="hover:bg-muted/50">
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium text-foreground">
+                              {veiculo.marca} {veiculo.modelo}
+                            </div>
+                            {veiculo.ano_modelo && (
+                              <div className="text-sm text-muted-foreground">
+                                {veiculo.ano_modelo}
+                              </div>
+                            )}
+                            {getCategoriaBadge(veiculo.categoria)}
                           </div>
-                        )}
-                        {getCategoriaBadge(veiculo.categoria)}
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <div className="font-mono font-medium">
-                        {veiculo.placa}
-                      </div>
-                      {veiculo.uf_emplacamento && (
-                        <div className="text-sm text-muted-foreground">
-                          {veiculo.uf_emplacamento}
-                        </div>
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="space-y-1">
-                        {veiculo.proprietario_nome && (
-                          <div className="font-medium text-foreground">
-                            {veiculo.proprietario_nome}
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="font-mono font-medium">
+                            {veiculo.placa}
                           </div>
-                        )}
-                        {veiculo.proprietario_doc && (
-                          <div className="text-sm text-muted-foreground font-mono">
-                            {veiculo.proprietario_doc}
-                          </div>
-                        )}
-                        {veiculo.proprietario_tipo && (
-                          <Badge variant="outline" className="text-xs">
-                            {veiculo.proprietario_tipo === 'pj' ? 'PJ' : 'PF'}
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className={`font-medium ${emplacamentoStatus.color}`}>
-                        {emplacamentoStatus.text}
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      {getStatusBadge(veiculo.status_seguro)}
-                    </TableCell>
-
-                    <TableCell>
-                      {veiculo.preco_fipe ? (
-                        <div className="font-medium text-green-600">
-                          {formatCurrency(veiculo.preco_fipe)}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      {veiculo.preco_nf ? (
-                        <div className="font-medium">
-                          {formatCurrency(veiculo.preco_nf)}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      {getModalidadeBadge(veiculo.modalidade_compra)}
-                      {veiculo.modalidade_compra === 'consorcio' && veiculo.consorcio_grupo && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Grupo: {veiculo.consorcio_grupo}
-                          {veiculo.consorcio_cota && ` | Cota: ${veiculo.consorcio_cota}`}
-                        </div>
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      {responsavel ? (
-                        <div className="space-y-1">
-                          <div className="font-medium text-foreground text-sm">
-                            {responsavel.nome}
-                          </div>
-                          {responsavel.telefone && (
-                            <div className="text-xs text-muted-foreground">
-                              {responsavel.telefone}
+                          {veiculo.uf_emplacamento && (
+                            <div className="text-sm text-muted-foreground">
+                              {veiculo.uf_emplacamento}
                             </div>
                           )}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">Não definido</span>
-                      )}
-                    </TableCell>
+                        </TableCell>
 
-                    <TableCell>
-                      <VehicleActions
-                        veiculo={veiculo}
-                        onView={handleView}
-                        onEdit={handleEdit}
-                        onDocs={handleDocs}
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                        <TableCell>
+                          <div className="space-y-1">
+                            {veiculo.proprietario_nome && (
+                              <div className="font-medium text-foreground">
+                                {veiculo.proprietario_nome}
+                              </div>
+                            )}
+                            {veiculo.proprietario_doc && (
+                              <div className="text-sm text-muted-foreground font-mono">
+                                {veiculo.proprietario_doc}
+                              </div>
+                            )}
+                            {veiculo.proprietario_tipo && (
+                              <Badge variant="outline" className="text-xs">
+                                {veiculo.proprietario_tipo === 'pj' ? 'PJ' : 'PF'}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className={`font-medium ${emplacamentoStatus.color}`}>
+                            {emplacamentoStatus.text}
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          {getStatusBadge(veiculo.status_seguro)}
+                        </TableCell>
+
+                        <TableCell>
+                          {veiculo.preco_fipe ? (
+                            <div className="font-medium text-green-600">
+                              {formatCurrency(veiculo.preco_fipe)}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          {veiculo.preco_nf ? (
+                            <div className="font-medium">
+                              {formatCurrency(veiculo.preco_nf)}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          {getModalidadeBadge(veiculo.modalidade_compra)}
+                          {veiculo.modalidade_compra === 'consorcio' && veiculo.consorcio_grupo && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Grupo: {veiculo.consorcio_grupo}
+                              {veiculo.consorcio_cota && ` | Cota: ${veiculo.consorcio_cota}`}
+                            </div>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          {responsavel ? (
+                            <div className="space-y-1">
+                              <div className="font-medium text-foreground text-sm">
+                                {responsavel.nome}
+                              </div>
+                              {responsavel.telefone && (
+                                <div className="text-xs text-muted-foreground">
+                                  {responsavel.telefone}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Não definido</span>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          <VehicleActions
+                            veiculo={veiculo}
+                            onView={handleView}
+                            onEdit={handleEdit}
+                            onDocs={handleDocs}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -95,15 +95,15 @@ export function GestaoFrotas() {
   }
 
   return (
-    <div className="flex flex-col min-h-0 min-w-0">
+    <div className="flex flex-col min-h-0 min-w-0 max-w-screen-xl mx-auto">
       {/* Header */}
-      <div className="flex-none border-b border-gray-200 bg-white p-4 sm:p-6">
+      <div className="flex-none border-b border-gray-200 bg-white p-3 sm:p-4 md:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words leading-tight">
               Gestão de Frotas
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 mt-1 break-words">
               Gerencie toda sua frota de veículos
             </p>
           </div>
@@ -113,7 +113,7 @@ export function GestaoFrotas() {
               variant="outline"
               size="sm"
               onClick={handleAlertas}
-              className="flex items-center gap-2 h-8 sm:h-9"
+              className="flex items-center gap-2 h-10 px-3"
             >
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Alertas</span>
@@ -123,7 +123,7 @@ export function GestaoFrotas() {
               variant="outline"
               size="sm"
               onClick={handleExportPDF}
-              className="flex items-center gap-2 h-8 sm:h-9"
+              className="flex items-center gap-2 h-10 px-3"
             >
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">PDF</span>
@@ -133,7 +133,7 @@ export function GestaoFrotas() {
       </div>
 
       {/* Filters */}
-      <div className="flex-none border-b border-gray-200 bg-gray-50 p-4 sm:p-6">
+      <div className="flex-none border-b border-gray-200 bg-gray-50 p-3 sm:p-4 md:p-6">
         <FrotasFilters
           filters={filters}
           onFilterChange={handleFilterChange}
@@ -144,7 +144,7 @@ export function GestaoFrotas() {
       {/* Content */}
       <div className="flex-1 min-h-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col min-h-0">
-          <div className="flex-none border-b border-gray-200 bg-white px-4 sm:px-6">
+          <div className="flex-none border-b border-gray-200 bg-white px-3 sm:px-4 md:px-6">
             <div className="overflow-x-auto scrollbar-gutter-stable">
               <nav className="inline-flex gap-2 pr-2">
                 <TabsList className="h-12 p-1 bg-gray-100 rounded-lg">
@@ -182,20 +182,20 @@ export function GestaoFrotas() {
           </div>
 
           <div className="flex-1 min-h-0">
-            <TabsContent value="frotas" className="h-full flex flex-col min-h-0 p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <TabsContent value="frotas" className="h-full flex flex-col min-h-0 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
               <FrotasDashboard kpis={kpis} veiculos={veiculos} loading={loading} />
               <FrotasTable veiculos={veiculos} loading={loading} onRefetch={refetch} />
             </TabsContent>
 
-            <TabsContent value="fipe" className="h-full p-4 sm:p-6 overflow-y-auto">
+            <TabsContent value="fipe" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">
               <FrotasFipe veiculos={veiculos} loading={loading} />
             </TabsContent>
 
-            <TabsContent value="documentos" className="h-full p-4 sm:p-6 overflow-y-auto">
+            <TabsContent value="documentos" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">
               <FrotasDocumentos veiculos={veiculos} loading={loading} />
             </TabsContent>
 
-            <TabsContent value="upload" className="h-full p-4 sm:p-6 overflow-y-auto">
+            <TabsContent value="upload" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">
               <FrotasUpload onSuccess={refetch} />
             </TabsContent>
           </div>

@@ -83,70 +83,70 @@ export function FrotasDashboard({ kpis, veiculos, loading }: FrotasDashboardProp
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="rounded-xl border bg-white p-4 sm:p-6">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="rounded-xl border bg-white p-4 md:p-5 min-h-[88px] flex flex-col justify-between">
           <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600">
+            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
               Total de Veículos
             </h3>
-            <Car className="h-4 w-4 text-blue-600" />
+            <Car className="h-4 w-4 text-blue-600 flex-shrink-0" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
               {kpis.totalVeiculos}
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 break-words">
               veículos cadastrados
             </p>
           </div>
         </Card>
 
-        <Card className="rounded-xl border bg-white p-4 sm:p-6">
+        <Card className="rounded-xl border bg-white p-4 md:p-5 min-h-[88px] flex flex-col justify-between">
           <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600">
+            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
               Sem Seguro
             </h3>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl md:text-3xl font-bold text-red-600 leading-tight">
               {kpis.semSeguro}
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 break-words">
               necessitam seguro
             </p>
           </div>
         </Card>
 
-        <Card className="rounded-xl border bg-white p-4 sm:p-6">
+        <Card className="rounded-xl border bg-white p-4 md:p-5 min-h-[88px] flex flex-col justify-between">
           <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600">
+            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
               Emplacamento Vencido
             </h3>
-            <Calendar className="h-4 w-4 text-orange-600" />
+            <Calendar className="h-4 w-4 text-orange-600 flex-shrink-0" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl md:text-3xl font-bold text-orange-600 leading-tight">
               {kpis.emplacamentoVencido}
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 break-words">
               licenciamento vencido
             </p>
           </div>
         </Card>
 
-        <Card className="rounded-xl border bg-white p-4 sm:p-6">
+        <Card className="rounded-xl border bg-white p-4 md:p-5 min-h-[88px] flex flex-col justify-between">
           <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600">
+            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
               Próximo Vencimento
             </h3>
-            <Calendar className="h-4 w-4 text-yellow-600" />
+            <Calendar className="h-4 w-4 text-yellow-600 flex-shrink-0" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-2xl md:text-3xl font-bold text-yellow-600 leading-tight">
               {kpis.proximoVencimento}
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 break-words">
               vencem em 30 dias
             </p>
           </div>
@@ -154,43 +154,43 @@ export function FrotasDashboard({ kpis, veiculos, loading }: FrotasDashboardProp
       </div>
 
       {/* Additional KPIs */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Card className="rounded-xl border bg-white p-4 sm:p-6">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
+        <Card className="rounded-xl border bg-white p-3 md:p-4 min-h-[88px] flex flex-col justify-between">
           <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600">
+            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
               Valorização vs. Compra
             </h3>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <TrendingUp className="h-4 w-4 text-green-600 flex-shrink-0" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl md:text-3xl font-bold text-green-600 leading-tight">
               {kpis.valorizacaoMedia.toFixed(1)}%
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 break-words">
               média de valorização FIPE
             </p>
           </div>
         </Card>
 
-        <Card className="rounded-xl border bg-white p-4 sm:p-6">
+        <Card className="rounded-xl border bg-white p-3 md:p-4 min-h-[88px] flex flex-col justify-between">
           <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600">
+            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
               Modalidade de Compra
             </h3>
-            <CreditCard className="h-4 w-4 text-purple-600" />
+            <CreditCard className="h-4 w-4 text-purple-600 flex-shrink-0" />
           </div>
           <div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Financiado:</span>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs sm:text-sm">
+                <span className="break-words">Financiado:</span>
                 <span className="font-medium">{kpis.modalidadeDistribuicao.financiado}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span>À Vista:</span>
+              <div className="flex justify-between text-xs sm:text-sm">
+                <span className="break-words">À Vista:</span>
                 <span className="font-medium">{kpis.modalidadeDistribuicao.avista}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span>Consórcio:</span>
+              <div className="flex justify-between text-xs sm:text-sm">
+                <span className="break-words">Consórcio:</span>
                 <span className="font-medium">{kpis.modalidadeDistribuicao.consorcio}</span>
               </div>
             </div>
@@ -199,14 +199,14 @@ export function FrotasDashboard({ kpis, veiculos, loading }: FrotasDashboardProp
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
         {/* Distribuição por Categoria */}
-        <Card className="rounded-xl border bg-white p-4 sm:p-6">
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <PieChart className="h-5 w-5 text-blue-600" />
-            Distribuição por Categoria
+        <Card className="rounded-xl border bg-white p-3 md:p-4">
+          <h3 className="font-semibold mb-3 flex items-center gap-2 text-base md:text-lg">
+            <PieChart className="h-5 w-5 text-blue-600 flex-shrink-0" />
+            <span className="break-words leading-tight">Distribuição por Categoria</span>
           </h3>
-          <div className={`${isMobile ? 'h-[220px]' : 'h-[300px]'}`}>
+          <div className="w-full h-[240px] sm:h-[300px] md:h-[360px]">
             {categoriaData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
@@ -236,12 +236,12 @@ export function FrotasDashboard({ kpis, veiculos, loading }: FrotasDashboardProp
         </Card>
 
         {/* Top Marcas */}
-        <Card className="rounded-xl border bg-white p-4 sm:p-6">
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Car className="h-5 w-5 text-green-600" />
-            Top Marcas/Modelos
+        <Card className="rounded-xl border bg-white p-3 md:p-4">
+          <h3 className="font-semibold mb-3 flex items-center gap-2 text-base md:text-lg">
+            <Car className="h-5 w-5 text-green-600 flex-shrink-0" />
+            <span className="break-words leading-tight">Top Marcas/Modelos</span>
           </h3>
-          <div className={`${isMobile ? 'h-[220px]' : 'h-[300px]'}`}>
+          <div className="w-full h-[240px] sm:h-[300px] md:h-[360px]">
             {marcasData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={marcasData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
