@@ -36,9 +36,11 @@ interface FrotasTableProps {
   veiculos: FrotaVeiculo[];
   loading: boolean;
   onRefetch: () => void;
+  /** Altura máxima da área da tabela. Ex: '60vh' ou 'calc(100vh - 220px)' */
+  maxHeight?: string;
 }
 
-export function FrotasTable({ veiculos, loading, onRefetch }: FrotasTableProps) {
+export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }: FrotasTableProps) {
   const [selectedVeiculo, setSelectedVeiculo] = useState<FrotaVeiculo | null>(null);
 
   const getStatusBadge = (status: string) => {
@@ -172,44 +174,50 @@ export function FrotasTable({ veiculos, loading, onRefetch }: FrotasTableProps) 
   }
 
   return (
-    <Card className="border-0 shadow-sm">
-      <CardHeader>
+    <Card className="border-0 shadow-sm flex flex-col min-h-0">
+      <CardHeader className="shrink-0">
         <CardTitle className="flex items-center gap-2">
           <Car className="h-5 w-5" />
           Lista de Veículos ({veiculos.length})
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
+      <CardContent className="flex-1 min-h-0 p-0">
+        {/* Wrapper com scroll interno */}
+        <div
+          className="overflow-y-auto overscroll-contain"
+          style={{ maxHeight }}
+          tabIndex={0}
+          aria-label="Tabela de veículos rolável"
+        >
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
               <TableRow>
-                <TableHead className="min-w-[200px]">Veículo</TableHead>
-                <TableHead>Placa</TableHead>
-                <TableHead>Proprietário</TableHead>
-                <TableHead>Emplacamento</TableHead>
-                <TableHead>Status Seguro</TableHead>
-                <TableHead>FIPE</TableHead>
-                <TableHead>Valor NF</TableHead>
-                <TableHead>Modalidade</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead className="w-[50px]">Ações</TableHead>
+                <TableHead className="min-w-[200px] bg-background" scope="col">Veículo</TableHead>
+                <TableHead className="bg-background" scope="col">Placa</TableHead>
+                <TableHead className="bg-background" scope="col">Proprietário</TableHead>
+                <TableHead className="bg-background" scope="col">Emplacamento</TableHead>
+                <TableHead className="bg-background" scope="col">Status Seguro</TableHead>
+                <TableHead className="bg-background" scope="col">FIPE</TableHead>
+                <TableHead className="bg-background" scope="col">Valor NF</TableHead>
+                <TableHead className="bg-background" scope="col">Modalidade</TableHead>
+                <TableHead className="bg-background" scope="col">Responsável</TableHead>
+                <TableHead className="w-[50px] bg-background" scope="col">Ações</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="[&_tr:hover]:bg-muted/50">
               {veiculos.map((veiculo) => {
                 const emplacamentoStatus = getEmplacamentoStatus(veiculo.data_venc_emplacamento);
                 const responsavel = veiculo.responsaveis?.[0];
 
                 return (
-                  <TableRow key={veiculo.id} className="hover:bg-gray-50">
+                  <TableRow key={veiculo.id} className="hover:bg-muted/50">
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-foreground">
                           {veiculo.marca} {veiculo.modelo}
                         </div>
                         {veiculo.ano_modelo && (
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             {veiculo.ano_modelo}
                           </div>
                         )}
@@ -222,7 +230,7 @@ export function FrotasTable({ veiculos, loading, onRefetch }: FrotasTableProps) 
                         {veiculo.placa}
                       </div>
                       {veiculo.uf_emplacamento && (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                           {veiculo.uf_emplacamento}
                         </div>
                       )}
@@ -231,12 +239,12 @@ export function FrotasTable({ veiculos, loading, onRefetch }: FrotasTableProps) 
                     <TableCell>
                       <div className="space-y-1">
                         {veiculo.proprietario_nome && (
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-foreground">
                             {veiculo.proprietario_nome}
                           </div>
                         )}
                         {veiculo.proprietario_doc && (
-                          <div className="text-sm text-gray-500 font-mono">
+                          <div className="text-sm text-muted-foreground font-mono">
                             {veiculo.proprietario_doc}
                           </div>
                         )}
@@ -264,7 +272,7 @@ export function FrotasTable({ veiculos, loading, onRefetch }: FrotasTableProps) 
                           {formatCurrency(veiculo.preco_fipe)}
                         </div>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-muted-foreground">-</span>
                       )}
                     </TableCell>
 
@@ -274,14 +282,14 @@ export function FrotasTable({ veiculos, loading, onRefetch }: FrotasTableProps) 
                           {formatCurrency(veiculo.preco_nf)}
                         </div>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-muted-foreground">-</span>
                       )}
                     </TableCell>
 
                     <TableCell>
                       {getModalidadeBadge(veiculo.modalidade_compra)}
                       {veiculo.modalidade_compra === 'consorcio' && veiculo.consorcio_grupo && (
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-muted-foreground mt-1">
                           Grupo: {veiculo.consorcio_grupo}
                           {veiculo.consorcio_cota && ` | Cota: ${veiculo.consorcio_cota}`}
                         </div>
@@ -291,17 +299,17 @@ export function FrotasTable({ veiculos, loading, onRefetch }: FrotasTableProps) 
                     <TableCell>
                       {responsavel ? (
                         <div className="space-y-1">
-                          <div className="font-medium text-gray-900 text-sm">
+                          <div className="font-medium text-foreground text-sm">
                             {responsavel.nome}
                           </div>
                           {responsavel.telefone && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               {responsavel.telefone}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-sm">Não definido</span>
+                        <span className="text-muted-foreground text-sm">Não definido</span>
                       )}
                     </TableCell>
 
