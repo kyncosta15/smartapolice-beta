@@ -1,40 +1,62 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { 
   FileText, 
-  AlertTriangle, 
   CheckCircle, 
   Clock, 
-  DollarSign,
-  TrendingUp,
-  Activity,
   Calendar
 } from 'lucide-react';
 
-interface SinistrosDashboardProps {
-  sinistros: any[];
-  vehicles: any[];
-  policies: ParsedPolicyData[];
+// Types
+type Sinistro = {
+  id: string;
+  status: string;
+  created_at: string;
+  closed_at?: string | null;
+  seguradora?: string | null;
+  ticket_id?: string;
+  tipo_evento?: string;
+  veiculo?: {
+    placa?: string;
+  };
+  data_abertura?: string;
+  financeiro?: {
+    reserva_tecnica?: number;
+  };
+};
+
+// Constants for status categorization
+const OPEN_STATUSES = ['aberto', 'em_analise', 'em_regulacao', 'ABERTO', 'EM_ANALISE', 'EM_REGULACAO'];
+const CLOSED_STATUSES = ['encerrado', 'finalizado', 'pago', 'ENCERRADO', 'FINALIZADO', 'PAGO'];
+
+// KPI calculation function
+function kpisFrom(sinistros: Sinistro[], now = new Date()) {
+  const total = sinistros.length;
+  const emAberto = sinistros.filter(s =>
+    OPEN_STATUSES.includes(s.status)
+  ).length;
+  const finalizados = sinistros.filter(s =>
+    CLOSED_STATUSES.includes(s.status) || !!s.closed_at
+  ).length;
+  const cutoff = new Date(now);
+  cutoff.setDate(cutoff.getDate() - 60);
+  const ult60d = sinistros.filter(s => new Date(s.created_at) >= cutoff).length;
+  return { total, emAberto, finalizados, ult60d };
 }
 
-export function SinistrosDashboard({ sinistros, vehicles, policies }: SinistrosDashboardProps) {
-  // Calculate KPIs
-  const totalSinistros = sinistros.length;
-  const sinistrosAbertos = sinistros.filter(s => ['ABERTO', 'EM_ANALISE', 'EM_REGULACAO'].includes(s.status)).length;
-  const sinistrosEncerrados = sinistros.filter(s => s.status === 'ENCERRADO').length;
-  
-  const valorReservado = sinistros.reduce((acc, s) => acc + (s.financeiro?.reserva_tecnica || 0), 0);
-  const indenizacaoPaga = sinistros.reduce((acc, s) => acc + (s.financeiro?.indenizacao_paga || 0), 0);
-  const gastosReparo = sinistros.reduce((acc, s) => acc + (s.financeiro?.gastos_reparo_pagos || 0), 0);
-  
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value / 100);
-  };
+interface SinistrosDashboardProps {
+  sinistros: Sinistro[];
+  vehicles: any[];
+  policies: ParsedPolicyData[];
+  loading?: boolean;
+}
+
+export function SinistrosDashboard({ sinistros = [], vehicles, policies, loading = false }: SinistrosDashboardProps) {
+  // Calculate KPIs using the new function
+  const kpis = kpisFrom(sinistros);
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -78,117 +100,105 @@ export function SinistrosDashboard({ sinistros, vehicles, policies }: SinistrosD
     return labels[type as keyof typeof labels] || type;
   };
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value / 100);
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4 rounded" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+    <div className="container mx-auto px-4 space-y-6">
+      {/* New 4 KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total de Sinistros */}
+        <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Eventos</CardTitle>
+            <CardTitle className="text-sm font-medium">Total de Sinistros</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalSinistros}</div>
+            <div className="text-2xl font-bold" aria-label={`Total de ${kpis.total} sinistros`} title={`Total: ${kpis.total} sinistros`}>
+              {kpis.total}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {sinistrosAbertos} abertos, {sinistrosEncerrados} encerrados
+              total
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Em Aberto */}
+        <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor Reservado</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Em Aberto</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(valorReservado)}</div>
+            <div className="text-2xl font-bold" aria-label={`${kpis.emAberto} sinistros em aberto`} title={`Em aberto: ${kpis.emAberto} sinistros`}>
+              {kpis.emAberto}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Reserva técnica total
+              em aberto
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Finalizados */}
+        <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Indenização Paga</CardTitle>
+            <CardTitle className="text-sm font-medium">Finalizados</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(indenizacaoPaga)}</div>
+            <div className="text-2xl font-bold" aria-label={`${kpis.finalizados} sinistros finalizados`} title={`Finalizados: ${kpis.finalizados} sinistros`}>
+              {kpis.finalizados}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Valores já quitados
+              finalizados
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Últimos 60 dias */}
+        <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gastos de Reparo</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Últimos 60 dias</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(gastosReparo)}</div>
+            <div className="text-2xl font-bold" aria-label={`${kpis.ult60d} sinistros criados nos últimos 60 dias`} title={`Últimos 60 dias: ${kpis.ult60d} sinistros`}>
+              {kpis.ult60d}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Reparos executados
+              criados nos últimos 60 dias
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Performance de SLA
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">SLA Médio</span>
-              <Badge variant="outline">12 dias</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">% Encerrados no Prazo</span>
-              <Badge variant="outline" className="bg-green-50 text-green-700">
-                85%
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Ticket Médio</span>
-              <Badge variant="outline">{formatCurrency(250000)}</Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Alertas e Pendências
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">SLA Ultrapassado</span>
-              <Badge variant="destructive">2 casos</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Documentação Pendente</span>
-              <Badge variant="secondary">5 casos</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">CRLV Vencendo</span>
-              <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
-                3 veículos
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Cases */}
+      {/* Recent Cases Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -197,51 +207,35 @@ export function SinistrosDashboard({ sinistros, vehicles, policies }: SinistrosD
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {sinistros.slice(0, 5).map((sinistro) => (
-              <div key={sinistro.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Badge className={`${getStatusColor(sinistro.status)} text-white`}>
-                    {getStatusLabel(sinistro.status)}
-                  </Badge>
-                  <div>
-                    <p className="font-medium">{sinistro.ticket_id}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {sinistro.veiculo?.placa} • {getEventTypeLabel(sinistro.tipo_evento)}
-                    </p>
+          {sinistros.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum sinistro encontrado
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="space-y-4">
+                {sinistros.slice(0, 5).map((sinistro) => (
+                  <div key={sinistro.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Badge className={`${getStatusColor(sinistro.status)} text-white`}>
+                        {getStatusLabel(sinistro.status)}
+                      </Badge>
+                      <div>
+                        <p className="font-medium">{sinistro.ticket_id || sinistro.id}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {sinistro.veiculo?.placa || 'N/A'} • {getEventTypeLabel(sinistro.tipo_evento || 'OUTRO')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{formatCurrency(sinistro.financeiro?.reserva_tecnica || 0)}</p>
+                      <p className="text-sm text-muted-foreground">{sinistro.data_abertura || sinistro.created_at.split('T')[0]}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium">{formatCurrency(sinistro.financeiro?.reserva_tecnica || 0)}</p>
-                  <p className="text-sm text-muted-foreground">{sinistro.data_abertura}</p>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Status Distribution */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Distribuição por Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['ABERTO', 'EM_ANALISE', 'EM_REGULACAO', 'ENCERRADO'].map((status) => {
-              const count = sinistros.filter(s => s.status === status).length;
-              return (
-                <div key={status} className="text-center p-3 border rounded-lg">
-                  <div className={`w-4 h-4 rounded-full ${getStatusColor(status)} mx-auto mb-2`}></div>
-                  <p className="text-sm font-medium">{getStatusLabel(status)}</p>
-                  <p className="text-lg font-bold">{count}</p>
-                </div>
-              );
-            })}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

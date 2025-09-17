@@ -76,6 +76,8 @@ export function SinistrosManagement({
       tipo_evento: 'COLISAO',
       gravidade: 'MEDIA',
       data_abertura: '2025-01-10',
+      created_at: '2025-01-10T10:00:00Z',
+      closed_at: null,
       veiculo: { placa: 'ABC1D23', marca: 'FIAT', modelo: 'ARGO' },
       seguradora: 'Porto Seguro',
       financeiro: {
