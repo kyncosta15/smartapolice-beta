@@ -24,19 +24,20 @@ import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useFipeService } from '@/services/fipeService';
+import { fipeService } from '@/services/fipeService';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VehicleDetailsModalNewProps {
   veiculo: FrotaVeiculo | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  mode?: 'view' | 'edit';
   onSave?: (veiculo: FrotaVeiculo) => void;
 }
 
-export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: VehicleDetailsModalNewProps) {
+export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'view', onSave }: VehicleDetailsModalNewProps) {
   const { toast } = useToast();
-  const { updateFipePrice } = useFipeService();
   const [activeTab, setActiveTab] = useState('veiculo');
   const [formData, setFormData] = useState<Partial<FrotaVeiculo>>({});
   const [loading, setLoading] = useState(false);
@@ -190,6 +191,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   id="marca"
                   value={formData.marca || ''}
                   onChange={(e) => handleInputChange('marca', e.target.value)}
+                  disabled={mode === 'view'}
                 />
               </div>
               <div>
@@ -198,6 +200,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   id="modelo"
                   value={formData.modelo || ''}
                   onChange={(e) => handleInputChange('modelo', e.target.value)}
+                  disabled={mode === 'view'}
                 />
               </div>
               <div>
@@ -207,11 +210,16 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   type="number"
                   value={formData.ano_modelo || ''}
                   onChange={(e) => handleInputChange('ano_modelo', parseInt(e.target.value) || null)}
+                  disabled={mode === 'view'}
                 />
               </div>
               <div>
                 <Label htmlFor="categoria">Categoria</Label>
-                <Select value={formData.categoria || ''} onValueChange={(value) => handleInputChange('categoria', value)}>
+                <Select 
+                  value={formData.categoria || ''} 
+                  onValueChange={(value) => handleInputChange('categoria', value)}
+                  disabled={mode === 'view'}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a categoria" />
                   </SelectTrigger>
@@ -231,6 +239,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   value={formData.observacoes || ''}
                   onChange={(e) => handleInputChange('observacoes', e.target.value)}
                   rows={3}
+                  disabled={mode === 'view'}
                 />
               </div>
             </div>
@@ -244,11 +253,16 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   id="proprietario_nome"
                   value={formData.proprietario_nome || ''}
                   onChange={(e) => handleInputChange('proprietario_nome', e.target.value)}
+                  disabled={mode === 'view'}
                 />
               </div>
               <div>
                 <Label htmlFor="proprietario_tipo">Tipo</Label>
-                <Select value={formData.proprietario_tipo || ''} onValueChange={(value) => handleInputChange('proprietario_tipo', value)}>
+                <Select 
+                  value={formData.proprietario_tipo || ''} 
+                  onValueChange={(value) => handleInputChange('proprietario_tipo', value)}
+                  disabled={mode === 'view'}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Pessoa Física ou Jurídica" />
                   </SelectTrigger>
@@ -264,6 +278,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   id="proprietario_doc"
                   value={formData.proprietario_doc || ''}
                   onChange={(e) => handleInputChange('proprietario_doc', e.target.value)}
+                  disabled={mode === 'view'}
                 />
               </div>
               <div className="flex items-end">
@@ -284,6 +299,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   value={formData.uf_emplacamento || ''}
                   onChange={(e) => handleInputChange('uf_emplacamento', e.target.value)}
                   maxLength={2}
+                  disabled={mode === 'view'}
                 />
               </div>
               <div>
@@ -293,6 +309,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   type="date"
                   value={formData.data_venc_emplacamento || ''}
                   onChange={(e) => handleInputChange('data_venc_emplacamento', e.target.value)}
+                  disabled={mode === 'view'}
                 />
               </div>
             </div>
@@ -302,7 +319,11 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="status_seguro">Status do Seguro</Label>
-                <Select value={formData.status_seguro || ''} onValueChange={(value) => handleInputChange('status_seguro', value)}>
+                <Select 
+                  value={formData.status_seguro || ''} 
+                  onValueChange={(value) => handleInputChange('status_seguro', value)}
+                  disabled={mode === 'view'}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Status do seguro" />
                   </SelectTrigger>
@@ -321,6 +342,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                     onChange={(e) => handleInputChange('motivo_sem_seguro', e.target.value)}
                     placeholder="Informe o motivo..."
                     required
+                    disabled={mode === 'view'}
                   />
                 </div>
               )}
@@ -345,6 +367,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   type="date"
                   value={formData.previsao_circulacao || ''}
                   onChange={(e) => handleInputChange('previsao_circulacao', e.target.value)}
+                  disabled={mode === 'view'}
                 />
               </div>
               <div className="md:col-span-2">
@@ -355,6 +378,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   onChange={(e) => handleInputChange('observacoes_operacao', e.target.value)}
                   rows={3}
                   placeholder="Informações sobre circulação, uso do veículo, etc."
+                  disabled={mode === 'view'}
                 />
               </div>
             </div>
@@ -371,11 +395,12 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                     step="0.01"
                     value={formData.preco_fipe || ''}
                     onChange={(e) => handleInputChange('preco_fipe', parseFloat(e.target.value) || null)}
+                    disabled={mode === 'view'}
                   />
                   <Button 
                     variant="outline" 
                     onClick={handleUpdateFipe}
-                    disabled={fipeLoading}
+                    disabled={fipeLoading || mode === 'view'}
                     className="flex-shrink-0"
                   >
                     {fipeLoading ? (
@@ -399,6 +424,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   step="0.01"
                   value={formData.preco_nf || ''}
                   onChange={(e) => handleInputChange('preco_nf', parseFloat(e.target.value) || null)}
+                  disabled={mode === 'view'}
                 />
               </div>
               <div>
@@ -409,6 +435,7 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
                   step="0.01"
                   value={formData.percentual_tabela || ''}
                   onChange={(e) => handleInputChange('percentual_tabela', parseFloat(e.target.value) || null)}
+                  disabled={mode === 'view'}
                 />
               </div>
             </div>
@@ -463,9 +490,11 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, onSave }: 
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? 'Salvando...' : 'Salvar'}
-          </Button>
+          {mode === 'edit' && (
+            <Button onClick={handleSave} disabled={loading}>
+              {loading ? 'Salvando...' : 'Salvar'}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

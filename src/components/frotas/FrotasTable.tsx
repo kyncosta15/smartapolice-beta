@@ -100,12 +100,14 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps
 export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', hideHeader = false }: FrotasTableProps) {
   const [selectedVeiculo, setSelectedVeiculo] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
   const isMobile = useIsMobile();
 
   const handleView = (id: string) => {
     const veiculo = veiculos.find(v => v.id === id);
     if (veiculo) {
       setSelectedVeiculo(veiculo);
+      setModalMode('view');
       setModalOpen(true);
     }
   };
@@ -113,8 +115,9 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   const handleEdit = (id: string) => {
     const veiculo = veiculos.find(v => v.id === id);
     if (veiculo) {
-      // TODO: Abrir modal de edição
-      console.log('Editar veículo:', veiculo);
+      setSelectedVeiculo(veiculo);
+      setModalMode('edit');
+      setModalOpen(true);
     }
   };
 
@@ -449,6 +452,10 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
         veiculo={selectedVeiculo}
         open={modalOpen}
         onOpenChange={setModalOpen}
+        mode={modalMode}
+        onSave={(updatedVeiculo) => {
+          onRefetch(); // Refetch data to show updated vehicle
+        }}
       />
       </>
     );
@@ -473,6 +480,10 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
         veiculo={selectedVeiculo}
         open={modalOpen}
         onOpenChange={setModalOpen}
+        mode={modalMode}
+        onSave={(updatedVeiculo) => {
+          onRefetch(); // Refetch data to show updated vehicle
+        }}
       />
     </>
   );
