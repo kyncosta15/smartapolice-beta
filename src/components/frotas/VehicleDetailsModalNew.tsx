@@ -36,9 +36,10 @@ interface VehicleDetailsModalNewProps {
   onOpenChange: (open: boolean) => void;
   mode?: 'view' | 'edit';
   onSave?: (veiculo: FrotaVeiculo) => void;
+  onVehicleUpdated?: () => void;
 }
 
-export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'view', onSave }: VehicleDetailsModalNewProps) {
+export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'view', onSave, onVehicleUpdated }: VehicleDetailsModalNewProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('veiculo');
   const [formData, setFormData] = useState<Partial<FrotaVeiculo>>({});
@@ -46,15 +47,15 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'vi
   const [fipeLoading, setFipeLoading] = useState(false);
   const [fipeLastUpdate, setFipeLastUpdate] = useState<string | null>(null);
 
-  // Initialize form data when vehicle changes
+  // Real-time update of form data when vehicle prop changes
   useEffect(() => {
-    if (veiculo) {
+    if (veiculo && (!formData.id || formData.id !== veiculo.id)) {
       setFormData({ ...veiculo });
       if (veiculo.updated_at) {
         setFipeLastUpdate(veiculo.updated_at);
       }
     }
-  }, [veiculo]);
+  }, [veiculo, formData.id]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -98,25 +99,62 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'vi
   };
 
   const handleSave = async () => {
-    if (!formData.id) return;
-
+    if (!veiculo || mode === 'view') return;
+    
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      // Here you would call your update service
-      // await updateVehicle(formData);
-      
+      // Update vehicle in database
+      const { data: updatedVehicle, error } = await supabase
+        .from('frota_veiculos')
+        .update({
+          marca: formData.marca,
+          modelo: formData.modelo,
+          ano_modelo: formData.ano_modelo,
+          categoria: formData.categoria,
+          proprietario_nome: formData.proprietario_nome,
+          proprietario_tipo: formData.proprietario_tipo,
+          proprietario_doc: formData.proprietario_doc,
+          uf_emplacamento: formData.uf_emplacamento,
+          data_venc_emplacamento: formData.data_venc_emplacamento,
+          status_seguro: formData.status_seguro,
+          preco_fipe: formData.preco_fipe,
+          preco_nf: formData.preco_nf,
+          percentual_tabela: formData.percentual_tabela,
+          modalidade_compra: formData.modalidade_compra,
+          observacoes: formData.observacoes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', veiculo.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
       toast({
-        title: "Veículo atualizado",
-        description: "As alterações foram salvas com sucesso"
+        title: "Veículo atualizado com sucesso!",
+        description: "As alterações foram salvas no sistema.",
+        variant: "default"
       });
 
+      // Update the form data with the saved data
+      if (updatedVehicle) {
+        setFormData(updatedVehicle);
+      }
+
+      // Notify parent component to refresh data
       if (onSave) {
-        onSave(formData as FrotaVeiculo);
+        onSave(updatedVehicle || formData as FrotaVeiculo);
+      }
+
+      // Trigger data refresh in the parent component
+      if (onVehicleUpdated) {
+        onVehicleUpdated();
       }
       
-      onOpenChange(false);
+      // Keep modal open but show success message
+      // Don't close modal: onOpenChange(false);
     } catch (error: any) {
+      console.error('Error saving vehicle:', error);
       toast({
         title: "Erro ao salvar",
         description: error.message || "Não foi possível salvar as alterações",

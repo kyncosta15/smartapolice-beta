@@ -469,8 +469,10 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
         onOpenChange={setModalOpen}
         mode={modalMode}
         onSave={(updatedVeiculo) => {
-          onRefetch(); // Refetch data to show updated vehicle
+          // Update the selected vehicle data to reflect changes immediately
+          setSelectedVeiculo(updatedVeiculo);
         }}
+        onVehicleUpdated={onRefetch}
       />
       </>
     );
@@ -497,8 +499,10 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
         onOpenChange={setModalOpen}
         mode={modalMode}
         onSave={(updatedVeiculo) => {
-          onRefetch(); // Refetch data to show updated vehicle
+          // Update the selected vehicle data to reflect changes immediately
+          setSelectedVeiculo(updatedVeiculo);
         }}
+        onVehicleUpdated={onRefetch}
       />
     </>
   );
