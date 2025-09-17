@@ -83,26 +83,26 @@ export const LandingPage = () => {
 
       {/* Right side - Background Image */}
       <div className="hidden md:block md:w-1/2 relative">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp'), url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        />
+        <picture className="absolute inset-0 w-full h-full">
+          <source srcSet="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp" type="image/webp" />
+          <img 
+            src="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png"
+            alt="Background"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </picture>
       </div>
 
       {/* Mobile background image overlay */}
       <div className="md:hidden absolute top-0 right-0 w-1/3 h-1/3 opacity-20 z-0">
-        <div 
-          className="w-full h-full bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp'), url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png')`,
-            backgroundSize: 'contain',
-            backgroundPosition: 'center'
-          }}
-        />
+        <picture className="w-full h-full">
+          <source srcSet="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp" type="image/webp" />
+          <img 
+            src="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png"
+            alt="Background overlay"
+            className="w-full h-full object-contain"
+          />
+        </picture>
       </div>
     </div>
   );
