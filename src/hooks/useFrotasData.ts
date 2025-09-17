@@ -47,6 +47,11 @@ export interface FrotaVeiculo {
   created_at: string;
   updated_at: string;
   
+  // Additional fields for modal form
+  motivo_sem_seguro?: string;
+  previsao_circulacao?: string;
+  observacoes_operacao?: string;
+  
   // Dados relacionados
   responsaveis?: FrotaResponsavel[];
   pagamentos?: FrotaPagamento[];

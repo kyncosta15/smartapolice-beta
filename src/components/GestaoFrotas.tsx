@@ -13,7 +13,8 @@ import {
   Search,
   Filter,
   FileText,
-  Bell
+  Bell,
+  Shield
 } from 'lucide-react';
 import { FrotasDashboard } from './frotas/FrotasDashboard';
 import { FrotasTable } from './frotas/FrotasTable';
@@ -22,6 +23,9 @@ import { FrotasFipe } from './frotas/FrotasFipe';
 import { FrotasDocumentos } from './frotas/FrotasDocumentos';
 import { FrotasUpload } from './frotas/FrotasUpload';
 import { FrotasFilters } from './frotas/FrotasFilters';
+import { PolicyHeader } from './frotas/PolicyHeader';
+import { SinistrosDashboard } from './frotas/SinistrosDashboard';
+import { AssistenciaDashboard } from './frotas/AssistenciaDashboard';
 import { useFrotasData } from '@/hooks/useFrotasData';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,6 +45,20 @@ export function GestaoFrotas() {
     categoria: [],
     status: []
   });
+
+  // Mock policies data - replace with real data from your API
+  const [policies] = useState([
+    {
+      id: '1',
+      seguradora: 'Porto Seguro',
+      numero_apolice: '123456789',
+      inicio_vigencia: '2025-01-01',
+      fim_vigencia: '2025-12-31',
+      status: 'ativa' as const,
+      tipo_beneficio: 'Frota'
+    }
+  ]);
+  const [selectedPolicyId, setSelectedPolicyId] = useState(policies[0]?.id);
 
   const { 
     veiculos, 
@@ -134,6 +152,15 @@ export function GestaoFrotas() {
         </div>
       </div>
 
+      {/* Policy Header */}
+      <div className="p-3 sm:p-4 md:p-6 pb-0">
+        <PolicyHeader 
+          policies={policies}
+          selectedPolicyId={selectedPolicyId}
+          onPolicyChange={setSelectedPolicyId}
+        />
+      </div>
+
       {/* Tabs and Content */}
       <div className="flex-1 min-h-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col min-h-0">
@@ -191,6 +218,14 @@ export function GestaoFrotas() {
                 filters={filters}
                 onFilterChange={handleFilterChange}
               />
+            </TabsContent>
+
+            <TabsContent value="sinistros" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">
+              <SinistrosDashboard loading={loading} />
+            </TabsContent>
+
+            <TabsContent value="assistencia" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">
+              <AssistenciaDashboard loading={loading} />
             </TabsContent>
 
             <TabsContent value="fipe" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">

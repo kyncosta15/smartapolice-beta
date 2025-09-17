@@ -33,7 +33,7 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { VehicleListMobile } from './VehicleListMobile';
-import { VehicleDetailsModal } from './VehicleDetailsModal';
+import { VehicleDetailsModalNew } from './VehicleDetailsModalNew';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FrotasTableProps {
@@ -445,11 +445,11 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
     return (
       <>
         {tableContent}
-        <VehicleDetailsModal 
-          veiculo={selectedVeiculo}
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-        />
+      <VehicleDetailsModalNew 
+        veiculo={selectedVeiculo}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
       </>
     );
   }
@@ -469,7 +469,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
       </Card>
 
       {/* Modal de detalhes */}
-      <VehicleDetailsModal
+      <VehicleDetailsModalNew 
         veiculo={selectedVeiculo}
         open={modalOpen}
         onOpenChange={setModalOpen}
