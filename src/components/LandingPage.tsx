@@ -11,9 +11,9 @@ export const LandingPage = () => {
       <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/10 via-[hsl(var(--off-white-dark))] to-secondary/10 flex flex-col relative z-10">
         <section className="isolate">
           <div className="mx-auto max-w-screen-md px-6 py-12 sm:py-16 text-center min-h-[75vh] flex flex-col justify-center">
-            {/* Logo */}
-            <div className="mx-auto mb-6">
-              <picture>
+            {/* Brand Lockup */}
+            <div className="mx-auto mb-6 flex flex-col items-center">
+              <picture className="mb-4">
                 <source 
                   srcSet="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414-optimized.webp" 
                   type="image/webp"
@@ -21,32 +21,45 @@ export const LandingPage = () => {
                 />
                 <img 
                   src="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414.png" 
-                  alt="RCorp — soluções corporativas inteligentes" 
-                  className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-2xl shadow-sm mx-auto" 
+                  alt="RCorp — soluções corporativas" 
+                  className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-2xl shadow-sm" 
                   width="80"
                   height="80"
                   loading="eager"
                   decoding="sync"
                 />
               </picture>
+              
+              {/* H1 Brand Name with Gradient */}
+              <h1 
+                className="font-extrabold tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent leading-tight mb-2" 
+                style={{ 
+                  fontSize: 'clamp(40px, 6vw, 80px)',
+                  lineHeight: '1.05'
+                }}
+                aria-label="RCorp"
+              >
+                RCorp
+              </h1>
+              
+              {/* Tagline */}
+              <p className="text-sm sm:text-base text-muted-foreground mb-6">
+                Soluções corporativas inteligentes
+              </p>
             </div>
-            
-            {/* Tagline */}
-            <p className="text-sm sm:text-base text-muted-foreground mb-4">
-              Soluções corporativas inteligentes
-            </p>
 
-            {/* Hero Title - Compact */}
-            <h1 className="font-extrabold tracking-tight text-foreground mb-4" 
+            {/* H2 Secondary Title */}
+            <h2 className="font-extrabold tracking-tight text-foreground mb-3" 
                 style={{ 
                   textWrap: 'balance' as any,
-                  fontSize: 'clamp(28px, 5vw, 44px)'
+                  fontSize: 'clamp(28px, 4.2vw, 54px)'
                 }}>
               Transforme a gestão da sua empresa
-            </h1>
+            </h2>
 
             {/* Description - Single sentence */}
-            <p className="mx-auto max-w-prose text-base sm:text-lg text-muted-foreground mb-6">
+            <p className="mx-auto max-w-prose text-muted-foreground mb-4" 
+               style={{ fontSize: 'clamp(16px, 1.6vw, 20px)' }}>
               Otimize processos, centralize documentos e acompanhe tudo em um único painel.
             </p>
 
@@ -67,6 +80,7 @@ export const LandingPage = () => {
                   variant="gradient" 
                   size="lg" 
                   className="text-base font-medium px-6 py-3 min-h-[44px] group"
+                  aria-label="Entrar no painel da RCorp"
                 >
                   Entrar no painel
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
