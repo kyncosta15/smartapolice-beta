@@ -15,6 +15,7 @@ import {
   Shield, 
   DollarSign, 
   AlertTriangle,
+  Settings,
   Calendar,
   Upload,
   RefreshCw,
@@ -23,211 +24,182 @@ import {
   Edit
 } from 'lucide-react';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
-import { formatCurrency } from '@/utils/currencyFormatter';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { fipeService } from '@/services/fipeService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { fipeService } from '@/services/fipeService';
 
 interface VehicleDetailsModalNewProps {
   veiculo: FrotaVeiculo | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSave?: (updatedVeiculo: FrotaVeiculo) => void;
   mode?: 'view' | 'edit';
-  onSave?: (veiculo: FrotaVeiculo) => void;
-  onVehicleUpdated?: () => void;
 }
 
-export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'view', onSave, onVehicleUpdated }: VehicleDetailsModalNewProps) {
-  const { toast } = useToast();
+export function VehicleDetailsModalNew({ 
+  veiculo, 
+  open, 
+  onOpenChange, 
+  onSave,
+  mode = 'view'
+}: VehicleDetailsModalNewProps) {
   const [activeTab, setActiveTab] = useState('veiculo');
   const [formData, setFormData] = useState<Partial<FrotaVeiculo>>({});
   const [loading, setLoading] = useState(false);
-  const [fipeLoading, setFipeLoading] = useState(false);
-  const [fipeLastUpdate, setFipeLastUpdate] = useState<string | null>(null);
+  const [fipeUpdateLoading, setFipeUpdateLoading] = useState(false);
+  const [fipeUpdateInfo, setFipeUpdateInfo] = useState<{
+    updated: boolean;
+    oldValue?: number;
+    newValue?: number;
+  }>({ updated: false });
 
-  // Real-time update of form data when vehicle prop changes
   useEffect(() => {
-    if (veiculo && (!formData.id || formData.id !== veiculo.id)) {
+    if (veiculo) {
       setFormData({ ...veiculo });
-      if (veiculo.updated_at) {
-        setFipeLastUpdate(veiculo.updated_at);
-      }
+      setFipeUpdateInfo({ updated: false });
     }
-  }, [veiculo, formData.id]);
+  }, [veiculo]);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: keyof FrotaVeiculo, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleUpdateFipe = async () => {
-    if (!formData.marca || !formData.modelo) {
-      toast({
-        title: "Dados insuficientes",
-        description: "Marca e modelo são necessários para consulta FIPE",
-        variant: "destructive"
-      });
+    if (!formData.marca || !formData.modelo || !formData.ano_modelo) {
+      toast.error('Informações do veículo são necessárias para buscar o valor FIPE');
       return;
     }
 
+    setFipeUpdateLoading(true);
     try {
-      setFipeLoading(true);
-      const result = await fipeService.getPrice({
-        placa: formData.placa,
+      const fipeValue = await fipeService.getValue({
         marca: formData.marca,
         modelo: formData.modelo,
-        ano_modelo: formData.ano_modelo || undefined
+        ano_modelo: formData.ano_modelo
       });
 
-      handleInputChange('preco_fipe', result.valor);
-      setFipeLastUpdate(result.atualizadoEm);
-      
-      toast({
-        title: "Valor FIPE atualizado",
-        description: `Valor: R$ ${result.valor.toLocaleString('pt-BR')}`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro ao consultar FIPE",
-        description: error.message || "Não foi possível obter o valor FIPE",
-        variant: "destructive"
-      });
+      if (fipeValue) {
+        const oldValue = formData.preco_fipe;
+        setFormData(prev => ({ ...prev, preco_fipe: fipeValue }));
+        setFipeUpdateInfo({
+          updated: true,
+          oldValue,
+          newValue: fipeValue
+        });
+        toast.success('Valor FIPE atualizado com sucesso!');
+      } else {
+        toast.error('Não foi possível encontrar o valor FIPE para este veículo');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar valor FIPE:', error);
+      toast.error('Erro ao buscar valor FIPE');
     } finally {
-      setFipeLoading(false);
+      setFipeUpdateLoading(false);
     }
   };
 
   const handleSave = async () => {
-    if (!veiculo || mode === 'view') return;
-    
+    if (!formData.id) return;
+
     setLoading(true);
     try {
-      // Update vehicle in database
-      const { data: updatedVehicle, error } = await supabase
+      const { error } = await supabase
         .from('frota_veiculos')
-        .update({
-          marca: formData.marca,
-          modelo: formData.modelo,
-          ano_modelo: formData.ano_modelo,
-          categoria: formData.categoria,
-          proprietario_nome: formData.proprietario_nome,
-          proprietario_tipo: formData.proprietario_tipo,
-          proprietario_doc: formData.proprietario_doc,
-          uf_emplacamento: formData.uf_emplacamento,
-          data_venc_emplacamento: formData.data_venc_emplacamento,
-          status_seguro: formData.status_seguro,
-          preco_fipe: formData.preco_fipe,
-          preco_nf: formData.preco_nf,
-          percentual_tabela: formData.percentual_tabela,
-          modalidade_compra: formData.modalidade_compra,
-          observacoes: formData.observacoes,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', veiculo.id)
-        .select()
-        .single();
+        .update(formData)
+        .eq('id', formData.id);
 
       if (error) throw error;
 
-      toast({
-        title: "Veículo atualizado com sucesso!",
-        description: "As alterações foram salvas no sistema.",
-        variant: "default"
-      });
-
-      // Update the form data with the saved data
-      if (updatedVehicle) {
-        setFormData(updatedVehicle);
-      }
-
-      // Notify parent component to refresh data
       if (onSave) {
-        onSave(updatedVehicle || formData as FrotaVeiculo);
+        onSave(formData as FrotaVeiculo);
       }
 
-      // Trigger data refresh in the parent component
-      if (onVehicleUpdated) {
-        onVehicleUpdated();
-      }
+      toast.success('Veículo atualizado com sucesso!');
       
-      // Keep modal open but show success message
-      // Don't close modal: onOpenChange(false);
-    } catch (error: any) {
-      console.error('Error saving vehicle:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: error.message || "Não foi possível salvar as alterações",
-        variant: "destructive"
-      });
+      // Dispatch event to refresh the table
+      window.dispatchEvent(new CustomEvent('vehicleUpdated'));
+      
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast.error('Erro ao salvar as alterações');
     } finally {
       setLoading(false);
     }
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'segurado':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Segurado</Badge>;
-      case 'sem_seguro':
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Sem Seguro</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
+    const config = {
+      'vigente': { color: 'bg-green-100 text-green-800', label: 'Vigente' },
+      'vencido': { color: 'bg-red-100 text-red-800', label: 'Vencido' },
+      'vence_30_dias': { color: 'bg-yellow-100 text-yellow-800', label: 'Vence em 30 dias' },
+      'vence_60_dias': { color: 'bg-blue-100 text-blue-800', label: 'Vence em 60 dias' },
+      'sem_seguro': { color: 'bg-gray-100 text-gray-800', label: 'Sem Seguro' }
+    };
+    
+    const statusConfig = config[status as keyof typeof config] || config['sem_seguro'];
+    
+    return (
+      <Badge className={statusConfig.color}>
+        {statusConfig.label}
+      </Badge>
+    );
   };
 
-  const getCategoriaBadge = (categoria?: string) => {
-    if (!categoria) return null;
-    
-    const colors = {
-      passeio: 'bg-blue-100 text-blue-800 border-blue-200',
-      utilitario: 'bg-purple-100 text-purple-800 border-purple-200',
-      caminhao: 'bg-orange-100 text-orange-800 border-orange-200',
-      moto: 'bg-green-100 text-green-800 border-green-200',
-      outros: 'bg-gray-100 text-gray-800 border-gray-200',
-    };
-
+  const getCategoriaBadge = (categoria: string) => {
     const labels = {
-      passeio: 'Passeio',
-      utilitario: 'Utilitário',
-      caminhao: 'Caminhão',
-      moto: 'Moto',
-      outros: 'Outros',
+      'passeio': 'Passeio',
+      'utilitario': 'Utilitário', 
+      'caminhao': 'Caminhão',
+      'moto': 'Moto',
+      'outros': 'Outros'
     };
 
     return (
-      <Badge className={colors[categoria as keyof typeof colors] || colors.outros}>
+      <Badge variant="secondary">
         {labels[categoria as keyof typeof labels] || categoria}
       </Badge>
     );
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
   };
 
   if (!veiculo) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+        <DialogHeader className="shrink-0 pb-4 border-b">
           <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Car className="h-5 w-5" />
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <span>{formData.marca} {formData.modelo}</span>
-                <span className="text-sm font-mono text-muted-foreground">{formData.placa}</span>
-                <div className="flex gap-2">
-                  {getCategoriaBadge(formData.categoria)}
-                  {getStatusBadge(formData.status_seguro || 'sem_seguro')}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Car className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex flex-col">
+                  <h2 className="text-xl font-semibold">{formData.marca} {formData.modelo}</h2>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-sm font-mono text-muted-foreground bg-gray-100 px-2 py-1 rounded">
+                      {formData.placa}
+                    </span>
+                    {getCategoriaBadge(formData.categoria)}
+                    {getStatusBadge(formData.status_seguro || 'sem_seguro')}
+                  </div>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {mode === 'view' ? (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
                   <Eye className="h-3 w-3 mr-1" />
                   Visualização
                 </Badge>
               ) : (
-                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 px-3 py-1">
                   <Edit className="h-3 w-3 mr-1" />
                   Editando
                 </Badge>
@@ -236,319 +208,363 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'vi
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 gap-1">
-            <TabsTrigger value="veiculo" className="text-xs md:text-sm">Veículo</TabsTrigger>
-            <TabsTrigger value="proprietario" className="text-xs md:text-sm">Proprietário</TabsTrigger>
-            <TabsTrigger value="emplacamento" className="text-xs md:text-sm">Emplacamento</TabsTrigger>
-            <TabsTrigger value="seguro" className="text-xs md:text-sm">Seguro</TabsTrigger>
-            <TabsTrigger value="operacao" className="text-xs md:text-sm">Operação</TabsTrigger>
-            <TabsTrigger value="valores" className="text-xs md:text-sm">Valores</TabsTrigger>
-            <TabsTrigger value="sinistros" className="text-xs md:text-sm">Sinistros</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="veiculo" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="marca">Marca</Label>
-                <Input
-                  id="marca"
-                  value={formData.marca || ''}
-                  onChange={(e) => handleInputChange('marca', e.target.value)}
-                  disabled={mode === 'view'}
-                />
-              </div>
-              <div>
-                <Label htmlFor="modelo">Modelo</Label>
-                <Input
-                  id="modelo"
-                  value={formData.modelo || ''}
-                  onChange={(e) => handleInputChange('modelo', e.target.value)}
-                  disabled={mode === 'view'}
-                />
-              </div>
-              <div>
-                <Label htmlFor="ano_modelo">Ano do Modelo</Label>
-                <Input
-                  id="ano_modelo"
-                  type="number"
-                  value={formData.ano_modelo || ''}
-                  onChange={(e) => handleInputChange('ano_modelo', parseInt(e.target.value) || null)}
-                  disabled={mode === 'view'}
-                />
-              </div>
-              <div>
-                <Label htmlFor="categoria">Categoria</Label>
-                <Select 
-                  value={formData.categoria || ''} 
-                  onValueChange={(value) => handleInputChange('categoria', value)}
-                  disabled={mode === 'view'}
+        <div className="flex-1 overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+            <div className="shrink-0 px-1 py-4">
+              <div className="flex flex-wrap gap-2 md:gap-1">
+                <TabsTrigger 
+                  value="veiculo" 
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="passeio">Passeio</SelectItem>
-                    <SelectItem value="utilitario">Utilitário</SelectItem>
-                    <SelectItem value="caminhao">Caminhão</SelectItem>
-                    <SelectItem value="moto">Moto</SelectItem>
-                    <SelectItem value="outros">Outros</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="observacoes">Observações</Label>
-                <Textarea
-                  id="observacoes"
-                  value={formData.observacoes || ''}
-                  onChange={(e) => handleInputChange('observacoes', e.target.value)}
-                  rows={3}
-                  disabled={mode === 'view'}
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="proprietario" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="proprietario_nome">Nome do Proprietário</Label>
-                <Input
-                  id="proprietario_nome"
-                  value={formData.proprietario_nome || ''}
-                  onChange={(e) => handleInputChange('proprietario_nome', e.target.value)}
-                  disabled={mode === 'view'}
-                />
-              </div>
-              <div>
-                <Label htmlFor="proprietario_tipo">Tipo</Label>
-                <Select 
-                  value={formData.proprietario_tipo || ''} 
-                  onValueChange={(value) => handleInputChange('proprietario_tipo', value)}
-                  disabled={mode === 'view'}
+                  <Car className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Veículo</span>
+                  <span className="sm:hidden">Info</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="proprietario" 
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pessoa Física ou Jurídica" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pf">Pessoa Física</SelectItem>
-                    <SelectItem value="pj">Pessoa Jurídica</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="proprietario_doc">CPF/CNPJ</Label>
-                <Input
-                  id="proprietario_doc"
-                  value={formData.proprietario_doc || ''}
-                  onChange={(e) => handleInputChange('proprietario_doc', e.target.value)}
-                  disabled={mode === 'view'}
-                />
-              </div>
-              <div className="flex items-end">
-                <Button variant="outline" className="w-full">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Anexar Documento
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="emplacamento" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="uf_emplacamento">UF de Emplacamento</Label>
-                <Input
-                  id="uf_emplacamento"
-                  value={formData.uf_emplacamento || ''}
-                  onChange={(e) => handleInputChange('uf_emplacamento', e.target.value)}
-                  maxLength={2}
-                  disabled={mode === 'view'}
-                />
-              </div>
-              <div>
-                <Label htmlFor="data_venc_emplacamento">Data de Vencimento</Label>
-                <Input
-                  id="data_venc_emplacamento"
-                  type="date"
-                  value={formData.data_venc_emplacamento || ''}
-                  onChange={(e) => handleInputChange('data_venc_emplacamento', e.target.value)}
-                  disabled={mode === 'view'}
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="seguro" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="status_seguro">Status do Seguro</Label>
-                <Select 
-                  value={formData.status_seguro || ''} 
-                  onValueChange={(value) => handleInputChange('status_seguro', value)}
-                  disabled={mode === 'view'}
+                  <User className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Proprietário</span>
+                  <span className="sm:hidden">Dono</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="emplacamento" 
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status do seguro" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="segurado">Segurado</SelectItem>
-                    <SelectItem value="sem_seguro">Não Segurado</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <FileText className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Emplacamento</span>
+                  <span className="sm:hidden">Docs</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="seguro" 
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  <span>Seguro</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="operacao" 
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  <span>Operação</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="valores" 
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                >
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  <span>Valores</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="sinistros" 
+                  className="flex-1 min-w-[100px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 transition-all duration-200 rounded-lg px-4 py-2"
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  <span>Sinistros</span>
+                </TabsTrigger>
               </div>
-              {formData.status_seguro === 'sem_seguro' && (
-                <div>
-                  <Label htmlFor="motivo_sem_seguro">Motivo da Falta de Seguro *</Label>
-                  <Input
-                    id="motivo_sem_seguro"
-                    value={formData.motivo_sem_seguro || ''}
-                    onChange={(e) => handleInputChange('motivo_sem_seguro', e.target.value)}
-                    placeholder="Informe o motivo..."
-                    required
-                    disabled={mode === 'view'}
-                  />
-                </div>
-              )}
             </div>
-            {formData.status_seguro === 'sem_seguro' && (
-              <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                <div className="text-sm text-yellow-800">
-                  <p className="font-medium">Atenção: Veículo sem seguro</p>
-                  <p>Este veículo não possui cobertura de seguro ativa. Certifique-se de informar o motivo.</p>
-                </div>
-              </div>
-            )}
-          </TabsContent>
 
-          <TabsContent value="operacao" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="previsao_circulacao">Previsão de Circulação</Label>
-                <Input
-                  id="previsao_circulacao"
-                  type="date"
-                  value={formData.previsao_circulacao || ''}
-                  onChange={(e) => handleInputChange('previsao_circulacao', e.target.value)}
-                  disabled={mode === 'view'}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="observacoes_operacao">Observações de Operação</Label>
-                <Textarea
-                  id="observacoes_operacao"
-                  value={formData.observacoes_operacao || ''}
-                  onChange={(e) => handleInputChange('observacoes_operacao', e.target.value)}
-                  rows={3}
-                  placeholder="Informações sobre circulação, uso do veículo, etc."
-                  disabled={mode === 'view'}
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="valores" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="preco_fipe">Valor FIPE</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="preco_fipe"
-                    type="number"
-                    step="0.01"
-                    value={formData.preco_fipe || ''}
-                    onChange={(e) => handleInputChange('preco_fipe', parseFloat(e.target.value) || null)}
-                    disabled={mode === 'view'}
-                  />
-                  <Button 
-                    variant="outline" 
-                    onClick={handleUpdateFipe}
-                    disabled={fipeLoading || mode === 'view'}
-                    className="flex-shrink-0"
-                  >
-                    {fipeLoading ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                {fipeLastUpdate && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Atualizado em: {format(new Date(fipeLastUpdate), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="preco_nf">Valor da Nota Fiscal</Label>
-                <Input
-                  id="preco_nf"
-                  type="number"
-                  step="0.01"
-                  value={formData.preco_nf || ''}
-                  onChange={(e) => handleInputChange('preco_nf', parseFloat(e.target.value) || null)}
-                  disabled={mode === 'view'}
-                />
-              </div>
-              <div>
-                <Label htmlFor="percentual_tabela">% da Tabela FIPE</Label>
-                <Input
-                  id="percentual_tabela"
-                  type="number"
-                  step="0.01"
-                  value={formData.percentual_tabela || ''}
-                  onChange={(e) => handleInputChange('percentual_tabela', parseFloat(e.target.value) || null)}
-                  disabled={mode === 'view'}
-                />
-              </div>
-            </div>
-            
-            {formData.preco_fipe && formData.preco_nf && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Análise de Valores</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Valor FIPE</p>
-                      <p className="font-medium">{formatCurrency(formData.preco_fipe)}</p>
+            <div className="flex-1 overflow-y-auto px-2">
+              <TabsContent value="veiculo" className="mt-0 space-y-6">
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Car className="h-5 w-5 text-blue-600" />
+                    Informações do Veículo
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="marca" className="text-sm font-medium text-gray-700">Marca</Label>
+                      <Input
+                        id="marca"
+                        value={formData.marca || ''}
+                        onChange={(e) => handleInputChange('marca', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-11"
+                      />
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">Valor NF</p>
-                      <p className="font-medium">{formatCurrency(formData.preco_nf)}</p>
+                    <div className="space-y-2">
+                      <Label htmlFor="modelo" className="text-sm font-medium text-gray-700">Modelo</Label>
+                      <Input
+                        id="modelo"
+                        value={formData.modelo || ''}
+                        onChange={(e) => handleInputChange('modelo', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-11"
+                      />
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">Diferença</p>
-                      <p className={`font-medium ${formData.preco_fipe > formData.preco_nf ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatCurrency(Math.abs(formData.preco_fipe - formData.preco_nf))}
-                      </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="ano_modelo" className="text-sm font-medium text-gray-700">Ano do Modelo</Label>
+                      <Input
+                        id="ano_modelo"
+                        type="number"
+                        value={formData.ano_modelo || ''}
+                        onChange={(e) => handleInputChange('ano_modelo', parseInt(e.target.value) || null)}
+                        disabled={mode === 'view'}
+                        className="h-11"
+                      />
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">% da Tabela</p>
-                      <p className="font-medium">
-                        {((formData.preco_nf / formData.preco_fipe) * 100).toFixed(1)}%
-                      </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="categoria" className="text-sm font-medium text-gray-700">Categoria</Label>
+                      <Select 
+                        value={formData.categoria || ''} 
+                        onValueChange={(value) => handleInputChange('categoria', value)}
+                        disabled={mode === 'view'}
+                      >
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder="Selecione a categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="passeio">Passeio</SelectItem>
+                          <SelectItem value="utilitario">Utilitário</SelectItem>
+                          <SelectItem value="caminhao">Caminhão</SelectItem>
+                          <SelectItem value="moto">Moto</SelectItem>
+                          <SelectItem value="outros">Outros</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 md:col-span-2 xl:col-span-2">
+                      <Label htmlFor="observacoes" className="text-sm font-medium text-gray-700">Observações</Label>
+                      <Textarea
+                        id="observacoes"
+                        value={formData.observacoes || ''}
+                        onChange={(e) => handleInputChange('observacoes', e.target.value)}
+                        disabled={mode === 'view'}
+                        rows={3}
+                        className="resize-none"
+                      />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+                </Card>
+              </TabsContent>
 
-          <TabsContent value="sinistros" className="space-y-4">
-            <div className="text-center py-8">
-              <AlertTriangle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Sinistros do Veículo
-              </h3>
-              <p className="text-gray-500 mb-4">
-                Lista de sinistros relacionados a este veículo será implementada aqui.
-              </p>
+              <TabsContent value="proprietario" className="mt-0 space-y-6">
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <User className="h-5 w-5 text-blue-600" />
+                    Informações do Proprietário
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="proprietario_nome" className="text-sm font-medium text-gray-700">Nome do Proprietário</Label>
+                      <Input
+                        id="proprietario_nome"
+                        value={formData.proprietario_nome || ''}
+                        onChange={(e) => handleInputChange('proprietario_nome', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="proprietario_tipo" className="text-sm font-medium text-gray-700">Tipo</Label>
+                      <Select 
+                        value={formData.proprietario_tipo || ''} 
+                        onValueChange={(value) => handleInputChange('proprietario_tipo', value)}
+                        disabled={mode === 'view'}
+                      >
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fisica">Pessoa Física</SelectItem>
+                          <SelectItem value="juridica">Pessoa Jurídica</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="proprietario_doc" className="text-sm font-medium text-gray-700">CPF/CNPJ</Label>
+                      <Input
+                        id="proprietario_doc"
+                        value={formData.proprietario_doc || ''}
+                        onChange={(e) => handleInputChange('proprietario_doc', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-11"
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="emplacamento" className="mt-0 space-y-6">
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    Informações de Emplacamento
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="placa" className="text-sm font-medium text-gray-700">Placa</Label>
+                      <Input
+                        id="placa"
+                        value={formData.placa || ''}
+                        onChange={(e) => handleInputChange('placa', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-11 font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="renavam" className="text-sm font-medium text-gray-700">Renavam</Label>
+                      <Input
+                        id="renavam"
+                        value={formData.renavam || ''}
+                        onChange={(e) => handleInputChange('renavam', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-11 font-mono"
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="seguro" className="mt-0 space-y-6">
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-blue-600" />
+                    Status do Seguro
+                  </h3>
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Status Atual</Label>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        {getStatusBadge(formData.status_seguro || 'sem_seguro')}
+                      </div>
+                    </div>
+                    {formData.motivo_sem_seguro && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Motivo sem Seguro</Label>
+                        <p className="p-4 bg-yellow-50 rounded-lg text-yellow-800">
+                          {formData.motivo_sem_seguro}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="operacao" className="mt-0 space-y-6">
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-blue-600" />
+                    Informações Operacionais
+                  </h3>
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="observacoes_operacao" className="text-sm font-medium text-gray-700">Observações Operacionais</Label>
+                      <Textarea
+                        id="observacoes_operacao"
+                        value={formData.observacoes_operacao || ''}
+                        onChange={(e) => handleInputChange('observacoes_operacao', e.target.value)}
+                        disabled={mode === 'view'}
+                        rows={3}
+                        className="resize-none"
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="valores" className="mt-0 space-y-6">
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-blue-600" />
+                      Informações Financeiras
+                    </h3>
+                    {mode === 'edit' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleUpdateFipe}
+                        disabled={fipeUpdateLoading}
+                      >
+                        {fipeUpdateLoading ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Atualizando...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Atualizar FIPE
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="preco_nf" className="text-sm font-medium text-gray-700">Valor da Nota Fiscal</Label>
+                      <Input
+                        id="preco_nf"
+                        type="number"
+                        value={formData.preco_nf || ''}
+                        onChange={(e) => handleInputChange('preco_nf', parseFloat(e.target.value) || null)}
+                        disabled={mode === 'view'}
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="preco_fipe" className="text-sm font-medium text-gray-700">
+                        Valor FIPE
+                        {fipeUpdateInfo.updated && (
+                          <span className="text-green-600 text-xs ml-2">Atualizado!</span>
+                        )}
+                      </Label>
+                      <Input
+                        id="preco_fipe"
+                        type="number"
+                        value={formData.preco_fipe || ''}
+                        onChange={(e) => handleInputChange('preco_fipe', parseFloat(e.target.value) || null)}
+                        disabled={mode === 'view'}
+                        className="h-11"
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                {formData.preco_fipe && formData.preco_nf && (
+                  <Card className="p-6 bg-gray-50">
+                    <h4 className="text-md font-semibold mb-4">Análise FIPE vs Nota Fiscal</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                      <div>
+                        <p className="text-muted-foreground">Valor NF</p>
+                        <p className="text-lg font-semibold">{formatCurrency(formData.preco_nf)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Diferença</p>
+                        <p className={`text-lg font-semibold ${formData.preco_fipe > formData.preco_nf ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(Math.abs(formData.preco_fipe - formData.preco_nf))}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">% da Tabela</p>
+                        <p className="text-lg font-semibold">
+                          {((formData.preco_nf / formData.preco_fipe) * 100).toFixed(1)}%
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="sinistros" className="mt-0 space-y-6">
+                <Card className="p-6">
+                  <div className="text-center py-8">
+                    <AlertTriangle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Sinistros do Veículo
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      Lista de sinistros relacionados a este veículo será implementada aqui.
+                    </p>
+                  </div>
+                </Card>
+              </TabsContent>
             </div>
-          </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
 
         <div className="flex justify-between items-center gap-2 pt-4 border-t">
           <div>
