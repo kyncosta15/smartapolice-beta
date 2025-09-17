@@ -14,7 +14,7 @@ import {
   Eye, 
   Edit, 
   FileText, 
-  MoreHorizontal,
+  MoreVertical,
   Car,
   User,
   Shield,
@@ -40,8 +40,83 @@ interface FrotasTableProps {
   maxHeight?: string;
 }
 
+interface VehicleActionsProps {
+  veiculo: FrotaVeiculo;
+  onView: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDocs: (id: string) => void;
+}
+
+function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps) {
+  return (
+    <div className="flex items-center justify-end gap-2">
+      {/* Botão primário no mobile */}
+      <Button
+        size="sm"
+        variant="outline"
+        className="sm:hidden h-8 px-3"
+        onClick={() => onView(veiculo.id)}
+        aria-label="Ver detalhes"
+      >
+        <Eye className="w-4 h-4 mr-1" /> Ver
+      </Button>
+
+      {/* Kebab sempre disponível */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            aria-label="Mais ações"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onSelect={() => onView(veiculo.id)}>
+            <Eye className="mr-2 h-4 w-4" /> Ver detalhes
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => onEdit(veiculo.id)}>
+            <Edit className="mr-2 h-4 w-4" /> Editar
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => onDocs(veiculo.id)}>
+            <FileText className="mr-2 h-4 w-4" /> Documentos
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }: FrotasTableProps) {
   const [selectedVeiculo, setSelectedVeiculo] = useState<FrotaVeiculo | null>(null);
+
+  const handleView = (id: string) => {
+    const veiculo = veiculos.find(v => v.id === id);
+    if (veiculo) {
+      setSelectedVeiculo(veiculo);
+      // TODO: Abrir modal de detalhes
+      console.log('Ver detalhes do veículo:', veiculo);
+    }
+  };
+
+  const handleEdit = (id: string) => {
+    const veiculo = veiculos.find(v => v.id === id);
+    if (veiculo) {
+      // TODO: Abrir modal de edição
+      console.log('Editar veículo:', veiculo);
+    }
+  };
+
+  const handleDocs = (id: string) => {
+    const veiculo = veiculos.find(v => v.id === id);
+    if (veiculo) {
+      // TODO: Abrir documentos
+      console.log('Ver documentos do veículo:', veiculo);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -314,30 +389,12 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
                     </TableCell>
 
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => setSelectedVeiculo(veiculo)}
-                            className="flex items-center gap-2"
-                          >
-                            <Eye className="h-4 w-4" />
-                            Ver detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-2">
-                            <Edit className="h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-2">
-                            <FileText className="h-4 w-4" />
-                            Documentos
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <VehicleActions
+                        veiculo={veiculo}
+                        onView={handleView}
+                        onEdit={handleEdit}
+                        onDocs={handleDocs}
+                      />
                     </TableCell>
                   </TableRow>
                 );

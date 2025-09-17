@@ -85,34 +85,34 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Search and Filter Controls */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Search Input */}
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Buscar por placa, CNPJ, CPF ou proprietário..."
             value={filters.search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-10 h-10"
+            className="pl-10 h-9 sm:h-10 w-full"
             disabled={loading}
           />
         </div>
 
         {/* Filter Dropdowns */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Categoria Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="h-10 px-3 flex items-center gap-2"
+                className="h-8 sm:h-9 px-3 flex items-center gap-2"
                 disabled={loading}
               >
                 <Car className="h-4 w-4" />
-                Categoria
+                <span className="hidden sm:inline">Categoria</span>
                 {filters.categoria.length > 0 && (
                   <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 text-xs">
                     {filters.categoria.length}
@@ -141,11 +141,11 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="h-10 px-3 flex items-center gap-2"
+                className="h-8 sm:h-9 px-3 flex items-center gap-2"
                 disabled={loading}
               >
                 <Shield className="h-4 w-4" />
-                Status
+                <span className="hidden sm:inline">Status</span>
                 {filters.status.length > 0 && (
                   <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 text-xs">
                     {filters.status.length}
@@ -174,11 +174,11 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
               variant="ghost" 
               size="sm" 
               onClick={handleClearFilters}
-              className="h-10 px-3 text-gray-500 hover:text-gray-700"
+              className="h-8 sm:h-9 px-3 text-gray-500 hover:text-gray-700"
               disabled={loading}
             >
               <X className="h-4 w-4 mr-1" />
-              Limpar
+              <span className="hidden sm:inline">Limpar</span>
             </Button>
           )}
         </div>
@@ -200,6 +200,7 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
                 <button
                   onClick={() => removeCategoriaFilter(categoria)}
                   className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                  aria-label={`Remover filtro ${option?.label || categoria}`}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -220,6 +221,7 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
                 <button
                   onClick={() => removeStatusFilter(status)}
                   className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                  aria-label={`Remover filtro ${option?.label || status}`}
                 >
                   <X className="h-3 w-3" />
                 </button>
