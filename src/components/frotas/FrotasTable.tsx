@@ -52,15 +52,15 @@ interface VehicleActionsProps {
 
 function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps) {
   return (
-    <div className="inline-flex items-center justify-end gap-2">
+    <div className="flex items-center justify-end gap-1 min-w-[80px]">
       {/* Ver detalhes (ação direta) */}
       <Button
         variant="ghost"
-        size="icon"
+        size="sm"
         aria-label="Ver detalhes"
         title="Ver detalhes"
         onClick={() => onView(veiculo.id)}
-        className="hover:bg-muted"
+        className="h-8 w-8 p-0 hover:bg-muted"
       >
         <Eye className="h-4 w-4" />
         <span className="sr-only">Ver detalhes</span>
@@ -71,17 +71,17 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             aria-label="Mais ações"
             title="Mais ações"
-            className="hover:bg-muted"
+            className="h-8 w-8 p-0 hover:bg-muted"
           >
             <MoreVertical className="h-4 w-4" />
             <span className="sr-only">Mais ações</span>
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" sideOffset={6} className="z-50">
+        <DropdownMenuContent align="end" sideOffset={6} className="z-50 bg-background">
           <DropdownMenuItem onClick={() => onView(veiculo.id)}>
             <Eye className="mr-2 h-4 w-4" /> Ver detalhes
           </DropdownMenuItem>

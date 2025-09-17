@@ -183,8 +183,7 @@ export function GestaoFrotas() {
 
           <div className="flex-1 min-h-0">
             <TabsContent value="frotas" className="h-full flex flex-col min-h-0 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
-              <FrotasDashboard kpis={kpis} veiculos={veiculos} loading={loading} />
-              <FrotasTable veiculos={veiculos} loading={loading} onRefetch={refetch} />
+              <FrotasDashboard kpis={kpis} veiculos={veiculos} loading={loading} onRefetch={refetch} />
             </TabsContent>
 
             <TabsContent value="fipe" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto">

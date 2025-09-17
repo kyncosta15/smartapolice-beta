@@ -13,14 +13,16 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { FrotaVeiculo, FrotaKPIs } from '@/hooks/useFrotasData';
 import { ResponsiveContainer, PieChart as RechartsPieChart, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Pie } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { FrotasTable } from './FrotasTable';
 
 interface FrotasDashboardProps {
   kpis: FrotaKPIs;
   veiculos: FrotaVeiculo[];
   loading: boolean;
+  onRefetch?: () => void;
 }
 
-export function FrotasDashboard({ kpis, veiculos, loading }: FrotasDashboardProps) {
+export function FrotasDashboard({ kpis, veiculos, loading, onRefetch }: FrotasDashboardProps) {
   const isMobile = useIsMobile();
 
   // Preparar dados para gráficos
@@ -267,6 +269,15 @@ export function FrotasDashboard({ kpis, veiculos, loading }: FrotasDashboardProp
             )}
           </div>
         </Card>
+      </div>
+
+      {/* Vehicle List Table */}
+      <div className="mt-6">
+        <FrotasTable 
+          veiculos={veiculos}
+          loading={loading}
+          onRefetch={onRefetch || (() => {})}
+        />
       </div>
     </div>
   );
