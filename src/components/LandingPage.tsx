@@ -18,15 +18,18 @@ export const LandingPage = () => {
               <div className="absolute inset-0 w-44 h-44 md:w-24 md:h-24 bg-primary/20 rounded-2xl animate-ping" style={{ animationDuration: '2s' }}></div>
               
               {/* Main container */}
-              <div className="relative w-40 h-40 md:w-20 md:h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
-                <img 
-                  src="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414.png" 
-                  alt="RCorp Logo" 
-                  className="w-full h-full object-cover rounded-2xl" 
-                  style={{ 
-                    filter: 'drop-shadow(0 0 12px rgba(59, 130, 246, 0.4))'
-                  }} 
-                />
+               <div className="relative w-40 h-40 md:w-20 md:h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
+                <picture>
+                  <source srcSet="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414-optimized.webp" type="image/webp" />
+                  <img 
+                    src="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414.png" 
+                    alt="RCorp Logo" 
+                    className="w-full h-full object-cover rounded-2xl" 
+                    style={{ 
+                      filter: 'drop-shadow(0 0 12px rgba(59, 130, 246, 0.4))'
+                    }} 
+                  />
+                </picture>
               </div>
             </div>
           </div>
@@ -83,7 +86,7 @@ export const LandingPage = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png')`,
+            backgroundImage: `url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp'), url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }}
@@ -95,7 +98,7 @@ export const LandingPage = () => {
         <div 
           className="w-full h-full bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png')`,
+            backgroundImage: `url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp'), url('/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png')`,
             backgroundSize: 'contain',
             backgroundPosition: 'center'
           }}
