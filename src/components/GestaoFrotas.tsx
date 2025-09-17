@@ -152,14 +152,6 @@ export function GestaoFrotas() {
         </div>
       </div>
 
-      {/* Policy Header */}
-      <div className="p-3 sm:p-4 md:p-6 pb-0">
-        <PolicyHeader 
-          policies={policies}
-          selectedPolicyId={selectedPolicyId}
-          onPolicyChange={setSelectedPolicyId}
-        />
-      </div>
 
       {/* Tabs and Content */}
       <div className="flex-1 min-h-0">
