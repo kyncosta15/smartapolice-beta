@@ -133,17 +133,14 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs }: VehicleCardProps) {
             </div>
           )}
 
-          {/* Informações de emplacamento */}
+          {/* Status do emplacamento */}
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium">Emplacamento:</span>{' '}
-              <span className={emplacamentoStatus.color}>{emplacamentoStatus.text}</span>
+            <p className="text-xs">
+              <span className={`font-medium ${emplacamentoStatus.color}`}>{emplacamentoStatus.text}</span>
+              {veiculo.uf_emplacamento && (
+                <span className="text-muted-foreground ml-2">({veiculo.uf_emplacamento})</span>
+              )}
             </p>
-            {veiculo.uf_emplacamento && (
-              <p className="text-xs text-muted-foreground">
-                UF: {veiculo.uf_emplacamento}
-              </p>
-            )}
           </div>
 
           {/* Valores financeiros */}

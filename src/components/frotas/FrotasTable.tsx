@@ -32,6 +32,7 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { VehicleListMobile } from './VehicleListMobile';
+import { VehicleDetailsModal } from './VehicleDetailsModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FrotasTableProps {
@@ -52,24 +53,24 @@ interface VehicleActionsProps {
 function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps) {
   return (
     <div className="flex items-center justify-end gap-2">
-      {/* Botão primário no mobile */}
+      {/* Botão de visualizar sempre disponível */}
       <Button
         size="sm"
         variant="outline"
-        className="sm:hidden h-8 px-3"
+        className="h-10 w-10 p-0"
         onClick={() => onView(veiculo.id)}
         aria-label="Ver detalhes"
       >
-        <Eye className="w-4 h-4 mr-1" /> Ver
+        <Eye className="h-4 w-4" />
       </Button>
 
-      {/* Kebab sempre disponível */}
+      {/* Kebab menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
+            className="h-10 w-10 p-0"
             aria-label="Mais ações"
           >
             <MoreVertical className="h-4 w-4" />
@@ -94,14 +95,14 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps
 
 export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }: FrotasTableProps) {
   const [selectedVeiculo, setSelectedVeiculo] = useState<FrotaVeiculo | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const handleView = (id: string) => {
     const veiculo = veiculos.find(v => v.id === id);
     if (veiculo) {
       setSelectedVeiculo(veiculo);
-      // TODO: Abrir modal de detalhes
-      console.log('Ver detalhes do veículo:', veiculo);
+      setModalOpen(true);
     }
   };
 
@@ -252,172 +253,181 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
   }
 
   return (
-    <Card className="border-0 shadow-sm rounded-xl">
-      <CardHeader className="p-3 md:p-4">
-        <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-          <Car className="h-5 w-5" />
-          Lista de Veículos ({veiculos.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        {/* Wrapper com scroll próprio */}
-        <div
-          className="max-h-[60vh] md:max-h-[50vh] overflow-y-auto overscroll-contain pr-1 -mr-1"
-          tabIndex={0}
-          aria-label="Lista de veículos rolável"
-        >
-          <div className="p-3 md:p-4">
-            {isMobile ? (
-              // Versão mobile: cards
-              <VehicleListMobile
-                veiculos={veiculos}
-                onView={handleView}
-                onEdit={handleEdit}
-                onDocs={handleDocs}
-              />
-            ) : (
-              // Versão desktop: tabela
-              <Table>
-                <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
-                  <TableRow>
-                    <TableHead className="min-w-[200px] bg-background" scope="col">Veículo</TableHead>
-                    <TableHead className="bg-background" scope="col">Placa</TableHead>
-                    <TableHead className="bg-background" scope="col">Proprietário</TableHead>
-                    <TableHead className="bg-background" scope="col">Emplacamento</TableHead>
-                    <TableHead className="bg-background" scope="col">Status Seguro</TableHead>
-                    <TableHead className="bg-background" scope="col">FIPE</TableHead>
-                    <TableHead className="bg-background" scope="col">Valor NF</TableHead>
-                    <TableHead className="bg-background" scope="col">Modalidade</TableHead>
-                    <TableHead className="bg-background" scope="col">Responsável</TableHead>
-                    <TableHead className="w-[50px] bg-background" scope="col">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="[&_tr:hover]:bg-muted/50">
-                  {veiculos.map((veiculo) => {
-                    const emplacamentoStatus = getEmplacamentoStatus(veiculo.data_venc_emplacamento);
-                    const responsavel = veiculo.responsaveis?.[0];
+    <>
+      <Card className="border-0 shadow-sm rounded-xl">
+        <CardHeader className="p-3 md:p-4">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Car className="h-5 w-5" />
+            Lista de Veículos ({veiculos.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {/* Wrapper com scroll próprio */}
+          <div
+            className="max-h-[60vh] md:max-h-[50vh] overflow-y-auto overscroll-contain pr-1 -mr-1"
+            tabIndex={0}
+            aria-label="Lista de veículos rolável"
+          >
+            <div className="p-3 md:p-4">
+              {isMobile ? (
+                // Versão mobile: cards
+                <VehicleListMobile
+                  veiculos={veiculos}
+                  onView={handleView}
+                  onEdit={handleEdit}
+                  onDocs={handleDocs}
+                />
+              ) : (
+                // Versão desktop: tabela
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                    <TableRow>
+                      <TableHead className="min-w-[200px] bg-background" scope="col">Veículo</TableHead>
+                      <TableHead className="bg-background" scope="col">Placa</TableHead>
+                      <TableHead className="bg-background" scope="col">Proprietário</TableHead>
+                      <TableHead className="bg-background" scope="col">Emplacamento</TableHead>
+                      <TableHead className="bg-background" scope="col">Status Seguro</TableHead>
+                      <TableHead className="bg-background" scope="col">FIPE</TableHead>
+                      <TableHead className="bg-background" scope="col">Valor NF</TableHead>
+                      <TableHead className="bg-background" scope="col">Modalidade</TableHead>
+                      <TableHead className="bg-background" scope="col">Responsável</TableHead>
+                      <TableHead className="w-[50px] bg-background" scope="col">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="[&_tr:hover]:bg-muted/50">
+                    {veiculos.map((veiculo) => {
+                      const emplacamentoStatus = getEmplacamentoStatus(veiculo.data_venc_emplacamento);
+                      const responsavel = veiculo.responsaveis?.[0];
 
-                    return (
-                      <TableRow key={veiculo.id} className="hover:bg-muted/50">
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="font-medium text-foreground">
-                              {veiculo.marca} {veiculo.modelo}
-                            </div>
-                            {veiculo.ano_modelo && (
-                              <div className="text-sm text-muted-foreground">
-                                {veiculo.ano_modelo}
-                              </div>
-                            )}
-                            {getCategoriaBadge(veiculo.categoria)}
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell>
-                          <div className="font-mono font-medium">
-                            {veiculo.placa}
-                          </div>
-                          {veiculo.uf_emplacamento && (
-                            <div className="text-sm text-muted-foreground">
-                              {veiculo.uf_emplacamento}
-                            </div>
-                          )}
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="space-y-1">
-                            {veiculo.proprietario_nome && (
-                              <div className="font-medium text-foreground">
-                                {veiculo.proprietario_nome}
-                              </div>
-                            )}
-                            {veiculo.proprietario_doc && (
-                              <div className="text-sm text-muted-foreground font-mono">
-                                {veiculo.proprietario_doc}
-                              </div>
-                            )}
-                            {veiculo.proprietario_tipo && (
-                              <Badge variant="outline" className="text-xs">
-                                {veiculo.proprietario_tipo === 'pj' ? 'PJ' : 'PF'}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <div className={`font-medium ${emplacamentoStatus.color}`}>
-                            {emplacamentoStatus.text}
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          {getStatusBadge(veiculo.status_seguro)}
-                        </TableCell>
-
-                        <TableCell>
-                          {veiculo.preco_fipe ? (
-                            <div className="font-medium text-green-600">
-                              {formatCurrency(veiculo.preco_fipe)}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-
-                        <TableCell>
-                          {veiculo.preco_nf ? (
-                            <div className="font-medium">
-                              {formatCurrency(veiculo.preco_nf)}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-
-                        <TableCell>
-                          {getModalidadeBadge(veiculo.modalidade_compra)}
-                          {veiculo.modalidade_compra === 'consorcio' && veiculo.consorcio_grupo && (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Grupo: {veiculo.consorcio_grupo}
-                              {veiculo.consorcio_cota && ` | Cota: ${veiculo.consorcio_cota}`}
-                            </div>
-                          )}
-                        </TableCell>
-
-                        <TableCell>
-                          {responsavel ? (
+                      return (
+                        <TableRow key={veiculo.id} className="hover:bg-muted/50">
+                          <TableCell>
                             <div className="space-y-1">
-                              <div className="font-medium text-foreground text-sm">
-                                {responsavel.nome}
+                              <div className="font-medium text-foreground">
+                                {veiculo.marca} {veiculo.modelo}
                               </div>
-                              {responsavel.telefone && (
-                                <div className="text-xs text-muted-foreground">
-                                  {responsavel.telefone}
+                              {veiculo.ano_modelo && (
+                                <div className="text-sm text-muted-foreground">
+                                  {veiculo.ano_modelo}
                                 </div>
                               )}
+                              {getCategoriaBadge(veiculo.categoria)}
                             </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">Não definido</span>
-                          )}
-                        </TableCell>
+                          </TableCell>
+                          
+                          <TableCell>
+                            <div className="font-mono font-medium">
+                              {veiculo.placa}
+                            </div>
+                            {veiculo.uf_emplacamento && (
+                              <div className="text-sm text-muted-foreground">
+                                {veiculo.uf_emplacamento}
+                              </div>
+                            )}
+                          </TableCell>
 
-                        <TableCell>
-                          <VehicleActions
-                            veiculo={veiculo}
-                            onView={handleView}
-                            onEdit={handleEdit}
-                            onDocs={handleDocs}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
+                          <TableCell>
+                            <div className="space-y-1">
+                              {veiculo.proprietario_nome && (
+                                <div className="font-medium text-foreground">
+                                  {veiculo.proprietario_nome}
+                                </div>
+                              )}
+                              {veiculo.proprietario_doc && (
+                                <div className="text-sm text-muted-foreground font-mono">
+                                  {veiculo.proprietario_doc}
+                                </div>
+                              )}
+                              {veiculo.proprietario_tipo && (
+                                <Badge variant="outline" className="text-xs">
+                                  {veiculo.proprietario_tipo === 'pj' ? 'PJ' : 'PF'}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+
+                          <TableCell>
+                            <div className={`font-medium ${emplacamentoStatus.color}`}>
+                              {emplacamentoStatus.text}
+                            </div>
+                          </TableCell>
+
+                          <TableCell>
+                            {getStatusBadge(veiculo.status_seguro)}
+                          </TableCell>
+
+                          <TableCell>
+                            {veiculo.preco_fipe ? (
+                              <div className="font-medium text-green-600">
+                                {formatCurrency(veiculo.preco_fipe)}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+
+                          <TableCell>
+                            {veiculo.preco_nf ? (
+                              <div className="font-medium">
+                                {formatCurrency(veiculo.preco_nf)}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+
+                          <TableCell>
+                            {getModalidadeBadge(veiculo.modalidade_compra)}
+                            {veiculo.modalidade_compra === 'consorcio' && veiculo.consorcio_grupo && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Grupo: {veiculo.consorcio_grupo}
+                                {veiculo.consorcio_cota && ` | Cota: ${veiculo.consorcio_cota}`}
+                              </div>
+                            )}
+                          </TableCell>
+
+                          <TableCell>
+                            {responsavel ? (
+                              <div className="space-y-1">
+                                <div className="font-medium text-foreground text-sm">
+                                  {responsavel.nome}
+                                </div>
+                                {responsavel.telefone && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {responsavel.telefone}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">Não definido</span>
+                            )}
+                          </TableCell>
+
+                          <TableCell>
+                            <VehicleActions
+                              veiculo={veiculo}
+                              onView={handleView}
+                              onEdit={handleEdit}
+                              onDocs={handleDocs}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Modal de detalhes */}
+      <VehicleDetailsModal
+        veiculo={selectedVeiculo}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
+    </>
   );
 }
