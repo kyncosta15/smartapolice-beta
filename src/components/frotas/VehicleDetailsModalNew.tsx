@@ -237,14 +237,14 @@ export function VehicleDetailsModalNew({ veiculo, open, onOpenChange, mode = 'vi
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="veiculo">Veículo</TabsTrigger>
-            <TabsTrigger value="proprietario">Proprietário</TabsTrigger>
-            <TabsTrigger value="emplacamento">Emplacamento</TabsTrigger>
-            <TabsTrigger value="seguro">Seguro</TabsTrigger>
-            <TabsTrigger value="operacao">Operação</TabsTrigger>
-            <TabsTrigger value="valores">Valores</TabsTrigger>
-            <TabsTrigger value="sinistros">Sinistros</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 gap-1">
+            <TabsTrigger value="veiculo" className="text-xs md:text-sm">Veículo</TabsTrigger>
+            <TabsTrigger value="proprietario" className="text-xs md:text-sm">Proprietário</TabsTrigger>
+            <TabsTrigger value="emplacamento" className="text-xs md:text-sm">Emplacamento</TabsTrigger>
+            <TabsTrigger value="seguro" className="text-xs md:text-sm">Seguro</TabsTrigger>
+            <TabsTrigger value="operacao" className="text-xs md:text-sm">Operação</TabsTrigger>
+            <TabsTrigger value="valores" className="text-xs md:text-sm">Valores</TabsTrigger>
+            <TabsTrigger value="sinistros" className="text-xs md:text-sm">Sinistros</TabsTrigger>
           </TabsList>
 
           <TabsContent value="veiculo" className="space-y-4">

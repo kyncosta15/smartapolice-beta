@@ -220,11 +220,21 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     }}
                   />
                   <Legend 
-                    wrapperStyle={{ fontSize: '12px' }}
+                    wrapperStyle={{ 
+                      fontSize: typeof window !== 'undefined' && window.innerWidth < 768 ? '10px' : '12px',
+                      paddingTop: '10px'
+                    }}
                     iconType="circle"
+                    layout="horizontal"
+                    align="center"
+                    verticalAlign="bottom"
                     formatter={(value) => (
-                      <span style={{ color: '#374151', fontWeight: '500' }}>
-                        {value}
+                      <span style={{ 
+                        color: '#374151', 
+                        fontWeight: '500',
+                        fontSize: typeof window !== 'undefined' && window.innerWidth < 768 ? '10px' : '12px'
+                      }}>
+                        {value.length > 15 ? `${value.substring(0, 15)}...` : value}
                       </span>
                     )}
                   />
