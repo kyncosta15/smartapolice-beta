@@ -53,7 +53,17 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
   };
 
   const handleSearchChange = (value: string) => {
-    onFilterChange({ search: value });
+    // If search is being cleared, also clear all other filters
+    if (value === '' && filters.search !== '') {
+      onFilterChange({ 
+        search: '', 
+        categoria: [], 
+        status: [], 
+        marcaModelo: [] 
+      });
+    } else {
+      onFilterChange({ search: value });
+    }
   };
 
   const handleCategoriaChange = (categoria: string, checked: boolean) => {
@@ -95,9 +105,20 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
             placeholder="Buscar por placa, CNPJ, CPF ou proprietário..."
             value={filters.search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-10 h-9 sm:h-10 w-full"
+            className="pl-10 pr-10 h-9 sm:h-10 w-full"
             disabled={loading}
           />
+          {/* Clear search button */}
+          {filters.search && (
+            <button
+              onClick={() => handleSearchChange('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Limpar busca"
+              disabled={loading}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* Filter Dropdowns */}

@@ -205,19 +205,32 @@ export function useFrotasData(filters: FrotaFilters) {
   useEffect(() => {
     if (!user?.company) return;
 
-    // Skip if this is the initial empty state
-    const hasAnyFilter = filters.search !== '' || filters.categoria.length > 0 || filters.status.length > 0 || filters.marcaModelo.length > 0;
-    if (!hasAnyFilter) return;
+    // If search is cleared, make sure we fetch all data
+    if (filters.search === '' && debouncedSearch === '' && 
+        filters.categoria.length === 0 && filters.status.length === 0 && filters.marcaModelo.length === 0) {
+      fetchVeiculos(false);
+      return;
+    }
 
     // For search, wait for debounce to complete
     if (filters.search !== '' && debouncedSearch !== filters.search) {
       return;
     }
 
+    // If search was cleared but debounce hasn't caught up, force immediate fetch
+    if (filters.search === '' && debouncedSearch !== '') {
+      fetchVeiculos(false);
+      return;
+    }
+
+    // Skip if no filters are active
+    const hasAnyFilter = debouncedSearch !== '' || filters.categoria.length > 0 || filters.status.length > 0 || filters.marcaModelo.length > 0;
+    if (!hasAnyFilter) return;
+
     // Determine if this is a search operation
     const isSearchOperation = debouncedSearch !== '';
     fetchVeiculos(isSearchOperation);
-  }, [user?.company, debouncedSearch, filters.categoria, filters.status, filters.marcaModelo]); // Direct dependencies, not debouncedFilters
+  }, [user?.company, debouncedSearch, filters.categoria, filters.status, filters.marcaModelo, filters.search]); // Added filters.search to detect clearing
 
   // Escutar eventos de atualização da frota
   useEffect(() => {
