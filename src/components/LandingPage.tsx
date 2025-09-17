@@ -20,11 +20,19 @@ export const LandingPage = () => {
               {/* Main container */}
                <div className="relative w-40 h-40 md:w-20 md:h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
                 <picture>
-                  <source srcSet="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414-optimized.webp" type="image/webp" />
+                  <source 
+                    srcSet="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414-optimized.webp" 
+                    type="image/webp"
+                    sizes="(max-width: 768px) 160px, 80px"
+                  />
                   <img 
                     src="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414.png" 
                     alt="RCorp Logo" 
                     className="w-full h-full object-cover rounded-2xl" 
+                    width="160"
+                    height="160"
+                    loading="eager"
+                    decoding="sync"
                     style={{ 
                       filter: 'drop-shadow(0 0 12px rgba(59, 130, 246, 0.4))'
                     }} 
@@ -84,11 +92,19 @@ export const LandingPage = () => {
       {/* Right side - Background Image */}
       <div className="hidden md:block md:w-1/2 relative">
         <picture className="absolute inset-0 w-full h-full">
-          <source srcSet="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp" type="image/webp" />
+          <source 
+            srcSet="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp" 
+            type="image/webp"
+            sizes="50vw"
+          />
           <img 
             src="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png"
             alt="Background"
             className="absolute inset-0 w-full h-full object-cover"
+            width="960"
+            height="1080"
+            loading="lazy"
+            decoding="async"
           />
         </picture>
       </div>
@@ -96,11 +112,19 @@ export const LandingPage = () => {
       {/* Mobile background image overlay */}
       <div className="md:hidden absolute top-0 right-0 w-1/3 h-1/3 opacity-20 z-0">
         <picture className="w-full h-full">
-          <source srcSet="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp" type="image/webp" />
+          <source 
+            srcSet="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp" 
+            type="image/webp"
+            sizes="33vw"
+          />
           <img 
             src="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png"
             alt="Background overlay"
             className="w-full h-full object-contain"
+            width="320"
+            height="360"
+            loading="lazy"
+            decoding="async"
           />
         </picture>
       </div>
