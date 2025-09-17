@@ -52,36 +52,43 @@ interface VehicleActionsProps {
 
 function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps) {
   return (
-    <div className="flex items-center justify-end gap-2">
-      {/* Botão de visualizar sempre disponível */}
+    <div className="inline-flex items-center justify-end gap-2">
+      {/* Ver detalhes (ação direta) */}
       <Button
-        size="sm"
-        variant="outline"
-        className="h-10 w-10 p-0"
-        onClick={() => onView(veiculo.id)}
+        variant="ghost"
+        size="icon"
         aria-label="Ver detalhes"
+        title="Ver detalhes"
+        onClick={() => onView(veiculo.id)}
+        className="hover:bg-muted"
       >
         <Eye className="h-4 w-4" />
+        <span className="sr-only">Ver detalhes</span>
       </Button>
 
-      {/* Kebab menu */}
+      {/* Menu de 3 pontos */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            size="sm"
-            className="h-10 w-10 p-0"
+            size="icon"
             aria-label="Mais ações"
+            title="Mais ações"
+            className="hover:bg-muted"
           >
             <MoreVertical className="h-4 w-4" />
+            <span className="sr-only">Mais ações</span>
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onSelect={() => onEdit(veiculo.id)}>
+        <DropdownMenuContent align="end" sideOffset={6} className="z-50">
+          <DropdownMenuItem onClick={() => onView(veiculo.id)}>
+            <Eye className="mr-2 h-4 w-4" /> Ver detalhes
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onEdit(veiculo.id)}>
             <Edit className="mr-2 h-4 w-4" /> Editar
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => onDocs(veiculo.id)}>
+          <DropdownMenuItem onClick={() => onDocs(veiculo.id)}>
             <FileText className="mr-2 h-4 w-4" /> Documentos
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -261,7 +268,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
         <CardContent className="p-0">
           {/* Wrapper com scroll próprio */}
           <div
-            className="max-h-[60vh] md:max-h-[50vh] overflow-y-auto overscroll-contain pr-1 -mr-1"
+            className="w-full overflow-x-auto max-h-[60vh] md:max-h-[50vh] overflow-y-auto overscroll-contain pr-1 -mr-1"
             tabIndex={0}
             aria-label="Lista de veículos rolável"
           >
@@ -276,21 +283,22 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
                 />
               ) : (
                 // Versão desktop: tabela
-                <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
-                    <TableRow>
-                      <TableHead className="min-w-[200px] bg-background" scope="col">Veículo</TableHead>
-                      <TableHead className="bg-background" scope="col">Placa</TableHead>
-                      <TableHead className="bg-background" scope="col">Proprietário</TableHead>
-                      <TableHead className="bg-background" scope="col">Emplacamento</TableHead>
-                      <TableHead className="bg-background" scope="col">Status Seguro</TableHead>
-                      <TableHead className="bg-background" scope="col">FIPE</TableHead>
-                      <TableHead className="bg-background" scope="col">Valor NF</TableHead>
-                      <TableHead className="bg-background" scope="col">Modalidade</TableHead>
-                      <TableHead className="bg-background" scope="col">Responsável</TableHead>
-                      <TableHead className="w-[50px] bg-background" scope="col">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                <div className="w-full overflow-x-auto">
+                  <Table className="min-w-[900px]">
+                    <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                      <TableRow>
+                        <TableHead className="min-w-[200px] bg-background" scope="col">Veículo</TableHead>
+                        <TableHead className="bg-background" scope="col">Placa</TableHead>
+                        <TableHead className="bg-background" scope="col">Proprietário</TableHead>
+                        <TableHead className="bg-background" scope="col">Emplacamento</TableHead>
+                        <TableHead className="bg-background" scope="col">Status Seguro</TableHead>
+                        <TableHead className="bg-background" scope="col">FIPE</TableHead>
+                        <TableHead className="bg-background" scope="col">Valor NF</TableHead>
+                        <TableHead className="bg-background" scope="col">Modalidade</TableHead>
+                        <TableHead className="bg-background" scope="col">Responsável</TableHead>
+                        <TableHead className="w-24 bg-background text-right" scope="col">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody className="[&_tr:hover]:bg-muted/50">
                     {veiculos.map((veiculo) => {
                       const emplacamentoStatus = getEmplacamentoStatus(veiculo.data_venc_emplacamento);
@@ -400,7 +408,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
                             )}
                           </TableCell>
 
-                          <TableCell>
+                          <TableCell className="relative text-right">
                             <VehicleActions
                               veiculo={veiculo}
                               onView={handleView}
@@ -412,7 +420,8 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh' }
                       );
                     })}
                   </TableBody>
-                </Table>
+                  </Table>
+                </div>
               )}
             </div>
           </div>
