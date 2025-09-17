@@ -72,7 +72,7 @@ export function VehicleDetailsModalNew({
 
     setFipeUpdateLoading(true);
     try {
-      const fipeValue = await fipeService.getValue({
+      const fipeValue = await fipeService.getPrice({
         marca: formData.marca,
         modelo: formData.modelo,
         ano_modelo: formData.ano_modelo
@@ -80,11 +80,11 @@ export function VehicleDetailsModalNew({
 
       if (fipeValue) {
         const oldValue = formData.preco_fipe;
-        setFormData(prev => ({ ...prev, preco_fipe: fipeValue }));
+        setFormData(prev => ({ ...prev, preco_fipe: fipeValue.valor }));
         setFipeUpdateInfo({
           updated: true,
           oldValue,
-          newValue: fipeValue
+          newValue: fipeValue.valor
         });
         toast.success('Valor FIPE atualizado com sucesso!');
       } else {
