@@ -84,190 +84,68 @@ export function FrotasDashboard({ kpis, veiculos, loading, onRefetch }: FrotasDa
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="rounded-xl border bg-white p-4 md:p-5 min-h-[88px] flex flex-col justify-between">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
-              Total de Veículos
-            </h3>
-            <Car className="h-4 w-4 text-blue-600 flex-shrink-0" />
-          </div>
-          <div>
-            <div className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
-              {kpis.totalVeiculos}
-            </div>
-            <p className="text-xs text-gray-500 break-words">
-              veículos cadastrados
-            </p>
-          </div>
-        </Card>
-
-        <Card className="rounded-xl border bg-white p-4 md:p-5 min-h-[88px] flex flex-col justify-between">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
-              Sem Seguro
-            </h3>
-            <AlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0" />
-          </div>
-          <div>
-            <div className="text-2xl md:text-3xl font-bold text-red-600 leading-tight">
-              {kpis.semSeguro}
-            </div>
-            <p className="text-xs text-gray-500 break-words">
-              necessitam seguro
-            </p>
-          </div>
-        </Card>
-
-        <Card className="rounded-xl border bg-white p-4 md:p-5 min-h-[88px] flex flex-col justify-between">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
-              Emplacamento Vencido
-            </h3>
-            <Calendar className="h-4 w-4 text-orange-600 flex-shrink-0" />
-          </div>
-          <div>
-            <div className="text-2xl md:text-3xl font-bold text-orange-600 leading-tight">
-              {kpis.emplacamentoVencido}
-            </div>
-            <p className="text-xs text-gray-500 break-words">
-              licenciamento vencido
-            </p>
-          </div>
-        </Card>
-
-        <Card className="rounded-xl border bg-white p-4 md:p-5 min-h-[88px] flex flex-col justify-between">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
-              Próximo Vencimento
-            </h3>
-            <Calendar className="h-4 w-4 text-yellow-600 flex-shrink-0" />
-          </div>
-          <div>
-            <div className="text-2xl md:text-3xl font-bold text-yellow-600 leading-tight">
-              {kpis.proximoVencimento}
-            </div>
-            <p className="text-xs text-gray-500 break-words">
-              vencem em 30 dias
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      {/* Additional KPIs */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Card className="rounded-xl border bg-white p-3 md:p-4 min-h-[88px] flex flex-col justify-between">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
-              Valorização vs. Compra
-            </h3>
-            <TrendingUp className="h-4 w-4 text-green-600 flex-shrink-0" />
-          </div>
-          <div>
-            <div className="text-2xl md:text-3xl font-bold text-green-600 leading-tight">
-              {kpis.valorizacaoMedia.toFixed(1)}%
-            </div>
-            <p className="text-xs text-gray-500 break-words">
-              média de valorização FIPE
-            </p>
-          </div>
-        </Card>
-
-        <Card className="rounded-xl border bg-white p-3 md:p-4 min-h-[88px] flex flex-col justify-between">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-gray-600 leading-tight break-words">
-              Modalidade de Compra
-            </h3>
-            <CreditCard className="h-4 w-4 text-purple-600 flex-shrink-0" />
-          </div>
-          <div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs sm:text-sm">
-                <span className="break-words">Financiado:</span>
-                <span className="font-medium">{kpis.modalidadeDistribuicao.financiado}</span>
-              </div>
-              <div className="flex justify-between text-xs sm:text-sm">
-                <span className="break-words">À Vista:</span>
-                <span className="font-medium">{kpis.modalidadeDistribuicao.avista}</span>
-              </div>
-              <div className="flex justify-between text-xs sm:text-sm">
-                <span className="break-words">Consórcio:</span>
-                <span className="font-medium">{kpis.modalidadeDistribuicao.consorcio}</span>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* Chart Wrapper with responsive heights */}
-        {/* Distribuição por Categoria */}
+      {/* Charts and Analytics */}
+      <div className="grid grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-2">
+        {/* Categories Distribution Chart */}
         <Card className="rounded-xl border bg-white p-3 md:p-4">
-          <h3 className="font-semibold mb-3 flex items-center gap-2 text-base md:text-lg">
-            <PieChart className="h-5 w-5 text-blue-600 flex-shrink-0" />
-            <span className="break-words leading-tight">Distribuição por Categoria</span>
-          </h3>
-          <div className="w-full h-48 md:h-64 xl:h-80 overflow-x-auto">
-            {categoriaData.length > 0 ? (
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <PieChart className="h-5 w-5 text-blue-600" />
+              Distribuição por Categoria
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                <RechartsPieChart>
                   <Pie
                     data={categoriaData}
+                    dataKey="value"
+                    nameKey="name"
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={!isMobile ? ({ name, value }) => `${name} ${value}` : false}
-                    outerRadius={isMobile ? 60 : 80}
+                    outerRadius={80}
                     fill="#8884d8"
-                    dataKey="value"
                   >
                     {categoriaData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend />
                 </RechartsPieChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-gray-500">
-                Nenhum dado disponível
-              </div>
-            )}
-          </div>
+            </div>
+          </CardContent>
         </Card>
 
-        {/* Top Marcas */}
+        {/* Brands Distribution Chart */}
         <Card className="rounded-xl border bg-white p-3 md:p-4">
-          <h3 className="font-semibold mb-3 flex items-center gap-2 text-base md:text-lg">
-            <Car className="h-5 w-5 text-green-600 flex-shrink-0" />
-            <span className="break-words leading-tight">Top Marcas/Modelos</span>
-          </h3>
-          <div className="w-full h-48 md:h-64 xl:h-80 overflow-x-auto">
-            {marcasData.length > 0 ? (
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <Car className="h-5 w-5 text-green-600" />
+              Top 8 Marcas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={marcasData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <BarChart data={marcasData}>
+                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="name" 
-                    hide={isMobile}
-                    fontSize={12}
                     angle={-45}
                     textAnchor="end"
-                    height={80}
+                    height={60}
+                    fontSize={12}
                   />
-                  <YAxis hide={isMobile} fontSize={12} />
+                  <YAxis />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="count" fill="#10B981" />
                 </BarChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-gray-500">
-                Nenhum dado disponível
-              </div>
-            )}
-          </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
 

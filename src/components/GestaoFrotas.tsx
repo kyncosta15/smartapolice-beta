@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { FrotasDashboard } from './frotas/FrotasDashboard';
 import { FrotasTable } from './frotas/FrotasTable';
+import { FrotasKPICards } from './frotas/FrotasKPICards';
 import { FrotasFipe } from './frotas/FrotasFipe';
 import { FrotasDocumentos } from './frotas/FrotasDocumentos';
 import { FrotasUpload } from './frotas/FrotasUpload';
@@ -132,16 +133,7 @@ export function GestaoFrotas() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex-none border-b border-gray-200 bg-gray-50 p-3 sm:p-4 md:p-6">
-        <FrotasFilters
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          loading={loading}
-        />
-      </div>
-
-      {/* Content */}
+      {/* Tabs and Content */}
       <div className="flex-1 min-h-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col min-h-0">
           <div className="flex-none border-b border-gray-200 bg-white px-3 sm:px-4 md:px-6">
@@ -180,9 +172,24 @@ export function GestaoFrotas() {
               </nav>
             </div>
           </div>
+        
+          {/* KPI Cards - shown right after tabs */}
+          <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200">
+            <FrotasKPICards kpis={kpis} loading={loading} />
+          </div>
 
+          {/* Filters */}
+          <div className="flex-none border-b border-gray-200 bg-gray-50 p-3 sm:p-4 md:p-6">
+            <FrotasFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              loading={loading}
+            />
+          </div>
+
+          {/* Tab Content */}
           <div className="flex-1 min-h-0">
-            <TabsContent value="frotas" className="h-full flex flex-col min-h-0 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
+            <TabsContent value="frotas" className="h-full flex flex-col min-h-0 p-3 sm:p-4 md:p-6">
               <FrotasDashboard kpis={kpis} veiculos={veiculos} loading={loading} onRefetch={refetch} />
             </TabsContent>
 
