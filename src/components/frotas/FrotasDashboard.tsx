@@ -34,7 +34,24 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
     }));
   }, [veiculos]);
 
-  const marcasData = React.useMemo(() => {
+  const modelosData = React.useMemo(() => {
+    const modelos = veiculos.reduce((acc, v) => {
+      if (!v.modelo) return acc;
+      acc[v.modelo] = (acc[v.modelo] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(modelos)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 8)
+      .map(([name, value]) => ({
+        name: name.length > 15 ? name.substring(0, 15) + '...' : name,
+        value,
+        color: getRandomColor()
+      }));
+  }, [veiculos]);
+
+  const marcasDataPie = React.useMemo(() => {
     const marcas = veiculos.reduce((acc, v) => {
       if (!v.marca) return acc;
       acc[v.marca] = (acc[v.marca] || 0) + 1;
@@ -44,9 +61,9 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
     return Object.entries(marcas)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 8)
-      .map(([name, count]) => ({
+      .map(([name, value]) => ({
         name,
-        count,
+        value,
         color: getRandomColor()
       }));
   }, [veiculos]);
@@ -79,7 +96,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Charts and Analytics */}
-      <div className="grid grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {/* Categories Distribution Chart */}
         <Card className="rounded-xl border bg-white p-3 md:p-4">
           <CardHeader className="pb-2">
@@ -113,30 +130,105 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
           </CardContent>
         </Card>
 
-        {/* Brands Distribution Chart */}
-        <Card className="rounded-xl border bg-white p-3 md:p-4">
-          <CardHeader className="pb-2">
+        {/* Brands Distribution Chart - Pie */}
+        <Card className="rounded-xl border bg-white">
+          <CardHeader className="pb-2 p-3 md:p-4">
             <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <Car className="h-5 w-5 text-green-600" />
-              Top 8 Marcas
+              <Car className="h-5 w-5 text-blue-600" />
+              Distribuição por Marcas
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-64">
+          <CardContent className="p-3 md:p-4">
+            <div className="h-64 md:h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={marcasData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                    fontSize={12}
+                <PieChart>
+                  <Pie
+                    data={marcasDataPie}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 768 ? 70 : 90}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {marcasDataPie.map((entry, index) => (
+                      <Cell key={`marca-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value, name, props) => [
+                      `${value} veículo${value !== 1 ? 's' : ''}`,
+                      props.payload.name
+                    ]}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px'
+                    }}
                   />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#10B981" />
-                </BarChart>
+                  <Legend 
+                    wrapperStyle={{ fontSize: '12px' }}
+                    iconType="circle"
+                    formatter={(value) => (
+                      <span style={{ color: '#374151', fontWeight: '500' }}>
+                        {value}
+                      </span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Models Distribution Chart - Pie */}
+        <Card className="rounded-xl border bg-white">
+          <CardHeader className="pb-2 p-3 md:p-4">
+            <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <Car className="h-5 w-5 text-purple-600" />
+              Distribuição por Modelos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 md:p-4">
+            <div className="h-64 md:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={modelosData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 768 ? 70 : 90}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {modelosData.map((entry, index) => (
+                      <Cell key={`modelo-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value, name, props) => [
+                      `${value} veículo${value !== 1 ? 's' : ''}`,
+                      props.payload.name
+                    ]}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px'
+                    }}
+                  />
+                  <Legend 
+                    wrapperStyle={{ fontSize: '12px' }}
+                    iconType="circle"
+                    formatter={(value) => (
+                      <span style={{ color: '#374151', fontWeight: '500' }}>
+                        {value}
+                      </span>
+                    )}
+                  />
+                </PieChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
