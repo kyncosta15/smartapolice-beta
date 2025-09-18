@@ -65,7 +65,7 @@ interface SessionData {
   dependents: Dependent[];
 }
 
-export const NewSolicitacaoPage: React.FC = () => {
+const NewSolicitacaoPage: React.FC = () => {
   const [step, setStep] = useState(0); // 0=identification, 1=kind, 2=people, 3=docs, 4=review
   const [formData, setFormData] = useState<FormData>({
     cpf: '',
@@ -656,3 +656,5 @@ export const NewSolicitacaoPage: React.FC = () => {
     </div>
   );
 };
+
+export default NewSolicitacaoPage;

@@ -32,7 +32,7 @@ interface LinkData {
   empresa_id: string;
 }
 
-export const ColaboradorFormPage = () => {
+const ColaboradorFormPage = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   
@@ -438,3 +438,5 @@ export const ColaboradorFormPage = () => {
     </SecureFormValidator>
   );
 };
+
+export default ColaboradorFormPage;

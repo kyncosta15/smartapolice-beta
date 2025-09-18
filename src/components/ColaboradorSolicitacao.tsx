@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, Send, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-export const ColaboradorSolicitacao = () => {
+const ColaboradorSolicitacao = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     nomeColaborador: '',
@@ -78,3 +78,5 @@ export const ColaboradorSolicitacao = () => {
     </div>
   );
 };
+
+export default ColaboradorSolicitacao;

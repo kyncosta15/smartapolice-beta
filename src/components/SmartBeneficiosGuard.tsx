@@ -57,10 +57,12 @@ const SmartBeneficiosGuardContent = () => {
   return <SmartBeneficiosDashboard />;
 };
 
-export const SmartBeneficiosGuard = () => {
+const SmartBeneficiosGuard = () => {
   return (
     <AuthProvider>
       <SmartBeneficiosGuardContent />
     </AuthProvider>
   );
 };
+
+export default SmartBeneficiosGuard;

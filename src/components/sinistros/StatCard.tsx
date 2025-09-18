@@ -11,7 +11,7 @@ type StatCardProps = {
   isLoading?: boolean;
 };
 
-export function StatCard({
+const StatCard = ({
   label, 
   value, 
   variant, 
@@ -19,7 +19,7 @@ export function StatCard({
   onClick, 
   isActive, 
   isLoading = false
-}: StatCardProps) {
+}: StatCardProps) => {
   const gradientMap = {
     total: "from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900",
     aberto: "from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900", 
@@ -75,4 +75,7 @@ export function StatCard({
       )}
     </button>
   );
-}
+};
+
+export { StatCard };
+export default StatCard;
