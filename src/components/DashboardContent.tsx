@@ -127,10 +127,13 @@ export function DashboardContent() {
       coverage: policy.coberturas?.map((c: any) => {
         // Usar renderização segura para evitar objetos React
         if (typeof c === 'string') return c;
-        if (typeof c === 'object' && c.descricao) {
-          return typeof c.descricao === 'string' ? c.descricao : extractFieldValue(c.descricao);
+        if (typeof c === 'object' && c !== null && c.descricao) {
+          return typeof c.descricao === 'string' ? c.descricao : 'Cobertura';
         }
-        return extractFieldValue(c);
+        if (typeof c === 'object' && c !== null) {
+          return 'Cobertura';
+        }
+        return String(c || 'Cobertura Básica');
       }).filter(desc => desc && desc !== 'Não informado') || ['Cobertura Básica'],
       monthlyAmount: policy.monthlyAmount || (parseFloat(policy.premium) / 12) || 0,
       premium: policy.premium || 0,
@@ -334,9 +337,9 @@ export function DashboardContent() {
   // DEBUG: Verificar se as apólices têm documento_tipo - SAFE LOGGING
   console.log('🔍 DEBUG DOCUMENTO_TIPO:', normalizedPolicies.map(p => ({
     id: p.id,
-    name: String(p.name || 'N/A'),
-    documento_tipo: String(p.documento_tipo || 'N/A'),
-    documento: String(p.documento || 'N/A')
+    name: p.name && typeof p.name === 'string' ? p.name : 'N/A',
+    documento_tipo: p.documento_tipo && typeof p.documento_tipo === 'string' ? p.documento_tipo : 'N/A',
+    documento: p.documento && typeof p.documento === 'string' ? p.documento : 'N/A'
   })));
 
   return (
