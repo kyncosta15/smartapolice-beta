@@ -162,7 +162,7 @@ export function SinistrosCasos({
       {/* Cases Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Sinisstros</CardTitle>
+          <CardTitle>Lista de Sinistros</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
