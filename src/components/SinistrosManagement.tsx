@@ -11,18 +11,12 @@ import { SinistrosMovimentacoes } from './sinistros/SinistrosMovimentacoes';
 import { SinistrosCRLV } from './sinistros/SinistrosCRLV';
 import { SinistrosRelatorios } from './sinistros/SinistrosRelatorios';
 import { SinistrosConfiguracoes } from './sinistros/SinistrosConfiguracoes';
+import { HamburgerMenu } from './sinistros/HamburgerMenu';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { normalizePolicy } from '@/lib/policies';
 import { 
   Search, 
-  Filter,
-  Plus,
-  FileText,
-  Calculator,
-  Car,
-  Settings,
-  BarChart3,
-  Activity
+  Filter
 } from 'lucide-react';
 
 interface SinistrosManagementProps {
@@ -89,13 +83,16 @@ export function SinistrosManagement({
 
   return (
     <div className="space-y-6">
-      {/* Header with Search */}
+      {/* Header with hamburger menu and search */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Gestão de Sinistros</h1>
-          <p className="text-muted-foreground">
-            Abertura, acompanhamento e relatórios de sinistros
-          </p>
+        <div className="flex items-center gap-4">
+          <HamburgerMenu activeTab={activeTab} onTabChange={setActiveTab} />
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Gestão de Sinistros</h1>
+            <p className="text-muted-foreground">
+              Abertura, acompanhamento e relatórios de sinistros
+            </p>
+          </div>
         </div>
         
         <div className="flex gap-2 w-full sm:w-auto">
@@ -114,69 +111,8 @@ export function SinistrosManagement({
         </div>
       </div>
 
-      {/* Filters Row */}
-      <div className="flex flex-wrap gap-3">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="ABERTO">Aberto</SelectItem>
-            <SelectItem value="EM_ANALISE">Em Análise</SelectItem>
-            <SelectItem value="DOCUMENTACAO_PENDENTE">Doc. Pendente</SelectItem>
-            <SelectItem value="EM_REGULACAO">Em Regulação</SelectItem>
-            <SelectItem value="EM_REPARO">Em Reparo</SelectItem>
-            <SelectItem value="ENCERRADO">Encerrado</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={seguradoraFilter} onValueChange={setSeguradoraFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Seguradora" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as seguradoras</SelectItem>
-            <SelectItem value="Porto Seguro">Porto Seguro</SelectItem>
-            <SelectItem value="Bradesco Seguros">Bradesco Seguros</SelectItem>
-            <SelectItem value="Suhai Seguradora">Suhai Seguradora</SelectItem>
-            <SelectItem value="Allianz">Allianz</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Tabs Navigation */}
+      {/* Content based on active tab - no visible tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Dashboard
-          </TabsTrigger>
-          <TabsTrigger value="casos" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Casos
-          </TabsTrigger>
-          <TabsTrigger value="novo" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Ticket
-          </TabsTrigger>
-          <TabsTrigger value="movimentacoes" className="flex items-center gap-2">
-            <Car className="h-4 w-4" />
-            Movimentações
-          </TabsTrigger>
-          <TabsTrigger value="crlv" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            CRLV
-          </TabsTrigger>
-          <TabsTrigger value="relatorios" className="flex items-center gap-2">
-            <Calculator className="h-4 w-4" />
-            Relatórios
-          </TabsTrigger>
-          <TabsTrigger value="config" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Config
-          </TabsTrigger>
-        </TabsList>
 
         <TabsContent value="dashboard">
           <SinistrosDashboard 

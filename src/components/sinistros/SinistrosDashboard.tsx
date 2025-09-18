@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatCard } from './StatCard';
-import { FilterChips } from './FilterChips';
 import { NovoTicketModal } from './NovoTicketModal';
-import { ClaimsList } from '../claims/ClaimsList';
+import { SinistrosListModal } from './SinistrosListModal';
 import { useSinistrosKpis } from '@/hooks/useSinistrosKpis';
-import { useFilterState } from '@/hooks/useFilterState';
 import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -17,8 +13,7 @@ import {
   Calendar,
   Plus,
   Wrench,
-  Activity,
-  Search
+  Activity
 } from 'lucide-react';
 import { Claim, Assistance } from '@/types/claims';
 
@@ -70,17 +65,15 @@ export function SinistrosDashboard({
   const [claims, setClaims] = useState<Claim[]>([]);
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showList, setShowList] = useState(false);
   
-  // Filter state management
-  const {
-    filters,
-    activeFilterChips,
-    updateFilter,
-    removeFilter,
-    clearAllFilters,
-    applyCardFilter
-  } = useFilterState();
+  // Modal state
+  const [listModalOpen, setListModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalFilter, setModalFilter] = useState<{
+    tipo?: 'sinistro' | 'assistencia';
+    status?: string;
+    periodo?: 'last60d';
+  }>({});
   
   const { toast } = useToast();
 
@@ -111,11 +104,7 @@ export function SinistrosDashboard({
   ];
 
   // Calculate KPIs using the custom hook
-  const kpis = useSinistrosKpis(mockItems, {
-    status: filters.status,
-    seguradora: filters.seguradora,
-    search: filters.search
-  });
+  const kpis = useSinistrosKpis(mockItems, {});
 
   console.log('📊 KPIs calculados:', kpis);
 
@@ -146,77 +135,61 @@ export function SinistrosDashboard({
   };
 
   const handleCardClick = (cardType: 'total' | 'sinistros' | 'assistencias', filterType?: 'aberto' | 'finalizado' | 'ultimos60d') => {
-    applyCardFilter(cardType, filterType);
-    setShowList(true);
+    // Configure modal based on card clicked
+    let title = '';
+    let filter: typeof modalFilter = {};
+    
+    if (cardType === 'total') {
+      title = 'Todos os Sinistros e Assistências';
+    } else if (cardType === 'sinistros') {
+      title = 'Sinistros';
+      filter.tipo = 'sinistro';
+    } else if (cardType === 'assistencias') {
+      title = 'Assistências';
+      filter.tipo = 'assistencia';
+    }
+    
+    if (filterType === 'aberto') {
+      title += ' - Em Aberto';
+      filter.status = 'open';
+    } else if (filterType === 'finalizado') {
+      title += ' - Finalizados';
+      filter.status = 'closed';
+    } else if (filterType === 'ultimos60d') {
+      title += ' - Últimos 60 dias';
+      filter.periodo = 'last60d';
+    }
+    
+    setModalTitle(title);
+    setModalFilter(filter);
+    setListModalOpen(true);
   };
 
   const handleTicketCreated = () => {
     loadData();
-    setShowList(true);
   };
 
   return (
     <div className="container mx-auto max-w-7xl px-6 space-y-8">
-      {/* Header with filters, search and CTA */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-        <div className="flex flex-wrap gap-3">
-          <Select value={filters.status || 'all'} onValueChange={(value) => updateFilter('status', value)}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="open">Em Aberto</SelectItem>
-              <SelectItem value="closed">Finalizados</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={filters.seguradora || 'all'} onValueChange={(value) => updateFilter('seguradora', value)}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Seguradora" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as seguradoras</SelectItem>
-              <SelectItem value="Porto Seguro">Porto Seguro</SelectItem>
-              <SelectItem value="Bradesco Seguros">Bradesco Seguros</SelectItem>
-              <SelectItem value="Suhai Seguradora">Suhai Seguradora</SelectItem>
-              <SelectItem value="Allianz">Allianz</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* Header with CTA only */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Dashboard de Sinistros</h2>
+          <p className="text-muted-foreground">
+            Clique nos cards para ver detalhes e filtrar informações
+          </p>
         </div>
-
-        <div className="flex gap-3 w-full lg:w-auto">
-          <div className="relative w-full lg:w-80">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por placa, chassi, proprietário ou modelo"
-              value={filters.search || ''}
-              onChange={(e) => updateFilter('search', e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          
-          <NovoTicketModal
-            trigger={
-              <Button className="shrink-0" title="Abrir novo ticket">
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Ticket
-              </Button>
-            }
-            onTicketCreated={handleTicketCreated}
-          />
-        </div>
+        
+        <NovoTicketModal
+          trigger={
+            <Button className="shrink-0" title="Abrir novo ticket">
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Ticket
+            </Button>
+          }
+          onTicketCreated={handleTicketCreated}
+        />
       </div>
-
-      {/* Filter chips */}
-      <FilterChips
-        activeFilters={activeFilterChips}
-        onRemoveFilter={removeFilter}
-        onClearAll={() => {
-          clearAllFilters();
-          setShowList(false);
-        }}
-      />
 
       {/* Dashboard Grid - 3x3 responsive layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
@@ -227,7 +200,7 @@ export function SinistrosDashboard({
           variant="total"
           icon={Activity}
           onClick={() => handleCardClick('total')}
-          isActive={!filters.tipo && !filters.status && !filters.periodo}
+          isActive={false}
           isLoading={loading}
         />
         <StatCard
@@ -236,7 +209,7 @@ export function SinistrosDashboard({
           variant="aberto"
           icon={Clock}
           onClick={() => handleCardClick('total', 'aberto')}
-          isActive={filters.status === 'open' && !filters.tipo}
+          isActive={false}
           isLoading={loading}
         />
         <StatCard
@@ -245,7 +218,7 @@ export function SinistrosDashboard({
           variant="finalizado"
           icon={CheckCircle}
           onClick={() => handleCardClick('total', 'finalizado')}
-          isActive={filters.status === 'closed' && !filters.tipo}
+          isActive={false}
           isLoading={loading}
         />
         <StatCard
@@ -254,7 +227,7 @@ export function SinistrosDashboard({
           variant="ultimos60"
           icon={Calendar}
           onClick={() => handleCardClick('total', 'ultimos60d')}
-          isActive={filters.periodo === 'last60d' && !filters.tipo}
+          isActive={false}
           isLoading={loading}
         />
 
@@ -265,7 +238,7 @@ export function SinistrosDashboard({
           variant="total"
           icon={FileText}
           onClick={() => handleCardClick('sinistros')}
-          isActive={filters.tipo === 'sinistro' && !filters.status && !filters.periodo}
+          isActive={false}
           isLoading={loading}
         />
         <StatCard
@@ -274,7 +247,7 @@ export function SinistrosDashboard({
           variant="aberto"
           icon={Clock}
           onClick={() => handleCardClick('sinistros', 'aberto')}
-          isActive={filters.tipo === 'sinistro' && filters.status === 'open'}
+          isActive={false}
           isLoading={loading}
         />
         <StatCard
@@ -283,7 +256,7 @@ export function SinistrosDashboard({
           variant="finalizado"
           icon={CheckCircle}
           onClick={() => handleCardClick('sinistros', 'finalizado')}
-          isActive={filters.tipo === 'sinistro' && filters.status === 'closed'}
+          isActive={false}
           isLoading={loading}
         />
         <StatCard
@@ -292,7 +265,7 @@ export function SinistrosDashboard({
           variant="ultimos60"
           icon={Calendar}
           onClick={() => handleCardClick('sinistros', 'ultimos60d')}
-          isActive={filters.tipo === 'sinistro' && filters.periodo === 'last60d'}
+          isActive={false}
           isLoading={loading}
         />
 
@@ -303,46 +276,18 @@ export function SinistrosDashboard({
           variant="assistencia"
           icon={Wrench}
           onClick={() => handleCardClick('assistencias')}
-          isActive={filters.tipo === 'assistencia' && !filters.status && !filters.periodo}
+          isActive={false}
           isLoading={loading}
         />
       </div>
 
-      {/* Lista de Sinistros (aparece quando um card é clicado) */}
-      {showList && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">
-              Lista de {filters.tipo === 'sinistro' ? 'Sinistros' : filters.tipo === 'assistencia' ? 'Assistências' : 'Sinistros e Assistências'}
-              <span className="ml-2 text-sm font-normal text-muted-foreground">
-                ({mockItems.length} {mockItems.length === 1 ? 'item' : 'itens'})
-              </span>
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowList(false)}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              Ocultar lista
-            </Button>
-          </div>
-          
-          <ClaimsList
-            claims={filters.tipo === 'assistencia' ? [] : claims}
-            loading={loading}
-            statusFilter={filters.status || 'all'}
-            onClaimSelect={(claim) => {
-              console.log('Claim selecionado:', claim);
-              // TODO: Abrir drawer de detalhes
-            }}
-            onClaimEdit={(claim) => {
-              console.log('Editar claim:', claim);
-              // TODO: Abrir modal de edição
-            }}
-          />
-        </div>
-      )}
+      {/* Modal for filtered list */}
+      <SinistrosListModal
+        open={listModalOpen}
+        onOpenChange={setListModalOpen}
+        title={modalTitle}
+        initialFilter={modalFilter}
+      />
     </div>
   );
 }
