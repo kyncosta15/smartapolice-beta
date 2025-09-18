@@ -56,6 +56,8 @@ export function SinistrosDashboard({
   onNavigateToList,
   onNewTicket 
 }: SinistrosDashboardProps) {
+  console.log('🚗 SinistrosDashboard renderizando...');
+  
   const [statusFilter, setStatusFilter] = useState('all');
   const [seguradoraFilter, setSeguradoraFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,6 +68,8 @@ export function SinistrosDashboard({
     seguradora: seguradoraFilter,
     search: searchTerm
   });
+
+  console.log('📊 KPIs calculados:', kpis);
 
   const handleCardClick = (scope: 'all' | 'claims' | 'assists', filter?: string, value?: string) => {
     onNavigateToList?.(scope, filter, value);
