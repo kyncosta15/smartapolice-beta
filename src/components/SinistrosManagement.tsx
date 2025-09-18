@@ -5,9 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SinistrosDashboard } from './sinistros/SinistrosDashboard';
-import { SinistrosCasos } from './sinistros/SinistrosCasos';
-import { SinistrosNovoTicket } from './sinistros/SinistrosNovoTicket';
+import { ClaimsManager } from './claims/ClaimsManager';
 import { SinistrosMovimentacoes } from './sinistros/SinistrosMovimentacoes';
 import { SinistrosCRLV } from './sinistros/SinistrosCRLV';
 import { SinistrosRelatorios } from './sinistros/SinistrosRelatorios';
@@ -180,28 +178,20 @@ export function SinistrosManagement({
         </TabsList>
 
         <TabsContent value="dashboard">
-          <SinistrosDashboard 
-            sinistros={mockSinistros}
-            vehicles={vehicles}
-            policies={allPolicies}
+          <ClaimsManager 
+            onClaimEdit={onPolicySelect}
           />
         </TabsContent>
 
         <TabsContent value="casos">
-          <SinistrosCasos 
-            sinistros={mockSinistros}
-            searchTerm={searchTerm}
-            statusFilter={statusFilter}
-            seguradoraFilter={seguradoraFilter}
-            onCaseSelect={onPolicySelect}
+          <ClaimsManager 
+            onClaimEdit={onPolicySelect}
           />
         </TabsContent>
 
         <TabsContent value="novo">
-          <SinistrosNovoTicket 
-            vehicles={vehicles}
-            policies={allPolicies}
-            onTicketCreated={(ticket) => console.log('Ticket created:', ticket)}
+          <ClaimsManager 
+            onClaimEdit={onPolicySelect}
           />
         </TabsContent>
 
