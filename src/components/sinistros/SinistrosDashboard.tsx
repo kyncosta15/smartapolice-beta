@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { KpiBlock } from './KpiBlock';
+import { StatCard } from './StatCard';
+import { FilterChips } from './FilterChips';
+import { NovoTicketModal } from './NovoTicketModal';
+import { ClaimsList } from '../claims/ClaimsList';
 import { useSinistrosKpis } from '@/hooks/useSinistrosKpis';
+import { useFilterState } from '@/hooks/useFilterState';
+import { ClaimsService } from '@/services/claims';
+import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, 
   CheckCircle, 
@@ -11,8 +17,10 @@ import {
   Calendar,
   Plus,
   Wrench,
-  Activity
+  Activity,
+  Search
 } from 'lucide-react';
+import { Claim, Assistance } from '@/types/claims';
 
 // Types
 interface BaseItem {
@@ -58,29 +66,101 @@ export function SinistrosDashboard({
 }: SinistrosDashboardProps) {
   console.log('🚗 SinistrosDashboard renderizando...');
   
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [seguradoraFilter, setSeguradoraFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  // State for data
+  const [claims, setClaims] = useState<Claim[]>([]);
+  const [assistances, setAssistances] = useState<Assistance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showList, setShowList] = useState(false);
+  
+  // Filter state management
+  const {
+    filters,
+    activeFilterChips,
+    updateFilter,
+    removeFilter,
+    clearAllFilters,
+    applyCardFilter
+  } = useFilterState();
+  
+  const { toast } = useToast();
+
+  // Create combined items for KPI calculation
+  const mockItems: BaseItem[] = [
+    ...claims.map(claim => ({
+      id: claim.id,
+      tipo: 'sinistro' as const,
+      status: claim.status,
+      created_at: claim.created_at,
+      seguradora: claim.apolice?.seguradora,
+      placa: claim.veiculo?.placa,
+      chassi: claim.veiculo?.chassi,
+      proprietario_nome: claim.veiculo?.proprietario_nome,
+      modelo: claim.veiculo?.modelo
+    })),
+    ...assistances.map(assistance => ({
+      id: assistance.id,
+      tipo: 'assistencia' as const,
+      status: assistance.status,
+      created_at: assistance.created_at,
+      seguradora: undefined,
+      placa: assistance.veiculo?.placa,
+      chassi: assistance.veiculo?.chassi,
+      proprietario_nome: assistance.veiculo?.proprietario_nome,
+      modelo: assistance.veiculo?.modelo
+    }))
+  ];
 
   // Calculate KPIs using the custom hook
   const kpis = useSinistrosKpis(mockItems, {
-    status: statusFilter,
-    seguradora: seguradoraFilter,
-    search: searchTerm
+    status: filters.status,
+    seguradora: filters.seguradora,
+    search: filters.search
   });
 
   console.log('📊 KPIs calculados:', kpis);
 
-  const handleCardClick = (scope: 'all' | 'claims' | 'assists', filter?: string, value?: string) => {
-    onNavigateToList?.(scope, filter, value);
+  // Load data
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [claimsData, assistancesData] = await Promise.all([
+        ClaimsService.getClaims({}),
+        ClaimsService.getAssistances({})
+      ]);
+      setClaims(claimsData.data);
+      setAssistances(assistancesData.data);
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      toast({
+        title: "Erro ao carregar dados",
+        description: "Não foi possível carregar os dados. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCardClick = (cardType: 'total' | 'sinistros' | 'assistencias', filterType?: 'aberto' | 'finalizado' | 'ultimos60d') => {
+    applyCardFilter(cardType, filterType);
+    setShowList(true);
+  };
+
+  const handleTicketCreated = () => {
+    loadData();
+    setShowList(true);
   };
 
   return (
     <div className="container mx-auto max-w-7xl px-6 space-y-8">
-      {/* Header with filters and search */}
+      {/* Header with filters, search and CTA */}
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
         <div className="flex flex-wrap gap-3">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={filters.status || 'all'} onValueChange={(value) => updateFilter('status', value)}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -91,7 +171,7 @@ export function SinistrosDashboard({
             </SelectContent>
           </Select>
 
-          <Select value={seguradoraFilter} onValueChange={setSeguradoraFilter}>
+          <Select value={filters.seguradora || 'all'} onValueChange={(value) => updateFilter('seguradora', value)}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Seguradora" />
             </SelectTrigger>
@@ -106,136 +186,163 @@ export function SinistrosDashboard({
         </div>
 
         <div className="flex gap-3 w-full lg:w-auto">
-          <Input
-            placeholder="Buscar por placa, chassi, proprietário ou modelo"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full lg:w-80"
+          <div className="relative w-full lg:w-80">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por placa, chassi, proprietário ou modelo"
+              value={filters.search || ''}
+              onChange={(e) => updateFilter('search', e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          
+          <NovoTicketModal
+            trigger={
+              <Button className="shrink-0" title="Abrir novo ticket">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Ticket
+              </Button>
+            }
+            onTicketCreated={handleTicketCreated}
           />
-          <Button 
-            onClick={onNewTicket}
-            className="shrink-0"
-            title="Abrir novo ticket"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Ticket
-          </Button>
         </div>
       </div>
 
-      {/* Dashboard blocks */}
-      <div className="space-y-8">
-        {/* Bloco 1 - Geral */}
-        <KpiBlock
-          title="Total (Sinistros & Assistências)"
-          totalCard={{
-            value: kpis.geral.total,
-            subtitle: 'casos totais',
-            icon: Activity,
-            onClick: () => handleCardClick('all')
-          }}
-          smallCards={[
-            {
-              title: 'Em Aberto',
-              value: kpis.geral.emAberto,
-              subtitle: 'casos em aberto',
-              icon: Clock,
-              variant: 'open',
-              onClick: () => handleCardClick('all', 'status', 'open')
-            },
-            {
-              title: 'Finalizados',
-              value: kpis.geral.finalizados,
-              subtitle: 'casos finalizados',
-              icon: CheckCircle,
-              variant: 'closed',
-              onClick: () => handleCardClick('all', 'status', 'closed')
-            },
-            {
-              title: 'Últimos 60 dias',
-              value: kpis.geral.ult60d,
-              subtitle: 'casos recentes',
-              icon: Calendar,
-              variant: 'recent',
-              onClick: () => handleCardClick('all', 'range', 'last60d')
-            }
-          ]}
+      {/* Filter chips */}
+      <FilterChips
+        activeFilters={activeFilterChips}
+        onRemoveFilter={removeFilter}
+        onClearAll={() => {
+          clearAllFilters();
+          setShowList(false);
+        }}
+      />
+
+      {/* Dashboard Grid - 3x3 responsive layout */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+        {/* Linha 1 - Total (Sinistros & Assistências) */}
+        <StatCard
+          label="Total (Sinistros & Assistências)"
+          value={kpis.geral.total}
+          variant="total"
+          icon={Activity}
+          onClick={() => handleCardClick('total')}
+          isActive={!filters.tipo && !filters.status && !filters.periodo}
+          isLoading={loading}
+        />
+        <StatCard
+          label="Em Aberto"
+          value={kpis.geral.emAberto}
+          variant="aberto"
+          icon={Clock}
+          onClick={() => handleCardClick('total', 'aberto')}
+          isActive={filters.status === 'open' && !filters.tipo}
+          isLoading={loading}
+        />
+        <StatCard
+          label="Finalizados"
+          value={kpis.geral.finalizados}
+          variant="finalizado"
+          icon={CheckCircle}
+          onClick={() => handleCardClick('total', 'finalizado')}
+          isActive={filters.status === 'closed' && !filters.tipo}
+          isLoading={loading}
+        />
+        <StatCard
+          label="Últimos 60 dias"
+          value={kpis.geral.ult60d}
+          variant="ultimos60"
+          icon={Calendar}
+          onClick={() => handleCardClick('total', 'ultimos60d')}
+          isActive={filters.periodo === 'last60d' && !filters.tipo}
+          isLoading={loading}
         />
 
-        {/* Bloco 2 - Somente Sinistros */}
-        <KpiBlock
-          title="Total de Sinistros"
-          totalCard={{
-            value: kpis.sinistros.total,
-            subtitle: 'sinistros totais',
-            icon: FileText,
-            onClick: () => handleCardClick('claims')
-          }}
-          smallCards={[
-            {
-              title: 'Em Aberto',
-              value: kpis.sinistros.emAberto,
-              subtitle: 'sinistros em aberto',
-              icon: Clock,
-              variant: 'open',
-              onClick: () => handleCardClick('claims', 'status', 'open')
-            },
-            {
-              title: 'Finalizados',
-              value: kpis.sinistros.finalizados,
-              subtitle: 'sinistros finalizados',
-              icon: CheckCircle,
-              variant: 'closed',
-              onClick: () => handleCardClick('claims', 'status', 'closed')
-            },
-            {
-              title: 'Últimos 60 dias',
-              value: kpis.sinistros.ult60d,
-              subtitle: 'sinistros recentes',
-              icon: Calendar,
-              variant: 'recent',
-              onClick: () => handleCardClick('claims', 'range', 'last60d')
-            }
-          ]}
+        {/* Linha 2 - Somente Sinistros */}
+        <StatCard
+          label="Total de Sinistros"
+          value={kpis.sinistros.total}
+          variant="total"
+          icon={FileText}
+          onClick={() => handleCardClick('sinistros')}
+          isActive={filters.tipo === 'sinistro' && !filters.status && !filters.periodo}
+          isLoading={loading}
+        />
+        <StatCard
+          label="Sinistros Em Aberto"
+          value={kpis.sinistros.emAberto}
+          variant="aberto"
+          icon={Clock}
+          onClick={() => handleCardClick('sinistros', 'aberto')}
+          isActive={filters.tipo === 'sinistro' && filters.status === 'open'}
+          isLoading={loading}
+        />
+        <StatCard
+          label="Sinistros Finalizados"
+          value={kpis.sinistros.finalizados}
+          variant="finalizado"
+          icon={CheckCircle}
+          onClick={() => handleCardClick('sinistros', 'finalizado')}
+          isActive={filters.tipo === 'sinistro' && filters.status === 'closed'}
+          isLoading={loading}
+        />
+        <StatCard
+          label="Sinistros (60 dias)"
+          value={kpis.sinistros.ult60d}
+          variant="ultimos60"
+          icon={Calendar}
+          onClick={() => handleCardClick('sinistros', 'ultimos60d')}
+          isActive={filters.tipo === 'sinistro' && filters.periodo === 'last60d'}
+          isLoading={loading}
         />
 
-        {/* Bloco 3 - Somente Assistências */}
-        <KpiBlock
-          title="Total de Assistências"
-          totalCard={{
-            value: kpis.assistencias.total,
-            subtitle: 'assistências totais',
-            icon: Wrench,
-            onClick: () => handleCardClick('assists')
-          }}
-          smallCards={[
-            {
-              title: 'Em Aberto',
-              value: kpis.assistencias.emAberto,
-              subtitle: 'assistências em aberto',
-              icon: Clock,
-              variant: 'open',
-              onClick: () => handleCardClick('assists', 'status', 'open')
-            },
-            {
-              title: 'Finalizados',
-              value: kpis.assistencias.finalizados,
-              subtitle: 'assistências finalizadas',
-              icon: CheckCircle,
-              variant: 'closed',
-              onClick: () => handleCardClick('assists', 'status', 'closed')
-            },
-            {
-              title: 'Últimos 60 dias',
-              value: kpis.assistencias.ult60d,
-              subtitle: 'assistências recentes',
-              icon: Calendar,
-              variant: 'recent',
-              onClick: () => handleCardClick('assists', 'range', 'last60d')
-            }
-          ]}
+        {/* Linha 3 - Somente Assistências */}
+        <StatCard
+          label="Total de Assistências"
+          value={kpis.assistencias.total}
+          variant="assistencia"
+          icon={Wrench}
+          onClick={() => handleCardClick('assistencias')}
+          isActive={filters.tipo === 'assistencia' && !filters.status && !filters.periodo}
+          isLoading={loading}
         />
       </div>
+
+      {/* Lista de Sinistros (aparece quando um card é clicado) */}
+      {showList && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              Lista de {filters.tipo === 'sinistro' ? 'Sinistros' : filters.tipo === 'assistencia' ? 'Assistências' : 'Sinistros e Assistências'}
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                ({mockItems.length} {mockItems.length === 1 ? 'item' : 'itens'})
+              </span>
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowList(false)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Ocultar lista
+            </Button>
+          </div>
+          
+          <ClaimsList
+            claims={filters.tipo === 'assistencia' ? [] : claims}
+            loading={loading}
+            statusFilter={filters.status || 'all'}
+            onClaimSelect={(claim) => {
+              console.log('Claim selecionado:', claim);
+              // TODO: Abrir drawer de detalhes
+            }}
+            onClaimEdit={(claim) => {
+              console.log('Editar claim:', claim);
+              // TODO: Abrir modal de edição
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
