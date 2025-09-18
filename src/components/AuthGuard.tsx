@@ -65,4 +65,5 @@ const AuthGuard = () => {
   );
 };
 
+// Ensure proper default export
 export default AuthGuard;
