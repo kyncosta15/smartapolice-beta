@@ -160,101 +160,102 @@ export function SinistrosDashboard({
         />
       </div>
 
-      <div className="space-y-6">
-        {/* Card Grande - Resumo Geral */}
-        <div className="relative">
+      {/* Grid de 3 colunas: Totais | Sinistros | Assistências */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Coluna 1 - Totais */}
+        <div className="space-y-6">
+          {/* Resumo Geral */}
+          <div className="relative">
+            <StatCard
+              label="Resumo Geral"
+              value={`${kpis.geral.total} tickets`}
+              variant="total"
+              icon={Activity}
+              onClick={() => handleCardClick()}
+              isLoading={loading}
+            />
+            <p className="text-sm text-muted-foreground mt-2 text-center">
+              {kpis.geral.emAberto} em aberto • {kpis.geral.finalizados} finalizados
+            </p>
+          </div>
+          
+          {/* Últimos 60 dias */}
           <StatCard
-            label="Resumo Geral"
-            value={`${kpis.geral.total} tickets`}
-            variant="total"
-            icon={Activity}
-            onClick={() => handleCardClick()}
+            label="Últimos 60 dias"
+            value={kpis.geral.ult60d}
+            variant="ultimos60"
+            icon={Calendar}
+            onClick={() => handleCardClick(undefined, undefined, 'last60d')}
             isLoading={loading}
           />
-          <p className="text-sm text-muted-foreground mt-2 text-center">
-            {kpis.geral.emAberto} em aberto • {kpis.geral.finalizados} finalizados
-          </p>
         </div>
 
-        {/* Grid 3x2 - Layout: Coluna 1 (Sinistros) | Coluna 2 (Assistências) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Coluna 2 - Sinistros */}
+        <div className="space-y-6">
+          {/* Total Sinistros */}
+          <StatCard
+            label="Total Sinistros"
+            value={kpis.sinistros.total}
+            variant="total"
+            icon={FileText}
+            onClick={() => handleCardClick('sinistro')}
+            isLoading={loading}
+          />
           
-          {/* Coluna 1 - Sinistros */}
-          <div className="space-y-6">
-            {/* Linha 1 - Total Sinistros */}
-            <StatCard
-              label="Total Sinistros"
-              value={kpis.sinistros.total}
-              variant="total"
-              icon={FileText}
-              onClick={() => handleCardClick('sinistro')}
-              isLoading={loading}
-            />
-            
-            {/* Linha 2 - Sinistros em Aberto */}
-            <StatCard
-              label="Sinistros em Aberto"
-              value={kpis.sinistros.emAberto}
-              variant="aberto"
-              icon={Clock}
-              onClick={() => handleCardClick('sinistro', 'aberto')}
-              isLoading={loading}
-            />
-            
-            {/* Linha 3 - Sinistros Finalizados */}
-            <StatCard
-              label="Sinistros Finalizados"
-              value={kpis.sinistros.finalizados}
-              variant="finalizado"
-              icon={CheckCircle}
-              onClick={() => handleCardClick('sinistro', 'finalizado')}
-              isLoading={loading}
-            />
-          </div>
-
-          {/* Coluna 2 - Assistências */}
-          <div className="space-y-6">
-            {/* Linha 1 - Total Assistências */}
-            <StatCard
-              label="Total Assistências"
-              value={kpis.assistencias.total}
-              variant="assistencia"
-              icon={Wrench}
-              onClick={() => handleCardClick('assistencia')}
-              isLoading={loading}
-            />
-            
-            {/* Linha 2 - Assistências em Aberto */}
-            <StatCard
-              label="Assistências em Aberto"
-              value={kpis.assistencias.emAberto}
-              variant="aberto"
-              icon={Clock}
-              onClick={() => handleCardClick('assistencia', 'aberto')}
-              isLoading={loading}
-            />
-            
-            {/* Linha 3 - Assistências Finalizadas */}
-            <StatCard
-              label="Assistências Finalizadas"
-              value={kpis.assistencias.finalizados}
-              variant="finalizado"
-              icon={CheckCircle}
-              onClick={() => handleCardClick('assistencia', 'finalizado')}
-              isLoading={loading}
-            />
-          </div>
+          {/* Sinistros em Aberto */}
+          <StatCard
+            label="Sinistros em Aberto"
+            value={kpis.sinistros.emAberto}
+            variant="aberto"
+            icon={Clock}
+            onClick={() => handleCardClick('sinistro', 'aberto')}
+            isLoading={loading}
+          />
+          
+          {/* Sinistros Finalizados */}
+          <StatCard
+            label="Sinistros Finalizados"
+            value={kpis.sinistros.finalizados}
+            variant="finalizado"
+            icon={CheckCircle}
+            onClick={() => handleCardClick('sinistro', 'finalizado')}
+            isLoading={loading}
+          />
         </div>
 
-        {/* Card dos Últimos 60 dias (full width) */}
-        <StatCard
-          label="Últimos 60 dias"
-          value={kpis.geral.ult60d}
-          variant="ultimos60"
-          icon={Calendar}
-          onClick={() => handleCardClick(undefined, undefined, 'last60d')}
-          isLoading={loading}
-        />
+        {/* Coluna 3 - Assistências */}
+        <div className="space-y-6">
+          {/* Total Assistências */}
+          <StatCard
+            label="Total Assistências"
+            value={kpis.assistencias.total}
+            variant="assistencia"
+            icon={Wrench}
+            onClick={() => handleCardClick('assistencia')}
+            isLoading={loading}
+          />
+          
+          {/* Assistências em Aberto */}
+          <StatCard
+            label="Assistências em Aberto"
+            value={kpis.assistencias.emAberto}
+            variant="aberto"
+            icon={Clock}
+            onClick={() => handleCardClick('assistencia', 'aberto')}
+            isLoading={loading}
+          />
+          
+          {/* Assistências Finalizadas */}
+          <StatCard
+            label="Assistências Finalizadas"
+            value={kpis.assistencias.finalizados}
+            variant="finalizado"
+            icon={CheckCircle}
+            onClick={() => handleCardClick('assistencia', 'finalizado')}
+            isLoading={loading}
+          />
+        </div>
       </div>
 
       {/* Modal com lista filtrada */}
