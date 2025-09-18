@@ -5,7 +5,6 @@ import {
   Menu,
   BarChart3,
   Activity,
-  Plus,
   Car,
   FileText,
   Calculator,
@@ -20,7 +19,6 @@ interface HamburgerMenuProps {
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
   { id: 'casos', label: 'Casos', icon: Activity },
-  { id: 'novo', label: 'Novo Ticket', icon: Plus },
   { id: 'movimentacoes', label: 'Movimentações', icon: Car },
   { id: 'crlv', label: 'CRLV', icon: FileText },
   { id: 'relatorios', label: 'Relatórios', icon: Calculator },
