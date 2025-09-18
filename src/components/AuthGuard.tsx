@@ -57,10 +57,12 @@ const AuthGuardContent = () => {
   return <DashboardContent />;
 };
 
-export const AuthGuard = () => {
+const AuthGuard = () => {
   return (
     <AuthProvider>
       <AuthGuardContent />
     </AuthProvider>
   );
 };
+
+export default AuthGuard;

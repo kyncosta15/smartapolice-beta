@@ -16,7 +16,7 @@ const SmartBeneficiosGuard = lazy(() => import("@/components/SmartBeneficiosGuar
 const ColaboradorSolicitacao = lazy(() => import("@/components/ColaboradorSolicitacao").then(m => ({ default: m.ColaboradorSolicitacao })));
 const ColaboradorFormPage = lazy(() => import("@/pages/ColaboradorFormPage").then(m => ({ default: m.ColaboradorFormPage })));
 const NewSolicitacaoPage = lazy(() => import("@/pages/NewSolicitacaoPage").then(m => ({ default: m.NewSolicitacaoPage })));
-const AuthGuard = lazy(() => import("@/components/AuthGuard").then(m => ({ default: m.AuthGuard })));
+const AuthGuard = lazy(() => import("@/components/AuthGuard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const RHDashboard = lazy(() => import('./pages/RHDashboard'));
 const RHColaboradores = lazy(() => import('./pages/RHColaboradores'));
