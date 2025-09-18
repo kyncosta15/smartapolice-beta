@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import smartapoliceShield from '@/assets/smartapolice-shield-transparent.png';
 import smartbeneficiosPeopleHeart from '@/assets/smartbeneficios-transparent.png';
 
-export const SystemSelection = () => {
+const SystemSelection = () => {
   const navigate = useNavigate();
 
   const handleSystemSelect = (system: 'smartapolice' | 'smartbeneficios') => {
@@ -108,3 +108,5 @@ export const SystemSelection = () => {
     </div>
   );
 };
+
+export default SystemSelection;

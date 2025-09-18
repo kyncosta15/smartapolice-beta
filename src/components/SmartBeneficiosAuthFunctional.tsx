@@ -301,10 +301,12 @@ const SmartBeneficiosAuthContent = () => {
   );
 };
 
-export const SmartBeneficiosAuthFunctional = () => {
+const SmartBeneficiosAuthFunctional = () => {
   return (
     <AuthProvider>
       <SmartBeneficiosAuthContent />
     </AuthProvider>
   );
 };
+
+export default SmartBeneficiosAuthFunctional;

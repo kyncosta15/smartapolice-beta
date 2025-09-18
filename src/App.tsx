@@ -8,10 +8,10 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { LandingPage } from "@/components/LandingPage";
 
 // Lazy load heavy components to reduce initial bundle size
-const ProtectedRoute = lazy(() => import('@/components/ProtectedRoute').then(m => ({ default: m.ProtectedRoute })));
-const SystemSelection = lazy(() => import("@/components/SystemSelection").then(m => ({ default: m.SystemSelection })));
-const SmartApoliceAuth = lazy(() => import("@/components/SmartApoliceAuth").then(m => ({ default: m.SmartApoliceAuth })));
-const SmartBeneficiosAuthFunctional = lazy(() => import("@/components/SmartBeneficiosAuthFunctional").then(m => ({ default: m.SmartBeneficiosAuthFunctional })));
+const ProtectedRoute = lazy(() => import('@/components/ProtectedRoute'));
+const SystemSelection = lazy(() => import("@/components/SystemSelection"));
+const SmartApoliceAuth = lazy(() => import("@/components/SmartApoliceAuth"));
+const SmartBeneficiosAuthFunctional = lazy(() => import("@/components/SmartBeneficiosAuthFunctional"));
 const SmartBeneficiosGuard = lazy(() => import("@/components/SmartBeneficiosGuard").then(m => ({ default: m.SmartBeneficiosGuard })));
 const ColaboradorSolicitacao = lazy(() => import("@/components/ColaboradorSolicitacao").then(m => ({ default: m.ColaboradorSolicitacao })));
 const ColaboradorFormPage = lazy(() => import("@/pages/ColaboradorFormPage").then(m => ({ default: m.ColaboradorFormPage })));

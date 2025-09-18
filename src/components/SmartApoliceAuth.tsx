@@ -41,10 +41,12 @@ const SmartApoliceAuthContent = () => {
   );
 };
 
-export const SmartApoliceAuth = () => {
+const SmartApoliceAuth = () => {
   return (
     <AuthProvider>
       <SmartApoliceAuthContent />
     </AuthProvider>
   );
 };
+
+export default SmartApoliceAuth;
