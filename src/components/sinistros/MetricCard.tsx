@@ -6,7 +6,7 @@ import { LucideIcon } from 'lucide-react';
 interface MetricCardProps {
   title: string;
   value: number;
-  gradient: string;
+  variant: 'total' | 'aberto' | 'finalizado' | 'assistencia';
   icon: LucideIcon;
   onClick: () => void;
   ariaLabel: string;
@@ -16,18 +16,25 @@ interface MetricCardProps {
 export function MetricCard({
   title,
   value,
-  gradient,
+  variant,
   icon: Icon,
   onClick,
   ariaLabel,
   isLoading = false
 }: MetricCardProps) {
+  const variantStyles = {
+    total: 'bg-blue-500 hover:bg-blue-600',
+    assistencia: 'bg-blue-500 hover:bg-blue-600', 
+    aberto: 'bg-red-500 hover:bg-red-600',
+    finalizado: 'bg-orange-500 hover:bg-orange-600'
+  };
+
   if (isLoading) {
     return (
-      <Card className={`min-h-[140px] bg-gradient-to-br ${gradient} dark:from-white/5 dark:to-white/0`}>
+      <Card className={`min-h-[140px] ${variantStyles[variant]} text-white`}>
         <div className="p-6">
-          <Skeleton className="h-4 w-32 mb-2" />
-          <Skeleton className="h-12 w-16 mb-2" />
+          <Skeleton className="h-4 w-32 mb-2 bg-white/20" />
+          <Skeleton className="h-12 w-16 mb-2 bg-white/20" />
         </div>
       </Card>
     );
@@ -35,22 +42,28 @@ export function MetricCard({
 
   return (
     <Card 
-      className={`min-h-[140px] bg-gradient-to-br ${gradient} dark:from-white/5 dark:to-white/0 hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.99]`}
+      className={`min-h-[140px] ${variantStyles[variant]} shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer active:scale-[0.99] border-0`}
     >
       <button
         onClick={onClick}
         aria-label={ariaLabel}
-        className="w-full h-full p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-lg"
+        className="w-full h-full p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-lg text-white"
       >
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+        <div className="flex items-center justify-between mb-4">
+          <Icon className="h-6 w-6 text-white opacity-90" />
+          <h4 className="text-sm font-semibold text-white opacity-90 uppercase tracking-wide">
             {title}
           </h4>
-          <Icon className="h-5 w-5 text-slate-500 dark:text-slate-400" />
         </div>
         
-        <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <div className="text-5xl font-bold text-white mb-2">
           {value}
+        </div>
+        
+        <div className="text-sm text-white/80">
+          {variant === 'total' ? 'Total registrado' : 
+           variant === 'aberto' ? 'Necessitam atenção' : 
+           'Processados'}
         </div>
       </button>
     </Card>

@@ -23,8 +23,8 @@ export function MegaCard({
 }: MegaCardProps) {
   if (isLoading) {
     return (
-      <Card className="w-full min-h-[176px] bg-gradient-to-br from-indigo-50 to-sky-50 dark:from-white/5 dark:to-white/0">
-        <div className="flex flex-row divide-x divide-slate-200/60 dark:divide-slate-700/60">
+      <Card className="w-full min-h-[176px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="flex flex-row divide-x divide-slate-200 dark:divide-slate-700">
           <div className="flex-1 p-6">
             <Skeleton className="h-4 w-48 mb-2" />
             <Skeleton className="h-12 w-20 mb-2" />
@@ -42,22 +42,22 @@ export function MegaCard({
   }
 
   return (
-    <Card className="w-full min-h-[176px] bg-gradient-to-br from-indigo-50 to-sky-50 dark:from-white/5 dark:to-white/0 hover:shadow-md transition-shadow">
+    <Card className="w-full min-h-[176px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
       {/* Uma única linha com 2 colunas e divisor vertical */}
-      <div className="flex flex-row divide-x divide-slate-200/60 dark:divide-slate-700/60">
+      <div className="flex flex-row divide-x divide-slate-200 dark:divide-slate-700">
         {/* Coluna A – Totais */}
         <button
           onClick={onTotalClick}
           aria-label="Ver todos os tickets de sinistros e assistências"
-          className="flex-1 p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ring-offset-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer active:scale-[0.99]"
+          className="flex-1 p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ring-offset-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer active:scale-[0.99]"
         >
-          <h4 className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+          <h4 className="text-sm text-blue-600 dark:text-blue-400 font-semibold mb-2">
             Totais de Sinistros/Assistências
           </h4>
-          <div className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mt-2">
+          <div className="text-4xl font-bold text-slate-900 dark:text-white mb-1">
             {totalTickets}
           </div>
-          <div className="text-xs mt-1 text-slate-500 dark:text-slate-400">
+          <div className="text-sm text-slate-500 dark:text-slate-400">
             {totalAbertos} em aberto • {totalFinalizados} finalizados
           </div>
         </button>
@@ -66,15 +66,15 @@ export function MegaCard({
         <button
           onClick={onUltimos60dClick}
           aria-label="Ver tickets dos últimos 60 dias"
-          className="flex-1 p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ring-offset-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer active:scale-[0.99]"
+          className="flex-1 p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ring-offset-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer active:scale-[0.99]"
         >
-          <h4 className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+          <h4 className="text-sm text-green-600 dark:text-green-400 font-semibold mb-2">
             Últimos 60 dias
           </h4>
-          <div className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mt-2">
+          <div className="text-4xl font-bold text-slate-900 dark:text-white mb-1">
             {ultimos60d}
           </div>
-          <div className="text-xs mt-1 text-slate-500 dark:text-slate-400">
+          <div className="text-sm text-slate-500 dark:text-slate-400">
             criados nos últimos 60 dias
           </div>
         </button>

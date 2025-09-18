@@ -154,7 +154,7 @@ export function SinistrosDashboard({
           <MetricCard
             title="Total de Sinistros"
             value={stats.sinistros.total}
-            gradient="from-indigo-50 to-blue-50"
+            variant="total"
             icon={FileText}
             onClick={() => goToListWith({ tipo: 'sinistro' })}
             ariaLabel="Ver todos os sinistros"
@@ -163,7 +163,7 @@ export function SinistrosDashboard({
           <MetricCard
             title="Sinistros em Aberto"
             value={stats.sinistros.abertos}
-            gradient="from-amber-50 to-yellow-50"
+            variant="aberto"
             icon={Clock}
             onClick={() => goToListWith({ tipo: 'sinistro', status: ['aberto', 'em_analise', 'em_andamento'] })}
             ariaLabel="Ver sinistros em aberto"
@@ -172,7 +172,7 @@ export function SinistrosDashboard({
           <MetricCard
             title="Sinistros Finalizados"
             value={stats.sinistros.finalizados}
-            gradient="from-emerald-50 to-green-50"
+            variant="finalizado"
             icon={CheckCircle}
             onClick={() => goToListWith({ tipo: 'sinistro', status: ['finalizado'] })}
             ariaLabel="Ver sinistros finalizados"
@@ -188,7 +188,7 @@ export function SinistrosDashboard({
           <MetricCard
             title="Total de Assistências"
             value={stats.assistencias.total}
-            gradient="from-fuchsia-50 to-pink-50"
+            variant="assistencia"
             icon={Wrench}
             onClick={() => goToListWith({ tipo: 'assistencia' })}
             ariaLabel="Ver todas as assistências"
@@ -197,7 +197,7 @@ export function SinistrosDashboard({
           <MetricCard
             title="Assistências em Aberto"
             value={stats.assistencias.abertos}
-            gradient="from-amber-50 to-yellow-50"
+            variant="aberto"
             icon={Clock}
             onClick={() => goToListWith({ tipo: 'assistencia', status: ['aberto', 'em_analise', 'em_andamento'] })}
             ariaLabel="Ver assistências em aberto"
@@ -206,7 +206,7 @@ export function SinistrosDashboard({
           <MetricCard
             title="Assistências Finalizadas"
             value={stats.assistencias.finalizados}
-            gradient="from-emerald-50 to-green-50"
+            variant="finalizado"
             icon={CheckCircle}
             onClick={() => goToListWith({ tipo: 'assistencia', status: ['finalizado'] })}
             ariaLabel="Ver assistências finalizadas"
