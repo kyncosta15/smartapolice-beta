@@ -115,16 +115,9 @@ export function SinistrosDashboard({
   };
 
   return (
-    <div className="container mx-auto max-w-7xl px-6 space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Gestão de Sinistros</h2>
-          <p className="text-muted-foreground">
-            Clique nos cards para ver detalhes
-          </p>
-        </div>
-        
+    <div className="container mx-auto max-w-7xl px-4 md:px-6 space-y-6 md:space-y-8">
+      {/* Header - apenas mobile precisa do botão */}
+      <div className="flex items-center justify-between md:justify-end">
         <NovoTicketModal
           trigger={
             <Button className="shrink-0" title="Abrir novo ticket">
@@ -150,7 +143,7 @@ export function SinistrosDashboard({
       {/* Linha de Sinistros */}
       <section aria-labelledby="sinistros">
         <h3 id="sinistros" className="sr-only">Sinistros</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <MetricCard
             title="Total de Sinistros"
             value={stats.sinistros.total}
@@ -184,7 +177,7 @@ export function SinistrosDashboard({
       {/* Linha de Assistências */}
       <section aria-labelledby="assistencias">
         <h3 id="assistencias" className="sr-only">Assistências</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <MetricCard
             title="Total de Assistências"
             value={stats.assistencias.total}
