@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { StatCard } from './StatCard';
 import { NovoTicketModal } from './NovoTicketModal';
-import { SinistrosListModal } from './SinistrosListModal';
+import { FilterChips } from './FilterChips';
+import { ClaimsList } from '../claims/ClaimsList';
 import { useSinistrosKpis } from '@/hooks/useSinistrosKpis';
+import { useFilterState } from '@/hooks/useFilterState';
 import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -35,26 +37,6 @@ interface SinistrosDashboardProps {
   onNewTicket?: () => void;
 }
 
-// Mock data - replace with real data from API
-const mockItems: BaseItem[] = [
-  {
-    id: '1', tipo: 'sinistro', status: 'open', created_at: '2025-01-10T10:00:00Z',
-    seguradora: 'Porto Seguro', placa: 'ABC1D23', proprietario_nome: 'João Silva', modelo: 'Argo'
-  },
-  {
-    id: '2', tipo: 'sinistro', status: 'closed', created_at: '2025-01-05T15:30:00Z',
-    seguradora: 'Bradesco Seguros', placa: 'XYZ9W87', proprietario_nome: 'Maria Santos', modelo: 'Civic'
-  },
-  {
-    id: '3', tipo: 'assistencia', status: 'open', created_at: '2025-01-12T09:00:00Z',
-    seguradora: 'Suhai Seguradora', placa: 'DEF4G56', proprietario_nome: 'Pedro Oliveira', modelo: 'Onix'
-  },
-  {
-    id: '4', tipo: 'assistencia', status: 'closed', created_at: '2024-12-20T14:00:00Z',
-    seguradora: 'Allianz', placa: 'GHI7J89', proprietario_nome: 'Ana Costa', modelo: 'HB20'
-  }
-];
-
 export function SinistrosDashboard({ 
   onNavigateToList,
   onNewTicket 
@@ -66,19 +48,19 @@ export function SinistrosDashboard({
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Modal state
-  const [listModalOpen, setListModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalFilter, setModalFilter] = useState<{
-    tipo?: 'sinistro' | 'assistencia';
-    status?: string;
-    periodo?: 'last60d';
-  }>({});
+  // Filter state
+  const {
+    filters,
+    activeFilterChips,
+    updateFilter,
+    removeFilter,
+    clearAllFilters
+  } = useFilterState();
   
   const { toast } = useToast();
 
   // Create combined items for KPI calculation
-  const mockItems: BaseItem[] = [
+  const allItems: BaseItem[] = [
     ...claims.map(claim => ({
       id: claim.id,
       tipo: 'sinistro' as const,
@@ -103,8 +85,8 @@ export function SinistrosDashboard({
     }))
   ];
 
-  // Calculate KPIs using the custom hook
-  const kpis = useSinistrosKpis(mockItems, {});
+  // Calculate KPIs using the custom hook with current filters
+  const kpis = useSinistrosKpis(allItems, filters);
 
   console.log('📊 KPIs calculados:', kpis);
 
@@ -134,40 +116,52 @@ export function SinistrosDashboard({
     }
   };
 
-  const handleCardClick = (cardType: 'total' | 'sinistros' | 'assistencias', filterType?: 'aberto' | 'finalizado' | 'ultimos60d') => {
-    // Configure modal based on card clicked
-    let title = '';
-    let filter: typeof modalFilter = {};
+  // Handle card clicks to apply filters
+  const handleCardClick = (tipo?: 'sinistro' | 'assistencia', status?: 'aberto' | 'finalizado', periodo?: 'last60d') => {
+    // Clear previous filters and apply new ones
+    clearAllFilters();
     
-    if (cardType === 'total') {
-      title = 'Todos os Sinistros e Assistências';
-    } else if (cardType === 'sinistros') {
-      title = 'Sinistros';
-      filter.tipo = 'sinistro';
-    } else if (cardType === 'assistencias') {
-      title = 'Assistências';
-      filter.tipo = 'assistencia';
+    if (tipo) {
+      updateFilter('tipo', tipo);
     }
     
-    if (filterType === 'aberto') {
-      title += ' - Em Aberto';
-      filter.status = 'open';
-    } else if (filterType === 'finalizado') {
-      title += ' - Finalizados';
-      filter.status = 'closed';
-    } else if (filterType === 'ultimos60d') {
-      title += ' - Últimos 60 dias';
-      filter.periodo = 'last60d';
+    if (status === 'aberto') {
+      updateFilter('status', 'open');
+    } else if (status === 'finalizado') {
+      updateFilter('status', 'closed');  
     }
     
-    setModalTitle(title);
-    setModalFilter(filter);
-    setListModalOpen(true);
+    if (periodo === 'last60d') {
+      updateFilter('periodo', 'last60d');
+    }
   };
 
   const handleTicketCreated = () => {
     loadData();
   };
+
+  // Filter claims and assistances based on current filters
+  const filteredClaims = claims.filter(claim => {
+    // Se há filtro de tipo e não é 'sinistro', excluir claims
+    if (filters.tipo && filters.tipo !== 'sinistro') return false;
+    
+    if (filters.status) {
+      if (filters.status === 'open' && !['open', 'aberto', 'em_analise', 'em_regulacao'].includes(claim.status)) return false;
+      if (filters.status === 'closed' && !['closed', 'encerrado', 'finalizado', 'pago'].includes(claim.status)) return false;
+    }
+    return true;
+  });
+
+  const filteredAssistances = assistances.filter(assistance => {
+    // Se há filtro de tipo e não é 'assistencia', excluir assistências
+    if (filters.tipo && filters.tipo !== 'assistencia') return false;
+    
+    if (filters.status) {
+      if (filters.status === 'open' && !['open', 'aberto', 'em_analise', 'em_regulacao'].includes(assistance.status)) return false;
+      if (filters.status === 'closed' && !['closed', 'encerrado', 'finalizado', 'pago'].includes(assistance.status)) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="container mx-auto max-w-7xl px-6 space-y-8">
@@ -176,7 +170,7 @@ export function SinistrosDashboard({
         <div>
           <h2 className="text-2xl font-bold text-foreground">Dashboard de Sinistros</h2>
           <p className="text-muted-foreground">
-            Clique nos cards para ver detalhes e filtrar informações
+            Clique nos cards para filtrar informações
           </p>
         </div>
         
@@ -191,103 +185,127 @@ export function SinistrosDashboard({
         />
       </div>
 
-      {/* Dashboard Grid - 3x3 responsive layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        {/* Linha 1 - Total (Sinistros & Assistências) */}
-        <StatCard
-          label="Total (Sinistros & Assistências)"
-          value={kpis.geral.total}
-          variant="total"
-          icon={Activity}
-          onClick={() => handleCardClick('total')}
-          isActive={false}
-          isLoading={loading}
-        />
-        <StatCard
-          label="Em Aberto"
-          value={kpis.geral.emAberto}
-          variant="aberto"
-          icon={Clock}
-          onClick={() => handleCardClick('total', 'aberto')}
-          isActive={false}
-          isLoading={loading}
-        />
-        <StatCard
-          label="Finalizados"
-          value={kpis.geral.finalizados}
-          variant="finalizado"
-          icon={CheckCircle}
-          onClick={() => handleCardClick('total', 'finalizado')}
-          isActive={false}
-          isLoading={loading}
-        />
+      {/* Dashboard Grid - Layout conforme especificação: 2x3 + card grande */}
+      <div className="space-y-6">
+        {/* Grid 2x3 - Coluna A (Assistências) | Coluna B (Sinistros) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* Coluna A - Assistências */}
+          <div className="space-y-6">
+            {/* Linha 1 - Total Assistências */}
+            <StatCard
+              label="Total Assistências"
+              value={kpis.assistencias.total}
+              variant="assistencia"
+              icon={Wrench}
+              onClick={() => handleCardClick('assistencia')}
+              isActive={filters.tipo === 'assistencia' && !filters.status}
+              isLoading={loading}
+            />
+            
+            {/* Linha 2 - Assistências em Aberto */}
+            <StatCard
+              label="Assistências em Aberto"
+              value={kpis.assistencias.emAberto}
+              variant="aberto"
+              icon={Clock}
+              onClick={() => handleCardClick('assistencia', 'aberto')}
+              isActive={filters.tipo === 'assistencia' && filters.status === 'open'}
+              isLoading={loading}
+            />
+            
+            {/* Linha 3 - Assistências Finalizadas */}
+            <StatCard
+              label="Assistências Finalizadas"
+              value={kpis.assistencias.finalizados}
+              variant="finalizado"
+              icon={CheckCircle}
+              onClick={() => handleCardClick('assistencia', 'finalizado')}
+              isActive={filters.tipo === 'assistencia' && filters.status === 'closed'}
+              isLoading={loading}
+            />
+          </div>
+
+          {/* Coluna B - Sinistros */}
+          <div className="space-y-6">
+            {/* Linha 1 - Total Sinistros */}
+            <StatCard
+              label="Total Sinistros"
+              value={kpis.sinistros.total}
+              variant="total"
+              icon={FileText}
+              onClick={() => handleCardClick('sinistro')}
+              isActive={filters.tipo === 'sinistro' && !filters.status}
+              isLoading={loading}
+            />
+            
+            {/* Linha 2 - Sinistros em Aberto */}
+            <StatCard
+              label="Sinistros em Aberto"
+              value={kpis.sinistros.emAberto}
+              variant="aberto"
+              icon={Clock}
+              onClick={() => handleCardClick('sinistro', 'aberto')}
+              isActive={filters.tipo === 'sinistro' && filters.status === 'open'}
+              isLoading={loading}
+            />
+            
+            {/* Linha 3 - Sinistros Finalizados */}
+            <StatCard
+              label="Sinistros Finalizados"
+              value={kpis.sinistros.finalizados}
+              variant="finalizado"
+              icon={CheckCircle}
+              onClick={() => handleCardClick('sinistro', 'finalizado')}
+              isActive={filters.tipo === 'sinistro' && filters.status === 'closed'}
+              isLoading={loading}
+            />
+          </div>
+        </div>
+
+        {/* Card Grande - Últimos 60 dias (full width) */}
         <StatCard
           label="Últimos 60 dias"
           value={kpis.geral.ult60d}
           variant="ultimos60"
           icon={Calendar}
-          onClick={() => handleCardClick('total', 'ultimos60d')}
-          isActive={false}
-          isLoading={loading}
-        />
-
-        {/* Linha 2 - Somente Sinistros */}
-        <StatCard
-          label="Total de Sinistros"
-          value={kpis.sinistros.total}
-          variant="total"
-          icon={FileText}
-          onClick={() => handleCardClick('sinistros')}
-          isActive={false}
-          isLoading={loading}
-        />
-        <StatCard
-          label="Sinistros Em Aberto"
-          value={kpis.sinistros.emAberto}
-          variant="aberto"
-          icon={Clock}
-          onClick={() => handleCardClick('sinistros', 'aberto')}
-          isActive={false}
-          isLoading={loading}
-        />
-        <StatCard
-          label="Sinistros Finalizados"
-          value={kpis.sinistros.finalizados}
-          variant="finalizado"
-          icon={CheckCircle}
-          onClick={() => handleCardClick('sinistros', 'finalizado')}
-          isActive={false}
-          isLoading={loading}
-        />
-        <StatCard
-          label="Sinistros (60 dias)"
-          value={kpis.sinistros.ult60d}
-          variant="ultimos60"
-          icon={Calendar}
-          onClick={() => handleCardClick('sinistros', 'ultimos60d')}
-          isActive={false}
-          isLoading={loading}
-        />
-
-        {/* Linha 3 - Somente Assistências */}
-        <StatCard
-          label="Total de Assistências"
-          value={kpis.assistencias.total}
-          variant="assistencia"
-          icon={Wrench}
-          onClick={() => handleCardClick('assistencias')}
-          isActive={false}
+          onClick={() => handleCardClick(undefined, undefined, 'last60d')}
+          isActive={filters.periodo === 'last60d'}
           isLoading={loading}
         />
       </div>
 
-      {/* Modal for filtered list */}
-      <SinistrosListModal
-        open={listModalOpen}
-        onOpenChange={setListModalOpen}
-        title={modalTitle}
-        initialFilter={modalFilter}
-      />
+      {/* Filter Chips */}
+      {activeFilterChips.length > 0 && (
+        <FilterChips
+          activeFilters={activeFilterChips}
+          onRemoveFilter={removeFilter}
+          onClearAll={clearAllFilters}
+        />
+      )}
+
+      {/* Lista de Sinistros */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-foreground">
+            Lista de Sinistros ({filteredClaims.length + filteredAssistances.length})
+          </h3>
+        </div>
+        
+        <ClaimsList
+          claims={[...filteredClaims, ...filteredAssistances] as Claim[]}
+          loading={loading}
+          statusFilter={filters.status || 'all'}
+          onClaimSelect={(claim) => {
+            console.log('Claim selecionado:', claim);
+            // TODO: Abrir drawer de detalhes
+          }}
+          onClaimEdit={(claim) => {
+            console.log('Editar claim:', claim);
+            // TODO: Abrir modal de edição
+          }}
+        />
+      </div>
     </div>
   );
 }
