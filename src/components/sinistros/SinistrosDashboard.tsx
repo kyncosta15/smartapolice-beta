@@ -168,7 +168,7 @@ export function SinistrosDashboard({
           {/* Resumo Geral */}
           <div className="relative">
             <StatCard
-              label="Resumo Geral"
+              label="Totais de Sinistros/Assistências"
               value={`${kpis.geral.total} tickets`}
               variant="total"
               icon={Activity}
