@@ -1,33 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { StatCard } from './StatCard';
 import { NovoTicketModal } from './NovoTicketModal';
 import { SinistrosListModal } from './SinistrosListModal';
-import { useSinistrosKpis } from '@/hooks/useSinistrosKpis';
+import { MegaCard } from './MegaCard';
+import { MetricCard } from './MetricCard';
+import { useClaimsStats } from '@/hooks/useClaimsStats';
 import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, 
   CheckCircle, 
-  Clock, 
-  Calendar,
+  Clock,
   Plus,
-  Wrench,
-  Activity
+  Wrench
 } from 'lucide-react';
 import { Claim, Assistance } from '@/types/claims';
 
-// Types
-interface BaseItem {
-  id: string;
-  tipo: 'sinistro' | 'assistencia';
-  status: string;
-  created_at: string;
-  seguradora?: string;
-  placa?: string;
-  chassi?: string;
-  proprietario_nome?: string;
-  modelo?: string;
+interface ClaimFilter {
+  tipo?: 'sinistro' | 'assistencia';
+  status?: string[];
+  createdFromDays?: number;
+}
+
+interface ModalFilter {
+  tipo?: 'sinistro' | 'assistencia';
+  status?: string;
+  periodo?: 'last60d';
 }
 
 interface SinistrosDashboardProps {
@@ -49,40 +47,14 @@ export function SinistrosDashboard({
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
-  const [modalFilter, setModalFilter] = useState<{tipo?: 'sinistro' | 'assistencia'; status?: string; periodo?: 'last60d'}>({});
+  const [modalFilter, setModalFilter] = useState<ModalFilter>({});
   
   const { toast } = useToast();
 
-  // Create combined items for KPI calculation
-  const allItems: BaseItem[] = [
-    ...claims.map(claim => ({
-      id: claim.id,
-      tipo: 'sinistro' as const,
-      status: claim.status,
-      created_at: claim.created_at,
-      seguradora: claim.apolice?.seguradora,
-      placa: claim.veiculo?.placa,
-      chassi: claim.veiculo?.chassi,
-      proprietario_nome: claim.veiculo?.proprietario_nome,
-      modelo: claim.veiculo?.modelo
-    })),
-    ...assistances.map(assistance => ({
-      id: assistance.id,
-      tipo: 'assistencia' as const,
-      status: assistance.status,
-      created_at: assistance.created_at,
-      seguradora: undefined,
-      placa: assistance.veiculo?.placa,
-      chassi: assistance.veiculo?.chassi,
-      proprietario_nome: assistance.veiculo?.proprietario_nome,
-      modelo: assistance.veiculo?.modelo
-    }))
-  ];
-
   // Calculate KPIs using the custom hook
-  const kpis = useSinistrosKpis(allItems, {});
+  const stats = useClaimsStats(claims, assistances);
 
-  console.log('📊 KPIs calculados:', kpis);
+  console.log('📊 Stats calculados:', stats);
 
   // Load data
   useEffect(() => {
@@ -110,27 +82,31 @@ export function SinistrosDashboard({
     }
   };
 
-  // Handle card clicks to open modal with filtered data
-  const handleCardClick = (tipo?: 'sinistro' | 'assistencia', status?: 'aberto' | 'finalizado', periodo?: 'last60d') => {
+  // Navigate to list with specific filter
+  const goToListWith = (filter: ClaimFilter) => {
     let title = '';
-    let filter: {tipo?: 'sinistro' | 'assistencia'; status?: string; periodo?: 'last60d'} = {};
+    let modalFilterFormatted: ModalFilter = {};
     
-    if (tipo && status) {
-      title = `${tipo === 'sinistro' ? 'Sinistros' : 'Assistências'} ${status === 'aberto' ? 'em Aberto' : 'Finalizados'}`;
-      filter = { tipo, status: status === 'aberto' ? 'open' : 'closed' };
-    } else if (tipo) {
-      title = `Total de ${tipo === 'sinistro' ? 'Sinistros' : 'Assistências'}`;
-      filter = { tipo };
-    } else if (periodo === 'last60d') {
+    if (filter.tipo && filter.status) {
+      const statusText = filter.status.includes('finalizado') ? 'Finalizados' : 'em Aberto';
+      title = `${filter.tipo === 'sinistro' ? 'Sinistros' : 'Assistências'} ${statusText}`;
+      modalFilterFormatted = { 
+        tipo: filter.tipo, 
+        status: filter.status.includes('finalizado') ? 'closed' : 'open' 
+      };
+    } else if (filter.tipo) {
+      title = `Total de ${filter.tipo === 'sinistro' ? 'Sinistros' : 'Assistências'}`;
+      modalFilterFormatted = { tipo: filter.tipo };
+    } else if (filter.createdFromDays === 60) {
       title = 'Últimos 60 dias';
-      filter = { periodo };
+      modalFilterFormatted = { periodo: 'last60d' };
     } else {
-      title = 'Resumo Geral';
-      filter = {};
+      title = 'Todos os Tickets';
+      modalFilterFormatted = {};
     }
     
     setModalTitle(title);
-    setModalFilter(filter);
+    setModalFilter(modalFilterFormatted);
     setModalOpen(true);
   };
 
@@ -140,10 +116,10 @@ export function SinistrosDashboard({
 
   return (
     <div className="container mx-auto max-w-7xl px-6 space-y-8">
-      {/* Header with CTA only */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Dashboard de Sinistros</h2>
+          <h2 className="text-2xl font-bold text-foreground">Gestão de Sinistros</h2>
           <p className="text-muted-foreground">
             Clique nos cards para ver detalhes
           </p>
@@ -160,103 +136,84 @@ export function SinistrosDashboard({
         />
       </div>
 
-      {/* Grid de 3 colunas: Totais | Sinistros | Assistências */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Coluna 1 - Totais */}
-        <div className="space-y-6">
-          {/* Resumo Geral */}
-          <div className="relative">
-            <StatCard
-              label="Totais de Sinistros/Assistências"
-              value={`${kpis.geral.total} tickets`}
-              variant="total"
-              icon={Activity}
-              onClick={() => handleCardClick()}
-              isLoading={loading}
-            />
-            <p className="text-sm text-muted-foreground mt-2 text-center">
-              {kpis.geral.emAberto} em aberto • {kpis.geral.finalizados} finalizados
-            </p>
-          </div>
-          
-          {/* Últimos 60 dias */}
-          <StatCard
-            label="Últimos 60 dias"
-            value={kpis.geral.ult60d}
-            variant="ultimos60"
-            icon={Calendar}
-            onClick={() => handleCardClick(undefined, undefined, 'last60d')}
-            isLoading={loading}
-          />
-        </div>
+      {/* MegaCard - Totais */}
+      <MegaCard
+        totalTickets={stats.totais.tickets}
+        totalAbertos={stats.sinistros.abertos + stats.assistencias.abertos}
+        totalFinalizados={stats.sinistros.finalizados + stats.assistencias.finalizados}
+        ultimos60d={stats.totais.ultimos60d}
+        onTotalClick={() => goToListWith({})}
+        onUltimos60dClick={() => goToListWith({ createdFromDays: 60 })}
+        isLoading={loading}
+      />
 
-        {/* Coluna 2 - Sinistros */}
-        <div className="space-y-6">
-          {/* Total Sinistros */}
-          <StatCard
-            label="Total Sinistros"
-            value={kpis.sinistros.total}
-            variant="total"
+      {/* Linha de Sinistros */}
+      <section aria-labelledby="sinistros">
+        <h3 id="sinistros" className="sr-only">Sinistros</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <MetricCard
+            title="Total de Sinistros"
+            value={stats.sinistros.total}
+            gradient="from-indigo-50 to-blue-50"
             icon={FileText}
-            onClick={() => handleCardClick('sinistro')}
+            onClick={() => goToListWith({ tipo: 'sinistro' })}
+            ariaLabel="Ver todos os sinistros"
             isLoading={loading}
           />
-          
-          {/* Sinistros em Aberto */}
-          <StatCard
-            label="Sinistros em Aberto"
-            value={kpis.sinistros.emAberto}
-            variant="aberto"
+          <MetricCard
+            title="Sinistros em Aberto"
+            value={stats.sinistros.abertos}
+            gradient="from-amber-50 to-yellow-50"
             icon={Clock}
-            onClick={() => handleCardClick('sinistro', 'aberto')}
+            onClick={() => goToListWith({ tipo: 'sinistro', status: ['aberto', 'em_analise', 'em_andamento'] })}
+            ariaLabel="Ver sinistros em aberto"
             isLoading={loading}
           />
-          
-          {/* Sinistros Finalizados */}
-          <StatCard
-            label="Sinistros Finalizados"
-            value={kpis.sinistros.finalizados}
-            variant="finalizado"
+          <MetricCard
+            title="Sinistros Finalizados"
+            value={stats.sinistros.finalizados}
+            gradient="from-emerald-50 to-green-50"
             icon={CheckCircle}
-            onClick={() => handleCardClick('sinistro', 'finalizado')}
+            onClick={() => goToListWith({ tipo: 'sinistro', status: ['finalizado'] })}
+            ariaLabel="Ver sinistros finalizados"
             isLoading={loading}
           />
         </div>
+      </section>
 
-        {/* Coluna 3 - Assistências */}
-        <div className="space-y-6">
-          {/* Total Assistências */}
-          <StatCard
-            label="Total Assistências"
-            value={kpis.assistencias.total}
-            variant="assistencia"
+      {/* Linha de Assistências */}
+      <section aria-labelledby="assistencias">
+        <h3 id="assistencias" className="sr-only">Assistências</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <MetricCard
+            title="Total de Assistências"
+            value={stats.assistencias.total}
+            gradient="from-fuchsia-50 to-pink-50"
             icon={Wrench}
-            onClick={() => handleCardClick('assistencia')}
+            onClick={() => goToListWith({ tipo: 'assistencia' })}
+            ariaLabel="Ver todas as assistências"
             isLoading={loading}
           />
-          
-          {/* Assistências em Aberto */}
-          <StatCard
-            label="Assistências em Aberto"
-            value={kpis.assistencias.emAberto}
-            variant="aberto"
+          <MetricCard
+            title="Assistências em Aberto"
+            value={stats.assistencias.abertos}
+            gradient="from-amber-50 to-yellow-50"
             icon={Clock}
-            onClick={() => handleCardClick('assistencia', 'aberto')}
+            onClick={() => goToListWith({ tipo: 'assistencia', status: ['aberto', 'em_analise', 'em_andamento'] })}
+            ariaLabel="Ver assistências em aberto"
             isLoading={loading}
           />
-          
-          {/* Assistências Finalizadas */}
-          <StatCard
-            label="Assistências Finalizadas"
-            value={kpis.assistencias.finalizados}
-            variant="finalizado"
+          <MetricCard
+            title="Assistências Finalizadas"
+            value={stats.assistencias.finalizados}
+            gradient="from-emerald-50 to-green-50"
             icon={CheckCircle}
-            onClick={() => handleCardClick('assistencia', 'finalizado')}
+            onClick={() => goToListWith({ tipo: 'assistencia', status: ['finalizado'] })}
+            ariaLabel="Ver assistências finalizadas"
             isLoading={loading}
           />
         </div>
-      </div>
+      </section>
 
       {/* Modal com lista filtrada */}
       <SinistrosListModal
