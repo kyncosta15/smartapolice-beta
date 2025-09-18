@@ -23,7 +23,7 @@ export function MegaCard({
 }: MegaCardProps) {
   if (isLoading) {
     return (
-      <Card className="w-full min-h-[176px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <Card className="w-full min-h-[140px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="flex flex-row divide-x divide-slate-200 dark:divide-slate-700">
           <div className="flex-1 p-6">
             <Skeleton className="h-4 w-48 mb-2" />
@@ -42,7 +42,7 @@ export function MegaCard({
   }
 
   return (
-    <Card className="w-full min-h-[176px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+    <Card className="w-full min-h-[140px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
       {/* Uma única linha com 2 colunas e divisor vertical */}
       <div className="flex flex-row divide-x divide-slate-200 dark:divide-slate-700">
         {/* Coluna A – Totais */}
