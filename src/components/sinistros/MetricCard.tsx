@@ -31,7 +31,7 @@ export function MetricCard({
 
   if (isLoading) {
     return (
-      <Card className={`min-h-[140px] ${variantStyles[variant]} text-white`}>
+      <Card className={`min-h-[120px] ${variantStyles[variant]} text-white`}>
         <div className="p-6">
           <Skeleton className="h-4 w-32 mb-2 bg-white/20" />
           <Skeleton className="h-12 w-16 mb-2 bg-white/20" />
@@ -42,7 +42,7 @@ export function MetricCard({
 
   return (
     <Card 
-      className={`min-h-[140px] ${variantStyles[variant]} shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer active:scale-[0.99] border-0`}
+      className={`min-h-[120px] ${variantStyles[variant]} shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer active:scale-[0.99] border-0`}
     >
       <button
         onClick={onClick}
