@@ -115,11 +115,11 @@ export function GestaoFrotas() {
   }
 
   return (
-    <div className="flex flex-col min-h-0 min-w-0 max-w-screen-xl mx-auto">
+    <div className="flex flex-col min-h-0 min-w-0 w-full mx-auto px-3 sm:px-4 lg:px-6">
       {/* Header */}
-      <div className="flex-none border-b border-gray-200 bg-white p-3 sm:p-4 md:p-6">
+      <div className="flex-none border-b border-gray-200 bg-white py-3 sm:py-4 md:py-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words leading-tight">
               Gestão de Frotas
             </h1>
@@ -156,9 +156,9 @@ export function GestaoFrotas() {
       {/* Tabs and Content */}
       <div className="flex-1 min-h-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col min-h-0">
-          <div className="flex-none border-b border-gray-200 bg-white px-3 sm:px-4 md:px-6">
+          <div className="flex-none border-b border-gray-200 bg-white">
             <div className="overflow-x-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300">
-              <nav className="inline-flex gap-1 pr-2 py-2">
+              <nav className="inline-flex gap-1 px-3 sm:px-4 lg:px-6 py-2">
                 <TabsList className="h-10 sm:h-12 p-1 bg-gray-100 rounded-lg flex-shrink-0">
                   <TabsTrigger 
                     value="frotas" 
@@ -194,7 +194,7 @@ export function GestaoFrotas() {
           </div>
         
           {/* KPI Cards - shown right after tabs */}
-          <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 bg-gray-50">
+          <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-6 border-b border-gray-200 bg-gray-50">
             <FrotasKPICards kpis={kpis} loading={loading} />
           </div>
 
