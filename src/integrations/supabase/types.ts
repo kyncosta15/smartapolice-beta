@@ -2009,6 +2009,10 @@ export type Database = {
       }
     }
     Functions: {
+      auto_fix_frota_status: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       can_access_requests: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -2032,6 +2036,13 @@ export type Database = {
       delete_user_completely: {
         Args: { user_id_param: string }
         Returns: boolean
+      }
+      fix_frota_status_outros: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          placas_alteradas: string[]
+          veiculos_atualizados: number
+        }[]
       }
       generate_file_hash: {
         Args: { file_content: string }

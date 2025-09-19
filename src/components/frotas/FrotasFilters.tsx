@@ -9,7 +9,9 @@ import {
   Car,
   Shield,
   Calendar,
-  Check
+  Check,
+  AlertTriangle,
+  Wrench
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -20,8 +22,10 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FrotaFilters } from '../GestaoFrotas';
 import { supabase } from '@/integrations/supabase/client';
+import { useFrotaStatusFix } from '@/hooks/useFrotaStatusFix';
 
 interface FrotasFiltersProps {
   filters: FrotaFilters;
@@ -47,6 +51,15 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
   const [marcaOptions, setMarcaOptions] = useState<{ value: string; label: string }[]>([]);
   const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0;
   const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length;
+
+  // Hook para correção automática de status
+  const { 
+    hasOutros, 
+    outrosCount, 
+    outrosPlacas, 
+    isFixing, 
+    executeAutoFix 
+  } = useFrotaStatusFix();
 
   useEffect(() => {
     // Buscar marcas disponíveis no banco de dados
@@ -124,8 +137,45 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
     });
   };
 
+  const handleAutoFix = async () => {
+    await executeAutoFix();
+  };
+
   return (
     <div className="space-y-3">
+      {/* Alerta de Status "Outros" detectado */}
+      {hasOutros && (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <div>
+              <strong>Status inconsistente detectado:</strong> {outrosCount} veículo(s) com status "Outros" 
+              {outrosPlacas.length > 0 && outrosPlacas.length <= 3 && (
+                <span className="text-sm text-muted-foreground ml-2">
+                  Placas: {outrosPlacas.join(', ')}
+                </span>
+              )}
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleAutoFix}
+              disabled={isFixing}
+              className="ml-4"
+            >
+              {isFixing ? (
+                <>Corrigindo...</>
+              ) : (
+                <>
+                  <Wrench className="h-4 w-4 mr-1" />
+                  Corrigir Automaticamente
+                </>
+              )}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Search and Filter Controls */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Search Input */}
