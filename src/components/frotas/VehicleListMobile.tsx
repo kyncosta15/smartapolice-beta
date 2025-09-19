@@ -101,7 +101,7 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs, selectedVehicles, onSele
 
   return (
     <Card className={`p-3 border border-gray-200 rounded-lg ${isSelected ? 'bg-blue-50 border-blue-200' : ''}`}>
-      <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-start">
+      <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-start">
         {/* Checkbox */}
         <div className="pt-1">
           <Checkbox
@@ -110,6 +110,7 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs, selectedVehicles, onSele
             aria-label={`Selecionar ${veiculo.placa}`}
           />
         </div>
+
         {/* Conteúdo principal */}
         <div className="min-w-0 space-y-2">
           {/* Título e marca */}
@@ -193,26 +194,26 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs, selectedVehicles, onSele
         </div>
 
         {/* Ações */}
-        <div className="flex items-start gap-1">
+        <div className="flex flex-col gap-1 pt-1">
           <Button
-            size="icon"
+            size="sm"
             variant="outline"
-            className="h-10 w-10"
+            className="h-8 w-8 p-0"
             onClick={() => onView(veiculo.id)}
             aria-label="Ver detalhes"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-3 w-3" />
           </Button>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                size="icon"
+                size="sm"
                 variant="ghost"
-                className="h-10 w-10"
+                className="h-8 w-8 p-0"
                 aria-label="Mais ações"
               >
-                <MoreVertical className="h-4 w-4" />
+                <MoreVertical className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
 

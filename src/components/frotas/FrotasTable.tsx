@@ -336,7 +336,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   }
 
   const tableContent = (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {/* Bulk Actions Bar */}
       <FrotasBulkActions
         selectedVehicles={selectedVehicles}
@@ -345,11 +345,11 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
       />
       
       <div
-        className="w-full overflow-x-auto max-h-[60vh] md:max-h-[50vh] overflow-y-auto overscroll-contain pr-1 -mr-1"
+        className="w-full overflow-x-auto max-h-[50vh] md:max-h-[60vh] overflow-y-auto overscroll-contain pr-1 -mr-1"
         tabIndex={0}
         aria-label="Lista de veículos rolável"
       >
-        <div className="p-3 md:p-4">
+        <div className="p-2 md:p-4">
           {isMobile ? (
             // Versão mobile: cards
             <VehicleListMobile
@@ -544,9 +544,9 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   return (
     <>
       <Card className="border-0 shadow-sm rounded-xl">
-        <CardHeader className="p-3 md:p-4">
+        <CardHeader className="p-3 md:p-4 border-b">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-            <Car className="h-5 w-5" />
+            <Car className="h-4 w-4 md:h-5 md:w-5" />
             Lista de Veículos ({veiculos.length})
           </CardTitle>
         </CardHeader>

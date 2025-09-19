@@ -98,42 +98,58 @@ export function FrotasBulkActions({
 
   return (
     <Card className="border-2 border-blue-200 bg-blue-50">
-      <CardContent className="p-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <CardContent className="p-3 md:p-4">
+        {/* Mobile-first layout */}
+        <div className="space-y-3">
           {/* Selection Info */}
-          <div className="flex items-center gap-2">
-            <CheckSquare className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-900">
-              {selectedVehicles.length} veículo(s) selecionado(s)
-            </span>
-          </div>
-
-          {/* Current Status Summary */}
-          <div className="flex flex-wrap gap-1">
-            {Object.entries(
-              selectedVehicles.reduce((acc, vehicle) => {
-                const status = vehicle.status_seguro || 'sem_seguro';
-                acc[status] = (acc[status] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>)
-            ).map(([status, count]) => (
-              <Badge 
-                key={status} 
-                variant="outline" 
-                className={`text-xs ${getStatusBadgeColor(status)}`}
-              >
-                {getStatusLabel(status)}: {count}
-              </Badge>
-            ))}
-          </div>
-
-          {/* Bulk Actions */}
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-gray-600" />
+              <CheckSquare className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <span className="text-sm font-medium text-blue-900">
+                {selectedVehicles.length} selecionado(s)
+              </span>
+            </div>
+            
+            {/* Cancel button - always visible on mobile */}
+            <Button
+              onClick={onClearSelection}
+              variant="outline"
+              size="sm"
+              className="text-gray-600 hover:text-gray-800 h-8 px-3"
+            >
+              <X className="h-3 w-3 md:mr-1" />
+              <span className="hidden md:inline">Cancelar</span>
+            </Button>
+          </div>
+
+          {/* Current Status Summary - scrollable on mobile */}
+          <div className="overflow-x-auto">
+            <div className="flex gap-1 pb-1 min-w-max">
+              {Object.entries(
+                selectedVehicles.reduce((acc, vehicle) => {
+                  const status = vehicle.status_seguro || 'sem_seguro';
+                  acc[status] = (acc[status] || 0) + 1;
+                  return acc;
+                }, {} as Record<string, number>)
+              ).map(([status, count]) => (
+                <Badge 
+                  key={status} 
+                  variant="outline" 
+                  className={`text-xs whitespace-nowrap ${getStatusBadgeColor(status)}`}
+                >
+                  {getStatusLabel(status)}: {count}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions - stacked on mobile */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <div className="flex items-center gap-2 flex-1">
+              <Shield className="h-4 w-4 text-gray-600 flex-shrink-0" />
               <Select value={bulkStatus} onValueChange={setBulkStatus}>
-                <SelectTrigger className="w-48 h-9 text-sm">
-                  <SelectValue placeholder="Alterar status para..." />
+                <SelectTrigger className="flex-1 min-w-0 h-9 text-sm">
+                  <SelectValue placeholder="Alterar status..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="sem_seguro">Sem Seguro</SelectItem>
@@ -151,44 +167,35 @@ export function FrotasBulkActions({
               onClick={handleBulkStatusUpdate}
               disabled={!bulkStatus || loading}
               size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto h-9"
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
                   Aplicando...
                 </>
               ) : (
                 <>
-                  <CheckSquare className="h-3 w-3 mr-1" />
-                  Aplicar
+                  <CheckSquare className="h-3 w-3 mr-2" />
+                  Aplicar Status
                 </>
               )}
             </Button>
-
-            <Button
-              onClick={onClearSelection}
-              variant="outline"
-              size="sm"
-              className="text-gray-600 hover:text-gray-800"
-            >
-              <X className="h-3 w-3 mr-1" />
-              Cancelar
-            </Button>
           </div>
-        </div>
 
-        {bulkStatus && (
-          <div className="mt-3 p-2 bg-white rounded border border-blue-200">
-            <div className="flex items-center gap-2 text-sm text-blue-800">
-              <AlertTriangle className="h-4 w-4" />
-              <span>
-                Será aplicado o status "<strong>{getStatusLabel(bulkStatus)}</strong>" 
-                para {selectedVehicles.length} veículo(s) selecionado(s).
-              </span>
+          {/* Confirmation message */}
+          {bulkStatus && (
+            <div className="p-3 bg-white rounded border border-blue-200">
+              <div className="flex items-start gap-2 text-sm text-blue-800">
+                <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                <span className="leading-tight">
+                  Será aplicado o status "<strong>{getStatusLabel(bulkStatus)}</strong>" 
+                  para <strong>{selectedVehicles.length}</strong> veículo(s) selecionado(s).
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );

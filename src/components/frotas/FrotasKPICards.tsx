@@ -19,7 +19,7 @@ interface FrotasKPICardsProps {
 export function FrotasKPICards({ kpis, loading }: FrotasKPICardsProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4 mb-4 md:mb-6">
         {[...Array(4)].map((_, i) => (
           <Card key={i} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-4 md:p-6 min-h-[120px] animate-pulse">
             <div className="flex items-center justify-between space-y-0 pb-2">
@@ -37,7 +37,7 @@ export function FrotasKPICards({ kpis, loading }: FrotasKPICardsProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
+    <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4 mb-4 md:mb-6">
       <Card className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow p-4 md:p-6 min-h-[120px] flex flex-col justify-between">
         <div className="flex items-center justify-between space-y-0 pb-2">
           <Car className="h-5 w-5 text-blue-600 flex-shrink-0" />
