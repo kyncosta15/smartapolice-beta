@@ -106,7 +106,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 md:p-4">
-            <div className="h-64 md:h-80">
+            <div className="h-48 sm:h-64 md:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -115,7 +115,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 768 ? 70 : 80}
+                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 50 : window.innerWidth < 768 ? 60 : 80}
                     fill="#8884d8"
                   >
                     {categoriaData.map((entry, index) => (
@@ -123,10 +123,20 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     ))}
                   </Pie>
                   <Legend 
-                    wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
+                    wrapperStyle={{ 
+                      fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '10px' : '12px', 
+                      paddingTop: '8px' 
+                    }}
                     iconType="circle"
+                    layout="vertical"
+                    align="right"
+                    verticalAlign="middle"
                     formatter={(value, entry) => (
-                      <span style={{ color: '#374151', fontWeight: '500' }}>
+                      <span style={{ 
+                        color: '#374151', 
+                        fontWeight: '500',
+                        fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '10px' : '12px'
+                      }}>
                         {value} ({entry.payload.value})
                       </span>
                     )}
@@ -146,7 +156,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 md:p-4">
-            <div className="h-64 md:h-80">
+            <div className="h-48 sm:h-64 md:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -154,7 +164,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     cx="50%"
                     cy="50%"
                     innerRadius={40}
-                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 768 ? 70 : 90}
+                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 45 : window.innerWidth < 768 ? 55 : 75}
                     paddingAngle={2}
                     dataKey="value"
                   >
@@ -175,10 +185,19 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     }}
                   />
                   <Legend 
-                    wrapperStyle={{ fontSize: '12px' }}
+                    wrapperStyle={{ 
+                      fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '9px' : '11px'
+                    }}
                     iconType="circle"
+                    layout="vertical"
+                    align="right"
+                    verticalAlign="middle"
                     formatter={(value, entry) => (
-                      <span style={{ color: '#374151', fontWeight: '500' }}>
+                      <span style={{ 
+                        color: '#374151', 
+                        fontWeight: '500',
+                        fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '9px' : '11px'
+                      }}>
                         {value} ({entry.payload.value})
                       </span>
                     )}
@@ -198,7 +217,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 md:p-4">
-            <div className="h-64 md:h-80">
+            <div className="h-48 sm:h-64 md:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -206,7 +225,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     cx="50%"
                     cy="50%"
                     innerRadius={40}
-                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 768 ? 70 : 90}
+                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 45 : window.innerWidth < 768 ? 55 : 75}
                     paddingAngle={2}
                     dataKey="value"
                   >
@@ -228,20 +247,20 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                   />
                   <Legend 
                     wrapperStyle={{ 
-                      fontSize: typeof window !== 'undefined' && window.innerWidth < 768 ? '10px' : '12px',
-                      paddingTop: '10px'
+                      fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '8px' : '10px',
+                      paddingTop: '5px'
                     }}
                     iconType="circle"
-                    layout="horizontal"
-                    align="center"
-                    verticalAlign="bottom"
+                    layout="vertical"
+                    align="right"
+                    verticalAlign="middle"
                     formatter={(value, entry) => (
                       <span style={{ 
                         color: '#374151', 
                         fontWeight: '500',
-                        fontSize: typeof window !== 'undefined' && window.innerWidth < 768 ? '10px' : '12px'
+                        fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '8px' : '10px'
                       }}>
-                        {value.length > 12 ? `${value.substring(0, 12)}...` : value} ({entry.payload.value})
+                        {value.length > 8 ? `${value.substring(0, 8)}...` : value} ({entry.payload.value})
                       </span>
                     )}
                   />
