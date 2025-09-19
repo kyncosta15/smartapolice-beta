@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,8 @@ import {
   X,
   Car,
   Shield,
-  Calendar
+  Calendar,
+  Check
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -18,7 +19,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
 import { FrotaFilters } from '../GestaoFrotas';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FrotasFiltersProps {
   filters: FrotaFilters;
@@ -41,7 +44,30 @@ const statusOptions = [
 ];
 
 export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFiltersProps) {
-  const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0;
+  const [marcaOptions, setMarcaOptions] = useState<{ value: string; label: string }[]>([]);
+  const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0;
+  const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length;
+
+  useEffect(() => {
+    // Buscar marcas disponíveis no banco de dados
+    const fetchMarcas = async () => {
+      try {
+        const { data: veiculos } = await supabase
+          .from('frota_veiculos')
+          .select('marca')
+          .not('marca', 'is', null);
+        
+        if (veiculos) {
+          const marcasUnicas = [...new Set(veiculos.map(v => v.marca))].filter(Boolean);
+          setMarcaOptions(marcasUnicas.map(marca => ({ value: marca!, label: marca! })));
+        }
+      } catch (error) {
+        console.error('Erro ao buscar marcas:', error);
+      }
+    };
+    
+    fetchMarcas();
+  }, []);
 
   const handleClearFilters = () => {
     onFilterChange({
@@ -53,17 +79,7 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
   };
 
   const handleSearchChange = (value: string) => {
-    // If search is being cleared, also clear all other filters
-    if (value === '' && filters.search !== '') {
-      onFilterChange({ 
-        search: '', 
-        categoria: [], 
-        status: [], 
-        marcaModelo: [] 
-      });
-    } else {
-      onFilterChange({ search: value });
-    }
+    onFilterChange({ search: value });
   };
 
   const handleCategoriaChange = (categoria: string, checked: boolean) => {
@@ -82,6 +98,14 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
     onFilterChange({ status: newStatus });
   };
 
+  const handleMarcaChange = (marca: string, checked: boolean) => {
+    const newMarcas = checked
+      ? [...filters.marcaModelo, marca]
+      : filters.marcaModelo.filter(m => m !== marca);
+    
+    onFilterChange({ marcaModelo: newMarcas });
+  };
+
   const removeCategoriaFilter = (categoria: string) => {
     onFilterChange({ 
       categoria: filters.categoria.filter(c => c !== categoria) 
@@ -91,6 +115,12 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
   const removeStatusFilter = (status: string) => {
     onFilterChange({ 
       status: filters.status.filter(s => s !== status) 
+    });
+  };
+
+  const removeMarcaFilter = (marca: string) => {
+    onFilterChange({ 
+      marcaModelo: filters.marcaModelo.filter(m => m !== marca) 
     });
   };
 
@@ -121,29 +151,31 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
           )}
         </div>
 
-        {/* Filter Dropdowns */}
-        <div className="flex flex-wrap gap-2">
-          {/* Categoria Filter */}
+        {/* Unified Filter Button */}
+        <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="h-8 sm:h-9 px-3 flex items-center gap-2"
+                className="h-8 sm:h-9 px-3 flex items-center gap-2 relative"
                 disabled={loading}
               >
-                <Car className="h-4 w-4" />
-                <span className="hidden sm:inline">Categoria</span>
-                {filters.categoria.length > 0 && (
+                <Filter className="h-4 w-4" />
+                <span className="hidden sm:inline">Filtros</span>
+                {totalActiveFilters > 0 && (
                   <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 text-xs">
-                    {filters.categoria.length}
+                    {totalActiveFilters}
                   </Badge>
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Categoria do Veículo</DropdownMenuLabel>
-              <DropdownMenuSeparator />
+            <DropdownMenuContent align="end" className="w-64 max-h-96 overflow-y-auto">
+              {/* Categoria Section */}
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <Car className="h-4 w-4" />
+                Categoria do Veículo
+              </DropdownMenuLabel>
               {categoriaOptions.map((option) => (
                 <DropdownMenuCheckboxItem
                   key={option.value}
@@ -153,30 +185,14 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
                   {option.label}
                 </DropdownMenuCheckboxItem>
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Status Filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 sm:h-9 px-3 flex items-center gap-2"
-                disabled={loading}
-              >
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Status</span>
-                {filters.status.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 text-xs">
-                    {filters.status.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Status do Seguro</DropdownMenuLabel>
+              
               <DropdownMenuSeparator />
+              
+              {/* Status Section */}
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Status do Seguro
+              </DropdownMenuLabel>
               {statusOptions.map((option) => (
                 <DropdownMenuCheckboxItem
                   key={option.value}
@@ -186,22 +202,48 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
                   {option.label}
                 </DropdownMenuCheckboxItem>
               ))}
+              
+              {marcaOptions.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  
+                  {/* Marca Section */}
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Car className="h-4 w-4" />
+                    Marcas
+                  </DropdownMenuLabel>
+                  <div className="max-h-32 overflow-y-auto">
+                    {marcaOptions.slice(0, 10).map((option) => (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={filters.marcaModelo.includes(option.value)}
+                        onCheckedChange={(checked) => handleMarcaChange(option.value, checked)}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </div>
+                </>
+              )}
+              
+              {hasActiveFilters && (
+                <>
+                  <DropdownMenuSeparator />
+                  <div className="p-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleClearFilters}
+                      className="w-full justify-center"
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Limpar todos os filtros
+                    </Button>
+                  </div>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Clear Filters */}
-          {hasActiveFilters && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleClearFilters}
-              className="h-8 sm:h-9 px-3 text-gray-500 hover:text-gray-700"
-              disabled={loading}
-            >
-              <X className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">Limpar</span>
-            </Button>
-          )}
         </div>
       </div>
 
@@ -243,6 +285,26 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
                   onClick={() => removeStatusFilter(status)}
                   className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
                   aria-label={`Remover filtro ${option?.label || status}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            );
+          })}
+
+          {filters.marcaModelo.map((marca) => {
+            return (
+              <Badge 
+                key={marca} 
+                variant="secondary" 
+                className="flex items-center gap-1 px-2 py-1"
+              >
+                <Car className="h-3 w-3" />
+                {marca}
+                <button
+                  onClick={() => removeMarcaFilter(marca)}
+                  className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                  aria-label={`Remover filtro ${marca}`}
                 >
                   <X className="h-3 w-3" />
                 </button>
