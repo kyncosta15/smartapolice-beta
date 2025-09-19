@@ -123,7 +123,8 @@ export const LandingPage = () => {
           <img 
             src="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png"
             alt="Background"
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ maxHeight: '100vh' }}
             width="960"
             height="1080"
             loading="lazy"
