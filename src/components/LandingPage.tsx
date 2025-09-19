@@ -113,7 +113,7 @@ export const LandingPage = () => {
       </div>
 
       {/* Right side - Background Image */}
-      <div className="hidden md:block md:w-1/2 relative bg-gradient-to-br from-primary/5 to-secondary/10">
+      <div className="hidden md:block md:w-1/2 relative">
         <picture className="absolute inset-0 w-full h-full">
           <source 
             srcSet="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp" 
@@ -123,7 +123,7 @@ export const LandingPage = () => {
           <img 
             src="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png"
             alt="Background"
-            className="absolute inset-0 w-full h-full object-contain object-center"
+            className="absolute inset-0 w-full h-full object-cover"
             width="960"
             height="1080"
             loading="lazy"
