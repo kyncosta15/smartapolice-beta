@@ -12,7 +12,6 @@ import {
   AlertTriangle, 
   CheckCircle, 
   Calendar, 
-  Search,
   RefreshCw,
   Upload,
   Download,
@@ -28,11 +27,11 @@ interface SinistrosCRLVProps {
 }
 
 export function SinistrosCRLV({ vehicles, onCRLVUpdated }: SinistrosCRLVProps) {
-  const [searchPlaca, setSearchPlaca] = useState('');
   const [isAPIConsultaOpen, setIsAPIConsultaOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const [isConsulting, setIsConsulting] = useState(false);
+  const [searchPlaca, setSearchPlaca] = useState('');
 
   // Mock CRLV data
   const mockCRLVData = [
@@ -74,9 +73,7 @@ export function SinistrosCRLV({ vehicles, onCRLVUpdated }: SinistrosCRLVProps) {
     }
   ];
 
-  const filteredCRLV = mockCRLVData.filter(crlv => 
-    !searchPlaca || crlv.placa.toLowerCase().includes(searchPlaca.toLowerCase())
-  );
+  const filteredCRLV = mockCRLVData;
 
   const getSituacaoColor = (situacao: string) => {
     const colors = {
@@ -247,17 +244,6 @@ export function SinistrosCRLV({ vehicles, onCRLVUpdated }: SinistrosCRLVProps) {
       </div>
 
       {/* Search */}
-      <div className="flex gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Buscar por placa..."
-            value={searchPlaca}
-            onChange={(e) => setSearchPlaca(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

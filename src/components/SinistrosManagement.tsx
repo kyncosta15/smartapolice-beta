@@ -2,22 +2,15 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ClaimsManager } from './claims/ClaimsManager';
 import { SinistrosDashboard } from './sinistros/SinistrosDashboard';
-
 import { SinistrosCRLV } from './sinistros/SinistrosCRLV';
 import { SinistrosRelatorios } from './sinistros/SinistrosRelatorios';
 import { SinistrosConfiguracoes } from './sinistros/SinistrosConfiguracoes';
 import { HamburgerMenu } from './sinistros/HamburgerMenu';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { normalizePolicy } from '@/lib/policies';
-import { 
-  Search, 
-  Filter
-} from 'lucide-react';
 
 interface SinistrosManagementProps {
   allPolicies: ParsedPolicyData[];
@@ -31,9 +24,6 @@ export function SinistrosManagement({
   onPolicySelect 
 }: SinistrosManagementProps) {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [seguradoraFilter, setSeguradoraFilter] = useState('');
 
   // Extract vehicles from policies for sinistros context
   const vehicles = useMemo(() => {
@@ -83,31 +73,14 @@ export function SinistrosManagement({
 
   return (
     <div className="space-y-6">
-      {/* Header with hamburger menu and search */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-4">
-          <HamburgerMenu activeTab={activeTab} onTabChange={setActiveTab} />
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Gestão de Sinistros</h1>
-            <p className="text-muted-foreground">
-              Abertura, acompanhamento e relatórios de sinistros
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-80">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Buscar por placa, CPF, CNPJ..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
+      {/* Header with hamburger menu */}
+      <div className="flex items-center gap-4">
+        <HamburgerMenu activeTab={activeTab} onTabChange={setActiveTab} />
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Gestão de Sinistros</h1>
+          <p className="text-muted-foreground">
+            Abertura, acompanhamento e relatórios de sinistros
+          </p>
         </div>
       </div>
 
