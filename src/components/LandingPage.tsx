@@ -132,25 +132,6 @@ export const LandingPage = () => {
         </picture>
       </div>
 
-      {/* Mobile background image overlay */}
-      <div className="md:hidden absolute top-0 right-0 w-1/3 h-1/3 opacity-20 z-0">
-        <picture className="w-full h-full">
-          <source 
-            srcSet="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp" 
-            type="image/webp"
-            sizes="33vw"
-          />
-          <img 
-            src="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png"
-            alt="Background overlay"
-            className="w-full h-full object-contain"
-            width="320"
-            height="360"
-            loading="lazy"
-            decoding="async"
-          />
-        </picture>
-      </div>
     </div>
   );
 };
