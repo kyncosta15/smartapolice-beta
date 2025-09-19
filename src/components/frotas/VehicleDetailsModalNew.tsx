@@ -103,9 +103,17 @@ export function VehicleDetailsModalNew({
 
     setLoading(true);
     try {
+      // Extract only the fields that belong to frota_veiculos table
+      const {
+        responsaveis,
+        pagamentos,
+        documentos,
+        ...vehicleData
+      } = formData;
+
       const { error } = await supabase
         .from('frota_veiculos')
-        .update(formData)
+        .update(vehicleData)
         .eq('id', formData.id);
 
       if (error) throw error;
