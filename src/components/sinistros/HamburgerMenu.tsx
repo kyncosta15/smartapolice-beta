@@ -4,8 +4,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import {
   Menu,
   BarChart3,
-  Activity,
-  Car,
   FileText,
   Calculator,
   Settings
@@ -18,8 +16,6 @@ interface HamburgerMenuProps {
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-  { id: 'casos', label: 'Casos', icon: Activity },
-  { id: 'movimentacoes', label: 'Movimentações', icon: Car },
   { id: 'crlv', label: 'CRLV', icon: FileText },
   { id: 'relatorios', label: 'Relatórios', icon: Calculator },
   { id: 'config', label: 'Configurações', icon: Settings },

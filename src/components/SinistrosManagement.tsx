@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ClaimsManager } from './claims/ClaimsManager';
 import { SinistrosDashboard } from './sinistros/SinistrosDashboard';
-import { SinistrosMovimentacoes } from './sinistros/SinistrosMovimentacoes';
+
 import { SinistrosCRLV } from './sinistros/SinistrosCRLV';
 import { SinistrosRelatorios } from './sinistros/SinistrosRelatorios';
 import { SinistrosConfiguracoes } from './sinistros/SinistrosConfiguracoes';
@@ -127,22 +127,9 @@ export function SinistrosManagement({
           />
         </TabsContent>
 
-        <TabsContent value="casos">
-          <ClaimsManager 
-            onClaimEdit={onPolicySelect}
-          />
-        </TabsContent>
-
         <TabsContent value="novo">
           <ClaimsManager 
             onClaimEdit={onPolicySelect}
-          />
-        </TabsContent>
-
-        <TabsContent value="movimentacoes">
-          <SinistrosMovimentacoes 
-            vehicles={vehicles}
-            onMovimentacaoCreated={(mov) => console.log('Movimentação created:', mov)}
           />
         </TabsContent>
 
