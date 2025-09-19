@@ -32,7 +32,7 @@ export function MetricCard({
   if (isLoading) {
     return (
       <Card className={`min-h-[100px] ${variantStyles[variant]} text-white`}>
-        <div className="p-4 sm:p-6">
+        <div className="p-3 sm:p-4">
           <Skeleton className="h-3 sm:h-4 w-24 sm:w-32 mb-2 bg-white/20" />
           <Skeleton className="h-8 sm:h-12 w-12 sm:w-16 mb-2 bg-white/20" />
         </div>
@@ -47,7 +47,7 @@ export function MetricCard({
         <button
           onClick={onClick}
           aria-label={ariaLabel}
-          className="w-full h-full p-4 sm:p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-lg text-white"
+          className="w-full h-full p-3 sm:p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-lg text-white"
         >
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white opacity-90" />
