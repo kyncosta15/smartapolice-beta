@@ -122,8 +122,15 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Legend 
+                    wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
+                    iconType="circle"
+                    formatter={(value, entry) => (
+                      <span style={{ color: '#374151', fontWeight: '500' }}>
+                        {value} ({entry.payload.value})
+                      </span>
+                    )}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -170,9 +177,9 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                   <Legend 
                     wrapperStyle={{ fontSize: '12px' }}
                     iconType="circle"
-                    formatter={(value) => (
+                    formatter={(value, entry) => (
                       <span style={{ color: '#374151', fontWeight: '500' }}>
-                        {value}
+                        {value} ({entry.payload.value})
                       </span>
                     )}
                   />
@@ -228,13 +235,13 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     layout="horizontal"
                     align="center"
                     verticalAlign="bottom"
-                    formatter={(value) => (
+                    formatter={(value, entry) => (
                       <span style={{ 
                         color: '#374151', 
                         fontWeight: '500',
                         fontSize: typeof window !== 'undefined' && window.innerWidth < 768 ? '10px' : '12px'
                       }}>
-                        {value.length > 15 ? `${value.substring(0, 15)}...` : value}
+                        {value.length > 12 ? `${value.substring(0, 12)}...` : value} ({entry.payload.value})
                       </span>
                     )}
                   />
