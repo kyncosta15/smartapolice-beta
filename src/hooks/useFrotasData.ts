@@ -258,7 +258,7 @@ export function useFrotasData(filters: FrotaFilters) {
     thirtyDaysFromNow.setDate(today.getDate() + 30);
 
     const totalVeiculos = veiculos.length;
-    const semSeguro = veiculos.filter(v => v.status_seguro === 'sem_seguro').length;
+    const semSeguro = veiculos.filter(v => v.status_seguro === 'sem_seguro' || v.status_seguro === 'outros').length;
     
     const emplacamentoVencido = veiculos.filter(v => {
       if (!v.data_venc_emplacamento) return false;
