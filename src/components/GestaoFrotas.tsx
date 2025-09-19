@@ -115,9 +115,9 @@ export function GestaoFrotas() {
   }
 
   return (
-    <div className="flex flex-col min-h-0 min-w-0 w-full mx-auto px-3 sm:px-4 lg:px-6">
+    <div className="flex flex-col min-h-0 w-full">
       {/* Header */}
-      <div className="flex-none border-b border-gray-200 bg-white py-3 sm:py-4 md:py-6">
+      <div className="flex-none border-b border-gray-200 bg-white py-3 sm:py-4 md:py-6 px-3 sm:px-4 lg:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words leading-tight">

@@ -343,7 +343,7 @@ export function DashboardContent() {
   })));
 
   return (
-    <div className="min-h-screen flex bg-gray-50 overflow-hidden">
+    <div className="min-h-screen flex bg-gray-50">
       {/* Desktop Sidebar */}
       <AppSidebar 
         onSectionChange={setActiveSection} 
@@ -360,7 +360,7 @@ export function DashboardContent() {
       />
       
       {/* Main Content */}
-      <main className="flex-1 lg:ml-60">
+      <main className="flex-1 lg:ml-60 min-w-0">
         <Navbar 
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -370,10 +370,10 @@ export function DashboardContent() {
           isMobileMenuOpen={isMobileMenuOpen}
         />
 
-        <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-6">
+        <div className="w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
           {/* Complete Dashboard Content */}
           {activeSection === 'dashboard' && (
-            <div className="space-y-6 overflow-hidden">
+            <div className="space-y-4 sm:space-y-6">
               {/* Dashboard Cards */}
               <DashboardCards 
                 dashboardStats={{
@@ -388,7 +388,7 @@ export function DashboardContent() {
               />
               
               {/* Complete Dashboard with Charts - hide cards section to avoid duplication */}
-              <div className="mt-8">
+              <div className="mt-6 sm:mt-8">
                 <DynamicDashboard 
                   policies={normalizedPolicies}
                   viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
