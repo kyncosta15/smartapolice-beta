@@ -116,8 +116,9 @@ export function VehicleDetailsModalNew({
 
       toast.success('Veículo atualizado com sucesso!');
       
-      // Dispatch event to refresh the table
+      // Dispatch events to refresh the table and dashboard data
       window.dispatchEvent(new CustomEvent('vehicleUpdated'));
+      window.dispatchEvent(new CustomEvent('frota-data-updated'));
       
     } catch (error) {
       console.error('Erro ao salvar:', error);
@@ -425,17 +426,61 @@ export function VehicleDetailsModalNew({
                   </h3>
                   <div className="grid grid-cols-1 gap-4 md:gap-6">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Status Atual</Label>
-                      <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
-                        {getStatusBadge(formData.status_seguro || 'sem_seguro')}
-                      </div>
+                      <Label htmlFor="status_seguro" className="text-sm font-medium text-gray-700">Status Atual</Label>
+                      {mode === 'view' ? (
+                        <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                          {getStatusBadge(formData.status_seguro || 'sem_seguro')}
+                        </div>
+                      ) : (
+                        <Select 
+                          value={formData.status_seguro || 'sem_seguro'} 
+                          onValueChange={(value) => handleInputChange('status_seguro', value)}
+                        >
+                          <SelectTrigger className="h-10 md:h-11">
+                            <SelectValue placeholder="Selecione o status do seguro" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sem_seguro">Sem Seguro</SelectItem>
+                            <SelectItem value="segurado">Segurado</SelectItem>
+                            <SelectItem value="vencido">Vencido</SelectItem>
+                            <SelectItem value="vigente">Vigente</SelectItem>
+                            <SelectItem value="vence_30_dias">Vence em 30 dias</SelectItem>
+                            <SelectItem value="vence_60_dias">Vence em 60 dias</SelectItem>
+                            <SelectItem value="cotacao">Em Cotação</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                     {formData.motivo_sem_seguro && (
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Motivo sem Seguro</Label>
-                        <p className="p-3 md:p-4 bg-yellow-50 rounded-lg text-yellow-800 text-sm">
-                          {formData.motivo_sem_seguro}
-                        </p>
+                        <Label htmlFor="motivo_sem_seguro" className="text-sm font-medium text-gray-700">Motivo sem Seguro</Label>
+                        {mode === 'view' ? (
+                          <p className="p-3 md:p-4 bg-yellow-50 rounded-lg text-yellow-800 text-sm">
+                            {formData.motivo_sem_seguro}
+                          </p>
+                        ) : (
+                          <Textarea
+                            id="motivo_sem_seguro"
+                            value={formData.motivo_sem_seguro || ''}
+                            onChange={(e) => handleInputChange('motivo_sem_seguro', e.target.value)}
+                            rows={3}
+                            className="resize-none"
+                            placeholder="Descreva o motivo pelo qual o veículo está sem seguro..."
+                          />
+                        )}
+                      </div>
+                    )}
+                    {mode === 'edit' && formData.status_seguro === 'sem_seguro' && !formData.motivo_sem_seguro && (
+                      <div className="space-y-2">
+                        <Label htmlFor="motivo_sem_seguro" className="text-sm font-medium text-gray-700">Motivo sem Seguro</Label>
+                        <Textarea
+                          id="motivo_sem_seguro"
+                          value={formData.motivo_sem_seguro || ''}
+                          onChange={(e) => handleInputChange('motivo_sem_seguro', e.target.value)}
+                          rows={3}
+                          className="resize-none"
+                          placeholder="Descreva o motivo pelo qual o veículo está sem seguro..."
+                        />
                       </div>
                     )}
                   </div>
