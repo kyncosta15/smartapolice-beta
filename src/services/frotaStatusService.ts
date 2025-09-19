@@ -11,11 +11,11 @@ export interface FrotaStatusFixResult {
 
 export class FrotaStatusService {
   /**
-   * Detecta e corrige veículos com status "outros" para "sem_seguro"
+   * Detecta e corrige veículos com categoria "outros" alterando seu status_seguro para "sem_seguro"
    */
   static async autoFixStatusOutros(): Promise<FrotaStatusFixResult> {
     try {
-      const { data, error } = await supabase.rpc('auto_fix_frota_status');
+      const { data, error } = await supabase.rpc('fix_categoria_outros_to_sem_seguro');
       
       if (error) {
         console.error('Erro ao executar correção de status:', error);
@@ -28,7 +28,7 @@ export class FrotaStatusService {
         };
       }
       
-      const result = data as any;
+      const result = data[0] as any;
       return {
         success: result?.success ?? false,
         veiculos_atualizados: result?.veiculos_atualizados ?? 0,
@@ -49,17 +49,17 @@ export class FrotaStatusService {
   }
 
   /**
-   * Verifica se existem veículos com status "outros" que precisam ser corrigidos
+   * Verifica se existem veículos com categoria "outros" que precisam ser corrigidos
    */
   static async checkForStatusOutros(): Promise<{ hasOutros: boolean; count: number; placas: string[] }> {
     try {
       const { data, error } = await supabase
         .from('frota_veiculos')
-        .select('placa, status_seguro')
-        .or('status_seguro.eq.outros,status_seguro.ilike.outros');
+        .select('placa, categoria')
+        .eq('categoria', 'outros');
       
       if (error) {
-        console.error('Erro ao verificar status outros:', error);
+        console.error('Erro ao verificar categoria outros:', error);
         return { hasOutros: false, count: 0, placas: [] };
       }
       
@@ -86,14 +86,15 @@ export class FrotaStatusService {
     if (!check.hasOutros) {
       toast({
         title: "✅ Status verificado",
-        description: "Nenhum veículo encontrado com status 'Outros'",
+        description: "Nenhum veículo com categoria 'Outros' encontrado",
+        variant: "default"
       });
       
       return {
         success: true,
         veiculos_atualizados: 0,
         placas_alteradas: [],
-        message: 'Nenhum veículo encontrado com status "Outros"'
+        message: 'Nenhum veículo com categoria "Outros" encontrado'
       };
     }
 

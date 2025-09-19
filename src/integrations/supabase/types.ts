@@ -2037,6 +2037,16 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      fix_categoria_outros_to_sem_seguro: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          error: string
+          message: string
+          placas_alteradas: string[]
+          success: boolean
+          veiculos_atualizados: number
+        }[]
+      }
       fix_frota_status_outros: {
         Args: Record<PropertyKey, never>
         Returns: {
