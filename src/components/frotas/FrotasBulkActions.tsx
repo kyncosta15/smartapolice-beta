@@ -1,0 +1,195 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { 
+  CheckSquare, 
+  Shield, 
+  X, 
+  AlertTriangle,
+  Loader2
+} from 'lucide-react';
+import { FrotaVeiculo } from '@/hooks/useFrotasData';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface FrotasBulkActionsProps {
+  selectedVehicles: FrotaVeiculo[];
+  onClearSelection: () => void;
+  onUpdateComplete: () => void;
+}
+
+export function FrotasBulkActions({ 
+  selectedVehicles, 
+  onClearSelection, 
+  onUpdateComplete 
+}: FrotasBulkActionsProps) {
+  const [bulkStatus, setBulkStatus] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+
+  if (selectedVehicles.length === 0) {
+    return null;
+  }
+
+  const handleBulkStatusUpdate = async () => {
+    if (!bulkStatus) {
+      toast.error('Selecione um status para aplicar aos veículos selecionados');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const vehicleIds = selectedVehicles.map(v => v.id);
+      
+      const { error } = await supabase
+        .from('frota_veiculos')
+        .update({ 
+          status_seguro: bulkStatus,
+          updated_at: new Date().toISOString()
+        })
+        .in('id', vehicleIds);
+
+      if (error) throw error;
+
+      toast.success(`Status atualizado para ${selectedVehicles.length} veículo(s)`);
+      
+      // Clear selection and refresh data
+      onClearSelection();
+      onUpdateComplete();
+      setBulkStatus('');
+      
+      // Dispatch events to refresh dashboard
+      window.dispatchEvent(new CustomEvent('frota-data-updated'));
+      
+    } catch (error) {
+      console.error('Erro ao atualizar status em lote:', error);
+      toast.error('Erro ao atualizar o status dos veículos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels = {
+      'sem_seguro': 'Sem Seguro',
+      'segurado': 'Segurado',
+      'vencido': 'Vencido',
+      'vigente': 'Vigente',
+      'vence_30_dias': 'Vence em 30 dias',
+      'vence_60_dias': 'Vence em 60 dias',
+      'cotacao': 'Em Cotação'
+    };
+    return labels[status as keyof typeof labels] || status;
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    const colors = {
+      'vigente': 'bg-green-100 text-green-800',
+      'segurado': 'bg-green-100 text-green-800',
+      'vencido': 'bg-red-100 text-red-800',
+      'vence_30_dias': 'bg-yellow-100 text-yellow-800',
+      'vence_60_dias': 'bg-blue-100 text-blue-800',
+      'sem_seguro': 'bg-gray-100 text-gray-800',
+      'cotacao': 'bg-purple-100 text-purple-800'
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  return (
+    <Card className="border-2 border-blue-200 bg-blue-50">
+      <CardContent className="p-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          {/* Selection Info */}
+          <div className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-900">
+              {selectedVehicles.length} veículo(s) selecionado(s)
+            </span>
+          </div>
+
+          {/* Current Status Summary */}
+          <div className="flex flex-wrap gap-1">
+            {Object.entries(
+              selectedVehicles.reduce((acc, vehicle) => {
+                const status = vehicle.status_seguro || 'sem_seguro';
+                acc[status] = (acc[status] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>)
+            ).map(([status, count]) => (
+              <Badge 
+                key={status} 
+                variant="outline" 
+                className={`text-xs ${getStatusBadgeColor(status)}`}
+              >
+                {getStatusLabel(status)}: {count}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Bulk Actions */}
+          <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-gray-600" />
+              <Select value={bulkStatus} onValueChange={setBulkStatus}>
+                <SelectTrigger className="w-48 h-9 text-sm">
+                  <SelectValue placeholder="Alterar status para..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sem_seguro">Sem Seguro</SelectItem>
+                  <SelectItem value="segurado">Segurado</SelectItem>
+                  <SelectItem value="vencido">Vencido</SelectItem>
+                  <SelectItem value="vigente">Vigente</SelectItem>
+                  <SelectItem value="vence_30_dias">Vence em 30 dias</SelectItem>
+                  <SelectItem value="vence_60_dias">Vence em 60 dias</SelectItem>
+                  <SelectItem value="cotacao">Em Cotação</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              onClick={handleBulkStatusUpdate}
+              disabled={!bulkStatus || loading}
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  Aplicando...
+                </>
+              ) : (
+                <>
+                  <CheckSquare className="h-3 w-3 mr-1" />
+                  Aplicar
+                </>
+              )}
+            </Button>
+
+            <Button
+              onClick={onClearSelection}
+              variant="outline"
+              size="sm"
+              className="text-gray-600 hover:text-gray-800"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Cancelar
+            </Button>
+          </div>
+        </div>
+
+        {bulkStatus && (
+          <div className="mt-3 p-2 bg-white rounded border border-blue-200">
+            <div className="flex items-center gap-2 text-sm text-blue-800">
+              <AlertTriangle className="h-4 w-4" />
+              <span>
+                Será aplicado o status "<strong>{getStatusLabel(bulkStatus)}</strong>" 
+                para {selectedVehicles.length} veículo(s) selecionado(s).
+              </span>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Eye, 
   Edit, 
@@ -25,6 +26,8 @@ interface VehicleListMobileProps {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDocs: (id: string) => void;
+  selectedVehicles: FrotaVeiculo[];
+  onSelectVehicle: (veiculo: FrotaVeiculo, checked: boolean) => void;
 }
 
 interface VehicleCardProps {
@@ -32,9 +35,11 @@ interface VehicleCardProps {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDocs: (id: string) => void;
+  selectedVehicles: FrotaVeiculo[];
+  onSelectVehicle: (veiculo: FrotaVeiculo, checked: boolean) => void;
 }
 
-function VehicleCard({ veiculo, onView, onEdit, onDocs }: VehicleCardProps) {
+function VehicleCard({ veiculo, onView, onEdit, onDocs, selectedVehicles, onSelectVehicle }: VehicleCardProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'segurado':
@@ -92,10 +97,19 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs }: VehicleCardProps) {
 
   const emplacamentoStatus = getEmplacamentoStatus(veiculo.data_venc_emplacamento);
   const responsavel = veiculo.responsaveis?.[0];
+  const isSelected = selectedVehicles.some(v => v.id === veiculo.id);
 
   return (
-    <Card className="p-3 border border-gray-200 rounded-lg">
-      <div className="grid grid-cols-[1fr_auto] gap-2 items-start">
+    <Card className={`p-3 border border-gray-200 rounded-lg ${isSelected ? 'bg-blue-50 border-blue-200' : ''}`}>
+      <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-start">
+        {/* Checkbox */}
+        <div className="pt-1">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(checked) => onSelectVehicle(veiculo, checked as boolean)}
+            aria-label={`Selecionar ${veiculo.placa}`}
+          />
+        </div>
         {/* Conteúdo principal */}
         <div className="min-w-0 space-y-2">
           {/* Título e marca */}
@@ -217,7 +231,7 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs }: VehicleCardProps) {
   );
 }
 
-export function VehicleListMobile({ veiculos, onView, onEdit, onDocs }: VehicleListMobileProps) {
+export function VehicleListMobile({ veiculos, onView, onEdit, onDocs, selectedVehicles, onSelectVehicle }: VehicleListMobileProps) {
   if (veiculos.length === 0) {
     return (
       <div className="text-center py-8">
@@ -241,6 +255,8 @@ export function VehicleListMobile({ veiculos, onView, onEdit, onDocs }: VehicleL
           onView={onView}
           onEdit={onEdit}
           onDocs={onDocs}
+          selectedVehicles={selectedVehicles}
+          onSelectVehicle={onSelectVehicle}
         />
       ))}
     </div>
