@@ -16,7 +16,7 @@ interface NavbarProps {
 
 export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { logout } = useAuth(); // Só usar logout do AuthContext
+  const { logout, user } = useAuth(); // Buscar user do AuthContext
   const { profile: userProfile } = useUserProfile(); // Usar apenas useUserProfile para dados
   const { toast } = useToast();
 
@@ -66,9 +66,9 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
     }
   };
 
-  // Definir fonte preferida para avatar e nome usando apenas userProfile
+  // Definir fonte preferida para avatar e nome usando empresa quando disponível
   const preferredAvatarUrl = userProfile?.photo_url;
-  const preferredDisplayName = userProfile?.display_name || 'Usuário';
+  const preferredDisplayName = user?.company || userProfile?.display_name || user?.name || 'Usuário';
 
   return (
     <header className="sticky top-0 z-20 bg-white border-b border-gray-200">

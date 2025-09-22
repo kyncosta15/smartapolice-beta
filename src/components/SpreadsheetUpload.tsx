@@ -444,34 +444,22 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
       let colaboradoresImportados = 0;
       let dependentesImportados = 0;
 
-      // Importar colaboradores
-      if (previewData.colaboradores.length > 0) {
-        const colaboradores = previewData.colaboradores.map(col => ({
-          ...col,
-          empresa_id: empresa.id
-        }));
+        // Importar colaboradores (SEMPRE permite duplicatas por empresa)
+        if (previewData.colaboradores.length > 0) {
+          const colaboradores = previewData.colaboradores.map(col => ({
+            ...col,
+            empresa_id: empresa.id
+          }));
 
-        // Verificar quais colaboradores já existem
-        const cpfsExistentes = colaboradores.map(c => c.cpf);
-        const { data: colaboradoresExistentes } = await supabase
-          .from('colaboradores')
-          .select('cpf')
-          .eq('empresa_id', empresa.id)
-          .in('cpf', cpfsExistentes);
-
-        const cpfsJaCadastrados = new Set(colaboradoresExistentes?.map(c => c.cpf) || []);
-        const colaboradoresNovos = colaboradores.filter(c => !cpfsJaCadastrados.has(c.cpf));
-        
-        if (colaboradoresNovos.length > 0) {
+          // Inserir TODOS os colaboradores da planilha (permite duplicatas)
           const { error } = await supabase
             .from('colaboradores')
-            .insert(colaboradoresNovos);
+            .insert(colaboradores);
 
           if (error) throw error;
+          
+          colaboradoresImportados = colaboradores.length;
         }
-        
-        colaboradoresImportados = colaboradoresNovos.length;
-      }
 
       // Importar dependentes
       if (previewData.dependentes.length > 0) {
@@ -499,30 +487,14 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
           .filter(dep => dep.colaborador_id);
 
         if (dependentesComId.length > 0) {
-          // Verificar quais dependentes já existem
-          const cpfsDependentes = dependentesComId.map(d => d.cpf);
-          const { data: dependentesExistentes } = await supabase
+          // Inserir TODOS os dependentes da planilha (permite duplicatas)
+          const { error } = await supabase
             .from('dependentes')
-            .select('cpf, colaborador_id')
-            .in('cpf', cpfsDependentes);
+            .insert(dependentesComId);
 
-          const dependentesJaCadastrados = new Set(
-            dependentesExistentes?.map(d => `${d.cpf}-${d.colaborador_id}`) || []
-          );
+          if (error) throw error;
           
-          const dependentesNovos = dependentesComId.filter(
-            d => !dependentesJaCadastrados.has(`${d.cpf}-${d.colaborador_id}`)
-          );
-          
-          if (dependentesNovos.length > 0) {
-            const { error } = await supabase
-              .from('dependentes')
-              .insert(dependentesNovos);
-
-            if (error) throw error;
-          }
-          
-          dependentesImportados = dependentesNovos.length;
+          dependentesImportados = dependentesComId.length;
         }
       }
 
@@ -535,8 +507,8 @@ export const SpreadsheetUpload = ({ onFileSelect, onDataUpdate }: SpreadsheetUpl
       );
 
       toast({
-        title: "Dados importados com sucesso!",
-        description: `${colaboradoresImportados} colaboradores e ${dependentesImportados} dependentes foram importados`,
+        title: "Importação concluída!",
+        description: `✅ ${colaboradoresImportados} colaboradores e ${dependentesImportados} dependentes importados (duplicatas permitidas por empresa)`,
       });
 
       onDataUpdate?.();
