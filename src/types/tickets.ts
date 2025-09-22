@@ -30,6 +30,9 @@ export interface Ticket {
   origem: 'portal' | 'importacao' | 'api';
   created_by?: string;
   empresa_id?: string;
+  protocol_code?: string;
+  payload?: any;
+  external_ref?: string;
   created_at: string;
   updated_at: string;
   // Relacionamentos

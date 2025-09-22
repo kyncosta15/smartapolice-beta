@@ -103,7 +103,18 @@ export function useTicketsData() {
         throw error;
       }
 
-      setTickets((data || []) as Ticket[]);
+      // Mapear dados para o formato esperado
+      const mappedTickets = (data || []).map(ticket => {
+        const payload = ticket.payload as any;
+        return {
+          ...ticket,
+          subtipo: payload?.subtipo,
+          valor_estimado: payload?.valor_estimado,
+          descricao: payload?.descricao,
+        };
+      }) as Ticket[];
+      
+      setTickets(mappedTickets);
     } catch (error) {
       console.error('Erro ao carregar tickets:', error);
       toast({
@@ -125,22 +136,28 @@ export function useTicketsData() {
     if (!empresaId || !user?.id) return null;
 
     try {
+      // Gerar código de protocolo
+      const protocolCode = `TKT-${Date.now()}`;
+      
       const { data, error } = await supabase
         .from('tickets')
         .insert([
           {
             tipo: ticketData.tipo,
-            subtipo: ticketData.subtipo,
+            status: ticketData.status || 'aberto',
             vehicle_id: ticketData.vehicle_id,
             apolice_id: ticketData.apolice_id,
-            status: ticketData.status,
             data_evento: ticketData.data_evento,
-            valor_estimado: ticketData.valor_estimado,
-            descricao: ticketData.descricao,
             localizacao: ticketData.localizacao,
-            origem: ticketData.origem,
+            origem: ticketData.origem || 'portal',
             empresa_id: empresaId,
             created_by: user.id,
+            protocol_code: protocolCode,
+            payload: {
+              subtipo: ticketData.subtipo,
+              valor_estimado: ticketData.valor_estimado,
+              descricao: ticketData.descricao,
+            }
           }
         ])
         .select()

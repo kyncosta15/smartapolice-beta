@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClaimsManager } from './claims/ClaimsManager';
+import { TicketsDashboard } from './tickets/TicketsDashboard';
+import { AssistanceFloatingButton } from './tickets/AssistanceFloatingButton';
 import { SinistrosDashboard } from './sinistros/SinistrosDashboard';
 import { SinistrosCRLV } from './sinistros/SinistrosCRLV';
 import { SinistrosRelatorios } from './sinistros/SinistrosRelatorios';
@@ -75,7 +77,10 @@ export function SinistrosManagement({
     <div className="space-y-6">
       {/* Header with hamburger menu */}
       <div className="flex items-center gap-4">
-        <HamburgerMenu activeTab={activeTab} onTabChange={setActiveTab} />
+        <HamburgerMenu 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+        />
         <div>
           <h1 className="text-2xl font-bold text-foreground">Gestão de Sinistros</h1>
           <p className="text-muted-foreground">
@@ -98,6 +103,10 @@ export function SinistrosManagement({
               // TODO: Implement new ticket modal
             }}
           />
+        </TabsContent>
+
+        <TabsContent value="tickets">
+          <TicketsDashboard />
         </TabsContent>
 
         <TabsContent value="novo">
@@ -126,7 +135,10 @@ export function SinistrosManagement({
             onConfigSaved={(config) => console.log('Config saved:', config)}
           />
         </TabsContent>
-      </Tabs>
-    </div>
+        </Tabs>
+
+        {/* Botão Flutuante de Assistência 24h */}
+        <AssistanceFloatingButton />
+      </div>
   );
 }
