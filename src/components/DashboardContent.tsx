@@ -363,10 +363,6 @@ export function DashboardContent() {
       {/* Main Content */}
       <main className="flex-1 lg:ml-60 min-w-0">
         <Navbar 
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          notificationCount={enhancedDashboardStats.duingNext30Days}
-          policies={normalizedPolicies}
           onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
           isMobileMenuOpen={isMobileMenuOpen}
         />
