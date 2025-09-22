@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -21,18 +22,8 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, profile, logout } = useAuth();
+  const { profile: userProfile } = useUserProfile();
   const { toast } = useToast();
-
-  // Tentar obter o perfil do usuário do contexto
-  let userProfile = null;
-  try {
-    const { useUserProfileContext } = require('@/contexts/UserProfileContext');
-    const profileContext = useUserProfileContext();
-    userProfile = profileContext?.profile;
-  } catch (error) {
-    // Se o contexto não estiver disponível, continuar sem ele
-    console.log('UserProfileContext não disponível ainda');
-  }
 
   const getRoleLabel = (role: string) => {
     const roles = {

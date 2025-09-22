@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from '@/contexts/AuthContext';
-import { UserProfileProvider } from '@/contexts/UserProfileContext';
 import { LandingPage } from "@/components/LandingPage";
 
 // Temporary: Regular imports to isolate lazy loading issue
@@ -28,45 +27,43 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <UserProfileProvider>
-            <BrowserRouter>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/system-selection" element={<SystemSelection />} />
-                <Route path="/auth" element={<SystemSelection />} />
-                <Route path="/auth/smartapolice" element={<SmartApoliceAuth />} />
-                <Route path="/auth/smartbeneficios" element={<SmartBeneficiosAuthFunctional />} />
-                <Route path="/colaborador/solicitacao" element={<ColaboradorSolicitacao />} />
-                <Route path="/colaborador/:token" element={<ColaboradorFormPage />} />
-                <Route path="/solicitacao" element={<NewSolicitacaoPage />} />
-                <Route path="/rh/dashboard" element={<RHDashboard />} />
-                <Route path="/rh/colaboradores" element={<RHColaboradores />} />
-                
-                {/* Protected routes */}
-                <Route path="/dashboard" element={<AuthGuard />} />
-                <Route
-                  path="/smartbeneficios/dashboard"
-                  element={<SmartBeneficiosGuard />}
-                />
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/system-selection" element={<SystemSelection />} />
+              <Route path="/auth" element={<SystemSelection />} />
+              <Route path="/auth/smartapolice" element={<SmartApoliceAuth />} />
+              <Route path="/auth/smartbeneficios" element={<SmartBeneficiosAuthFunctional />} />
+              <Route path="/colaborador/solicitacao" element={<ColaboradorSolicitacao />} />
+              <Route path="/colaborador/:token" element={<ColaboradorFormPage />} />
+              <Route path="/solicitacao" element={<NewSolicitacaoPage />} />
+              <Route path="/rh/dashboard" element={<RHDashboard />} />
+              <Route path="/rh/colaboradores" element={<RHColaboradores />} />
+              
+              {/* Protected routes */}
+              <Route path="/dashboard" element={<AuthGuard />} />
+              <Route
+                path="/smartbeneficios/dashboard"
+                element={<SmartBeneficiosGuard />}
+              />
 
-                {/* Admin only routes (future) */}
-                <Route
-                  path="/admin/*"
-                  element={
-                    <ProtectedRoute requiredRoles={['admin', 'administrador']}>
-                      <div className="p-8 text-center">
-                        <h1 className="text-2xl font-bold">Painel Administrativo</h1>
-                        <p className="text-muted-foreground mt-2">Em breve...</p>
-                      </div>
-                    </ProtectedRoute>
-                  }
-                />
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </UserProfileProvider>
+              {/* Admin only routes (future) */}
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                    <div className="p-8 text-center">
+                      <h1 className="text-2xl font-bold">Painel Administrativo</h1>
+                      <p className="text-muted-foreground mt-2">Em breve...</p>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
         </AuthProvider>
         <Toaster />
         <Sonner />
