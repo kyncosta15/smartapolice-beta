@@ -52,6 +52,12 @@ export function GestaoFrotas() {
     status: []
   });
 
+  console.log('🏗️ GestaoFrotas renderizando com usuário:', {
+    id: user?.id,
+    name: user?.name,
+    company: user?.company
+  });
+
   // Mock policies data - replace with real data from your API
   const [policies] = useState([
     {
@@ -74,6 +80,13 @@ export function GestaoFrotas() {
     refetch,
     kpis 
   } = useFrotasData(filters);
+
+  console.log('🚗 GestaoFrotas - Dados do hook:', {
+    totalVeiculos: veiculos?.length || 0,
+    loading,
+    error,
+    kpisTotal: kpis?.totalVeiculos || 0
+  });
 
   const handleFilterChange = (newFilters: Partial<FrotaFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
