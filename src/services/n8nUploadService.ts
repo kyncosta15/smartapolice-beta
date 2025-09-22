@@ -22,17 +22,18 @@ export interface N8NUploadMetadata {
 }
 
 export interface N8NResponse {
-  empresa: {
+  // Propriedades da resposta antiga (N8N com webhook original)
+  empresa?: {
     id: string;
     nome: string;
     cnpj: string;
   };
-  apolice: {
+  apolice?: {
     numero_apolice: string;
     status: string;
     [key: string]: any;
   };
-  veiculos: Array<{
+  veiculos?: Array<{
     placa: string;
     chassi: string;
     modelo: string;
@@ -41,13 +42,25 @@ export interface N8NResponse {
     status: string;
     [key: string]: any;
   }>;
-  metrics: {
+  metrics?: {
     totalLinhas: number;
     totalVeiculos: number;
     porFamilia: Record<string, number>;
     porLocalizacao: Record<string, number>;
     processadoEm: string;
   };
+
+  // Propriedades da resposta nova (processar-n8n-frotas)
+  success?: boolean;
+  message?: string;
+  detalhes?: {
+    total_recebidos: number;
+    veiculos_inseridos: number;
+    erros_insercao: number;
+    empresa_id: string;
+    dados_preenchidos?: number;
+  };
+  erros?: any[];
 }
 
 export class N8NUploadService {

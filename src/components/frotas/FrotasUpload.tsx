@@ -22,6 +22,7 @@ import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { N8NUploadService, N8NUploadMetadata, N8NResponse } from '@/services/n8nUploadService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FrotasUploadProps {
   onSuccess: () => void;
@@ -146,15 +147,47 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
               : f
           ));
 
+          // Chamar função para preencher dados vazios após o processamento
+          try {
+            console.log('Chamando preenchimento de dados vazios...');
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (user) {
+              const { data: userData } = await supabase
+                .from('users')
+                .select('company')
+                .eq('id', user.id)
+                .single();
+                
+              if (userData?.company) {
+                const { data: empresa } = await supabase
+                  .from('empresas')
+                  .select('id')
+                  .eq('nome', userData.company)
+                  .single();
+                  
+                if (empresa) {
+                  const { data: preencherResult } = await supabase.functions.invoke('preencher-dados-veiculos', {
+                    body: { empresaId: empresa.id }
+                  });
+                  
+                  console.log('Resultado do preenchimento:', preencherResult);
+                }
+              }
+            }
+          } catch (error) {
+            console.warn('Erro ao preencher dados vazios:', error);
+          }
+
           toast({
             title: "✅ Arquivo processado",
-            description: `${result.metrics?.totalVeiculos || 0} veículos processados e salvos no dashboard`,
+            description: `${result.metrics?.totalVeiculos || 0} veículos processados${result.detalhes?.dados_preenchidos ? ` e ${result.detalhes.dados_preenchidos} campos vazios preenchidos automaticamente` : ''}`,
           });
 
           // Forçar atualização do dashboard de frotas
           setTimeout(() => {
             window.dispatchEvent(new CustomEvent('frota-data-updated'));
-          }, 1000);
+          }, 1500);
 
         } catch (error: any) {
           console.error(`Erro ao processar ${fileItem.file.name}:`, error);

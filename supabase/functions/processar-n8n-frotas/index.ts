@@ -185,14 +185,42 @@ serve(async (req) => {
       }
     }
 
+    // Depois da inserção, chamar função de preenchimento de dados vazios
+    console.log('Chamando função para preencher dados vazios...');
+    let dadosPreenchidos = 0;
+    
+    if (veiculosInseridos > 0 && empresaId) {
+      try {
+        const preencherResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/preencher-dados-veiculos`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+          },
+          body: JSON.stringify({ empresaId })
+        });
+
+        if (preencherResponse.ok) {
+          const preencherResult = await preencherResponse.json();
+          console.log('Resultado do preenchimento:', preencherResult);
+          dadosPreenchidos = preencherResult.totalProcessados || 0;
+        } else {
+          console.warn('Erro ao chamar função de preenchimento:', await preencherResponse.text());
+        }
+      } catch (error) {
+        console.warn('Erro ao chamar função de preenchimento:', error);
+      }
+    }
+
     const resultado = {
       success: errosInsercao === 0,
-      message: `Processamento concluído: ${veiculosInseridos} veículos inseridos, ${errosInsercao} erros`,
+      message: `Processamento concluído: ${veiculosInseridos} veículos inseridos, ${errosInsercao} erros${dadosPreenchidos > 0 ? `, ${dadosPreenchidos} campos vazios preenchidos automaticamente` : ''}`,
       detalhes: {
         total_recebidos: n8nData.veiculos.length,
         veiculos_inseridos: veiculosInseridos,
         erros_insercao: errosInsercao,
-        empresa_id: empresaId
+        empresa_id: empresaId,
+        dados_preenchidos: dadosPreenchidos
       },
       erros: errosDetalhados.length > 0 ? errosDetalhados : undefined
     };
