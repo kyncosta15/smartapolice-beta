@@ -70,8 +70,8 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
   const preferredAvatarUrl = userProfile?.avatar_url || userProfile?.photo_url;
   const preferredDisplayName = userProfile?.display_name || user?.name || user?.email?.split('@')[0] || 'Usuário';
   
-  // Get active empresa name
-  const activeEmpresaName = memberships.find(m => m.empresa_id === activeEmpresa)?.empresa?.nome;
+  // Get active empresa name with null check
+  const activeEmpresaName = memberships?.find(m => m.empresa_id === activeEmpresa)?.empresa?.nome;
 
   return (
     <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
@@ -149,9 +149,9 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                         <p className="text-xs text-gray-500">
                           {activeEmpresaName || 'Carregando...'}
                         </p>
-                        {memberships.length > 0 && (
+                        {memberships?.length > 0 && (
                           <Badge variant="secondary" className="text-xs mt-1">
-                            {memberships.find(m => m.empresa_id === activeEmpresa)?.role === 'admin' ? 'Admin' : 'Usuário'}
+                            {memberships?.find(m => m.empresa_id === activeEmpresa)?.role === 'admin' ? 'Admin' : 'Usuário'}
                           </Badge>
                         )}
                       </div>
