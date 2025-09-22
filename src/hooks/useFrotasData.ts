@@ -224,11 +224,6 @@ export function useFrotasData(filters: FrotaFilters) {
 
       if (fetchError) throw fetchError;
 
-      console.log('🚗 Dados dos veículos carregados:', {
-        total: data?.length || 0,
-        primeiros3: data?.slice(0, 3)?.map(v => ({ placa: v.placa, marca: v.marca, modelo: v.modelo }))
-      });
-
       setVeiculos(data || []);
     } catch (err: any) {
       console.error('Erro ao buscar veículos:', err);
@@ -298,11 +293,6 @@ export function useFrotasData(filters: FrotaFilters) {
 
   // Calcular KPIs
   const kpis = useMemo((): FrotaKPIs => {
-    console.log('🔢 Calculando KPIs com veículos:', {
-      totalVeiculos: veiculos.length,
-      statusSeguro: veiculos.map(v => v.status_seguro)
-    });
-
     const today = new Date();
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(today.getDate() + 30);
@@ -335,7 +325,7 @@ export function useFrotasData(filters: FrotaFilters) {
       consorcio: veiculos.filter(v => v.modalidade_compra === 'consorcio').length,
     };
 
-    const kpisResult = {
+    return {
       totalVeiculos,
       semSeguro,
       veiculosSegurados,
@@ -344,10 +334,6 @@ export function useFrotasData(filters: FrotaFilters) {
       valorizacaoMedia,
       modalidadeDistribuicao,
     };
-
-    console.log('📊 KPIs calculados:', kpisResult);
-
-    return kpisResult;
   }, [veiculos]);
 
   const refetch = useCallback(() => {
