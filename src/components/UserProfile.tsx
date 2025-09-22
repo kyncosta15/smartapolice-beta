@@ -55,7 +55,6 @@ export const UserProfile = () => {
     setIsUploading(true);
     
     try {
-      console.log('🔄 UserProfile - Fazendo upload da imagem:', file.name);
       await updateAvatar(file);
       
       toast({
@@ -65,10 +64,9 @@ export const UserProfile = () => {
 
       // Limpar preview após sucesso
       setPreviewImage(null);
-      console.log('✅ UserProfile - Foto atualizada com sucesso');
 
     } catch (error: any) {
-      console.error('❌ UserProfile - Erro no upload:', error);
+      console.error('Erro no upload:', error);
       toast({
         title: "Erro",
         description: error.message || "Erro ao fazer upload da imagem.",
@@ -93,7 +91,6 @@ export const UserProfile = () => {
     setIsLoading(true);
     
     try {
-      console.log('🔄 UserProfile - Atualizando nome para:', displayName);
       await updateDisplayName(displayName);
       
       toast({
@@ -101,9 +98,8 @@ export const UserProfile = () => {
         description: "Nome atualizado com sucesso!"
       });
 
-      console.log('✅ UserProfile - Nome atualizado com sucesso');
     } catch (error: any) {
-      console.error('❌ UserProfile - Erro ao atualizar nome:', error);
+      console.error('Erro ao atualizar nome:', error);
       toast({
         title: "Erro",
         description: error.message || "Erro ao atualizar o nome.",

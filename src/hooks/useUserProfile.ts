@@ -22,7 +22,6 @@ export function useUserProfile() {
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('🔍 useUserProfile - User from auth:', user);
       
       if (!user) { 
         setProfile(null); 
@@ -37,19 +36,13 @@ export function useUserProfile() {
         .eq('id', user.id)
         .maybeSingle();
 
-      console.log('🔍 useUserProfile - Profile data from DB:', data);
-      console.log('🔍 useUserProfile - Profile fetch error:', fetchError);
-
       if (fetchError) {
         throw fetchError;
       }
 
       if (data) {
         setProfile(data as UserProfile);
-        console.log('✅ useUserProfile - Profile set:', data);
       } else {
-        console.log('⚠️ useUserProfile - No profile found, creating one...');
-        
         // Se não existe perfil, criar um
         const { data: createData, error: createError } = await supabase
           .from('user_profiles')
@@ -60,15 +53,12 @@ export function useUserProfile() {
           .select()
           .single();
 
-        if (createError) {
-          console.error('❌ useUserProfile - Error creating profile:', createError);
-        } else {
-          console.log('✅ useUserProfile - Profile created:', createData);
+        if (!createError && createData) {
           setProfile(createData as UserProfile);
         }
       }
     } catch (err: any) {
-      console.error('❌ Erro ao carregar perfil:', err);
+      console.error('Erro ao carregar perfil:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -96,8 +86,6 @@ export function useUserProfile() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado');
 
-    console.log('🔄 updateDisplayName - Updating display_name to:', display_name);
-
     const { error } = await supabase
       .from('user_profiles')
       .upsert({ 
@@ -107,20 +95,13 @@ export function useUserProfile() {
         onConflict: 'id' 
       });
 
-    if (error) {
-      console.error('❌ updateDisplayName - Error:', error);
-      throw error;
-    }
-    
-    console.log('✅ updateDisplayName - Success, reloading profile...');
+    if (error) throw error;
     await load();
   };
 
   const updateAvatar = async (file: File) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado');
-
-    console.log('🔄 updateAvatar - Starting avatar update for user:', user.id);
 
     // Validação básica
     if (file.size > 5 * 1024 * 1024) {
@@ -138,12 +119,9 @@ export function useUserProfile() {
     const fileName = `${timestamp}-${randomId}.${ext}`;
     const path = `${user.id}/${fileName}`;
 
-    console.log('📁 updateAvatar - Uploading to path:', path);
-
     try {
       // Deletar arquivo anterior se existir
       if (profile?.photo_path) {
-        console.log('🗑️ updateAvatar - Removing old avatar:', profile.photo_path);
         await supabase.storage
           .from('avatars')
           .remove([profile.photo_path]);
@@ -157,10 +135,7 @@ export function useUserProfile() {
           contentType: file.type 
         });
 
-      if (uploadError) {
-        console.error('❌ updateAvatar - Upload error:', uploadError);
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
       // Obter URL pública
       const { data: publicData } = supabase.storage
@@ -168,7 +143,6 @@ export function useUserProfile() {
         .getPublicUrl(path);
 
       const photo_url = publicData.publicUrl;
-      console.log('🔗 updateAvatar - Photo URL:', photo_url);
 
       // Salvar no perfil
       const { error: upsertError } = await supabase
@@ -181,12 +155,8 @@ export function useUserProfile() {
           onConflict: 'id' 
         });
 
-      if (upsertError) {
-        console.error('❌ updateAvatar - Profile update error:', upsertError);
-        throw upsertError;
-      }
+      if (upsertError) throw upsertError;
 
-      console.log('✅ updateAvatar - Success, reloading profile...');
       await load();
       
     } catch (err: any) {

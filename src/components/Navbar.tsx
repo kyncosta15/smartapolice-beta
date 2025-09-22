@@ -25,12 +25,6 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   const { profile: userProfile, loading: profileLoading } = useUserProfile();
   const { toast } = useToast();
 
-  // Debug logs para investigar o problema
-  console.log('🔍 Navbar Debug - userProfile:', userProfile);
-  console.log('🔍 Navbar Debug - profileLoading:', profileLoading);
-  console.log('🔍 Navbar Debug - profile (auth):', profile);
-  console.log('🔍 Navbar Debug - user:', user);
-
   const getRoleLabel = (role: string) => {
     const roles = {
       cliente: 'Cliente',
@@ -100,25 +94,19 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   const preferredAvatarUrl = userProfile?.photo_url || profile?.avatar_url || (user as any)?.avatar_url || (user as any)?.avatar;
   const preferredDisplayName = userProfile?.display_name || profile?.full_name || user?.name || '';
 
-  // Debug logs para preferências
-  console.log('🔍 Navbar Debug - preferredAvatarUrl:', preferredAvatarUrl);
-  console.log('🔍 Navbar Debug - preferredDisplayName:', preferredDisplayName);
-
   // Se ainda estiver carregando e não tiver dados, mostrar loading
   const isLoadingProfile = profileLoading && !userProfile;
-  console.log('🔍 Navbar Debug - isLoadingProfile:', isLoadingProfile);
 
   return (
-    <header className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
-      <div className="h-14 flex items-center justify-between px-4">
-        {/* Left side - Brand and Mobile Menu */}
-        <div className="flex items-center gap-2">
-          {/* Mobile Menu Toggle */}
+    <header className="sticky top-0 z-20 bg-slate-800 border-b border-slate-700">
+      <div className="h-16 flex items-center justify-between px-6">
+        {/* Left side - Mobile Menu Toggle */}
+        <div className="flex items-center">
           <Button
             variant="ghost"
             size="sm"
             onClick={onMobileMenuToggle}
-            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-slate-50 transition-all duration-300 rounded-lg group"
+            className="lg:hidden p-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-all duration-300 rounded-lg"
             aria-label="Abrir menu"
           >
             <Menu className={cn(
@@ -126,30 +114,35 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
               isMobileMenuOpen && "rotate-90 scale-110"
             )} />
           </Button>
-          
-          {/* Brand */}
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold text-gray-900">SmartApólice</span>
-            <span className="ml-2 text-xs rounded bg-rose-500 text-white px-2 py-0.5 font-medium">
-              BETA
-            </span>
+        </div>
+
+        {/* Center - Search Bar */}
+        <div className="flex-1 max-w-lg mx-8">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Pesquisar..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full h-10 pl-4 pr-4 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+            />
           </div>
         </div>
 
         {/* Right side - Notifications and User Menu */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {/* Notifications */}
           <div className="relative">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-slate-50 transition-colors rounded-full"
+              className="relative p-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors rounded-lg"
               aria-label="Notificações"
             >
               <Bell className="w-5 h-5" />
               {notificationCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-rose-500 hover:bg-rose-500 text-white border-0">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 hover:bg-red-500 text-white border-0">
                   {notificationCount > 9 ? '9+' : notificationCount}
                 </Badge>
               )}
@@ -157,7 +150,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
 
             {/* Notifications Dropdown */}
             {showNotifications && (
-              <Card className="absolute right-0 mt-2 w-80 bg-white shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-[9999] rounded-2xl">
+              <Card className="absolute right-0 mt-2 w-80 bg-white shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-[9999] rounded-lg">
                 <CardContent className="p-0">
                   <div className="px-4 py-3 border-b border-gray-100">
                     <h3 className="font-semibold text-gray-900 text-sm">Notificações</h3>
@@ -209,43 +202,70 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             <Button
               variant="ghost"
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 p-2 hover:bg-slate-50 transition-colors rounded-full"
+              className="flex items-center gap-3 p-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors rounded-lg"
               aria-haspopup="menu"
               aria-expanded={showUserMenu}
             >
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8 ring-2 ring-slate-600">
                 <AvatarImage 
                   src={preferredAvatarUrl} 
                   alt="Foto de perfil"
                   className="object-cover"
                 />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-sm">
+                <AvatarFallback className="bg-slate-600 text-white font-semibold text-sm">
                   {getInitials(preferredDisplayName)}
                 </AvatarFallback>
               </Avatar>
-              <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
+              <div className="text-left hidden sm:block">
+                <p className="text-sm font-medium text-white leading-tight">
+                  {preferredDisplayName || 'Usuário'}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {getRoleLabel((profile?.role || user?.role) || '')}
+                </p>
+              </div>
+              <ChevronDown className="w-4 h-4 text-slate-400" />
             </Button>
 
             {/* User Dropdown */}
             {showUserMenu && (
-              <Card className="absolute right-0 mt-2 w-48 bg-white shadow-xl border border-gray-200 z-[9999] rounded-2xl">
-                <CardContent className="p-2">
-                  <div className="px-3 py-2 border-b border-gray-100 sm:hidden">
-                    <p className="text-sm font-medium text-gray-900 break-words">
-                      {preferredDisplayName}
-                    </p>
-                    <Badge variant={getRoleBadgeVariant((profile?.role || user?.role) || '')} className="text-xs mt-1">
-                      {getRoleLabel((profile?.role || user?.role) || '')}
-                    </Badge>
+              <Card className="absolute right-0 mt-2 w-64 bg-white shadow-xl border border-gray-200 z-[9999] rounded-lg">
+                <CardContent className="p-3">
+                  <div className="px-3 py-3 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage 
+                          src={preferredAvatarUrl} 
+                          alt="Foto de perfil"
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="bg-slate-600 text-white font-semibold">
+                          {getInitials(preferredDisplayName)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900 break-words">
+                          {preferredDisplayName || 'Usuário'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {profile?.email || user?.email}
+                        </p>
+                        <Badge variant={getRoleBadgeVariant((profile?.role || user?.role) || '')} className="text-xs mt-1">
+                          {getRoleLabel((profile?.role || user?.role) || '')}
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    onClick={handleLogout}
-                    className="w-full justify-start gap-2 text-sm text-gray-700 hover:bg-slate-50 transition-colors rounded-lg"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sair</span>
-                  </Button>
+                  <div className="pt-2">
+                    <Button
+                      variant="ghost"
+                      onClick={handleLogout}
+                      className="w-full justify-start gap-2 text-sm text-gray-700 hover:bg-slate-50 transition-colors rounded-lg"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sair</span>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
