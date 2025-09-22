@@ -2229,6 +2229,7 @@ export type Database = {
       user_profiles: {
         Row: {
           created_at: string
+          default_empresa_id: string | null
           display_name: string
           id: string
           photo_path: string | null
@@ -2238,6 +2239,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_empresa_id?: string | null
           display_name?: string
           id: string
           photo_path?: string | null
@@ -2247,6 +2249,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_empresa_id?: string | null
           display_name?: string
           id?: string
           photo_path?: string | null
@@ -2254,7 +2257,15 @@ export type Database = {
           settings?: Json | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_default_empresa_id_fkey"
+            columns: ["default_empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {

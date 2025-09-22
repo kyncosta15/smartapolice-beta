@@ -21,6 +21,7 @@ import {
 import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
 import { N8NUploadService, N8NUploadMetadata, N8NResponse } from '@/services/n8nUploadService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -40,6 +41,7 @@ interface UploadFile {
 export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { activeEmpresaId, activeEmpresaName } = useTenant();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [environment, setEnvironment] = useState<'test' | 'production'>('test');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -86,10 +88,10 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   };
 
   const processFiles = async () => {
-    if (files.length === 0 || !user?.company) {
+    if (files.length === 0 || !activeEmpresaId || !activeEmpresaName) {
       toast({
-        title: "Nenhum arquivo",
-        description: "Adicione pelo menos um arquivo para processar",
+        title: "Erro de configuração",
+        description: "Empresa ativa não encontrada ou arquivo não selecionado",
         variant: "destructive",
       });
       return;
@@ -98,12 +100,12 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     setIsProcessing(true);
     
     try {
-      // Preparar metadados do usuário
+      // Preparar metadados da empresa ativa
       const metadata: N8NUploadMetadata = {
-        empresa_id: user.id,
-        empresa_nome: user.company,
-        user_id: user.id,
-        razao_social: user.company,
+        empresa_id: activeEmpresaId,
+        empresa_nome: activeEmpresaName,
+        user_id: user!.id,
+        razao_social: activeEmpresaName,
       };
 
       // Processar cada arquivo individualmente
@@ -150,30 +152,13 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
           // Chamar função para preencher dados vazios após o processamento
           try {
             console.log('Chamando preenchimento de dados vazios...');
-            const { data: { user } } = await supabase.auth.getUser();
             
-            if (user) {
-              const { data: userData } = await supabase
-                .from('users')
-                .select('company')
-                .eq('id', user.id)
-                .single();
-                
-              if (userData?.company) {
-                const { data: empresa } = await supabase
-                  .from('empresas')
-                  .select('id')
-                  .eq('nome', userData.company)
-                  .single();
-                  
-                if (empresa) {
-                  const { data: preencherResult } = await supabase.functions.invoke('preencher-dados-veiculos', {
-                    body: { empresaId: empresa.id }
-                  });
-                  
-                  console.log('Resultado do preenchimento:', preencherResult);
-                }
-              }
+            if (activeEmpresaId) {
+              const { data: preencherResult } = await supabase.functions.invoke('preencher-dados-veiculos', {
+                body: { empresaId: activeEmpresaId }
+              });
+              
+              console.log('Resultado do preenchimento:', preencherResult);
             }
           } catch (error) {
             console.warn('Erro ao preencher dados vazios:', error);

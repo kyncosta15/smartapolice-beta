@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from '@/contexts/AuthContext';
+import { TenantProvider } from '@/contexts/TenantContext';
 import { LandingPage } from "@/components/LandingPage";
 
 // Temporary: Regular imports to isolate lazy loading issue
@@ -27,6 +28,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
+          <TenantProvider>
           <BrowserRouter>
             <Routes>
               {/* Public routes */}
@@ -64,6 +66,7 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+        </TenantProvider>
         </AuthProvider>
         <Toaster />
         <Sonner />
