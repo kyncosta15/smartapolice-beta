@@ -1892,6 +1892,36 @@ export type Database = {
           },
         ]
       }
+      user_profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          photo_path: string | null
+          photo_url: string | null
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          id: string
+          photo_path?: string | null
+          photo_url?: string | null
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          photo_path?: string | null
+          photo_url?: string | null
+          settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar: string | null
