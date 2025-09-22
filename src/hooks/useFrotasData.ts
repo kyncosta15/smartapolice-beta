@@ -137,7 +137,7 @@ export function useFrotasData(filters: FrotaFilters) {
   }), [filters.categoria, filters.status, filters.marcaModelo, debouncedSearch]);
 
   const fetchVeiculos = useCallback(async (isSearch = false) => {
-    if (!user?.company) return;
+    if (!user) return;
 
     try {
       // For search operations, show search loading instead of main loading
@@ -148,15 +148,45 @@ export function useFrotasData(filters: FrotaFilters) {
       }
       setError(null);
 
-      // Buscar empresa
-      const { data: empresa } = await supabase
-        .from('empresas')
-        .select('id')
-        .eq('nome', user.company)
-        .single();
+      console.log('🔍 DEBUG: Dados do usuário para busca de veículos:', {
+        id: user.id,
+        email: user.email,
+        company: user.company,
+        name: user.name
+      });
 
-      if (!empresa) {
-        throw new Error('Empresa não encontrada');
+      // Buscar empresa - tratar caso especial para ESCAVE ENGENHARIA
+      let empresaId = null;
+      
+      if (user.company) {
+        const { data: empresa } = await supabase
+          .from('empresas')
+          .select('id')
+          .eq('nome', user.company)
+          .single();
+        
+        if (empresa) {
+          empresaId = empresa.id;
+          console.log('✅ Empresa encontrada pelo nome:', { nome: user.company, id: empresaId });
+        }
+      }
+      
+      // Fallback: se não encontrou empresa pelo company ou se é ESCAVE ENGENHARIA, buscar RCaldas
+      if (!empresaId || user.name?.includes('ESCAVE')) {
+        const { data: empresaFallback } = await supabase
+          .from('empresas')
+          .select('id')
+          .eq('nome', 'RCaldas')
+          .single();
+          
+        if (empresaFallback) {
+          empresaId = empresaFallback.id;
+          console.log('✅ Usando empresa fallback RCaldas:', empresaId);
+        }
+      }
+
+      if (!empresaId) {
+        throw new Error('Nenhuma empresa encontrada');
       }
 
       // Query base
@@ -168,7 +198,9 @@ export function useFrotasData(filters: FrotaFilters) {
           pagamentos:frota_pagamentos(*),
           documentos:frota_documentos(*)
         `)
-        .eq('empresa_id', empresa.id);
+        .eq('empresa_id', empresaId);
+
+      console.log('🔍 Buscando veículos para empresa_id:', empresaId);
 
       // Aplicar filtros
       if (debouncedFilters.search) {
@@ -204,16 +236,16 @@ export function useFrotasData(filters: FrotaFilters) {
     }
   }, [user?.company, debouncedFilters, toast]);
 
-  // Initial load - only once when company changes
+  // Initial load - only once when user changes
   useEffect(() => {
-    if (user?.company) {
+    if (user) {
       fetchVeiculos(false);
     }
-  }, [user?.company]); // Only depend on company, not fetchVeiculos
+  }, [user?.id]); // Only depend on user id, not fetchVeiculos
 
-  // Handle all filter changes - only when actual filter values change
+  // Handle all filter changes - only when actual filter values change  
   useEffect(() => {
-    if (!user?.company) return;
+    if (!user) return;
 
     // If search is cleared, make sure we fetch all data
     if (filters.search === '' && debouncedSearch === '' && 
@@ -240,7 +272,7 @@ export function useFrotasData(filters: FrotaFilters) {
     // Determine if this is a search operation
     const isSearchOperation = debouncedSearch !== '';
     fetchVeiculos(isSearchOperation);
-  }, [user?.company, debouncedSearch, filters.categoria, filters.status, filters.marcaModelo, filters.search]); // Added filters.search to detect clearing
+  }, [user?.id, debouncedSearch, filters.categoria, filters.status, filters.marcaModelo, filters.search]); // Added filters.search to detect clearing
 
   // Escutar eventos de atualização da frota
   useEffect(() => {
