@@ -963,6 +963,8 @@ export type Database = {
         Row: {
           ano_modelo: number | null
           categoria: string | null
+          chassi: string | null
+          codigo: string | null
           consorcio_cota: string | null
           consorcio_grupo: string | null
           consorcio_taxa_adm: number | null
@@ -971,10 +973,12 @@ export type Database = {
           data_venc_ultima_parcela: string | null
           empresa_id: string
           id: string
+          localizacao: string | null
           marca: string | null
           modalidade_compra: string | null
           modelo: string | null
           observacoes: string | null
+          origem_planilha: string | null
           percentual_tabela: number | null
           placa: string
           preco_fipe: number | null
@@ -990,6 +994,8 @@ export type Database = {
         Insert: {
           ano_modelo?: number | null
           categoria?: string | null
+          chassi?: string | null
+          codigo?: string | null
           consorcio_cota?: string | null
           consorcio_grupo?: string | null
           consorcio_taxa_adm?: number | null
@@ -998,10 +1004,12 @@ export type Database = {
           data_venc_ultima_parcela?: string | null
           empresa_id: string
           id?: string
+          localizacao?: string | null
           marca?: string | null
           modalidade_compra?: string | null
           modelo?: string | null
           observacoes?: string | null
+          origem_planilha?: string | null
           percentual_tabela?: number | null
           placa: string
           preco_fipe?: number | null
@@ -1017,6 +1025,8 @@ export type Database = {
         Update: {
           ano_modelo?: number | null
           categoria?: string | null
+          chassi?: string | null
+          codigo?: string | null
           consorcio_cota?: string | null
           consorcio_grupo?: string | null
           consorcio_taxa_adm?: number | null
@@ -1025,10 +1035,12 @@ export type Database = {
           data_venc_ultima_parcela?: string | null
           empresa_id?: string
           id?: string
+          localizacao?: string | null
           marca?: string | null
           modalidade_compra?: string | null
           modelo?: string | null
           observacoes?: string | null
+          origem_planilha?: string | null
           percentual_tabela?: number | null
           placa?: string
           preco_fipe?: number | null
