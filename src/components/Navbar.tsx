@@ -16,8 +16,8 @@ interface NavbarProps {
 
 export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { logout, user } = useAuth(); // Buscar user do AuthContext
-  const { profile: userProfile } = useUserProfile(); // Usar apenas useUserProfile para dados
+  const { logout, user } = useAuth();
+  const { profile: userProfile, memberships, activeEmpresa } = useUserProfile();
   const { toast } = useToast();
 
   const getRoleLabel = (role: string) => {
@@ -66,9 +66,12 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
     }
   };
 
-  // Definir fonte preferida para avatar e nome usando empresa quando disponível
-  const preferredAvatarUrl = userProfile?.photo_url;
-  const preferredDisplayName = user?.company || userProfile?.display_name || user?.name || 'Usuário';
+  // Use profile data with proper fallbacks
+  const preferredAvatarUrl = userProfile?.avatar_url || userProfile?.photo_url;
+  const preferredDisplayName = userProfile?.display_name || user?.name || user?.email?.split('@')[0] || 'Usuário';
+  
+  // Get active empresa name
+  const activeEmpresaName = memberships.find(m => m.empresa_id === activeEmpresa)?.empresa?.nome;
 
   return (
     <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
@@ -117,7 +120,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                   {preferredDisplayName || 'Usuário'}
                 </p>
                 <p className="text-xs text-gray-500">
-                  Gestão de perfil
+                  {activeEmpresaName || 'Gestão de perfil'}
                 </p>
               </div>
               <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -144,11 +147,13 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                           {preferredDisplayName || 'Usuário'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {userProfile?.id ? 'Perfil ativo' : 'Carregando...'}
+                          {activeEmpresaName || 'Carregando...'}
                         </p>
-                        <Badge variant="secondary" className="text-xs mt-1">
-                          Usuário
-                        </Badge>
+                        {memberships.length > 0 && (
+                          <Badge variant="secondary" className="text-xs mt-1">
+                            {memberships.find(m => m.empresa_id === activeEmpresa)?.role === 'admin' ? 'Admin' : 'Usuário'}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>

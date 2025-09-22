@@ -1,29 +1,40 @@
 import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Camera, User, Save, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Save, Upload, User, Mail, Building, Shield, Loader2, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 
-export const UserProfile = () => {
-  const { user, profile: authProfile } = useAuth();
-  const { profile, loading: profileLoading, updateDisplayName, updateAvatar, removeAvatar } = useUserProfile();
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+export function UserProfile() {
+  const { user } = useAuth();
+  const { 
+    profile, 
+    memberships, 
+    activeEmpresa, 
+    loading, 
+    updateDisplayName, 
+    updateAvatar, 
+    removeAvatar,
+    setDefaultEmpresa
+  } = useUserProfile();
+  
+  const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [displayName, setDisplayName] = useState(profile?.display_name || authProfile?.full_name || user?.name || '');
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
-  // Sincronizar displayName quando profile mudar
   React.useEffect(() => {
-    setDisplayName(profile?.display_name || authProfile?.full_name || user?.name || '');
-  }, [profile, authProfile, user]);
+    if (profile?.display_name) {
+      setDisplayName(profile.display_name);
+    }
+  }, [profile?.display_name]);
 
   const getInitials = (name: string) => {
     return name
@@ -36,43 +47,41 @@ export const UserProfile = () => {
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Criar preview imediatamente
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreviewImage(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-    
-    // Upload da imagem
-    handleImageUpload(file);
+    if (file) {
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        // Preview could be implemented here if needed
+      };
+      reader.readAsDataURL(file);
+      
+      handleImageUpload(file);
+    }
   };
 
   const handleImageUpload = async (file: File) => {
-    if (!user?.id) return;
-
     setIsUploading(true);
-    
     try {
-      await updateAvatar(file);
+      const result = await updateAvatar(file);
       
+      if (result.success) {
+        toast({
+          title: "Avatar atualizado",
+          description: "Sua foto de perfil foi atualizada com sucesso!",
+        });
+      } else {
+        toast({
+          title: "Erro ao atualizar avatar",
+          description: result.error || "Ocorreu um erro inesperado.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Sucesso",
-        description: "Foto de perfil atualizada com sucesso!"
+        title: "Erro ao atualizar avatar",
+        description: "Ocorreu um erro inesperado.",
+        variant: "destructive",
       });
-
-      // Limpar preview após sucesso
-      setPreviewImage(null);
-
-    } catch (error: any) {
-      console.error('Erro no upload:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao fazer upload da imagem.",
-        variant: "destructive"
-      });
-      setPreviewImage(null);
     } finally {
       setIsUploading(false);
     }
@@ -81,29 +90,34 @@ export const UserProfile = () => {
   const handleUpdateName = async () => {
     if (!displayName.trim()) {
       toast({
-        title: "Erro",
-        description: "Nome é obrigatório.",
-        variant: "destructive"
+        title: "Nome inválido",
+        description: "Por favor, insira um nome válido.",
+        variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
-    
     try {
-      await updateDisplayName(displayName);
+      const result = await updateDisplayName(displayName.trim());
       
+      if (result.success) {
+        toast({
+          title: "Nome atualizado",
+          description: "Seu nome de exibição foi atualizado com sucesso!",
+        });
+      } else {
+        toast({
+          title: "Erro ao atualizar nome",
+          description: result.error || "Ocorreu um erro inesperado.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Sucesso",
-        description: "Nome atualizado com sucesso!"
-      });
-
-    } catch (error: any) {
-      console.error('Erro ao atualizar nome:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao atualizar o nome.",
-        variant: "destructive"
+        title: "Erro ao atualizar nome",
+        description: "Ocorreu um erro inesperado.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -112,176 +126,218 @@ export const UserProfile = () => {
 
   const handleRemoveAvatar = async () => {
     setIsUploading(true);
-    
     try {
-      await removeAvatar();
+      const result = await removeAvatar();
       
+      if (result.success) {
+        toast({
+          title: "Avatar removido",
+          description: "Sua foto de perfil foi removida com sucesso!",
+        });
+      } else {
+        toast({
+          title: "Erro ao remover avatar",
+          description: result.error || "Ocorreu um erro inesperado.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Sucesso",
-        description: "Foto de perfil removida com sucesso!"
-      });
-
-    } catch (error: any) {
-      console.error('Erro ao remover foto:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao remover a foto.",
-        variant: "destructive"
+        title: "Erro ao remover avatar",
+        description: "Ocorreu um erro inesperado.",
+        variant: "destructive",
       });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const currentAvatarUrl = previewImage || profile?.photo_url || authProfile?.avatar_url || (user as any)?.avatar_url;
+  const handleEmpresaChange = async (empresaId: string) => {
+    try {
+      const result = await setDefaultEmpresa(empresaId);
+      
+      if (result.success) {
+        toast({
+          title: "Empresa padrão alterada",
+          description: "Sua empresa padrão foi atualizada com sucesso!",
+        });
+      } else {
+        toast({
+          title: "Erro ao alterar empresa",
+          description: result.error || "Ocorreu um erro inesperado.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao alterar empresa",
+        description: "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">Carregando perfil...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Meu Perfil</h2>
-        <p className="text-gray-600 mt-2">Gerencie suas informações pessoais</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Foto de Perfil */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Camera className="h-5 w-5" />
-              Foto de Perfil
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="relative">
-                <Avatar className="h-32 w-32 border-4 border-gray-200">
-                  <AvatarImage 
-                    src={currentAvatarUrl} 
-                    alt="Foto de perfil" 
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="bg-primary text-white text-2xl">
-                    {getInitials(displayName || profile?.display_name || authProfile?.full_name || user?.name || 'U')}
-                  </AvatarFallback>
-                </Avatar>
-                {isUploading && (
-                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 text-white animate-spin" />
-                  </div>
-                )}
-              </div>
+    <div className="container mx-auto p-6 max-w-2xl">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="w-5 h-5" />
+            Meu Perfil
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Avatar Section */}
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <Avatar className="w-24 h-24">
+                <AvatarImage 
+                  src={profile?.avatar_url || profile?.photo_url} 
+                  alt="Foto de perfil"
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-slate-600 text-white text-xl font-semibold">
+                  {getInitials(displayName || user?.email?.split('@')[0] || 'U')}
+                </AvatarFallback>
+              </Avatar>
               
-              <div className="text-center space-y-2">
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    variant="outline"
-                    disabled={isUploading}
-                    className="flex-1"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {isUploading ? 'Enviando...' : 'Alterar Foto'}
-                  </Button>
-                  {(profile?.photo_url || currentAvatarUrl) && (
-                    <Button
-                      onClick={handleRemoveAvatar}
-                      variant="outline"
-                      disabled={isUploading}
-                      size="icon"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500">
-                  JPG, PNG, WebP, GIF até 5MB
-                </p>
-              </div>
+              <Button
+                size="sm"
+                className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                <Camera className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                {isUploading ? 'Enviando...' : 'Alterar Foto'}
+              </Button>
+              
+              {profile?.avatar_url && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveAvatar}
+                  disabled={isUploading}
+                  className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Remover
+                </Button>
+              )}
             </div>
 
             <input
-              type="file"
               ref={fileInputRef}
-              onChange={handleImageSelect}
+              type="file"
               accept="image/*"
+              onChange={handleImageSelect}
               className="hidden"
             />
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Informações Pessoais */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Informações Pessoais
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="displayName">Nome de Exibição</Label>
-              <Input
-                id="displayName"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Seu nome completo"
-              />
+          {/* Personal Information */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="display-name">Nome de Exibição</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="display-name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Digite seu nome de exibição"
+                />
+                <Button
+                  onClick={handleUpdateName}
+                  disabled={isLoading || !displayName.trim() || displayName === profile?.display_name}
+                  className="flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {isLoading ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={authProfile?.email || user?.email || ''}
-                disabled
+            <div>
+              <Label>Email</Label>
+              <Input 
+                value={user?.email || ''} 
+                disabled 
                 className="bg-gray-50"
               />
-              <p className="text-xs text-gray-500">
-                O email não pode ser alterado
-              </p>
             </div>
 
-            <div className="space-y-2">
-              <Label>Empresa</Label>
-              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                <Building className="h-4 w-4 text-gray-500" />
-                <span>{authProfile?.company || (user as any)?.company || 'Não informado'}</span>
+            {/* Company Selection */}
+            {memberships.length > 0 && (
+              <div>
+                <Label>Empresa Ativa</Label>
+                <Select
+                  value={activeEmpresa || ''}
+                  onValueChange={handleEmpresaChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {memberships.map((membership) => (
+                      <SelectItem key={membership.empresa_id} value={membership.empresa_id}>
+                        <div className="flex items-center gap-2">
+                          <span>{membership.empresa?.nome}</span>
+                          <Badge variant={membership.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
+                            {membership.role === 'admin' ? 'Admin' : membership.role === 'owner' ? 'Owner' : 'Membro'}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
+            )}
 
-            <div className="space-y-2">
-              <Label>Função</Label>
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-gray-500" />
-                <Badge variant={authProfile?.role === 'administrador' ? 'default' : 'secondary'}>
-                  {authProfile?.role === 'administrador' ? 'Administrador' : 
-                   authProfile?.role === 'rh' ? 'RH' : 
-                   authProfile?.role === 'cliente' ? 'Cliente' : 'Usuário'}
-                </Badge>
+            {/* Memberships */}
+            {memberships.length > 1 && (
+              <div>
+                <Label>Suas Empresas</Label>
+                <div className="space-y-2">
+                  {memberships.map((membership) => (
+                    <div key={membership.empresa_id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <div className="font-medium">{membership.empresa?.nome}</div>
+                        <div className="text-sm text-gray-500">ID: {membership.empresa_id}</div>
+                      </div>
+                      <Badge variant={membership.role === 'admin' ? 'default' : 'secondary'}>
+                        {membership.role === 'admin' ? 'Admin' : membership.role === 'owner' ? 'Owner' : 'Membro'}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            <Button 
-              onClick={handleUpdateName}
-              disabled={isLoading || !displayName.trim()}
-              className="w-full"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar Alterações
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
+}

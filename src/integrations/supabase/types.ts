@@ -705,6 +705,60 @@ export type Database = {
           },
         ]
       }
+      documentos: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          empresa_id: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          original_name: string | null
+          tipo: string
+          veiculo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          empresa_id: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          original_name?: string | null
+          tipo: string
+          veiculo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          empresa_id?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          original_name?: string | null
+          tipo?: string
+          veiculo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_plans: {
         Row: {
           created_at: string | null
@@ -798,6 +852,7 @@ export type Database = {
           created_at: string
           id: string
           nome: string
+          slug: string | null
           updated_at: string
         }
         Insert: {
@@ -808,6 +863,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome: string
+          slug?: string | null
           updated_at?: string
         }
         Update: {
@@ -818,6 +874,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome?: string
+          slug?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1003,6 +1060,7 @@ export type Database = {
           consorcio_grupo: string | null
           consorcio_taxa_adm: number | null
           created_at: string
+          created_by: string | null
           data_venc_emplacamento: string | null
           data_venc_ultima_parcela: string | null
           empresa_id: string
@@ -1037,6 +1095,7 @@ export type Database = {
           consorcio_grupo?: string | null
           consorcio_taxa_adm?: number | null
           created_at?: string
+          created_by?: string | null
           data_venc_emplacamento?: string | null
           data_venc_ultima_parcela?: string | null
           empresa_id: string
@@ -1071,6 +1130,7 @@ export type Database = {
           consorcio_grupo?: string | null
           consorcio_taxa_adm?: number | null
           created_at?: string
+          created_by?: string | null
           data_venc_emplacamento?: string | null
           data_venc_ultima_parcela?: string | null
           empresa_id?: string
@@ -1100,33 +1160,39 @@ export type Database = {
       import_jobs: {
         Row: {
           created_at: string | null
+          created_by: string | null
           empresa_id: string
           id: string
           job_id: string
           payload: Json
           processed_at: string | null
+          source: string
           status: string | null
           summary: Json | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          created_by?: string | null
           empresa_id: string
           id?: string
           job_id: string
           payload: Json
           processed_at?: string | null
+          source?: string
           status?: string | null
           summary?: Json | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          created_by?: string | null
           empresa_id?: string
           id?: string
           job_id?: string
           payload?: Json
           processed_at?: string | null
+          source?: string
           status?: string | null
           summary?: Json | null
           updated_at?: string | null
@@ -2131,6 +2197,35 @@ export type Database = {
           },
         ]
       }
+      user_memberships: {
+        Row: {
+          created_at: string | null
+          empresa_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          empresa_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          empresa_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_memberships_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           created_at: string
@@ -2399,6 +2494,10 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      is_member_of: {
+        Args: { record_empresa_id: string }
+        Returns: boolean
       }
       rh_employee_request: {
         Args: {

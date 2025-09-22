@@ -1,278 +1,310 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-// Event emitter para notificar mudanças de perfil
+// Event emitter for profile changes
 class ProfileEventEmitter {
   private listeners: (() => void)[] = [];
 
-  subscribe(callback: () => void) {
-    this.listeners.push(callback);
+  subscribe(listener: () => void) {
+    this.listeners.push(listener);
     return () => {
-      this.listeners = this.listeners.filter(listener => listener !== callback);
+      this.listeners = this.listeners.filter(l => l !== listener);
     };
   }
 
   emit() {
-    this.listeners.forEach(callback => callback());
+    this.listeners.forEach(listener => listener());
   }
 }
 
 const profileEvents = new ProfileEventEmitter();
 
-type UserProfile = {
+export interface UserProfile {
   id: string;
-  display_name: string;
-  photo_url: string | null;
-  photo_path: string | null;
-  settings?: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-};
+  display_name?: string;
+  avatar_url?: string;
+  photo_url?: string;
+  photo_path?: string;
+  default_empresa_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserMembership {
+  user_id: string;
+  empresa_id: string;
+  role: string; // Allow any string from database
+  created_at?: string;
+  empresa?: {
+    id: string;
+    nome: string;
+    slug?: string;
+  };
+}
 
 export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [memberships, setMemberships] = useState<UserMembership[]>([]);
+  const [activeEmpresa, setActiveEmpresa] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
     try {
+      setLoading(true);
+      setError(null);
+
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) { 
-        setProfile(null); 
-        setLoading(false); 
-        return; 
+      if (!user) {
+        setProfile(null);
+        setMemberships([]);
+        setActiveEmpresa(null);
+        return;
       }
 
-      // Primeiro tentar buscar o perfil existente
-      const { data, error: fetchError } = await supabase
+      // Load user profile
+      const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
 
-      if (fetchError) {
-        throw fetchError;
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
       }
 
-      if (data) {
-        setProfile(data as UserProfile);
-      } else {
-        // Se não existe perfil, criar um
-        const { data: createData, error: createError } = await supabase
+      // If no profile exists, create one
+      if (!profileData) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('name, company')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const newProfile = {
+          id: user.id,
+          display_name: userData?.name || user.email?.split('@')[0] || 'Usuário',
+        };
+
+        const { data: createdProfile, error: createError } = await supabase
           .from('user_profiles')
-          .insert({
-            id: user.id,
-            display_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || ''
-          })
+          .insert(newProfile)
           .select()
           .single();
 
-        if (!createError && createData) {
-          setProfile(createData as UserProfile);
+        if (createError) {
+          console.warn('Could not create profile:', createError);
+          setProfile(newProfile);
+        } else {
+          setProfile(createdProfile);
         }
+      } else {
+        setProfile(profileData);
       }
-    } catch (err: any) {
-      console.error('Erro ao carregar perfil:', err);
-      setError(err.message);
+
+      // Load user memberships
+      const { data: membershipData, error: membershipError } = await supabase
+        .from('user_memberships')
+        .select(`
+          *,
+          empresa:empresas(id, nome, slug)
+        `)
+        .eq('user_id', user.id);
+
+      if (membershipError) {
+        throw membershipError;
+      }
+
+      setMemberships(membershipData || []);
+
+      // Set active empresa
+      const profileDefault = (profileData as any)?.default_empresa_id;
+      if (profileDefault) {
+        setActiveEmpresa(profileDefault);
+      } else if (membershipData && membershipData.length > 0) {
+        setActiveEmpresa(membershipData[0].empresa_id);
+      }
+
+    } catch (err) {
+      console.error('Error loading user profile:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load profile');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    load();
-    
-    // Listen to profile update events
-    const unsubscribeEvents = profileEvents.subscribe(() => {
-      console.log('🔄 Profile event received, reloading...');
-      load();
-    });
-    
-    // Setup subscriptions
-    const setupSubscriptions = async () => {
-      // Listen to auth changes
-      const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session?.user) {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           load();
-        } else {
+        } else if (event === 'SIGNED_OUT') {
           setProfile(null);
+          setMemberships([]);
+          setActiveEmpresa(null);
           setLoading(false);
         }
-      });
-
-      // Listen to real-time changes in user_profiles table
-      const { data: { user } } = await supabase.auth.getUser();
-      let realtimeSubscription: any = null;
-      
-      if (user) {
-        realtimeSubscription = supabase
-          .channel('user_profiles_changes')
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'user_profiles',
-              filter: `id=eq.${user.id}`
-            },
-            (payload) => {
-              console.log('🔄 Profile changed in real-time:', payload);
-              load(); // Reload profile when it changes
-            }
-          )
-          .subscribe();
       }
+    );
 
-      return { authSubscription, realtimeSubscription };
-    };
-
-    let subscriptions: any = null;
-    
-    setupSubscriptions().then((subs) => {
-      subscriptions = subs;
+    // Set up profile events listener
+    const unsubscribeEvents = profileEvents.subscribe(() => {
+      load();
     });
 
+    // Initial load
+    load();
+
     return () => {
+      subscription.unsubscribe();
       unsubscribeEvents();
-      if (subscriptions) {
-        subscriptions.authSubscription?.unsubscribe();
-        subscriptions.realtimeSubscription?.unsubscribe();
-      }
     };
   }, [load]);
 
-  const updateDisplayName = async (display_name: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Não autenticado');
-
-    const { error } = await supabase
-      .from('user_profiles')
-      .upsert({ 
-        id: user.id, 
-        display_name: display_name.trim() 
-      }, { 
-        onConflict: 'id' 
-      });
-
-    if (error) throw error;
-    await load();
-    
-    // Emit event to notify other components
-    profileEvents.emit();
-  };
-
-  const updateAvatar = async (file: File) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Não autenticado');
-
-    // Validação básica
-    if (file.size > 5 * 1024 * 1024) {
-      throw new Error('Arquivo muito grande. Máximo 5MB.');
-    }
-    
-    if (!/image\/(png|jpe?g|webp|gif)/.test(file.type)) {
-      throw new Error('Formato não suportado. Use JPG, PNG, WEBP ou GIF.');
-    }
-
-    // Gerar nome único para o arquivo
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const timestamp = Date.now();
-    const randomId = Math.random().toString(36).substring(2, 15);
-    const fileName = `${timestamp}-${randomId}.${ext}`;
-    const path = `${user.id}/${fileName}`;
-
+  const updateDisplayName = useCallback(async (display_name: string) => {
     try {
-      // Deletar arquivo anterior se existir
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ display_name })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      profileEvents.emit();
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating display name:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to update' };
+    }
+  }, []);
+
+  const updateAvatar = useCallback(async (file: File) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Validate file
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please select an image file');
+      }
+
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        throw new Error('Image must be smaller than 5MB');
+      }
+
+      // Delete old avatar if exists
       if (profile?.photo_path) {
         await supabase.storage
-          .from('avatars')
+          .from('profile-avatars')
           .remove([profile.photo_path]);
       }
 
-      // Upload do novo arquivo
+      // Upload new avatar
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(path, file, { 
-          upsert: false,
-          contentType: file.type 
-        });
+        .from('profile-avatars')
+        .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      // Obter URL pública
-      const { data: publicData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(path);
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-avatars')
+        .getPublicUrl(fileName);
 
-      const photo_url = publicData.publicUrl;
-
-      // Salvar no perfil
-      const { error: upsertError } = await supabase
+      // Update profile
+      const { error: updateError } = await supabase
         .from('user_profiles')
-        .upsert({ 
-          id: user.id, 
-          photo_url, 
-          photo_path: path 
-        }, { 
-          onConflict: 'id' 
-        });
+        .update({
+          avatar_url: publicUrl,
+          photo_url: publicUrl,
+          photo_path: fileName
+        })
+        .eq('id', user.id);
 
-      if (upsertError) throw upsertError;
+      if (updateError) throw updateError;
 
-      await load();
-      
-      // Emit event to notify other components
       profileEvents.emit();
-      
-    } catch (err: any) {
-      // Se o upload falhou, tentar limpar o arquivo
-      try {
-        await supabase.storage.from('avatars').remove([path]);
-      } catch {
-        // Ignorar erro de limpeza
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to update avatar' };
+    }
+  }, [profile?.photo_path]);
+
+  const removeAvatar = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Delete file from storage
+      if (profile?.photo_path) {
+        await supabase.storage
+          .from('profile-avatars')
+          .remove([profile.photo_path]);
       }
-      throw err;
+
+      // Update profile
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          avatar_url: null,
+          photo_url: null,
+          photo_path: null
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      profileEvents.emit();
+      return { success: true };
+    } catch (error) {
+      console.error('Error removing avatar:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to remove avatar' };
     }
-  };
+  }, [profile?.photo_path]);
 
-  const removeAvatar = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Não autenticado');
+  const setDefaultEmpresa = useCallback(async (empresaId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
 
-    if (profile?.photo_path) {
-      // Deletar arquivo do storage
-      await supabase.storage
-        .from('avatars')
-        .remove([profile.photo_path]);
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ default_empresa_id: empresaId } as any)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setActiveEmpresa(empresaId);
+      profileEvents.emit();
+      return { success: true };
+    } catch (error) {
+      console.error('Error setting default empresa:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to set default empresa' };
     }
+  }, []);
 
-    // Limpar URLs do perfil
-    const { error } = await supabase
-      .from('user_profiles')
-      .update({ 
-        photo_url: null, 
-        photo_path: null 
-      })
-      .eq('id', user.id);
+  const reloadProfile = useCallback(() => {
+    load();
+  }, [load]);
 
-    if (error) throw error;
-    await load();
-    
-    // Emit event to notify other components
-    profileEvents.emit();
-  };
-
-  return { 
-    profile, 
-    loading, 
+  return {
+    profile,
+    memberships,
+    activeEmpresa,
+    loading,
     error,
-    updateDisplayName, 
+    updateDisplayName,
     updateAvatar,
     removeAvatar,
-    reloadProfile: load 
+    setDefaultEmpresa,
+    reloadProfile
   };
 }
