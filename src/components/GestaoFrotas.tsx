@@ -14,7 +14,9 @@ import {
   Filter,
   FileText,
   Bell,
-  Shield
+  Shield,
+  Database,
+  RefreshCw
 } from 'lucide-react';
 import { FrotasDashboard } from './frotas/FrotasDashboard';
 import { FrotasTable } from './frotas/FrotasTable';
@@ -28,6 +30,8 @@ import { SinistrosDashboard } from './frotas/SinistrosDashboard';
 import { AssistenciaDashboard } from './frotas/AssistenciaDashboard';
 import { useFrotasData } from '@/hooks/useFrotasData';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface FrotaFilters {
   search: string;
@@ -38,7 +42,9 @@ export interface FrotaFilters {
 
 export function GestaoFrotas() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('frotas');
+  const [preenchendoDados, setPreenchendoDados] = useState(false);
   const [filters, setFilters] = useState<FrotaFilters>({
     search: '',
     marcaModelo: [],
@@ -95,6 +101,57 @@ export function GestaoFrotas() {
     });
   };
 
+  const handlePreencherDados = async () => {
+    if (!user?.company) {
+      toast({
+        title: "Erro",
+        description: "Empresa não encontrada",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setPreenchendoDados(true);
+    
+    try {
+      // Buscar empresa
+      const { data: empresa } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('nome', user.company)
+        .single();
+
+      if (!empresa) {
+        throw new Error('Empresa não encontrada');
+      }
+
+      // Chamar edge function
+      const { data, error } = await supabase.functions.invoke('preencher-dados-veiculos', {
+        body: { empresaId: empresa.id }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Dados preenchidos com sucesso!",
+        description: data.message,
+      });
+
+      // Recarregar dados
+      refetch();
+
+    } catch (error: any) {
+      console.error('Erro ao preencher dados:', error);
+      toast({
+        title: "Erro ao preencher dados",
+        description: error.message || "Ocorreu um erro inesperado",
+        variant: "destructive"
+      });
+    } finally {
+      setPreenchendoDados(false);
+    }
+  };
+
   if (error) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -129,6 +186,23 @@ export function GestaoFrotas() {
           </div>
           
           <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePreencherDados}
+              disabled={preenchendoDados}
+              className="flex items-center gap-2 h-10 px-3"
+            >
+              {preenchendoDados ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Database className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">
+                {preenchendoDados ? 'Preenchendo...' : 'Preencher Dados'}
+              </span>
+            </Button>
+            
             <Button
               variant="outline"
               size="sm"
