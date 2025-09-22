@@ -5,8 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Settings, 
   Bell, 
@@ -18,7 +17,9 @@ import {
   CreditCard,
   Menu,
   ArrowLeft,
-  User
+  User,
+  Monitor,
+  Globe
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from '@/components/UserProfile';
@@ -54,7 +55,6 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
   });
 
   const [activeSection, setActiveSection] = useState('profile');
-  const isMobile = useIsMobile();
   const { toast } = useToast();
 
   const sections = [
@@ -62,6 +62,7 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
     { value: 'notifications', label: 'Notificações', icon: Bell },
     { value: 'appearance', label: 'Aparência', icon: Palette },
     { value: 'security', label: 'Segurança', icon: Shield },
+    { value: 'system', label: 'Sistema', icon: Monitor },
     { value: 'integration', label: 'Integração', icon: Database },
     { value: 'billing', label: 'Cobrança', icon: CreditCard }
   ];
@@ -86,103 +87,135 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
   const renderContent = () => {
     switch (activeSection) {
       case 'profile':
-        return <UserProfile />;
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <User className="h-5 w-5 mr-2" />
+                Meu Perfil
+              </h3>
+              <p className="text-gray-600 mb-6">Gerencie suas informações pessoais</p>
+            </div>
+            <UserProfile />
+          </div>
+        );
 
       case 'notifications':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                 <Bell className="h-5 w-5 mr-2" />
                 Preferências de Notificação
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-medium text-gray-900">Canais de Notificação</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="email-notifications">E-mail</Label>
-                      <Switch
-                        id="email-notifications"
-                        checked={settings.notifications.email}
-                        onCheckedChange={(checked) => updateSetting('notifications', 'email', checked)}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="push-notifications">Push</Label>
-                      <Switch
-                        id="push-notifications"
-                        checked={settings.notifications.push}
-                        onCheckedChange={(checked) => updateSetting('notifications', 'push', checked)}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="sms-notifications">SMS</Label>
-                      <Switch
-                        id="sms-notifications"
-                        checked={settings.notifications.sms}
-                        onCheckedChange={(checked) => updateSetting('notifications', 'sms', checked)}
-                      />
-                    </div>
-                  </div>
-                </div>
+              </h3>
+              <p className="text-gray-600 mb-6">Configure como e quando receber notificações</p>
+            </div>
 
-                <div className="space-y-4">
-                  <h3 className="font-medium text-gray-900">Alertas de Vencimento</h3>
-                  <div className="space-y-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Canais de Notificação</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="vencimento-days">Avisar com antecedência (dias)</Label>
-                      <Select
-                        value={settings.notifications.vencimento.toString()}
-                        onValueChange={(value) => updateSetting('notifications', 'vencimento', parseInt(value))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="7">7 dias</SelectItem>
-                          <SelectItem value="15">15 dias</SelectItem>
-                          <SelectItem value="30">30 dias</SelectItem>
-                          <SelectItem value="60">60 dias</SelectItem>
-                          <SelectItem value="90">90 dias</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="email-notifications">E-mail</Label>
+                      <p className="text-sm text-gray-500">Receber notificações por e-mail</p>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="renovacao-alerts">Alertas de renovação</Label>
-                      <Switch
-                        id="renovacao-alerts"
-                        checked={settings.notifications.renovacao}
-                        onCheckedChange={(checked) => updateSetting('notifications', 'renovacao', checked)}
-                      />
-                    </div>
+                    <Switch
+                      id="email-notifications"
+                      checked={settings.notifications.email}
+                      onCheckedChange={(checked) => updateSetting('notifications', 'email', checked)}
+                    />
                   </div>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <Button onClick={() => handleSave('notificações')} className="bg-blue-600 hover:bg-blue-700">
-                  Salvar Configurações
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="push-notifications">Push</Label>
+                      <p className="text-sm text-gray-500">Notificações do navegador</p>
+                    </div>
+                    <Switch
+                      id="push-notifications"
+                      checked={settings.notifications.push}
+                      onCheckedChange={(checked) => updateSetting('notifications', 'push', checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="sms-notifications">SMS</Label>
+                      <p className="text-sm text-gray-500">Mensagens de texto</p>
+                    </div>
+                    <Switch
+                      id="sms-notifications"
+                      checked={settings.notifications.sms}
+                      onCheckedChange={(checked) => updateSetting('notifications', 'sms', checked)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Alertas de Vencimento</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="vencimento-days">Avisar com antecedência (dias)</Label>
+                    <Select
+                      value={settings.notifications.vencimento.toString()}
+                      onValueChange={(value) => updateSetting('notifications', 'vencimento', parseInt(value))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="7">7 dias</SelectItem>
+                        <SelectItem value="15">15 dias</SelectItem>
+                        <SelectItem value="30">30 dias</SelectItem>
+                        <SelectItem value="60">60 dias</SelectItem>
+                        <SelectItem value="90">90 dias</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="renovacao-alerts">Alertas de renovação</Label>
+                      <p className="text-sm text-gray-500">Notificar sobre renovações</p>
+                    </div>
+                    <Switch
+                      id="renovacao-alerts"
+                      checked={settings.notifications.renovacao}
+                      onCheckedChange={(checked) => updateSetting('notifications', 'renovacao', checked)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="pt-4 border-t">
+              <Button onClick={() => handleSave('notificações')} className="bg-blue-600 hover:bg-blue-700">
+                Salvar Configurações
+              </Button>
+            </div>
+          </div>
         );
 
       case 'appearance':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                 <Palette className="h-5 w-5 mr-2" />
                 Personalização da Interface
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+              </h3>
+              <p className="text-gray-600 mb-6">Customize a aparência do sistema</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Tema e Idioma</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="theme-select">Tema</Label>
                     <Select
@@ -216,41 +249,54 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Layout</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="compact-view">Visualização compacta</Label>
+                    <div>
+                      <Label htmlFor="compact-view">Visualização compacta</Label>
+                      <p className="text-sm text-gray-500">Interface mais densa</p>
+                    </div>
                     <Switch
                       id="compact-view"
                       checked={settings.appearance.compactView}
                       onCheckedChange={(checked) => updateSetting('appearance', 'compactView', checked)}
                     />
                   </div>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <Button onClick={() => handleSave('aparência')} className="bg-blue-600 hover:bg-blue-700">
-                  Salvar Configurações
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="pt-4 border-t">
+              <Button onClick={() => handleSave('aparência')} className="bg-blue-600 hover:bg-blue-700">
+                Salvar Configurações
+              </Button>
+            </div>
+          </div>
         );
 
       case 'security':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                 <Shield className="h-5 w-5 mr-2" />
                 Configurações de Segurança
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+              </h3>
+              <p className="text-gray-600 mb-6">Gerencie suas configurações de segurança e privacidade</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Autenticação</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="two-factor">Autenticação de dois fatores</Label>
@@ -274,9 +320,14 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
                       onCheckedChange={(checked) => updateSetting('security', 'autoLogout', checked)}
                     />
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Sessão</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="session-timeout">Timeout da sessão (minutos)</Label>
                     <Select
@@ -294,30 +345,100 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <Button onClick={() => handleSave('segurança')} className="bg-blue-600 hover:bg-blue-700">
-                  Salvar Configurações
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="pt-4 border-t">
+              <Button onClick={() => handleSave('segurança')} className="bg-blue-600 hover:bg-blue-700">
+                Salvar Configurações
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'system':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <Monitor className="h-5 w-5 mr-2" />
+                Configurações do Sistema
+              </h3>
+              <p className="text-gray-600 mb-6">Gerencie as configurações gerais do sistema</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Performance</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Cache automático</Label>
+                      <p className="text-sm text-gray-500">Melhorar velocidade de carregamento</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Compressão de imagens</Label>
+                      <p className="text-sm text-gray-500">Otimizar tamanho das imagens</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Logs do Sistema</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Log de atividades</Label>
+                      <p className="text-sm text-gray-500">Registrar ações dos usuários</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Log de erros</Label>
+                      <p className="text-sm text-gray-500">Registrar erros do sistema</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Button onClick={() => handleSave('sistema')} className="bg-blue-600 hover:bg-blue-700">
+                Salvar Configurações
+              </Button>
+            </div>
+          </div>
         );
 
       case 'integration':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                 <Database className="h-5 w-5 mr-2" />
                 Backup e Integração
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+              </h3>
+              <p className="text-gray-600 mb-6">Configure backups e integrações externas</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Backup Automático</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="auto-sync">Sincronização automática</Label>
@@ -347,9 +468,14 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Exportação de Dados</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="export-format">Formato de exportação padrão</Label>
                     <Select
@@ -378,62 +504,93 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
                       Importar Dados
                     </Button>
                   </div>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <Button onClick={() => handleSave('integração')} className="bg-blue-600 hover:bg-blue-700">
-                  Salvar Configurações
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="pt-4 border-t">
+              <Button onClick={() => handleSave('integração')} className="bg-blue-600 hover:bg-blue-700">
+                Salvar Configurações
+              </Button>
+            </div>
+          </div>
         );
 
       case 'billing':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                 <CreditCard className="h-5 w-5 mr-2" />
                 Plano e Cobrança
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <h3 className="font-semibold text-blue-800 mb-2">Plano Atual: Profissional</h3>
-                <p className="text-blue-700 text-sm">R$ 99/mês • Próxima cobrança: 20/01/2025</p>
+              </h3>
+              <p className="text-gray-600 mb-6">Gerencie seu plano e informações de pagamento</p>
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-blue-800 text-lg">Plano Atual: Profissional</h3>
+                  <p className="text-blue-700 text-sm mt-1">R$ 99/mês • Próxima cobrança: 20/01/2025</p>
+                </div>
+                <div className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                  Ativo
+                </div>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-medium text-gray-900">Recursos Inclusos</h3>
-                  <ul className="space-y-2 text-sm text-gray-600">
-                    <li>✓ Apólices ilimitadas</li>
-                    <li>✓ IA para análise de documentos</li>
-                    <li>✓ Relatórios avançados</li>
-                    <li>✓ Suporte prioritário</li>
-                    <li>✓ API completa</li>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Recursos Inclusos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 text-sm text-gray-600">
+                    <li className="flex items-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                      Apólices ilimitadas
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                      IA para análise de documentos
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                      Relatórios avançados
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                      Suporte prioritário
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                      API completa
+                    </li>
                   </ul>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="font-medium text-gray-900">Ações</h3>
-                  <div className="space-y-2">
-                    <Button variant="outline" className="w-full">
-                      Alterar Plano
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      Histórico de Faturas
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      Atualizar Pagamento
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Ações</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button variant="outline" className="w-full justify-start">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Alterar Plano
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Download className="h-4 w-4 mr-2" />
+                    Histórico de Faturas
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Atualizar Pagamento
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         );
 
       default:
@@ -442,64 +599,48 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <Sidebar className="border-r">
-          <SidebarContent>
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-6">
-                <Settings className="h-6 w-6 text-blue-600" />
-                <h2 className="font-semibold text-lg">Configurações</h2>
-              </div>
-              
-              <SidebarMenu>
-                {sections.map((section) => (
-                  <SidebarMenuItem key={section.value}>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection(section.value)}
-                      isActive={activeSection === section.value}
-                      className="w-full justify-start"
-                    >
-                      <section.icon className="h-4 w-4" />
-                      <span>{section.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Configurações</h1>
+              <p className="text-gray-600 mt-1">Gerencie suas preferências e configurações do sistema</p>
             </div>
-          </SidebarContent>
-        </Sidebar>
-
-        <div className="flex-1 p-6">
-          {/* Header com trigger para mobile */}
-          <div className="flex items-center gap-4 mb-6 md:hidden">
-            <SidebarTrigger>
-              <Menu className="h-6 w-6" />
-            </SidebarTrigger>
-            <h1 className="text-xl font-semibold">Configurações</h1>
-          </div>
-          
-          {/* Header para desktop com botão voltar */}
-          <div className="hidden md:flex items-center gap-4 mb-6">
             {onBackToHome && (
-              <Button
-                variant="ghost" 
-                onClick={onBackToHome}
-                className="flex items-center gap-2 text-muted-foreground hover:text-primary"
-              >
+              <Button variant="ghost" onClick={onBackToHome} className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Voltar ao Dashboard
               </Button>
             )}
-            <h1 className="text-xl font-semibold ml-auto">Configurações</h1>
-          </div>
-          
-          {/* Conteúdo principal */}
-          <div className="space-y-6">
-            {renderContent()}
           </div>
         </div>
+
+        {/* Tabs */}
+        <Tabs value={activeSection} onValueChange={setActiveSection} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 mb-8">
+            {sections.map((section) => (
+              <TabsTrigger 
+                key={section.value} 
+                value={section.value}
+                className="flex items-center gap-2 text-xs sm:text-sm"
+              >
+                <section.icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{section.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <div className="bg-white rounded-lg shadow-sm border min-h-[600px]">
+            {sections.map((section) => (
+              <TabsContent key={section.value} value={section.value} className="p-6 sm:p-8">
+                {renderContent()}
+              </TabsContent>
+            ))}
+          </div>
+        </Tabs>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
