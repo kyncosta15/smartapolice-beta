@@ -25,6 +25,7 @@ export interface FrotaVeiculo {
   empresa_id: string;
   placa: string;
   renavam?: string;
+  chassi?: string;
   marca?: string;
   modelo?: string;
   ano_modelo?: number;
@@ -43,6 +44,9 @@ export interface FrotaVeiculo {
   consorcio_cota?: string;
   consorcio_taxa_adm?: number;
   data_venc_ultima_parcela?: string;
+  localizacao?: string;
+  codigo?: string;
+  origem_planilha?: string;
   observacoes?: string;
   created_at: string;
   updated_at: string;
