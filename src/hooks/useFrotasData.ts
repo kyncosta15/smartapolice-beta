@@ -104,6 +104,7 @@ export interface FrotaFilters {
 export interface FrotaKPIs {
   totalVeiculos: number;
   semSeguro: number;
+  veiculosSegurados: number;
   emplacamentoVencido: number;
   proximoVencimento: number;
   valorizacaoMedia: number;
@@ -259,6 +260,7 @@ export function useFrotasData(filters: FrotaFilters) {
 
     const totalVeiculos = veiculos.length;
     const semSeguro = veiculos.filter(v => v.status_seguro === 'sem_seguro').length;
+    const veiculosSegurados = veiculos.filter(v => v.status_seguro === 'segurado' || v.status_seguro === 'com_seguro').length;
     
     const emplacamentoVencido = veiculos.filter(v => {
       if (!v.data_venc_emplacamento) return false;
@@ -287,6 +289,7 @@ export function useFrotasData(filters: FrotaFilters) {
     return {
       totalVeiculos,
       semSeguro,
+      veiculosSegurados,
       emplacamentoVencido,
       proximoVencimento,
       valorizacaoMedia,

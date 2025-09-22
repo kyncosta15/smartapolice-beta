@@ -74,17 +74,17 @@ export function FrotasKPICards({ kpis, loading }: FrotasKPICardsProps) {
 
       <Card className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow p-3 sm:p-4 md:p-6 min-h-[100px] sm:min-h-[120px] flex flex-col justify-between">
         <div className="flex items-center gap-2 pb-2">
-          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" />
-          <h3 className="text-xs sm:text-sm font-semibold text-orange-600 dark:text-orange-400 leading-tight truncate">
-            Emplacamento Vencido
+          <Car className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
+          <h3 className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400 leading-tight truncate">
+            Veículos Segurados
           </h3>
         </div>
         <div>
           <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white leading-tight mb-1">
-            {kpis.emplacamentoVencido}
+            {kpis.veiculosSegurados}
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-tight">
-            licenciamento vencido
+            Constam na apólice
           </p>
         </div>
       </Card>
