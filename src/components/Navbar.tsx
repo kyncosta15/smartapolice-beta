@@ -18,12 +18,21 @@ interface NavbarProps {
 }
 
 export function Navbar({ searchTerm, onSearchChange, notificationCount, policies, onMobileMenuToggle, isMobileMenuOpen = false }: NavbarProps) {
-  // Fixed ArrowLeft reference error - force rebuild
-  
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, profile, logout } = useAuth();
   const { toast } = useToast();
+
+  // Tentar obter o perfil do usuário do contexto
+  let userProfile = null;
+  try {
+    const { useUserProfileContext } = require('@/contexts/UserProfileContext');
+    const profileContext = useUserProfileContext();
+    userProfile = profileContext?.profile;
+  } catch (error) {
+    // Se o contexto não estiver disponível, continuar sem ele
+    console.log('UserProfileContext não disponível ainda');
+  }
 
   const getRoleLabel = (role: string) => {
     const roles = {
@@ -89,6 +98,10 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   };
 
   const notifications = getNotifications();
+
+  // Definir fonte preferida para avatar e nome
+  const preferredAvatarUrl = userProfile?.photo_url || profile?.avatar_url || (user as any)?.avatar_url || (user as any)?.avatar;
+  const preferredDisplayName = userProfile?.display_name || profile?.full_name || user?.name || '';
 
   return (
     <header className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
@@ -197,12 +210,12 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage 
-                  src={profile?.avatar_url || (user as any)?.avatar_url || (user as any)?.avatar} 
+                  src={preferredAvatarUrl} 
                   alt="Foto de perfil"
                   className="object-cover"
                 />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-sm">
-                  {(profile?.full_name || user?.name) ? getInitials(profile?.full_name || user?.name || '') : 'U'}
+                  {getInitials(preferredDisplayName)}
                 </AvatarFallback>
               </Avatar>
               <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
@@ -213,7 +226,9 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
               <Card className="absolute right-0 mt-2 w-48 bg-white shadow-xl border border-gray-200 z-[9999] rounded-2xl">
                 <CardContent className="p-2">
                   <div className="px-3 py-2 border-b border-gray-100 sm:hidden">
-                    <p className="text-sm font-medium text-gray-900 break-words">{profile?.full_name || user?.name}</p>
+                    <p className="text-sm font-medium text-gray-900 break-words">
+                      {preferredDisplayName}
+                    </p>
                     <Badge variant={getRoleBadgeVariant((profile?.role || user?.role) || '')} className="text-xs mt-1">
                       {getRoleLabel((profile?.role || user?.role) || '')}
                     </Badge>

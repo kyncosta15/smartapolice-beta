@@ -5,19 +5,25 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Save, Upload, User, Mail, Building, Shield, Loader2 } from 'lucide-react';
+import { Camera, Save, Upload, User, Mail, Building, Shield, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 
 export const UserProfile = () => {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile: authProfile } = useAuth();
+  const { profile, loading: profileLoading, updateDisplayName, updateAvatar, removeAvatar } = useUserProfile();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [displayName, setDisplayName] = useState(profile?.full_name || user?.name || '');
+  const [displayName, setDisplayName] = useState(profile?.display_name || authProfile?.full_name || user?.name || '');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Sincronizar displayName quando profile mudar
+  React.useEffect(() => {
+    setDisplayName(profile?.display_name || authProfile?.full_name || user?.name || '');
+  }, [profile, authProfile, user]);
 
   const getInitials = (name: string) => {
     return name
@@ -32,27 +38,7 @@ export const UserProfile = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Verificar tipo de arquivo
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Erro",
-        description: "Por favor, selecione apenas arquivos de imagem.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Verificar tamanho do arquivo (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "Erro",
-        description: "A imagem deve ter no máximo 5MB.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Criar preview
+    // Criar preview imediatamente
     const reader = new FileReader();
     reader.onload = (e) => {
       setPreviewImage(e.target?.result as string);
@@ -69,59 +55,15 @@ export const UserProfile = () => {
     setIsUploading(true);
     
     try {
-      // Gerar nome único para o arquivo baseado no email
-      const fileExtension = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExtension}`;
+      await updateAvatar(file);
       
-      // Primeiro, deletar avatar anterior se existir
-      try {
-        const { error: deleteError } = await supabase.storage
-          .from('profile-avatars')
-          .remove([`${user.id}/avatar.png`, `${user.id}/avatar.jpg`, `${user.id}/avatar.jpeg`, `${user.id}/avatar.webp`, `${user.id}/avatar.gif`]);
-      } catch (error) {
-        // Ignorar erro se não houver arquivo anterior
-      }
-
-      // Upload do novo arquivo
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('profile-avatars')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // Obter URL pública
-      const { data: publicData } = supabase.storage
-        .from('profile-avatars')
-        .getPublicUrl(fileName);
-
-      // Atualizar URL no perfil do usuário
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ avatar_url: publicData.publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      // Também atualizar na tabela profiles se existir
-      await supabase
-        .from('profiles')
-        .update({ avatar_url: publicData.publicUrl })
-        .eq('id', user.id);
-
       toast({
         title: "Sucesso",
         description: "Foto de perfil atualizada com sucesso!"
       });
 
-      // Refresh do perfil e usuário para mostrar a nova imagem imediatamente
-      await refreshProfile();
+      // Limpar preview após sucesso
+      setPreviewImage(null);
 
     } catch (error: any) {
       console.error('Erro no upload:', error);
@@ -137,7 +79,7 @@ export const UserProfile = () => {
   };
 
   const handleUpdateName = async () => {
-    if (!user?.id || !displayName.trim()) {
+    if (!displayName.trim()) {
       toast({
         title: "Erro",
         description: "Nome é obrigatório.",
@@ -149,29 +91,12 @@ export const UserProfile = () => {
     setIsLoading(true);
     
     try {
-      // Atualizar na tabela users
-      const { error: usersError } = await supabase
-        .from('users')
-        .update({ name: displayName.trim() })
-        .eq('id', user.id);
-
-      if (usersError) {
-        throw usersError;
-      }
-
-      // Também atualizar na tabela profiles se existir
-      await supabase
-        .from('profiles')
-        .update({ full_name: displayName.trim() })
-        .eq('id', user.id);
-
+      await updateDisplayName(displayName);
+      
       toast({
         title: "Sucesso",
         description: "Nome atualizado com sucesso!"
       });
-
-      // Refresh do perfil e usuário para mostrar o novo nome imediatamente
-      await refreshProfile();
 
     } catch (error: any) {
       console.error('Erro ao atualizar nome:', error);
@@ -185,7 +110,30 @@ export const UserProfile = () => {
     }
   };
 
-  const currentAvatarUrl = previewImage || profile?.avatar_url || (user as any)?.avatar_url;
+  const handleRemoveAvatar = async () => {
+    setIsUploading(true);
+    
+    try {
+      await removeAvatar();
+      
+      toast({
+        title: "Sucesso",
+        description: "Foto de perfil removida com sucesso!"
+      });
+
+    } catch (error: any) {
+      console.error('Erro ao remover foto:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao remover a foto.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const currentAvatarUrl = previewImage || profile?.photo_url || authProfile?.avatar_url || (user as any)?.avatar_url;
 
   return (
     <div className="space-y-6">
@@ -213,7 +161,7 @@ export const UserProfile = () => {
                     className="object-cover"
                   />
                   <AvatarFallback className="bg-primary text-white text-2xl">
-                    {getInitials(displayName || profile?.full_name || user?.name || 'U')}
+                    {getInitials(displayName || profile?.display_name || authProfile?.full_name || user?.name || 'U')}
                   </AvatarFallback>
                 </Avatar>
                 {isUploading && (
@@ -224,17 +172,30 @@ export const UserProfile = () => {
               </div>
               
               <div className="text-center space-y-2">
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="outline"
-                  disabled={isUploading}
-                  className="w-full"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {isUploading ? 'Enviando...' : 'Alterar Foto'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="outline"
+                    disabled={isUploading}
+                    className="flex-1"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {isUploading ? 'Enviando...' : 'Alterar Foto'}
+                  </Button>
+                  {(profile?.photo_url || currentAvatarUrl) && (
+                    <Button
+                      onClick={handleRemoveAvatar}
+                      variant="outline"
+                      disabled={isUploading}
+                      size="icon"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500">
-                  JPG, PNG, WebP até 5MB
+                  JPG, PNG, WebP, GIF até 5MB
                 </p>
               </div>
             </div>
@@ -272,7 +233,7 @@ export const UserProfile = () => {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                value={profile?.email || user?.email || ''}
+                value={authProfile?.email || user?.email || ''}
                 disabled
                 className="bg-gray-50"
               />
@@ -285,7 +246,7 @@ export const UserProfile = () => {
               <Label>Empresa</Label>
               <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
                 <Building className="h-4 w-4 text-gray-500" />
-                <span>{profile?.company || (user as any)?.company || 'Não informado'}</span>
+                <span>{authProfile?.company || (user as any)?.company || 'Não informado'}</span>
               </div>
             </div>
 
@@ -293,10 +254,10 @@ export const UserProfile = () => {
               <Label>Função</Label>
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-gray-500" />
-                <Badge variant={profile?.role === 'administrador' ? 'default' : 'secondary'}>
-                  {profile?.role === 'administrador' ? 'Administrador' : 
-                   profile?.role === 'rh' ? 'RH' : 
-                   profile?.role === 'cliente' ? 'Cliente' : 'Usuário'}
+                <Badge variant={authProfile?.role === 'administrador' ? 'default' : 'secondary'}>
+                  {authProfile?.role === 'administrador' ? 'Administrador' : 
+                   authProfile?.role === 'rh' ? 'RH' : 
+                   authProfile?.role === 'cliente' ? 'Cliente' : 'Usuário'}
                 </Badge>
               </div>
             </div>
