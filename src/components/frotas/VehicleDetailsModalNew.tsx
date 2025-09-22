@@ -315,6 +315,36 @@ export function VehicleDetailsModalNew({
                       />
                     </div>
                     <div className="space-y-2">
+                      <Label htmlFor="placa" className="text-sm font-medium text-gray-700">Placa</Label>
+                      <Input
+                        id="placa"
+                        value={formData.placa || ''}
+                        onChange={(e) => handleInputChange('placa', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-10 md:h-11 font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="renavam" className="text-sm font-medium text-gray-700">RENAVAM</Label>
+                      <Input
+                        id="renavam"
+                        value={formData.renavam || ''}
+                        onChange={(e) => handleInputChange('renavam', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-10 md:h-11 font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="chassi" className="text-sm font-medium text-gray-700">Chassi</Label>
+                      <Input
+                        id="chassi"
+                        value={formData.chassi || ''}
+                        onChange={(e) => handleInputChange('chassi', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-10 md:h-11 font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
                       <Label htmlFor="categoria" className="text-sm font-medium text-gray-700">Categoria</Label>
                       <Select 
                         value={formData.categoria || ''} 
@@ -332,6 +362,36 @@ export function VehicleDetailsModalNew({
                           <SelectItem value="outros">Outros</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="localizacao" className="text-sm font-medium text-gray-700">Localização</Label>
+                      <Input
+                        id="localizacao"
+                        value={formData.localizacao || ''}
+                        onChange={(e) => handleInputChange('localizacao', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-10 md:h-11"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="codigo" className="text-sm font-medium text-gray-700">Código</Label>
+                      <Input
+                        id="codigo"
+                        value={formData.codigo || ''}
+                        onChange={(e) => handleInputChange('codigo', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-10 md:h-11 font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="origem_planilha" className="text-sm font-medium text-gray-700">Origem da Planilha</Label>
+                      <Input
+                        id="origem_planilha"
+                        value={formData.origem_planilha || ''}
+                        onChange={(e) => handleInputChange('origem_planilha', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-10 md:h-11"
+                      />
                     </div>
                     <div className="space-y-2 md:col-span-2 xl:col-span-2">
                       <Label htmlFor="observacoes" className="text-sm font-medium text-gray-700">Observações</Label>
