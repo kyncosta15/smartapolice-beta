@@ -321,20 +321,28 @@ export class N8NUploadService {
         console.log(`\n[${i + 1}/${n8nResponse.veiculos.length}] 🔄 Processando veículo:`, veiculo.placa || 'SEM PLACA');
 
         try {
-          // Preparar dados do veículo - CORRIGIR VALORES PARA CONSTRAINTS
+          // Preparar dados do veículo - MAPEAR TODOS OS CAMPOS DO N8N
           const categoria = this.mapCategoria(veiculo.familia);
           const statusSeguro = veiculo.status === 'ativo' ? 'segurado' : 'sem_seguro';
           
           const veiculoData = {
             empresa_id: empresaId,
             placa: veiculo.placa || `VEICULO-${i + 1}`,
-            marca: this.extractMarcaFromModelo(veiculo.modelo || 'Não informado'),
+            renavam: veiculo.renavam || null,
+            marca: veiculo.marca || this.extractMarcaFromModelo(veiculo.modelo || 'Não informado'),
             modelo: veiculo.modelo || 'Não informado',
+            ano_modelo: veiculo.ano ? Number(veiculo.ano) : null,
+            chassi: veiculo.chassi || null,
             categoria: categoria,
+            codigo: veiculo.codigo || null,
+            localizacao: veiculo.localizacao || null,
             status_seguro: statusSeguro,
+            status_veiculo: veiculo.status || 'ativo',
             proprietario_tipo: 'pj',
-            proprietario_nome: n8nResponse.empresa?.nome || userData.company,
+            proprietario_nome: veiculo.proprietario || n8nResponse.empresa?.nome || userData.company,
             proprietario_doc: n8nResponse.empresa?.cnpj || metadata?.cnpj,
+            origem_planilha: veiculo.origem_planilha || null,
+            observacoes: veiculo.origem_planilha ? `Importado do N8N - ${veiculo.origem_planilha} (${veiculo.familia || 'sem categoria'})` : null,
           };
 
           console.log('📋 Dados do veículo para inserir:', veiculoData);
@@ -430,14 +438,23 @@ export class N8NUploadService {
     if (familiaLower.includes('caminhao') || familiaLower.includes('caminhão') || familiaLower.includes('compactador')) {
       return 'caminhao';
     }
-    if (familiaLower.includes('utilitario') || familiaLower.includes('utilitário') || familiaLower.includes('van') || familiaLower.includes('pickup')) {
+    if (
+      familiaLower.includes('utilitario') || 
+      familiaLower.includes('utilitário') || 
+      familiaLower.includes('van') || 
+      familiaLower.includes('pickup') ||
+      familiaLower.includes('apoio') ||  // "CARRO DE APOIO"
+      familiaLower.includes('suv') ||
+      familiaLower.includes('hilux') ||
+      familiaLower.includes('sw4')
+    ) {
       return 'utilitario';
     }
-    if (familiaLower.includes('moto') || familiaLower.includes('motocicleta')) {
+    if (familiaLower.includes('moto') || familiaLower.includes('motocicleta') || familiaLower.includes('cg')) {
       return 'moto';
     }
     
-    // Default para outros casos
+    console.log(`⚠️ Categoria não mapeada: "${familia}" -> usando "outros"`);
     return 'outros';
   }
 
