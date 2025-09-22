@@ -55,77 +55,135 @@ serve(async (req) => {
       )
     }
 
-    // Função para gerar RENAVAM válido (11 dígitos)
+    // Função para gerar RENAVAM mais realista (11 dígitos)
     const gerarRenavam = () => {
-      const base = Math.floor(Math.random() * 99999999999).toString().padStart(10, '0')
-      return base + Math.floor(Math.random() * 10).toString()
+      // Gerar RENAVAM com padrão mais realista baseado em faixas reais
+      const prefixo = Math.floor(1000000000 + Math.random() * 8999999999) // 10 dígitos
+      const dv = Math.floor(Math.random() * 10) // Dígito verificador
+      return prefixo.toString() + dv.toString()
     }
 
-    // Função para gerar chassi VIN válido (17 caracteres)
-    const gerarChassi = (marca: string) => {
+    // Função para gerar chassi mais realista (17 caracteres)
+    const gerarChassi = (marca: string, ano?: number) => {
       const chars = 'ABCDEFGHJKLMNPRSTUVWXYZ1234567890'
       const fabricantes: { [key: string]: string } = {
-        'TOYOTA': '8AJ',
+        'HONDA': '9HC',
         'VW': '9BW',
+        'VOLKSWAGEN': '9BW',
         'FIAT': '9BD',
         'FORD': '9BF',
-        'HONDA': '9HC',
-        'VOLVO': 'YV3',
-        'MERCEDES': 'WDB',
-        'DEFAULT': '9BR'
+        'GM': '9BG',
+        'CHEVROLET': '9BG',
+        'TOYOTA': '9BR',
+        'MERCEDES': '9BM',
+        'M.BENZ': '9BM',
+        'VOLVO': 'YV1',
+        'YAMAHA': '9CY',
+        'SUZUKI': '9CS',
+        'KAWASAKI': '9CK',
+        'IVECO': '9BH',
+        'EFFA': '9BX'
       }
       
-      const prefixo = fabricantes[marca?.toUpperCase()] || fabricantes['DEFAULT']
+      // Normalizar marca
+      let marcaNormalizada = marca?.toUpperCase().trim() || 'DEFAULT'
+      if (marcaNormalizada.includes('HONDA')) marcaNormalizada = 'HONDA'
+      if (marcaNormalizada.includes('VW') || marcaNormalizada.includes('VOLKSWAGEN')) marcaNormalizada = 'VW'
+      if (marcaNormalizada.includes('FIAT')) marcaNormalizada = 'FIAT'
+      if (marcaNormalizada.includes('FORD')) marcaNormalizada = 'FORD'
+      
+      const prefixo = fabricantes[marcaNormalizada] || '9BX'
       let chassi = prefixo
       
-      // Completar até 17 caracteres
-      while (chassi.length < 17) {
-        chassi += chars[Math.floor(Math.random() * chars.length)]
+      // Adicionar dígitos específicos por posição
+      for (let i = 3; i < 17; i++) {
+        if (i === 8 && ano) {
+          // 9ª posição representa ano (código específico)
+          const anosChar: { [key: number]: string } = {
+            2018: 'J', 2019: 'K', 2020: 'L', 2021: 'M', 
+            2022: 'N', 2023: 'P', 2024: 'R', 2025: 'S'
+          }
+          chassi += anosChar[ano] || 'M'
+        } else if (i === 10) {
+          // 11ª posição - número sequencial de produção
+          chassi += Math.floor(Math.random() * 10).toString()
+        } else {
+          chassi += chars[Math.floor(Math.random() * chars.length)]
+        }
       }
       
       return chassi
     }
 
-    // Função para determinar ano baseado na placa
-    const determinarAno = (placa: string, createdAt: string) => {
+    // Função para determinar ano mais preciso baseado na placa e marca
+    const determinarAno = (placa: string, createdAt: string, marca: string, modelo: string) => {
       if (!placa || placa === 'FALTAPLACA') return 2020
       
-      // Placa Mercosul (formato: ABC1D23)
-      if (placa.match(/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/)) {
-        const letra = placa[4].charCodeAt(0) - 65 // A=0, B=1, etc.
-        return 2018 + Math.floor(letra / 2) // Estimativa baseada na letra
+      // Para motos Honda mais recentes
+      if (marca?.includes('HONDA') && modelo?.includes('CG')) {
+        // Placa Mercosul (formato: ABC1D23) - mais recente
+        if (placa.match(/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/)) {
+          const letra = placa[4]
+          // Mapear letras para anos mais precisos
+          const mapeamento: { [key: string]: number } = {
+            'A': 2018, 'B': 2019, 'C': 2020, 'D': 2020, 
+            'E': 2021, 'F': 2021, 'G': 2022, 'H': 2022,
+            'I': 2023, 'J': 2023, 'K': 2024, 'L': 2024
+          }
+          return mapeamento[letra] || 2022
+        }
       }
       
-      // Placa antiga (formato: ABC1234)
-      const year = new Date(createdAt).getFullYear()
-      return Math.max(2010, year - 5) // Entre 5-10 anos atrás
+      // Placa Mercosul geral
+      if (placa.match(/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/)) {
+        return 2019 + Math.floor(Math.random() * 5) // 2019-2024
+      }
+      
+      // Placas antigas - anos anteriores
+      const anoCreacao = new Date(createdAt).getFullYear()
+      return Math.max(2015, anoCreacao - Math.floor(Math.random() * 3))
     }
 
-    // Função para determinar localização baseada na categoria
+    // Função para determinar localização mais realista
     const determinarLocalizacao = (categoria: string, marca: string) => {
       const localizacoes: { [key: string]: string[] } = {
-        'passeio': ['SEDE', 'FILIAL-SP', 'GARAGEM-RJ'],
-        'utilitario': ['OBRA-1', 'OBRA-2', 'CANTEIRO'],
-        'caminhao': ['PATIO', 'OBRA-NORTE', 'OBRA-SUL'],
-        'moto': ['SEDE', 'FILIAL'],
-        'outros': ['DEPOSITO', 'PATIO-EXTRA']
+        'moto': ['SEDE SALVADOR-BA', 'FILIAL LAURO DE FREITAS-BA', 'CAMPO ITAPUÃ-BA'],
+        'carro': ['SEDE SALVADOR-BA', 'ESCRITÓRIO PELOURINHO-BA', 'UNIDADE PITUBA-BA'],
+        'utilitario': ['OBRA CENTRO-BA', 'OBRA PITUBA-BA', 'CAMPO PARALELA-BA'],
+        'caminhao': ['PÁTIO PARALELA-BA', 'OBRA PORTO-BA', 'TERMINAL SUBURBANA-BA'],
+        'outros': ['DEPÓSITO FEIRA-BA', 'PÁTIO CAMAÇARI-BA', 'MANUTENÇÃO-BA']
       }
       
       const opcoes = localizacoes[categoria] || localizacoes['outros']
       return opcoes[Math.floor(Math.random() * opcoes.length)]
     }
 
+    // Função para gerar código mais inteligente
+    const gerarCodigo = (placa: string, categoria: string, marca: string) => {
+      const prefixos: { [key: string]: string } = {
+        'moto': 'MOTO',
+        'carro': 'AUTO', 
+        'utilitario': 'UTIL',
+        'caminhao': 'CAM',
+        'outros': 'VEI'
+      }
+      
+      const prefixo = prefixos[categoria] || 'VEI'
+      const sufixo = placa?.length >= 3 ? placa.slice(-3) : '000'
+      return `${prefixo}${sufixo}`
+    }
+
     console.log('Preparando atualizações...')
     // Atualizar veículos em lotes
     const updates = veiculos.map(veiculo => {
-      const ano = determinarAno(veiculo.placa, veiculo.created_at)
+      const ano = determinarAno(veiculo.placa, veiculo.created_at, veiculo.marca || '', veiculo.modelo || '')
       const dadosGerados = {
         id: veiculo.id,
         renavam: veiculo.renavam || gerarRenavam(),
         ano_modelo: veiculo.ano_modelo || ano,
-        chassi: veiculo.chassi || gerarChassi(veiculo.marca),
+        chassi: veiculo.chassi || gerarChassi(veiculo.marca, ano),
         localizacao: veiculo.localizacao || determinarLocalizacao(veiculo.categoria, veiculo.marca),
-        codigo: veiculo.codigo || `VEI${veiculo.placa?.substring(veiculo.placa.length - 3) || '000'}`
+        codigo: veiculo.codigo || gerarCodigo(veiculo.placa, veiculo.categoria, veiculo.marca)
       }
       console.log(`Veículo ${veiculo.placa}: ${JSON.stringify(dadosGerados)}`)
       return dadosGerados
