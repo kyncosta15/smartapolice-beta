@@ -206,14 +206,17 @@ export function useFrotasData(filters: FrotaFilters) {
       if (debouncedFilters.search) {
         const searchTerm = debouncedFilters.search.toLowerCase();
         query = query.or(`placa.ilike.%${searchTerm}%,proprietario_doc.ilike.%${searchTerm}%,proprietario_nome.ilike.%${searchTerm}%,marca.ilike.%${searchTerm}%,modelo.ilike.%${searchTerm}%`);
+        console.log('🔍 Aplicando filtro de busca:', searchTerm);
       }
 
       if (debouncedFilters.categoria.length > 0) {
         query = query.in('categoria', debouncedFilters.categoria);
+        console.log('🔍 Aplicando filtro de categoria:', debouncedFilters.categoria);
       }
 
       if (debouncedFilters.status.length > 0) {
         query = query.in('status_seguro', debouncedFilters.status);
+        console.log('🔍 Aplicando filtro de status:', debouncedFilters.status);
       }
 
       const { data, error: fetchError } = await query
