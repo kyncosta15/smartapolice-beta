@@ -13,36 +13,48 @@ export class UserIdResolver {
   
   /**
    * RESOLVER user_id PRINCIPAL
+   * NOVA ESTRATÉGIA: PRIORIZAR EMAIL EM VEZ DE EMPRESA
    */
   static async resolveUserId(
     extractedData: any,
-    contextUserId?: string | null
+    contextUserId?: string | null,
+    userEmail?: string | null
   ): Promise<string> {
     console.log('🔍 Resolvendo user_id para dados:', extractedData);
     console.log('👤 User ID do contexto:', contextUserId);
+    console.log('📧 Email do usuário:', userEmail);
 
-    // PRIORIDADE 1: User ID do contexto autenticado
+    // PRIORIDADE 1: Usar email do usuário logado no sistema
+    if (userEmail) {
+      const userByEmail = await this.findUserByEmail(userEmail);
+      if (userByEmail) {
+        console.log('✅ User ID encontrado pelo email do usuário logado:', userByEmail);
+        return userByEmail;
+      }
+    }
+
+    // PRIORIDADE 2: User ID do contexto autenticado
     if (contextUserId && contextUserId !== 'null' && contextUserId.trim() !== '') {
       console.log('✅ Usando user_id do contexto autenticado:', contextUserId);
       return contextUserId;
     }
 
-    // PRIORIDADE 2: User ID nos dados do N8N (se válido)
+    // PRIORIDADE 3: Mapear por e-mail do segurado nos dados
+    if (extractedData.email) {
+      const userByEmail = await this.findUserByEmail(extractedData.email);
+      if (userByEmail) {
+        console.log('✅ User ID encontrado por e-mail dos dados:', userByEmail);
+        return userByEmail;
+      }
+    }
+
+    // PRIORIDADE 4: User ID nos dados do N8N (se válido)
     if (extractedData.user_id && extractedData.user_id !== null && extractedData.user_id.trim() !== '') {
       console.log('✅ Usando user_id dos dados N8N:', extractedData.user_id);
       return extractedData.user_id;
     }
 
-    // PRIORIDADE 3: Mapear por e-mail do segurado
-    if (extractedData.email) {
-      const userByEmail = await this.findUserByEmail(extractedData.email);
-      if (userByEmail) {
-        console.log('✅ User ID encontrado por e-mail:', userByEmail);
-        return userByEmail;
-      }
-    }
-
-    // PRIORIDADE 4: Mapear por documento (CPF/CNPJ) 
+    // PRIORIDADE 5: Mapear por documento (CPF/CNPJ) 
     if (extractedData.documento) {
       const userByDocument = await this.findUserByDocument(extractedData.documento);
       if (userByDocument) {
@@ -51,7 +63,7 @@ export class UserIdResolver {
       }
     }
 
-    // PRIORIDADE 5: Usuário da sessão atual (fallback)
+    // PRIORIDADE 6: Usuário da sessão atual (fallback)
     const currentUser = await this.getCurrentAuthUser();
     if (currentUser) {
       console.log('✅ Usando usuário da sessão atual:', currentUser);
@@ -185,7 +197,7 @@ export class UserIdResolver {
   /**
    * DEBUG: LOG DE TODAS AS ESTRATÉGIAS TENTADAS
    */
-  static async debugUserResolution(extractedData: any, contextUserId?: string | null): Promise<void> {
+  static async debugUserResolution(extractedData: any, contextUserId?: string | null, userEmail?: string | null): Promise<void> {
     console.log('🐛 DEBUG - Resolução de user_id:');
     console.log('📊 Dados extraídos:', {
       user_id: extractedData.user_id,
@@ -194,12 +206,18 @@ export class UserIdResolver {
       segurado: extractedData.segurado
     });
     console.log('👤 User ID do contexto:', contextUserId);
+    console.log('📧 Email do usuário:', userEmail);
 
     // Tentar cada estratégia
     try {
+      if (userEmail) {
+        const userEmailResult = await this.findUserByEmail(userEmail);
+        console.log('📧 Resultado por email do usuário:', userEmailResult);
+      }
+
       if (extractedData.email) {
         const emailResult = await this.findUserByEmail(extractedData.email);
-        console.log('📧 Resultado por e-mail:', emailResult);
+        console.log('📧 Resultado por e-mail dos dados:', emailResult);
       }
 
       if (extractedData.documento) {

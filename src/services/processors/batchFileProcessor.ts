@@ -24,9 +24,10 @@ export class BatchFileProcessor {
     this.toast = toast;
   }
 
-  async processMultipleFiles(files: File[], userId: string | null): Promise<ParsedPolicyData[]> {
+  async processMultipleFiles(files: File[], userId: string | null, userEmail?: string | null): Promise<ParsedPolicyData[]> {
     console.log(`🚀 BatchFileProcessor iniciando processamento de ${files.length} arquivos`);
     console.log(`👤 userId recebido:`, userId);
+    console.log(`📧 userEmail recebido:`, userEmail);
     
     // NOTA: userId pode ser null se os dados vierem do N8N com user_id nos dados
     // Verificaremos e resolveremos o user_id durante o processamento
@@ -84,7 +85,7 @@ export class BatchFileProcessor {
           console.log(`👤 userId do contexto: ${userId}`);
           console.log(`👤 user_id nos dados: ${singleData.user_id}`);
           
-          resolvedUserId = await UserIdResolver.resolveUserId(singleData, userId);
+          resolvedUserId = await UserIdResolver.resolveUserId(singleData, userId, userEmail);
           console.log(`✅ User ID resolvido para item ${index + 1}: ${resolvedUserId}`);
         } catch (error) {
           console.error(`❌ Falha ao resolver user_id para item ${index + 1}:`, error);

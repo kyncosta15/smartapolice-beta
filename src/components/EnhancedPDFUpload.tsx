@@ -62,7 +62,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       console.log(`🚀 Chamando fileProcessor.processMultipleFiles com userId: ${user.id}`);
       
       // Processar arquivos em lote
-      const allResults = await fileProcessor.processMultipleFiles(acceptedFiles);
+      const allResults = await fileProcessor.processMultipleFiles(acceptedFiles, user.email);
       
       console.log(`🎉 Processamento completo! ${allResults.length} apólices extraídas e salvas`);
       

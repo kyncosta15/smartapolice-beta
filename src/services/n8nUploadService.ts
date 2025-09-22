@@ -14,6 +14,7 @@ export interface N8NUploadMetadata {
   empresa_nome?: string;
   cnpj?: string;
   user_id?: string;
+  user_email?: string;
   razao_social?: string;
   seguradora?: string;
   numero_apolice?: string;

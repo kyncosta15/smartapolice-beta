@@ -31,10 +31,10 @@ export class FileProcessor {
   }
 
   // Método para processar múltiplos arquivos sequencialmente
-  async processMultipleFiles(files: File[]): Promise<ParsedPolicyData[]> {
+  async processMultipleFiles(files: File[], userEmail?: string | null): Promise<ParsedPolicyData[]> {
     console.log(`🚀 FileProcessor.processMultipleFiles CHAMADO!`);
-    console.log(`📤 FileProcessor: Passando userId ${this.userId} para BatchFileProcessor`);
-    const result = await this.batchProcessor.processMultipleFiles(files, this.userId);
+    console.log(`📤 FileProcessor: Passando userId ${this.userId} e email ${userEmail} para BatchFileProcessor`);
+    const result = await this.batchProcessor.processMultipleFiles(files, this.userId, userEmail);
     console.log(`✅ FileProcessor: Resultado do BatchFileProcessor:`, result.length);
     return result;
   }

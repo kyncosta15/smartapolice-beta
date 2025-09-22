@@ -88,10 +88,19 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   };
 
   const processFiles = async () => {
-    if (files.length === 0 || !activeEmpresaId || !activeEmpresaName) {
+    if (files.length === 0) {
       toast({
         title: "Erro de configuração",
-        description: "Empresa ativa não encontrada ou arquivo não selecionado",
+        description: "Nenhum arquivo selecionado para processamento",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user?.email) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Usuário não encontrado ou email não disponível",
         variant: "destructive",
       });
       return;
@@ -100,12 +109,13 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     setIsProcessing(true);
     
     try {
-      // Preparar metadados da empresa ativa
+      // Preparar metadados baseados no usuário logado
       const metadata: N8NUploadMetadata = {
-        empresa_id: activeEmpresaId,
-        empresa_nome: activeEmpresaName,
+        empresa_id: activeEmpresaId || user!.id, // Usar user_id se não tiver empresa
+        empresa_nome: activeEmpresaName || user!.email?.split('@')[0] || 'Usuario',
         user_id: user!.id,
-        razao_social: activeEmpresaName,
+        user_email: user!.email, // Adicionar email para resolução
+        razao_social: activeEmpresaName || user!.email?.split('@')[0] || 'Usuario',
       };
 
       // Processar cada arquivo individualmente
@@ -153,13 +163,15 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
           try {
             console.log('Chamando preenchimento de dados vazios...');
             
-            if (activeEmpresaId) {
-              const { data: preencherResult } = await supabase.functions.invoke('preencher-dados-veiculos', {
-                body: { empresaId: activeEmpresaId }
-              });
-              
-              console.log('Resultado do preenchimento:', preencherResult);
-            }
+            const empresaParaPreenchimento = activeEmpresaId || user!.id;
+            const { data: preencherResult } = await supabase.functions.invoke('preencher-dados-veiculos', {
+              body: { 
+                empresaId: empresaParaPreenchimento,
+                userEmail: user!.email 
+              }
+            });
+            
+            console.log('Resultado do preenchimento:', preencherResult);
           } catch (error) {
             console.warn('Erro ao preencher dados vazios:', error);
           }
