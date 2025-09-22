@@ -8,7 +8,8 @@ import {
   Shield, 
   X, 
   AlertTriangle,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +28,7 @@ export function FrotasBulkActions({
 }: FrotasBulkActionsProps) {
   const [bulkStatus, setBulkStatus] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   if (selectedVehicles.length === 0) {
     return null;
@@ -67,6 +69,69 @@ export function FrotasBulkActions({
       toast.error('Erro ao atualizar o status dos veículos');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedVehicles.length === 0) {
+      toast.error('Selecione veículos para excluir');
+      return;
+    }
+
+    if (!window.confirm(`Tem certeza que deseja excluir ${selectedVehicles.length} veículo(s)? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const vehicleIds = selectedVehicles.map(v => v.id);
+      
+      // Primeiro deletar documentos relacionados
+      const { error: docsError } = await supabase
+        .from('frota_documentos')
+        .delete()
+        .in('veiculo_id', vehicleIds);
+
+      if (docsError) throw docsError;
+
+      // Deletar responsáveis relacionados
+      const { error: responsaveisError } = await supabase
+        .from('frota_responsaveis')
+        .delete()
+        .in('veiculo_id', vehicleIds);
+
+      if (responsaveisError) throw responsaveisError;
+
+      // Deletar pagamentos relacionados
+      const { error: pagamentosError } = await supabase
+        .from('frota_pagamentos')
+        .delete()
+        .in('veiculo_id', vehicleIds);
+
+      if (pagamentosError) throw pagamentosError;
+
+      // Por fim, deletar os veículos
+      const { error } = await supabase
+        .from('frota_veiculos')
+        .delete()
+        .in('id', vehicleIds);
+
+      if (error) throw error;
+
+      toast.success(`${selectedVehicles.length} veículo(s) excluído(s) com sucesso`);
+      
+      // Clear selection and refresh data
+      onClearSelection();
+      onUpdateComplete();
+      
+      // Dispatch events to refresh dashboard
+      window.dispatchEvent(new CustomEvent('frota-data-updated'));
+      
+    } catch (error) {
+      console.error('Erro ao excluir veículos:', error);
+      toast.error('Erro ao excluir os veículos');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -163,24 +228,46 @@ export function FrotasBulkActions({
               </Select>
             </div>
 
-            <Button
-              onClick={handleBulkStatusUpdate}
-              disabled={!bulkStatus || loading}
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto h-9"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                  Aplicando...
-                </>
-              ) : (
-                <>
-                  <CheckSquare className="h-3 w-3 mr-2" />
-                  Aplicar Status
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                onClick={handleBulkStatusUpdate}
+                disabled={!bulkStatus || loading || deleting}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none h-9"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                    Aplicando...
+                  </>
+                ) : (
+                  <>
+                    <CheckSquare className="h-3 w-3 mr-2" />
+                    Aplicar Status
+                  </>
+                )}
+              </Button>
+
+              <Button
+                onClick={handleBulkDelete}
+                disabled={loading || deleting}
+                size="sm"
+                variant="destructive"
+                className="flex-1 sm:flex-none h-9"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3 w-3 mr-2" />
+                    Excluir
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           {/* Confirmation message */}
