@@ -22,8 +22,14 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, profile, logout } = useAuth();
-  const { profile: userProfile } = useUserProfile();
+  const { profile: userProfile, loading: profileLoading } = useUserProfile();
   const { toast } = useToast();
+
+  // Debug logs para investigar o problema
+  console.log('🔍 Navbar Debug - userProfile:', userProfile);
+  console.log('🔍 Navbar Debug - profileLoading:', profileLoading);
+  console.log('🔍 Navbar Debug - profile (auth):', profile);
+  console.log('🔍 Navbar Debug - user:', user);
 
   const getRoleLabel = (role: string) => {
     const roles = {
@@ -93,6 +99,14 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   // Definir fonte preferida para avatar e nome
   const preferredAvatarUrl = userProfile?.photo_url || profile?.avatar_url || (user as any)?.avatar_url || (user as any)?.avatar;
   const preferredDisplayName = userProfile?.display_name || profile?.full_name || user?.name || '';
+
+  // Debug logs para preferências
+  console.log('🔍 Navbar Debug - preferredAvatarUrl:', preferredAvatarUrl);
+  console.log('🔍 Navbar Debug - preferredDisplayName:', preferredDisplayName);
+
+  // Se ainda estiver carregando e não tiver dados, mostrar loading
+  const isLoadingProfile = profileLoading && !userProfile;
+  console.log('🔍 Navbar Debug - isLoadingProfile:', isLoadingProfile);
 
   return (
     <header className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
