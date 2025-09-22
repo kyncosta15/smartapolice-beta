@@ -126,6 +126,7 @@ export function SinistrosDashboard({
             </Button>
           }
           onTicketCreated={handleTicketCreated}
+          initialTipo="sinistro"
         />
       </div>
 
