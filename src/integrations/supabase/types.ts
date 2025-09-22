@@ -512,6 +512,39 @@ export type Database = {
         }
         Relationships: []
       }
+      company_import_settings: {
+        Row: {
+          allowed_fields: Json | null
+          auto_fill_enabled: boolean | null
+          category_mapping: Json | null
+          created_at: string | null
+          empresa_id: string
+          id: string
+          update_policy: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_fields?: Json | null
+          auto_fill_enabled?: boolean | null
+          category_mapping?: Json | null
+          created_at?: string | null
+          empresa_id: string
+          id?: string
+          update_policy?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_fields?: Json | null
+          auto_fill_enabled?: boolean | null
+          category_mapping?: Json | null
+          created_at?: string | null
+          empresa_id?: string
+          id?: string
+          update_policy?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       dashboard_exports: {
         Row: {
           created_at: string
@@ -965,6 +998,7 @@ export type Database = {
           categoria: string | null
           chassi: string | null
           codigo: string | null
+          codigo_interno: string | null
           consorcio_cota: string | null
           consorcio_grupo: string | null
           consorcio_taxa_adm: number | null
@@ -972,6 +1006,7 @@ export type Database = {
           data_venc_emplacamento: string | null
           data_venc_ultima_parcela: string | null
           empresa_id: string
+          familia: string | null
           id: string
           localizacao: string | null
           marca: string | null
@@ -988,6 +1023,7 @@ export type Database = {
           proprietario_tipo: string | null
           renavam: string | null
           status_seguro: string | null
+          status_veiculo: string | null
           uf_emplacamento: string | null
           updated_at: string
         }
@@ -996,6 +1032,7 @@ export type Database = {
           categoria?: string | null
           chassi?: string | null
           codigo?: string | null
+          codigo_interno?: string | null
           consorcio_cota?: string | null
           consorcio_grupo?: string | null
           consorcio_taxa_adm?: number | null
@@ -1003,6 +1040,7 @@ export type Database = {
           data_venc_emplacamento?: string | null
           data_venc_ultima_parcela?: string | null
           empresa_id: string
+          familia?: string | null
           id?: string
           localizacao?: string | null
           marca?: string | null
@@ -1019,6 +1057,7 @@ export type Database = {
           proprietario_tipo?: string | null
           renavam?: string | null
           status_seguro?: string | null
+          status_veiculo?: string | null
           uf_emplacamento?: string | null
           updated_at?: string
         }
@@ -1027,6 +1066,7 @@ export type Database = {
           categoria?: string | null
           chassi?: string | null
           codigo?: string | null
+          codigo_interno?: string | null
           consorcio_cota?: string | null
           consorcio_grupo?: string | null
           consorcio_taxa_adm?: number | null
@@ -1034,6 +1074,7 @@ export type Database = {
           data_venc_emplacamento?: string | null
           data_venc_ultima_parcela?: string | null
           empresa_id?: string
+          familia?: string | null
           id?: string
           localizacao?: string | null
           marca?: string | null
@@ -1050,8 +1091,45 @@ export type Database = {
           proprietario_tipo?: string | null
           renavam?: string | null
           status_seguro?: string | null
+          status_veiculo?: string | null
           uf_emplacamento?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      import_jobs: {
+        Row: {
+          created_at: string | null
+          empresa_id: string
+          id: string
+          job_id: string
+          payload: Json
+          processed_at: string | null
+          status: string | null
+          summary: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          empresa_id: string
+          id?: string
+          job_id: string
+          payload: Json
+          processed_at?: string | null
+          status?: string | null
+          summary?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          empresa_id?: string
+          id?: string
+          job_id?: string
+          payload?: Json
+          processed_at?: string | null
+          status?: string | null
+          summary?: Json | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -2130,6 +2208,56 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      veiculo_field_sources: {
+        Row: {
+          applied_at: string | null
+          applied_by: string | null
+          created_at: string | null
+          field_name: string
+          id: string
+          import_job_id: string | null
+          new_value: string | null
+          previous_value: string | null
+          reverted_at: string | null
+          source: string
+          veiculo_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_by?: string | null
+          created_at?: string | null
+          field_name: string
+          id?: string
+          import_job_id?: string | null
+          new_value?: string | null
+          previous_value?: string | null
+          reverted_at?: string | null
+          source: string
+          veiculo_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_by?: string | null
+          created_at?: string | null
+          field_name?: string
+          id?: string
+          import_job_id?: string | null
+          new_value?: string | null
+          previous_value?: string | null
+          reverted_at?: string | null
+          source?: string
+          veiculo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "veiculo_field_sources_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

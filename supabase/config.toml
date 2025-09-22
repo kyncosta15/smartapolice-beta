@@ -63,5 +63,8 @@ verify_jwt = false
 [functions.preencher-dados-veiculos]
 verify_jwt = false
 
-[functions.processar-n8n-frotas]
+[functions.commit-import]
+verify_jwt = false
+
+[functions.auto-fill-worker] 
 verify_jwt = false

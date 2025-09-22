@@ -16,7 +16,8 @@ import {
   Bell,
   Shield,
   Database,
-  RefreshCw
+  RefreshCw,
+  Settings
 } from 'lucide-react';
 import { FrotasDashboard } from './frotas/FrotasDashboard';
 import { FrotasTable } from './frotas/FrotasTable';
@@ -25,6 +26,7 @@ import { FrotasFipe } from './frotas/FrotasFipe';
 import { FrotasDocumentos } from './frotas/FrotasDocumentos';
 import { FrotasUpload } from './frotas/FrotasUpload';
 import { IntegracaoN8NTest } from './frotas/IntegracaoN8NTest';
+import { ImportConfigurationPage } from './frotas/ImportConfigurationPage';
 import { FrotasFilters } from './frotas/FrotasFilters';
 import { PolicyHeader } from './frotas/PolicyHeader';
 import { SinistrosDashboard } from './frotas/SinistrosDashboard';
@@ -45,7 +47,6 @@ export function GestaoFrotas() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('frotas');
-  const [preenchendoDados, setPreenchendoDados] = useState(false);
   const [filters, setFilters] = useState<FrotaFilters>({
     search: '',
     marcaModelo: [],
@@ -102,57 +103,6 @@ export function GestaoFrotas() {
     });
   };
 
-  const handlePreencherDados = async () => {
-    if (!user?.company) {
-      toast({
-        title: "Erro",
-        description: "Empresa não encontrada",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setPreenchendoDados(true);
-    
-    try {
-      // Buscar empresa
-      const { data: empresa } = await supabase
-        .from('empresas')
-        .select('id')
-        .eq('nome', user.company)
-        .single();
-
-      if (!empresa) {
-        throw new Error('Empresa não encontrada');
-      }
-
-      // Chamar edge function
-      const { data, error } = await supabase.functions.invoke('preencher-dados-veiculos', {
-        body: { empresaId: empresa.id }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "✅ Dados vazios preenchidos!",
-        description: `${data.message} - APENAS campos vazios foram preenchidos, dados existentes foram preservados.`,
-      });
-
-      // Recarregar dados
-      refetch();
-
-    } catch (error: any) {
-      console.error('Erro ao preencher dados:', error);
-      toast({
-        title: "❌ Erro ao preencher dados vazios",
-        description: error.message || "Ocorreu um erro inesperado ao tentar preencher campos vazios",
-        variant: "destructive"
-      });
-    } finally {
-      setPreenchendoDados(false);
-    }
-  };
-
   if (error) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -187,23 +137,6 @@ export function GestaoFrotas() {
           </div>
           
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePreencherDados}
-              disabled={preenchendoDados}
-              className="flex items-center gap-2 h-10 px-3"
-            >
-              {preenchendoDados ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Database className="h-4 w-4" />
-              )}
-              <span className="hidden sm:inline">
-                {preenchendoDados ? 'Preenchendo...' : 'Preencher Dados Vazios'}
-              </span>
-            </Button>
-            
             <Button
               variant="outline"
               size="sm"
@@ -263,6 +196,13 @@ export function GestaoFrotas() {
                     <Upload className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                     <span>Upload & N8N</span>
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="config" 
+                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
+                  >
+                    <Settings className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span>Configurações</span>
+                  </TabsTrigger>
                 </TabsList>
               </nav>
             </div>
@@ -311,6 +251,10 @@ export function GestaoFrotas() {
                 {/* Upload de arquivos tradicional */}
                 <FrotasUpload onSuccess={refetch} />
               </div>
+            </TabsContent>
+
+            <TabsContent value="config" className="h-full overflow-y-auto m-0">
+              <ImportConfigurationPage />
             </TabsContent>
           </div>
         </Tabs>
