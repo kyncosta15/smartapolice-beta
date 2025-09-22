@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Bell, LogOut, ChevronDown, AlertCircle, Calendar, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -22,7 +22,7 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
   
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const { toast } = useToast();
 
   const getRoleLabel = (role: string) => {
@@ -196,6 +196,11 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
               aria-expanded={showUserMenu}
             >
               <Avatar className="h-8 w-8">
+                <AvatarImage 
+                  src={profile?.avatar_url || (user as any)?.avatar_url} 
+                  alt="Foto de perfil"
+                  className="object-cover"
+                />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-sm">
                   {user?.name ? getInitials(user.name) : 'U'}
                 </AvatarFallback>

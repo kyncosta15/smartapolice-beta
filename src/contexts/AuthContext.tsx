@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   role: extendedUserData.role,
                   company: extendedUserData.company,
                   phone: extendedUserData.phone,
-                  avatar: extendedUserData.avatar,
+                  avatar: extendedUserData.avatar_url || extendedUserData.avatar,
                 };
                 setUser(mergedUser);
                 console.log('✅ Dados do usuário carregados:', {

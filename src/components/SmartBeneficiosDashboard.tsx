@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   Users, 
   Heart,
@@ -41,7 +41,6 @@ import { ConsolidatedReportPDF } from '@/components/ConsolidatedReportPDF';
 import { TicketsReportPDF } from '@/components/TicketsReportPDF';
 import { RequestsApprovalFlow } from '@/components/RequestsApprovalFlow';
 import { RealtimeDashboardMetrics } from '@/components/RealtimeDashboardMetrics';
-import { UserProfile } from '@/components/UserProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -237,11 +236,6 @@ export const SmartBeneficiosDashboard = () => {
             {user && profile && (
               <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1 sm:py-2 bg-gray-50 rounded-lg">
                 <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                  <AvatarImage 
-                    src={profile?.avatar_url || (user as any)?.avatar_url} 
-                    alt="Foto de perfil"
-                    className="object-cover"
-                  />
                   <AvatarFallback className="bg-primary text-white text-xs sm:text-sm">
                     {getInitials(profile.full_name || 'U')}
                   </AvatarFallback>
@@ -279,7 +273,7 @@ export const SmartBeneficiosDashboard = () => {
       <main className="p-3 sm:p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="relative mb-6">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 bg-white/60 backdrop-blur-xl border border-white/20 shadow-lg shadow-black/5 rounded-2xl p-1 h-auto relative overflow-hidden">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 bg-white/60 backdrop-blur-xl border border-white/20 shadow-lg shadow-black/5 rounded-2xl p-1 h-auto relative overflow-hidden">
               {/* Background blur effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-50/40 via-white/40 to-purple-50/40 rounded-2xl"></div>
               
@@ -324,12 +318,6 @@ export const SmartBeneficiosDashboard = () => {
                 className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
               >
                 Upload
-              </TabsTrigger>
-              <TabsTrigger 
-                value="perfil" 
-                className="text-xs sm:text-sm relative z-10 bg-transparent hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-500 ease-out py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] font-medium backdrop-blur-sm border-0 data-[state=active]:shadow-blue-100/50"
-              >
-                Meu Perfil
               </TabsTrigger>
             </TabsList>
           </div>
@@ -415,11 +403,6 @@ export const SmartBeneficiosDashboard = () => {
               />
               <PlanilhaHistorico />
             </div>
-          </TabsContent>
-
-          {/* Perfil Tab */}
-          <TabsContent value="perfil">
-            <UserProfile />
           </TabsContent>
         </Tabs>
       </main>

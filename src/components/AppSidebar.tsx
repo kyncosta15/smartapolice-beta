@@ -5,6 +5,7 @@ import {
   FileText, 
   BarChart3, 
   Users2,
+  User,
   Car,
   ShieldAlert,
   Settings,
@@ -34,6 +35,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'settings', title: 'Configurações', icon: Settings },
+    { id: 'perfil', title: 'Meu Perfil', icon: User },
   ];
 
   const adminNavigation = [
@@ -45,6 +47,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'settings', title: 'Configurações', icon: Settings },
+    { id: 'perfil', title: 'Meu Perfil', icon: User },
   ];
 
   const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;

@@ -17,6 +17,7 @@ import { VeiculosManagement } from './VeiculosManagement';
 import { GestaoFrotas } from './GestaoFrotas';
 import { SinistrosManagement } from './SinistrosManagement';
 import { N8NDataTester } from './N8NDataTester';
+import { UserProfile } from './UserProfile';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 
@@ -258,6 +259,13 @@ export function ContentRenderer({
       return (
         <div className="p-6">
           <N8NDataTester />
+        </div>
+      );
+
+    case 'perfil':
+      return (
+        <div className="p-6">
+          <UserProfile />
         </div>
       );
 
