@@ -24,6 +24,7 @@ import { FrotasKPICards } from './frotas/FrotasKPICards';
 import { FrotasFipe } from './frotas/FrotasFipe';
 import { FrotasDocumentos } from './frotas/FrotasDocumentos';
 import { FrotasUpload } from './frotas/FrotasUpload';
+import { IntegracaoN8NTest } from './frotas/IntegracaoN8NTest';
 import { FrotasFilters } from './frotas/FrotasFilters';
 import { PolicyHeader } from './frotas/PolicyHeader';
 import { SinistrosDashboard } from './frotas/SinistrosDashboard';
@@ -260,7 +261,7 @@ export function GestaoFrotas() {
                     className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
                   >
                     <Upload className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span>Upload</span>
+                    <span>Upload & N8N</span>
                   </TabsTrigger>
                 </TabsList>
               </nav>
@@ -303,7 +304,13 @@ export function GestaoFrotas() {
             </TabsContent>
 
             <TabsContent value="upload" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
-              <FrotasUpload onSuccess={refetch} />
+              <div className="space-y-6">
+                {/* Teste da Integração N8N */}
+                <IntegracaoN8NTest onSuccess={refetch} />
+                
+                {/* Upload de arquivos tradicional */}
+                <FrotasUpload onSuccess={refetch} />
+              </div>
             </TabsContent>
           </div>
         </Tabs>
