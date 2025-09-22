@@ -17,7 +17,7 @@ interface NavbarProps {
 export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, profile, logout } = useAuth();
-  const { profile: userProfile, loading: profileLoading } = useUserProfile();
+  const { profile: userProfile } = useUserProfile();
   const { toast } = useToast();
 
   const getRoleLabel = (role: string) => {
