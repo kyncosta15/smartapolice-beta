@@ -17,9 +17,11 @@ import {
   Upload,
   CreditCard,
   Menu,
-  ArrowLeft
+  ArrowLeft,
+  User
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserProfile } from '@/components/UserProfile';
 
 interface OptimizedSettingsProps {
   onBackToHome?: () => void;
@@ -51,11 +53,12 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
     }
   });
 
-  const [activeSection, setActiveSection] = useState('notifications');
+  const [activeSection, setActiveSection] = useState('profile');
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
   const sections = [
+    { value: 'profile', label: 'Meu Perfil', icon: User },
     { value: 'notifications', label: 'Notificações', icon: Bell },
     { value: 'appearance', label: 'Aparência', icon: Palette },
     { value: 'security', label: 'Segurança', icon: Shield },
@@ -82,6 +85,9 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
 
   const renderContent = () => {
     switch (activeSection) {
+      case 'profile':
+        return <UserProfile />;
+
       case 'notifications':
         return (
           <Card>

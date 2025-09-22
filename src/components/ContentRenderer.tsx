@@ -262,12 +262,6 @@ export function ContentRenderer({
         </div>
       );
 
-    case 'perfil':
-      return (
-        <div className="p-6">
-          <UserProfile />
-        </div>
-      );
 
     default:
       return (
