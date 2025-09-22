@@ -38,13 +38,11 @@ const categoriaOptions = [
   { value: 'utilitario', label: 'Utilitário' },
   { value: 'caminhao', label: 'Caminhão' },
   { value: 'moto', label: 'Moto' },
-  { value: 'outros', label: 'Outros' },
 ];
 
 const statusOptions = [
   { value: 'segurado', label: 'Segurado' },
   { value: 'sem_seguro', label: 'Sem Seguro' },
-  { value: 'cotacao', label: 'Em Cotação' },
 ];
 
 export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFiltersProps) {
