@@ -71,7 +71,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
   const preferredDisplayName = userProfile?.display_name || profile?.full_name || user?.name || '';
 
   return (
-    <header className="sticky top-0 z-20 bg-slate-800 border-b border-slate-700">
+    <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
       <div className="h-16 flex items-center justify-between px-6">
         {/* Left side - Mobile Menu Toggle */}
         <div className="flex items-center">
@@ -79,7 +79,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
             variant="ghost"
             size="sm"
             onClick={onMobileMenuToggle}
-            className="lg:hidden p-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-all duration-300 rounded-lg"
+            className="lg:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-slate-50 transition-all duration-300 rounded-lg"
             aria-label="Abrir menu"
           >
             <Menu className={cn(
@@ -98,11 +98,11 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
             <Button
               variant="ghost"
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-3 p-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors rounded-lg"
+              className="flex items-center gap-3 p-2 text-gray-700 hover:text-gray-900 hover:bg-slate-50 transition-colors rounded-lg"
               aria-haspopup="menu"
               aria-expanded={showUserMenu}
             >
-              <Avatar className="h-8 w-8 ring-2 ring-slate-600">
+              <Avatar className="h-8 w-8 ring-2 ring-gray-300">
                 <AvatarImage 
                   src={preferredAvatarUrl} 
                   alt="Foto de perfil"
@@ -113,14 +113,14 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                 </AvatarFallback>
               </Avatar>
               <div className="text-left hidden sm:block">
-                <p className="text-sm font-medium text-white leading-tight">
+                <p className="text-sm font-medium text-gray-900 leading-tight">
                   {preferredDisplayName || 'Usuário'}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-gray-500">
                   {getRoleLabel((profile?.role || user?.role) || '')}
                 </p>
               </div>
-              <ChevronDown className="w-4 h-4 text-slate-400" />
+              <ChevronDown className="w-4 h-4 text-gray-500" />
             </Button>
 
             {/* User Dropdown */}
