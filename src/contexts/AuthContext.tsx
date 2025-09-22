@@ -481,6 +481,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (authError) {
         console.error('❌ Erro no registro (auth):', authError);
+        
+        // Handle specific rate limiting error
+        if (authError.message.includes('For security purposes, you can only request this after')) {
+          return { success: false, error: 'Muitas tentativas de criação de conta. Aguarde 24 segundos antes de tentar novamente.' };
+        } else if (authError.message.includes('User already registered')) {
+          return { success: false, error: 'Este email já está cadastrado. Tente fazer login.' };
+        } else if (authError.message.includes('Password should be at least 6 characters')) {
+          return { success: false, error: 'A senha deve ter pelo menos 6 caracteres.' };
+        }
+        
         return { success: false, error: authError.message };
       }
 

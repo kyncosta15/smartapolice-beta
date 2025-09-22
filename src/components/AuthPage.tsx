@@ -61,8 +61,13 @@ export const AuthPage = () => {
     }
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent multiple rapid submissions
+    if (isSubmitting) return;
     
     if (registerData.password !== registerData.confirmPassword) {
       toast({
@@ -91,34 +96,40 @@ export const AuthPage = () => {
       return;
     }
 
-    const result = await register({
-      ...registerData,
-      classification: registerData.classification
-    });
+    setIsSubmitting(true);
     
-    if (result.success) {
-      toast({
-        title: "Sucesso",
-        description: "Conta criada com sucesso! Verifique seu email para confirmar.",
+    try {
+      const result = await register({
+        ...registerData,
+        classification: registerData.classification
       });
-      // Reset form
-      setRegisterData({
-        email: '',
-        password: '',
-        confirmPassword: '',
-        name: '',
-        company: '',
-        phone: '',
-        role: 'cliente' as UserRole,
-        classification: 'Corretora' as 'Corretora' | 'Gestão RH'
-      });
-      setPersonType('pf');
-    } else {
-      toast({
-        title: "Erro",
-        description: result.error || "Erro ao criar conta",
-        variant: "destructive"
-      });
+      
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: "Conta criada com sucesso! Verifique seu email para confirmar.",
+        });
+        // Reset form
+        setRegisterData({
+          email: '',
+          password: '',
+          confirmPassword: '',
+          name: '',
+          company: '',
+          phone: '',
+          role: 'cliente' as UserRole,
+          classification: 'Corretora' as 'Corretora' | 'Gestão RH'
+        });
+        setPersonType('pf');
+      } else {
+        toast({
+          title: "Erro na criação da conta",
+          description: result.error || "Erro ao criar conta",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -362,9 +373,9 @@ export const AuthPage = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-blue-600 hover:bg-blue-700"
-                    disabled={isLoading}
+                    disabled={isLoading || isSubmitting}
                   >
-                    {isLoading ? (
+                    {(isLoading || isSubmitting) ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Criando...
