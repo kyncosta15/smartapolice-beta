@@ -548,6 +548,42 @@ export type Database = {
         }
         Relationships: []
       }
+      delete_requests: {
+        Row: {
+          context_id: string
+          contexto: string
+          created_at: string
+          id: string
+          motivo: string
+          requested_by: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          context_id: string
+          contexto: string
+          created_at?: string
+          id?: string
+          motivo: string
+          requested_by: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          context_id?: string
+          contexto?: string
+          created_at?: string
+          id?: string
+          motivo?: string
+          requested_by?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       dependentes: {
         Row: {
           colaborador_id: string | null
@@ -1848,46 +1884,159 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_attachments: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_url: string | null
+          id: string
+          nome_arquivo: string
+          tamanho_arquivo: number | null
+          ticket_id: string | null
+          tipo: string
+          tipo_mime: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_url?: string | null
+          id?: string
+          nome_arquivo: string
+          tamanho_arquivo?: number | null
+          ticket_id?: string | null
+          tipo: string
+          tipo_mime?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_url?: string | null
+          id?: string
+          nome_arquivo?: string
+          tamanho_arquivo?: number | null
+          ticket_id?: string | null
+          tipo?: string
+          tipo_mime?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: []
+      }
+      ticket_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          payload: Json | null
+          ticket_id: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          payload?: Json | null
+          ticket_id: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          payload?: Json | null
+          ticket_id?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
+          apolice_id: string | null
           created_at: string | null
+          created_by: string | null
+          data_evento: string | null
+          empresa_id: string | null
           external_ref: string | null
           id: string
+          localizacao: string | null
+          origem: string | null
           payload: Json
           protocol_code: string
           request_id: string | null
           rh_note: string | null
           status: string
+          subtipo: string | null
+          tipo: string | null
           updated_at: string | null
+          valor_estimado: number | null
+          vehicle_id: string | null
         }
         Insert: {
+          apolice_id?: string | null
           created_at?: string | null
+          created_by?: string | null
+          data_evento?: string | null
+          empresa_id?: string | null
           external_ref?: string | null
           id?: string
+          localizacao?: string | null
+          origem?: string | null
           payload: Json
           protocol_code: string
           request_id?: string | null
           rh_note?: string | null
           status?: string
+          subtipo?: string | null
+          tipo?: string | null
           updated_at?: string | null
+          valor_estimado?: number | null
+          vehicle_id?: string | null
         }
         Update: {
+          apolice_id?: string | null
           created_at?: string | null
+          created_by?: string | null
+          data_evento?: string | null
+          empresa_id?: string | null
           external_ref?: string | null
           id?: string
+          localizacao?: string | null
+          origem?: string | null
           payload?: Json
           protocol_code?: string
           request_id?: string | null
           rh_note?: string | null
           status?: string
+          subtipo?: string | null
+          tipo?: string | null
           updated_at?: string | null
+          valor_estimado?: number | null
+          vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tickets_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tickets_request_id_fkey"
             columns: ["request_id"]
             isOneToOne: true
             referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
             referencedColumns: ["id"]
           },
         ]
