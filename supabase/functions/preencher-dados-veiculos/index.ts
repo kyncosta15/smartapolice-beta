@@ -7,37 +7,48 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('=== EDGE FUNCTION: Preencher Dados Veículos ===')
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    console.log('Inicializando cliente Supabase...')
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    console.log('Lendo body da requisição...')
     const { empresaId } = await req.json()
+    console.log('EmpresaId recebido:', empresaId)
 
     if (!empresaId) {
+      console.log('ERRO: EmpresaId não fornecido')
       return new Response(
         JSON.stringify({ error: 'ID da empresa é obrigatório' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    console.log('Buscando veículos sem dados...')
     // Buscar veículos sem dados
     const { data: veiculos, error: fetchError } = await supabase
       .from('frota_veiculos')
-      .select('id, placa, marca, modelo, categoria, created_at')
+      .select('id, placa, marca, modelo, categoria, created_at, renavam, ano_modelo, chassi, localizacao, codigo')
       .eq('empresa_id', empresaId)
       .or('renavam.is.null,ano_modelo.is.null,chassi.is.null,localizacao.is.null,codigo.is.null')
 
     if (fetchError) {
+      console.error('Erro ao buscar veículos:', fetchError)
       throw fetchError
     }
 
+    console.log(`Encontrados ${veiculos?.length || 0} veículos para atualizar`)
+
     if (!veiculos || veiculos.length === 0) {
+      console.log('Nenhum veículo encontrado para atualizar')
       return new Response(
         JSON.stringify({ message: 'Nenhum veículo encontrado para atualizar' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -104,28 +115,34 @@ serve(async (req) => {
       return opcoes[Math.floor(Math.random() * opcoes.length)]
     }
 
+    console.log('Preparando atualizações...')
     // Atualizar veículos em lotes
     const updates = veiculos.map(veiculo => {
       const ano = determinarAno(veiculo.placa, veiculo.created_at)
-      return {
+      const dadosGerados = {
         id: veiculo.id,
-        renavam: gerarRenavam(),
-        ano_modelo: ano,
-        chassi: gerarChassi(veiculo.marca),
-        localizacao: determinarLocalizacao(veiculo.categoria, veiculo.marca),
-        codigo: `VEI${veiculo.placa.substring(veiculo.placa.length - 3)}`
+        renavam: veiculo.renavam || gerarRenavam(),
+        ano_modelo: veiculo.ano_modelo || ano,
+        chassi: veiculo.chassi || gerarChassi(veiculo.marca),
+        localizacao: veiculo.localizacao || determinarLocalizacao(veiculo.categoria, veiculo.marca),
+        codigo: veiculo.codigo || `VEI${veiculo.placa?.substring(veiculo.placa.length - 3) || '000'}`
       }
+      console.log(`Veículo ${veiculo.placa}: ${JSON.stringify(dadosGerados)}`)
+      return dadosGerados
     })
 
-    // Atualizar em lotes de 50
-    const batchSize = 50
+    console.log(`Iniciando atualização de ${updates.length} veículos...`)
+    // Atualizar em lotes de 10 para melhor monitoramento
+    const batchSize = 10
     let updatedCount = 0
 
     for (let i = 0; i < updates.length; i += batchSize) {
       const batch = updates.slice(i, i + batchSize)
+      console.log(`Processando lote ${Math.floor(i/batchSize) + 1}/${Math.ceil(updates.length/batchSize)}`)
       
       for (const update of batch) {
-        const { error: updateError } = await supabase
+        console.log(`Atualizando veículo ID: ${update.id}`)
+        const { data, error: updateError } = await supabase
           .from('frota_veiculos')
           .update({
             renavam: update.renavam,
@@ -135,14 +152,18 @@ serve(async (req) => {
             codigo: update.codigo
           })
           .eq('id', update.id)
+          .select('id, placa')
 
         if (updateError) {
-          console.error(`Erro ao atualizar veículo ${update.id}:`, updateError)
+          console.error(`ERRO ao atualizar veículo ${update.id}:`, updateError)
         } else {
+          console.log(`SUCESSO - Veículo atualizado:`, data)
           updatedCount++
         }
       }
     }
+
+    console.log(`Processo concluído! ${updatedCount} de ${updates.length} veículos atualizados`)
 
     return new Response(
       JSON.stringify({
