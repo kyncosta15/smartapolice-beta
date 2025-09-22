@@ -197,12 +197,12 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage 
-                  src={profile?.avatar_url || (user as any)?.avatar_url} 
+                  src={profile?.avatar_url || (user as any)?.avatar_url || (user as any)?.avatar} 
                   alt="Foto de perfil"
                   className="object-cover"
                 />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-sm">
-                  {user?.name ? getInitials(user.name) : 'U'}
+                  {(profile?.full_name || user?.name) ? getInitials(profile?.full_name || user?.name || '') : 'U'}
                 </AvatarFallback>
               </Avatar>
               <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
@@ -213,9 +213,9 @@ export function Navbar({ searchTerm, onSearchChange, notificationCount, policies
               <Card className="absolute right-0 mt-2 w-48 bg-white shadow-xl border border-gray-200 z-[9999] rounded-2xl">
                 <CardContent className="p-2">
                   <div className="px-3 py-2 border-b border-gray-100 sm:hidden">
-                    <p className="text-sm font-medium text-gray-900 break-words">{user?.name}</p>
-                    <Badge variant={getRoleBadgeVariant(user?.role || '')} className="text-xs mt-1">
-                      {getRoleLabel(user?.role || '')}
+                    <p className="text-sm font-medium text-gray-900 break-words">{profile?.full_name || user?.name}</p>
+                    <Badge variant={getRoleBadgeVariant((profile?.role || user?.role) || '')} className="text-xs mt-1">
+                      {getRoleLabel((profile?.role || user?.role) || '')}
                     </Badge>
                   </div>
                   <Button

@@ -120,10 +120,8 @@ export const UserProfile = () => {
         description: "Foto de perfil atualizada com sucesso!"
       });
 
-      // Refresh do perfil para mostrar a nova imagem
-      setTimeout(() => {
-        refreshProfile();
-      }, 1000);
+      // Refresh do perfil e usuário para mostrar a nova imagem imediatamente
+      await refreshProfile();
 
     } catch (error: any) {
       console.error('Erro no upload:', error);
@@ -172,8 +170,8 @@ export const UserProfile = () => {
         description: "Nome atualizado com sucesso!"
       });
 
-      // Refresh do perfil
-      refreshProfile();
+      // Refresh do perfil e usuário para mostrar o novo nome imediatamente
+      await refreshProfile();
 
     } catch (error: any) {
       console.error('Erro ao atualizar nome:', error);

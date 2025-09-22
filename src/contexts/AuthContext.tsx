@@ -144,8 +144,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = async () => {
     if (user) {
-      const profileData = await fetchProfile(user.id);
-      setProfile(profileData);
+      console.log('🔄 Atualizando perfil do usuário:', user.id);
+      
+      // Buscar dados atualizados de ambas as tabelas
+      const [profileData, extendedUserData] = await Promise.all([
+        fetchProfile(user.id),
+        fetchExtendedUserData(user.id)
+      ]);
+      
+      if (profileData) {
+        setProfile(profileData);
+        console.log('✅ Perfil atualizado:', profileData);
+      }
+      
+      if (extendedUserData) {
+        // Atualizar o estado do usuário com os dados mais recentes
+        const updatedUser: ExtendedUser = {
+          ...user,
+          name: extendedUserData.name,
+          role: extendedUserData.role,
+          company: extendedUserData.company,
+          phone: extendedUserData.phone,
+          avatar: extendedUserData.avatar_url || extendedUserData.avatar,
+        };
+        setUser(updatedUser);
+        console.log('✅ Dados do usuário atualizados:', {
+          name: updatedUser.name,
+          avatar: updatedUser.avatar
+        });
+      }
     }
   };
 
