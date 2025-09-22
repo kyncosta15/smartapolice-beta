@@ -55,147 +55,247 @@ serve(async (req) => {
       )
     }
 
-    // Função para gerar RENAVAM mais realista (11 dígitos)
-    const gerarRenavam = () => {
-      // Gerar RENAVAM com padrão mais realista baseado em faixas reais
-      const prefixo = Math.floor(1000000000 + Math.random() * 8999999999) // 10 dígitos
-      const dv = Math.floor(Math.random() * 10) // Dígito verificador
-      return prefixo.toString() + dv.toString()
+    // Buscar dados de referência de outros veículos da mesma empresa para análise
+    console.log('Buscando dados de referência para análise...')
+    const { data: veiculosReferencia, error: refError } = await supabase
+      .from('frota_veiculos')
+      .select('marca, modelo, categoria, renavam, ano_modelo, chassi, localizacao, codigo')
+      .eq('empresa_id', empresaId)
+      .not('renavam', 'is', null)
+      .not('ano_modelo', 'is', null)
+      .not('chassi', 'is', null)
+      .not('localizacao', 'is', null)
+      .not('codigo', 'is', null)
+
+    if (refError) {
+      console.warn('Erro ao buscar dados de referência:', refError)
     }
 
-    // Função para gerar chassi mais realista (17 caracteres)
-    const gerarChassi = (marca: string, ano?: number) => {
-      const chars = 'ABCDEFGHJKLMNPRSTUVWXYZ1234567890'
-      const fabricantes: { [key: string]: string } = {
-        'HONDA': '9HC',
-        'VW': '9BW',
-        'VOLKSWAGEN': '9BW',
-        'FIAT': '9BD',
-        'FORD': '9BF',
-        'GM': '9BG',
-        'CHEVROLET': '9BG',
-        'TOYOTA': '9BR',
-        'MERCEDES': '9BM',
-        'M.BENZ': '9BM',
-        'VOLVO': 'YV1',
-        'YAMAHA': '9CY',
-        'SUZUKI': '9CS',
-        'KAWASAKI': '9CK',
-        'IVECO': '9BH',
-        'EFFA': '9BX'
+    console.log(`Encontrados ${veiculosReferencia?.length || 0} veículos com dados completos para referência`)
+
+    // Função para analisar e sugerir RENAVAM baseado em dados reais
+    const analisarRenavam = (marca: string, modelo: string, ano: number) => {
+      if (!veiculosReferencia || veiculosReferencia.length === 0) {
+        return null // Não gerar dados fictícios
       }
+
+      // Buscar veículos similares
+      const similares = veiculosReferencia.filter(v => 
+        v.marca?.toLowerCase().includes(marca?.toLowerCase() || '') ||
+        v.modelo?.toLowerCase().includes(modelo?.toLowerCase() || '') ||
+        Math.abs((v.ano_modelo || 0) - ano) <= 2
+      )
+
+      if (similares.length === 0) return null
+
+      // Analisar padrões de RENAVAM dos similares
+      const renavams = similares.map(v => v.renavam).filter(Boolean)
+      console.log(`Analisando ${renavams.length} RENAVAMs de referência para ${marca} ${modelo}`)
       
-      // Normalizar marca
-      let marcaNormalizada = marca?.toUpperCase().trim() || 'DEFAULT'
-      if (marcaNormalizada.includes('HONDA')) marcaNormalizada = 'HONDA'
-      if (marcaNormalizada.includes('VW') || marcaNormalizada.includes('VOLKSWAGEN')) marcaNormalizada = 'VW'
-      if (marcaNormalizada.includes('FIAT')) marcaNormalizada = 'FIAT'
-      if (marcaNormalizada.includes('FORD')) marcaNormalizada = 'FORD'
+      return null // Por enquanto, não sugerir RENAVAM - aguardar dados reais
+    }
+
+    // Função para analisar e sugerir chassi baseado em dados reais
+    const analisarChassi = (marca: string, modelo: string, ano: number) => {
+      if (!veiculosReferencia || veiculosReferencia.length === 0) {
+        return null // Não gerar dados fictícios
+      }
+
+      // Buscar veículos da mesma marca
+      const mesmamarca = veiculosReferencia.filter(v => 
+        v.marca?.toLowerCase().includes(marca?.toLowerCase() || '') &&
+        Math.abs((v.ano_modelo || 0) - ano) <= 3
+      )
+
+      if (mesmamarca.length === 0) return null
+
+      // Analisar padrões de chassi dos similares
+      const chassis = mesmamarca.map(v => v.chassi).filter(Boolean)
+      console.log(`Analisando ${chassis.length} chassis de referência para ${marca}`)
       
-      const prefixo = fabricantes[marcaNormalizada] || '9BX'
-      let chassi = prefixo
-      
-      // Adicionar dígitos específicos por posição
-      for (let i = 3; i < 17; i++) {
-        if (i === 8 && ano) {
-          // 9ª posição representa ano (código específico)
-          const anosChar: { [key: number]: string } = {
-            2018: 'J', 2019: 'K', 2020: 'L', 2021: 'M', 
-            2022: 'N', 2023: 'P', 2024: 'R', 2025: 'S'
+      return null // Por enquanto, não sugerir chassi - aguardar dados reais
+    }
+
+    // Função para analisar e sugerir ano baseado em dados reais
+    const analisarAno = (placa: string, marca: string, modelo: string) => {
+      if (!veiculosReferencia || veiculosReferencia.length === 0) {
+        return null // Não sugerir ano fictício
+      }
+
+      // Buscar veículos similares (mesma marca/modelo)
+      const similares = veiculosReferencia.filter(v => 
+        v.marca?.toLowerCase().includes(marca?.toLowerCase() || '') &&
+        v.modelo?.toLowerCase().includes(modelo?.toLowerCase() || '')
+      )
+
+      if (similares.length === 0) {
+        // Buscar apenas pela marca
+        const mesmamarca = veiculosReferencia.filter(v => 
+          v.marca?.toLowerCase().includes(marca?.toLowerCase() || '')
+        )
+        
+        if (mesmamarca.length > 0) {
+          // Calcular ano médio dos veículos da mesma marca
+          const anos = mesmamarca.map(v => v.ano_modelo).filter(Boolean)
+          if (anos.length > 0) {
+            const anoMedio = Math.round(anos.reduce((sum, ano) => sum + ano, 0) / anos.length)
+            console.log(`Sugerindo ano ${anoMedio} baseado em ${anos.length} veículos da marca ${marca}`)
+            return anoMedio
           }
-          chassi += anosChar[ano] || 'M'
-        } else if (i === 10) {
-          // 11ª posição - número sequencial de produção
-          chassi += Math.floor(Math.random() * 10).toString()
-        } else {
-          chassi += chars[Math.floor(Math.random() * chars.length)]
+        }
+      } else {
+        // Calcular ano médio dos similares
+        const anos = similares.map(v => v.ano_modelo).filter(Boolean)
+        if (anos.length > 0) {
+          const anoMedio = Math.round(anos.reduce((sum, ano) => sum + ano, 0) / anos.length)
+          console.log(`Sugerindo ano ${anoMedio} baseado em ${anos.length} veículos similares`)
+          return anoMedio
         }
       }
-      
-      return chassi
+
+      return null // Não conseguiu analisar dados reais
     }
 
-    // Função para determinar ano mais preciso baseado na placa e marca
-    const determinarAno = (placa: string, createdAt: string, marca: string, modelo: string) => {
-      if (!placa || placa === 'FALTAPLACA') return 2020
-      
-      // Para motos Honda mais recentes
-      if (marca?.includes('HONDA') && modelo?.includes('CG')) {
-        // Placa Mercosul (formato: ABC1D23) - mais recente
-        if (placa.match(/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/)) {
-          const letra = placa[4]
-          // Mapear letras para anos mais precisos
-          const mapeamento: { [key: string]: number } = {
-            'A': 2018, 'B': 2019, 'C': 2020, 'D': 2020, 
-            'E': 2021, 'F': 2021, 'G': 2022, 'H': 2022,
-            'I': 2023, 'J': 2023, 'K': 2024, 'L': 2024
-          }
-          return mapeamento[letra] || 2022
+    // Função para analisar e sugerir localização baseada em dados reais
+    const analisarLocalizacao = (categoria: string, marca: string) => {
+      if (!veiculosReferencia || veiculosReferencia.length === 0) {
+        return null // Não sugerir localização fictícia
+      }
+
+      // Buscar veículos da mesma categoria
+      const mesmaCategoria = veiculosReferencia.filter(v => 
+        v.categoria?.toLowerCase() === categoria?.toLowerCase()
+      )
+
+      if (mesmaCategoria.length > 0) {
+        // Encontrar a localização mais comum da categoria
+        const localizacoes = mesmaCategoria.map(v => v.localizacao).filter(Boolean)
+        const contagem: { [key: string]: number } = {}
+        
+        localizacoes.forEach(loc => {
+          contagem[loc] = (contagem[loc] || 0) + 1
+        })
+
+        const locMaisComum = Object.entries(contagem)
+          .sort(([,a], [,b]) => b - a)[0]
+
+        if (locMaisComum) {
+          console.log(`Sugerindo localização "${locMaisComum[0]}" baseada em ${locMaisComum[1]} veículos da categoria ${categoria}`)
+          return locMaisComum[0]
         }
       }
-      
-      // Placa Mercosul geral
-      if (placa.match(/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/)) {
-        return 2019 + Math.floor(Math.random() * 5) // 2019-2024
+
+      // Se não encontrou por categoria, buscar por marca
+      const mesmamarca = veiculosReferencia.filter(v => 
+        v.marca?.toLowerCase().includes(marca?.toLowerCase() || '')
+      )
+
+      if (mesmamarca.length > 0) {
+        const localizacoes = mesmamarca.map(v => v.localizacao).filter(Boolean)
+        const contagem: { [key: string]: number } = {}
+        
+        localizacoes.forEach(loc => {
+          contagem[loc] = (contagem[loc] || 0) + 1
+        })
+
+        const locMaisComum = Object.entries(contagem)
+          .sort(([,a], [,b]) => b - a)[0]
+
+        if (locMaisComum) {
+          console.log(`Sugerindo localização "${locMaisComum[0]}" baseada em ${locMaisComum[1]} veículos da marca ${marca}`)
+          return locMaisComum[0]
+        }
       }
-      
-      // Placas antigas - anos anteriores
-      const anoCreacao = new Date(createdAt).getFullYear()
-      return Math.max(2015, anoCreacao - Math.floor(Math.random() * 3))
+
+      return null // Não conseguiu analisar dados reais
     }
 
-    // Função para determinar localização mais realista
-    const determinarLocalizacao = (categoria: string, marca: string) => {
-      const localizacoes: { [key: string]: string[] } = {
-        'moto': ['SEDE SALVADOR-BA', 'FILIAL LAURO DE FREITAS-BA', 'CAMPO ITAPUÃ-BA'],
-        'carro': ['SEDE SALVADOR-BA', 'ESCRITÓRIO PELOURINHO-BA', 'UNIDADE PITUBA-BA'],
-        'utilitario': ['OBRA CENTRO-BA', 'OBRA PITUBA-BA', 'CAMPO PARALELA-BA'],
-        'caminhao': ['PÁTIO PARALELA-BA', 'OBRA PORTO-BA', 'TERMINAL SUBURBANA-BA'],
-        'outros': ['DEPÓSITO FEIRA-BA', 'PÁTIO CAMAÇARI-BA', 'MANUTENÇÃO-BA']
+    // Função para analisar e sugerir código baseado em dados reais
+    const analisarCodigo = (placa: string, categoria: string, marca: string) => {
+      if (!veiculosReferencia || veiculosReferencia.length === 0) {
+        return null // Não gerar código fictício
       }
+
+      // Buscar padrões de códigos existentes
+      const codigos = veiculosReferencia.map(v => v.codigo).filter(Boolean)
       
-      const opcoes = localizacoes[categoria] || localizacoes['outros']
-      return opcoes[Math.floor(Math.random() * opcoes.length)]
+      if (codigos.length === 0) return null
+
+      // Analisar padrões comuns
+      const padroes: { [key: string]: number } = {}
+      codigos.forEach(codigo => {
+        // Extrair possível prefixo (primeiras 3-4 letras)
+        const prefixo = codigo.match(/^[A-Z]+/)?.[0] || ''
+        if (prefixo) {
+          padroes[prefixo] = (padroes[prefixo] || 0) + 1
+        }
+      })
+
+      const prefixoMaisComum = Object.entries(padroes)
+        .sort(([,a], [,b]) => b - a)[0]
+
+      if (prefixoMaisComum && placa) {
+        const sufixo = placa.length >= 3 ? placa.slice(-3) : '000'
+        const codigoSugerido = `${prefixoMaisComum[0]}${sufixo}`
+        console.log(`Sugerindo código "${codigoSugerido}" baseado no padrão mais comum "${prefixoMaisComum[0]}"`)
+        return codigoSugerido
+      }
+
+      return null // Não conseguiu analisar padrão
     }
 
-    // Função para gerar código mais inteligente
-    const gerarCodigo = (placa: string, categoria: string, marca: string) => {
-      const prefixos: { [key: string]: string } = {
-        'moto': 'MOTO',
-        'carro': 'AUTO', 
-        'utilitario': 'UTIL',
-        'caminhao': 'CAM',
-        'outros': 'VEI'
-      }
-      
-      const prefixo = prefixos[categoria] || 'VEI'
-      const sufixo = placa?.length >= 3 ? placa.slice(-3) : '000'
-      return `${prefixo}${sufixo}`
-    }
-
-    console.log('Preparando atualizações APENAS para campos vazios...')
-    // Atualizar veículos em lotes - APENAS campos que estão realmente vazios
+    console.log('Preparando atualizações BASEADAS EM ANÁLISE DE DADOS REAIS...')
+    // Atualizar veículos baseado em análise de dados existentes no banco
     const updates = veiculos.map(veiculo => {
-      const ano = veiculo.ano_modelo || determinarAno(veiculo.placa, veiculo.created_at, veiculo.marca || '', veiculo.modelo || '')
+      console.log(`Analisando veículo ${veiculo.placa} (${veiculo.marca} ${veiculo.modelo})...`)
       
-      // CRÍTICO: Apenas gerar dados para campos que estão REALMENTE vazios
-      const dadosGerados = {
-        id: veiculo.id,
-        // Só gerar RENAVAM se estiver vazio
-        ...(veiculo.renavam ? {} : { renavam: gerarRenavam() }),
-        // Só gerar ano se estiver vazio
-        ...(veiculo.ano_modelo ? {} : { ano_modelo: ano }),
-        // Só gerar chassi se estiver vazio
-        ...(veiculo.chassi ? {} : { chassi: gerarChassi(veiculo.marca, ano) }),
-        // Só gerar localização se estiver vazia
-        ...(veiculo.localizacao ? {} : { localizacao: determinarLocalizacao(veiculo.categoria, veiculo.marca) }),
-        // Só gerar código se estiver vazio
-        ...(veiculo.codigo ? {} : { codigo: gerarCodigo(veiculo.placa, veiculo.categoria, veiculo.marca) })
+      const dadosAnalisados = {
+        id: veiculo.id
+      }
+
+      // Analisar e sugerir ano baseado em dados reais
+      if (!veiculo.ano_modelo) {
+        const anoSugerido = analisarAno(veiculo.placa, veiculo.marca || '', veiculo.modelo || '')
+        if (anoSugerido) {
+          dadosAnalisados.ano_modelo = anoSugerido
+        } else {
+          console.log(`❌ Não foi possível analisar ano para ${veiculo.placa} - dados insuficientes`)
+        }
+      }
+
+      // Analisar e sugerir localização baseada em dados reais
+      if (!veiculo.localizacao) {
+        const localizacaoSugerida = analisarLocalizacao(veiculo.categoria || '', veiculo.marca || '')
+        if (localizacaoSugerida) {
+          dadosAnalisados.localizacao = localizacaoSugerida
+        } else {
+          console.log(`❌ Não foi possível analisar localização para ${veiculo.placa} - dados insuficientes`)
+        }
+      }
+
+      // Analisar e sugerir código baseado em padrões reais
+      if (!veiculo.codigo) {
+        const codigoSugerido = analisarCodigo(veiculo.placa, veiculo.categoria || '', veiculo.marca || '')
+        if (codigoSugerido) {
+          dadosAnalisados.codigo = codigoSugerido
+        } else {
+          console.log(`❌ Não foi possível analisar código para ${veiculo.placa} - dados insuficientes`)
+        }
+      }
+
+      // Para RENAVAM e CHASSI, não sugerimos dados fictícios - aguardamos dados reais
+      if (!veiculo.renavam) {
+        console.log(`⏳ RENAVAM vazio para ${veiculo.placa} - aguardando dados reais da planilha`)
       }
       
-      console.log(`Veículo ${veiculo.placa}: PRESERVANDO dados existentes, gerando apenas:`, 
-        Object.keys(dadosGerados).filter(k => k !== 'id'))
-      return dadosGerados
+      if (!veiculo.chassi) {
+        console.log(`⏳ CHASSI vazio para ${veiculo.placa} - aguardando dados reais da planilha`)
+      }
+      
+      const camposAtualizados = Object.keys(dadosAnalisados).filter(k => k !== 'id')
+      console.log(`Veículo ${veiculo.placa}: Campos baseados em análise:`, camposAtualizados)
+      
+      return dadosAnalisados
     })
 
     console.log(`Iniciando atualização de ${updates.length} veículos...`)
