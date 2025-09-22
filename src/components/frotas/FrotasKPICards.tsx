@@ -72,25 +72,19 @@ export function FrotasKPICards({ kpis, loading }: FrotasKPICardsProps) {
         </div>
       </Card>
 
-      {/* Card de Seguros - Com/Sem */}
-      <Card className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow p-3 sm:p-4 md:p-6 min-h-[100px] sm:min-h-[120px] flex flex-col justify-between cursor-pointer">
+      <Card className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow p-3 sm:p-4 md:p-6 min-h-[100px] sm:min-h-[120px] flex flex-col justify-between">
         <div className="flex items-center gap-2 pb-2">
-          <div className="flex gap-1">
-            <Car className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
-            <Car className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 flex-shrink-0" />
-          </div>
-          <h3 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 leading-tight truncate">
-            Seguro: Com / Sem
+          <Car className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
+          <h3 className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400 leading-tight truncate">
+            Veículos Segurados
           </h3>
         </div>
         <div>
-          <div className="flex gap-4 text-lg sm:text-2xl md:text-3xl font-bold leading-tight mb-1">
-            <span className="text-green-600">{kpis.veiculosSegurados}</span>
-            <span className="text-slate-400">/</span>
-            <span className="text-red-600">{kpis.semSeguro}</span>
+          <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white leading-tight mb-1">
+            {kpis.veiculosSegurados}
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-tight">
-            Com seguro / Sem seguro
+            Constam na apólice
           </p>
         </div>
       </Card>
