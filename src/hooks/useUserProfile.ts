@@ -1,6 +1,24 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+// Event emitter para notificar mudanças de perfil
+class ProfileEventEmitter {
+  private listeners: (() => void)[] = [];
+
+  subscribe(callback: () => void) {
+    this.listeners.push(callback);
+    return () => {
+      this.listeners = this.listeners.filter(listener => listener !== callback);
+    };
+  }
+
+  emit() {
+    this.listeners.forEach(callback => callback());
+  }
+}
+
+const profileEvents = new ProfileEventEmitter();
+
 type UserProfile = {
   id: string;
   display_name: string;
@@ -68,17 +86,62 @@ export function useUserProfile() {
   useEffect(() => {
     load();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        load();
-      } else {
-        setProfile(null);
-        setLoading(false);
+    // Listen to profile update events
+    const unsubscribeEvents = profileEvents.subscribe(() => {
+      console.log('🔄 Profile event received, reloading...');
+      load();
+    });
+    
+    // Setup subscriptions
+    const setupSubscriptions = async () => {
+      // Listen to auth changes
+      const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) {
+          load();
+        } else {
+          setProfile(null);
+          setLoading(false);
+        }
+      });
+
+      // Listen to real-time changes in user_profiles table
+      const { data: { user } } = await supabase.auth.getUser();
+      let realtimeSubscription: any = null;
+      
+      if (user) {
+        realtimeSubscription = supabase
+          .channel('user_profiles_changes')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'user_profiles',
+              filter: `id=eq.${user.id}`
+            },
+            (payload) => {
+              console.log('🔄 Profile changed in real-time:', payload);
+              load(); // Reload profile when it changes
+            }
+          )
+          .subscribe();
       }
+
+      return { authSubscription, realtimeSubscription };
+    };
+
+    let subscriptions: any = null;
+    
+    setupSubscriptions().then((subs) => {
+      subscriptions = subs;
     });
 
     return () => {
-      subscription?.unsubscribe();
+      unsubscribeEvents();
+      if (subscriptions) {
+        subscriptions.authSubscription?.unsubscribe();
+        subscriptions.realtimeSubscription?.unsubscribe();
+      }
     };
   }, [load]);
 
@@ -97,6 +160,9 @@ export function useUserProfile() {
 
     if (error) throw error;
     await load();
+    
+    // Emit event to notify other components
+    profileEvents.emit();
   };
 
   const updateAvatar = async (file: File) => {
@@ -159,6 +225,9 @@ export function useUserProfile() {
 
       await load();
       
+      // Emit event to notify other components
+      profileEvents.emit();
+      
     } catch (err: any) {
       // Se o upload falhou, tentar limpar o arquivo
       try {
@@ -192,6 +261,9 @@ export function useUserProfile() {
 
     if (error) throw error;
     await load();
+    
+    // Emit event to notify other components
+    profileEvents.emit();
   };
 
   return { 

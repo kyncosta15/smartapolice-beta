@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LogOut, ChevronDown, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,8 +16,8 @@ interface NavbarProps {
 
 export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { user, profile, logout } = useAuth();
-  const { profile: userProfile } = useUserProfile();
+  const { logout } = useAuth(); // Só usar logout do AuthContext
+  const { profile: userProfile } = useUserProfile(); // Usar apenas useUserProfile para dados
   const { toast } = useToast();
 
   const getRoleLabel = (role: string) => {
@@ -66,9 +66,9 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
     }
   };
 
-  // Definir fonte preferida para avatar e nome
-  const preferredAvatarUrl = userProfile?.photo_url || profile?.avatar_url || (user as any)?.avatar_url || (user as any)?.avatar;
-  const preferredDisplayName = userProfile?.display_name || profile?.full_name || user?.name || '';
+  // Definir fonte preferida para avatar e nome usando apenas userProfile
+  const preferredAvatarUrl = userProfile?.photo_url;
+  const preferredDisplayName = userProfile?.display_name || 'Usuário';
 
   return (
     <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
@@ -117,7 +117,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                   {preferredDisplayName || 'Usuário'}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {getRoleLabel((profile?.role || user?.role) || '')}
+                  Gestão de perfil
                 </p>
               </div>
               <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -144,10 +144,10 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                           {preferredDisplayName || 'Usuário'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {profile?.email || user?.email}
+                          {userProfile?.id ? 'Perfil ativo' : 'Carregando...'}
                         </p>
-                        <Badge variant={getRoleBadgeVariant((profile?.role || user?.role) || '')} className="text-xs mt-1">
-                          {getRoleLabel((profile?.role || user?.role) || '')}
+                        <Badge variant="secondary" className="text-xs mt-1">
+                          Usuário
                         </Badge>
                       </div>
                     </div>
