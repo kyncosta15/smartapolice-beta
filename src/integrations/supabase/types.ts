@@ -1895,6 +1895,7 @@ export type Database = {
       users: {
         Row: {
           avatar: string | null
+          avatar_url: string | null
           classification: string | null
           company: string | null
           created_at: string | null
@@ -1909,6 +1910,7 @@ export type Database = {
         }
         Insert: {
           avatar?: string | null
+          avatar_url?: string | null
           classification?: string | null
           company?: string | null
           created_at?: string | null
@@ -1923,6 +1925,7 @@ export type Database = {
         }
         Update: {
           avatar?: string | null
+          avatar_url?: string | null
           classification?: string | null
           company?: string | null
           created_at?: string | null
