@@ -133,8 +133,8 @@ export function GestaoFrotas() {
       if (error) throw error;
 
       toast({
-        title: "Dados preenchidos com sucesso!",
-        description: data.message,
+        title: "✅ Dados vazios preenchidos!",
+        description: `${data.message} - APENAS campos vazios foram preenchidos, dados existentes foram preservados.`,
       });
 
       // Recarregar dados
@@ -143,8 +143,8 @@ export function GestaoFrotas() {
     } catch (error: any) {
       console.error('Erro ao preencher dados:', error);
       toast({
-        title: "Erro ao preencher dados",
-        description: error.message || "Ocorreu um erro inesperado",
+        title: "❌ Erro ao preencher dados vazios",
+        description: error.message || "Ocorreu um erro inesperado ao tentar preencher campos vazios",
         variant: "destructive"
       });
     } finally {
@@ -199,7 +199,7 @@ export function GestaoFrotas() {
                 <Database className="h-4 w-4" />
               )}
               <span className="hidden sm:inline">
-                {preenchendoDados ? 'Preenchendo...' : 'Preencher Dados'}
+                {preenchendoDados ? 'Preenchendo...' : 'Preencher Dados Vazios'}
               </span>
             </Button>
             

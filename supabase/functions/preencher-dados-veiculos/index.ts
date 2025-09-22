@@ -32,8 +32,8 @@ serve(async (req) => {
       )
     }
 
-    console.log('Buscando veículos sem dados...')
-    // Buscar veículos sem dados
+    console.log('Buscando veículos com campos vazios...')
+    // Buscar apenas veículos que têm campos REALMENTE vazios/nulos
     const { data: veiculos, error: fetchError } = await supabase
       .from('frota_veiculos')
       .select('id, placa, marca, modelo, categoria, created_at, renavam, ano_modelo, chassi, localizacao, codigo')
@@ -173,19 +173,28 @@ serve(async (req) => {
       return `${prefixo}${sufixo}`
     }
 
-    console.log('Preparando atualizações...')
-    // Atualizar veículos em lotes
+    console.log('Preparando atualizações APENAS para campos vazios...')
+    // Atualizar veículos em lotes - APENAS campos que estão realmente vazios
     const updates = veiculos.map(veiculo => {
-      const ano = determinarAno(veiculo.placa, veiculo.created_at, veiculo.marca || '', veiculo.modelo || '')
+      const ano = veiculo.ano_modelo || determinarAno(veiculo.placa, veiculo.created_at, veiculo.marca || '', veiculo.modelo || '')
+      
+      // CRÍTICO: Apenas gerar dados para campos que estão REALMENTE vazios
       const dadosGerados = {
         id: veiculo.id,
-        renavam: veiculo.renavam || gerarRenavam(),
-        ano_modelo: veiculo.ano_modelo || ano,
-        chassi: veiculo.chassi || gerarChassi(veiculo.marca, ano),
-        localizacao: veiculo.localizacao || determinarLocalizacao(veiculo.categoria, veiculo.marca),
-        codigo: veiculo.codigo || gerarCodigo(veiculo.placa, veiculo.categoria, veiculo.marca)
+        // Só gerar RENAVAM se estiver vazio
+        ...(veiculo.renavam ? {} : { renavam: gerarRenavam() }),
+        // Só gerar ano se estiver vazio
+        ...(veiculo.ano_modelo ? {} : { ano_modelo: ano }),
+        // Só gerar chassi se estiver vazio
+        ...(veiculo.chassi ? {} : { chassi: gerarChassi(veiculo.marca, ano) }),
+        // Só gerar localização se estiver vazia
+        ...(veiculo.localizacao ? {} : { localizacao: determinarLocalizacao(veiculo.categoria, veiculo.marca) }),
+        // Só gerar código se estiver vazio
+        ...(veiculo.codigo ? {} : { codigo: gerarCodigo(veiculo.placa, veiculo.categoria, veiculo.marca) })
       }
-      console.log(`Veículo ${veiculo.placa}: ${JSON.stringify(dadosGerados)}`)
+      
+      console.log(`Veículo ${veiculo.placa}: PRESERVANDO dados existentes, gerando apenas:`, 
+        Object.keys(dadosGerados).filter(k => k !== 'id'))
       return dadosGerados
     })
 
@@ -200,15 +209,22 @@ serve(async (req) => {
       
       for (const update of batch) {
         console.log(`Atualizando veículo ID: ${update.id}`)
+        
+        // Só fazer update se houver dados para atualizar (excluindo o ID)
+        const updateData = Object.fromEntries(
+          Object.entries(update).filter(([key]) => key !== 'id')
+        );
+        
+        if (Object.keys(updateData).length === 0) {
+          console.log(`Pulando veículo ${update.id} - nenhum campo para atualizar`)
+          updatedCount++
+          continue;
+        }
+        
+        console.log(`Atualizando campos:`, Object.keys(updateData))
         const { data, error: updateError } = await supabase
           .from('frota_veiculos')
-          .update({
-            renavam: update.renavam,
-            ano_modelo: update.ano_modelo,
-            chassi: update.chassi,
-            localizacao: update.localizacao,
-            codigo: update.codigo
-          })
+          .update(updateData)
           .eq('id', update.id)
           .select('id, placa')
 
