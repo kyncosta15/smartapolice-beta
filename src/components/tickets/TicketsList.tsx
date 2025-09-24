@@ -240,12 +240,12 @@ export function TicketsList() {
 
       {/* Modal da Esteira de Status Completa */}
       <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
-        <DialogContent className="max-w-[90vw] sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[90vh] h-[90vh] overflow-hidden p-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
-          <DialogHeader className="px-4 py-3 border-b bg-background/95 backdrop-blur-sm flex-shrink-0">
+        <DialogContent className="w-[95vw] max-w-sm sm:max-w-md md:max-w-lg max-h-[92vh] h-[92vh] overflow-hidden p-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+          <DialogHeader className="px-3 py-2.5 border-b bg-background/95 backdrop-blur-sm flex-shrink-0">
             <DialogTitle className="flex items-center gap-2 text-sm font-medium">
-              <div className="w-2 h-2 rounded-full bg-primary" />
-              <span className="truncate">
-                {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id}
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="truncate text-xs sm:text-sm">
+                {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id?.slice(-8)}
               </span>
             </DialogTitle>
           </DialogHeader>
