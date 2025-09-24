@@ -13,6 +13,7 @@ import { shouldUseUIV2 } from '@/config/features';
 // Phase 1 - UI V2 components
 import { NovoTicketModalV2 } from './NovoTicketModalV2'
 import { NovoTicketModalV3 } from './NovoTicketModalV3'
+import { NovoTicketModalV4 } from './NovoTicketModalV4'
 import { useUIVersion } from '@/hooks/useUIVersion'
 import { 
   FileText, 
@@ -130,9 +131,9 @@ export function SinistrosDashboard({
       <div className="flex items-center justify-between md:justify-end">
         {/* Feature Flag: Use V2 or V1 modal based on flag */}
         {uiVersion.useV2 ? (
-          <NovoTicketModalV3
+          <NovoTicketModalV4
             trigger={
-              <Button className="shrink-0" title="Abrir novo ticket (React Aria)">
+              <Button className="shrink-0" title="Abrir novo ticket (React Aria v4)">
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Ticket
               </Button>
