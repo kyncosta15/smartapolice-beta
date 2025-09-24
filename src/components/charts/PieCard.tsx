@@ -1,0 +1,221 @@
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
+type Item = { name: string; count: number };
+
+type Props = {
+  title: string;
+  icon?: React.ReactNode;
+  data: Item[];
+  maxSlices?: number;
+  colorScale?: string[];
+};
+
+const palette = [
+  "#4F46E5", // indigo-600
+  "#06B6D4", // cyan-500  
+  "#84CC16", // lime-500
+  "#F59E0B", // amber-500
+  "#EF4444", // red-500
+  "#8B5CF6", // violet-500
+  "#22C55E", // green-500
+  "#3B82F6", // blue-500
+  "#F43F5E", // rose-500
+  "#14B8A6", // teal-500
+];
+
+export default function PieCard({ 
+  title, 
+  icon, 
+  data, 
+  maxSlices = 8, 
+  colorScale = palette 
+}: Props) {
+  const [showLegend, setShowLegend] = useState(false);
+
+  const chartData = useMemo(() => {
+    const sorted = [...data]
+      .filter(d => d.count > 0)
+      .sort((a, b) => b.count - a.count);
+    
+    if (sorted.length <= maxSlices) {
+      return sorted.map((item, index) => ({
+        ...item,
+        color: colorScale[index % colorScale.length]
+      }));
+    }
+    
+    const top = sorted.slice(0, maxSlices - 1);
+    const rest = sorted.slice(maxSlices - 1);
+    const outrosCount = rest.reduce((sum, item) => sum + item.count, 0);
+    
+    const result = [
+      ...top.map((item, index) => ({
+        ...item,
+        color: colorScale[index % colorScale.length]
+      })),
+      {
+        name: "Outros",
+        count: outrosCount,
+        color: colorScale[(maxSlices - 1) % colorScale.length]
+      }
+    ];
+    
+    return result;
+  }, [data, maxSlices, colorScale]);
+
+  const total = useMemo(() => 
+    chartData.reduce((sum, item) => sum + item.count, 0), 
+    [chartData]
+  );
+
+  const CustomLegend = () => (
+    <div className="space-y-2 max-h-56 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300">
+      {chartData.map((entry, index) => {
+        const percentage = total > 0 ? Math.round((entry.count / total) * 100) : 0;
+        return (
+          <div 
+            key={`legend-${index}`} 
+            className="flex items-start gap-2 p-2 rounded-md hover:bg-gray-50 transition-colors"
+            role="listitem"
+            aria-label={`${entry.name}: ${entry.count} veículos, ${percentage}%`}
+          >
+            <div 
+              className="w-3 h-3 rounded-full flex-shrink-0 mt-1"
+              style={{ backgroundColor: entry.color }}
+              aria-hidden="true"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-gray-900 leading-tight">
+                {entry.name}
+              </div>
+              <div className="text-xs text-gray-600 mt-0.5">
+                {entry.count} veículo{entry.count !== 1 ? 's' : ''} ({percentage}%)
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const renderTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.[0]) return null;
+    
+    const data = payload[0].payload;
+    const percentage = total > 0 ? Math.round((data.count / total) * 100) : 0;
+    
+    return (
+      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <div className="font-medium text-gray-900">{data.name}</div>
+        <div className="text-sm text-gray-600">
+          {data.count} veículo{data.count !== 1 ? 's' : ''} ({percentage}%)
+        </div>
+      </div>
+    );
+  };
+
+  if (chartData.length === 0) {
+    return (
+      <Card className="rounded-xl border bg-white">
+        <CardHeader className="pb-2 p-3 md:p-4">
+          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+            {icon}
+            {title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 md:p-4">
+          <div className="flex items-center justify-center h-48 text-gray-500">
+            Nenhum dado disponível
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="rounded-xl border bg-white">
+      <CardHeader className="pb-2 p-3 md:p-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+            {icon}
+            {title}
+          </CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden"
+            onClick={() => setShowLegend(!showLegend)}
+            aria-expanded={showLegend}
+            aria-controls={`legend-${title.replace(/\s+/g, '-').toLowerCase()}`}
+          >
+            {showLegend ? (
+              <>
+                <ChevronUp className="h-4 w-4 mr-1" />
+                Esconder
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4 mr-1" />
+                Ver legenda
+              </>
+            )}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-3 md:p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 items-start">
+          {/* Chart Area */}
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart aria-label={`Gráfico de ${title}`}>
+                <Pie
+                  data={chartData}
+                  dataKey="count"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={90}
+                  paddingAngle={2}
+                  isAnimationActive={false}
+                  labelLine={false}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.color}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip content={renderTooltip} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Desktop Legend - Always Visible */}
+          <div className="hidden lg:block">
+            <div className="text-sm font-medium text-gray-700 mb-3">Legenda</div>
+            <CustomLegend />
+          </div>
+
+          {/* Mobile Legend - Collapsible */}
+          <div 
+            className={`lg:hidden transition-all duration-200 ease-in-out ${
+              showLegend ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+            }`}
+            id={`legend-${title.replace(/\s+/g, '-').toLowerCase()}`}
+            role="list"
+            aria-label={`Legenda do gráfico ${title}`}
+          >
+            <div className="text-sm font-medium text-gray-700 mb-3">Legenda</div>
+            <CustomLegend />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

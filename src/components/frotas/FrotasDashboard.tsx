@@ -4,77 +4,22 @@ import { FrotasTable } from './FrotasTable';
 import { FrotasFilters } from './FrotasFilters';
 import { FrotaVeiculo, FrotaKPIs } from '@/hooks/useFrotasData';
 import { FrotaFilters } from '../GestaoFrotas';
-import { Pie, PieChart, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { Car, PieChart as PieChartIcon } from 'lucide-react';
+import { Car, PieChart as PieChartIcon, Package } from 'lucide-react';
+import PieCard from '@/components/charts/PieCard';
 
-// Helper functions for colors
-function getRandomColor() {
-  const colors = [
-    '#3B82F6', // blue-500
-    '#10B981', // emerald-500
-    '#F59E0B', // amber-500
-    '#EF4444', // red-500
-    '#8B5CF6', // violet-500
-    '#06B6D4', // cyan-500
-    '#84CC16', // lime-500
-    '#F97316', // orange-500
-    '#EC4899', // pink-500
-    '#6366F1', // indigo-500
-    '#14B8A6', // teal-500
-    '#F43F5E', // rose-500
-    '#A855F7', // purple-500
-    '#0EA5E9', // sky-500
-    '#22C55E', // green-500
-  ];
-  return colors[Math.floor(Math.random() * colors.length)];
-}
-
-function getCategoryColor(categoria: string) {
-  const categoryColors = {
-    'Passeio': '#3B82F6',      // blue-500
-    'Utilitário': '#10B981',   // emerald-500
-    'Caminhão': '#F59E0B',     // amber-500
-    'Moto': '#EF4444',         // red-500
-    'Outros': '#8B5CF6',       // violet-500
-  };
-  return categoryColors[categoria as keyof typeof categoryColors] || '#6B7280';
-}
-
-// Custom Legend Component for better organization
-const CustomLegend = ({ payload, type }: any) => {
-  if (!payload || payload.length === 0) return null;
-  
-  return (
-    <div className="flex flex-col gap-1 text-sm max-w-[200px] pl-2">
-      {payload.map((entry: any, index: number) => {
-        const name = entry?.payload?.fullName || entry.value || entry.name;
-        const value = entry?.payload?.value || 0;
-        const displayName = name && name.length > 18 ? `${name.substring(0, 18)}...` : name;
-        
-        return (
-          <div 
-            key={`legend-${index}`} 
-            className="flex flex-col p-2 border-b border-gray-100 last:border-b-0"
-            title={name && name.length > 18 ? name : undefined}
-          >
-            <div className="flex items-center gap-2">
-              <div 
-                className="w-3 h-3 rounded-full flex-shrink-0" 
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="font-medium text-gray-900 leading-tight text-xs">
-                {displayName}
-              </span>
-            </div>
-            <span className="text-xs text-gray-600 ml-5 mt-0.5">
-              {value} veículo{value !== 1 ? 's' : ''}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+// Consistent color palette for all charts
+const chartColors = [
+  "#4F46E5", // indigo-600
+  "#06B6D4", // cyan-500  
+  "#84CC16", // lime-500
+  "#F59E0B", // amber-500
+  "#EF4444", // red-500
+  "#8B5CF6", // violet-500
+  "#22C55E", // green-500
+  "#3B82F6", // blue-500
+  "#F43F5E", // rose-500
+  "#14B8A6", // teal-500
+];
 
 interface FrotasDashboardProps {
   kpis: FrotaKPIs;
@@ -91,16 +36,28 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
   // Preparar dados para gráficos
   const categoriaData = React.useMemo(() => {
     const categorias = veiculos.reduce((acc, v) => {
-      const cat = v.categoria || 'outros';
-      acc[cat] = (acc[cat] || 0) + 1;
+      const cat = v.categoria || 'Outros';
+      const normalizedCat = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
+      acc[normalizedCat] = (acc[normalizedCat] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    return Object.entries(categorias).map(([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      fullName: name.charAt(0).toUpperCase() + name.slice(1),
-      value,
-      color: getCategoryColor(name.charAt(0).toUpperCase() + name.slice(1))
+    return Object.entries(categorias).map(([name, count]) => ({
+      name,
+      count
+    }));
+  }, [veiculos]);
+
+  const marcasData = React.useMemo(() => {
+    const marcas = veiculos.reduce((acc, v) => {
+      if (!v.marca) return acc;
+      acc[v.marca] = (acc[v.marca] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(marcas).map(([name, count]) => ({
+      name,
+      count
     }));
   }, [veiculos]);
 
@@ -111,40 +68,11 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
       return acc;
     }, {} as Record<string, number>);
 
-    return Object.entries(modelos)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 8)
-      .map(([name, value]) => ({
-        name: name,
-        fullName: name,
-        value,
-        color: getRandomColor()
-      }));
+    return Object.entries(modelos).map(([name, count]) => ({
+      name,
+      count
+    }));
   }, [veiculos]);
-
-  const marcasDataPie = React.useMemo(() => {
-    const marcas = veiculos.reduce((acc, v) => {
-      if (!v.marca) return acc;
-      acc[v.marca] = (acc[v.marca] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return Object.entries(marcas)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 8)
-      .map(([name, value]) => ({
-        name,
-        fullName: name,
-        value,
-        color: getRandomColor()
-      }));
-  }, [veiculos]);
-
-  const modalidadeData = [
-    { name: 'Financiado', fullName: 'Financiado', value: kpis.modalidadeDistribuicao.financiado, color: '#3B82F6' },
-    { name: 'À Vista', fullName: 'À Vista', value: kpis.modalidadeDistribuicao.avista, color: '#10B981' },
-    { name: 'Consórcio', fullName: 'Consórcio', value: kpis.modalidadeDistribuicao.consorcio, color: '#F59E0B' },
-  ].filter(item => item.value > 0);
 
   if (loading) {
     return (
@@ -168,150 +96,27 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Charts and Analytics */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        {/* Categories Distribution Chart */}
-        <Card className="rounded-xl border bg-white">
-          <CardHeader className="pb-2 p-3 md:p-4">
-            <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <PieChartIcon className="h-5 w-5 text-blue-600" />
-              Distribuição por Categoria
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 md:p-4">
-            <div className="flex flex-col lg:flex-row items-center gap-4">
-              <div className="h-48 sm:h-56 w-full lg:w-[60%]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoriaData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={60}
-                      fill="#8884d8"
-                    >
-                      {categoriaData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value, name) => [
-                        `${value} veículo${value !== 1 ? 's' : ''}`,
-                        name
-                      ]}
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="w-full lg:w-[40%]">
-                <CustomLegend payload={categoriaData} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Brands Distribution Chart - Pie */}
-        <Card className="rounded-xl border bg-white">
-          <CardHeader className="pb-2 p-3 md:p-4">
-            <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <Car className="h-5 w-5 text-blue-600" />
-              Distribuição por Marcas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 md:p-4">
-            <div className="flex flex-col lg:flex-row items-center gap-4">
-              <div className="h-48 sm:h-56 w-full lg:w-[60%]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={marcasDataPie}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={60}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {marcasDataPie.map((entry, index) => (
-                        <Cell key={`marca-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value, name) => [
-                        `${value} veículo${value !== 1 ? 's' : ''}`,
-                        name
-                      ]}
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="w-full lg:w-[40%]">
-                <CustomLegend payload={marcasDataPie} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Models Distribution Chart - Pie */}
-        <Card className="rounded-xl border bg-white">
-          <CardHeader className="pb-2 p-3 md:p-4">
-            <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <Car className="h-5 w-5 text-purple-600" />
-              Distribuição por Modelos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 md:p-4">
-            <div className="flex flex-col lg:flex-row items-center gap-4">
-              <div className="h-48 sm:h-56 w-full lg:w-[60%]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={modelosData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={60}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {modelosData.map((entry, index) => (
-                        <Cell key={`modelo-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value, name) => [
-                        `${value} veículo${value !== 1 ? 's' : ''}`,
-                        name
-                      ]}
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="w-full lg:w-[40%]">
-                <CustomLegend payload={modelosData} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <PieCard
+          title="Distribuição por Categoria"
+          icon={<PieChartIcon className="h-5 w-5 text-blue-600" />}
+          data={categoriaData}
+          colorScale={chartColors}
+        />
+        
+        <PieCard
+          title="Distribuição por Marcas"
+          icon={<Car className="h-5 w-5 text-cyan-600" />}
+          data={marcasData}
+          colorScale={chartColors}
+        />
+        
+        <PieCard
+          title="Distribuição por Modelos"
+          icon={<Package className="h-5 w-5 text-violet-600" />}
+          data={modelosData}
+          colorScale={chartColors}
+        />
       </div>
 
       {/* Lista de Veículos com Filtros */}
