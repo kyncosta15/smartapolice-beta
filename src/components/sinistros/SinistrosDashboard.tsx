@@ -11,7 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 import { TicketsList } from '@/components/tickets/TicketsList';
 import { shouldUseUIV2 } from '@/config/features';
 // Phase 1 - UI V2 components
-import { NovoTicketModalV2 } from './NovoTicketModalV2';
+import { NovoTicketModalV2 } from './NovoTicketModalV2'
+import { NovoTicketModalV3 } from './NovoTicketModalV3'
+import { useUIVersion } from '@/hooks/useUIVersion'
 import { 
   FileText, 
   CheckCircle, 
