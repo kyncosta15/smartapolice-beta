@@ -31,7 +31,7 @@ const SmartApoliceAuthContent = () => {
 
       {/* Conteúdo da autenticação */}
       <div className="flex-1 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-lg">
           <CardContent className="p-6">
             <AuthPage />
           </CardContent>
