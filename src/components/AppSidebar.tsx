@@ -55,53 +55,64 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   };
 
   return (
-    <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 border-r border-gray-200 bg-white z-30 overflow-y-auto">
+    <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 bg-background border-r border-border/50 z-30 overflow-y-auto shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-center p-4 border-b border-gray-100">
+      <div className="flex items-center justify-center p-4 border-b border-border/30 bg-gradient-to-b from-background to-muted/10">
         <SmartApóliceLogo size="sm" showText={true} />
       </div>
 
       {/* Navigation */}
-      <nav className="p-4 space-y-1.5">
+      <nav className="p-4 space-y-2">
         {navigation.map((item) => (
           <button
             key={item.id}
             onClick={() => handleNavigation(item.id)}
             aria-current={activeSection === item.id ? 'page' : undefined}
             className={cn(
-              "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm w-full text-left",
-              "transition-all duration-200 ease-out font-medium",
+              "group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm w-full text-left",
+              "transition-all duration-200 ease-out font-medium relative overflow-hidden",
               "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-              "hover:shadow-sm hover:scale-[1.02] active:scale-[0.98]",
+              "hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] hover:translate-x-0.5",
+              "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
               activeSection === item.id && [
-                "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20",
-                "hover:bg-primary/15 hover:text-primary"
+                "bg-gradient-to-r from-primary/15 to-primary/5 text-primary shadow-sm border border-primary/10",
+                "hover:from-primary/20 hover:to-primary/8 hover:text-primary",
+                "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-gradient-to-b before:from-primary before:to-primary/80 before:rounded-r-full"
               ]
             )}
           >
             <item.icon className={cn(
-              "size-4 transition-all duration-200",
+              "size-4 transition-all duration-200 flex-shrink-0",
               activeSection === item.id 
-                ? "text-primary" 
-                : "text-muted-foreground group-hover:text-foreground"
+                ? "text-primary drop-shadow-sm" 
+                : "text-muted-foreground group-hover:text-foreground group-hover:scale-110"
             )} />
             <span className="truncate">{item.title}</span>
+            {activeSection === item.id && (
+              <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            )}
           </button>
         ))}
       </nav>
 
       {/* Bottom Section - Back Button */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 bg-white">
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/30 bg-gradient-to-t from-background to-muted/5 backdrop-blur-sm">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/system-selection')}
-          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-gray-600 hover:bg-slate-50 transition-colors rounded-lg"
+          className={cn(
+            "w-full flex items-center gap-3 px-3.5 py-2.5 text-sm rounded-xl",
+            "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+            "transition-all duration-200 ease-out font-medium",
+            "hover:scale-[1.01] active:scale-[0.99] hover:shadow-sm",
+            "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1"
+          )}
           aria-label="Voltar para seleção de sistemas"
           title="Voltar para seleção de sistemas"
         >
-          <ArrowLeft className="size-4" />
-          <span className="truncate font-medium">Voltar aos sistemas</span>
+          <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+          <span className="truncate">Voltar aos sistemas</span>
         </Button>
       </div>
     </aside>
