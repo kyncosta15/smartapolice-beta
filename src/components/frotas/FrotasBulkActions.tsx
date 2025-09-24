@@ -59,17 +59,20 @@ export function FrotasBulkActions({
   
   // Extrair marcas e modelos únicos dos veículos
   const availableBrands = useMemo(() => {
+    if (!allVehicles || !Array.isArray(allVehicles)) return [];
     const brands = [...new Set(allVehicles.map(v => v.marca).filter(Boolean))].sort();
     return brands;
   }, [allVehicles]);
   
   const availableModels = useMemo(() => {
+    if (!allVehicles || !Array.isArray(allVehicles)) return [];
     const models = [...new Set(allVehicles.map(v => v.modelo).filter(Boolean))].sort();
     return models;
   }, [allVehicles]);
   
   // Filtrar veículos baseado nos filtros de seleção
   const filteredVehicles = useMemo(() => {
+    if (!allVehicles || !Array.isArray(allVehicles)) return [];
     return allVehicles.filter(vehicle => {
       // Filtro de busca
       if (searchFilter) {
