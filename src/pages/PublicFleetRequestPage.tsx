@@ -8,6 +8,7 @@ import { CheckCircle, AlertTriangle, Clock, Car, Building2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import DocumentUpload from '@/components/DocumentUpload';
 import {
   Form,
   FormControl,
@@ -72,6 +73,8 @@ export default function PublicFleetRequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [protocolCode, setProtocolCode] = useState<string>('');
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; url: string; size: number }>>([]);
+  const [empresaId, setEmpresaId] = useState<string>('');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -114,12 +117,13 @@ export default function PublicFleetRequestPage() {
       // Buscar nome da empresa separadamente
       const { data: empresa } = await supabase
         .from('empresas')
-        .select('nome')
+        .select('nome, id')
         .eq('id', data.empresa_id)
         .single();
 
       setTokenValid(true);
       setCompanyName(empresa?.nome || '');
+      setEmpresaId(empresa?.id || '');
     } catch (error) {
       setTokenValid(false);
     }
@@ -136,6 +140,7 @@ export default function PublicFleetRequestPage() {
         body: {
           token,
           formData: values,
+          anexos: uploadedFiles,
         }
       });
 
@@ -545,6 +550,24 @@ export default function PublicFleetRequestPage() {
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Upload de Documentos */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Documentos Anexos</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Anexe documentos relevantes à sua solicitação (opcional)
+                  </p>
+                  
+                  {empresaId && (
+                    <DocumentUpload
+                      onFilesChange={setUploadedFiles}
+                      empresaId={empresaId}
+                      maxFiles={5}
+                      maxSizeInMB={10}
+                      acceptedTypes={['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx']}
+                    />
+                  )}
                 </div>
 
                 {/* Botão de Envio */}

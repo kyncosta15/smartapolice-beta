@@ -22,7 +22,7 @@ serve(async (req) => {
     const body = await req.json();
     console.log('Received public fleet request:', JSON.stringify(body, null, 2));
 
-    const { token, formData } = body;
+    const { token, formData, anexos } = body;
 
     if (!token || !formData) {
       return new Response(
@@ -123,7 +123,7 @@ serve(async (req) => {
         status: 'aberto',
         prioridade: 'normal',
         payload,
-        anexos: [],
+        anexos: anexos || [],
       })
       .select()
       .single();
