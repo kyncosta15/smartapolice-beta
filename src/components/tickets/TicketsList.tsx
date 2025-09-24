@@ -240,7 +240,7 @@ export function TicketsList() {
 
       {/* Modal da Esteira de Status Completa */}
       <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
-        <DialogContent className="w-[95vw] max-w-sm sm:max-w-md md:max-w-lg max-h-[92vh] h-[92vh] overflow-hidden p-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+        <DialogContent className="w-[95vw] max-w-sm sm:max-w-md md:max-w-lg max-h-[92vh] h-[92vh] overflow-hidden p-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 flex flex-col">
           <DialogHeader className="px-3 py-2.5 border-b bg-background/95 backdrop-blur-sm flex-shrink-0">
             <DialogTitle className="flex items-center gap-2 text-sm font-medium">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -265,6 +265,17 @@ export function TicketsList() {
               />
             </div>
           )}
+          
+          {/* Rodapé com botão fechar */}
+          <div className="border-t bg-muted/20 p-3 flex-shrink-0">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsStatusModalOpen(false)}
+              className="w-full"
+            >
+              Fechar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
