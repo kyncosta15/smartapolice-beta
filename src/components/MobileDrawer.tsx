@@ -81,48 +81,56 @@ export function MobileDrawer({
         aria-modal="true"
         aria-label="Menu de navegação"
         className={cn(
-          "fixed inset-y-0 left-0 w-[85%] max-w-[320px] bg-white z-50 shadow-2xl transition-transform duration-300 ease-out",
+          "fixed inset-y-0 left-0 w-[85%] max-w-[320px] bg-background border-r border-border/50 z-50 shadow-xl transition-all duration-300 ease-out",
           isOpen 
             ? "translate-x-0" 
             : "-translate-x-full"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+        <div className="flex items-center justify-between p-4 border-b border-border/30 bg-gradient-to-b from-background to-muted/10">
           <SmartApóliceLogo size="sm" showText={true} />
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
             aria-label="Fechar menu"
-            className="p-2 hover:bg-gray-100 rounded-full"
+            className="p-2 hover:bg-accent/50 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
           </Button>
         </div>
 
         {/* Navigation */}
-        <nav className="p-3 space-y-1">
+        <nav className="p-4 space-y-2">
           {navigation.map((item) => (
             <button
               key={item.id}
               onClick={() => handleNavigation(item.id)}
               aria-current={activeSection === item.id ? 'page' : undefined}
               className={cn(
-                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm w-full text-left",
-                "text-gray-700 hover:bg-slate-50 transition-colors duration-200",
+                "group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm w-full text-left",
+                "transition-all duration-200 ease-out font-medium relative overflow-hidden",
+                "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                "hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] hover:translate-x-0.5",
+                "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
                 activeSection === item.id && [
-                  "bg-slate-100 border-l-2 border-blue-600 text-blue-700"
+                  "bg-gradient-to-r from-primary/15 to-primary/5 text-primary shadow-sm border border-primary/10",
+                  "hover:from-primary/20 hover:to-primary/8 hover:text-primary",
+                  "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-gradient-to-b before:from-primary before:to-primary/80 before:rounded-r-full"
                 ]
               )}
             >
               <item.icon className={cn(
-                "size-4 transition-colors",
+                "size-4 transition-all duration-200 flex-shrink-0",
                 activeSection === item.id 
-                  ? "text-blue-600" 
-                  : "text-gray-400 group-hover:text-gray-600"
+                  ? "text-primary drop-shadow-sm" 
+                  : "text-muted-foreground group-hover:text-foreground group-hover:scale-110"
               )} />
-              <span className="truncate font-medium">{item.title}</span>
+              <span className="truncate">{item.title}</span>
+              {activeSection === item.id && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              )}
             </button>
           ))}
         </nav>
