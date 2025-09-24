@@ -41,8 +41,12 @@ export function useTicketsData() {
 
   // Carregar tickets
   const loadTickets = async () => {
-    if (!empresaId) return;
+    if (!empresaId) {
+      console.log('🎫 loadTickets: empresaId não encontrado:', empresaId);
+      return;
+    }
 
+    console.log('🎫 loadTickets: Iniciando busca com empresaId:', empresaId);
     setLoading(true);
     try {
       let query = supabase
@@ -97,11 +101,16 @@ export function useTicketsData() {
           .lte('created_at', filters.dataFim);
       }
 
+      console.log('🎫 loadTickets: Executando query...');
       const { data, error } = await query;
 
       if (error) {
+        console.error('🎫 Erro na query:', error);
         throw error;
       }
+
+      console.log('🎫 loadTickets: Dados recebidos:', data?.length, 'tickets');
+      console.log('🎫 loadTickets: Primeiros dados:', data?.slice(0, 2));
 
       // Mapear dados para o formato esperado
       const mappedTickets = (data || []).map(ticket => {
@@ -114,6 +123,7 @@ export function useTicketsData() {
         };
       }) as Ticket[];
       
+      console.log('🎫 loadTickets: Tickets mapeados:', mappedTickets.length);
       setTickets(mappedTickets);
     } catch (error) {
       console.error('Erro ao carregar tickets:', error);
