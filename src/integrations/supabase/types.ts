@@ -917,6 +917,57 @@ export type Database = {
           },
         ]
       }
+      fleet_change_requests: {
+        Row: {
+          anexos: Json
+          chassi: string | null
+          created_at: string
+          empresa_id: string
+          id: string
+          payload: Json
+          placa: string | null
+          prioridade: string | null
+          renavam: string | null
+          status: string
+          tipo: string
+          updated_at: string
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          anexos?: Json
+          chassi?: string | null
+          created_at?: string
+          empresa_id: string
+          id?: string
+          payload?: Json
+          placa?: string | null
+          prioridade?: string | null
+          renavam?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          anexos?: Json
+          chassi?: string | null
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          payload?: Json
+          placa?: string | null
+          prioridade?: string | null
+          renavam?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: []
+      }
       frota_documentos: {
         Row: {
           created_at: string
@@ -1704,6 +1755,36 @@ export type Database = {
           phone?: string | null
           role?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      public_fleet_tokens: {
+        Row: {
+          created_at: string
+          created_by: string
+          empresa_id: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          empresa_id: string
+          expires_at: string
+          id?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          empresa_id?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
         }
         Relationships: []
       }
