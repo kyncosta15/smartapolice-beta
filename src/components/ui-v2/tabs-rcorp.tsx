@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { Tab } from '@headlessui/react'
-import { cn } from '../lib/utils'
+import { useSearchParams, useNavigate } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 
 export type TabItem = {
   id: string                 // usado também na URL (?tab=id)
@@ -15,8 +16,8 @@ export type TabItem = {
 
 export type TabsRCorpProps = {
   items: TabItem[]
-  initialTabId?: string      // id inicial; se ausente, usar primeira aba
-  urlSync?: boolean          // default: false para storybook
+  initialTabId?: string      // id inicial; se ausente, usar ?tab= ou primeira aba
+  urlSync?: boolean          // default: true — sincroniza com ?tab=
   className?: string         // container
   listClassName?: string     // Tab.List
   panelClassName?: string    // Tab.Panel
@@ -26,33 +27,47 @@ export type TabsRCorpProps = {
 export function TabsRCorp({
   items,
   initialTabId,
-  urlSync = false,
+  urlSync = true,
   className,
   listClassName,
   panelClassName,
   onTabChange
 }: TabsRCorpProps) {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [mountedTabs, setMountedTabs] = useState<Set<string>>(new Set())
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [isClient, setIsClient] = useState(false)
+
+  // Inicializar após hidratação para evitar mismatch
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Determinar aba inicial
   const getInitialTabIndex = useCallback(() => {
-    if (initialTabId) {
-      const index = items.findIndex(item => item.id === initialTabId)
+    if (!isClient) return 0
+    
+    const urlTabId = urlSync ? searchParams.get('tab') : null
+    const targetTabId = urlTabId || initialTabId
+    
+    if (targetTabId) {
+      const index = items.findIndex(item => item.id === targetTabId)
       return index >= 0 ? index : 0
     }
+    
     return 0
-  }, [items, initialTabId])
+  }, [items, initialTabId, urlSync, searchParams, isClient])
 
-  // Inicializar aba selecionada
+  // Atualizar selectedIndex quando parâmetros mudarem
   useEffect(() => {
-    const newIndex = getInitialTabIndex()
-    setSelectedIndex(newIndex)
-    // Marcar primeira aba como montada
-    if (items[newIndex]) {
-      setMountedTabs(prev => new Set([...prev, items[newIndex].id]))
+    if (isClient) {
+      const newIndex = getInitialTabIndex()
+      setSelectedIndex(newIndex)
+      // Marcar primeira aba como montada
+      setMountedTabs(prev => new Set([...prev, items[newIndex]?.id]))
     }
-  }, [getInitialTabIndex, items])
+  }, [getInitialTabIndex, items, isClient])
 
   // Handler para mudança de aba
   const handleTabChange = useCallback((index: number) => {
@@ -64,9 +79,16 @@ export function TabsRCorp({
     // Marcar aba como montada para lazy loading
     setMountedTabs(prev => new Set([...prev, newTab.id]))
     
+    // Sincronizar com URL
+    if (urlSync && isClient) {
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      newSearchParams.set('tab', newTab.id)
+      navigate(`?${newSearchParams.toString()}`, { replace: true })
+    }
+    
     // Callback customizado
     onTabChange?.(newTab.id)
-  }, [items, onTabChange])
+  }, [items, urlSync, searchParams, navigate, onTabChange, isClient])
 
   // Memoizar itens válidos
   const validItems = useMemo(() => items.filter(item => item.id && item.label), [items])
@@ -80,9 +102,9 @@ export function TabsRCorp({
       <Tab.Group selectedIndex={selectedIndex} onChange={handleTabChange}>
         <Tab.List 
           className={cn(
-            'flex gap-1 overflow-x-auto rounded-xl bg-gradient-to-r from-blue-500/10 to-blue-400/5 p-1 backdrop-blur',
+            'flex gap-1 overflow-x-auto rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 p-1 backdrop-blur supports-[backdrop-filter]:bg-primary/10',
             'scrollbar-hide scroll-smooth snap-x snap-mandatory',
-            'border border-blue-500/10 shadow-sm',
+            'border border-primary/10 shadow-sm',
             listClassName
           )}
         >
@@ -93,10 +115,10 @@ export function TabsRCorp({
                 cn(
                   'flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                   'min-w-0 flex-shrink-0 snap-start whitespace-nowrap',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2',
+                  'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background',
                   selected
-                    ? 'bg-white text-blue-700 shadow-md shadow-blue-500/10 ring-1 ring-blue-500/20'
-                    : 'text-blue-600/70 hover:bg-white/20 hover:text-blue-600 active:scale-[0.98]'
+                    ? 'bg-white text-primary shadow-md shadow-primary/10 ring-1 ring-primary/20'
+                    : 'text-primary/70 hover:bg-white/20 hover:text-primary active:scale-[0.98]'
                 )
               }
             >
@@ -113,7 +135,7 @@ export function TabsRCorp({
               {typeof item.count === 'number' && (
                 <span className={cn(
                   'ml-1 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                  'min-w-[1.5rem] h-5 bg-blue-500/15 text-blue-700 border border-blue-500/20'
+                  'min-w-[1.5rem] h-5 bg-primary/15 text-primary border border-primary/20'
                 )}>
                   {item.count}
                 </span>
@@ -127,7 +149,7 @@ export function TabsRCorp({
             <Tab.Panel
               key={item.id}
               className={cn(
-                'focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 rounded-lg',
+                'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 rounded-lg',
                 panelClassName
               )}
             >
@@ -137,8 +159,8 @@ export function TabsRCorp({
                   {item.content}
                 </div>
               ) : (
-                <div className="flex items-center justify-center py-8 text-gray-500">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                   <span className="ml-2 text-sm">Carregando...</span>
                 </div>
               )}

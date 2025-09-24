@@ -4,6 +4,10 @@
  * FEATURE_UI_V2: Migração incremental para Radix UI + React Aria
  * - false: Usa componentes atuais (shadcn/ui)
  * - true: Usa nova UI (Radix + React Aria) com acessibilidade avançada
+ * 
+ * FEATURE_TABS_V2: TabsRCorp com Headless UI - rollout incremental
+ * - false: Usa abas atuais
+ * - true: Usa TabsRCorp com Headless UI
  */
 
 export const FEATURE_FLAGS = {
@@ -15,6 +19,9 @@ export const FEATURE_FLAGS = {
   UI_V2_SINISTROS: import.meta.env.VITE_FEATURE_UI_V2_SINISTROS === 'true' || false,
   UI_V2_FORMS: import.meta.env.VITE_FEATURE_UI_V2_FORMS === 'true' || false,
   UI_V2_TABLES: import.meta.env.VITE_FEATURE_UI_V2_TABLES === 'true' || false,
+  
+  // Tabs V2 Migration - Default: false para rollout seguro
+  TABS_V2: import.meta.env.VITE_FEATURE_TABS_V2 === 'true' || false,
 } as const
 
 /**
@@ -44,4 +51,11 @@ export function shouldUseUIV2(page?: 'frotas' | 'sinistros' | 'forms' | 'tables'
     default:
       return false
   }
+}
+
+/**
+ * Utilitário para verificar se deve usar Tabs V2 (TabsRCorp)
+ */
+export function shouldUseTabsV2(): boolean {
+  return FEATURE_FLAGS.TABS_V2
 }

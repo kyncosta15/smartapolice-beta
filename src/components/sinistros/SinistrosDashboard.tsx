@@ -9,13 +9,14 @@ import { useClaimsStats } from '@/hooks/useClaimsStats';
 import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
 import { TicketsList } from '@/components/tickets/TicketsList';
-import { shouldUseUIV2 } from '@/config/features';
+import { shouldUseUIV2, shouldUseTabsV2 } from '@/config/features';
 // Phase 1 - UI V2 components
 import { NovoTicketModalV2 } from './NovoTicketModalV2'
 import { NovoTicketModalV3 } from './NovoTicketModalV3'
 import { NovoTicketModalV4 } from './NovoTicketModalV4'
 import { useUIVersion } from '@/hooks/useUIVersion'
 import { TicketsListV2 } from '@/components/tickets/TicketsListV2'
+import { TabsRCorp, TabItem } from '@/components/ui-v2/tabs-rcorp'
 import { Badge } from '@/components/ui/badge'
 import { 
   FileText, 
@@ -23,7 +24,9 @@ import {
   Clock,
   Plus,
   Wrench,
-  GitBranch
+  GitBranch,
+  AlertTriangle,
+  BarChart3
 } from 'lucide-react';
 import { Claim, Assistance } from '@/types/claims';
 
