@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.2';
-import nodemailer from 'npm:nodemailer@6.9.7';
-import jsPDF from 'npm:jspdf@2.5.1';
+import nodemailer from 'https://esm.sh/nodemailer@6.9.7';
+import jsPDF from 'https://esm.sh/jspdf@2.5.1';
 
 // Configurar transporter do Nodemailer
 const transporter = nodemailer.createTransporter({

@@ -68,3 +68,9 @@ verify_jwt = false
 
 [functions.auto-fill-worker] 
 verify_jwt = false
+
+[functions.fleet-request-webhook]
+verify_jwt = false
+
+[functions.public-fleet-request]
+verify_jwt = false
