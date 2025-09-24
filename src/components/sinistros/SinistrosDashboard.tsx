@@ -17,6 +17,7 @@ import { NovoTicketModalV4 } from './NovoTicketModalV4'
 import { useUIVersion } from '@/hooks/useUIVersion'
 import { TicketsListV2 } from '@/components/tickets/TicketsListV2'
 import { TabsRCorp, TabItem } from '@/components/ui-v2/tabs-rcorp'
+import { SinistrosFilter } from './SinistrosFilter'
 import { Badge } from '@/components/ui/badge'
 import { 
   FileText, 
@@ -224,12 +225,16 @@ export function SinistrosDashboard({
         count: stats.sinistros.total,
         lazy: true,
         content: (
-          <div className="mt-6 space-y-4">
-            <h3 className="text-lg font-semibold">Lista de Sinistros</h3>
-            <div className="text-sm text-muted-foreground mb-4">
-              Filtro aplicado: apenas sinistros
-            </div>
-            {renderTicketsContent()}
+          <div className="mt-6">
+            <SinistrosFilter
+              claims={claims}
+              assistances={assistances}
+              loading={loading}
+              filter="sinistro"
+              onViewClaim={(id) => console.log('View claim:', id)}
+              onEditClaim={(id) => console.log('Edit claim:', id)}
+              onDeleteClaim={(id) => console.log('Delete claim:', id)}
+            />
           </div>
         )
       },
@@ -240,22 +245,38 @@ export function SinistrosDashboard({
         count: stats.assistencias.total,
         lazy: true,
         content: (
-          <div className="mt-6 space-y-4">
-            <h3 className="text-lg font-semibold">Lista de Assistências</h3>
-            <div className="text-sm text-muted-foreground mb-4">
-              Filtro aplicado: apenas assistências
-            </div>
-            {renderTicketsContent()}
+          <div className="mt-6">
+            <SinistrosFilter
+              claims={claims}
+              assistances={assistances}
+              loading={loading}
+              filter="assistencia"
+              onViewClaim={(id) => console.log('View claim:', id)}
+              onEditClaim={(id) => console.log('Edit claim:', id)}
+              onDeleteClaim={(id) => console.log('Delete claim:', id)}
+            />
           </div>
         )
       },
       {
         id: 'todos',
-        label: 'Todos os Tickets',
+        label: 'Todos',
         icon: <GitBranch className="h-4 w-4" />,
         count: stats.totais.tickets,
         lazy: true,
-        content: <div className="mt-6">{renderTicketsContent()}</div>
+        content: (
+          <div className="mt-6">
+            <SinistrosFilter
+              claims={claims}
+              assistances={assistances}
+              loading={loading}
+              filter="todos"
+              onViewClaim={(id) => console.log('View claim:', id)}
+              onEditClaim={(id) => console.log('Edit claim:', id)}
+              onDeleteClaim={(id) => console.log('Delete claim:', id)}
+            />
+          </div>
+        )
       }
     ];
   }
@@ -350,26 +371,15 @@ export function SinistrosDashboard({
   function renderTicketsContent() {
     return (
       <div className="space-y-4">
-        {uiVersion.useV2 ? (
-          <>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Lista de Tickets (V2)</h3>
-              <Badge variant="secondary" className="text-xs">
-                React Aria + Advanced Filtering
-              </Badge>
-            </div>
-            <TicketsListV2
-              claims={claims}
-              assistances={assistances}
-              loading={loading}
-              onViewClaim={(id) => console.log('View claim:', id)}
-              onEditClaim={(id) => console.log('Edit claim:', id)}
-              onDeleteClaim={(id) => console.log('Delete claim:', id)}
-            />
-          </>
-        ) : (
-          <TicketsList />
-        )}
+        <SinistrosFilter
+          claims={claims}
+          assistances={assistances}
+          loading={loading}
+          filter="todos"
+          onViewClaim={(id) => console.log('View claim:', id)}
+          onEditClaim={(id) => console.log('Edit claim:', id)}
+          onDeleteClaim={(id) => console.log('Delete claim:', id)}
+        />
       </div>
     );
   }

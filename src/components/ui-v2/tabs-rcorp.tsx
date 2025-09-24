@@ -102,9 +102,9 @@ export function TabsRCorp({
       <Tab.Group selectedIndex={selectedIndex} onChange={handleTabChange}>
         <Tab.List 
           className={cn(
-            'flex gap-1 overflow-x-auto rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 p-1 backdrop-blur supports-[backdrop-filter]:bg-primary/10',
-            'scrollbar-hide scroll-smooth snap-x snap-mandatory',
-            'border border-primary/10 shadow-sm',
+            'flex gap-1 overflow-x-auto rounded-xl bg-gradient-to-r from-primary/8 to-primary/4 p-1',
+            'scrollbar-hide scroll-smooth snap-x snap-mandatory border border-primary/15 shadow-sm',
+            'bg-white/40 backdrop-blur-sm supports-[backdrop-filter]:bg-white/40',
             listClassName
           )}
         >
@@ -113,12 +113,13 @@ export function TabsRCorp({
               key={item.id}
               className={({ selected }) =>
                 cn(
-                  'flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                  'flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-200',
                   'min-w-0 flex-shrink-0 snap-start whitespace-nowrap',
-                  'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background',
+                  'focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-1',
+                  'md:px-3 md:py-2.5', // Maior padding em desktop
                   selected
-                    ? 'bg-white text-primary shadow-md shadow-primary/10 ring-1 ring-primary/20'
-                    : 'text-primary/70 hover:bg-white/20 hover:text-primary active:scale-[0.98]'
+                    ? 'bg-white text-primary shadow-md shadow-primary/20 ring-1 ring-primary/30 font-semibold'
+                    : 'text-primary/75 hover:bg-white/60 hover:text-primary hover:shadow-sm active:scale-[0.98]'
                 )
               }
             >
@@ -128,14 +129,15 @@ export function TabsRCorp({
                 </span>
               )}
               
-              <span className="truncate font-medium">
+              <span className="truncate font-medium text-xs md:text-sm">
                 {item.label}
               </span>
               
               {typeof item.count === 'number' && (
                 <span className={cn(
-                  'ml-1 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                  'min-w-[1.5rem] h-5 bg-primary/15 text-primary border border-primary/20'
+                  'ml-1 inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold',
+                  'min-w-[1.25rem] h-4 md:min-w-[1.5rem] md:h-5 md:px-2 md:text-[11px]',
+                  'bg-primary/20 text-primary border border-primary/30 shadow-sm'
                 )}>
                   {item.count}
                 </span>
@@ -159,9 +161,11 @@ export function TabsRCorp({
                   {item.content}
                 </div>
               ) : (
-                <div className="flex items-center justify-center py-8 text-muted-foreground">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                  <span className="ml-2 text-sm">Carregando...</span>
+                <div className="flex items-center justify-center py-12 text-muted-foreground">
+                  <div className="text-center space-y-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                    <p className="text-sm">Carregando conteúdo...</p>
+                  </div>
                 </div>
               )}
             </Tab.Panel>
