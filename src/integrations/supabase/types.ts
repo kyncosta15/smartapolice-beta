@@ -2121,7 +2121,7 @@ export type Database = {
           localizacao: string | null
           origem: string | null
           payload: Json
-          protocol_code: string
+          protocol_code: string | null
           request_id: string | null
           rh_note: string | null
           status: string
@@ -2142,7 +2142,7 @@ export type Database = {
           localizacao?: string | null
           origem?: string | null
           payload: Json
-          protocol_code: string
+          protocol_code?: string | null
           request_id?: string | null
           rh_note?: string | null
           status?: string
@@ -2163,7 +2163,7 @@ export type Database = {
           localizacao?: string | null
           origem?: string | null
           payload?: Json
-          protocol_code?: string
+          protocol_code?: string | null
           request_id?: string | null
           rh_note?: string | null
           status?: string
