@@ -48,17 +48,19 @@ export function FrotasBulkActions({
   allVehicles,
   onSelectVehicles
 }: FrotasBulkActionsProps) {
-  const [bulkStatus, setBulkStatus] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   
-  // Filtros para seleção múltipla
+  // Filtros para seleção múltipla (removido filtro por categoria)
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   
-  // Categorias disponíveis
+  // Estados para alteração em lote
+  const [bulkStatus, setBulkStatus] = useState<string>('');
+  const [bulkCategory, setBulkCategory] = useState<string>('');
+  
+  // Categorias disponíveis para aplicar
   const availableCategories = [
     { value: 'passeio', label: 'Passeio' },
     { value: 'utilitario', label: 'Utilitário' },
@@ -105,15 +107,9 @@ export function FrotasBulkActions({
         if (!vehicle.modelo || !selectedModels.includes(vehicle.modelo)) return false;
       }
       
-      // Filtro por categoria
-      if (selectedCategories.length > 0) {
-        const vehicleCategory = vehicle.categoria || 'outros';
-        if (!selectedCategories.includes(vehicleCategory)) return false;
-      }
-      
       return true;
     });
-  }, [allVehicles, searchFilter, selectedBrands, selectedModels, selectedCategories]);
+  }, [allVehicles, searchFilter, selectedBrands, selectedModels]);
   
   // Aplicar filtros para seleção
   const handleSelectFiltered = () => {
@@ -125,10 +121,9 @@ export function FrotasBulkActions({
     setSearchFilter('');
     setSelectedBrands([]);
     setSelectedModels([]);
-    setSelectedCategories([]);
   };
   
-  const hasFilters = searchFilter || selectedBrands.length > 0 || selectedModels.length > 0 || selectedCategories.length > 0;
+  const hasFilters = searchFilter || selectedBrands.length > 0 || selectedModels.length > 0;
 
   if (selectedVehicles.length === 0) {
     return null;
@@ -167,6 +162,44 @@ export function FrotasBulkActions({
     } catch (error) {
       console.error('Erro ao atualizar status em lote:', error);
       toast.error('Erro ao atualizar o status dos veículos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkCategoryUpdate = async () => {
+    if (!bulkCategory) {
+      toast.error('Selecione uma categoria para aplicar aos veículos selecionados');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const vehicleIds = selectedVehicles.map(v => v.id);
+      
+      const { error } = await supabase
+        .from('frota_veiculos')
+        .update({ 
+          categoria: bulkCategory,
+          updated_at: new Date().toISOString()
+        })
+        .in('id', vehicleIds);
+
+      if (error) throw error;
+
+      toast.success(`Categoria atualizada para ${selectedVehicles.length} veículo(s)`);
+      
+      // Clear selection and refresh data
+      onClearSelection();
+      onUpdateComplete();
+      setBulkCategory('');
+      
+      // Dispatch events to refresh dashboard
+      window.dispatchEvent(new CustomEvent('frota-data-updated'));
+      
+    } catch (error) {
+      console.error('Erro ao atualizar categoria em lote:', error);
+      toast.error('Erro ao atualizar a categoria dos veículos');
     } finally {
       setLoading(false);
     }
@@ -288,35 +321,6 @@ export function FrotasBulkActions({
                 />
               </div>
               
-              {/* Category Filter */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 px-2 text-xs">
-                    <Car className="h-3 w-3 mr-1" />
-                    Categorias {selectedCategories.length > 0 && `(${selectedCategories.length})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48">
-                  <DropdownMenuLabel>Selecionar Categorias</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {availableCategories.map((category) => (
-                    <DropdownMenuCheckboxItem
-                      key={category.value}
-                      checked={selectedCategories.includes(category.value)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedCategories([...selectedCategories, category.value]);
-                        } else {
-                          setSelectedCategories(selectedCategories.filter(c => c !== category.value));
-                        }
-                      }}
-                    >
-                      {category.label}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
               {/* Brand Filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -428,21 +432,6 @@ export function FrotasBulkActions({
                   </button>
                 </Badge>
               )}
-              {selectedCategories.map((category) => {
-                const categoryLabel = availableCategories.find(c => c.value === category)?.label || category;
-                return (
-                  <Badge key={category} variant="outline" className="text-xs">
-                    <Car className="h-3 w-3 mr-1" />
-                    {categoryLabel}
-                    <button
-                      onClick={() => setSelectedCategories(selectedCategories.filter(c => c !== category))}
-                      className="ml-1 hover:bg-gray-200 rounded-full"
-                    >
-                      <X className="h-2 w-2" />
-                    </button>
-                  </Badge>
-                );
-              })}
               {selectedBrands.map((brand) => (
                 <Badge key={brand} variant="outline" className="text-xs">
                   <Car className="h-3 w-3 mr-1" />
@@ -492,31 +481,32 @@ export function FrotasBulkActions({
           </div>
 
           {/* Actions - stacked on mobile */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-            <div className="flex items-center gap-2 flex-1">
-              <Shield className="h-4 w-4 text-gray-600 flex-shrink-0" />
-              <Select value={bulkStatus} onValueChange={setBulkStatus}>
-                <SelectTrigger className="flex-1 min-w-0 h-9 text-sm">
-                  <SelectValue placeholder="Alterar status..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sem_seguro">Sem Seguro</SelectItem>
-                  <SelectItem value="segurado">Segurado</SelectItem>
-                  <SelectItem value="vencido">Vencido</SelectItem>
-                  <SelectItem value="vigente">Vigente</SelectItem>
-                  <SelectItem value="vence_30_dias">Vence em 30 dias</SelectItem>
-                  <SelectItem value="vence_60_dias">Vence em 60 dias</SelectItem>
-                  <SelectItem value="cotacao">Em Cotação</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex flex-col gap-3">
+            {/* Status Update */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <div className="flex items-center gap-2 flex-1">
+                <Shield className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                <Select value={bulkStatus} onValueChange={setBulkStatus}>
+                  <SelectTrigger className="flex-1 min-w-0 h-9 text-sm">
+                    <SelectValue placeholder="Alterar status..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sem_seguro">Sem Seguro</SelectItem>
+                    <SelectItem value="segurado">Segurado</SelectItem>
+                    <SelectItem value="vencido">Vencido</SelectItem>
+                    <SelectItem value="vigente">Vigente</SelectItem>
+                    <SelectItem value="vence_30_dias">Vence em 30 dias</SelectItem>
+                    <SelectItem value="vence_60_dias">Vence em 60 dias</SelectItem>
+                    <SelectItem value="cotacao">Em Cotação</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 onClick={handleBulkStatusUpdate}
                 disabled={!bulkStatus || loading || deleting}
                 size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none h-9"
+                className="bg-green-600 hover:bg-green-700 text-white h-9"
               >
                 {loading ? (
                   <>
@@ -530,13 +520,54 @@ export function FrotasBulkActions({
                   </>
                 )}
               </Button>
+            </div>
 
+            {/* Category Update */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <div className="flex items-center gap-2 flex-1">
+                <Car className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                <Select value={bulkCategory} onValueChange={setBulkCategory}>
+                  <SelectTrigger className="flex-1 min-w-0 h-9 text-sm">
+                    <SelectValue placeholder="Alterar categoria..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCategories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                onClick={handleBulkCategoryUpdate}
+                disabled={!bulkCategory || loading || deleting}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white h-9"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                    Aplicando...
+                  </>
+                ) : (
+                  <>
+                    <Car className="h-3 w-3 mr-2" />
+                    Aplicar Categoria
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Delete Action */}
+            <div className="flex justify-end">
               <Button
                 onClick={handleBulkDelete}
                 disabled={loading || deleting}
                 size="sm"
                 variant="destructive"
-                className="flex-1 sm:flex-none h-9"
+                className="h-9"
               >
                 {deleting ? (
                   <>
@@ -546,25 +577,39 @@ export function FrotasBulkActions({
                 ) : (
                   <>
                     <Trash2 className="h-3 w-3 mr-2" />
-                    Excluir
+                    Excluir Selecionados
                   </>
                 )}
               </Button>
             </div>
           </div>
 
-          {/* Confirmation message */}
-          {bulkStatus && (
-            <div className="p-3 bg-white rounded border border-blue-200">
-              <div className="flex items-start gap-2 text-sm text-blue-800">
-                <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                <span className="leading-tight">
-                  Será aplicado o status "<strong>{getStatusLabel(bulkStatus)}</strong>" 
-                  para <strong>{selectedVehicles.length}</strong> veículo(s) selecionado(s).
-                </span>
+          {/* Confirmation messages */}
+          <div className="space-y-2">
+            {bulkStatus && (
+              <div className="p-3 bg-white rounded border border-blue-200">
+                <div className="flex items-start gap-2 text-sm text-blue-800">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <span className="leading-tight">
+                    Será aplicado o status "<strong>{getStatusLabel(bulkStatus)}</strong>" 
+                    para <strong>{selectedVehicles.length}</strong> veículo(s) selecionado(s).
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+            
+            {bulkCategory && (
+              <div className="p-3 bg-white rounded border border-blue-200">
+                <div className="flex items-start gap-2 text-sm text-blue-800">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <span className="leading-tight">
+                    Será aplicada a categoria "<strong>{availableCategories.find(c => c.value === bulkCategory)?.label || bulkCategory}</strong>" 
+                    para <strong>{selectedVehicles.length}</strong> veículo(s) selecionado(s).
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
