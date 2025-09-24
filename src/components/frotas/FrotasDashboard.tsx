@@ -7,6 +7,39 @@ import { FrotaFilters } from '../GestaoFrotas';
 import { Pie, PieChart, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Car, PieChart as PieChartIcon } from 'lucide-react';
 
+// Helper functions for colors
+function getRandomColor() {
+  const colors = [
+    '#3B82F6', // blue-500
+    '#10B981', // emerald-500
+    '#F59E0B', // amber-500
+    '#EF4444', // red-500
+    '#8B5CF6', // violet-500
+    '#06B6D4', // cyan-500
+    '#84CC16', // lime-500
+    '#F97316', // orange-500
+    '#EC4899', // pink-500
+    '#6366F1', // indigo-500
+    '#14B8A6', // teal-500
+    '#F43F5E', // rose-500
+    '#A855F7', // purple-500
+    '#0EA5E9', // sky-500
+    '#22C55E', // green-500
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function getCategoryColor(categoria: string) {
+  const categoryColors = {
+    'Passeio': '#3B82F6',      // blue-500
+    'Utilitário': '#10B981',   // emerald-500
+    'Caminhão': '#F59E0B',     // amber-500
+    'Moto': '#EF4444',         // red-500
+    'Outros': '#8B5CF6',       // violet-500
+  };
+  return categoryColors[categoria as keyof typeof categoryColors] || '#6B7280';
+}
+
 interface FrotasDashboardProps {
   kpis: FrotaKPIs;
   veiculos: FrotaVeiculo[];
@@ -30,7 +63,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
     return Object.entries(categorias).map(([name, value]) => ({
       name: name.charAt(0).toUpperCase() + name.slice(1),
       value,
-      color: getRandomColor()
+      color: getCategoryColor(name.charAt(0).toUpperCase() + name.slice(1))
     }));
   }, [veiculos]);
 
@@ -124,8 +157,10 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                   </Pie>
                   <Legend 
                     wrapperStyle={{ 
-                      fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '10px' : '12px', 
-                      paddingTop: '8px' 
+                      fontSize: '12px',
+                      paddingTop: '10px',
+                      maxWidth: '160px',
+                      lineHeight: '20px'
                     }}
                     iconType="circle"
                     layout="vertical"
@@ -134,10 +169,21 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     formatter={(value, entry) => (
                       <span style={{ 
                         color: '#374151', 
-                        fontWeight: '500',
-                        fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '10px' : '12px'
+                        fontWeight: '600',
+                        fontSize: '12px',
+                        lineHeight: '20px',
+                        display: 'block',
+                        marginBottom: '4px'
                       }}>
-                        {value} ({entry.payload.value})
+                        <span style={{ fontWeight: '500' }}>{value}</span>
+                        <br />
+                        <span style={{ 
+                          fontSize: '11px', 
+                          color: '#6b7280',
+                          fontWeight: '500'
+                        }}>
+                          {entry.payload.value} veículo{entry.payload.value !== 1 ? 's' : ''}
+                        </span>
                       </span>
                     )}
                   />
@@ -186,7 +232,10 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                   />
                   <Legend 
                     wrapperStyle={{ 
-                      fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '9px' : '11px'
+                      fontSize: '11px',
+                      paddingTop: '8px',
+                      maxWidth: '140px',
+                      lineHeight: '18px'
                     }}
                     iconType="circle"
                     layout="vertical"
@@ -195,10 +244,23 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     formatter={(value, entry) => (
                       <span style={{ 
                         color: '#374151', 
-                        fontWeight: '500',
-                        fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '9px' : '11px'
+                        fontWeight: '600',
+                        fontSize: '11px',
+                        lineHeight: '18px',
+                        display: 'block',
+                        marginBottom: '3px'
                       }}>
-                        {value} ({entry.payload.value})
+                        <span style={{ fontWeight: '500' }}>
+                          {value.length > 12 ? `${value.substring(0, 12)}...` : value}
+                        </span>
+                        <br />
+                        <span style={{ 
+                          fontSize: '10px', 
+                          color: '#6b7280',
+                          fontWeight: '500'
+                        }}>
+                          {entry.payload.value} veículo{entry.payload.value !== 1 ? 's' : ''}
+                        </span>
                       </span>
                     )}
                   />
@@ -247,8 +309,10 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                   />
                   <Legend 
                     wrapperStyle={{ 
-                      fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '8px' : '10px',
-                      paddingTop: '5px'
+                      fontSize: '10px',
+                      paddingTop: '6px',
+                      maxWidth: '120px',
+                      lineHeight: '16px'
                     }}
                     iconType="circle"
                     layout="vertical"
@@ -257,10 +321,23 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                     formatter={(value, entry) => (
                       <span style={{ 
                         color: '#374151', 
-                        fontWeight: '500',
-                        fontSize: typeof window !== 'undefined' && window.innerWidth < 640 ? '8px' : '10px'
+                        fontWeight: '600',
+                        fontSize: '10px',
+                        lineHeight: '16px',
+                        display: 'block',
+                        marginBottom: '2px'
                       }}>
-                        {value.length > 8 ? `${value.substring(0, 8)}...` : value} ({entry.payload.value})
+                        <span style={{ fontWeight: '500' }}>
+                          {value.length > 10 ? `${value.substring(0, 10)}...` : value}
+                        </span>
+                        <br />
+                        <span style={{ 
+                          fontSize: '9px', 
+                          color: '#6b7280',
+                          fontWeight: '500'
+                        }}>
+                          {entry.payload.value} veículo{entry.payload.value !== 1 ? 's' : ''}
+                        </span>
                       </span>
                     )}
                   />
@@ -320,12 +397,4 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
       </Card>
     </div>
   );
-}
-
-function getRandomColor() {
-  const colors = [
-    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-    '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1'
-  ];
-  return colors[Math.floor(Math.random() * colors.length)];
 }
