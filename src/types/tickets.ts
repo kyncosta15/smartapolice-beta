@@ -33,6 +33,7 @@ export interface Ticket {
   protocol_code?: string;
   payload?: any;
   external_ref?: string;
+  sla_due_at?: string;
   created_at: string;
   updated_at: string;
   // Relacionamentos

@@ -18,7 +18,6 @@ import { GestaoFrotas } from './GestaoFrotas';
 import { SinistrosManagement } from './SinistrosManagement';
 import { N8NDataTester } from './N8NDataTester';
 import { UserProfile } from './UserProfile';
-import { StatusStepperExample } from './status-stepper/StatusStepperExample';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 
@@ -230,11 +229,6 @@ export function ContentRenderer({
             onPolicySelect={onPolicySelect}
           />
         </div>
-      );
-
-    case 'status-stepper':
-      return (
-        <StatusStepperExample />
       );
 
     case 'frotas':
