@@ -62,27 +62,30 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       </div>
 
       {/* Navigation */}
-      <nav className="p-3 space-y-1">
+      <nav className="p-4 space-y-1.5">
         {navigation.map((item) => (
           <button
             key={item.id}
             onClick={() => handleNavigation(item.id)}
             aria-current={activeSection === item.id ? 'page' : undefined}
             className={cn(
-              "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm w-full text-left",
-              "text-gray-700 hover:bg-slate-50 transition-colors",
+              "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm w-full text-left",
+              "transition-all duration-200 ease-out font-medium",
+              "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+              "hover:shadow-sm hover:scale-[1.02] active:scale-[0.98]",
               activeSection === item.id && [
-                "bg-slate-100 border-l-2 border-blue-600 text-blue-700"
+                "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20",
+                "hover:bg-primary/15 hover:text-primary"
               ]
             )}
           >
             <item.icon className={cn(
-              "size-4 transition-colors",
+              "size-4 transition-all duration-200",
               activeSection === item.id 
-                ? "text-blue-600" 
-                : "text-gray-400 group-hover:text-gray-600"
+                ? "text-primary" 
+                : "text-muted-foreground group-hover:text-foreground"
             )} />
-            <span className="truncate font-medium">{item.title}</span>
+            <span className="truncate">{item.title}</span>
           </button>
         ))}
       </nav>
