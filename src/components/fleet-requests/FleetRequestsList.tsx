@@ -142,12 +142,12 @@ export function FleetRequestsList() {
               />
             </div>
             
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter || 'all'} onValueChange={(value) => setStatusFilter(value === 'all' ? '' : value)}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
                 {FLEET_REQUEST_STATUS.map(status => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
@@ -156,12 +156,12 @@ export function FleetRequestsList() {
               </SelectContent>
             </Select>
 
-            <Select value={tipoFilter} onValueChange={setTipoFilter}>
+            <Select value={tipoFilter || 'all'} onValueChange={(value) => setTipoFilter(value === 'all' ? '' : value)}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Todos os tipos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
+                <SelectItem value="all">Todos os tipos</SelectItem>
                 {FLEET_REQUEST_TIPOS.map(tipo => (
                   <SelectItem key={tipo.value} value={tipo.value}>
                     {tipo.label}
