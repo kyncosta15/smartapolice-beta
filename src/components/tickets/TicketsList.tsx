@@ -240,18 +240,18 @@ export function TicketsList() {
 
       {/* Modal da Esteira de Status Completa */}
       <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden sm:max-w-[95vw] sm:max-h-[95vh]">
-          <DialogHeader className="pb-2 sm:pb-4">
-            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <GitBranch className="h-4 w-4 sm:h-5 sm:w-5" />
+        <DialogContent className="max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-4xl max-h-[85vh] overflow-hidden p-0">
+          <DialogHeader className="px-6 py-4 border-b bg-background/95 backdrop-blur-sm">
+            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="truncate">
-                Status - {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id}
+                {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id}
               </span>
             </DialogTitle>
           </DialogHeader>
           
           {selectedTicket && (
-            <div className="flex-1 overflow-hidden">
+            <div className="overflow-hidden">
               <CompactStatusStepper
                 type={selectedTicket.tipo}
                 currentStatus={selectedTicket.status}
