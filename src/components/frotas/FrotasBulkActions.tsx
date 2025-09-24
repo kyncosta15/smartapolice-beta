@@ -1,16 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
-  CheckSquare, 
-  Shield, 
   X, 
+  CheckSquare,
+  Trash2, 
   AlertTriangle,
-  Loader2,
-  Trash2
+  Shield,
+  Filter,
+  Car,
+  Search,
+  Loader2
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -19,16 +37,78 @@ interface FrotasBulkActionsProps {
   selectedVehicles: FrotaVeiculo[];
   onClearSelection: () => void;
   onUpdateComplete: () => void;
+  allVehicles: FrotaVeiculo[];
+  onSelectVehicles: (vehicles: FrotaVeiculo[]) => void;
 }
 
 export function FrotasBulkActions({ 
   selectedVehicles, 
   onClearSelection, 
-  onUpdateComplete 
+  onUpdateComplete,
+  allVehicles,
+  onSelectVehicles
 }: FrotasBulkActionsProps) {
   const [bulkStatus, setBulkStatus] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  // Filtros para seleção múltipla
+  const [searchFilter, setSearchFilter] = useState<string>('');
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  
+  // Extrair marcas e modelos únicos dos veículos
+  const availableBrands = useMemo(() => {
+    const brands = [...new Set(allVehicles.map(v => v.marca).filter(Boolean))].sort();
+    return brands;
+  }, [allVehicles]);
+  
+  const availableModels = useMemo(() => {
+    const models = [...new Set(allVehicles.map(v => v.modelo).filter(Boolean))].sort();
+    return models;
+  }, [allVehicles]);
+  
+  // Filtrar veículos baseado nos filtros de seleção
+  const filteredVehicles = useMemo(() => {
+    return allVehicles.filter(vehicle => {
+      // Filtro de busca
+      if (searchFilter) {
+        const searchLower = searchFilter.toLowerCase();
+        const matchesSearch = 
+          vehicle.placa?.toLowerCase().includes(searchLower) ||
+          vehicle.marca?.toLowerCase().includes(searchLower) ||
+          vehicle.modelo?.toLowerCase().includes(searchLower) ||
+          vehicle.proprietario_nome?.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+      
+      // Filtro por marca
+      if (selectedBrands.length > 0) {
+        if (!vehicle.marca || !selectedBrands.includes(vehicle.marca)) return false;
+      }
+      
+      // Filtro por modelo
+      if (selectedModels.length > 0) {
+        if (!vehicle.modelo || !selectedModels.includes(vehicle.modelo)) return false;
+      }
+      
+      return true;
+    });
+  }, [allVehicles, searchFilter, selectedBrands, selectedModels]);
+  
+  // Aplicar filtros para seleção
+  const handleSelectFiltered = () => {
+    onSelectVehicles(filteredVehicles);
+  };
+  
+  // Limpar todos os filtros
+  const handleClearFilters = () => {
+    setSearchFilter('');
+    setSelectedBrands([]);
+    setSelectedModels([]);
+  };
+  
+  const hasFilters = searchFilter || selectedBrands.length > 0 || selectedModels.length > 0;
 
   if (selectedVehicles.length === 0) {
     return null;
@@ -166,8 +246,8 @@ export function FrotasBulkActions({
       <CardContent className="p-3 md:p-4">
         {/* Mobile-first layout */}
         <div className="space-y-3">
-          {/* Selection Info */}
-          <div className="flex items-center justify-between">
+          {/* Selection Info and Filters */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2">
               <CheckSquare className="h-4 w-4 text-blue-600 flex-shrink-0" />
               <span className="text-sm font-medium text-blue-900">
@@ -175,7 +255,104 @@ export function FrotasBulkActions({
               </span>
             </div>
             
-            {/* Cancel button - always visible on mobile */}
+            {/* Multi-select Filters */}
+            <div className="flex flex-wrap items-center gap-2 flex-1">
+              {/* Search Filter */}
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
+                <Input
+                  placeholder="Buscar para selecionar..."
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="pl-7 h-8 w-48 text-xs"
+                />
+              </div>
+              
+              {/* Brand Filter */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 px-2 text-xs">
+                    <Car className="h-3 w-3 mr-1" />
+                    Marcas {selectedBrands.length > 0 && `(${selectedBrands.length})`}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 max-h-48 overflow-y-auto">
+                  <DropdownMenuLabel>Selecionar Marcas</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {availableBrands.map((brand) => (
+                    <DropdownMenuCheckboxItem
+                      key={brand}
+                      checked={selectedBrands.includes(brand)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedBrands([...selectedBrands, brand]);
+                        } else {
+                          setSelectedBrands(selectedBrands.filter(b => b !== brand));
+                        }
+                      }}
+                    >
+                      {brand}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Model Filter */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 px-2 text-xs">
+                    <Car className="h-3 w-3 mr-1" />
+                    Modelos {selectedModels.length > 0 && `(${selectedModels.length})`}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 max-h-48 overflow-y-auto">
+                  <DropdownMenuLabel>Selecionar Modelos</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {availableModels.slice(0, 20).map((model) => (
+                    <DropdownMenuCheckboxItem
+                      key={model}
+                      checked={selectedModels.includes(model)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedModels([...selectedModels, model]);
+                        } else {
+                          setSelectedModels(selectedModels.filter(m => m !== model));
+                        }
+                      }}
+                    >
+                      {model.length > 25 ? `${model.substring(0, 25)}...` : model}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Apply Filters Button */}
+              {hasFilters && (
+                <Button
+                  onClick={handleSelectFiltered}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-2 text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                >
+                  <Filter className="h-3 w-3 mr-1" />
+                  Selecionar {filteredVehicles.length}
+                </Button>
+              )}
+              
+              {/* Clear Filters */}
+              {hasFilters && (
+                <Button
+                  onClick={handleClearFilters}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            
+            {/* Cancel button */}
             <Button
               onClick={onClearSelection}
               variant="outline"
@@ -186,6 +363,48 @@ export function FrotasBulkActions({
               <span className="hidden md:inline">Cancelar</span>
             </Button>
           </div>
+          
+          {/* Active Filter Tags */}
+          {hasFilters && (
+            <div className="flex flex-wrap gap-1">
+              {searchFilter && (
+                <Badge variant="outline" className="text-xs">
+                  <Search className="h-3 w-3 mr-1" />
+                  "{searchFilter}"
+                  <button
+                    onClick={() => setSearchFilter('')}
+                    className="ml-1 hover:bg-gray-200 rounded-full"
+                  >
+                    <X className="h-2 w-2" />
+                  </button>
+                </Badge>
+              )}
+              {selectedBrands.map((brand) => (
+                <Badge key={brand} variant="outline" className="text-xs">
+                  <Car className="h-3 w-3 mr-1" />
+                  {brand}
+                  <button
+                    onClick={() => setSelectedBrands(selectedBrands.filter(b => b !== brand))}
+                    className="ml-1 hover:bg-gray-200 rounded-full"
+                  >
+                    <X className="h-2 w-2" />
+                  </button>
+                </Badge>
+              ))}
+              {selectedModels.map((model) => (
+                <Badge key={model} variant="outline" className="text-xs">
+                  <Car className="h-3 w-3 mr-1" />
+                  {model.length > 15 ? `${model.substring(0, 15)}...` : model}
+                  <button
+                    onClick={() => setSelectedModels(selectedModels.filter(m => m !== model))}
+                    className="ml-1 hover:bg-gray-200 rounded-full"
+                  >
+                    <X className="h-2 w-2" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
 
           {/* Current Status Summary - scrollable on mobile */}
           <div className="overflow-x-auto">

@@ -337,12 +337,13 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
 
   const tableContent = (
     <div className="space-y-3 md:space-y-4">
-      {/* Bulk Actions Bar */}
-      <FrotasBulkActions
-        selectedVehicles={selectedVehicles}
-        onClearSelection={clearSelection}
-        onUpdateComplete={handleBulkUpdateComplete}
-      />
+        <FrotasBulkActions
+          selectedVehicles={selectedVehicles}
+          onClearSelection={clearSelection}
+          onUpdateComplete={handleBulkUpdateComplete}
+          allVehicles={veiculos}
+          onSelectVehicles={setSelectedVehicles}
+        />
       
       <div
         className="w-full overflow-x-auto max-h-[50vh] md:max-h-[60vh] overflow-y-auto overscroll-contain pr-1 -mr-1"
