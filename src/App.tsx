@@ -16,6 +16,7 @@ import SmartBeneficiosGuard from "@/components/SmartBeneficiosGuard";
 import ColaboradorSolicitacao from "@/components/ColaboradorSolicitacao";
 import ColaboradorFormPage from "@/pages/ColaboradorFormPage";
 import NewSolicitacaoPage from "@/pages/NewSolicitacaoPage";
+import PublicFleetRequestPage from "@/pages/PublicFleetRequestPage";
 import AuthGuard from "@/components/AuthGuard";
 import NotFound from "./pages/NotFound";
 import RHDashboard from './pages/RHDashboard';
@@ -40,6 +41,7 @@ const App = () => {
               <Route path="/colaborador/solicitacao" element={<ColaboradorSolicitacao />} />
               <Route path="/colaborador/:token" element={<ColaboradorFormPage />} />
               <Route path="/solicitacao" element={<NewSolicitacaoPage />} />
+              <Route path="/solicitacao-frota/:token" element={<PublicFleetRequestPage />} />
               <Route path="/rh/dashboard" element={<RHDashboard />} />
               <Route path="/rh/colaboradores" element={<RHColaboradores />} />
               

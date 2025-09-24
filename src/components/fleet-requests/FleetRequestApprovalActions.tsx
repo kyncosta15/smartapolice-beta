@@ -1,0 +1,191 @@
+import React, { useState } from 'react';
+import { Check, X, MessageSquare } from 'lucide-react';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import type { FleetChangeRequest } from '@/types/fleet-requests';
+
+interface FleetRequestApprovalActionsProps {
+  request: FleetChangeRequest;
+  onUpdate: () => void;
+}
+
+export function FleetRequestApprovalActions({ 
+  request, 
+  onUpdate 
+}: FleetRequestApprovalActionsProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [actionType, setActionType] = useState<'approve' | 'reject'>('approve');
+  const [comments, setComments] = useState('');
+  const [processing, setProcessing] = useState(false);
+
+  // Verificar se usuário pode aprovar (admin/rh)
+  const canApprove = user?.role && ['admin', 'administrador', 'rh', 'corretora_admin'].includes(user.role);
+
+  if (!canApprove || !['aberto', 'em_triagem'].includes(request.status)) {
+    return null;
+  }
+
+  const handleApprove = () => {
+    setActionType('approve');
+    setComments('');
+    setActionModalOpen(true);
+  };
+
+  const handleReject = () => {
+    setActionType('reject');
+    setComments('');
+    setActionModalOpen(true);
+  };
+
+  const processAction = async () => {
+    try {
+      setProcessing(true);
+
+      const newStatus = actionType === 'approve' ? 'aprovado' : 'recusado';
+      
+      // Chamar edge function para processar aprovação/rejeição
+      const { data, error } = await supabase.functions.invoke('process-fleet-request-approval', {
+        body: {
+          requestId: request.id,
+          action: actionType,
+          comments,
+          approvedBy: user?.id,
+        }
+      });
+
+      if (error) throw error;
+
+      setActionModalOpen(false);
+      setComments('');
+      onUpdate();
+
+      toast({
+        title: actionType === 'approve' ? 'Solicitação aprovada!' : 'Solicitação recusada!',
+        description: actionType === 'approve' ? 
+          'A alteração será processada automaticamente' : 
+          'O solicitante será notificado',
+      });
+    } catch (error: any) {
+      console.error('Erro ao processar aprovação:', error);
+      toast({
+        title: 'Erro ao processar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex gap-2">
+        <Button
+          onClick={handleApprove}
+          variant="default"
+          size="sm"
+          className="gap-1"
+        >
+          <Check className="h-4 w-4" />
+          Aprovar
+        </Button>
+        <Button
+          onClick={handleReject}
+          variant="destructive"
+          size="sm"
+          className="gap-1"
+        >
+          <X className="h-4 w-4" />
+          Recusar
+        </Button>
+      </div>
+
+      <Dialog open={actionModalOpen} onOpenChange={setActionModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {actionType === 'approve' ? (
+                <>
+                  <Check className="h-5 w-5 text-green-600" />
+                  Aprovar Solicitação
+                </>
+              ) : (
+                <>
+                  <X className="h-5 w-5 text-red-600" />
+                  Recusar Solicitação
+                </>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600 space-y-1">
+                <div><strong>Tipo:</strong> {request.tipo}</div>
+                <div><strong>Veículo:</strong> {request.placa || request.chassi || 'N/A'}</div>
+                <div><strong>Solicitante:</strong> {request.payload?.solicitante?.nome || 'N/A'}</div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="comments">
+                Comentários {actionType === 'reject' ? '*' : '(opcional)'}
+              </Label>
+              <Textarea
+                id="comments"
+                placeholder={
+                  actionType === 'approve' 
+                    ? 'Comentários sobre a aprovação...'
+                    : 'Motivo da recusa...'
+                }
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            {actionType === 'approve' && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-green-800 text-sm">
+                  <strong>Atenção:</strong> Ao aprovar, a alteração será processada automaticamente no sistema.
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setActionModalOpen(false)}
+                disabled={processing}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={processAction}
+                disabled={processing || (actionType === 'reject' && !comments.trim())}
+                variant={actionType === 'approve' ? 'default' : 'destructive'}
+              >
+                {processing ? 'Processando...' : (actionType === 'approve' ? 'Aprovar' : 'Recusar')}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

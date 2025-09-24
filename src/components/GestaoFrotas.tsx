@@ -17,7 +17,8 @@ import {
   Shield,
   Database,
   RefreshCw,
-  Settings
+  Settings,
+  Link
 } from 'lucide-react';
 import { FrotasDashboard } from './frotas/FrotasDashboard';
 import { FrotasTable } from './frotas/FrotasTable';
@@ -33,6 +34,7 @@ import { SinistrosDashboard } from './frotas/SinistrosDashboard';
 import { AssistenciaDashboard } from './frotas/AssistenciaDashboard';
 import { FleetRequestModal } from './fleet-requests/FleetRequestModal';
 import { FleetRequestsList } from './fleet-requests/FleetRequestsList';
+import { PublicLinkGenerator } from './fleet-requests/PublicLinkGenerator';
 import { useFrotasData } from '@/hooks/useFrotasData';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,6 +52,7 @@ export function GestaoFrotas() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('frotas');
   const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [publicLinkModalOpen, setPublicLinkModalOpen] = useState(false);
   const [filters, setFilters] = useState<FrotaFilters>({
     search: '',
     marcaModelo: [],
@@ -168,6 +171,16 @@ export function GestaoFrotas() {
               <Car className="h-4 w-4" />
               <span className="hidden sm:inline">Solicitar alteração</span>
             </Button>
+            
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setPublicLinkModalOpen(true)}
+              className="flex items-center gap-2 h-10 px-3"
+            >
+              <Link className="h-4 w-4" />
+              <span className="hidden sm:inline">Gerar link externo</span>
+            </Button>
           </div>
         </div>
       </div>
@@ -281,6 +294,12 @@ export function GestaoFrotas() {
       <FleetRequestModal 
         open={requestModalOpen} 
         onOpenChange={setRequestModalOpen} 
+      />
+
+      {/* Public Link Generator Modal */}
+      <PublicLinkGenerator 
+        open={publicLinkModalOpen} 
+        onOpenChange={setPublicLinkModalOpen} 
       />
     </div>
   );

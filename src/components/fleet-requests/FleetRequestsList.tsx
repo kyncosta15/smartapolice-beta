@@ -37,6 +37,7 @@ import {
 
 import { useFleetRequests } from '@/hooks/useFleetRequests';
 import { FleetRequestDetailsModal } from './FleetRequestDetailsModal';
+import { FleetRequestApprovalActions } from './FleetRequestApprovalActions';
 import { 
   FLEET_REQUEST_TIPOS, 
   FLEET_REQUEST_STATUS, 
@@ -239,15 +240,21 @@ export function FleetRequestsList() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetails(request)}
-                          className="gap-1"
-                        >
-                          <Eye className="h-4 w-4" />
-                          Ver
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <FleetRequestApprovalActions 
+                            request={request}
+                            onUpdate={() => window.location.reload()}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewDetails(request)}
+                            className="gap-1"
+                          >
+                            <Eye className="h-4 w-4" />
+                            Ver
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
