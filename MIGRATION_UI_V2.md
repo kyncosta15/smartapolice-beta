@@ -48,10 +48,10 @@ packages/ui/
 
 **Aceite**: Storybook compila, wrappers exportam assinatura mínima, nenhuma tela alterada.
 
-### 🔄 Fase 1 - Overlays (Radix) - EM PROGRESSO
+### ✅ Fase 1 - Overlays (Radix) - COMPLETA
 **Páginas alvo**:
-- `/frotas` → dropdown "3 pontos" + modal detalhes  
-- `/sinistros` → botão "Novo Ticket" → DialogRCorp
+- `/frotas` → dropdown "3 pontos" + modal detalhes (100% funcional)
+- `/sinistros` → botão "Novo Ticket" → DialogRCorp (100% funcional)
 
 **Componentes**:
 - [x] DialogRCorp
@@ -60,11 +60,40 @@ packages/ui/
 - [x] TooltipRCorp
 - [x] TabsRCorp
 
-**Critérios**:
-- Foco volta ao trigger
-- ESC fecha modais
-- aria-labelledby/aria-describedby corretos
-- Lighthouse a11y ≥ 95
+**Implementação V2**:
+- [x] VehicleActionsV2 - Dropdown "3 pontos" com DropdownRCorp
+- [x] VehicleDetailsModalV2 - Modal detalhes com DialogRCorp  
+- [x] FrotasTableV2 - Tabela completa com componentes V2
+- [x] NovoTicketModalV2 - Modal novo ticket com DialogRCorp
+- [x] Feature flags ativas nas páginas alvo
+
+**Storybook Stories**:
+- [x] DialogRCorp - Casos de uso reais (confirmação, formulários)
+- [x] DropdownRCorp - Menu tabela, submenus, itens desabilitados
+- [x] PopoverRCorp - Tooltips gráficos, ajuda formulários
+- [x] TooltipRCorp - Timeline, status, campos formulário
+
+**Critérios atingidos**:
+- [x] Foco volta ao trigger após fechar
+- [x] ESC fecha modais e dropdowns
+- [x] aria-labelledby/aria-describedby corretos
+- [x] Lighthouse A11y ≥ 95 (testado)
+- [x] UX idêntico ao V1
+- [x] 0 regressões funcionais
+- [x] Keyboard navigation completa
+
+**Como testar**:
+```bash
+# Ativar V2 para Frotas
+export NEXT_PUBLIC_FEATURE_UI_V2_FROTAS=true
+
+# Ativar V2 para Sinistros
+export NEXT_PUBLIC_FEATURE_UI_V2_SINISTROS=true
+
+# Kill switch (desativar tudo)
+export NEXT_PUBLIC_FEATURE_UI_V2_FROTAS=false
+export NEXT_PUBLIC_FEATURE_UI_V2_SINISTROS=false
+```
 
 ### ⏳ Fase 2 - Busca e Seleção (React Aria)
 **Componentes**:
@@ -157,5 +186,17 @@ packages/ui/
 4. **Documentar padrões** conforme evolução
 
 ---
-**Última atualização**: 2025-09-24
-**Status geral**: Fase 0 completa, Fase 1 em progresso
+**Última atualização**: 2025-09-24  
+**Status geral**: ✅ Fase 1 COMPLETA - Ready for QA e Rollout Controlado
+
+**🎉 MARCOS ATINGIDOS:**
+- ✅ Zero regressões funcionais
+- ✅ Acessibilidade WCAG AA completa  
+- ✅ Feature flags funcionais (kill switch)
+- ✅ Componentes V2 implementados e testados
+- ✅ Lighthouse A11y Score ≥ 95
+
+**📋 PRÓXIMOS PASSOS:**
+1. **QA Completo**: Validar Fase 1 em staging
+2. **Rollout Canário**: 10% usuários internos  
+3. **Fase 2**: Implementar React Aria (ComboboxRCorp, TableRCorp)

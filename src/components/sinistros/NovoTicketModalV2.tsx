@@ -9,9 +9,10 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
-import { DialogRCorp } from '../../packages/ui/src/components/DialogRCorp'
-import { ComboboxRCorp } from '../../packages/ui/src/components/ComboboxRCorp'
-import type { ComboboxItem } from '../../packages/ui/src/components/ComboboxRCorp'
+import { DialogRCorp } from '@/components/ui-v2/dialog-rcorp'
+// Temporarily using basic combobox with shadcn components for Phase 1
+// Will be replaced with React Aria ComboboxRCorp in Phase 2
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { CalendarIcon, CheckCircle, AlertTriangle, Car, Wrench } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -48,8 +49,8 @@ export function NovoTicketModalV2({ trigger, onTicketCreated, initialTipo = 'sin
   
   const { toast } = useToast()
 
-  // Convert vehicles to combobox items
-  const comboboxItems: ComboboxItem[] = searchResults.map(vehicle => ({
+  // Simple vehicle search items (Phase 1)
+  const vehicleSearchItems = searchResults.map(vehicle => ({
     id: vehicle.id,
     label: vehicle.placa,
     description: `${vehicle.marca} ${vehicle.modelo} • ${vehicle.proprietario_nome || 'N/A'}`,
@@ -174,19 +175,54 @@ export function NovoTicketModalV2({ trigger, onTicketCreated, initialTipo = 'sin
     <div className="space-y-6">
       {step === 'veiculo' && (
         <div className="space-y-4">
-          <ComboboxRCorp
-            label="Selecionar Veículo"
-            description="Digite a placa, chassi, proprietário ou modelo"
-            placeholder="Ex: ABC-1234 ou João Silva"
-            items={comboboxItems}
-            selectedKey={selectedVehicle?.id || null}
-            onSelectionChange={handleVehicleSelect}
-            inputValue={searchQuery}
-            onInputChange={setSearchQuery}
-            isLoading={loadingSearch}
-            noResultsLabel="Nenhum veículo encontrado. Verifique a placa ou proprietário."
-            isRequired
-          />
+          <div>
+            <Label>Selecionar Veículo *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between"
+                >
+                  {selectedVehicle 
+                    ? `${selectedVehicle.placa} - ${selectedVehicle.marca} ${selectedVehicle.modelo}`
+                    : "Buscar veículo..."
+                  }
+                  <svg className="ml-2 h-4 w-4 shrink-0 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput 
+                    placeholder="Digite placa, chassi ou nome..."
+                    value={searchQuery}
+                    onValueChange={setSearchQuery}
+                  />
+                  <CommandList>
+                    <CommandEmpty>
+                      {loadingSearch ? "Buscando..." : "Nenhum veículo encontrado."}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {vehicleSearchItems.map((vehicle) => (
+                        <CommandItem
+                          key={vehicle.id}
+                          value={vehicle.id}
+                          onSelect={() => handleVehicleSelect(vehicle.id)}
+                        >
+                          <div>
+                            <div className="font-medium">{vehicle.label}</div>
+                            <div className="text-sm text-muted-foreground">{vehicle.description}</div>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
 
           {searchQuery && searchQuery.length >= 3 && !loadingSearch && searchResults.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">

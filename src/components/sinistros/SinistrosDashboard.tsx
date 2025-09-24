@@ -9,6 +9,9 @@ import { useClaimsStats } from '@/hooks/useClaimsStats';
 import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
 import { TicketsList } from '@/components/tickets/TicketsList';
+import { shouldUseUIV2 } from '@/config/features';
+// Phase 1 - UI V2 components
+import { NovoTicketModalV2 } from './NovoTicketModalV2';
 import { 
   FileText, 
   CheckCircle, 
@@ -121,16 +124,30 @@ export function SinistrosDashboard({
     <div className="container mx-auto max-w-7xl px-4 md:px-6 space-y-6 md:space-y-8">
       {/* Header - apenas mobile precisa do botão */}
       <div className="flex items-center justify-between md:justify-end">
-        <NovoTicketModal
-          trigger={
-            <Button className="shrink-0" title="Abrir novo ticket">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Ticket
-            </Button>
-          }
-          onTicketCreated={handleTicketCreated}
-          initialTipo="sinistro"
-        />
+        {/* Feature Flag: Use V2 or V1 modal based on flag */}
+        {shouldUseUIV2('sinistros') ? (
+          <NovoTicketModalV2
+            trigger={
+              <Button className="shrink-0" title="Abrir novo ticket">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Ticket V2
+              </Button>
+            }
+            onTicketCreated={handleTicketCreated}
+            initialTipo="sinistro"
+          />
+        ) : (
+          <NovoTicketModal
+            trigger={
+              <Button className="shrink-0" title="Abrir novo ticket">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Ticket
+              </Button>
+            }
+            onTicketCreated={handleTicketCreated}
+            initialTipo="sinistro"
+          />
+        )}
       </div>
 
       <Tabs defaultValue="dashboard" className="w-full">

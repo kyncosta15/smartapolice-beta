@@ -6,6 +6,9 @@ import { FrotaVeiculo, FrotaKPIs } from '@/hooks/useFrotasData';
 import { FrotaFilters } from '../GestaoFrotas';
 import { Car, PieChart as PieChartIcon, Package } from 'lucide-react';
 import PieCard from '@/components/charts/PieCard';
+import { shouldUseUIV2 } from '@/config/features';
+// Phase 1 - UI V2 components
+import { FrotasTableV2 } from './FrotasTableV2';
 
 // Consistent color palette for all charts
 const chartColors = [
@@ -157,12 +160,22 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                 </div>
               )}
               
-              <FrotasTable 
-                veiculos={veiculos} 
-                loading={loading} 
-                onRefetch={onRefetch}
-                hideHeader={true}
-              />
+              {/* Feature Flag: Use V2 or V1 table based on flag */}
+              {shouldUseUIV2('frotas') ? (
+                <FrotasTableV2 
+                  veiculos={veiculos} 
+                  loading={loading} 
+                  onRefetch={onRefetch}
+                  hideHeader={true}
+                />
+              ) : (
+                <FrotasTable 
+                  veiculos={veiculos} 
+                  loading={loading} 
+                  onRefetch={onRefetch}
+                  hideHeader={true}
+                />
+              )}
             </div>
         </CardContent>
       </Card>

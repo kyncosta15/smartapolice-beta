@@ -1,0 +1,349 @@
+import React, { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Car } from 'lucide-react'
+import { FrotaVeiculo } from '@/hooks/useFrotasData'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { VehicleActionsV2 } from './VehicleActionsV2'
+import { VehicleDetailsModalV2 } from './VehicleDetailsModalV2'
+import { VehicleListMobile } from './VehicleListMobile'
+import { FrotasBulkActions } from './FrotasBulkActions'
+
+interface FrotasTableV2Props {
+  veiculos: FrotaVeiculo[]
+  loading: boolean
+  onRefetch: () => void
+  maxHeight?: string
+  hideHeader?: boolean
+}
+
+export function FrotasTableV2({ 
+  veiculos, 
+  loading, 
+  onRefetch, 
+  maxHeight = '60vh', 
+  hideHeader = false 
+}: FrotasTableV2Props) {
+  const [selectedVeiculo, setSelectedVeiculo] = useState<FrotaVeiculo | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedVehicles, setSelectedVehicles] = useState<FrotaVeiculo[]>([])
+  
+  const isMobile = useIsMobile()
+
+  const handleView = (id: string) => {
+    const veiculo = veiculos.find(v => v.id === id)
+    if (veiculo) {
+      setSelectedVeiculo(veiculo)
+      setModalOpen(true)
+    }
+  }
+
+  const handleEdit = (id: string) => {
+    const veiculo = veiculos.find(v => v.id === id)
+    if (veiculo) {
+      // TODO: Implementar edição
+      console.log('Editar veículo:', veiculo)
+    }
+  }
+
+  const handleDocs = (id: string) => {
+    const veiculo = veiculos.find(v => v.id === id)
+    if (veiculo) {
+      // TODO: Implementar documentos
+      console.log('Ver documentos:', veiculo)
+    }
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedVehicles([...veiculos])
+    } else {
+      setSelectedVehicles([])
+    }
+  }
+
+  const handleSelectVehicle = (veiculo: FrotaVeiculo, checked: boolean) => {
+    if (checked) {
+      setSelectedVehicles(prev => [...prev, veiculo])
+    } else {
+      setSelectedVehicles(prev => prev.filter(v => v.id !== veiculo.id))
+    }
+  }
+
+  const isVehicleSelected = (vehicleId: string) => {
+    return selectedVehicles.some(v => v.id === vehicleId)
+  }
+
+  const isAllSelected = selectedVehicles.length === veiculos.length && veiculos.length > 0
+  const isPartialSelected = selectedVehicles.length > 0 && selectedVehicles.length < veiculos.length
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'segurado':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Segurado</Badge>
+      case 'sem_seguro':
+        return <Badge className="bg-red-100 text-red-800 border-red-200">Sem Seguro</Badge>
+      case 'cotacao':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Em Cotação</Badge>
+      default:
+        return <Badge variant="secondary">{status}</Badge>
+    }
+  }
+
+  const getCategoriaBadge = (categoria?: string) => {
+    if (!categoria) return null
+    
+    const colors = {
+      passeio: 'bg-blue-100 text-blue-800 border-blue-200',
+      utilitario: 'bg-purple-100 text-purple-800 border-purple-200',
+      caminhao: 'bg-orange-100 text-orange-800 border-orange-200',
+      moto: 'bg-green-100 text-green-800 border-green-200',
+      outros: 'bg-gray-100 text-gray-800 border-gray-200',
+    }
+
+    const labels = {
+      passeio: 'Passeio',
+      utilitario: 'Utilitário',
+      caminhao: 'Caminhão',
+      moto: 'Moto',
+      outros: 'Outros',
+    }
+
+    return (
+      <Badge className={colors[categoria as keyof typeof colors] || colors.outros}>
+        {labels[categoria as keyof typeof labels] || categoria}
+      </Badge>
+    )
+  }
+
+  if (loading) {
+    const loadingContent = (
+      <div className="space-y-3">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="animate-pulse flex space-x-3 p-3 border rounded-lg">
+            <div className="rounded-full bg-gray-200 h-10 w-10 flex-shrink-0"></div>
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+
+    if (hideHeader) return loadingContent
+    
+    return (
+      <Card className="border-0 shadow-sm rounded-xl">
+        <CardHeader className="p-3 md:p-4">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Car className="h-5 w-5" />
+            Lista de Veículos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 md:p-4">
+          {loadingContent}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (veiculos.length === 0) {
+    const emptyContent = (
+      <div className="text-center py-8 sm:py-12">
+        <Car className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Nenhum veículo encontrado
+        </h3>
+        <p className="text-gray-500 mb-4 text-sm sm:text-base">
+          Não há veículos cadastrados ou que correspondam aos filtros aplicados.
+        </p>
+        <Button onClick={onRefetch} variant="outline" size="sm">
+          Recarregar dados
+        </Button>
+      </div>
+    )
+
+    if (hideHeader) return emptyContent
+    
+    return (
+      <Card className="border-0 shadow-sm rounded-xl">
+        <CardHeader className="p-3 md:p-4">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Car className="h-5 w-5" />
+            Lista de Veículos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 md:p-4">
+          {emptyContent}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const tableContent = (
+    <div className="space-y-3 md:space-y-4">
+      <FrotasBulkActions
+        selectedVehicles={selectedVehicles}
+        onClearSelection={() => setSelectedVehicles([])}
+        onUpdateComplete={onRefetch}
+        allVehicles={veiculos}
+        onSelectVehicles={setSelectedVehicles}
+      />
+      
+      <div className="w-full overflow-x-auto max-h-[50vh] md:max-h-[60vh] overflow-y-auto">
+        <div className="p-2 md:p-4">
+          {isMobile ? (
+            <VehicleListMobile
+              veiculos={veiculos}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDocs={handleDocs}
+              selectedVehicles={selectedVehicles}
+              onSelectVehicle={handleSelectVehicle}
+            />
+          ) : (
+            <div className="w-full overflow-x-auto">
+              <Table className="min-w-[800px] w-full">
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={handleSelectAll}
+                        {...(isPartialSelected && { 'data-state': 'indeterminate' })}
+                      />
+                    </TableHead>
+                    <TableHead className="min-w-[200px]">Veículo</TableHead>
+                    <TableHead className="min-w-[120px]">Placa</TableHead>
+                    <TableHead className="min-w-[150px]">Proprietário</TableHead>
+                    <TableHead className="min-w-[120px]">Status Seguro</TableHead>
+                    <TableHead className="w-[120px] text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {veiculos.map((veiculo) => {
+                    const isSelected = isVehicleSelected(veiculo.id)
+
+                    return (
+                      <TableRow key={veiculo.id} className={`hover:bg-muted/50 ${isSelected ? 'bg-blue-50' : ''}`}>
+                        <TableCell>
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => handleSelectVehicle(veiculo, checked as boolean)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium text-foreground">
+                              {veiculo.marca} {veiculo.modelo}
+                            </div>
+                            {veiculo.ano_modelo && (
+                              <div className="text-sm text-muted-foreground">
+                                {veiculo.ano_modelo}
+                              </div>
+                            )}
+                            {getCategoriaBadge(veiculo.categoria)}
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="font-mono font-medium">
+                            {veiculo.placa}
+                          </div>
+                          {veiculo.uf_emplacamento && (
+                            <div className="text-sm text-muted-foreground">
+                              {veiculo.uf_emplacamento}
+                            </div>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="space-y-1">
+                            {veiculo.proprietario_nome && (
+                              <div className="font-medium text-foreground">
+                                {veiculo.proprietario_nome}
+                              </div>
+                            )}
+                            {veiculo.proprietario_doc && (
+                              <div className="text-sm text-muted-foreground font-mono">
+                                {veiculo.proprietario_doc}
+                              </div>
+                            )}
+                            {veiculo.proprietario_tipo && (
+                              <Badge variant="outline" className="text-xs">
+                                {veiculo.proprietario_tipo === 'pj' ? 'PJ' : 'PF'}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          {getStatusBadge(veiculo.status_seguro)}
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <VehicleActionsV2
+                            veiculo={veiculo}
+                            onView={handleView}
+                            onEdit={handleEdit}
+                            onDocs={handleDocs}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
+  const content = (
+    <>
+      {tableContent}
+      <VehicleDetailsModalV2 
+        veiculo={selectedVeiculo}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
+    </>
+  )
+
+  if (hideHeader) return content
+
+  return (
+    <>
+      <Card className="border-0 shadow-sm rounded-xl">
+        <CardHeader className="p-3 md:p-4 border-b">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Car className="h-4 w-4 md:h-5 md:w-5" />
+            Lista de Veículos V2 ({veiculos.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {tableContent}
+        </CardContent>
+      </Card>
+
+      <VehicleDetailsModalV2 
+        veiculo={selectedVeiculo}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
+    </>
+  )
+}

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DialogRCorp } from '../../packages/ui/src/components/DialogRCorp'
+import { DialogRCorp } from '@/components/ui-v2/dialog-rcorp'
 import { formatCurrency } from '@/utils/currencyFormatter'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'

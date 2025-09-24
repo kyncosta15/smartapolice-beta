@@ -1,8 +1,8 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Eye, Edit, FileText, Trash2 } from 'lucide-react'
-import { DropdownRCorp } from '../../packages/ui/src/components/DropdownRCorp'
-import type { DropdownItem } from '../../packages/ui/src/components/DropdownRCorp'
+import { DropdownRCorp } from '@/components/ui-v2/dropdown-rcorp'
+import type { DropdownItem } from '@/components/ui-v2/dropdown-rcorp'
 import { FrotaVeiculo } from '@/hooks/useFrotasData'
 
 interface VehicleActionsV2Props {
