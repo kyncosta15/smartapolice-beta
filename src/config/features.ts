@@ -20,8 +20,8 @@ export const FEATURE_FLAGS = {
   UI_V2_FORMS: import.meta.env.VITE_FEATURE_UI_V2_FORMS === 'true' || false,
   UI_V2_TABLES: import.meta.env.VITE_FEATURE_UI_V2_TABLES === 'true' || false,
   
-  // Tabs V2 Migration - Default: false para rollout seguro
-  TABS_V2: import.meta.env.VITE_FEATURE_TABS_V2 === 'true' || false,
+  // Tabs V2 Migration - Ativado para rollout
+  TABS_V2: import.meta.env.VITE_FEATURE_TABS_V2 === 'false' ? false : true,
 } as const
 
 /**

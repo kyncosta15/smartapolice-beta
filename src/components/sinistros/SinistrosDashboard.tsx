@@ -132,14 +132,19 @@ export function SinistrosDashboard({
 
   return (
     <div className="container mx-auto max-w-7xl px-4 md:px-6 space-y-6 md:space-y-8">
-      {/* Header - apenas mobile precisa do botão */}
-      <div className="flex items-center justify-between md:justify-end">
-        {/* Feature Flag: Use V2 or V1 modal based on flag */}
+      {/* Header com botão único */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">Gestão de Sinistros</h2>
+          <p className="text-sm text-muted-foreground">Dashboard e acompanhamento de tickets</p>
+        </div>
+        
+        {/* Botão único - removendo redundâncias */}
         {uiVersion.useV2 ? (
           <NovoTicketModalV4
             trigger={
-              <Button className="shrink-0" title="Abrir novo ticket (React Aria v4)">
-                <Plus className="h-4 w-4 mr-2" />
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
                 Novo Ticket
               </Button>
             }
@@ -149,8 +154,8 @@ export function SinistrosDashboard({
         ) : (
           <NovoTicketModal
             trigger={
-              <Button className="shrink-0" title="Abrir novo ticket">
-                <Plus className="h-4 w-4 mr-2" />
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
                 Novo Ticket
               </Button>
             }
@@ -160,133 +165,212 @@ export function SinistrosDashboard({
         )}
       </div>
 
-      <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Dashboard
-          </TabsTrigger>
-          <TabsTrigger value="tickets" className="flex items-center gap-2">
-            <GitBranch className="h-4 w-4" />
-            Tickets
-          </TabsTrigger>
-        </TabsList>
+      {/* TabsRCorp V2 ou Tabs tradicionais baseado na feature flag */}
+      {shouldUseTabsV2() ? (
+        <TabsRCorp
+          items={createTabsV2Items()}
+          initialTabId="dashboard"
+          urlSync={true}
+          className="w-full"
+        />
+      ) : (
+        // Layout original (fallback)
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="tickets" className="flex items-center gap-2">
+              <GitBranch className="h-4 w-4" />
+              Tickets
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="dashboard" className="mt-6 space-y-6">
-          {/* MegaCard - Totais */}
-          <MegaCard
-            totalTickets={stats.totais.tickets}
-            totalAbertos={stats.sinistros.abertos + stats.assistencias.abertos}
-            totalFinalizados={stats.sinistros.finalizados + stats.assistencias.finalizados}
-            ultimos60d={stats.totais.ultimos60d}
-            onTotalClick={() => goToListWith({})}
-            onUltimos60dClick={() => goToListWith({ createdFromDays: 60 })}
-            isLoading={loading}
-          />
+          <TabsContent value="dashboard" className="mt-6 space-y-6">
+            {renderDashboardContent()}
+          </TabsContent>
 
-          {/* Linha de Sinistros */}
-          <section aria-labelledby="sinistros">
-            <h3 id="sinistros" className="sr-only">Sinistros</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              <MetricCard
-                title="Total de Sinistros"
-                value={stats.sinistros.total}
-                variant="total"
-                icon={FileText}
-                onClick={() => goToListWith({ tipo: 'sinistro' })}
-                ariaLabel="Ver todos os sinistros"
-                isLoading={loading}
-              />
-              <MetricCard
-                title="Sinistros em Aberto"
-                value={stats.sinistros.abertos}
-                variant="aberto"
-                icon={Clock}
-                onClick={() => goToListWith({ tipo: 'sinistro', status: ['aberto', 'em_analise', 'em_andamento'] })}
-                ariaLabel="Ver sinistros em aberto"
-                isLoading={loading}
-              />
-              <MetricCard
-                title="Sinistros Finalizados"
-                value={stats.sinistros.finalizados}
-                variant="finalizado"
-                icon={CheckCircle}
-                onClick={() => goToListWith({ tipo: 'sinistro', status: ['finalizado'] })}
-                ariaLabel="Ver sinistros finalizados"
-                isLoading={loading}
-              />
-            </div>
-          </section>
+          <TabsContent value="tickets" className="mt-6">
+            {renderTicketsContent()}
+          </TabsContent>
+        </Tabs>
+      )}
 
-          {/* Linha de Assistências */}
-          <section aria-labelledby="assistencias">
-            <h3 id="assistencias" className="sr-only">Assistências</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              <MetricCard
-                title="Total de Assistências"
-                value={stats.assistencias.total}
-                variant="assistencia"
-                icon={Wrench}
-                onClick={() => goToListWith({ tipo: 'assistencia' })}
-                ariaLabel="Ver todas as assistências"
-                isLoading={loading}
-              />
-              <MetricCard
-                title="Assistências em Aberto"
-                value={stats.assistencias.abertos}
-                variant="aberto"
-                icon={Clock}
-                onClick={() => goToListWith({ tipo: 'assistencia', status: ['aberto', 'em_analise', 'em_andamento'] })}
-                ariaLabel="Ver assistências em aberto"
-                isLoading={loading}
-              />
-              <MetricCard
-                title="Assistências Finalizadas"
-                value={stats.assistencias.finalizados}
-                variant="finalizado"
-                icon={CheckCircle}
-                onClick={() => goToListWith({ tipo: 'assistencia', status: ['finalizado'] })}
-                ariaLabel="Ver assistências finalizadas"
-                isLoading={loading}
-              />
-            </div>
-          </section>
-
-          {/* Modal com lista filtrada */}
-          <SinistrosListModal
-            open={modalOpen}
-            onOpenChange={setModalOpen}
-            title={modalTitle}
-            initialFilter={modalFilter}
-          />
-        </TabsContent>
-
-        <TabsContent value="tickets" className="mt-6">
-          <div className="space-y-4">
-            {/* Integration with TicketsListV2 when V2 is enabled */}
-            {uiVersion.useV2 ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Lista de Tickets (V2)</h3>
-                  <Badge variant="secondary" className="text-xs">
-                    React Aria + Advanced Filtering
-                  </Badge>
-                </div>
-                <TicketsListV2
-                  claims={claims}
-                  assistances={assistances}
-                  loading={loading}
-                  onViewClaim={(id) => console.log('View claim:', id)}
-                  onEditClaim={(id) => console.log('Edit claim:', id)}
-                  onDeleteClaim={(id) => console.log('Delete claim:', id)}
-                />
-              </>
-            ) : (
-              <TicketsList />
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+      {/* Modal com lista filtrada - compartilhado entre versões */}
+      <SinistrosListModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        title={modalTitle}
+        initialFilter={modalFilter}
+      />
     </div>
   );
+
+  // Função para criar os itens das abas V2
+  function createTabsV2Items(): TabItem[] {
+    return [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: <BarChart3 className="h-4 w-4" />,
+        count: stats.totais.tickets,
+        content: <div className="mt-6 space-y-6">{renderDashboardContent()}</div>
+      },
+      {
+        id: 'sinistros',
+        label: 'Sinistros',
+        icon: <AlertTriangle className="h-4 w-4" />,
+        count: stats.sinistros.total,
+        lazy: true,
+        content: (
+          <div className="mt-6 space-y-4">
+            <h3 className="text-lg font-semibold">Lista de Sinistros</h3>
+            <div className="text-sm text-muted-foreground mb-4">
+              Filtro aplicado: apenas sinistros
+            </div>
+            {renderTicketsContent()}
+          </div>
+        )
+      },
+      {
+        id: 'assistencias',
+        label: 'Assistências',
+        icon: <Wrench className="h-4 w-4" />,
+        count: stats.assistencias.total,
+        lazy: true,
+        content: (
+          <div className="mt-6 space-y-4">
+            <h3 className="text-lg font-semibold">Lista de Assistências</h3>
+            <div className="text-sm text-muted-foreground mb-4">
+              Filtro aplicado: apenas assistências
+            </div>
+            {renderTicketsContent()}
+          </div>
+        )
+      },
+      {
+        id: 'todos',
+        label: 'Todos os Tickets',
+        icon: <GitBranch className="h-4 w-4" />,
+        count: stats.totais.tickets,
+        lazy: true,
+        content: <div className="mt-6">{renderTicketsContent()}</div>
+      }
+    ];
+  }
+
+  // Função para renderizar conteúdo do dashboard (reutilizada)
+  function renderDashboardContent() {
+    return (
+      <>
+        {/* MegaCard - Totais */}
+        <MegaCard
+          totalTickets={stats.totais.tickets}
+          totalAbertos={stats.sinistros.abertos + stats.assistencias.abertos}
+          totalFinalizados={stats.sinistros.finalizados + stats.assistencias.finalizados}
+          ultimos60d={stats.totais.ultimos60d}
+          onTotalClick={() => goToListWith({})}
+          onUltimos60dClick={() => goToListWith({ createdFromDays: 60 })}
+          isLoading={loading}
+        />
+
+        {/* Linha de Sinistros */}
+        <section aria-labelledby="sinistros">
+          <h3 id="sinistros" className="sr-only">Sinistros</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <MetricCard
+              title="Total de Sinistros"
+              value={stats.sinistros.total}
+              variant="total"
+              icon={FileText}
+              onClick={() => goToListWith({ tipo: 'sinistro' })}
+              ariaLabel="Ver todos os sinistros"
+              isLoading={loading}
+            />
+            <MetricCard
+              title="Sinistros em Aberto"
+              value={stats.sinistros.abertos}
+              variant="aberto"
+              icon={Clock}
+              onClick={() => goToListWith({ tipo: 'sinistro', status: ['aberto', 'em_analise', 'em_andamento'] })}
+              ariaLabel="Ver sinistros em aberto"
+              isLoading={loading}
+            />
+            <MetricCard
+              title="Sinistros Finalizados"
+              value={stats.sinistros.finalizados}
+              variant="finalizado"
+              icon={CheckCircle}
+              onClick={() => goToListWith({ tipo: 'sinistro', status: ['finalizado'] })}
+              ariaLabel="Ver sinistros finalizados"
+              isLoading={loading}
+            />
+          </div>
+        </section>
+
+        {/* Linha de Assistências */}
+        <section aria-labelledby="assistencias">
+          <h3 id="assistencias" className="sr-only">Assistências</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <MetricCard
+              title="Total de Assistências"
+              value={stats.assistencias.total}
+              variant="assistencia"
+              icon={Wrench}
+              onClick={() => goToListWith({ tipo: 'assistencia' })}
+              ariaLabel="Ver todas as assistências"
+              isLoading={loading}
+            />
+            <MetricCard
+              title="Assistências em Aberto"
+              value={stats.assistencias.abertos}
+              variant="aberto"
+              icon={Clock}
+              onClick={() => goToListWith({ tipo: 'assistencia', status: ['aberto', 'em_analise', 'em_andamento'] })}
+              ariaLabel="Ver assistências em aberto"
+              isLoading={loading}
+            />
+            <MetricCard
+              title="Assistências Finalizadas"
+              value={stats.assistencias.finalizados}
+              variant="finalizado"
+              icon={CheckCircle}
+              onClick={() => goToListWith({ tipo: 'assistencia', status: ['finalizado'] })}
+              ariaLabel="Ver assistências finalizadas"
+              isLoading={loading}
+            />
+          </div>
+        </section>
+      </>
+    );
+  }
+
+  // Função para renderizar conteúdo dos tickets (reutilizada)
+  function renderTicketsContent() {
+    return (
+      <div className="space-y-4">
+        {uiVersion.useV2 ? (
+          <>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Lista de Tickets (V2)</h3>
+              <Badge variant="secondary" className="text-xs">
+                React Aria + Advanced Filtering
+              </Badge>
+            </div>
+            <TicketsListV2
+              claims={claims}
+              assistances={assistances}
+              loading={loading}
+              onViewClaim={(id) => console.log('View claim:', id)}
+              onEditClaim={(id) => console.log('Edit claim:', id)}
+              onDeleteClaim={(id) => console.log('Delete claim:', id)}
+            />
+          </>
+        ) : (
+          <TicketsList />
+        )}
+      </div>
+    );
+  }
 }
