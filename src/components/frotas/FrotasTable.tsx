@@ -220,22 +220,6 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
     );
   };
 
-  const getEmplacamentoStatus = (dataVencimento?: string) => {
-    if (!dataVencimento) return { text: 'Não definido', color: 'text-gray-500' };
-    
-    const vencimento = new Date(dataVencimento);
-    const hoje = new Date();
-    const diffDays = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 3600 * 24));
-    
-    if (diffDays < 0) {
-      return { text: 'Vencido', color: 'text-red-600' };
-    } else if (diffDays <= 30) {
-      return { text: `${diffDays}d`, color: 'text-yellow-600' };
-    } else {
-      return { text: format(vencimento, 'dd/MM/yyyy', { locale: ptBR }), color: 'text-green-600' };
-    }
-  };
-
   const getModalidadeBadge = (modalidade?: string) => {
     if (!modalidade) return null;
     
@@ -378,14 +362,12 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                     <TableHead className="min-w-[200px] bg-background" scope="col">Veículo</TableHead>
                     <TableHead className="min-w-[120px] bg-background" scope="col">Placa</TableHead>
                     <TableHead className="min-w-[150px] bg-background" scope="col">Proprietário</TableHead>
-                    <TableHead className="min-w-[120px] bg-background" scope="col">Emplacamento</TableHead>
-                     <TableHead className="min-w-[120px] bg-background" scope="col">Status Seguro</TableHead>
+                    <TableHead className="min-w-[120px] bg-background" scope="col">Status Seguro</TableHead>
                      <TableHead className="w-[120px] min-w-[120px] bg-background text-right sticky right-0 bg-background border-l shadow-sm" scope="col">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="[&_tr:hover]:bg-muted/50">
                   {veiculos.map((veiculo) => {
-                    const emplacamentoStatus = getEmplacamentoStatus(veiculo.data_venc_emplacamento);
                     const responsavel = veiculo.responsaveis?.[0];
                     const isSelected = isVehicleSelected(veiculo.id);
 
@@ -440,12 +422,6 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                                 {veiculo.proprietario_tipo === 'pj' ? 'PJ' : 'PF'}
                               </Badge>
                             )}
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <div className={`font-medium ${emplacamentoStatus.color}`}>
-                            {emplacamentoStatus.text}
                           </div>
                         </TableCell>
 
