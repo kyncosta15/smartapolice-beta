@@ -8,13 +8,13 @@
 
 export const FEATURE_FLAGS = {
   // UI V2 Migration - Default: false para rollout seguro
-  UI_V2: process.env.NEXT_PUBLIC_FEATURE_UI_V2 === 'true' || false,
+  UI_V2: import.meta.env.VITE_FEATURE_UI_V2 === 'true' || false,
   
   // UI V2 por página (override granular)
-  UI_V2_FROTAS: process.env.NEXT_PUBLIC_FEATURE_UI_V2_FROTAS === 'true' || false,
-  UI_V2_SINISTROS: process.env.NEXT_PUBLIC_FEATURE_UI_V2_SINISTROS === 'true' || false,
-  UI_V2_FORMS: process.env.NEXT_PUBLIC_FEATURE_UI_V2_FORMS === 'true' || false,
-  UI_V2_TABLES: process.env.NEXT_PUBLIC_FEATURE_UI_V2_TABLES === 'true' || false,
+  UI_V2_FROTAS: import.meta.env.VITE_FEATURE_UI_V2_FROTAS === 'true' || false,
+  UI_V2_SINISTROS: import.meta.env.VITE_FEATURE_UI_V2_SINISTROS === 'true' || false,
+  UI_V2_FORMS: import.meta.env.VITE_FEATURE_UI_V2_FORMS === 'true' || false,
+  UI_V2_TABLES: import.meta.env.VITE_FEATURE_UI_V2_TABLES === 'true' || false,
 } as const
 
 /**
