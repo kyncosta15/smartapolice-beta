@@ -240,10 +240,10 @@ export function TicketsList() {
 
       {/* Modal da Esteira de Status Completa */}
       <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
-        <DialogContent className="max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-4xl max-h-[85vh] overflow-hidden p-0">
-          <DialogHeader className="px-6 py-4 border-b bg-background/95 backdrop-blur-sm">
-            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+        <DialogContent className="max-w-[90vw] sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[90vh] h-[90vh] overflow-hidden p-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+          <DialogHeader className="px-4 py-3 border-b bg-background/95 backdrop-blur-sm flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-sm font-medium">
+              <div className="w-2 h-2 rounded-full bg-primary" />
               <span className="truncate">
                 {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id}
               </span>
@@ -251,7 +251,7 @@ export function TicketsList() {
           </DialogHeader>
           
           {selectedTicket && (
-            <div className="overflow-hidden">
+            <div className="flex-1 overflow-hidden">
               <CompactStatusStepper
                 type={selectedTicket.tipo}
                 currentStatus={selectedTicket.status}

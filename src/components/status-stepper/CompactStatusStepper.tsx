@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, AlertCircle, CheckCircle2, Circle, ChevronRight } from 'lucide-react';
+import { Clock, AlertCircle, CheckCircle2, CheckCircle, Circle, ChevronRight } from 'lucide-react';
 import { StatusStepperProps, StatusStep, STAGE_COLORS } from '@/types/status-stepper';
 import { StatusHistoryPanel } from './StatusHistoryPanel';
 import { Badge } from '@/components/ui/badge';
@@ -33,15 +33,14 @@ export const CompactStatusStepper: React.FC<StatusStepperProps> = ({
 
   const getStepIcon = (step: StatusStep, stepIndex: number) => {
     const status = getStepStatus(stepIndex);
-    const color = STAGE_COLORS[step.stage];
     
     if (status === 'completed') {
-      return <CheckCircle2 className="w-4 h-4" style={{ color }} />;
+      return <CheckCircle2 className="w-4 h-4 text-green-600" />;
     }
     if (status === 'current') {
-      return <Circle className="w-4 h-4 fill-current" style={{ color }} />;
+      return <Circle className="w-4 h-4 fill-current text-primary" />;
     }
-    return <Circle className="w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />;
+    return <Circle className="w-4 h-4 text-muted-foreground" />;
   };
 
   const handleStepClick = (step: StatusStep) => {
@@ -52,45 +51,28 @@ export const CompactStatusStepper: React.FC<StatusStepperProps> = ({
 
   return (
     <TooltipProvider>
-      <div className="h-full max-h-[75vh] overflow-hidden">
-        {/* iOS-inspired Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+      <div className="flex flex-col h-full max-h-[80vh]">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between p-3 border-b bg-gradient-to-r from-primary/5 to-primary/10">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-white" />
             </div>
             <div>
-              <h3 className="font-semibold text-sm">
+              <h3 className="font-medium text-sm">
                 {type === 'sinistro' ? 'Sinistro' : 'Assistência'}
               </h3>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{Math.round(progressPercent)}% completo</span>
-                {slaInfo?.due_at && (
-                  <Badge variant={slaInfo.isOverdue ? "destructive" : "secondary"} className="text-xs h-4 px-1.5">
-                    {slaInfo.isOverdue ? 'Atrasado' : 'OK'}
-                  </Badge>
-                )}
-              </div>
+              <div className="text-xs text-muted-foreground">{Math.round(progressPercent)}% completo</div>
             </div>
           </div>
           
-          {/* Progress Ring */}
-          <div className="relative w-12 h-12">
-            <svg className="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
-              <path
-                d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeDasharray="100, 100"
-                className="text-muted"
-              />
-              <path
-                d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeDasharray={`${progressPercent}, 100`}
+          {/* Mini Progress Ring */}
+          <div className="relative w-8 h-8">
+            <svg className="w-8 h-8 -rotate-90" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted/30" />
+              <circle 
+                cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" 
+                strokeDasharray={`${progressPercent * 0.628}, 62.8`}
                 className="text-primary"
               />
             </svg>
@@ -100,156 +82,150 @@ export const CompactStatusStepper: React.FC<StatusStepperProps> = ({
           </div>
         </div>
 
-        {/* Current Status Card - iOS Style */}
-        <div className="p-4 bg-gradient-to-r from-primary/5 to-primary/10 border-b">
-          <div className="flex items-center gap-3">
-            {steps[currentStepIndex] && (
-              <>
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-                  {getStepIcon(steps[currentStepIndex], currentStepIndex)}
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Status Atual</div>
-                  <div className="text-lg font-semibold text-primary">
-                    {steps[currentStepIndex].label}
-                  </div>
-                  <Badge variant="secondary" className="text-xs mt-1">
-                    {steps[currentStepIndex].stage}
-                  </Badge>
-                </div>
-                {!readOnly && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                    onClick={() => handleStepClick(steps[currentStepIndex])}
-                  >
-                    Atualizar
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Steps List - iOS Style */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-2">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-muted-foreground">Progresso</span>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  {steps.filter((_, i) => getStepStatus(i) === 'completed').length} Concluídas
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-muted-foreground" />
-                  {steps.filter((_, i) => getStepStatus(i) === 'pending').length} Pendentes
-                </span>
+        {/* Current Status - Compact */}
+        {steps[currentStepIndex] && (
+          <div className="p-3 bg-primary/5 border-b">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                {getStepIcon(steps[currentStepIndex], currentStepIndex)}
               </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm truncate">{steps[currentStepIndex].label}</div>
+                <Badge variant="secondary" className="text-xs h-4 px-1.5 mt-0.5">
+                  {steps[currentStepIndex].stage}
+                </Badge>
+              </div>
+              {!readOnly && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => handleStepClick(steps[currentStepIndex])}
+                >
+                  Atualizar
+                </Button>
+              )}
             </div>
+          </div>
+        )}
 
+        {/* Steps Timeline - Scrollable */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-3 space-y-1 relative">
+            {/* Timeline vertical line */}
+            <div className="absolute left-8 top-0 bottom-0 w-px bg-border" />
+            
             {steps.map((step, index) => {
               const status = getStepStatus(index);
               const isClickable = !readOnly;
+              const isLast = index === steps.length - 1;
               
               return (
                 <motion.div
                   key={step.key}
                   className={cn(
-                    "flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 bg-background/50",
-                    status === 'completed' && "border-green-200/50 bg-green-50/30",
-                    status === 'current' && "border-primary/30 bg-primary/5 ring-1 ring-primary/10",
-                    status === 'pending' && "border-muted/50",
-                    isClickable && "active:scale-[0.98] cursor-pointer"
+                    "relative flex items-center gap-3 p-2 rounded-lg transition-all duration-200",
+                    status === 'completed' && "bg-green-50/50",
+                    status === 'current' && "bg-primary/10 border border-primary/20",
+                    status === 'pending' && "hover:bg-muted/30",
+                    isClickable && "cursor-pointer"
                   )}
                   onClick={() => isClickable && handleStepClick(step)}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.02 }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  {/* Step Number & Icon */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-muted/30 flex items-center justify-center text-xs font-medium text-muted-foreground">
+                  {/* Step indicator */}
+                  <div className="relative z-10 flex items-center">
+                    <div className="w-6 h-6 text-xs font-medium text-muted-foreground flex items-center justify-center">
                       {index + 1}
                     </div>
                     <div className={cn(
-                      "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all",
-                      status === 'completed' && "border-green-500 bg-green-500 text-white shadow-sm",
-                      status === 'current' && "border-primary bg-primary text-primary-foreground shadow-sm",
-                      status === 'pending' && "border-muted-foreground/30 bg-background"
+                      "w-6 h-6 rounded-full border-2 flex items-center justify-center ml-1 bg-background",
+                      status === 'completed' && "border-green-500 bg-green-500",
+                      status === 'current' && "border-primary bg-primary",
+                      status === 'pending' && "border-muted-foreground/30"
                     )}>
-                      {getStepIcon(step, index)}
+                      {status === 'completed' ? (
+                        <CheckCircle2 className="w-3 h-3 text-white" />
+                      ) : status === 'current' ? (
+                        <Circle className="w-3 h-3 fill-current text-white" />
+                      ) : (
+                        <Circle className="w-3 h-3 text-muted-foreground" />
+                      )}
                     </div>
                   </div>
 
-                  {/* Content */}
+                  {/* Step content */}
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">
-                      {step.label}
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm truncate">{step.label}</span>
+                      {status === 'completed' && (
+                        <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
+                      )}
+                      {status === 'current' && (
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
+                    
+                    <div className="flex items-center gap-1 mt-0.5">
                       <Badge 
-                        variant={status === 'current' ? 'default' : 'outline'}
-                        className="text-xs h-5"
-                        style={status !== 'current' ? { 
+                        variant="outline"
+                        className="text-xs h-4 px-1.5"
+                        style={{ 
                           borderColor: STAGE_COLORS[step.stage],
                           color: STAGE_COLORS[step.stage],
-                          backgroundColor: `${STAGE_COLORS[step.stage]}08`
-                        } : {}}
+                          backgroundColor: `${STAGE_COLORS[step.stage]}10`
+                        }}
                       >
                         {step.stage}
                       </Badge>
+                      
                       {status === 'completed' && (
-                        <span className="text-xs text-green-600 font-medium">✓ Concluída</span>
+                        <span className="text-xs text-green-600">Concluída</span>
                       )}
                       {status === 'current' && (
-                        <span className="text-xs text-primary font-medium">⏵ Atual</span>
+                        <span className="text-xs text-primary font-medium">Em andamento</span>
                       )}
                     </div>
                   </div>
 
-                  {/* History Indicator */}
+                  {/* Activity indicator */}
                   {history.filter(h => h.to_status === step.key).length > 0 && (
-                    <div className="w-2 h-2 rounded-full bg-primary/40" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
                   )}
                 </motion.div>
               );
             })}
           </div>
+        </div>
 
+        {/* Footer with SLA and Activity */}
+        <div className="border-t bg-muted/10">
           {/* SLA Warning */}
           {slaInfo?.isOverdue && (
-            <div className="mx-4 mb-4">
-              <motion.div 
-                className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-              >
-                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                <span className="text-sm text-red-700">
-                  Ticket em atraso conforme SLA
-                </span>
-              </motion.div>
+            <div className="p-2 bg-destructive/5 border-b border-destructive/20">
+              <div className="flex items-center gap-2 text-xs">
+                <AlertCircle className="w-3 h-3 text-destructive flex-shrink-0" />
+                <span className="text-destructive font-medium">Ticket em atraso</span>
+              </div>
             </div>
           )}
 
-          {/* Recent Activity - Compact */}
+          {/* Recent Activity */}
           {history.length > 0 && (
-            <div className="border-t bg-muted/20">
-              <div className="p-4 space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">Última Atividade</div>
-                <div className="space-y-1">
-                  {history.slice(-2).reverse().map((event) => (
-                    <div key={event.id} className="flex items-center gap-2 p-2 bg-background/60 rounded-lg text-xs">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      <span className="font-medium">{event.to_status}</span>
-                      <span className="text-muted-foreground">
-                        {format(new Date(event.created_at), 'dd/MM HH:mm', { locale: ptBR })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            <div className="p-2">
+              <div className="text-xs font-medium text-muted-foreground mb-1">Última atividade</div>
+              <div className="space-y-1">
+                {history.slice(-1).map((event) => (
+                  <div key={event.id} className="flex items-center gap-2 text-xs">
+                    <div className="w-1 h-1 rounded-full bg-primary" />
+                    <span className="font-medium truncate">{event.to_status}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {format(new Date(event.created_at), 'dd/MM HH:mm', { locale: ptBR })}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
