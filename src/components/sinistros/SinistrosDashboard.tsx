@@ -47,6 +47,8 @@ export function SinistrosDashboard({
 }: SinistrosDashboardProps) {
   console.log('🚗 SinistrosDashboard renderizando...');
   
+  const uiVersion = useUIVersion('sinistros');
+  
   // State for data
   const [claims, setClaims] = useState<Claim[]>([]);
   const [assistances, setAssistances] = useState<Assistance[]>([]);
@@ -127,12 +129,12 @@ export function SinistrosDashboard({
       {/* Header - apenas mobile precisa do botão */}
       <div className="flex items-center justify-between md:justify-end">
         {/* Feature Flag: Use V2 or V1 modal based on flag */}
-        {shouldUseUIV2('sinistros') ? (
-          <NovoTicketModalV2
+        {uiVersion.useV2 ? (
+          <NovoTicketModalV3
             trigger={
-              <Button className="shrink-0" title="Abrir novo ticket">
+              <Button className="shrink-0" title="Abrir novo ticket (React Aria)">
                 <Plus className="h-4 w-4 mr-2" />
-                Novo Ticket V2
+                Novo Ticket
               </Button>
             }
             onTicketCreated={handleTicketCreated}
