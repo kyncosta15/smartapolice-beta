@@ -36,12 +36,12 @@ export const StatusStepper: React.FC<StatusStepperProps> = ({
     const color = STAGE_COLORS[step.stage];
     
     if (status === 'completed') {
-      return <CheckCircle2 className="w-4 h-4" style={{ color }} />;
+      return <CheckCircle2 className="w-5 h-5" style={{ color }} />;
     }
     if (status === 'current') {
-      return <Circle className="w-4 h-4 fill-current" style={{ color }} />;
+      return <Circle className="w-5 h-5 fill-current" style={{ color }} />;
     }
-    return <Circle className="w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />;
+    return <Circle className="w-5 h-5" style={{ color: 'hsl(var(--muted-foreground))' }} />;
   };
 
   const getStepHistory = (stepKey: string) => {
@@ -75,148 +75,221 @@ export const StatusStepper: React.FC<StatusStepperProps> = ({
 
   return (
     <TooltipProvider>
-      <div className="w-full space-y-4">
-        {/* Progress Bar e SLA Info */}
+      <div className="w-full bg-card border rounded-xl p-6 space-y-6 shadow-sm">
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="text-sm font-medium">
-              Progresso: {Math.round(progressPercent)}%
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold text-foreground">
+              Esteira de Status - {type === 'sinistro' ? 'Sinistro' : 'Assistência'}
+            </h3>
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-muted-foreground">
+                Progresso: <span className="font-medium text-foreground">{Math.round(progressPercent)}%</span>
+              </div>
+              {slaInfo?.due_at && (
+                <Badge variant={slaInfo.isOverdue ? "destructive" : "secondary"}>
+                  <Clock className="w-3 h-3 mr-1" />
+                  {slaInfo.isOverdue ? 'Atrasado' : 'No prazo'}
+                </Badge>
+              )}
             </div>
-            {slaInfo?.due_at && (
-              <Badge variant={slaInfo.isOverdue ? "destructive" : "secondary"}>
-                <Clock className="w-3 h-3 mr-1" />
-                {slaInfo.isOverdue ? 'Atrasado' : 'No prazo'}
-              </Badge>
-            )}
           </div>
         </div>
 
-        {/* Progress Bar Visual */}
-        <div className="relative">
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
+        {/* Enhanced Progress Bar */}
+        <div className="space-y-2">
+          <div className="relative h-3 bg-muted rounded-full overflow-hidden shadow-inner">
             <motion.div
-              className="h-full bg-primary rounded-full"
+              className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full shadow-sm"
               initial={{ width: 0 }}
               animate={{ width: `${progressPercent}%` }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
             />
           </div>
         </div>
 
-        {/* Desktop: Stepper Horizontal */}
-        <div className="hidden md:block">
-          <div className="flex items-center justify-between relative">
-            {/* Connecting Line */}
-            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-muted -translate-y-1/2" />
+        {/* Desktop: Enhanced Stepper */}
+        <div className="hidden lg:block">
+          <div className="relative">
+            {/* Background line */}
+            <div className="absolute top-8 left-0 right-0 h-1 bg-gradient-to-r from-muted via-muted to-muted rounded-full" />
+            
+            {/* Progress line */}
             <motion.div
-              className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2"
+              className="absolute top-8 left-0 h-1 bg-gradient-to-r from-primary to-primary/70 rounded-full"
               initial={{ width: 0 }}
               animate={{ 
                 width: currentStepIndex >= 0 
                   ? `${(currentStepIndex / (steps.length - 1)) * 100}%` 
                   : '0%' 
               }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
             />
 
+            {/* Steps */}
+            <div className="flex justify-between relative z-10">
+              {steps.map((step, index) => {
+                const status = getStepStatus(index);
+                const isClickable = !readOnly;
+                
+                return (
+                  <Tooltip key={step.key}>
+                    <TooltipTrigger asChild>
+                      <motion.div
+                        className={cn(
+                          "flex flex-col items-center space-y-3 cursor-pointer group",
+                          !isClickable && "cursor-default"
+                        )}
+                        onClick={() => isClickable && handleStepClick(step)}
+                        whileHover={isClickable ? { scale: 1.05 } : {}}
+                        whileTap={isClickable ? { scale: 0.95 } : {}}
+                      >
+                        {/* Icon Circle */}
+                        <div className={cn(
+                          "w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-300",
+                          "bg-background shadow-lg",
+                          status === 'completed' && "border-primary bg-primary/10",
+                          status === 'current' && "border-primary bg-primary/20 ring-4 ring-primary/20",
+                          status === 'pending' && "border-muted-foreground/30",
+                          isClickable && "group-hover:border-primary/70 group-hover:shadow-xl"
+                        )}>
+                          {getStepIcon(step, index)}
+                        </div>
+                        
+                        {/* Step Info */}
+                        <div className="text-center space-y-2 min-w-[120px] max-w-[140px]">
+                          <div className="text-sm font-medium text-foreground leading-tight">
+                            {step.label}
+                          </div>
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs"
+                            style={{ 
+                              borderColor: STAGE_COLORS[step.stage],
+                              color: STAGE_COLORS[step.stage]
+                            }}
+                          >
+                            {step.stage}
+                          </Badge>
+                        </div>
+                      </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {formatTooltipContent(step)}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Tablet: Horizontal Scroll */}
+        <div className="hidden md:block lg:hidden">
+          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory">
             {steps.map((step, index) => {
               const status = getStepStatus(index);
               const isClickable = !readOnly;
               
               return (
-                <Tooltip key={step.key}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "relative z-10 flex flex-col items-center gap-2 p-3 h-auto",
-                        "bg-background border rounded-lg min-w-[120px]",
-                        isClickable && "hover:bg-muted cursor-pointer",
-                        status === 'current' && "ring-2 ring-primary"
-                      )}
-                      onClick={() => isClickable && handleStepClick(step)}
-                      disabled={!isClickable}
+                <motion.div
+                  key={step.key}
+                  className={cn(
+                    "flex-shrink-0 snap-center flex flex-col items-center space-y-3 p-4 rounded-xl border cursor-pointer",
+                    "bg-background min-w-[140px]",
+                    status === 'completed' && "border-primary/30 bg-primary/5",
+                    status === 'current' && "border-primary bg-primary/10 ring-2 ring-primary/20",
+                    status === 'pending' && "border-muted",
+                    isClickable && "hover:border-primary/50 hover:bg-primary/5"
+                  )}
+                  onClick={() => isClickable && handleStepClick(step)}
+                  whileHover={isClickable ? { scale: 1.02 } : {}}
+                  whileTap={isClickable ? { scale: 0.98 } : {}}
+                >
+                  <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center" 
+                       style={{ borderColor: STAGE_COLORS[step.stage] }}>
+                    {getStepIcon(step, index)}
+                  </div>
+                  <div className="text-center space-y-2">
+                    <div className="text-sm font-medium leading-tight">
+                      {step.label}
+                    </div>
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs"
+                      style={{ 
+                        borderColor: STAGE_COLORS[step.stage],
+                        color: STAGE_COLORS[step.stage]
+                      }}
                     >
-                      <div className="flex items-center gap-2">
-                        {getStepIcon(step, index)}
-                        <span className="text-xs font-medium truncate max-w-[80px]">
-                          {step.label}
-                        </span>
-                      </div>
-                      
-                      {/* Stage Badge */}
-                      <Badge 
-                        variant="outline" 
-                        className="text-xs"
-                        style={{ 
-                          borderColor: STAGE_COLORS[step.stage],
-                          color: STAGE_COLORS[step.stage]
-                        }}
-                      >
-                        {step.stage}
-                      </Badge>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {formatTooltipContent(step)}
-                  </TooltipContent>
-                </Tooltip>
+                      {step.stage}
+                    </Badge>
+                  </div>
+                </motion.div>
               );
             })}
           </div>
         </div>
 
-        {/* Mobile: Carrossel Horizontal */}
+        {/* Mobile: Compact Cards */}
         <div className="md:hidden">
-          <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory">
-            {steps.map((step, index) => {
-              const status = getStepStatus(index);
-              const isClickable = !readOnly;
-              
-              return (
-                <Button
-                  key={step.key}
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "flex-shrink-0 snap-center flex flex-col items-center gap-2 p-3 h-auto",
-                    "bg-background border rounded-lg min-w-[100px]",
-                    isClickable && "hover:bg-muted cursor-pointer",
-                    status === 'current' && "ring-2 ring-primary"
-                  )}
-                  onClick={() => isClickable && handleStepClick(step)}
-                  disabled={!isClickable}
-                >
-                  <div className="flex items-center gap-1">
-                    {getStepIcon(step, index)}
-                  </div>
-                  <span className="text-xs font-medium text-center leading-tight">
-                    {step.label}
-                  </span>
-                  <Badge 
-                    variant="outline" 
-                    className="text-xs"
-                    style={{ 
-                      borderColor: STAGE_COLORS[step.stage],
-                      color: STAGE_COLORS[step.stage]
-                    }}
+          <div className="space-y-3">
+            <div className="text-sm font-medium text-muted-foreground mb-3">
+              Etapas do Processo
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory">
+              {steps.map((step, index) => {
+                const status = getStepStatus(index);
+                const isClickable = !readOnly;
+                
+                return (
+                  <motion.div
+                    key={step.key}
+                    className={cn(
+                      "flex-shrink-0 snap-center p-3 rounded-lg border cursor-pointer min-w-[100px]",
+                      "bg-background",
+                      status === 'completed' && "border-primary/30 bg-primary/5",
+                      status === 'current' && "border-primary bg-primary/10 ring-1 ring-primary/30",
+                      status === 'pending' && "border-muted",
+                      isClickable && "active:scale-95"
+                    )}
+                    onClick={() => isClickable && handleStepClick(step)}
+                    whileTap={isClickable ? { scale: 0.95 } : {}}
                   >
-                    {step.stage}
-                  </Badge>
-                </Button>
-              );
-            })}
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="w-8 h-8 rounded-full border flex items-center justify-center" 
+                           style={{ borderColor: STAGE_COLORS[step.stage] }}>
+                        {status === 'completed' ? (
+                          <CheckCircle2 className="w-4 h-4" style={{ color: STAGE_COLORS[step.stage] }} />
+                        ) : status === 'current' ? (
+                          <Circle className="w-4 h-4 fill-current" style={{ color: STAGE_COLORS[step.stage] }} />
+                        ) : (
+                          <Circle className="w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                        )}
+                      </div>
+                      <div className="text-xs font-medium text-center leading-tight">
+                        {step.label.length > 12 ? `${step.label.substring(0, 12)}...` : step.label}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {slaInfo?.isOverdue && (
-          <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+          <motion.div 
+            className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded-lg"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             <AlertCircle className="w-4 h-4 text-destructive" />
             <span className="text-sm text-destructive">
               Este ticket está atrasado conforme o SLA estabelecido
             </span>
-          </div>
+          </motion.div>
         )}
 
         {/* Status History Panel */}

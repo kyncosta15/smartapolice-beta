@@ -34,23 +34,25 @@ export const MiniStepper: React.FC<MiniStepperProps> = ({
   const currentStep = steps[currentStepIndex];
 
   return (
-    <div className={cn("space-y-2", className)}>
-      {/* Status Atual */}
+    <div className={cn("bg-card border rounded-lg p-4 space-y-3 shadow-sm", className)}>
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <div className="text-sm font-medium">
+          <div className="text-sm font-semibold text-foreground">
             {currentStep ? currentStep.label : 'Status não encontrado'}
           </div>
           <div className="text-xs text-muted-foreground">
-            Progresso: {Math.round(progressPercent)}%
+            {type === 'sinistro' ? 'Sinistro' : 'Assistência'} • Progresso: {Math.round(progressPercent)}%
           </div>
         </div>
         {currentStep && (
           <Badge 
-            variant="outline"
+            variant="secondary"
+            className="text-xs font-medium"
             style={{ 
-              borderColor: STAGE_COLORS[currentStep.stage],
-              color: STAGE_COLORS[currentStep.stage]
+              backgroundColor: `${STAGE_COLORS[currentStep.stage]}15`,
+              color: STAGE_COLORS[currentStep.stage],
+              borderColor: `${STAGE_COLORS[currentStep.stage]}30`
             }}
           >
             {currentStep.stage}
@@ -58,50 +60,63 @@ export const MiniStepper: React.FC<MiniStepperProps> = ({
         )}
       </div>
 
-      {/* Mini Progress Bar */}
-      <div className="relative">
-        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+      {/* Enhanced Progress Bar */}
+      <div className="space-y-2">
+        <div className="relative h-2 bg-muted rounded-full overflow-hidden shadow-inner">
           <div 
-            className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+            className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-700 ease-out shadow-sm"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
         
-        {/* Pontos no progresso */}
-        <div className="absolute inset-0 flex justify-between items-center">
-          {keySteps.map((step, index) => {
-            const originalIndex = steps.findIndex(s => s.key === step.key);
-            const status = getStepStatus(originalIndex);
-            const color = STAGE_COLORS[step.stage];
-            
-            return (
-              <div
-                key={step.key}
-                className="relative"
-                style={{ 
-                  left: `${(originalIndex / (steps.length - 1)) * 100}%`,
-                  transform: 'translateX(-50%)'
-                }}
-              >
-                {status === 'completed' ? (
-                  <CheckCircle2 
-                    className="w-3 h-3 bg-background rounded-full" 
-                    style={{ color }} 
-                  />
-                ) : status === 'current' ? (
-                  <Circle 
-                    className="w-3 h-3 fill-current bg-background rounded-full" 
-                    style={{ color }} 
-                  />
-                ) : (
-                  <Circle 
-                    className="w-3 h-3 bg-background rounded-full" 
-                    style={{ color: 'hsl(var(--muted-foreground))' }} 
-                  />
-                )}
-              </div>
-            );
-          })}
+        {/* Progress Points */}
+        <div className="relative h-4">
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between">
+            {keySteps.map((step, index) => {
+              const originalIndex = steps.findIndex(s => s.key === step.key);
+              const status = getStepStatus(originalIndex);
+              const color = STAGE_COLORS[step.stage];
+              const leftPosition = (originalIndex / (steps.length - 1)) * 100;
+              
+              return (
+                <div
+                  key={step.key}
+                  className="absolute flex flex-col items-center"
+                  style={{ 
+                    left: `${leftPosition}%`,
+                    transform: 'translateX(-50%)'
+                  }}
+                >
+                  {/* Icon */}
+                  <div className={cn(
+                    "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-300",
+                    "bg-background shadow-sm",
+                    status === 'completed' && "border-primary",
+                    status === 'current' && "border-primary ring-2 ring-primary/20",
+                    status === 'pending' && "border-muted-foreground/30"
+                  )}>
+                    {status === 'completed' ? (
+                      <CheckCircle2 className="w-2.5 h-2.5" style={{ color }} />
+                    ) : status === 'current' ? (
+                      <Circle className="w-2.5 h-2.5 fill-current" style={{ color }} />
+                    ) : (
+                      <Circle className="w-2.5 h-2.5" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                    )}
+                  </div>
+                  
+                  {/* Label for current step on mobile */}
+                  {status === 'current' && (
+                    <div 
+                      className="absolute top-5 text-xs font-medium whitespace-nowrap px-1 py-0.5 rounded text-center"
+                      style={{ color }}
+                    >
+                      {step.label.length > 8 ? `${step.label.substring(0, 8)}...` : step.label}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
