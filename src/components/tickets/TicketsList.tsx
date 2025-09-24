@@ -240,11 +240,13 @@ export function TicketsList() {
 
       {/* Modal da Esteira de Status Completa */}
       <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="flex items-center gap-2 text-lg">
-              <GitBranch className="h-5 w-5" />
-              Status - {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id}
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden sm:max-w-[95vw] sm:max-h-[95vh]">
+          <DialogHeader className="pb-2 sm:pb-4">
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <GitBranch className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="truncate">
+                Status - {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id}
+              </span>
             </DialogTitle>
           </DialogHeader>
           
