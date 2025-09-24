@@ -20,6 +20,7 @@ import {
 import { useTicketsData } from '@/hooks/useTicketsData';
 import { TicketStatus, Ticket } from '@/types/tickets';
 import { StatusStepper, SINISTRO_STEPS, ASSISTENCIA_STEPS, StatusEvent } from '@/components/status-stepper';
+import { CompactStatusStepper } from '@/components/status-stepper/CompactStatusStepper';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -239,17 +240,17 @@ export function TicketsList() {
 
       {/* Modal da Esteira de Status Completa */}
       <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
-        <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-lg">
               <GitBranch className="h-5 w-5" />
-              Esteira de Status - {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id}
+              Status - {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id}
             </DialogTitle>
           </DialogHeader>
           
           {selectedTicket && (
-            <div className="space-y-6">
-              <StatusStepper
+            <div className="flex-1 overflow-hidden">
+              <CompactStatusStepper
                 type={selectedTicket.tipo}
                 currentStatus={selectedTicket.status}
                 steps={selectedTicket.tipo === 'sinistro' ? SINISTRO_STEPS : ASSISTENCIA_STEPS}
