@@ -147,7 +147,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                           {preferredDisplayName || 'Usuário'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {activeEmpresaName || user?.company || 'Empresa não definida'}
+                          {memberships?.find(m => m.empresa_id === activeEmpresa)?.role === 'admin' ? 'Administrador' : 'Usuário'}
                         </p>
                         {memberships?.length > 0 && (
                           <Badge variant="secondary" className="text-xs mt-1">
