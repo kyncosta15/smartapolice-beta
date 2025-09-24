@@ -364,7 +364,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
           ) : (
             // Versão desktop: tabela
             <div className="w-full overflow-x-auto">
-              <Table className="min-w-[1200px] w-full">
+              <Table className="min-w-[800px] w-full">
                 <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                   <TableRow>
                     <TableHead className="w-12 bg-background" scope="col">
@@ -379,12 +379,8 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                     <TableHead className="min-w-[120px] bg-background" scope="col">Placa</TableHead>
                     <TableHead className="min-w-[150px] bg-background" scope="col">Proprietário</TableHead>
                     <TableHead className="min-w-[120px] bg-background" scope="col">Emplacamento</TableHead>
-                    <TableHead className="min-w-[120px] bg-background" scope="col">Status Seguro</TableHead>
-                    <TableHead className="min-w-[100px] bg-background" scope="col">FIPE</TableHead>
-                    <TableHead className="min-w-[100px] bg-background" scope="col">Valor NF</TableHead>
-                    <TableHead className="min-w-[120px] bg-background" scope="col">Modalidade</TableHead>
-                    <TableHead className="min-w-[120px] bg-background" scope="col">Responsável</TableHead>
-                    <TableHead className="w-[120px] min-w-[120px] bg-background text-right sticky right-0 bg-background border-l shadow-sm" scope="col">Ações</TableHead>
+                     <TableHead className="min-w-[120px] bg-background" scope="col">Status Seguro</TableHead>
+                     <TableHead className="w-[120px] min-w-[120px] bg-background text-right sticky right-0 bg-background border-l shadow-sm" scope="col">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="[&_tr:hover]:bg-muted/50">
@@ -455,53 +451,6 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
 
                         <TableCell>
                           {getStatusBadge(veiculo.status_seguro)}
-                        </TableCell>
-
-                        <TableCell>
-                          {veiculo.preco_fipe ? (
-                            <div className="font-medium text-green-600">
-                              {formatCurrency(veiculo.preco_fipe)}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-
-                        <TableCell>
-                          {veiculo.preco_nf ? (
-                            <div className="font-medium">
-                              {formatCurrency(veiculo.preco_nf)}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-
-                        <TableCell>
-                          {getModalidadeBadge(veiculo.modalidade_compra)}
-                          {veiculo.modalidade_compra === 'consorcio' && veiculo.consorcio_grupo && (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Grupo: {veiculo.consorcio_grupo}
-                              {veiculo.consorcio_cota && ` | Cota: ${veiculo.consorcio_cota}`}
-                            </div>
-                          )}
-                        </TableCell>
-
-                        <TableCell>
-                          {responsavel ? (
-                            <div className="space-y-1">
-                              <div className="font-medium text-foreground text-sm">
-                                {responsavel.nome}
-                              </div>
-                              {responsavel.telefone && (
-                                <div className="text-xs text-muted-foreground">
-                                  {responsavel.telefone}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">Não definido</span>
-                          )}
                         </TableCell>
 
                         <TableCell className="w-[120px] min-w-[120px] text-right sticky right-0 bg-background border-l">
