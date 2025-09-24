@@ -138,12 +138,16 @@ export function ClaimsList({
                           {claim.ticket}
                         </TableCell>
                         <TableCell>
-                          <div>
-                            <p className="font-medium">{claim.veiculo.placa}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {claim.veiculo.marca} {claim.veiculo.modelo}
-                            </p>
-                          </div>
+                          {claim.veiculo ? (
+                            <div>
+                              <p className="font-medium">{claim.veiculo.placa}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {claim.veiculo.marca} {claim.veiculo.modelo}
+                              </p>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">Sem veículo</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           {claim.apolice ? (
@@ -219,7 +223,7 @@ export function ClaimsList({
                         <div>
                           <p className="font-semibold">{claim.ticket}</p>
                           <p className="text-sm text-muted-foreground">
-                            {claim.veiculo.placa} • {claim.veiculo.marca} {claim.veiculo.modelo}
+                            {claim.veiculo ? `${claim.veiculo.placa} • ${claim.veiculo.marca} ${claim.veiculo.modelo}` : 'Sem veículo'}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
