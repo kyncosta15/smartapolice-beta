@@ -31,6 +31,8 @@ import { FrotasFilters } from './frotas/FrotasFilters';
 import { PolicyHeader } from './frotas/PolicyHeader';
 import { SinistrosDashboard } from './frotas/SinistrosDashboard';
 import { AssistenciaDashboard } from './frotas/AssistenciaDashboard';
+import { FleetRequestModal } from './fleet-requests/FleetRequestModal';
+import { FleetRequestsList } from './fleet-requests/FleetRequestsList';
 import { useFrotasData } from '@/hooks/useFrotasData';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
