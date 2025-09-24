@@ -56,6 +56,16 @@ export function FrotasBulkActions({
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  
+  // Categorias disponíveis
+  const availableCategories = [
+    { value: 'passeio', label: 'Passeio' },
+    { value: 'utilitario', label: 'Utilitário' },
+    { value: 'caminhao', label: 'Caminhão' },
+    { value: 'moto', label: 'Moto' },
+    { value: 'outros', label: 'Outros' },
+  ];
   
   // Extrair marcas e modelos únicos dos veículos
   const availableBrands = useMemo(() => {
@@ -95,9 +105,15 @@ export function FrotasBulkActions({
         if (!vehicle.modelo || !selectedModels.includes(vehicle.modelo)) return false;
       }
       
+      // Filtro por categoria
+      if (selectedCategories.length > 0) {
+        const vehicleCategory = vehicle.categoria || 'outros';
+        if (!selectedCategories.includes(vehicleCategory)) return false;
+      }
+      
       return true;
     });
-  }, [allVehicles, searchFilter, selectedBrands, selectedModels]);
+  }, [allVehicles, searchFilter, selectedBrands, selectedModels, selectedCategories]);
   
   // Aplicar filtros para seleção
   const handleSelectFiltered = () => {
@@ -109,9 +125,10 @@ export function FrotasBulkActions({
     setSearchFilter('');
     setSelectedBrands([]);
     setSelectedModels([]);
+    setSelectedCategories([]);
   };
   
-  const hasFilters = searchFilter || selectedBrands.length > 0 || selectedModels.length > 0;
+  const hasFilters = searchFilter || selectedBrands.length > 0 || selectedModels.length > 0 || selectedCategories.length > 0;
 
   if (selectedVehicles.length === 0) {
     return null;
@@ -271,6 +288,35 @@ export function FrotasBulkActions({
                 />
               </div>
               
+              {/* Category Filter */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 px-2 text-xs">
+                    <Car className="h-3 w-3 mr-1" />
+                    Categorias {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48">
+                  <DropdownMenuLabel>Selecionar Categorias</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {availableCategories.map((category) => (
+                    <DropdownMenuCheckboxItem
+                      key={category.value}
+                      checked={selectedCategories.includes(category.value)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedCategories([...selectedCategories, category.value]);
+                        } else {
+                          setSelectedCategories(selectedCategories.filter(c => c !== category.value));
+                        }
+                      }}
+                    >
+                      {category.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
               {/* Brand Filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -382,6 +428,21 @@ export function FrotasBulkActions({
                   </button>
                 </Badge>
               )}
+              {selectedCategories.map((category) => {
+                const categoryLabel = availableCategories.find(c => c.value === category)?.label || category;
+                return (
+                  <Badge key={category} variant="outline" className="text-xs">
+                    <Car className="h-3 w-3 mr-1" />
+                    {categoryLabel}
+                    <button
+                      onClick={() => setSelectedCategories(selectedCategories.filter(c => c !== category))}
+                      className="ml-1 hover:bg-gray-200 rounded-full"
+                    >
+                      <X className="h-2 w-2" />
+                    </button>
+                  </Badge>
+                );
+              })}
               {selectedBrands.map((brand) => (
                 <Badge key={brand} variant="outline" className="text-xs">
                   <Car className="h-3 w-3 mr-1" />
