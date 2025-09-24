@@ -110,74 +110,81 @@ export const StatusStepper: React.FC<StatusStepperProps> = ({
 
         {/* Desktop: Enhanced Stepper */}
         <div className="hidden lg:block">
-          <div className="relative">
-            {/* Background line */}
-            <div className="absolute top-8 left-0 right-0 h-1 bg-gradient-to-r from-muted via-muted to-muted rounded-full" />
-            
-            {/* Progress line */}
-            <motion.div
-              className="absolute top-8 left-0 h-1 bg-gradient-to-r from-primary to-primary/70 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ 
-                width: currentStepIndex >= 0 
-                  ? `${(currentStepIndex / (steps.length - 1)) * 100}%` 
-                  : '0%' 
-              }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            />
-
-            {/* Steps */}
-            <div className="flex justify-between relative z-10">
+          <div className="relative px-8">
+            {/* Steps Container */}
+            <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${steps.length}, 1fr)` }}>
               {steps.map((step, index) => {
                 const status = getStepStatus(index);
                 const isClickable = !readOnly;
                 
                 return (
-                  <Tooltip key={step.key}>
-                    <TooltipTrigger asChild>
-                      <motion.div
-                        className={cn(
-                          "flex flex-col items-center space-y-3 cursor-pointer group",
-                          !isClickable && "cursor-default"
-                        )}
-                        onClick={() => isClickable && handleStepClick(step)}
-                        whileHover={isClickable ? { scale: 1.05 } : {}}
-                        whileTap={isClickable ? { scale: 0.95 } : {}}
-                      >
-                        {/* Icon Circle */}
-                        <div className={cn(
-                          "w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-300",
-                          "bg-background shadow-lg",
-                          status === 'completed' && "border-primary bg-primary/10",
-                          status === 'current' && "border-primary bg-primary/20 ring-4 ring-primary/20",
-                          status === 'pending' && "border-muted-foreground/30",
-                          isClickable && "group-hover:border-primary/70 group-hover:shadow-xl"
-                        )}>
-                          {getStepIcon(step, index)}
-                        </div>
-                        
-                        {/* Step Info */}
-                        <div className="text-center space-y-2 min-w-[120px] max-w-[140px]">
-                          <div className="text-sm font-medium text-foreground leading-tight">
-                            {step.label}
+                  <div key={step.key} className="relative flex flex-col items-center">
+                    {/* Connecting Line */}
+                    {index < steps.length - 1 && (
+                      <>
+                        {/* Background line */}
+                        <div className="absolute top-6 left-1/2 w-full h-0.5 bg-muted z-0" />
+                        {/* Progress line */}
+                        <motion.div
+                          className="absolute top-6 left-1/2 h-0.5 bg-primary z-0"
+                          initial={{ width: 0 }}
+                          animate={{ 
+                            width: status === 'completed' ? '100%' : '0%'
+                          }}
+                          transition={{ duration: 0.6, ease: "easeOut", delay: index * 0.1 }}
+                        />
+                      </>
+                    )}
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <motion.div
+                          className={cn(
+                            "flex flex-col items-center space-y-3 cursor-pointer group relative z-10",
+                            !isClickable && "cursor-default"
+                          )}
+                          onClick={() => isClickable && handleStepClick(step)}
+                          whileHover={isClickable ? { scale: 1.02 } : {}}
+                          whileTap={isClickable ? { scale: 0.98 } : {}}
+                        >
+                          {/* Icon Circle */}
+                          <div className={cn(
+                            "w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 relative",
+                            "bg-background shadow-sm",
+                            status === 'completed' && "border-primary bg-primary text-primary-foreground",
+                            status === 'current' && "border-primary bg-primary/10 ring-2 ring-primary/30",
+                            status === 'pending' && "border-muted-foreground/30",
+                            isClickable && "group-hover:border-primary/70 group-hover:shadow-md"
+                          )}>
+                            {getStepIcon(step, index)}
                           </div>
-                          <Badge 
-                            variant="outline" 
-                            className="text-xs"
-                            style={{ 
-                              borderColor: STAGE_COLORS[step.stage],
-                              color: STAGE_COLORS[step.stage]
-                            }}
-                          >
-                            {step.stage}
-                          </Badge>
-                        </div>
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {formatTooltipContent(step)}
-                    </TooltipContent>
-                  </Tooltip>
+                          
+                          {/* Step Info */}
+                          <div className="text-center space-y-1 max-w-[100px]">
+                            <div className={cn(
+                              "text-xs font-medium leading-tight",
+                              status === 'current' ? "text-primary" : "text-foreground"
+                            )}>
+                              {step.label}
+                            </div>
+                            <Badge 
+                              variant={status === 'current' ? 'default' : 'outline'}
+                              className="text-xs"
+                              style={status !== 'current' ? { 
+                                borderColor: STAGE_COLORS[step.stage],
+                                color: STAGE_COLORS[step.stage]
+                              } : {}}
+                            >
+                              {step.stage}
+                            </Badge>
+                          </div>
+                        </motion.div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {formatTooltipContent(step)}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 );
               })}
             </div>
@@ -186,94 +193,148 @@ export const StatusStepper: React.FC<StatusStepperProps> = ({
 
         {/* Tablet: Horizontal Scroll */}
         <div className="hidden md:block lg:hidden">
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory">
-            {steps.map((step, index) => {
-              const status = getStepStatus(index);
-              const isClickable = !readOnly;
-              
-              return (
-                <motion.div
-                  key={step.key}
-                  className={cn(
-                    "flex-shrink-0 snap-center flex flex-col items-center space-y-3 p-4 rounded-xl border cursor-pointer",
-                    "bg-background min-w-[140px]",
-                    status === 'completed' && "border-primary/30 bg-primary/5",
-                    status === 'current' && "border-primary bg-primary/10 ring-2 ring-primary/20",
-                    status === 'pending' && "border-muted",
-                    isClickable && "hover:border-primary/50 hover:bg-primary/5"
-                  )}
-                  onClick={() => isClickable && handleStepClick(step)}
-                  whileHover={isClickable ? { scale: 1.02 } : {}}
-                  whileTap={isClickable ? { scale: 0.98 } : {}}
-                >
-                  <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center" 
-                       style={{ borderColor: STAGE_COLORS[step.stage] }}>
-                    {getStepIcon(step, index)}
-                  </div>
-                  <div className="text-center space-y-2">
-                    <div className="text-sm font-medium leading-tight">
-                      {step.label}
-                    </div>
-                    <Badge 
-                      variant="outline" 
-                      className="text-xs"
-                      style={{ 
-                        borderColor: STAGE_COLORS[step.stage],
-                        color: STAGE_COLORS[step.stage]
-                      }}
-                    >
-                      {step.stage}
-                    </Badge>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Mobile: Compact Cards */}
-        <div className="md:hidden">
-          <div className="space-y-3">
-            <div className="text-sm font-medium text-muted-foreground mb-3">
-              Etapas do Processo
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory">
+          <div className="relative">
+            <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory px-4">
               {steps.map((step, index) => {
                 const status = getStepStatus(index);
                 const isClickable = !readOnly;
                 
                 return (
-                  <motion.div
-                    key={step.key}
-                    className={cn(
-                      "flex-shrink-0 snap-center p-3 rounded-lg border cursor-pointer min-w-[100px]",
-                      "bg-background",
-                      status === 'completed' && "border-primary/30 bg-primary/5",
-                      status === 'current' && "border-primary bg-primary/10 ring-1 ring-primary/30",
-                      status === 'pending' && "border-muted",
-                      isClickable && "active:scale-95"
-                    )}
-                    onClick={() => isClickable && handleStepClick(step)}
-                    whileTap={isClickable ? { scale: 0.95 } : {}}
-                  >
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className="w-8 h-8 rounded-full border flex items-center justify-center" 
-                           style={{ borderColor: STAGE_COLORS[step.stage] }}>
-                        {status === 'completed' ? (
-                          <CheckCircle2 className="w-4 h-4" style={{ color: STAGE_COLORS[step.stage] }} />
-                        ) : status === 'current' ? (
-                          <Circle className="w-4 h-4 fill-current" style={{ color: STAGE_COLORS[step.stage] }} />
-                        ) : (
-                          <Circle className="w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                  <div key={step.key} className="relative flex-shrink-0 snap-center">
+                    {/* Connecting Line */}
+                    {index < steps.length - 1 && (
+                      <>
+                        <div className="absolute top-6 -right-3 w-6 h-0.5 bg-muted z-0" />
+                        {status === 'completed' && (
+                          <motion.div
+                            className="absolute top-6 -right-3 h-0.5 bg-primary z-0"
+                            initial={{ width: 0 }}
+                            animate={{ width: '24px' }}
+                            transition={{ duration: 0.4, delay: index * 0.1 }}
+                          />
                         )}
+                      </>
+                    )}
+                    
+                    <motion.div
+                      className={cn(
+                        "flex flex-col items-center space-y-3 p-3 rounded-lg border cursor-pointer min-w-[120px]",
+                        "bg-background relative z-10",
+                        status === 'completed' && "border-primary/30 bg-primary/5",
+                        status === 'current' && "border-primary bg-primary/10 ring-1 ring-primary/30",
+                        status === 'pending' && "border-muted",
+                        isClickable && "hover:border-primary/50 hover:bg-primary/5"
+                      )}
+                      onClick={() => isClickable && handleStepClick(step)}
+                      whileHover={isClickable ? { scale: 1.02 } : {}}
+                      whileTap={isClickable ? { scale: 0.98 } : {}}
+                    >
+                      <div className={cn(
+                        "w-12 h-12 rounded-full border-2 flex items-center justify-center transition-colors",
+                        status === 'completed' && "border-primary bg-primary text-primary-foreground",
+                        status === 'current' && "border-primary bg-primary/10",
+                        status === 'pending' && "border-muted-foreground/30"
+                      )}>
+                        {getStepIcon(step, index)}
                       </div>
-                      <div className="text-xs font-medium text-center leading-tight">
-                        {step.label.length > 12 ? `${step.label.substring(0, 12)}...` : step.label}
+                      <div className="text-center space-y-1">
+                        <div className={cn(
+                          "text-sm font-medium leading-tight",
+                          status === 'current' && "text-primary"
+                        )}>
+                          {step.label}
+                        </div>
+                        <Badge 
+                          variant={status === 'current' ? 'default' : 'outline'}
+                          className="text-xs"
+                          style={status !== 'current' ? { 
+                            borderColor: STAGE_COLORS[step.stage],
+                            color: STAGE_COLORS[step.stage]
+                          } : {}}
+                        >
+                          {step.stage}
+                        </Badge>
                       </div>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+                  </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile: Compact Cards */}
+        <div className="md:hidden">
+          <div className="space-y-4">
+            {/* Current Status Card */}
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <div className="text-sm font-semibold text-primary">
+                    Status Atual
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {steps[currentStepIndex]?.label || 'Status não encontrado'}
+                  </div>
+                </div>
+                {steps[currentStepIndex] && (
+                  <Badge variant="default" className="text-xs">
+                    {steps[currentStepIndex].stage}
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {/* Steps Scroll */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Todas as Etapas
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+                {steps.map((step, index) => {
+                  const status = getStepStatus(index);
+                  const isClickable = !readOnly;
+                  
+                  return (
+                    <motion.div
+                      key={step.key}
+                      className={cn(
+                        "flex-shrink-0 snap-center p-3 rounded-lg border cursor-pointer min-w-[90px]",
+                        "bg-background",
+                        status === 'completed' && "border-primary bg-primary/10",
+                        status === 'current' && "border-primary bg-primary/15 ring-1 ring-primary/40",
+                        status === 'pending' && "border-muted",
+                        isClickable && "active:scale-95"
+                      )}
+                      onClick={() => isClickable && handleStepClick(step)}
+                      whileTap={isClickable ? { scale: 0.95 } : {}}
+                    >
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className={cn(
+                          "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors",
+                          status === 'completed' && "border-primary bg-primary text-primary-foreground",
+                          status === 'current' && "border-primary bg-primary/20",
+                          status === 'pending' && "border-muted-foreground/40"
+                        )}>
+                          {status === 'completed' ? (
+                            <CheckCircle2 className="w-4 h-4" />
+                          ) : status === 'current' ? (
+                            <Circle className="w-4 h-4 fill-current" style={{ color: STAGE_COLORS[step.stage] }} />
+                          ) : (
+                            <Circle className="w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                          )}
+                        </div>
+                        <div className={cn(
+                          "text-xs font-medium text-center leading-tight",
+                          status === 'current' && "text-primary"
+                        )}>
+                          {step.label.length > 10 ? `${step.label.substring(0, 10)}...` : step.label}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
