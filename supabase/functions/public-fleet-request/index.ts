@@ -63,7 +63,7 @@ serve(async (req) => {
     const protocolCode = generateProtocolCode();
 
     // Preparar payload para a solicitação
-    const payload = {
+    const payload: any = {
       motivo: formData.motivo,
       solicitante: {
         nome: formData.solicitante_nome,
@@ -135,7 +135,7 @@ serve(async (req) => {
 
     // Salvar documentos anexados na tabela específica
     if (anexos && anexos.length > 0) {
-      const documentInserts = anexos.map(file => ({
+      const documentInserts = anexos.map((file: any) => ({
         request_id: request.id,
         file_name: file.name,
         file_url: file.url,
@@ -190,7 +190,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Erro interno do servidor'
+        error: error instanceof Error ? error.message : 'Erro interno do servidor'
       }),
       { 
         status: 500,

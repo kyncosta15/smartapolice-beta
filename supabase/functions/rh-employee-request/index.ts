@@ -148,7 +148,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('💥 Erro na edge function:', error);
     return new Response(
-      JSON.stringify({ ok: false, error: { code: 'INTERNAL_ERROR', message: error.message } }),
+      JSON.stringify({ ok: false, error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? error.message : 'Unknown error' } }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

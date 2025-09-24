@@ -436,7 +436,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('💥 Erro crítico na função:', error);
-    console.error('📊 Stack trace:', error.stack);
+    console.error('📊 Stack trace:', error instanceof Error ? error.stack : 'No stack trace available');
     return new Response(
       JSON.stringify({ 
         ok: false, 

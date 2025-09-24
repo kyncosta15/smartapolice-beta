@@ -78,7 +78,7 @@ serve(async (req) => {
           .from('import_jobs')
           .update({
             status: 'failed',
-            summary: { error: error.message },
+            summary: { error: error instanceof Error ? error.message : 'Unknown error' },
             processed_at: new Date().toISOString()
           })
           .eq('id', job.id)
@@ -86,7 +86,7 @@ serve(async (req) => {
         results.push({
           job_id: job.job_id,
           success: false,
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error'
         })
       }
     }
@@ -108,7 +108,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erro no worker:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

@@ -239,7 +239,7 @@ serve(async (req) => {
     console.error('Erro na função:', error)
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         success: false,
         message: 'Erro interno no processamento dos dados'
       }),

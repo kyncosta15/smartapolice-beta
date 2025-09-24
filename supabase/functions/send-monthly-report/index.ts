@@ -1,328 +1,182 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.2';
-import nodemailer from 'https://esm.sh/nodemailer@6.9.7';
-import jsPDF from 'https://esm.sh/jspdf@2.5.1';
-
-// Configurar transporter do Nodemailer
-const transporter = nodemailer.createTransporter({
-  service: 'gmail', // ou 'outlook', 'yahoo', etc.
-  auth: {
-    user: Deno.env.get("SMTP_USER"), // exemplo: seuemail@gmail.com
-    pass: Deno.env.get("SMTP_PASS"), // senha de app do Gmail
-  },
-});
+import { Resend } from 'https://esm.sh/resend@2.0.0';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface PolicyData {
-  id: string;
-  seguradora: string;
-  tipo_seguro: string;
-  valor_premio: number;
-  custo_mensal: number;
-  extraido_em: string;
-  user_id: string;
-  segurado: string;
-}
-
 const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log("Starting monthly report generation...");
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Initialize Resend
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      throw new Error('RESEND_API_KEY not configured');
+    }
+    const resend = new Resend(resendApiKey);
 
-    // Verificar se é chamada manual (com email específico) ou automática
-    const requestBody = await req.json().catch(() => ({}));
-    const isManualCall = requestBody.userEmail && requestBody.userName;
+    console.log('Starting monthly report generation...');
 
-    console.log("Request type:", isManualCall ? "Manual" : "Automatic");
+    // Get all policies that are about to expire (30 days)
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-    if (isManualCall) {
-      // Para chamadas manuais, enviar apenas para o usuário específico
-      console.log(`Manual call for user: ${requestBody.userEmail}`);
-      
-      // Para chamadas manuais, buscar policies do usuário usando o header de autorização
-      const authHeader = req.headers.get('authorization');
-      if (!authHeader) {
-        throw new Error('Missing authorization header');
-      }
+    const { data: expiringPolicies, error: policiesError } = await supabase
+      .from('policies')
+      .select(`
+        *,
+        users!inner(email, name, company)
+      `)
+      .lte('fim_vigencia', thirtyDaysFromNow.toISOString().split('T')[0])
+      .gte('fim_vigencia', new Date().toISOString().split('T')[0]);
 
-      // Criar cliente com o token do usuário para respeitar RLS
-      const userSupabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        {
-          global: {
-            headers: {
-              authorization: authHeader
-            }
-          }
-        }
-      );
-
-      const { data: userPolicies, error: userPoliciesError } = await userSupabase
-        .from('policies')
-        .select('*');
-
-      if (userPoliciesError) {
-        console.error('Error fetching user policies:', userPoliciesError);
-        throw new Error(`Failed to fetch user policies: ${userPoliciesError.message}`);
-      }
-
-      console.log(`Found ${userPolicies?.length || 0} policies for user`);
-
-      // Gerar PDF
-      const pdfBuffer = await generatePDFReport(userPolicies || []);
-
-      // Enviar email para o usuário
-      await sendReportEmail(requestBody.userEmail, requestBody.userName, pdfBuffer);
-
-      return new Response(JSON.stringify({ 
-        message: 'Report sent successfully',
-        recipientCount: 1,
-        policyCount: userPolicies?.length || 0
-      }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-
-    } else {
-      // Para chamadas automáticas, buscar todas as policies e enviar para admins
-      console.log("Automatic monthly report call");
-
-      // Buscar todas as apólices usando service role key para ignorar RLS
-      const { data: policies, error: policiesError } = await supabase
-        .from('policies')
-        .select('*');
-
-      if (policiesError) {
-        console.error('Error fetching policies:', policiesError);
-        throw new Error(`Failed to fetch policies: ${policiesError.message}`);
-      }
-
-      console.log(`Found ${policies?.length || 0} policies`);
-
-      // Buscar usuários administradores
-      const { data: admins, error: adminsError } = await supabase
-        .from('users')
-        .select('email, name')
-        .eq('role', 'administrador');
-
-      if (adminsError) {
-        console.error('Error fetching admins:', adminsError);
-        throw new Error(`Failed to fetch administrators: ${adminsError.message}`);
-      }
-
-      console.log(`Found ${admins?.length || 0} administrators`);
-
-      if (!admins || admins.length === 0) {
-        console.log('No administrators found, skipping email');
-        return new Response(JSON.stringify({ message: 'No administrators found' }), {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-      }
-
-      // Gerar PDF
-      const pdfBuffer = await generatePDFReport(policies || []);
-
-      // Enviar email para cada administrador
-      const emailPromises = admins.map(admin => sendReportEmail(admin.email, admin.name, pdfBuffer));
-      await Promise.all(emailPromises);
-
-      console.log('Monthly reports sent successfully');
-
-      return new Response(JSON.stringify({ 
-        message: 'Monthly reports sent successfully',
-        recipientCount: admins.length,
-        policyCount: policies?.length || 0
-      }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+    if (policiesError) {
+      throw policiesError;
     }
 
-  } catch (error: any) {
-    console.error("Error in send-monthly-report function:", error);
+    console.log(`Found ${expiringPolicies?.length || 0} expiring policies`);
+
+    if (!expiringPolicies || expiringPolicies.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'No expiring policies found' 
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Group policies by company
+    const companiesMap = new Map();
+    expiringPolicies.forEach(policy => {
+      const company = policy.users.company;
+      if (!companiesMap.has(company)) {
+        companiesMap.set(company, {
+          policies: [],
+          email: policy.users.email,
+          name: policy.users.name
+        });
+      }
+      companiesMap.get(company).policies.push(policy);
+    });
+
+    // Send email for each company
+    const emailResults = [];
+    for (const [companyName, companyData] of companiesMap) {
+      try {
+        const policiesList = companyData.policies
+          .map((policy: any) => `
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;">${policy.numero_apolice || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${policy.seguradora || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${policy.fim_vigencia || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">R$ ${policy.premio_total || '0,00'}</td>
+            </tr>
+          `)
+          .join('');
+
+        const emailHtml = `
+          <h2>Relatório Mensal - Apólices com Vencimento Próximo</h2>
+          <p>Olá ${companyData.name},</p>
+          <p>Segue o relatório das apólices da empresa <strong>${companyName}</strong> que vencem nos próximos 30 dias:</p>
+          
+          <table style="border-collapse: collapse; width: 100%; margin: 20px 0;">
+            <thead>
+              <tr style="background-color: #f5f5f5;">
+                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Número da Apólice</th>
+                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Seguradora</th>
+                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Vencimento</th>
+                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${policiesList}
+            </tbody>
+          </table>
+          
+          <p><strong>Total de apólices:</strong> ${companyData.policies.length}</p>
+          
+          <p>Entre em contato conosco para renovar suas apólices.</p>
+          
+          <hr style="margin: 30px 0;">
+          <p style="color: #666; font-size: 12px;">
+            Este relatório foi gerado automaticamente pelo sistema SmartApólice.
+          </p>
+        `;
+
+        const emailResult = await resend.emails.send({
+          from: 'SmartApólice <noreply@smartapolice.com>',
+          to: [companyData.email],
+          subject: `Relatório Mensal - ${companyName} - ${companyData.policies.length} apólices vencendo`,
+          html: emailHtml,
+        });
+
+        emailResults.push({
+          company: companyName,
+          email: companyData.email,
+          policies_count: companyData.policies.length,
+          email_sent: true,
+          email_id: emailResult.data?.id
+        });
+
+        console.log(`Email sent to ${companyName} (${companyData.email})`);
+
+      } catch (emailError) {
+        console.error(`Failed to send email to ${companyName}:`, emailError);
+        emailResults.push({
+          company: companyName,
+          email: companyData.email,
+          policies_count: companyData.policies.length,
+          email_sent: false,
+          error: emailError instanceof Error ? emailError.message : 'Unknown error'
+        });
+      }
+    }
+
+    console.log('Monthly report generation completed');
+
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: true,
+        message: 'Monthly reports sent successfully',
+        companies_processed: emailResults.length,
+        emails_sent: emailResults.filter(r => r.email_sent).length,
+        results: emailResults
+      }),
       {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+
+  } catch (error) {
+    console.error('Error in send-monthly-report function:', error);
+    
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      { 
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
 };
-
-async function generatePDFReport(policies: any[]): Promise<Uint8Array> {
-  const pdf = new jsPDF('p', 'mm', 'a4');
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  let yPosition = 20;
-
-  // Calcular métricas
-  const totalPolicies = policies.length;
-  const totalMonthlyCost = policies.reduce((sum, p) => sum + (p.custo_mensal || 0), 0);
-  const totalInsuredValue = policies.reduce((sum, p) => sum + (p.valor_premio || 0), 0);
-
-  // Distribuição por seguradora
-  const insurerDistribution = policies.reduce((acc, policy) => {
-    const insurer = policy.seguradora || 'Não informado';
-    acc[insurer] = (acc[insurer] || 0) + 1;
-    return acc;
-  }, {});
-
-  // Distribuição por tipo
-  const typeDistribution = policies.reduce((acc, policy) => {
-    const type = policy.tipo_seguro || 'Não informado';
-    acc[type] = (acc[type] || 0) + 1;
-    return acc;
-  }, {});
-
-  // CABEÇALHO
-  pdf.setFontSize(24);
-  pdf.setTextColor(51, 51, 51);
-  pdf.text('Relatório Mensal de Apólices - SmartApólice', 20, yPosition);
-  yPosition += 15;
-
-  pdf.setFontSize(12);
-  pdf.setTextColor(102, 102, 102);
-  pdf.text(`Gerado automaticamente em: ${new Date().toLocaleDateString('pt-BR', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })}`, 20, yPosition);
-  yPosition += 20;
-
-  // RESUMO EXECUTIVO
-  pdf.setFontSize(16);
-  pdf.setTextColor(51, 51, 51);
-  pdf.text('RESUMO EXECUTIVO', 20, yPosition);
-  yPosition += 15;
-
-  const kpis = [
-    ['Total de Apólices', `${totalPolicies} apólices`],
-    ['Custo Mensal Total', `R$ ${totalMonthlyCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`],
-    ['Valor Segurado Total', `R$ ${totalInsuredValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`],
-    ['Período do Relatório', new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })]
-  ];
-
-  pdf.setFontSize(12);
-  kpis.forEach(([label, value]) => {
-    pdf.setTextColor(102, 102, 102);
-    pdf.text(label + ':', 25, yPosition);
-    pdf.setTextColor(51, 51, 51);
-    pdf.text(value, 90, yPosition);
-    yPosition += 8;
-  });
-
-  yPosition += 15;
-
-  // DISTRIBUIÇÃO POR SEGURADORA
-  pdf.setFontSize(16);
-  pdf.setTextColor(51, 51, 51);
-  pdf.text('DISTRIBUIÇÃO POR SEGURADORA', 20, yPosition);
-  yPosition += 15;
-
-  Object.entries(insurerDistribution).slice(0, 10).forEach(([insurer, count], index) => {
-    const percentage = ((count as number / totalPolicies) * 100).toFixed(1);
-    
-    pdf.setFontSize(10);
-    pdf.setTextColor(51, 51, 51);
-    pdf.text(insurer, 25, yPosition);
-    
-    pdf.setTextColor(102, 102, 102);
-    pdf.text(`${count} apólices (${percentage}%)`, 120, yPosition);
-    
-    yPosition += 10;
-  });
-
-  yPosition += 15;
-
-  // DISTRIBUIÇÃO POR TIPO
-  pdf.setFontSize(16);
-  pdf.setTextColor(51, 51, 51);
-  pdf.text('DISTRIBUIÇÃO POR TIPO DE SEGURO', 20, yPosition);
-  yPosition += 15;
-
-  Object.entries(typeDistribution).forEach(([type, count]) => {
-    const percentage = ((count as number / totalPolicies) * 100).toFixed(1);
-    
-    pdf.setFontSize(10);
-    pdf.setTextColor(51, 51, 51);
-    pdf.text(type, 25, yPosition);
-    
-    pdf.setTextColor(102, 102, 102);
-    pdf.text(`${count} apólices (${percentage}%)`, 120, yPosition);
-    
-    yPosition += 10;
-  });
-
-  // RODAPÉ
-  pdf.setFontSize(8);
-  pdf.setTextColor(150, 150, 150);
-  pdf.text('SmartApólice - Sistema de Gestão de Apólices', 20, pdf.internal.pageSize.getHeight() - 10);
-
-  // Converter para Uint8Array
-  const pdfArrayBuffer = pdf.output('arraybuffer');
-  return new Uint8Array(pdfArrayBuffer);
-}
-
-async function sendReportEmail(email: string, name: string, pdfBuffer: Uint8Array): Promise<void> {
-  const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-  
-  const mailOptions = {
-    from: '"RCaldas Seguros" <' + Deno.env.get("SMTP_USER") + '>',
-    to: email,
-    subject: `Relatório Mensal de Apólices - ${currentMonth}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #333; border-bottom: 2px solid #3B82F6; padding-bottom: 10px;">
-          Relatório Mensal - SmartApólice
-        </h1>
-        
-        <p>Olá ${name},</p>
-        
-        <p>Segue anexo o relatório mensal de apólices referente ao mês de <strong>${currentMonth}</strong>.</p>
-        
-        <p>Este relatório contém:</p>
-        <ul>
-          <li>Resumo executivo com métricas principais</li>
-          <li>Distribuição de apólices por seguradora</li>
-          <li>Distribuição por tipo de seguro</li>
-          <li>Análise financeira do período</li>
-        </ul>
-        
-        <p>O relatório é gerado automaticamente todo dia 1º do mês às 9:00.</p>
-        
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-        
-        <p style="color: #666; font-size: 12px;">
-          Este é um email automático do sistema SmartApólice.<br>
-          Gerado em: ${new Date().toLocaleString('pt-BR')}
-        </p>
-      </div>
-    `,
-    attachments: [
-      {
-        filename: `relatorio-mensal-${new Date().toISOString().slice(0, 7)}.pdf`,
-        content: Buffer.from(pdfBuffer),
-      }
-    ],
-  };
-
-  await transporter.sendMail(mailOptions);
-}
 
 serve(handler);
