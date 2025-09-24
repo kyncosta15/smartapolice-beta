@@ -34,25 +34,28 @@ export const MiniStepper: React.FC<MiniStepperProps> = ({
   const currentStep = steps[currentStepIndex];
 
   return (
-    <div className={cn("bg-card border rounded-lg p-4 space-y-3 shadow-sm", className)}>
+    <div className={cn("bg-gradient-to-br from-card to-muted/10 border border-border/50 rounded-xl p-5 space-y-4 shadow-md backdrop-blur-sm", className)}>
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="text-sm font-semibold text-foreground">
+        <div className="space-y-1.5">
+          <div className="text-sm font-bold text-foreground tracking-tight">
             {currentStep ? currentStep.label : 'Status não encontrado'}
           </div>
-          <div className="text-xs text-muted-foreground">
-            {type === 'sinistro' ? 'Sinistro' : 'Assistência'} • Progresso: {Math.round(progressPercent)}%
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span>{type === 'sinistro' ? 'Sinistro' : 'Assistência'}</span>
+            <span>•</span>
+            <span className="font-medium text-primary">Progresso: {Math.round(progressPercent)}%</span>
           </div>
         </div>
         {currentStep && (
           <Badge 
             variant="secondary"
-            className="text-xs font-medium"
+            className="text-xs font-semibold shadow-sm"
             style={{ 
-              backgroundColor: `${STAGE_COLORS[currentStep.stage]}15`,
+              backgroundColor: `${STAGE_COLORS[currentStep.stage]}20`,
               color: STAGE_COLORS[currentStep.stage],
-              borderColor: `${STAGE_COLORS[currentStep.stage]}30`
+              borderColor: `${STAGE_COLORS[currentStep.stage]}40`
             }}
           >
             {currentStep.stage}
@@ -61,12 +64,14 @@ export const MiniStepper: React.FC<MiniStepperProps> = ({
       </div>
 
       {/* Enhanced Progress Bar */}
-      <div className="space-y-2">
-        <div className="relative h-2 bg-muted rounded-full overflow-hidden shadow-inner">
+      <div className="space-y-3">
+        <div className="relative h-3 bg-muted/50 rounded-full overflow-hidden shadow-inner border border-border/20">
           <div 
-            className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-700 ease-out shadow-sm"
+            className="h-full bg-gradient-to-r from-primary via-primary/90 to-primary/80 rounded-full transition-all duration-1000 ease-out shadow-sm relative"
             style={{ width: `${progressPercent}%` }}
-          />
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+          </div>
         </div>
         
         {/* Progress Points */}

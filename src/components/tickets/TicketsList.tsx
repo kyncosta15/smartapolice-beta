@@ -222,7 +222,7 @@ export function TicketsList() {
                   className="gap-2"
                 >
                   <GitBranch className="h-4 w-4" />
-                  Ver Esteira
+                  Acompanhar Status
                 </Button>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Eye className="h-4 w-4" />

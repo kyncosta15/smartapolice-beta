@@ -134,6 +134,20 @@
   }
 }
 
+@keyframes shimmer-smooth {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.6s ease-out forwards;
 }
@@ -144,6 +158,15 @@
 
 .animate-bounce-gentle {
   animation: bounce-gentle 1.5s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer-smooth 2s linear infinite;
+}
+
+/* Enhanced utilities */
+.border-3 {
+  border-width: 3px;
 }
 
 /* Smooth transitions for interactive elements */
