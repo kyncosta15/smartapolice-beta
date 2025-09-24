@@ -25,7 +25,7 @@ import { FrotasKPICards } from './frotas/FrotasKPICards';
 import { FrotasFipe } from './frotas/FrotasFipe';
 import { FrotasDocumentos } from './frotas/FrotasDocumentos';
 import { FrotasUpload } from './frotas/FrotasUpload';
-import { IntegracaoN8NTest } from './frotas/IntegracaoN8NTest';
+
 import { ImportConfigurationPage } from './frotas/ImportConfigurationPage';
 import { FrotasFilters } from './frotas/FrotasFilters';
 import { PolicyHeader } from './frotas/PolicyHeader';
@@ -244,13 +244,7 @@ export function GestaoFrotas() {
             </TabsContent>
 
             <TabsContent value="upload" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
-              <div className="space-y-6">
-                {/* Teste da Integração N8N */}
-                <IntegracaoN8NTest onSuccess={refetch} />
-                
-                {/* Upload de arquivos tradicional */}
-                <FrotasUpload onSuccess={refetch} />
-              </div>
+              <FrotasUpload onSuccess={refetch} />
             </TabsContent>
 
             <TabsContent value="config" className="h-full overflow-y-auto m-0">

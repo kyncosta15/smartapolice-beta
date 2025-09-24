@@ -13,10 +13,7 @@ import {
   AlertCircle,
   RefreshCw,
   X,
-  Brain,
-  Settings,
-  TestTube,
-  Rocket
+  Brain
 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/hooks/use-toast';
@@ -43,7 +40,6 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   const { user } = useAuth();
   const { activeEmpresaId, activeEmpresaName } = useTenant();
   const [files, setFiles] = useState<UploadFile[]>([]);
-  const [environment, setEnvironment] = useState<'test' | 'production'>('test');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -139,12 +135,10 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
               : f
           ));
 
-          console.log(`Processando arquivo: ${fileItem.file.name} no ambiente ${environment}`);
-          
           const result = await N8NUploadService.uploadToN8N(
             fileItem.file,
             metadata,
-            environment
+            'production'
           );
 
           // Status: Completed
@@ -285,58 +279,6 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
         </p>
       </div>
 
-      {/* Configurações */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Settings className="h-5 w-5" />
-            Configurações de Upload N8N
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                {environment === 'test' ? (
-                  <TestTube className="h-4 w-4 text-orange-600" />
-                ) : (
-                  <Rocket className="h-4 w-4 text-green-600" />
-                )}
-                <span className="font-medium">Ambiente N8N</span>
-              </div>
-              <p className="text-sm text-gray-500">
-                {environment === 'test' 
-                  ? 'Modo de teste - usar quando estiver "Listen for test event" no N8N'
-                  : 'Modo produção - usar com fluxo publicado no N8N'
-                }
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className={`text-sm ${environment === 'test' ? 'text-orange-600' : 'text-gray-500'}`}>
-                Test
-              </span>
-              <Switch
-                checked={environment === 'production'}
-                onCheckedChange={(checked) => setEnvironment(checked ? 'production' : 'test')}
-              />
-              <span className={`text-sm ${environment === 'production' ? 'text-green-600' : 'text-gray-500'}`}>
-                Prod
-              </span>
-            </div>
-          </div>
-          
-          <div className="text-xs text-gray-400 bg-gray-50 p-2 rounded">
-            <strong>URL atual:</strong> {environment === 'test' 
-              ? 'webhook-test/testewebhook1' 
-              : 'webhook/testewebhook1'
-            }
-          </div>
-
-          <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
-            <strong>💾 Auto-save:</strong> Os dados processados serão automaticamente salvos no dashboard de frotas
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Upload Area */}
       <Card className="border-0 shadow-sm">
@@ -399,12 +341,12 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
                   {isProcessing ? (
                     <>
                       <RefreshCw className="h-4 w-4 animate-spin" />
-                      Enviando para N8N ({environment})...
+                      Processando...
                     </>
                   ) : (
                     <>
                       <Upload className="h-4 w-4" />
-                      Processar no N8N
+                      Processar Arquivos
                     </>
                   )}
                 </Button>
