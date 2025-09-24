@@ -133,6 +133,26 @@ serve(async (req) => {
       throw insertError;
     }
 
+    // Salvar documentos anexados na tabela específica
+    if (anexos && anexos.length > 0) {
+      const documentInserts = anexos.map(file => ({
+        request_id: request.id,
+        file_name: file.name,
+        file_url: file.url,
+        file_size: file.size,
+        mime_type: file.name.split('.').pop() || 'unknown'
+      }));
+
+      const { error: docsError } = await supabase
+        .from('fleet_request_documents')
+        .insert(documentInserts);
+
+      if (docsError) {
+        console.error('Error saving documents:', docsError);
+        // Não falhar a solicitação por causa dos documentos
+      }
+    }
+
     // Marcar token como usado
     await supabase
       .from('public_fleet_tokens')
