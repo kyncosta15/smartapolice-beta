@@ -32,7 +32,7 @@ import { FrotasFilters } from './frotas/FrotasFilters';
 import { PolicyHeader } from './frotas/PolicyHeader';
 import { SinistrosDashboard } from './frotas/SinistrosDashboard';
 import { AssistenciaDashboard } from './frotas/AssistenciaDashboard';
-import { FleetRequestModal } from './fleet-requests/FleetRequestModal';
+
 import { FleetRequestsList } from './fleet-requests/FleetRequestsList';
 import { PublicLinkGenerator } from './fleet-requests/PublicLinkGenerator';
 import { useFrotasData } from '@/hooks/useFrotasData';
@@ -51,7 +51,7 @@ export function GestaoFrotas() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('frotas');
-  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  
   const [publicLinkModalOpen, setPublicLinkModalOpen] = useState(false);
   const [filters, setFilters] = useState<FrotaFilters>({
     search: '',
@@ -163,14 +163,6 @@ export function GestaoFrotas() {
               <span className="hidden sm:inline">PDF</span>
             </Button>
             
-            <Button
-              size="sm"
-              onClick={() => setRequestModalOpen(true)}
-              className="flex items-center gap-2 h-10 px-3"
-            >
-              <Car className="h-4 w-4" />
-              <span className="hidden sm:inline">Solicitar alteração</span>
-            </Button>
             
             <Button
               variant="secondary"
@@ -290,11 +282,6 @@ export function GestaoFrotas() {
         </Tabs>
       </div>
 
-      {/* Fleet Request Modal */}
-      <FleetRequestModal 
-        open={requestModalOpen} 
-        onOpenChange={setRequestModalOpen} 
-      />
 
       {/* Public Link Generator Modal */}
       <PublicLinkGenerator 
