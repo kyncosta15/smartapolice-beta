@@ -469,7 +469,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
           </h3>
           <div className="space-y-2 text-sm text-blue-800">
             <p>
-              • <strong>Processamento automático:</strong> Dados extraídos pelo N8N são salvos diretamente no Supabase
+              • <strong>Processamento automático:</strong> Dados extraídos com ajuda da IA
             </p>
             <p>
               • <strong>Dashboard atualizado:</strong> Após o processamento, os dados aparecem imediatamente no painel
