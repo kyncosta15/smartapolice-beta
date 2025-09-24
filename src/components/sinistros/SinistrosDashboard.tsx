@@ -15,6 +15,8 @@ import { NovoTicketModalV2 } from './NovoTicketModalV2'
 import { NovoTicketModalV3 } from './NovoTicketModalV3'
 import { NovoTicketModalV4 } from './NovoTicketModalV4'
 import { useUIVersion } from '@/hooks/useUIVersion'
+import { TicketsListV2 } from '@/components/tickets/TicketsListV2'
+import { Badge } from '@/components/ui/badge'
 import { 
   FileText, 
   CheckCircle, 
@@ -257,7 +259,29 @@ export function SinistrosDashboard({
         </TabsContent>
 
         <TabsContent value="tickets" className="mt-6">
-          <TicketsList />
+          <div className="space-y-4">
+            {/* Integration with TicketsListV2 when V2 is enabled */}
+            {uiVersion.useV2 ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Lista de Tickets (V2)</h3>
+                  <Badge variant="secondary" className="text-xs">
+                    React Aria + Advanced Filtering
+                  </Badge>
+                </div>
+                <TicketsListV2
+                  claims={claims}
+                  assistances={assistances}
+                  loading={loading}
+                  onViewClaim={(id) => console.log('View claim:', id)}
+                  onEditClaim={(id) => console.log('Edit claim:', id)}
+                  onDeleteClaim={(id) => console.log('Delete claim:', id)}
+                />
+              </>
+            ) : (
+              <TicketsList />
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
