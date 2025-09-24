@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useTicketsData } from '@/hooks/useTicketsData';
 import { TicketStatus, Ticket } from '@/types/tickets';
-import { StatusStepper, MiniStepper, SINISTRO_STEPS, ASSISTENCIA_STEPS, StatusEvent } from '@/components/status-stepper';
+import { StatusStepper, SINISTRO_STEPS, ASSISTENCIA_STEPS, StatusEvent } from '@/components/status-stepper';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -134,15 +134,15 @@ export function TicketsList() {
         const steps = ticket.tipo === 'sinistro' ? SINISTRO_STEPS : ASSISTENCIA_STEPS;
         
         return (
-          <Card key={ticket.id} className="p-6 hover:shadow-md transition-shadow">
-            <div className="space-y-4">
-              {/* Header do Ticket */}
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
+          <Card key={ticket.id} className="overflow-hidden border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-br from-card to-muted/10">
+            <div className="p-6 space-y-6">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     {getTipoIcon(ticket.tipo)}
                     <div>
-                      <h3 className="font-semibold text-lg">
+                      <h3 className="font-semibold text-xl">
                         {ticket.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{ticket.id}
                       </h3>
                       {ticket.subtipo && (
@@ -154,37 +154,30 @@ export function TicketsList() {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <Badge className={cn("flex items-center gap-1", getStatusColor(ticket.status))}>
-                    {getStatusIcon(ticket.status)}
-                    {ticket.status.replace('_', ' ')}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Esteira de Status - Mini Stepper */}
-              <div className="bg-muted/30 p-4 rounded-lg">
-                <MiniStepper
-                  type={ticket.tipo}
-                  currentStatus={ticket.status}
-                  steps={steps}
-                />
+                <Badge className={cn("flex items-center gap-1 shrink-0", getStatusColor(ticket.status))}>
+                  {getStatusIcon(ticket.status)}
+                  {ticket.status.replace('_', ' ')}
+                </Badge>
               </div>
 
               {/* Informações do Ticket */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {ticket.vehicle && (
-                  <div className="flex items-center gap-2">
-                    <Car className="h-4 w-4 text-muted-foreground" />
-                    <span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      <Car className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <span className="truncate">
                       {ticket.vehicle.placa} - {ticket.vehicle.marca} {ticket.vehicle.modelo}
                     </span>
                   </div>
                 )}
                 
                 {ticket.data_evento && (
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </div>
                     <span>
                       {format(new Date(ticket.data_evento), 'dd/MM/yyyy', { locale: ptBR })}
                     </span>
@@ -192,21 +185,27 @@ export function TicketsList() {
                 )}
                 
                 {ticket.valor_estimado && (
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </div>
                     <span>{formatCurrency(ticket.valor_estimado)}</span>
                   </div>
                 )}
 
                 {ticket.localizacao && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                    </div>
                     <span className="truncate">{ticket.localizacao}</span>
                   </div>
                 )}
 
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </div>
                   <span>
                     Criado em {format(new Date(ticket.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                   </span>
@@ -214,21 +213,21 @@ export function TicketsList() {
               </div>
 
               {/* Ações */}
-              <div className="flex gap-2 pt-2 border-t">
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-border/50">
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => handleTicketClick(ticket)}
-                  className="gap-2"
+                  className="gap-2 hover:bg-primary/5 hover:border-primary/30 transition-colors"
                 >
                   <GitBranch className="h-4 w-4" />
                   Acompanhar Status
                 </Button>
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button variant="outline" size="sm" className="gap-2 hover:bg-muted/50 transition-colors">
                   <Eye className="h-4 w-4" />
                   Ver Detalhes
                 </Button>
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button variant="outline" size="sm" className="gap-2 hover:bg-muted/50 transition-colors">
                   <Edit className="h-4 w-4" />
                   Editar
                 </Button>
