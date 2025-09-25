@@ -25,6 +25,8 @@ interface DragDropUploadProps {
   bucketName?: string;
   acceptedTypes?: string[];
   disabled?: boolean;
+  publicMode?: boolean;
+  publicPath?: string;
 }
 
 export function DragDropUpload({
@@ -33,7 +35,9 @@ export function DragDropUpload({
   maxSize = 10 * 1024 * 1024, // 10MB
   bucketName = 'fleet-documents',
   acceptedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
-  disabled = false
+  disabled = false,
+  publicMode = false,
+  publicPath = 'public'
 }: DragDropUploadProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -42,7 +46,8 @@ export function DragDropUpload({
   const fileIdCounter = useRef(0);
 
   const uploadFile = useCallback(async (fileWithPreview: FileWithPreview): Promise<FileWithPreview> => {
-    if (!user?.id) {
+    // Para modo público, não verificar autenticação
+    if (!publicMode && !user?.id) {
       throw new Error('Usuário não autenticado');
     }
 
@@ -50,7 +55,11 @@ export function DragDropUpload({
       // Criar path único para o arquivo
       const fileExt = fileWithPreview.file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      
+      // Para modo público, usar publicPath; senão usar user.id
+      const filePath = publicMode 
+        ? `${publicPath}/${fileName}` 
+        : `${user?.id}/${fileName}`;
 
       // Upload para o Supabase Storage
       const { data, error } = await supabase.storage
@@ -84,10 +93,11 @@ export function DragDropUpload({
         error: error.message,
       };
     }
-  }, [user?.id, bucketName]);
+  }, [user?.id, bucketName, publicMode, publicPath]);
 
   const processFiles = useCallback(async (acceptedFiles: File[]) => {
-    if (!user?.id) {
+    // Para modo público, não verificar autenticação
+    if (!publicMode && !user?.id) {
       toast({
         title: 'Erro de autenticação',
         description: 'Você precisa estar logado para fazer upload de arquivos',
@@ -158,7 +168,7 @@ export function DragDropUpload({
     } finally {
       setUploading(false);
     }
-  }, [files, maxFiles, user?.id, toast, uploadFile]);
+  }, [files, maxFiles, user?.id, toast, uploadFile, publicMode]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: processFiles,

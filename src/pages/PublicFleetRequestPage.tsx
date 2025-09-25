@@ -572,6 +572,8 @@ export default function PublicFleetRequestPage() {
                     maxSize={10 * 1024 * 1024}
                     bucketName="fleet-documents"
                     acceptedTypes={['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                    publicMode={true}
+                    publicPath="public-requests"
                   />
                 </div>
 
