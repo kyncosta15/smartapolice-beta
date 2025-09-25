@@ -1,11 +1,39 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { testN8NDataProcessing, limparDadosTeste } from '@/services/testN8NUpload';
 
 export function N8NTestButton() {
   const [isTestingUpload, setIsTestingUpload] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [isTestingEmpresa, setIsTestingEmpresa] = useState(false);
+
+  const handleTestEmpresa = async () => {
+    setIsTestingEmpresa(true);
+    try {
+      console.log('🔧 Testando função get_user_empresa_id...');
+      
+      const { data, error } = await supabase.rpc('test_get_user_empresa');
+      
+      if (error) {
+        console.error('❌ Erro ao testar função:', error);
+        toast.error('❌ Erro: ' + error.message);
+      } else {
+        console.log('✅ Resultado da função:', data);
+        if (data.success) {
+          toast.success(`✅ Empresa criada: ${data.empresa_id}`);
+        } else {
+          toast.error(`❌ Falha: ${data.message || data.error}`);
+        }
+      }
+    } catch (err) {
+      console.error('💥 Erro geral:', err);
+      toast.error('💥 Erro: ' + (err as Error).message);
+    } finally {
+      setIsTestingEmpresa(false);
+    }
+  };
 
   const handleTestUpload = async () => {
     setIsTestingUpload(true);
@@ -50,6 +78,14 @@ export function N8NTestButton() {
         </p>
       </div>
       <div className="flex flex-col gap-2">
+        <Button 
+          onClick={handleTestEmpresa}
+          disabled={isTestingEmpresa}
+          variant="secondary"
+          size="sm"
+        >
+          {isTestingEmpresa ? '⚙️ Testando...' : '⚙️ Teste Empresa'}
+        </Button>
         <Button 
           onClick={handleTestUpload}
           disabled={isTestingUpload}

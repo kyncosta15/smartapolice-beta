@@ -2672,6 +2672,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      test_get_user_empresa: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       validate_session_token: {
         Args: { p_token: string }
         Returns: {
