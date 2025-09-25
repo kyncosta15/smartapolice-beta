@@ -179,6 +179,10 @@ export function useFrotasData(filters: FrotaFilters) {
           documentos:frota_documentos(*)
         `);
 
+      console.log('🔍 DEBUG: Testando função current_empresa_id diretamente');
+      const { data: empresaTest } = await supabase.rpc('current_empresa_id');
+      console.log('🔍 DEBUG: current_empresa_id retornou:', empresaTest);
+
       // Aplicar filtros
       if (debouncedFilters.search) {
         const searchTerm = debouncedFilters.search.toLowerCase();
