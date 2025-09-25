@@ -126,10 +126,18 @@ export function useUserProfile() {
         setActiveEmpresa(profileDefault);
         console.log('🔍 DEBUG Usando empresa do perfil:', profileDefault);
       } else if (membershipData && membershipData.length > 0) {
-        setActiveEmpresa(membershipData[0].empresa_id);
-        console.log('🔍 DEBUG Usando primeira empresa dos memberships:', membershipData[0].empresa_id);
+        const empresaId = membershipData[0].empresa_id;
+        setActiveEmpresa(empresaId);
+        console.log('🔍 DEBUG Usando primeira empresa dos memberships:', empresaId);
+        
+        // Verificar se a empresa existe
+        const empresaInfo = membershipData.find(m => m.empresa_id === empresaId);
+        console.log('🔍 DEBUG Info da empresa ativa:', empresaInfo);
       } else {
         console.log('🔍 DEBUG Nenhuma empresa encontrada - usuário sem memberships');
+        // Forçar o uso da empresa padrão
+        setActiveEmpresa('00000000-0000-0000-0000-000000000001');
+        console.log('🔍 DEBUG Forçando empresa padrão: Clientes Individuais');
       }
 
     } catch (err) {

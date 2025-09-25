@@ -150,11 +150,24 @@ export function useFrotasData(filters: FrotaFilters) {
       }
       setError(null);
 
-      console.log('🔍 DEBUG: Usando TenantContext para busca de veículos:', {
+      console.log('🔍 DEBUG: Verificando autenticação completa:', {
         userId: user.id,
         activeEmpresaId,
         email: user.email
       });
+
+      // Verificar sessão do Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔍 DEBUG: Session Supabase:', {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        isAuthenticated: !!session?.user
+      });
+
+      if (!session?.user) {
+        console.error('❌ Erro: Usuário não autenticado no Supabase');
+        throw new Error('Usuário não autenticado');
+      }
 
       // RLS irá filtrar automaticamente pela empresa do usuário
       let query = supabase
