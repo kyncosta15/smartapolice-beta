@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Upload, Eye, Trash2, Calendar, User } from 'lucide-react';
+import { FileText, Download, Upload, Trash2, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -40,10 +40,9 @@ export function VehicleDocumentsSection({
   const isFetchingRef = useRef(false);
 
   const getDocumentType = useCallback((fileName: string): string => {
-    const ext = fileName.toLowerCase().split('.').pop();
     const lowerFileName = fileName.toLowerCase();
     
-    // Mapear baseado no nome do arquivo e extensão para tipos permitidos
+    // Mapear baseado no nome do arquivo para tipos permitidos pela constraint
     if (lowerFileName.includes('nf') || lowerFileName.includes('nota') || lowerFileName.includes('fiscal')) {
       return 'nf';
     }
@@ -169,7 +168,7 @@ export function VehicleDocumentsSection({
       setDocuments(uniqueDocs);
     } catch (error) {
       console.error('Erro ao buscar documentos:', error);
-      toast.error('Erro ao carregar documentos do veículo');
+      // Não mostrar toast aqui para evitar spam
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -185,32 +184,55 @@ export function VehicleDocumentsSection({
     if (!vehicleId || files.length === 0) return;
 
     setUploading(true);
+    let savedCount = 0;
+    const errors: string[] = [];
+    
     try {
-      // Inserir registros dos documentos na tabela frota_documentos
-      const documentsToInsert = files.map(({ file, url }) => ({
-        veiculo_id: vehicleId,
-        tipo: getDocumentType(file.name),
-        nome_arquivo: file.name,
-        url: url || '',
-        tamanho_arquivo: file.size,
-        tipo_mime: file.type,
-        origem: 'upload' as const,
-      }));
+      for (const { file, url } of files) {
+        try {
+          const documentData = {
+            veiculo_id: vehicleId,
+            tipo: getDocumentType(file.name),
+            nome_arquivo: file.name,
+            url: url || '',
+            tamanho_arquivo: file.size,
+            tipo_mime: file.type,
+            origem: 'upload' as const,
+          };
 
-      const { error } = await supabase
-        .from('frota_documentos')
-        .insert(documentsToInsert);
+          const { error } = await supabase
+            .from('frota_documentos')
+            .insert([documentData]);
 
-      if (error) throw error;
+          if (error) {
+            console.error('Erro ao salvar documento:', file.name, error);
+            errors.push(`${file.name}: ${error.message}`);
+          } else {
+            savedCount++;
+          }
+        } catch (fileError: any) {
+          console.error('Erro ao processar arquivo:', file.name, fileError);
+          errors.push(`${file.name}: Erro ao processar arquivo`);
+        }
+      }
 
-      toast.success(`${files.length} documento(s) adicionado(s) com sucesso!`);
+      // Mostrar resultado baseado no que foi salvo
+      if (savedCount > 0 && errors.length === 0) {
+        toast.success(`${savedCount} documento(s) adicionado(s) com sucesso!`);
+      } else if (savedCount > 0 && errors.length > 0) {
+        toast.success(`${savedCount} documento(s) salvos. ${errors.length} falharam.`);
+      } else {
+        toast.error('Nenhum documento foi salvo. Verifique os tipos de arquivo permitidos.');
+      }
       
-      // Recarregar lista após um pequeno delay para evitar loops
-      setTimeout(() => {
-        fetchDocuments();
-      }, 500);
+      if (savedCount > 0) {
+        // Recarregar lista apenas se houver documentos salvos
+        setTimeout(() => {
+          fetchDocuments();
+        }, 500);
+      }
     } catch (error) {
-      console.error('Erro ao salvar documentos:', error);
+      console.error('Erro geral ao salvar documentos:', error);
       toast.error('Erro ao salvar documentos no sistema');
     } finally {
       setUploading(false);
@@ -318,7 +340,7 @@ export function VehicleDocumentsSection({
                 <h4 className="text-sm font-medium text-blue-900">Upload de Documentos</h4>
               </div>
               <p className="text-xs text-blue-700 mb-3">
-                Adicione documentos relacionados a este veículo. Os arquivos serão salvos no sistema.
+                Adicione documentos relacionados a este veículo. Suportamos: PDF, DOC, DOCX, XLS, XLSX e imagens.
               </p>
               <DragDropUpload
                 onFilesChange={handleFilesUploaded}
@@ -337,7 +359,6 @@ export function VehicleDocumentsSection({
                 ]}
                 disabled={uploading}
                 publicMode={false}
-                publicPath={`vehicles/${vehicleId}`}
               />
             </div>
           )}
@@ -376,17 +397,17 @@ export function VehicleDocumentsSection({
                                   <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
                                   {getStatusBadge(doc.origem)}
                                 </div>
-                                  <div className="flex items-center gap-4 text-xs text-purple-600">
-                                    <span>{getDocumentTypeLabel(doc.tipo)}</span>
-                                    <span>{formatFileSize(doc.tamanho_arquivo)}</span>
-                                    <span className="flex items-center gap-1">
-                                      <Calendar className="h-3 w-3" />
-                                      {formatDistanceToNow(new Date(doc.created_at), { 
-                                        addSuffix: true, 
-                                        locale: ptBR 
-                                      })}
-                                    </span>
-                                  </div>
+                                <div className="flex items-center gap-4 text-xs text-purple-600">
+                                  <span>{getDocumentTypeLabel(doc.tipo)}</span>
+                                  <span>{formatFileSize(doc.tamanho_arquivo)}</span>
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {formatDistanceToNow(new Date(doc.created_at), { 
+                                      addSuffix: true, 
+                                      locale: ptBR 
+                                    })}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
