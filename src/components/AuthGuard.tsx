@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { DashboardContent } from '@/components/DashboardContent';
 import { Shield, Loader2 } from 'lucide-react';
 
@@ -58,11 +58,7 @@ const AuthGuardContent = () => {
 };
 
 const AuthGuard = () => {
-  return (
-    <AuthProvider>
-      <AuthGuardContent />
-    </AuthProvider>
-  );
+  return <AuthGuardContent />;
 };
 
 // Ensure proper default export
