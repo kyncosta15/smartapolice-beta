@@ -372,7 +372,6 @@ export function VehicleDocumentsSection({
                   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                 ]}
                 disabled={uploading}
-                publicMode={false}
               />
             </div>
           )}
