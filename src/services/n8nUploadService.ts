@@ -299,64 +299,36 @@ export class N8NUploadService {
       console.log('Resposta N8N completa:', JSON.stringify(n8nResponse, null, 2));
       console.log('Metadata recebida:', metadata);
       
-      // Buscar empresa_id do usuário atual
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        console.error('Erro de autenticação:', userError);
-        throw new Error('Usuário não autenticado');
-      }
+      // Buscar empresa_id usando o current_empresa_id() que já lida com a lógica de empresa padrão
+      const { data: empresaResult, error: empresaError } = await supabase
+        .rpc('current_empresa_id');
 
-      console.log('Usuário autenticado:', user.id);
-
-      const { data: userData, error: userDataError } = await supabase
-        .from('users')
-        .select('company')
-        .eq('id', user.id)
-        .single();
-
-      if (userDataError || !userData?.company) {
-        console.error('Erro ao buscar dados do usuário:', userDataError);
-        throw new Error('Empresa do usuário não encontrada');
-      }
-
-      console.log('Empresa do usuário:', userData.company);
-
-      // Buscar empresa_id baseado no nome da empresa do usuário
-      const { data: empresa, error: empresaError } = await supabase
-        .from('empresas')
-        .select('id')
-        .eq('nome', userData.company)
-        .maybeSingle();
-        
       if (empresaError) {
-        console.error('Erro ao buscar empresa:', empresaError);
-        throw new Error('Erro ao buscar empresa');
+        console.error('Erro ao buscar empresa_id:', empresaError);
+        throw new Error('Erro ao determinar empresa do usuário');
       }
 
-      let empresaId: string;
-      
-      if (empresa) {
-        empresaId = empresa.id;
-        console.log('✅ Empresa encontrada:', empresaId);
-      } else {
-        console.log('❌ Empresa não encontrada, criando nova...');
-        const { data: novaEmpresa, error: novaEmpresaError } = await supabase
-          .from('empresas')
-          .insert([{
-            nome: userData.company,
-            cnpj: metadata?.cnpj || null,
-          }])
-          .select('id')
-          .single();
-          
-        if (novaEmpresaError || !novaEmpresa) {
-          console.error('Erro ao criar empresa:', novaEmpresaError);
-          throw new Error('Não foi possível criar a empresa');
-        }
-        
-        empresaId = novaEmpresa.id;
-        console.log('✅ Nova empresa criada:', empresaId);
+      const empresaId = empresaResult;
+      console.log('✅ Empresa ID obtida:', empresaId);
+
+      // Verificar se a empresa existe
+      const { data: empresa, error: empresaExisteError } = await supabase
+        .from('empresas')
+        .select('id, nome')
+        .eq('id', empresaId)
+        .maybeSingle();
+
+      if (empresaExisteError) {
+        console.error('Erro ao verificar empresa:', empresaExisteError);
+        throw new Error('Erro ao verificar empresa');
       }
+
+      if (!empresa) {
+        console.error('Empresa não encontrada para ID:', empresaId);
+        throw new Error('Empresa não encontrada no sistema');
+      }
+
+      console.log('✅ Empresa confirmada:', empresa.nome);
 
       // Processar cada veículo
       console.log(`🚗 Processando ${n8nResponse.veiculos.length} veículos...`);
@@ -386,7 +358,7 @@ export class N8NUploadService {
             status_seguro: statusSeguro,
             status_veiculo: veiculo.status || 'ativo',
             proprietario_tipo: 'pj',
-            proprietario_nome: veiculo.proprietario || n8nResponse.empresa?.nome || userData.company,
+            proprietario_nome: veiculo.proprietario || n8nResponse.empresa?.nome || empresa.nome,
             proprietario_doc: n8nResponse.empresa?.cnpj || metadata?.cnpj,
             origem_planilha: veiculo.origem_planilha || null,
             observacoes: veiculo.origem_planilha ? `Importado do N8N - ${veiculo.origem_planilha} (${veiculo.familia || 'sem categoria'})` : null,
