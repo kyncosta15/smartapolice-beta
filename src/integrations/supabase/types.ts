@@ -2571,6 +2571,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      debug_frota_auth: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          auth_user_id: string
+          current_empresa_result: string
+          membership_count: number
+          total_vehicles_no_rls: number
+          total_vehicles_with_rls: number
+          user_company: string
+          user_memberships: Json
+        }[]
+      }
       delete_policy_completely: {
         Args: { policy_id_param: string }
         Returns: boolean
