@@ -312,7 +312,7 @@ export class N8NUploadService {
       console.log('✅ Empresa ID obtida:', empresaId);
 
       // Verificar se a empresa existe
-      const { data: empresa, error: empresaExisteError } = await supabase
+      let { data: empresa, error: empresaExisteError } = await supabase
         .from('empresas')
         .select('id, nome')
         .eq('id', empresaId)
@@ -324,8 +324,26 @@ export class N8NUploadService {
       }
 
       if (!empresa) {
-        console.error('Empresa não encontrada para ID:', empresaId);
-        throw new Error('Empresa não encontrada no sistema');
+        console.log('📝 Empresa não encontrada, criando empresa padrão...');
+        
+        // Criar a empresa padrão "Clientes Individuais"
+        const { data: novaEmpresa, error: criarEmpresaError } = await supabase
+          .from('empresas')
+          .insert({
+            id: empresaId,
+            nome: 'Clientes Individuais',
+            slug: 'clientes-individuais'
+          })
+          .select('id, nome')
+          .single();
+
+        if (criarEmpresaError) {
+          console.error('Erro ao criar empresa padrão:', criarEmpresaError);
+          throw new Error('Erro ao criar empresa padrão no sistema');
+        }
+
+        console.log('✅ Empresa padrão criada:', novaEmpresa.nome);
+        empresa = novaEmpresa;
       }
 
       console.log('✅ Empresa confirmada:', empresa.nome);
