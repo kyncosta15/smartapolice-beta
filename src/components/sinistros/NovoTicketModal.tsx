@@ -17,7 +17,6 @@ import { cn } from '@/lib/utils';
 import { Vehicle, Policy } from '@/types/claims';
 import { VehiclesService } from '@/services/vehicles';
 import { ClaimsService } from '@/services/claims';
-import { useFrotasData } from '@/hooks/useFrotasData';
 
 type NovoTicketModalProps = {
   trigger: React.ReactNode;
@@ -32,14 +31,43 @@ export function NovoTicketModal({ trigger, onTicketCreated, initialTipo = 'sinis
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [relatedPolicy, setRelatedPolicy] = useState<Policy | null>(undefined);
   const [loadingPolicy, setLoadingPolicy] = useState(false);
-  
-  // Buscar todos os veículos da empresa do usuário
-  const { veiculos, loading: loadingVehicles } = useFrotasData({
-    search: '',
-    categoria: [],
-    status: [],
-    marcaModelo: []
-  });
+  const [veiculos, setVeiculos] = useState<any[]>([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(false);
+
+  // Carregar veículos apenas quando o modal abrir
+  useEffect(() => {
+    if (open && veiculos.length === 0) {
+      loadVehicles();
+    }
+  }, [open]);
+
+  const loadVehicles = async () => {
+    setLoadingVehicles(true);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data } = await supabase
+        .from('frota_veiculos')
+        .select(`
+          id,
+          placa,
+          chassi,
+          marca,
+          modelo,
+          proprietario_nome,
+          proprietario_tipo,
+          status_seguro
+        `)
+        .order('placa');
+      
+      if (data) {
+        setVeiculos(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar veículos:', error);
+    } finally {
+      setLoadingVehicles(false);
+    }
+  };
   
   // Form state
   const [tipoTicket, setTipoTicket] = useState<'sinistro' | 'assistencia'>(initialTipo);
@@ -159,6 +187,8 @@ export function NovoTicketModal({ trigger, onTicketCreated, initialTipo = 'sinis
     setDescricao('');
     setAnexos([]);
     setSubmitting(false);
+    // Limpar lista de veículos para recarregar na próxima abertura
+    setVeiculos([]);
   };
 
   const canSubmit = selectedVehicle && (tipoTicket === 'sinistro' ? tipoSinistro : tipoAssistencia) && dataEvento;
