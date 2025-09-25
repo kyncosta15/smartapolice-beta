@@ -180,21 +180,26 @@ export function VehicleDocumentsSection({
     fetchDocuments();
   }, [vehicleId, vehiclePlaca, vehicleChassi]);
 
-  const handleFilesUploaded = useCallback(async (files: Array<{ file: File; id: string; url?: string }>) => {
+  const handleFilesUploaded = useCallback(async (files: Array<{ file: File; id: string; url?: string; uploaded?: boolean; error?: string }>) => {
     if (!vehicleId || files.length === 0) return;
 
     setUploading(true);
     let savedCount = 0;
     const errors: string[] = [];
     
+    // Filtrar apenas arquivos que foram realmente enviados com sucesso
+    const successfulFiles = files.filter(f => f.uploaded && f.url && !f.error);
+    const failedFiles = files.filter(f => !f.uploaded || !f.url || f.error);
+    
     try {
-      for (const { file, url } of files) {
+      // Processar apenas arquivos que foram enviados com sucesso para o storage
+      for (const { file, url } of successfulFiles) {
         try {
           const documentData = {
             veiculo_id: vehicleId,
             tipo: getDocumentType(file.name),
             nome_arquivo: file.name,
-            url: url || '',
+            url: url!,
             tamanho_arquivo: file.size,
             tipo_mime: file.type,
             origem: 'upload' as const,
@@ -216,13 +221,22 @@ export function VehicleDocumentsSection({
         }
       }
 
+      // Adicionar erros de upload aos erros totais
+      failedFiles.forEach(f => {
+        errors.push(`${f.file.name}: Falha no upload para o storage`);
+      });
+
       // Mostrar resultado baseado no que foi salvo
       if (savedCount > 0 && errors.length === 0) {
         toast.success(`${savedCount} documento(s) adicionado(s) com sucesso!`);
       } else if (savedCount > 0 && errors.length > 0) {
         toast.success(`${savedCount} documento(s) salvos. ${errors.length} falharam.`);
+        // Mostrar detalhes dos erros em um toast separado
+        setTimeout(() => {
+          toast.error(`Erros: ${errors.slice(0, 3).join(', ')}${errors.length > 3 ? '...' : ''}`);
+        }, 1000);
       } else {
-        toast.error('Nenhum documento foi salvo. Verifique os tipos de arquivo permitidos.');
+        toast.error(`Nenhum documento foi salvo${errors.length > 0 ? '. Erros nos uploads.' : '.'}`);
       }
       
       if (savedCount > 0) {
