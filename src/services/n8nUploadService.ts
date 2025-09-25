@@ -299,51 +299,27 @@ export class N8NUploadService {
       console.log('Resposta N8N completa:', JSON.stringify(n8nResponse, null, 2));
       console.log('Metadata recebida:', metadata);
       
-      // Buscar empresa_id usando o current_empresa_id() que já lida com a lógica de empresa padrão
-      const { data: empresaResult, error: empresaError } = await supabase
-        .rpc('current_empresa_id');
+      // Garantir que a empresa padrão existe usando função segura
+      const { data: empresaId, error: empresaError } = await supabase
+        .rpc('ensure_default_empresa');
 
       if (empresaError) {
-        console.error('Erro ao buscar empresa_id:', empresaError);
-        throw new Error('Erro ao determinar empresa do usuário');
+        console.error('Erro ao garantir empresa padrão:', empresaError);
+        throw new Error('Erro ao garantir empresa padrão do usuário');
       }
 
-      const empresaId = empresaResult;
-      console.log('✅ Empresa ID obtida:', empresaId);
+      console.log('✅ Empresa ID confirmada:', empresaId);
 
-      // Verificar se a empresa existe
-      let { data: empresa, error: empresaExisteError } = await supabase
+      // Buscar dados da empresa
+      const { data: empresa, error: empresaExisteError } = await supabase
         .from('empresas')
         .select('id, nome')
         .eq('id', empresaId)
-        .maybeSingle();
+        .single();
 
-      if (empresaExisteError) {
-        console.error('Erro ao verificar empresa:', empresaExisteError);
-        throw new Error('Erro ao verificar empresa');
-      }
-
-      if (!empresa) {
-        console.log('📝 Empresa não encontrada, criando empresa padrão...');
-        
-        // Criar a empresa padrão "Clientes Individuais"
-        const { data: novaEmpresa, error: criarEmpresaError } = await supabase
-          .from('empresas')
-          .insert({
-            id: empresaId,
-            nome: 'Clientes Individuais',
-            slug: 'clientes-individuais'
-          })
-          .select('id, nome')
-          .single();
-
-        if (criarEmpresaError) {
-          console.error('Erro ao criar empresa padrão:', criarEmpresaError);
-          throw new Error('Erro ao criar empresa padrão no sistema');
-        }
-
-        console.log('✅ Empresa padrão criada:', novaEmpresa.nome);
-        empresa = novaEmpresa;
+      if (empresaExisteError || !empresa) {
+        console.error('Erro ao buscar empresa após criação:', empresaExisteError);
+        throw new Error('Erro ao confirmar empresa no sistema');
       }
 
       console.log('✅ Empresa confirmada:', empresa.nome);

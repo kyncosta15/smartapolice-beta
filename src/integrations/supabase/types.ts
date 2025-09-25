@@ -2598,6 +2598,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      ensure_default_empresa: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       fix_categoria_outros_to_sem_seguro: {
         Args: Record<PropertyKey, never>
         Returns: {
