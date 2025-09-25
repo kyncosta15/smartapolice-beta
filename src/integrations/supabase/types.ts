@@ -2663,6 +2663,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      limpar_dados_usuario_teste_v2: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       rh_employee_request: {
         Args: {
           employee_data: Json
