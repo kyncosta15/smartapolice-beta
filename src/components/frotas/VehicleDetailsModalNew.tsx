@@ -27,6 +27,7 @@ import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { fipeService } from '@/services/fipeService';
+import { VehicleDocumentsSection } from './VehicleDocumentsSection';
 
 interface VehicleDetailsModalNewProps {
   veiculo: FrotaVeiculo | null;
@@ -456,34 +457,10 @@ export function VehicleDetailsModalNew({
               </TabsContent>
 
               <TabsContent value="emplacamento" className="mt-0 space-y-4 md:space-y-6">
-                <Card className="p-3 md:p-6">
-                  <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
-                    <FileText className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
-                    Informações de Emplacamento
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="placa" className="text-sm font-medium text-gray-700">Placa</Label>
-                      <Input
-                        id="placa"
-                        value={formData.placa || ''}
-                        onChange={(e) => handleInputChange('placa', e.target.value)}
-                        disabled={mode === 'view'}
-                        className="h-10 md:h-11 font-mono"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="renavam" className="text-sm font-medium text-gray-700">Renavam</Label>
-                      <Input
-                        id="renavam"
-                        value={formData.renavam || ''}
-                        onChange={(e) => handleInputChange('renavam', e.target.value)}
-                        disabled={mode === 'view'}
-                        className="h-10 md:h-11 font-mono"
-                      />
-                    </div>
-                  </div>
-                </Card>
+                <VehicleDocumentsSection
+                  vehicleId={formData.id || ''}
+                  mode={mode}
+                />
               </TabsContent>
 
               <TabsContent value="seguro" className="mt-0 space-y-4 md:space-y-6">

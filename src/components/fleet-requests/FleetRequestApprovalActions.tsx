@@ -82,31 +82,47 @@ export function FleetRequestApprovalActions({
       setComments('');
       onUpdate();
 
-      // Toast de sucesso com animação de progresso
-      let progress = 0;
-      const successMessage = actionType === 'approve' ? 'Solicitação aprovada com sucesso!' : 'Solicitação recusada!';
-      const successDescription = actionType === 'approve' ? 
-        'A alteração foi processada automaticamente no sistema' : 
-        'O solicitante será notificado sobre a decisão';
-
-      // Simular progresso por 3 segundos
-      const progressInterval = setInterval(() => {
-        progress += 10;
-        if (progress <= 100) {
+      // Toast de sucesso específico para aprovação
+      if (actionType === 'approve') {
+        // Se foi aprovado e é para inclusão de veículo, mostrar toast especial
+        if (request.tipo.includes('inclusao') || request.tipo.includes('alteracao')) {
           toast({
-            title: `${successMessage} (${progress}%)`,
-            description: successDescription,
-            duration: 100, // Toast rápido para atualizar
+            title: "🚗 Veículo Adicionado à Frota!",
+            description: "Solicitação aprovada com sucesso.",
+            action: (
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => {
+                  // Dispatch event para abrir modal do veículo
+                  window.dispatchEvent(new CustomEvent('openVehicleModal', { 
+                    detail: { 
+                      placa: request.placa,
+                      chassi: request.chassi,
+                      requestId: request.id 
+                    } 
+                  }));
+                }}
+              >
+                Ver Veículo
+              </Button>
+            ),
+            duration: 8000,
           });
         } else {
-          clearInterval(progressInterval);
           toast({
-            title: actionType === 'approve' ? '✅ Aprovação Concluída' : '❌ Recusa Processada',
-            description: successDescription,
+            title: '✅ Solicitação Aprovada',
+            description: 'A alteração foi processada automaticamente no sistema',
             duration: 5000,
           });
         }
-      }, 300);
+      } else {
+        toast({
+          title: '❌ Solicitação Recusada',
+          description: 'O solicitante será notificado sobre a decisão',
+          duration: 5000,
+        });
+      }
 
     } catch (error: any) {
       console.error('Erro ao processar aprovação:', error);

@@ -304,7 +304,16 @@ export function FleetRequestDetailsModal({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.open(doc.file_url, '_blank')}
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = doc.file_url;
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            link.download = doc.file_name;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
                           className="gap-1 flex-shrink-0"
                         >
                           <Download className="h-4 w-4" />
