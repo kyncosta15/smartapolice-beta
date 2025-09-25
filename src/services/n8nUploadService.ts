@@ -299,13 +299,13 @@ export class N8NUploadService {
       console.log('Resposta N8N completa:', JSON.stringify(n8nResponse, null, 2));
       console.log('Metadata recebida:', metadata);
       
-      // Garantir que a empresa padrão existe usando função segura
+      // Obter empresa específica do usuário (cria automaticamente se não existir)
       const { data: empresaId, error: empresaError } = await supabase
-        .rpc('ensure_default_empresa');
+        .rpc('get_user_empresa_id');
 
       if (empresaError) {
-        console.error('Erro ao garantir empresa padrão:', empresaError);
-        throw new Error('Erro ao garantir empresa padrão do usuário');
+        console.error('Erro ao obter empresa do usuário:', empresaError);
+        throw new Error('Erro ao obter empresa específica do usuário');
       }
 
       console.log('✅ Empresa ID confirmada:', empresaId);
