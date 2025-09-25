@@ -333,11 +333,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
               </CardTitle>
               
                 <Button
-                  onClick={() => {
-                    processFiles();
-                    // Abrir webhook de ativação
-                    window.open('https://rcorpoficial.app.n8n.cloud/webhook-test/testewebhook1', '_blank');
-                  }}
+                  onClick={processFiles}
                   disabled={isProcessing || files.every(f => f.status !== 'pending')}
                   className="flex items-center gap-2"
                   size="default"
