@@ -105,8 +105,8 @@ export default function PublicFleetRequestPage() {
         .from('public_fleet_tokens')
         .select('*')
         .eq('token', token)
-        .gte('expires_at', new Date().toISOString())
         .is('used_at', null)
+        .or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`)
         .single();
 
       if (error || !data) {
