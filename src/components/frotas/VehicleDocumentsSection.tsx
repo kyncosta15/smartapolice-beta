@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +37,7 @@ export function VehicleDocumentsSection({
   const [documents, setDocuments] = useState<VehicleDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [fetchingRef, setFetchingRef] = useState(false);
+  const isFetchingRef = useRef(false);
 
   const getDocumentType = useCallback((fileName: string): string => {
     const ext = fileName.toLowerCase().split('.').pop();
@@ -55,11 +55,11 @@ export function VehicleDocumentsSection({
   }, []);
 
   const fetchDocuments = useCallback(async () => {
-    if (loading || fetchingRef || !vehicleId || vehicleId.trim() === '') return;
+    if (!vehicleId || vehicleId.trim() === '' || isFetchingRef.current) return;
     
     try {
+      isFetchingRef.current = true;
       setLoading(true);
-      setFetchingRef(true);
       
       // Buscar documentos na tabela frota_documentos (uploads diretos)
       const { data: frotaDocs, error: frotaError } = await supabase
@@ -151,16 +151,16 @@ export function VehicleDocumentsSection({
       setDocuments([]);
     } finally {
       setLoading(false);
-      setFetchingRef(false);
+      isFetchingRef.current = false;
     }
-  }, [vehicleId, vehiclePlaca, vehicleChassi, loading, fetchingRef, getDocumentType]);
+  }, [vehicleId, vehiclePlaca, vehicleChassi, getDocumentType]);
 
   useEffect(() => {
     fetchDocuments();
-  }, [fetchDocuments]);
+  }, [vehicleId, vehiclePlaca, vehicleChassi]);
 
   const handleFilesUploaded = useCallback(async (files: Array<{ file: File; id: string; url?: string }>) => {
-    if (!vehicleId) return;
+    if (!vehicleId || files.length === 0) return;
 
     setUploading(true);
     try {
@@ -182,7 +182,11 @@ export function VehicleDocumentsSection({
       if (error) throw error;
 
       toast.success(`${files.length} documento(s) adicionado(s) com sucesso!`);
-      fetchDocuments(); // Recarregar lista
+      
+      // Recarregar lista após um pequeno delay para evitar loops
+      setTimeout(() => {
+        fetchDocuments();
+      }, 500);
     } catch (error) {
       console.error('Erro ao salvar documentos:', error);
       toast.error('Erro ao salvar documentos no sistema');
