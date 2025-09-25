@@ -154,14 +154,14 @@ export function ContentRenderer({
         </div>
       );
 
-    case 'vidas-beneficiarios':
+    case 'users':
       return (
         <div className="p-6">
           <VidasBeneficiarios allPolicies={allPolicies} />
         </div>
       );
 
-    case 'contato':
+    case 'contatos':
       return (
         <div className="p-6">
           <ContactSection />
@@ -205,7 +205,7 @@ export function ContentRenderer({
         </div>
       );
 
-    case 'sinistros':
+    case 'claims':
       return (
         <div className="p-6">
           <SinistrosManagement 

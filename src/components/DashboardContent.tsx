@@ -27,7 +27,7 @@ import {
   User,
   Car,
   Calculator,
-  TestTube,
+  ShieldAlert,
   Settings,
   Upload,
   Mail
@@ -89,7 +89,7 @@ export function DashboardContent() {
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Minhas Apólices', icon: FileText },
-    { id: 'claims', title: 'Sinistros', icon: TestTube },
+    { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'settings', title: 'Configurações', icon: Settings },
@@ -99,7 +99,7 @@ export function DashboardContent() {
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Minhas Apólices', icon: FileText },
     { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
-    { id: 'claims', title: 'Sinistros', icon: TestTube },
+    { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
