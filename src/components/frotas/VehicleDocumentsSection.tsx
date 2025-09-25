@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,18 +37,29 @@ export function VehicleDocumentsSection({
   const [documents, setDocuments] = useState<VehicleDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [fetchingRef, setFetchingRef] = useState(false);
 
-  useEffect(() => {
-    if (vehicleId && vehicleId.trim() !== '') {
-      fetchDocuments();
-    }
-  }, [vehicleId]);
+  const getDocumentType = useCallback((fileName: string): string => {
+    const ext = fileName.toLowerCase().split('.').pop();
+    const typeMap: Record<string, string> = {
+      pdf: 'PDF',
+      doc: 'DOC',
+      docx: 'DOCX',
+      jpg: 'Imagem',
+      jpeg: 'Imagem',
+      png: 'Imagem',
+      xls: 'Planilha',
+      xlsx: 'Planilha',
+    };
+    return typeMap[ext || ''] || 'Documento';
+  }, []);
 
-  const fetchDocuments = async () => {
-    if (loading) return; // Prevent multiple simultaneous fetches
+  const fetchDocuments = useCallback(async () => {
+    if (loading || fetchingRef || !vehicleId || vehicleId.trim() === '') return;
     
     try {
       setLoading(true);
+      setFetchingRef(true);
       
       // Buscar documentos na tabela frota_documentos (uploads diretos)
       const { data: frotaDocs, error: frotaError } = await supabase
@@ -67,7 +78,7 @@ export function VehicleDocumentsSection({
         .from('frota_veiculos')
         .select('placa, chassi, renavam')
         .eq('id', vehicleId)
-        .single();
+        .maybeSingle();
 
       if (vehicleError && vehicleError.code !== 'PGRST116') {
         console.error('Erro ao buscar dados do veículo:', vehicleError);
@@ -77,32 +88,41 @@ export function VehicleDocumentsSection({
       let fleetRequestDocs: any[] = [];
       
       // Se temos dados do veículo, buscar documentos relacionados às solicitações
-      if (vehicleData) {
-        // Primeiro buscar as solicitações executadas para este veículo
-        const { data: requestsData, error: requestsError } = await supabase
-          .from('fleet_change_requests')
-          .select('id')
-          .or(`placa.eq.${vehicleData.placa},chassi.eq.${vehicleData.chassi}`)
-          .eq('status', 'executado');
+      if (vehicleData && (vehiclePlaca || vehicleChassi)) {
+        const placa = vehiclePlaca || vehicleData.placa;
+        const chassi = vehicleChassi || vehicleData.chassi;
+        
+        if (placa || chassi) {
+          // Primeiro buscar as solicitações executadas para este veículo
+          const orConditions = [];
+          if (placa) orConditions.push(`placa.eq.${placa}`);
+          if (chassi) orConditions.push(`chassi.eq.${chassi}`);
+          
+          const { data: requestsData, error: requestsError } = await supabase
+            .from('fleet_change_requests')
+            .select('id')
+            .or(orConditions.join(','))
+            .eq('status', 'executado');
 
-        if (!requestsError && requestsData && requestsData.length > 0) {
-          // Buscar documentos para essas solicitações
-          const requestIds = requestsData.map(r => r.id);
-          const { data: docsData, error: docsError } = await supabase
-            .from('fleet_request_documents')
-            .select('*')
-            .in('request_id', requestIds);
+          if (!requestsError && requestsData && requestsData.length > 0) {
+            // Buscar documentos para essas solicitações
+            const requestIds = requestsData.map(r => r.id);
+            const { data: docsData, error: docsError } = await supabase
+              .from('fleet_request_documents')
+              .select('*')
+              .in('request_id', requestIds);
 
-          if (!docsError && docsData) {
-            fleetRequestDocs = docsData.map((doc: any) => ({
-              ...doc,
-              origem: 'external',
-              tipo: getDocumentType(doc.file_name),
-              url: doc.file_url,
-              nome_arquivo: doc.file_name,
-              tamanho_arquivo: doc.file_size,
-              tipo_mime: doc.mime_type
-            }));
+            if (!docsError && docsData) {
+              fleetRequestDocs = docsData.map((doc: any) => ({
+                ...doc,
+                origem: 'external',
+                tipo: getDocumentType(doc.file_name),
+                url: doc.file_url,
+                nome_arquivo: doc.file_name,
+                tamanho_arquivo: doc.file_size,
+                tipo_mime: doc.mime_type
+              }));
+            }
           }
         }
       }
@@ -128,13 +148,18 @@ export function VehicleDocumentsSection({
     } catch (error) {
       console.error('Erro ao buscar documentos:', error);
       toast.error('Erro ao carregar documentos do veículo');
-      setDocuments([]); // Reset documents on error
+      setDocuments([]);
     } finally {
       setLoading(false);
+      setFetchingRef(false);
     }
-  };
+  }, [vehicleId, vehiclePlaca, vehicleChassi, loading, fetchingRef, getDocumentType]);
 
-  const handleFilesUploaded = async (files: Array<{ file: File; id: string; url?: string }>) => {
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
+
+  const handleFilesUploaded = useCallback(async (files: Array<{ file: File; id: string; url?: string }>) => {
     if (!vehicleId) return;
 
     setUploading(true);
@@ -164,24 +189,9 @@ export function VehicleDocumentsSection({
     } finally {
       setUploading(false);
     }
-  };
+  }, [vehicleId, getDocumentType, fetchDocuments]);
 
-  const getDocumentType = (fileName: string): string => {
-    const ext = fileName.toLowerCase().split('.').pop();
-    const typeMap: Record<string, string> = {
-      pdf: 'PDF',
-      doc: 'DOC',
-      docx: 'DOCX',
-      jpg: 'Imagem',
-      jpeg: 'Imagem',
-      png: 'Imagem',
-      xls: 'Planilha',
-      xlsx: 'Planilha',
-    };
-    return typeMap[ext || ''] || 'Documento';
-  };
-
-  const getStatusBadge = (origem: string) => {
+  const getStatusBadge = useCallback((origem: string) => {
     const config = {
       upload: { color: 'bg-blue-100 text-blue-800', label: 'Upload Direto' },
       import: { color: 'bg-green-100 text-green-800', label: 'Importado' },
@@ -195,16 +205,16 @@ export function VehicleDocumentsSection({
         {statusConfig.label}
       </Badge>
     );
-  };
+  }, []);
 
-  const formatFileSize = (bytes?: number): string => {
+  const formatFileSize = useCallback((bytes?: number): string => {
     if (!bytes) return 'Tamanho desconhecido';
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
-  };
+  }, []);
 
-  const handleDownload = (doc: VehicleDocument) => {
+  const handleDownload = useCallback((doc: VehicleDocument) => {
     const link = document.createElement('a');
     link.href = doc.url;
     link.target = '_blank';
@@ -213,9 +223,9 @@ export function VehicleDocumentsSection({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, []);
 
-  const handleDelete = async (docId: string) => {
+  const handleDelete = useCallback(async (docId: string) => {
     try {
       const { error } = await supabase
         .from('frota_documentos')
@@ -230,9 +240,19 @@ export function VehicleDocumentsSection({
       console.error('Erro ao deletar documento:', error);
       toast.error('Erro ao remover documento');
     }
-  };
+  }, [fetchDocuments]);
 
-  if (loading) {
+  const externalDocs = useMemo(() => 
+    documents.filter(doc => doc.origem === 'external'), 
+    [documents]
+  );
+
+  const localDocs = useMemo(() => 
+    documents.filter(doc => doc.origem !== 'external'), 
+    [documents]
+  );
+
+  if (loading && documents.length === 0) {
     return (
       <Card className="p-3 md:p-6">
         <div className="flex items-center justify-center py-8">
@@ -311,115 +331,111 @@ export function VehicleDocumentsSection({
               ) : (
                 <div>
                   {/* Seção de documentos externos */}
-                  {documents.some(doc => doc.origem === 'external') && (
+                  {externalDocs.length > 0 && (
                     <div className="mb-6">
                       <div className="flex items-center gap-2 mb-3 pb-2 border-b border-purple-200">
                         <div className="w-3 h-3 rounded-full bg-purple-500"></div>
                         <h4 className="text-sm font-medium text-purple-900">Documentos do Link Externo</h4>
                         <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-300">
-                          {documents.filter(doc => doc.origem === 'external').length} arquivo(s)
+                          {externalDocs.length} arquivo(s)
                         </Badge>
                       </div>
                       <div className="space-y-3">
-                        {documents
-                          .filter(doc => doc.origem === 'external')
-                          .map((doc) => (
-                            <div key={doc.id} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <FileText className="h-5 w-5 text-purple-600 flex-shrink-0" />
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
-                                    {getStatusBadge(doc.origem)}
-                                  </div>
-                                  <div className="flex items-center gap-4 text-xs text-purple-600">
-                                    <span>{doc.tipo}</span>
-                                    <span>{formatFileSize(doc.tamanho_arquivo)}</span>
-                                    <span className="flex items-center gap-1">
-                                      <Calendar className="h-3 w-3" />
-                                      {formatDistanceToNow(new Date(doc.created_at), { 
-                                        addSuffix: true, 
-                                        locale: ptBR 
-                                      })}
-                                    </span>
-                                  </div>
+                        {externalDocs.map((doc) => (
+                          <div key={doc.id} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <FileText className="h-5 w-5 text-purple-600 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
+                                  {getStatusBadge(doc.origem)}
+                                </div>
+                                <div className="flex items-center gap-4 text-xs text-purple-600">
+                                  <span>{doc.tipo}</span>
+                                  <span>{formatFileSize(doc.tamanho_arquivo)}</span>
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {formatDistanceToNow(new Date(doc.created_at), { 
+                                      addSuffix: true, 
+                                      locale: ptBR 
+                                    })}
+                                  </span>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDownload(doc)}
-                                  className="gap-1 text-purple-700 hover:text-purple-800 hover:bg-purple-100"
-                                >
-                                  <Download className="h-4 w-4" />
-                                  Baixar
-                                </Button>
-                              </div>
                             </div>
-                          ))}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownload(doc)}
+                                className="gap-1 text-purple-700 hover:text-purple-800 hover:bg-purple-100"
+                              >
+                                <Download className="h-4 w-4" />
+                                Baixar
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
 
                   {/* Seção de documentos locais */}
-                  {documents.some(doc => doc.origem !== 'external') && (
+                  {localDocs.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-200">
                         <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                         <h4 className="text-sm font-medium text-blue-900">Documentos Locais</h4>
                         <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-300">
-                          {documents.filter(doc => doc.origem !== 'external').length} arquivo(s)
+                          {localDocs.length} arquivo(s)
                         </Badge>
                       </div>
                       <div className="space-y-3">
-                        {documents
-                          .filter(doc => doc.origem !== 'external')
-                          .map((doc) => (
-                            <div key={doc.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
-                                    {getStatusBadge(doc.origem)}
-                                  </div>
-                                  <div className="flex items-center gap-4 text-xs text-blue-600">
-                                    <span>{doc.tipo}</span>
-                                    <span>{formatFileSize(doc.tamanho_arquivo)}</span>
-                                    <span className="flex items-center gap-1">
-                                      <Calendar className="h-3 w-3" />
-                                      {formatDistanceToNow(new Date(doc.created_at), { 
-                                        addSuffix: true, 
-                                        locale: ptBR 
-                                      })}
-                                    </span>
-                                  </div>
+                        {localDocs.map((doc) => (
+                          <div key={doc.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
+                                  {getStatusBadge(doc.origem)}
+                                </div>
+                                <div className="flex items-center gap-4 text-xs text-blue-600">
+                                  <span>{doc.tipo}</span>
+                                  <span>{formatFileSize(doc.tamanho_arquivo)}</span>
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {formatDistanceToNow(new Date(doc.created_at), { 
+                                      addSuffix: true, 
+                                      locale: ptBR 
+                                    })}
+                                  </span>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownload(doc)}
+                                className="gap-1 text-blue-700 hover:text-blue-800 hover:bg-blue-100"
+                              >
+                                <Download className="h-4 w-4" />
+                                Baixar
+                              </Button>
+                              {mode === 'edit' && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleDownload(doc)}
-                                  className="gap-1 text-blue-700 hover:text-blue-800 hover:bg-blue-100"
+                                  onClick={() => handleDelete(doc.id)}
+                                  className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
                                 >
-                                  <Download className="h-4 w-4" />
-                                  Baixar
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
-                                {mode === 'edit' && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDelete(doc.id)}
-                                    className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
+                              )}
                             </div>
-                          ))}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
