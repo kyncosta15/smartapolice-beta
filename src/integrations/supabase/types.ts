@@ -2586,6 +2586,10 @@ export type Database = {
           user_memberships: Json
         }[]
       }
+      debug_user_empresa_complete: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       delete_policy_completely: {
         Args: { policy_id_param: string }
         Returns: boolean
@@ -2654,6 +2658,10 @@ export type Database = {
       is_member_of: {
         Args: { record_empresa_id: string }
         Returns: boolean
+      }
+      limpar_dados_usuario_teste: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       rh_employee_request: {
         Args: {
