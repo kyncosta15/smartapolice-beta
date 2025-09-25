@@ -135,22 +135,30 @@ serve(async (req) => {
 
     // Salvar documentos anexados na tabela específica
     if (anexos && anexos.length > 0) {
+      console.log('💾 Salvando documentos:', anexos.length, 'arquivos');
+      
       const documentInserts = anexos.map((file: any) => ({
         request_id: request.id,
         file_name: file.name,
         file_url: file.url,
         file_size: file.size,
-        mime_type: file.name.split('.').pop() || 'unknown'
+        mime_type: file.type || getFileTypeFromName(file.name) || 'application/octet-stream'
       }));
+
+      console.log('📋 Documentos para inserir:', JSON.stringify(documentInserts, null, 2));
 
       const { error: docsError } = await supabase
         .from('fleet_request_documents')
         .insert(documentInserts);
 
       if (docsError) {
-        console.error('Error saving documents:', docsError);
+        console.error('❌ Error saving documents:', docsError);
         // Não falhar a solicitação por causa dos documentos
+      } else {
+        console.log('✅ Documentos salvos com sucesso!');
       }
+    } else {
+      console.log('📄 Nenhum documento para anexar');
     }
 
     // Marcar token como usado
@@ -204,4 +212,22 @@ function generateProtocolCode(): string {
   const year = new Date().getFullYear();
   const timestamp = Date.now().toString().slice(-6);
   return `SB-${year}-${timestamp}`;
+}
+
+function getFileTypeFromName(fileName: string): string {
+  const extension = fileName.split('.').pop()?.toLowerCase();
+  
+  const mimeTypes: Record<string, string> = {
+    'pdf': 'application/pdf',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'webp': 'image/webp',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  };
+  
+  return mimeTypes[extension || ''] || 'application/octet-stream';
 }

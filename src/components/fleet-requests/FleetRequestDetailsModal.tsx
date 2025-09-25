@@ -15,6 +15,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 
 import {
@@ -34,6 +35,7 @@ import {
   FLEET_REQUEST_PRIORIDADES 
 } from '@/types/fleet-requests';
 import type { FleetChangeRequest } from '@/types/fleet-requests';
+import { useFleetRequestDocuments } from '@/hooks/useFleetRequestDocuments';
 
 interface FleetRequestDetailsModalProps {
   request: FleetChangeRequest;
@@ -46,6 +48,8 @@ export function FleetRequestDetailsModal({
   open, 
   onOpenChange 
 }: FleetRequestDetailsModalProps) {
+  const { documents, loading: documentsLoading } = useFleetRequestDocuments(request?.id || null);
+  
   const getTipoLabel = (tipo: string) => {
     const tipoConfig = FLEET_REQUEST_TIPOS.find(t => t.value === tipo);
     return tipoConfig?.label || tipo;
@@ -254,13 +258,77 @@ export function FleetRequestDetailsModal({
             </Card>
           )}
 
-          {/* Anexos */}
+          {/* Documentos Anexos (da tabela fleet_request_documents) */}
+          {(documents.length > 0 || documentsLoading) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <FileText className="h-5 w-5" />
+                  Documentos Anexos
+                  {documentsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {documents.length > 0 && (
+                    <Badge variant="outline">
+                      {documents.length} arquivo{documents.length > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {documentsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-sm text-muted-foreground">Carregando documentos...</span>
+                  </div>
+                ) : documents.length > 0 ? (
+                  <div className="space-y-3">
+                    {documents.map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3 flex-1">
+                          <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium truncate">{doc.file_name}</div>
+                            <div className="flex items-center gap-3 text-xs text-gray-500">
+                              {doc.file_size && (
+                                <span>{formatFileSize(doc.file_size)}</span>
+                              )}
+                              <span>
+                                Enviado em {format(new Date(doc.uploaded_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                              </span>
+                              {doc.mime_type && (
+                                <span className="uppercase">{doc.mime_type}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(doc.file_url, '_blank')}
+                          className="gap-1 flex-shrink-0"
+                        >
+                          <Download className="h-4 w-4" />
+                          Baixar
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    <FileText className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm">Nenhum documento anexado</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Anexos do Payload (legado - manter para compatibilidade) */}
           {request.anexos && request.anexos.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <FileText className="h-5 w-5" />
-                  Anexos ({request.anexos.length})
+                  Anexos Legado ({request.anexos.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>

@@ -135,6 +135,10 @@ export default function PublicFleetRequestPage() {
     try {
       setSubmitting(true);
 
+      console.log('🚀 Enviando solicitação pública...');
+      console.log('📝 Dados do formulário:', values);
+      console.log('📎 Arquivos anexados:', uploadedFiles);
+
       // Chamar edge function para processar solicitação pública
       const { data, error } = await supabase.functions.invoke('public-fleet-request', {
         body: {
@@ -144,6 +148,8 @@ export default function PublicFleetRequestPage() {
         }
       });
 
+      console.log('📤 Resposta da edge function:', { data, error });
+
       if (error) throw error;
 
       setProtocolCode(data.protocolCode);
@@ -151,10 +157,10 @@ export default function PublicFleetRequestPage() {
       
       toast({
         title: 'Solicitação enviada com sucesso!',
-        description: `Protocolo: ${data.protocolCode}`,
+        description: `Protocolo: ${data.protocolCode}${uploadedFiles.length > 0 ? ` • ${uploadedFiles.length} arquivo(s) anexado(s)` : ''}`,
       });
     } catch (error: any) {
-      console.error('Erro ao enviar solicitação:', error);
+      console.error('❌ Erro ao enviar solicitação:', error);
       toast({
         title: 'Erro ao enviar solicitação',
         description: error.message || 'Não foi possível enviar a solicitação',
@@ -561,11 +567,14 @@ export default function PublicFleetRequestPage() {
                   
                   <DragDropUpload
                     onFilesChange={(files) => {
+                      console.log('📁 Arquivos alterados:', files);
                       const fileList = files.filter(f => f.uploaded && f.url).map(f => ({
                         name: f.file.name,
                         url: f.url!,
-                        size: f.file.size
+                        size: f.file.size,
+                        type: f.file.type
                       }));
+                      console.log('📎 Lista de arquivos processada:', fileList);
                       setUploadedFiles(fileList);
                     }}
                     maxFiles={5}
@@ -575,6 +584,28 @@ export default function PublicFleetRequestPage() {
                     publicMode={true}
                     publicPath="public-requests"
                   />
+                  
+                  {/* Resumo dos arquivos anexados */}
+                  {uploadedFiles.length > 0 && (
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h5 className="text-sm font-medium text-blue-900 mb-2">
+                        Arquivos que serão enviados ({uploadedFiles.length}):
+                      </h5>
+                      <div className="space-y-2">
+                        {uploadedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between text-xs text-blue-800">
+                            <span className="truncate">{file.name}</span>
+                            <span className="ml-2 flex-shrink-0">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-xs text-blue-600 mt-2 pt-2 border-t border-blue-200">
+                        Total: {(uploadedFiles.reduce((total, f) => total + f.size, 0) / 1024 / 1024).toFixed(2)} MB
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Botão de Envio */}

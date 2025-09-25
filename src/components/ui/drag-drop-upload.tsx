@@ -159,6 +159,12 @@ export function DragDropUpload({
         title: 'Upload concluído',
         description: `${newFilesWithPreview.length} arquivo(s) enviado(s) com sucesso`,
       });
+      
+      console.log('✅ Upload concluído!', {
+        totalFiles: newFilesWithPreview.length,
+        uploadedFiles: updatedFiles.filter(f => f.uploaded),
+        allFiles: updatedFiles
+      });
     } catch (error) {
       toast({
         title: 'Erro no upload',
@@ -209,8 +215,16 @@ export function DragDropUpload({
 
   // Notificar parent component sobre mudanças nos arquivos
   React.useEffect(() => {
+    console.log('📋 DragDropUpload: Notificando mudanças nos arquivos:', {
+      totalFiles: files.length,
+      uploadedFiles: files.filter(f => f.uploaded).length,
+      filesWithUrls: files.filter(f => f.uploaded && f.url).length
+    });
     onFilesChange(files);
   }, [files, onFilesChange]);
+
+  // Mostrar lista de arquivos no componente de upload
+  const hasUploadedFiles = files.some(f => f.uploaded);
 
   return (
     <div className="space-y-4">
@@ -305,6 +319,12 @@ export function DragDropUpload({
                       {formatFileSize(fileWithPreview.file.size)}
                     </span>
                     
+                    {fileWithPreview.uploaded && (
+                      <span className="text-xs text-green-600">
+                        Enviado
+                      </span>
+                    )}
+                    
                     {!fileWithPreview.uploaded && !fileWithPreview.error && (
                       <div className="flex-1 max-w-24">
                         <Progress value={fileWithPreview.uploadProgress} className="h-1" />
@@ -331,6 +351,21 @@ export function DragDropUpload({
                 </Button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Resumo dos uploads bem-sucedidos */}
+      {hasUploadedFiles && !uploading && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center gap-2 text-green-800">
+            <CheckCircle2 className="h-4 w-4" />
+            <span className="text-sm font-medium">
+              {files.filter(f => f.uploaded).length} arquivo(s) enviado(s) com sucesso
+            </span>
+          </div>
+          <div className="text-xs text-green-600 mt-1">
+            Total: {formatFileSize(files.filter(f => f.uploaded).reduce((total, f) => total + f.file.size, 0))}
           </div>
         </div>
       )}
