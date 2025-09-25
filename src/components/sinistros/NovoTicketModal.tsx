@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { Vehicle, Policy } from '@/types/claims';
 import { VehiclesService } from '@/services/vehicles';
 import { ClaimsService } from '@/services/claims';
+import { useFrotasData } from '@/hooks/useFrotasData';
 
 type NovoTicketModalProps = {
   trigger: React.ReactNode;
@@ -28,11 +29,17 @@ export function NovoTicketModal({ trigger, onTicketCreated, initialTipo = 'sinis
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<'veiculo' | 'dados'>('veiculo');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [relatedPolicy, setRelatedPolicy] = useState<Policy | null>(undefined);
-  const [loadingSearch, setLoadingSearch] = useState(false);
   const [loadingPolicy, setLoadingPolicy] = useState(false);
+  
+  // Buscar todos os veículos da empresa do usuário
+  const { veiculos, loading: loadingVehicles } = useFrotasData({
+    search: '',
+    categoria: [],
+    status: [],
+    marcaModelo: []
+  });
   
   // Form state
   const [tipoTicket, setTipoTicket] = useState<'sinistro' | 'assistencia'>(initialTipo);
@@ -47,31 +54,33 @@ export function NovoTicketModal({ trigger, onTicketCreated, initialTipo = 'sinis
   
   const { toast } = useToast();
 
-  // Search vehicles
-  useEffect(() => {
-    if (open && searchQuery && searchQuery.length >= 3) {
-      searchVehicles();
-    }
-  }, [searchQuery, open]);
+  // Filtrar veículos baseado na busca
+  const filteredVehicles = useMemo(() => {
+    if (!searchQuery || searchQuery.length < 2) return veiculos;
+    
+    const query = searchQuery.toLowerCase();
+    return veiculos.filter(veiculo =>
+      veiculo.placa?.toLowerCase().includes(query) ||
+      veiculo.marca?.toLowerCase().includes(query) ||
+      veiculo.modelo?.toLowerCase().includes(query) ||
+      veiculo.proprietario_nome?.toLowerCase().includes(query) ||
+      veiculo.chassi?.toLowerCase().includes(query)
+    );
+  }, [veiculos, searchQuery]);
 
-  const searchVehicles = async () => {
-    try {
-      setLoadingSearch(true);
-      const results = await VehiclesService.searchVehicles(searchQuery);
-      setSearchResults(results);
-    } catch (error) {
-      console.error('Erro ao buscar veículos:', error);
-      toast({
-        title: "Erro ao buscar veículos",
-        description: "Tente novamente com outros termos.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoadingSearch(false);
-    }
-  };
+  // Converter veículo da frota para o formato esperado pelo modal
+  const convertVehicle = (veiculo: any): Vehicle => ({
+    id: veiculo.id,
+    placa: veiculo.placa,
+    chassi: veiculo.chassi,
+    marca: veiculo.marca,
+    modelo: veiculo.modelo,
+    proprietario_nome: veiculo.proprietario_nome,
+    proprietario_tipo: veiculo.proprietario_tipo
+  });
 
-  const selectVehicle = async (vehicle: Vehicle) => {
+  const selectVehicle = async (veiculo: any) => {
+    const vehicle = convertVehicle(veiculo);
     setSelectedVehicle(vehicle);
     setLoadingPolicy(true);
     
@@ -139,7 +148,6 @@ export function NovoTicketModal({ trigger, onTicketCreated, initialTipo = 'sinis
     setOpen(false);
     setStep('veiculo');
     setSearchQuery('');
-    setSearchResults([]);
     setSelectedVehicle(null);
     setRelatedPolicy(undefined);
     setTipoTicket(initialTipo);
@@ -189,26 +197,34 @@ export function NovoTicketModal({ trigger, onTicketCreated, initialTipo = 'sinis
                 </div>
               </div>
 
-              {loadingSearch && (
+              {loadingVehicles && (
                 <div className="text-center py-4 text-muted-foreground">
-                  Buscando veículos...
+                  Carregando veículos...
                 </div>
               )}
 
-              {searchResults.length > 0 && (
+              {!loadingVehicles && filteredVehicles.length > 0 && (
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {searchResults.map((vehicle) => (
+                  {filteredVehicles.map((veiculo) => (
                     <div
-                      key={vehicle.id}
+                      key={veiculo.id}
                       className="p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => selectVehicle(vehicle)}
+                      onClick={() => selectVehicle(veiculo)}
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <div className="font-medium">{vehicle.placa}</div>
+                          <div className="font-medium">{veiculo.placa}</div>
                           <div className="text-sm text-muted-foreground">
-                            {vehicle.marca} {vehicle.modelo} • {vehicle.proprietario_nome || 'N/A'}
+                            {veiculo.marca} {veiculo.modelo} • {veiculo.proprietario_nome || 'N/A'}
                           </div>
+                          {veiculo.status_seguro && (
+                            <Badge 
+                              variant={veiculo.status_seguro === 'com_seguro' ? 'default' : 'secondary'}
+                              className="mt-1 text-xs"
+                            >
+                              {veiculo.status_seguro === 'com_seguro' ? 'Com Seguro' : 'Sem Seguro'}
+                            </Badge>
+                          )}
                         </div>
                         <Badge variant="outline">Veículo</Badge>
                       </div>
@@ -217,10 +233,17 @@ export function NovoTicketModal({ trigger, onTicketCreated, initialTipo = 'sinis
                 </div>
               )}
 
-              {searchQuery && searchQuery.length >= 3 && !loadingSearch && searchResults.length === 0 && (
+              {!loadingVehicles && searchQuery && searchQuery.length >= 2 && filteredVehicles.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <div className="text-lg font-medium mb-2">Nenhum veículo encontrado</div>
-                  <div className="text-sm">Tente buscar por placa, chassi ou proprietário</div>
+                  <div className="text-sm">Tente buscar por placa, chassi, marca ou proprietário</div>
+                </div>
+              )}
+
+              {!loadingVehicles && !searchQuery && veiculos.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-lg font-medium mb-2">Nenhum veículo cadastrado</div>
+                  <div className="text-sm">Cadastre veículos na gestão de frotas primeiro</div>
                 </div>
               )}
             </div>
