@@ -46,16 +46,8 @@ export function DragDropUpload({
   const fileIdCounter = useRef(0);
 
   const uploadFile = useCallback(async (fileWithPreview: FileWithPreview): Promise<FileWithPreview> => {
-    console.log('📤 uploadFile chamado para:', fileWithPreview.file.name, {
-      publicMode,
-      publicPath,
-      bucketName,
-      userId: user?.id
-    });
-
     // Para modo público, não verificar autenticação
     if (!publicMode && !user?.id) {
-      console.log('❌ uploadFile: Usuário não autenticado');
       throw new Error('Usuário não autenticado');
     }
 
@@ -69,10 +61,7 @@ export function DragDropUpload({
         ? `${publicPath}/${fileName}` 
         : `${user?.id}/${fileName}`;
 
-      console.log('📁 Caminho do arquivo:', filePath);
-
       // Upload para o Supabase Storage
-      console.log('🚀 Iniciando upload para Supabase...');
       const { data, error } = await supabase.storage
         .from(bucketName)
         .upload(filePath, fileWithPreview.file, {
@@ -85,14 +74,12 @@ export function DragDropUpload({
         throw error;
       }
 
-      console.log('✅ Upload bem-sucedido:', data);
+      console.log('✅ Upload realizado:', filePath);
 
       // Obter URL do arquivo
       const { data: urlData } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
-
-      console.log('🔗 URL pública obtida:', urlData.publicUrl);
 
       return {
         ...fileWithPreview,
@@ -113,17 +100,14 @@ export function DragDropUpload({
   }, [user?.id, bucketName, publicMode, publicPath]);
 
   const processFiles = useCallback(async (acceptedFiles: File[]) => {
-    console.log('🔥 processFiles chamado!', { 
-      acceptedFiles: acceptedFiles.length, 
+    console.log('🔄 Processando arquivos:', { 
+      quantidade: acceptedFiles.length, 
       publicMode, 
-      userId: user?.id,
-      bucketName,
-      publicPath 
+      bucketName 
     });
 
     // Para modo público, não verificar autenticação
     if (!publicMode && !user?.id) {
-      console.log('❌ Erro: usuário não autenticado e não está em modo público');
       toast({
         title: 'Erro de autenticação',
         description: 'Você precisa estar logado para fazer upload de arquivos',
@@ -132,11 +116,8 @@ export function DragDropUpload({
       return;
     }
 
-    console.log('✅ Verificação de autenticação passou');
-
     // Verificar limites
     if (files.length + acceptedFiles.length > maxFiles) {
-      console.log('❌ Erro: muitos arquivos', { current: files.length, new: acceptedFiles.length, max: maxFiles });
       toast({
         title: 'Muitos arquivos',
         description: `Máximo ${maxFiles} arquivos permitidos`,
@@ -144,8 +125,6 @@ export function DragDropUpload({
       });
       return;
     }
-
-    console.log('✅ Verificação de limites passou');
 
     // Criar objetos FileWithPreview
     const newFilesWithPreview: FileWithPreview[] = acceptedFiles.map(file => ({
@@ -209,14 +188,7 @@ export function DragDropUpload({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles, rejectedFiles) => {
-      console.log('🎯 onDrop chamado!', { 
-        acceptedFiles: acceptedFiles.length, 
-        rejectedFiles: rejectedFiles.length,
-        rejected: rejectedFiles.map(r => ({ file: r.file.name, errors: r.errors.map(e => e.message) }))
-      });
-      
       if (rejectedFiles.length > 0) {
-        console.log('❌ Arquivos rejeitados:', rejectedFiles);
         rejectedFiles.forEach(rejection => {
           rejection.errors.forEach(error => {
             toast({
@@ -269,11 +241,6 @@ export function DragDropUpload({
 
   // Notificar parent component sobre mudanças nos arquivos
   React.useEffect(() => {
-    console.log('📋 DragDropUpload: Notificando mudanças nos arquivos:', {
-      totalFiles: files.length,
-      uploadedFiles: files.filter(f => f.uploaded).length,
-      filesWithUrls: files.filter(f => f.uploaded && f.url).length
-    });
     onFilesChange(files);
   }, [files, onFilesChange]);
 

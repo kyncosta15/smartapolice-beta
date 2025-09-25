@@ -258,17 +258,17 @@ export function FleetRequestDetailsModal({
             </Card>
           )}
 
-          {/* Documentos Anexos (da tabela fleet_request_documents) */}
-          {(documents.length > 0 || documentsLoading) && (
+          {/* Documentos Anexos - Seção Unificada */}
+          {((documents.length > 0 || documentsLoading) || (request.anexos && request.anexos.length > 0)) && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <FileText className="h-5 w-5" />
                   Documentos Anexos
                   {documentsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {documents.length > 0 && (
+                  {!documentsLoading && (
                     <Badge variant="outline">
-                      {documents.length} arquivo{documents.length > 1 ? 's' : ''}
+                      {documents.length + (request.anexos?.length || 0)} arquivo{(documents.length + (request.anexos?.length || 0)) > 1 ? 's' : ''}
                     </Badge>
                   )}
                 </CardTitle>
@@ -279,12 +279,13 @@ export function FleetRequestDetailsModal({
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     <span className="ml-2 text-sm text-muted-foreground">Carregando documentos...</span>
                   </div>
-                ) : documents.length > 0 ? (
+                ) : (documents.length > 0 || (request.anexos && request.anexos.length > 0)) ? (
                   <div className="space-y-3">
+                    {/* Documentos da Fleet Request Documents Table */}
                     {documents.map((doc) => (
                       <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-3 flex-1">
-                          <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                          <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <div className="text-sm font-medium truncate">{doc.file_name}</div>
                             <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -295,7 +296,7 @@ export function FleetRequestDetailsModal({
                                 Enviado em {format(new Date(doc.uploaded_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                               </span>
                               {doc.mime_type && (
-                                <span className="uppercase">{doc.mime_type}</span>
+                                <span className="uppercase font-mono">{doc.mime_type.split('/')[1] || doc.mime_type}</span>
                               )}
                             </div>
                           </div>
@@ -311,6 +312,31 @@ export function FleetRequestDetailsModal({
                         </Button>
                       </div>
                     ))}
+
+                    {/* Anexos Legados (mantidos para compatibilidade) */}
+                    {request.anexos?.map((anexo, index) => (
+                      <div key={`legacy-${index}`} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <div className="flex items-center gap-3 flex-1">
+                          <FileText className="h-5 w-5 text-orange-500 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium truncate">{anexo.name}</div>
+                            <div className="flex items-center gap-3 text-xs text-orange-600">
+                              <span>{formatFileSize(anexo.size)}</span>
+                              <span>• Anexo legado</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(anexo.url, '_blank')}
+                          className="gap-1 flex-shrink-0"
+                        >
+                          <Download className="h-4 w-4" />
+                          Baixar
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="text-center py-6 text-gray-500">
@@ -318,42 +344,6 @@ export function FleetRequestDetailsModal({
                     <p className="text-sm">Nenhum documento anexado</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Anexos do Payload (legado - manter para compatibilidade) */}
-          {request.anexos && request.anexos.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <FileText className="h-5 w-5" />
-                  Anexos Legado ({request.anexos.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {request.anexos.map((anexo, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <div className="text-sm font-medium">{anexo.name}</div>
-                          <div className="text-xs text-gray-500">{formatFileSize(anexo.size)}</div>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(anexo.url, '_blank')}
-                        className="gap-1"
-                      >
-                        <Download className="h-4 w-4" />
-                        Baixar
-                      </Button>
-                    </div>
-                  ))}
-                </div>
               </CardContent>
             </Card>
           )}
