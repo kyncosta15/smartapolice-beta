@@ -2342,6 +2342,7 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           default_empresa_id: string | null
           display_name: string
@@ -2352,6 +2353,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           default_empresa_id?: string | null
           display_name?: string
@@ -2362,6 +2364,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           default_empresa_id?: string | null
           display_name?: string
