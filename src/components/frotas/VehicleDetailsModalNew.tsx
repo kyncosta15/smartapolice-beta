@@ -460,6 +460,8 @@ export function VehicleDetailsModalNew({
                 <VehicleDocumentsSection
                   vehicleId={formData.id || ''}
                   mode={mode}
+                  vehiclePlaca={formData.placa}
+                  vehicleChassi={formData.chassi}
                 />
               </TabsContent>
 

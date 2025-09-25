@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DragDropUpload } from '@/components/ui/drag-drop-upload';
+import { MigrateDocumentsButton } from './MigrateDocumentsButton';
 
 interface VehicleDocument {
   id: string;
@@ -23,9 +24,16 @@ interface VehicleDocument {
 interface VehicleDocumentsSectionProps {
   vehicleId: string;
   mode?: 'view' | 'edit';
+  vehiclePlaca?: string;
+  vehicleChassi?: string;
 }
 
-export function VehicleDocumentsSection({ vehicleId, mode = 'view' }: VehicleDocumentsSectionProps) {
+export function VehicleDocumentsSection({ 
+  vehicleId, 
+  mode = 'view', 
+  vehiclePlaca, 
+  vehicleChassi 
+}: VehicleDocumentsSectionProps) {
   const [documents, setDocuments] = useState<VehicleDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -39,14 +47,76 @@ export function VehicleDocumentsSection({ vehicleId, mode = 'view' }: VehicleDoc
   const fetchDocuments = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Buscar documentos na tabela frota_documentos (uploads diretos)
+      const { data: frotaDocs, error: frotaError } = await supabase
         .from('frota_documentos')
         .select('*')
         .eq('veiculo_id', vehicleId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setDocuments(data || []);
+      if (frotaError) throw frotaError;
+
+      // Buscar informações do veículo para usar placa/chassi
+      const { data: vehicleData, error: vehicleError } = await supabase
+        .from('frota_veiculos')
+        .select('placa, chassi, renavam')
+        .eq('id', vehicleId)
+        .single();
+
+      if (vehicleError) throw vehicleError;
+
+      let fleetRequestDocs: any[] = [];
+      
+      // Se temos dados do veículo, buscar documentos relacionados às solicitações
+      if (vehicleData) {
+        // Primeiro buscar as solicitações executadas para este veículo
+        const { data: requestsData, error: requestsError } = await supabase
+          .from('fleet_change_requests')
+          .select('id')
+          .or(`placa.eq.${vehicleData.placa},chassi.eq.${vehicleData.chassi}`)
+          .eq('status', 'executado');
+
+        if (!requestsError && requestsData && requestsData.length > 0) {
+          // Buscar documentos para essas solicitações
+          const requestIds = requestsData.map(r => r.id);
+          const { data: docsData, error: docsError } = await supabase
+            .from('fleet_request_documents')
+            .select('*')
+            .in('request_id', requestIds);
+
+          if (!docsError && docsData) {
+            fleetRequestDocs = docsData.map((doc: any) => ({
+              ...doc,
+              origem: 'external',
+              tipo: getDocumentType(doc.file_name),
+              url: doc.file_url,
+              nome_arquivo: doc.file_name,
+              tamanho_arquivo: doc.file_size,
+              tipo_mime: doc.mime_type
+            }));
+          }
+        }
+      }
+
+      // Combinar documentos de ambas as fontes
+      const allDocs = [
+        ...(frotaDocs || []).map(doc => ({
+          ...doc,
+          origem: doc.origem || 'upload'
+        })),
+        ...fleetRequestDocs
+      ];
+
+      // Remover duplicatas baseado no nome do arquivo e tamanho
+      const uniqueDocs = allDocs.filter((doc, index, arr) => 
+        arr.findIndex(d => 
+          d.nome_arquivo === doc.nome_arquivo && 
+          d.tamanho_arquivo === doc.tamanho_arquivo
+        ) === index
+      );
+
+      setDocuments(uniqueDocs);
     } catch (error) {
       console.error('Erro ao buscar documentos:', error);
       toast.error('Erro ao carregar documentos do veículo');
@@ -104,9 +174,9 @@ export function VehicleDocumentsSection({ vehicleId, mode = 'view' }: VehicleDoc
 
   const getStatusBadge = (origem: string) => {
     const config = {
-      upload: { color: 'bg-blue-100 text-blue-800', label: 'Uploaded' },
+      upload: { color: 'bg-blue-100 text-blue-800', label: 'Upload Direto' },
       import: { color: 'bg-green-100 text-green-800', label: 'Importado' },
-      external: { color: 'bg-purple-100 text-purple-800', label: 'Externo' },
+      external: { color: 'bg-purple-100 text-purple-800', label: 'Link Externo' },
     };
     
     const statusConfig = config[origem as keyof typeof config] || config.upload;
@@ -167,10 +237,21 @@ export function VehicleDocumentsSection({ vehicleId, mode = 'view' }: VehicleDoc
     <div className="space-y-4 md:space-y-6">
       <Card className="p-3 md:p-6">
         <CardHeader className="px-0 pt-0">
-          <CardTitle className="text-base md:text-lg font-semibold flex items-center gap-2">
-            <FileText className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
-            Documentos do Veículo
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base md:text-lg font-semibold flex items-center gap-2">
+              <FileText className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+              Documentos do Veículo
+            </CardTitle>
+            
+            {mode === 'edit' && (vehiclePlaca || vehicleChassi) && (
+              <MigrateDocumentsButton
+                vehicleId={vehicleId}
+                vehiclePlaca={vehiclePlaca}
+                vehicleChassi={vehicleChassi}
+                onMigrated={fetchDocuments}
+              />
+            )}
+          </div>
         </CardHeader>
         <CardContent className="px-0 pb-0">
           
@@ -199,63 +280,127 @@ export function VehicleDocumentsSection({ vehicleId, mode = 'view' }: VehicleDoc
 
           {/* Lista de documentos */}
           <div className="space-y-3">
-            {documents.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <FileText className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                <p className="text-sm">Nenhum documento encontrado</p>
-                {mode === 'edit' && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Adicione documentos usando a área de upload acima
-                  </p>
-                )}
-              </div>
-            ) : (
-              documents.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
-                        {getStatusBadge(doc.origem)}
+              {documents.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+                  <p className="text-sm">Nenhum documento encontrado</p>
+                  {mode === 'edit' && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Adicione documentos usando a área de upload acima
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  {/* Seção de documentos externos */}
+                  {documents.some(doc => doc.origem === 'external') && (
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
+                        <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                        <h4 className="text-sm font-medium text-gray-700">Documentos do Link Externo</h4>
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span>{doc.tipo}</span>
-                        <span>{formatFileSize(doc.tamanho_arquivo)}</span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDistanceToNow(new Date(doc.created_at), { 
-                            addSuffix: true, 
-                            locale: ptBR 
-                          })}
-                        </span>
+                      <div className="space-y-3">
+                        {documents
+                          .filter(doc => doc.origem === 'external')
+                          .map((doc) => (
+                            <div key={doc.id} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <FileText className="h-5 w-5 text-purple-600 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
+                                    {getStatusBadge(doc.origem)}
+                                  </div>
+                                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                                    <span>{doc.tipo}</span>
+                                    <span>{formatFileSize(doc.tamanho_arquivo)}</span>
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {formatDistanceToNow(new Date(doc.created_at), { 
+                                        addSuffix: true, 
+                                        locale: ptBR 
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDownload(doc)}
+                                  className="gap-1"
+                                >
+                                  <Download className="h-4 w-4" />
+                                  Baixar
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDownload(doc)}
-                      className="gap-1"
-                    >
-                      <Download className="h-4 w-4" />
-                      Baixar
-                    </Button>
-                    {mode === 'edit' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(doc.id)}
-                        className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                  )}
+
+                  {/* Seção de documentos locais */}
+                  {documents.some(doc => doc.origem !== 'external') && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
+                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                        <h4 className="text-sm font-medium text-gray-700">Documentos Locais</h4>
+                      </div>
+                      <div className="space-y-3">
+                        {documents
+                          .filter(doc => doc.origem !== 'external')
+                          .map((doc) => (
+                            <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
+                                    {getStatusBadge(doc.origem)}
+                                  </div>
+                                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                                    <span>{doc.tipo}</span>
+                                    <span>{formatFileSize(doc.tamanho_arquivo)}</span>
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {formatDistanceToNow(new Date(doc.created_at), { 
+                                        addSuffix: true, 
+                                        locale: ptBR 
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDownload(doc)}
+                                  className="gap-1"
+                                >
+                                  <Download className="h-4 w-4" />
+                                  Baixar
+                                </Button>
+                                {mode === 'edit' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDelete(doc.id)}
+                                    className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))
-            )}
+              )}
           </div>
         </CardContent>
       </Card>
