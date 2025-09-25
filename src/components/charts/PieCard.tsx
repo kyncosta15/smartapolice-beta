@@ -147,7 +147,7 @@ export default function PieCard({
           <Button
             variant="ghost"
             size="sm"
-            className="md:hidden"
+            className="xl:hidden"
             onClick={() => setShowLegend(!showLegend)}
             aria-expanded={showLegend}
             aria-controls={`legend-${title.replace(/\s+/g, '-').toLowerCase()}`}
@@ -167,9 +167,9 @@ export default function PieCard({
         </div>
       </CardHeader>
       <CardContent className="p-3 md:p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_180px] gap-4 items-start">
           {/* Chart Area */}
-          <div className="h-64 w-full">
+          <div className="h-64 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart aria-label={`Gráfico de ${title}`}>
                 <Pie
@@ -178,8 +178,8 @@ export default function PieCard({
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={90}
+                  innerRadius={40}
+                  outerRadius={80}
                   paddingAngle={2}
                   isAnimationActive={false}
                   labelLine={false}
@@ -197,14 +197,40 @@ export default function PieCard({
           </div>
 
           {/* Desktop Legend - Always Visible */}
-          <div className="hidden lg:block">
-            <div className="text-sm font-medium text-gray-700 mb-3">Legenda</div>
-            <CustomLegend />
+          <div className="hidden xl:block">
+            <div className="text-xs font-medium text-gray-700 mb-2">Legenda</div>
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300">
+              {chartData.map((entry, index) => {
+                const percentage = total > 0 ? Math.round((entry.count / total) * 100) : 0;
+                return (
+                  <div 
+                    key={`legend-${index}`} 
+                    className="flex items-start gap-1.5 p-1.5 rounded-md hover:bg-gray-50 transition-colors"
+                    role="listitem"
+                    aria-label={`${entry.name}: ${entry.count} veículos, ${percentage}%`}
+                  >
+                    <div 
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1"
+                      style={{ backgroundColor: entry.color }}
+                      aria-hidden="true"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium text-gray-900 leading-tight truncate">
+                        {entry.name}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-0.5">
+                        {entry.count} ({percentage}%)
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Mobile Legend - Collapsible */}
+          {/* Mobile/Tablet Legend - Collapsible */}
           <div 
-            className={`lg:hidden transition-all duration-200 ease-in-out ${
+            className={`xl:hidden transition-all duration-200 ease-in-out ${
               showLegend ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
             }`}
             id={`legend-${title.replace(/\s+/g, '-').toLowerCase()}`}

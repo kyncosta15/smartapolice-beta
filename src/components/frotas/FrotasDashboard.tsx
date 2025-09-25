@@ -90,7 +90,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Charts and Analytics */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 2xl:grid-cols-3">
         <PieCard
           title="Distribuição por Categoria"
           icon={<PieChartIcon className="h-5 w-5 text-blue-600" />}
