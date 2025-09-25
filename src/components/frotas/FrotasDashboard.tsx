@@ -9,8 +9,6 @@ import PieCard from '@/components/charts/PieCard';
 import { shouldUseUIV2 } from '@/config/features';
 // Phase 1 - UI V2 components
 import { FrotasEmptyState } from './FrotasEmptyState';
-import { N8NTestButton } from '@/components/N8NTestButton';
-import N8NTestEmpresaButton from '@/components/N8NTestEmpresaButton';
 
 // Consistent color palette for all charts
 const chartColors = [
