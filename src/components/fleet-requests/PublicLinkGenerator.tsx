@@ -31,18 +31,20 @@ interface PublicLinkGeneratorProps {
 export function PublicLinkGenerator({ open, onOpenChange }: PublicLinkGeneratorProps) {
   const { generatePublicLink, generating } = usePublicFleetTokens();
   const { toast } = useToast();
-  const [validityDays, setValidityDays] = useState(7);
   const [generatedLink, setGeneratedLink] = useState<{
     link: string;
     whatsappMessage: string;
-    expiresAt: string;
     token: string;
   } | null>(null);
 
   const handleGenerateLink = async () => {
     try {
-      const result = await generatePublicLink(validityDays);
-      setGeneratedLink(result);
+      const result = await generatePublicLink(0); // Link permanente
+      setGeneratedLink({
+        link: result.link,
+        whatsappMessage: result.whatsappMessage,
+        token: result.token
+      });
     } catch (error) {
       // Error is handled in the hook
     }
@@ -66,7 +68,6 @@ export function PublicLinkGenerator({ open, onOpenChange }: PublicLinkGeneratorP
 
   const handleClose = () => {
     setGeneratedLink(null);
-    setValidityDays(7);
     onOpenChange(false);
   };
 
@@ -83,49 +84,32 @@ export function PublicLinkGenerator({ open, onOpenChange }: PublicLinkGeneratorP
         <div className="space-y-6">
           {!generatedLink ? (
             <>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="validity">Validade do Link</Label>
-                  <Select value={validityDays.toString()} onValueChange={(value) => setValidityDays(Number(value))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 dia</SelectItem>
-                      <SelectItem value="3">3 dias</SelectItem>
-                      <SelectItem value="7">7 dias</SelectItem>
-                      <SelectItem value="15">15 dias</SelectItem>
-                      <SelectItem value="30">30 dias</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Link className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="font-medium text-blue-900">Como funciona</h3>
-                        <div className="text-sm text-blue-700 space-y-1">
-                          <p>• O link permite que outros setores solicitem alterações na frota</p>
-                          <p>• Não é necessário fazer login para preencher o formulário</p>
-                          <p>• Todas as solicitações passam por aprovação antes de serem executadas</p>
-                          <p>• Você pode enviar o link por WhatsApp, email ou outros meios</p>
-                        </div>
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Link className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="font-medium text-blue-900">Link Permanente para Solicitações</h3>
+                      <div className="text-sm text-blue-700 space-y-1">
+                        <p>• O link permite que outros setores solicitem alterações na frota</p>
+                        <p>• Não é necessário fazer login para preencher o formulário</p>
+                        <p>• Todas as solicitações passam por aprovação antes de serem executadas</p>
+                        <p>• Você pode enviar o link por WhatsApp, email ou outros meios</p>
+                        <p>• <strong>Este link não expira e pode ser usado sempre</strong></p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={handleClose}>
                   Cancelar
                 </Button>
                 <Button onClick={handleGenerateLink} disabled={generating}>
-                  {generating ? 'Gerando...' : 'Gerar Link'}
+                  {generating ? 'Gerando...' : 'Gerar Link Permanente'}
                 </Button>
               </div>
             </>
@@ -133,16 +117,16 @@ export function PublicLinkGenerator({ open, onOpenChange }: PublicLinkGeneratorP
             <>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">Link Gerado com Sucesso!</h3>
-                  <Badge variant="outline" className="gap-1">
-                    <Calendar className="h-3 w-3" />
-                    Válido até {new Date(generatedLink.expiresAt).toLocaleDateString('pt-BR')}
+                  <h3 className="text-lg font-medium">Link Permanente Gerado!</h3>
+                  <Badge variant="outline" className="gap-1 bg-green-50 text-green-700 border-green-200">
+                    <Link className="h-3 w-3" />
+                    Link Permanente
                   </Badge>
                 </div>
 
                 {/* Link Público */}
                 <div className="space-y-2">
-                  <Label>Link Público</Label>
+                  <Label>Link Permanente</Label>
                   <div className="flex gap-2">
                     <Input value={generatedLink.link} readOnly className="flex-1" />
                     <Button
@@ -176,11 +160,11 @@ export function PublicLinkGenerator({ open, onOpenChange }: PublicLinkGeneratorP
                 </div>
 
                 {/* Informações do Token */}
-                <Card className="bg-gray-50">
+                <Card className="bg-green-50 border-green-200">
                   <CardContent className="pt-6">
-                    <div className="text-sm text-gray-600 space-y-1">
+                    <div className="text-sm text-green-700 space-y-1">
                       <div><strong>Token:</strong> {generatedLink.token}</div>
-                      <div><strong>Expira em:</strong> {new Date(generatedLink.expiresAt).toLocaleString('pt-BR')}</div>
+                      <div><strong>Status:</strong> Permanente - Não expira</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -191,7 +175,7 @@ export function PublicLinkGenerator({ open, onOpenChange }: PublicLinkGeneratorP
                   Fechar
                 </Button>
                 <Button onClick={() => setGeneratedLink(null)}>
-                  Gerar Novo Link
+                  Gerar Novo Link Permanente
                 </Button>
               </div>
             </>
