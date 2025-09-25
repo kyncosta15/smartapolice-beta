@@ -265,7 +265,11 @@ export const AuthPage = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="cliente">Cliente</SelectItem>
+                          <SelectItem value="rh">RH</SelectItem>
                           <SelectItem value="administrador">Administrador</SelectItem>
+                          <SelectItem value="corretora_admin">Corretora Admin</SelectItem>
+                          <SelectItem value="gestor_rh">Gestor RH</SelectItem>
+                          <SelectItem value="financeiro">Financeiro</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

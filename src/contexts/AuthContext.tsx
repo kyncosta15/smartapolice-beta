@@ -11,13 +11,13 @@ export interface ExtendedUser extends User {
   avatar?: string;
 }
 
-export type UserRole = 'rh' | 'administrador';
+export type UserRole = 'cliente' | 'rh' | 'administrador' | 'corretora_admin' | 'gestor_rh' | 'financeiro';
 
 interface UserProfile {
   id: string;
   email: string;
   full_name: string;
-  role: 'rh' | 'administrador';
+  role: 'cliente' | 'rh' | 'administrador' | 'corretora_admin' | 'gestor_rh' | 'financeiro';
   company?: string;
   avatar_url?: string;
   phone?: string;
@@ -497,12 +497,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
 
     try {
-      // Primeiro, criar o usuário no Supabase Auth
+      // Primeiro, criar o usuário no Supabase Auth com metadados
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: userData.name,
+            role: userData.role,
+            company: userData.company || '',
+            phone: userData.phone || '',
+            classification: userData.classification || 'Corretora'
+          }
         }
       });
 
@@ -516,6 +523,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return { success: false, error: 'Este email já está cadastrado. Tente fazer login.' };
         } else if (authError.message.includes('Password should be at least 6 characters')) {
           return { success: false, error: 'A senha deve ter pelo menos 6 caracteres.' };
+        } else if (authError.message.includes('Database error saving new user')) {
+          return { success: false, error: 'Erro ao salvar dados do usuário. Tente novamente.' };
         }
         
         return { success: false, error: authError.message };
@@ -528,26 +537,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('✅ Usuário auth criado:', authData.user.id);
 
-      // Então, criar o perfil na tabela users
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email: userData.email,
-          name: userData.name,
-          password_hash: 'managed_by_auth',
-          role: userData.role,
-          company: userData.company,
-          phone: userData.phone,
-          classification: userData.classification || 'Corretora'
-        });
-
-      if (profileError) {
-        console.error('❌ Erro ao criar perfil:', profileError);
-        return { success: false, error: profileError.message };
-      }
-
-      console.log('✅ Perfil criado com sucesso');
+      // A função handle_new_user será executada automaticamente pelo trigger
+      // Não precisamos mais criar manualmente na tabela users
+      
+      console.log('✅ Usuário registrado com sucesso');
       return { success: true };
     } catch (error) {
       console.error('❌ Erro inesperado no registro:', error);

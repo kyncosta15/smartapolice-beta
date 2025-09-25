@@ -31,7 +31,7 @@ export const AuthPage = () => {
     confirmPassword: '',
     fullName: '',
     company: '',
-    role: 'rh' as 'rh' | 'administrador',
+    role: 'cliente' as 'cliente' | 'rh' | 'administrador' | 'corretora_admin' | 'gestor_rh' | 'financeiro',
     phone: '',
     department: ''
   });
@@ -120,9 +120,10 @@ export const AuthPage = () => {
           data: {
             full_name: signupForm.fullName,
             role: signupForm.role,
-            company: signupForm.company,
-            phone: signupForm.phone,
-            department: signupForm.department
+            company: signupForm.company || '',
+            phone: signupForm.phone || '',
+            department: signupForm.department || '',
+            classification: 'Corretora'
           }
         }
       });
@@ -147,7 +148,7 @@ export const AuthPage = () => {
         confirmPassword: '',
         fullName: '',
         company: '',
-        role: 'rh',
+        role: 'cliente',
         phone: '',
         department: ''
       });
