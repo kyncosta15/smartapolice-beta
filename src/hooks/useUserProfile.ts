@@ -102,42 +102,80 @@ export function useUserProfile() {
         setProfile(profileData);
       }
 
-      // Load user memberships
-      const { data: membershipData, error: membershipError } = await supabase
-        .from('user_memberships')
-        .select(`
-          *,
-          empresa:empresas(id, nome, slug)
-        `)
-        .eq('user_id', user.id);
+      // Check if user is 'cliente' and create specific company if needed
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-      if (membershipError) {
-        throw membershipError;
-      }
-
-      setMemberships(membershipData || []);
-
-      // Set active empresa
-      const profileDefault = (profileData as any)?.default_empresa_id;
-      console.log('🔍 DEBUG Profile default empresa:', profileDefault);
-      console.log('🔍 DEBUG Memberships data:', membershipData);
-      
-      if (profileDefault) {
-        setActiveEmpresa(profileDefault);
-        console.log('🔍 DEBUG Usando empresa do perfil:', profileDefault);
-      } else if (membershipData && membershipData.length > 0) {
-        const empresaId = membershipData[0].empresa_id;
-        setActiveEmpresa(empresaId);
-        console.log('🔍 DEBUG Usando primeira empresa dos memberships:', empresaId);
+      if (userData?.role === 'cliente') {
+        console.log('🔍 DEBUG Usuário é cliente, criando/obtendo empresa específica...');
         
-        // Verificar se a empresa existe
-        const empresaInfo = membershipData.find(m => m.empresa_id === empresaId);
-        console.log('🔍 DEBUG Info da empresa ativa:', empresaInfo);
+        // Call RPC function to get or create user-specific company
+        const { data: empresaId, error: empresaError } = await supabase
+          .rpc('get_user_empresa_id');
+
+        if (empresaError) {
+          console.error('❌ Erro ao obter empresa específica:', empresaError);
+          throw empresaError;
+        }
+
+        console.log('✅ Empresa específica obtida/criada:', empresaId);
+        
+        // Load memberships again after company creation
+        const { data: membershipData, error: membershipError } = await supabase
+          .from('user_memberships')
+          .select(`
+            *,
+            empresa:empresas(id, nome, slug)
+          `)
+          .eq('user_id', user.id);
+
+        if (membershipError) {
+          throw membershipError;
+        }
+
+        setMemberships(membershipData || []);
+        setActiveEmpresa(empresaId);
+        console.log('🔍 DEBUG Empresa específica ativa:', empresaId);
+        
       } else {
-        console.log('🔍 DEBUG Nenhuma empresa encontrada - usuário sem memberships');
-        // Forçar o uso da empresa padrão
-        setActiveEmpresa('00000000-0000-0000-0000-000000000001');
-        console.log('🔍 DEBUG Forçando empresa padrão: Clientes Individuais');
+        // For non-client users, use existing logic
+        const { data: membershipData, error: membershipError } = await supabase
+          .from('user_memberships')
+          .select(`
+            *,
+            empresa:empresas(id, nome, slug)
+          `)
+          .eq('user_id', user.id);
+
+        if (membershipError) {
+          throw membershipError;
+        }
+
+        setMemberships(membershipData || []);
+
+        // Set active empresa
+        const profileDefault = (profileData as any)?.default_empresa_id;
+        console.log('🔍 DEBUG Profile default empresa:', profileDefault);
+        console.log('🔍 DEBUG Memberships data:', membershipData);
+        
+        if (profileDefault) {
+          setActiveEmpresa(profileDefault);
+          console.log('🔍 DEBUG Usando empresa do perfil:', profileDefault);
+        } else if (membershipData && membershipData.length > 0) {
+          const empresaId = membershipData[0].empresa_id;
+          setActiveEmpresa(empresaId);
+          console.log('🔍 DEBUG Usando primeira empresa dos memberships:', empresaId);
+          
+          const empresaInfo = membershipData.find(m => m.empresa_id === empresaId);
+          console.log('🔍 DEBUG Info da empresa ativa:', empresaInfo);
+        } else {
+          console.log('🔍 DEBUG Nenhuma empresa encontrada - usuário sem memberships');
+          setActiveEmpresa('00000000-0000-0000-0000-000000000001');
+          console.log('🔍 DEBUG Forçando empresa padrão: Clientes Individuais');
+        }
       }
 
     } catch (err) {
