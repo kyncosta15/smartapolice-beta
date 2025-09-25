@@ -1,13 +1,8 @@
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { DashboardContent } from '@/components/DashboardContent';
 import { Shield, Loader2 } from 'lucide-react';
-
-// Lazy load ClientDashboard
-const ClientDashboard = lazy(() => 
-  import('./ClientDashboard').then(module => ({ default: module.ClientDashboard }))
-);
 
 const AuthGuardContent = () => {
   const { user, isLoading } = useAuth();
@@ -57,23 +52,6 @@ const AuthGuardContent = () => {
 
   if (!user) {
     return null; // Redirecionamento será feito pelo useEffect
-  }
-
-  // Role-based dashboard loading
-  if (user.role === 'cliente') {
-    // Cliente users get a simplified dashboard without company/fleet access
-    return (
-      <Suspense fallback={
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Shield className="h-16 w-16 text-blue-600 mx-auto animate-pulse" />
-            <p className="text-gray-600">Carregando dashboard...</p>
-          </div>
-        </div>
-      }>
-        <ClientDashboard />
-      </Suspense>
-    );
   }
 
   return <DashboardContent />;

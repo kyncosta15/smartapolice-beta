@@ -110,6 +110,21 @@ export function ContentRenderer({
     );
   }
 
+  // Admin-only sections check
+  if (['clients', 'vidas-beneficiarios'].includes(activeSection) && 
+      user.role !== 'admin' && user.role !== 'administrador' && user.role !== 'rh' && user.role !== 'corretora_admin' && user.role !== 'gestor_rh') {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold mb-2">Acesso Restrito</h3>
+          <p className="text-muted-foreground">
+            Você não tem permissão para acessar esta seção.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   switch (activeSection) {
     case 'policies':
       return (
@@ -133,49 +148,20 @@ export function ContentRenderer({
       );
 
     case 'clients':
-      if (user?.role === 'administrador') {
-        return (
-            <div className="p-6">
-              <ClientsList />
-            </div>
-        );
-      }
       return (
         <div className="p-6">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Acesso Restrito
-            </h3>
-            <p className="text-gray-600">
-              Esta seção é disponível apenas para administradores.
-            </p>
-          </div>
+          <ClientsList />
         </div>
       );
 
-    case 'users':
-      // Only show for admins
-      if (user?.role === 'administrador') {
-        return (
-          <div className="p-6">
-            <VidasBeneficiarios allPolicies={allPolicies} />
-          </div>
-        );
-      }
+    case 'vidas-beneficiarios':
       return (
         <div className="p-6">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Acesso Restrito
-            </h3>
-            <p className="text-gray-600">
-              Esta seção é disponível apenas para administradores.
-            </p>
-          </div>
+          <VidasBeneficiarios allPolicies={allPolicies} />
         </div>
       );
 
-    case 'contatos':
+    case 'contato':
       return (
         <div className="p-6">
           <ContactSection />
@@ -219,7 +205,6 @@ export function ContentRenderer({
         </div>
       );
 
-    case 'claims':
     case 'sinistros':
       return (
         <div className="p-6">
@@ -232,66 +217,34 @@ export function ContentRenderer({
       );
 
     case 'frotas':
-      // Only allow admin roles to access fleet management
-      if (['administrador', 'admin', 'corretora_admin', 'rh', 'gestor_rh'].includes(user?.role || '')) {
-        return (
-          <GestaoFrotas />
-        );
-      }
       return (
-        <div className="p-6">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Acesso Restrito
-            </h3>
-            <p className="text-gray-600">
-              Gestão de Frotas é disponível apenas para administradores e RH.
-            </p>
-          </div>
-        </div>
+        <GestaoFrotas />
       );
 
-    case 'vehicles':
     case 'veiculos':
-      // Only allow admin roles to access vehicle management
-      if (['administrador', 'admin', 'corretora_admin', 'rh', 'gestor_rh'].includes(user?.role || '')) {
-        return (
-          <div className="p-6">
-            <VeiculosManagement 
-              allPolicies={allPolicies}
-              onPolicyUpdate={onPolicyUpdate}
-              onPolicySelect={onPolicySelect}
-            />
-          </div>
-        );
-      }
       return (
         <div className="p-6">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Acesso Restrito
-            </h3>
-            <p className="text-gray-600">
-              Gestão de Veículos é disponível apenas para administradores e RH.
-            </p>
-          </div>
+          <VeiculosManagement 
+            allPolicies={allPolicies}
+            onPolicyUpdate={onPolicyUpdate}
+            onPolicySelect={onPolicySelect}
+          />
         </div>
       );
 
-    case 'regions':
+    case 'regional-metrics':
       return (
         <div className="p-6">
           <RegionalMetrics />
         </div>
       );
 
-    case 'n8n-test':
+    case 'n8n-data-tester':
       return (
         <div className="p-6">
           <N8NDataTester />
         </div>
       );
-
 
     default:
       return (
