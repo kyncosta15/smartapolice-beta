@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 // Configuração de URLs do N8N
-const N8N_BASE_URL = 'https://oficialsmartapolice.app.n8n.cloud';
+const N8N_BASE_URL = 'https://rcorpoficial.app.n8n.cloud';
 
 // URLs para diferentes ambientes
 export const N8N_URLS = {
@@ -134,14 +134,24 @@ export class N8NUploadService {
       try {
         console.log(`Tentativa ${attempt + 1}/${this.RETRY_COUNT + 1}`);
         
+        // Criar um AbortController para timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
+        
         const response = await fetch(url, {
           method: 'POST',
           body: formData,
           // NÃO definir Content-Type - deixar o browser definir com boundary
           headers: {
             'Accept': 'application/json'
-          }
+          },
+          // Adicionar configurações para evitar problemas de CORS e timeout
+          mode: 'cors',
+          credentials: 'omit',
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         console.log('Status da resposta:', response.status, response.statusText);
 
@@ -212,6 +222,32 @@ export class N8NUploadService {
 
       } catch (error: any) {
         lastError = error;
+        
+        console.error(`Erro na tentativa ${attempt + 1}:`, error);
+        
+        // Tratamento específico para diferentes tipos de erro
+        if (error.name === 'AbortError') {
+          // Timeout - tentar novamente se ainda há tentativas
+          if (attempt < this.RETRY_COUNT) {
+            console.log('⏱️ Timeout - tentando novamente em 3 segundos...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            continue;
+          } else {
+            throw new Error(`Timeout na conexão com o webhook N8N após 30 segundos. Verifique se o endpoint ${url} está respondendo corretamente.`);
+          }
+        }
+        
+        if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+          // Erro de rede/CORS - tentar novamente se ainda há tentativas
+          if (attempt < this.RETRY_COUNT) {
+            console.log('🔄 Erro de rede/CORS - tentando novamente em 2 segundos...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          } else {
+            // Última tentativa - dar erro mais específico
+            throw new Error(`Falha na conexão com o webhook N8N. Verifique se o endpoint ${url} está acessível e se o servidor permite requisições CORS.`);
+          }
+        }
         
         // Se é erro de rede e ainda temos tentativas
         if (error.name === 'TypeError' && error.message.includes('fetch') && attempt < this.RETRY_COUNT) {
