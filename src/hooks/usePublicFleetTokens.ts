@@ -27,8 +27,14 @@ export function usePublicFleetTokens() {
 
       // Gerar token único
       const token = generateSecureToken();
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + validityDays);
+      
+      // Se validityDays for 0 ou menor, criar link permanente (sem expiração)
+      const isPermanent = validityDays <= 0;
+      const expiresAt = isPermanent ? null : new Date();
+      
+      if (!isPermanent && expiresAt) {
+        expiresAt.setDate(expiresAt.getDate() + validityDays);
+      }
 
       // Salvar token no banco
       const { data, error } = await supabase
@@ -36,7 +42,7 @@ export function usePublicFleetTokens() {
         .insert({
           token,
           empresa_id: empresa.id,
-          expires_at: expiresAt.toISOString(),
+          expires_at: isPermanent ? null : expiresAt?.toISOString(),
           created_by: user.id,
         })
         .select()
@@ -53,20 +59,20 @@ export function usePublicFleetTokens() {
         `🚗 *Solicitação de Alteração de Frota*\n\n` +
         `Você pode solicitar alterações na frota através deste link:\n\n` +
         `${publicUrl}\n\n` +
-        `⏰ Link válido até ${expiresAt.toLocaleDateString('pt-BR')}\n\n` +
+        `${isPermanent ? '🔗 Link permanente - não expira' : `⏰ Link válido até ${expiresAt?.toLocaleDateString('pt-BR')}`}\n\n` +
         `_Link gerado por: ${user.name}_`
       );
 
       const result = {
         link: publicUrl,
         whatsappMessage: `https://wa.me/?text=${whatsappMessage}`,
-        expiresAt: expiresAt.toISOString(),
+        ...(isPermanent ? {} : { expiresAt: expiresAt?.toISOString() }),
         token,
       };
 
       toast({
         title: 'Link gerado com sucesso!',
-        description: `Link válido até ${expiresAt.toLocaleDateString('pt-BR')}`,
+        description: isPermanent ? 'Link permanente criado' : `Link válido até ${expiresAt?.toLocaleDateString('pt-BR')}`,
       });
 
       return result;
