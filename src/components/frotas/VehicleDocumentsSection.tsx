@@ -39,12 +39,14 @@ export function VehicleDocumentsSection({
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (vehicleId) {
+    if (vehicleId && vehicleId.trim() !== '') {
       fetchDocuments();
     }
   }, [vehicleId]);
 
   const fetchDocuments = async () => {
+    if (loading) return; // Prevent multiple simultaneous fetches
+    
     try {
       setLoading(true);
       
@@ -55,7 +57,10 @@ export function VehicleDocumentsSection({
         .eq('veiculo_id', vehicleId)
         .order('created_at', { ascending: false });
 
-      if (frotaError) throw frotaError;
+      if (frotaError) {
+        console.error('Erro ao buscar documentos da frota:', frotaError);
+        throw frotaError;
+      }
 
       // Buscar informações do veículo para usar placa/chassi
       const { data: vehicleData, error: vehicleError } = await supabase
@@ -64,7 +69,10 @@ export function VehicleDocumentsSection({
         .eq('id', vehicleId)
         .single();
 
-      if (vehicleError) throw vehicleError;
+      if (vehicleError && vehicleError.code !== 'PGRST116') {
+        console.error('Erro ao buscar dados do veículo:', vehicleError);
+        throw vehicleError;
+      }
 
       let fleetRequestDocs: any[] = [];
       
@@ -120,6 +128,7 @@ export function VehicleDocumentsSection({
     } catch (error) {
       console.error('Erro ao buscar documentos:', error);
       toast.error('Erro ao carregar documentos do veículo');
+      setDocuments([]); // Reset documents on error
     } finally {
       setLoading(false);
     }
