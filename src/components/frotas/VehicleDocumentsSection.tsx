@@ -41,17 +41,39 @@ export function VehicleDocumentsSection({
 
   const getDocumentType = useCallback((fileName: string): string => {
     const ext = fileName.toLowerCase().split('.').pop();
-    const typeMap: Record<string, string> = {
-      pdf: 'PDF',
-      doc: 'DOC',
-      docx: 'DOCX',
-      jpg: 'Imagem',
-      jpeg: 'Imagem',
-      png: 'Imagem',
-      xls: 'Planilha',
-      xlsx: 'Planilha',
+    const lowerFileName = fileName.toLowerCase();
+    
+    // Mapear baseado no nome do arquivo e extensão para tipos permitidos
+    if (lowerFileName.includes('nf') || lowerFileName.includes('nota') || lowerFileName.includes('fiscal')) {
+      return 'nf';
+    }
+    if (lowerFileName.includes('crlv') || lowerFileName.includes('documento') || lowerFileName.includes('veiculo')) {
+      return 'crlv';
+    }
+    if (lowerFileName.includes('termo') && lowerFileName.includes('responsabilidade')) {
+      return 'termo_responsabilidade';
+    }
+    if (lowerFileName.includes('termo') && lowerFileName.includes('devolucao')) {
+      return 'termo_devolucao';
+    }
+    if (lowerFileName.includes('contrato')) {
+      return 'contrato';
+    }
+    
+    // Para todos os outros casos, usar 'outro'
+    return 'outro';
+  }, []);
+
+  const getDocumentTypeLabel = useCallback((tipo: string): string => {
+    const labelMap: Record<string, string> = {
+      nf: 'Nota Fiscal',
+      crlv: 'CRLV',
+      termo_responsabilidade: 'Termo de Responsabilidade',
+      termo_devolucao: 'Termo de Devolução',
+      contrato: 'Contrato',
+      outro: 'Outro Documento',
     };
-    return typeMap[ext || ''] || 'Documento';
+    return labelMap[tipo] || 'Documento';
   }, []);
 
   const fetchDocuments = useCallback(async () => {
@@ -354,17 +376,17 @@ export function VehicleDocumentsSection({
                                   <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
                                   {getStatusBadge(doc.origem)}
                                 </div>
-                                <div className="flex items-center gap-4 text-xs text-purple-600">
-                                  <span>{doc.tipo}</span>
-                                  <span>{formatFileSize(doc.tamanho_arquivo)}</span>
-                                  <span className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    {formatDistanceToNow(new Date(doc.created_at), { 
-                                      addSuffix: true, 
-                                      locale: ptBR 
-                                    })}
-                                  </span>
-                                </div>
+                                  <div className="flex items-center gap-4 text-xs text-purple-600">
+                                    <span>{getDocumentTypeLabel(doc.tipo)}</span>
+                                    <span>{formatFileSize(doc.tamanho_arquivo)}</span>
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {formatDistanceToNow(new Date(doc.created_at), { 
+                                        addSuffix: true, 
+                                        locale: ptBR 
+                                      })}
+                                    </span>
+                                  </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
@@ -405,7 +427,7 @@ export function VehicleDocumentsSection({
                                   {getStatusBadge(doc.origem)}
                                 </div>
                                 <div className="flex items-center gap-4 text-xs text-blue-600">
-                                  <span>{doc.tipo}</span>
+                                  <span>{getDocumentTypeLabel(doc.tipo)}</span>
                                   <span>{formatFileSize(doc.tamanho_arquivo)}</span>
                                   <span className="flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
