@@ -2567,6 +2567,10 @@ export type Database = {
           policy_id: string
         }[]
       }
+      current_empresa_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       delete_policy_completely: {
         Args: { policy_id_param: string }
         Returns: boolean

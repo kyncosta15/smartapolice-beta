@@ -8,7 +8,7 @@ import { Car, PieChart as PieChartIcon, Package } from 'lucide-react';
 import PieCard from '@/components/charts/PieCard';
 import { shouldUseUIV2 } from '@/config/features';
 // Phase 1 - UI V2 components
-import { FrotasTableV2 } from './FrotasTableV2';
+import { FrotasEmptyState } from './FrotasEmptyState';
 
 // Consistent color palette for all charts
 const chartColors = [
@@ -77,22 +77,13 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
     }));
   }, [veiculos]);
 
-  if (loading) {
+  // Estado vazio - mostrar quando não há dados
+  if (!loading && Array.isArray(veiculos) && veiculos.length === 0) {
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="rounded-xl border bg-white p-4 sm:p-6 animate-pulse">
-            <div className="flex items-center justify-between space-y-0 pb-2">
-              <div className="h-4 bg-gray-200 rounded w-20"></div>
-              <div className="h-4 w-4 bg-gray-200 rounded"></div>
-            </div>
-            <div>
-              <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-24"></div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <FrotasEmptyState 
+        onUploadClick={() => {}} 
+        onCreateClick={() => {}}
+      />
     );
   }
 
@@ -160,22 +151,13 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                 </div>
               )}
               
-              {/* Feature Flag: Use V2 or V1 table based on flag */}
-              {shouldUseUIV2('frotas') ? (
-                <FrotasTableV2 
-                  veiculos={veiculos} 
-                  loading={loading} 
-                  onRefetch={onRefetch}
-                  hideHeader={true}
-                />
-              ) : (
-                <FrotasTable 
-                  veiculos={veiculos} 
-                  loading={loading} 
-                  onRefetch={onRefetch}
-                  hideHeader={true}
-                />
-              )}
+              {/* Feature Flag: Use standard table */}
+              <FrotasTable 
+                veiculos={veiculos} 
+                loading={loading} 
+                onRefetch={onRefetch}
+                hideHeader={true}
+              />
             </div>
         </CardContent>
       </Card>

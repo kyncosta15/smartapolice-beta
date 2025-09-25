@@ -36,6 +36,14 @@ export function FrotasKPICards({ kpis, loading }: FrotasKPICardsProps) {
     );
   }
 
+  // Garantir que KPIs sempre tenham valores válidos
+  const safeKpis = {
+    totalVeiculos: kpis?.totalVeiculos ?? 0,
+    semSeguro: kpis?.semSeguro ?? 0,
+    veiculosSegurados: kpis?.veiculosSegurados ?? 0,
+    proximoVencimento: kpis?.proximoVencimento ?? 0,
+  };
+
   return (
     <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4 mb-4 md:mb-6">
       <Card className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow p-3 sm:p-4 md:p-6 min-h-[100px] sm:min-h-[120px] flex flex-col justify-between">
@@ -47,7 +55,7 @@ export function FrotasKPICards({ kpis, loading }: FrotasKPICardsProps) {
         </div>
         <div>
           <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white leading-tight mb-1">
-            {kpis.totalVeiculos}
+            {safeKpis.totalVeiculos}
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-tight">
             veículos cadastrados
@@ -64,7 +72,7 @@ export function FrotasKPICards({ kpis, loading }: FrotasKPICardsProps) {
         </div>
         <div>
           <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white leading-tight mb-1">
-            {kpis.semSeguro}
+            {safeKpis.semSeguro}
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-tight">
             necessitam seguro
@@ -81,7 +89,7 @@ export function FrotasKPICards({ kpis, loading }: FrotasKPICardsProps) {
         </div>
         <div>
           <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white leading-tight mb-1">
-            {kpis.veiculosSegurados}
+            {safeKpis.veiculosSegurados}
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-tight">
             Constam na apólice
@@ -98,7 +106,7 @@ export function FrotasKPICards({ kpis, loading }: FrotasKPICardsProps) {
         </div>
         <div>
           <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white leading-tight mb-1">
-            {kpis.proximoVencimento}
+            {safeKpis.proximoVencimento}
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-tight">
             vencem em 30 dias
