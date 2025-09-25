@@ -2620,6 +2620,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      is_company_admin: {
+        Args: { check_empresa_id: string }
+        Returns: boolean
+      }
       is_member_of: {
         Args: { record_empresa_id: string }
         Returns: boolean
