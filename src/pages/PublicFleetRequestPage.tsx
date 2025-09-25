@@ -8,7 +8,7 @@ import { CheckCircle, AlertTriangle, Clock, Car, Building2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import DocumentUpload from '@/components/DocumentUpload';
+import { DragDropUpload } from '@/components/ui/drag-drop-upload';
 import {
   Form,
   FormControl,
@@ -559,15 +559,20 @@ export default function PublicFleetRequestPage() {
                     Anexe documentos relevantes à sua solicitação (opcional)
                   </p>
                   
-                  {empresaId && (
-                    <DocumentUpload
-                      onFilesChange={setUploadedFiles}
-                      empresaId={empresaId}
-                      maxFiles={5}
-                      maxSizeInMB={10}
-                      acceptedTypes={['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx']}
-                    />
-                  )}
+                  <DragDropUpload
+                    onFilesChange={(files) => {
+                      const fileList = files.filter(f => f.uploaded && f.url).map(f => ({
+                        name: f.file.name,
+                        url: f.url!,
+                        size: f.file.size
+                      }));
+                      setUploadedFiles(fileList);
+                    }}
+                    maxFiles={5}
+                    maxSize={10 * 1024 * 1024}
+                    bucketName="fleet-documents"
+                    acceptedTypes={['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                  />
                 </div>
 
                 {/* Botão de Envio */}
