@@ -46,8 +46,16 @@ export function DragDropUpload({
   const fileIdCounter = useRef(0);
 
   const uploadFile = useCallback(async (fileWithPreview: FileWithPreview): Promise<FileWithPreview> => {
+    console.log('📤 uploadFile chamado para:', fileWithPreview.file.name, {
+      publicMode,
+      publicPath,
+      bucketName,
+      userId: user?.id
+    });
+
     // Para modo público, não verificar autenticação
     if (!publicMode && !user?.id) {
+      console.log('❌ uploadFile: Usuário não autenticado');
       throw new Error('Usuário não autenticado');
     }
 
@@ -61,7 +69,10 @@ export function DragDropUpload({
         ? `${publicPath}/${fileName}` 
         : `${user?.id}/${fileName}`;
 
+      console.log('📁 Caminho do arquivo:', filePath);
+
       // Upload para o Supabase Storage
+      console.log('🚀 Iniciando upload para Supabase...');
       const { data, error } = await supabase.storage
         .from(bucketName)
         .upload(filePath, fileWithPreview.file, {
@@ -70,13 +81,18 @@ export function DragDropUpload({
         });
 
       if (error) {
+        console.error('❌ Erro no upload:', error);
         throw error;
       }
+
+      console.log('✅ Upload bem-sucedido:', data);
 
       // Obter URL do arquivo
       const { data: urlData } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
+
+      console.log('🔗 URL pública obtida:', urlData.publicUrl);
 
       return {
         ...fileWithPreview,
@@ -86,6 +102,7 @@ export function DragDropUpload({
         error: undefined,
       };
     } catch (error: any) {
+      console.error('💥 Erro no uploadFile:', error);
       return {
         ...fileWithPreview,
         uploadProgress: 0,
@@ -96,8 +113,17 @@ export function DragDropUpload({
   }, [user?.id, bucketName, publicMode, publicPath]);
 
   const processFiles = useCallback(async (acceptedFiles: File[]) => {
+    console.log('🔥 processFiles chamado!', { 
+      acceptedFiles: acceptedFiles.length, 
+      publicMode, 
+      userId: user?.id,
+      bucketName,
+      publicPath 
+    });
+
     // Para modo público, não verificar autenticação
     if (!publicMode && !user?.id) {
+      console.log('❌ Erro: usuário não autenticado e não está em modo público');
       toast({
         title: 'Erro de autenticação',
         description: 'Você precisa estar logado para fazer upload de arquivos',
@@ -106,8 +132,11 @@ export function DragDropUpload({
       return;
     }
 
+    console.log('✅ Verificação de autenticação passou');
+
     // Verificar limites
     if (files.length + acceptedFiles.length > maxFiles) {
+      console.log('❌ Erro: muitos arquivos', { current: files.length, new: acceptedFiles.length, max: maxFiles });
       toast({
         title: 'Muitos arquivos',
         description: `Máximo ${maxFiles} arquivos permitidos`,
@@ -115,6 +144,8 @@ export function DragDropUpload({
       });
       return;
     }
+
+    console.log('✅ Verificação de limites passou');
 
     // Criar objetos FileWithPreview
     const newFilesWithPreview: FileWithPreview[] = acceptedFiles.map(file => ({
@@ -177,7 +208,30 @@ export function DragDropUpload({
   }, [files, maxFiles, user?.id, toast, uploadFile, publicMode]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: processFiles,
+    onDrop: (acceptedFiles, rejectedFiles) => {
+      console.log('🎯 onDrop chamado!', { 
+        acceptedFiles: acceptedFiles.length, 
+        rejectedFiles: rejectedFiles.length,
+        rejected: rejectedFiles.map(r => ({ file: r.file.name, errors: r.errors.map(e => e.message) }))
+      });
+      
+      if (rejectedFiles.length > 0) {
+        console.log('❌ Arquivos rejeitados:', rejectedFiles);
+        rejectedFiles.forEach(rejection => {
+          rejection.errors.forEach(error => {
+            toast({
+              title: 'Arquivo rejeitado',
+              description: `${rejection.file.name}: ${error.message}`,
+              variant: 'destructive',
+            });
+          });
+        });
+      }
+      
+      if (acceptedFiles.length > 0) {
+        processFiles(acceptedFiles);
+      }
+    },
     accept: acceptedTypes.reduce((acc, type) => {
       acc[type] = [];
       return acc;
