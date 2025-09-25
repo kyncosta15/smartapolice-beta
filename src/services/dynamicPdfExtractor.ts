@@ -1,5 +1,5 @@
 export class DynamicPDFExtractor {
-  private static readonly WEBHOOK_URL = 'https://oficialsmartapolice.app.n8n.cloud/webhook/upload-arquivo';
+  private static readonly WEBHOOK_URL = 'https://oficialsmartapolice.app.n8n.cloud/webhook-test/testewebhook1';
   private static readonly TIMEOUT = 120000; // Aumentado para 2 minutos
   private static readonly MAX_RETRIES = 2; // Reduzido para evitar loops longos
 
