@@ -12,15 +12,9 @@ const SmartApoliceAuthContent = () => {
 
   useEffect(() => {
     if (user) {
-      // Role-based navigation for SmartApolice
-      if (['administrador', 'admin', 'corretora_admin'].includes(user.role || '')) {
-        navigate('/dashboard');
-      } else if (['rh', 'gestor_rh'].includes(user.role || '')) {
-        navigate('/smartbeneficios/dashboard');
-      } else {
-        // Cliente users go to basic dashboard
-        navigate('/dashboard');
-      }
+      // Se o usuário fez login no SmartApolice, vai para o dashboard do SmartApolice
+      // independente do role (respeitando a escolha do sistema)
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
