@@ -232,19 +232,49 @@ export function ContentRenderer({
       );
 
     case 'frotas':
+      // Only allow admin roles to access fleet management
+      if (['administrador', 'admin', 'corretora_admin', 'rh', 'gestor_rh'].includes(user?.role || '')) {
+        return (
+          <GestaoFrotas />
+        );
+      }
       return (
-        <GestaoFrotas />
+        <div className="p-6">
+          <div className="text-center py-12">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Acesso Restrito
+            </h3>
+            <p className="text-gray-600">
+              Gestão de Frotas é disponível apenas para administradores e RH.
+            </p>
+          </div>
+        </div>
       );
 
     case 'vehicles':
     case 'veiculos':
+      // Only allow admin roles to access vehicle management
+      if (['administrador', 'admin', 'corretora_admin', 'rh', 'gestor_rh'].includes(user?.role || '')) {
+        return (
+          <div className="p-6">
+            <VeiculosManagement 
+              allPolicies={allPolicies}
+              onPolicyUpdate={onPolicyUpdate}
+              onPolicySelect={onPolicySelect}
+            />
+          </div>
+        );
+      }
       return (
         <div className="p-6">
-          <VeiculosManagement 
-            allPolicies={allPolicies}
-            onPolicyUpdate={onPolicyUpdate}
-            onPolicySelect={onPolicySelect}
-          />
+          <div className="text-center py-12">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Acesso Restrito
+            </h3>
+            <p className="text-gray-600">
+              Gestão de Veículos é disponível apenas para administradores e RH.
+            </p>
+          </div>
         </div>
       );
 

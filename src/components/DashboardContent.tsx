@@ -90,7 +90,6 @@ export function DashboardContent() {
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Minhas Apólices', icon: FileText },
     { id: 'claims', title: 'Sinistros', icon: TestTube },
-    { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'settings', title: 'Configurações', icon: Settings },
@@ -107,7 +106,7 @@ export function DashboardContent() {
     { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 
-  const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
+  const navigation = (['administrador', 'admin', 'corretora_admin'].includes(user?.role || '')) ? adminNavigation : clientNavigation;
 
   const handlePolicyExtracted = async (policy: any) => {
     console.log('🚀 handlePolicyExtracted CHAMADO para persistência!');

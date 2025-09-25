@@ -41,10 +41,13 @@ export const AuthPage = () => {
     if (!loading) {
       if (user) {
         // Check user role and redirect appropriately
-        if (user.role === 'corretora_admin' || user.role === 'administrador') {
+        if (user.role === 'corretora_admin' || user.role === 'administrador' || user.role === 'admin') {
           navigate('/dashboard');
-        } else {
+        } else if (user.role === 'rh' || user.role === 'gestor_rh') {
           navigate('/smartbeneficios/dashboard');
+        } else {
+          // Usuários clientes vão para um dashboard básico
+          navigate('/dashboard');
         }
       } else {
         // If no user, redirect to system selection to choose login type
