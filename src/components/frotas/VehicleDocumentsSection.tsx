@@ -257,7 +257,14 @@ export function VehicleDocumentsSection({
           
           {/* Upload de novos documentos */}
           {mode === 'edit' && (
-            <div className="mb-6">
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <Upload className="h-5 w-5 text-blue-600" />
+                <h4 className="text-sm font-medium text-blue-900">Upload de Documentos</h4>
+              </div>
+              <p className="text-xs text-blue-700 mb-3">
+                Adicione documentos relacionados a este veículo. Os arquivos serão salvos no sistema.
+              </p>
               <DragDropUpload
                 onFilesChange={handleFilesUploaded}
                 bucketName="frotas_docs"
@@ -274,6 +281,8 @@ export function VehicleDocumentsSection({
                   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                 ]}
                 disabled={uploading}
+                publicMode={false}
+                publicPath={`vehicles/${vehicleId}`}
               />
             </div>
           )}
@@ -286,7 +295,7 @@ export function VehicleDocumentsSection({
                   <p className="text-sm">Nenhum documento encontrado</p>
                   {mode === 'edit' && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Adicione documentos usando a área de upload acima
+                      Use a área de upload acima para adicionar documentos
                     </p>
                   )}
                 </div>
@@ -295,9 +304,12 @@ export function VehicleDocumentsSection({
                   {/* Seção de documentos externos */}
                   {documents.some(doc => doc.origem === 'external') && (
                     <div className="mb-6">
-                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-purple-200">
                         <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                        <h4 className="text-sm font-medium text-gray-700">Documentos do Link Externo</h4>
+                        <h4 className="text-sm font-medium text-purple-900">Documentos do Link Externo</h4>
+                        <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-300">
+                          {documents.filter(doc => doc.origem === 'external').length} arquivo(s)
+                        </Badge>
                       </div>
                       <div className="space-y-3">
                         {documents
@@ -311,7 +323,7 @@ export function VehicleDocumentsSection({
                                     <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
                                     {getStatusBadge(doc.origem)}
                                   </div>
-                                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                                  <div className="flex items-center gap-4 text-xs text-purple-600">
                                     <span>{doc.tipo}</span>
                                     <span>{formatFileSize(doc.tamanho_arquivo)}</span>
                                     <span className="flex items-center gap-1">
@@ -329,7 +341,7 @@ export function VehicleDocumentsSection({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDownload(doc)}
-                                  className="gap-1"
+                                  className="gap-1 text-purple-700 hover:text-purple-800 hover:bg-purple-100"
                                 >
                                   <Download className="h-4 w-4" />
                                   Baixar
@@ -344,23 +356,26 @@ export function VehicleDocumentsSection({
                   {/* Seção de documentos locais */}
                   {documents.some(doc => doc.origem !== 'external') && (
                     <div>
-                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-200">
                         <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                        <h4 className="text-sm font-medium text-gray-700">Documentos Locais</h4>
+                        <h4 className="text-sm font-medium text-blue-900">Documentos Locais</h4>
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-300">
+                          {documents.filter(doc => doc.origem !== 'external').length} arquivo(s)
+                        </Badge>
                       </div>
                       <div className="space-y-3">
                         {documents
                           .filter(doc => doc.origem !== 'external')
                           .map((doc) => (
-                            <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                            <div key={doc.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
                               <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                                <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-2 mb-1">
                                     <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
                                     {getStatusBadge(doc.origem)}
                                   </div>
-                                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                                  <div className="flex items-center gap-4 text-xs text-blue-600">
                                     <span>{doc.tipo}</span>
                                     <span>{formatFileSize(doc.tamanho_arquivo)}</span>
                                     <span className="flex items-center gap-1">
@@ -378,7 +393,7 @@ export function VehicleDocumentsSection({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDownload(doc)}
-                                  className="gap-1"
+                                  className="gap-1 text-blue-700 hover:text-blue-800 hover:bg-blue-100"
                                 >
                                   <Download className="h-4 w-4" />
                                   Baixar
