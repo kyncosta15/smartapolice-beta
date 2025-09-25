@@ -88,11 +88,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Botão de Teste N8N (temporário) */}
-        <N8NTestEmpresaButton />
-        <N8NTestButton />
-      
+    <div className="space-y-4 sm:space-y-6">      
       {/* Charts and Analytics */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 2xl:grid-cols-3">
         <PieCard

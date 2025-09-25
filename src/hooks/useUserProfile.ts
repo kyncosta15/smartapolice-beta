@@ -102,7 +102,7 @@ export function useUserProfile() {
         setProfile(profileData);
       }
 
-      // Check if user is 'cliente' and create specific company if needed
+      // Para usuários 'cliente', a empresa específica já foi criada automaticamente no trigger
       const { data: userData } = await supabase
         .from('users')
         .select('role')
@@ -110,20 +110,9 @@ export function useUserProfile() {
         .single();
 
       if (userData?.role === 'cliente') {
-        console.log('🔍 DEBUG Usuário é cliente, criando/obtendo empresa específica...');
+        console.log('🔍 DEBUG Usuário é cliente, carregando empresa específica...');
         
-        // Call RPC function to get or create user-specific company
-        const { data: empresaId, error: empresaError } = await supabase
-          .rpc('get_user_empresa_id');
-
-        if (empresaError) {
-          console.error('❌ Erro ao obter empresa específica:', empresaError);
-          throw empresaError;
-        }
-
-        console.log('✅ Empresa específica obtida/criada:', empresaId);
-        
-        // Load memberships again after company creation
+        // Load memberships for client user
         const { data: membershipData, error: membershipError } = await supabase
           .from('user_memberships')
           .select(`
@@ -137,8 +126,11 @@ export function useUserProfile() {
         }
 
         setMemberships(membershipData || []);
-        setActiveEmpresa(empresaId);
-        console.log('🔍 DEBUG Empresa específica ativa:', empresaId);
+        
+        if (membershipData && membershipData.length > 0) {
+          setActiveEmpresa(membershipData[0].empresa_id);
+          console.log('✅ Empresa específica ativa:', membershipData[0].empresa_id);
+        }
         
       } else {
         // For non-client users, use existing logic
@@ -206,13 +198,7 @@ export function useUserProfile() {
       load();
     });
 
-    // Listen for profile updates from other components
-    const handleProfileUpdate = () => {
-      console.log('🔄 Evento profile-updated recebido, recarregando perfil...');
-      load();
-    };
-    
-    window.addEventListener('profile-updated', handleProfileUpdate);
+    // Listen for profile updates from other components - REMOVED, not needed with automatic company creation
 
     // Initial load
     load();
@@ -220,7 +206,6 @@ export function useUserProfile() {
     return () => {
       subscription.unsubscribe();
       unsubscribeEvents();
-      window.removeEventListener('profile-updated', handleProfileUpdate);
     };
   }, [load]);
 
