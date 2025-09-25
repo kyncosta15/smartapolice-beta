@@ -119,10 +119,17 @@ export function useUserProfile() {
 
       // Set active empresa
       const profileDefault = (profileData as any)?.default_empresa_id;
+      console.log('🔍 DEBUG Profile default empresa:', profileDefault);
+      console.log('🔍 DEBUG Memberships data:', membershipData);
+      
       if (profileDefault) {
         setActiveEmpresa(profileDefault);
+        console.log('🔍 DEBUG Usando empresa do perfil:', profileDefault);
       } else if (membershipData && membershipData.length > 0) {
         setActiveEmpresa(membershipData[0].empresa_id);
+        console.log('🔍 DEBUG Usando primeira empresa dos memberships:', membershipData[0].empresa_id);
+      } else {
+        console.log('🔍 DEBUG Nenhuma empresa encontrada - usuário sem memberships');
       }
 
     } catch (err) {

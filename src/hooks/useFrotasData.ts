@@ -156,7 +156,7 @@ export function useFrotasData(filters: FrotaFilters) {
         email: user.email
       });
 
-      // Use activeEmpresaId from TenantContext, with RLS handling the filtering automatically
+      // RLS irá filtrar automaticamente pela empresa do usuário
       let query = supabase
         .from('frota_veiculos')
         .select(`
@@ -165,8 +165,6 @@ export function useFrotasData(filters: FrotaFilters) {
           pagamentos:frota_pagamentos(*),
           documentos:frota_documentos(*)
         `);
-
-      console.log('🔍 Buscando veículos com RLS automático');
 
       // Aplicar filtros
       if (debouncedFilters.search) {
@@ -219,14 +217,15 @@ export function useFrotasData(filters: FrotaFilters) {
 
   // Initial load - only once when user changes
   useEffect(() => {
-    if (user) {
+    if (user && activeEmpresaId !== null) {
+      console.log('🔄 Carregando dados da frota para empresa:', activeEmpresaId);
       fetchVeiculos(false);
     }
-  }, [user?.id]); // Only depend on user id, not fetchVeiculos
+  }, [user?.id, activeEmpresaId]); // Depend on both user and activeEmpresaId
 
   // Handle all filter changes - only when actual filter values change  
   useEffect(() => {
-    if (!user) return;
+    if (!user || activeEmpresaId === null) return;
 
     // If search is cleared, make sure we fetch all data
     if (filters.search === '' && debouncedSearch === '' && 
@@ -253,7 +252,7 @@ export function useFrotasData(filters: FrotaFilters) {
     // Determine if this is a search operation
     const isSearchOperation = debouncedSearch !== '';
     fetchVeiculos(isSearchOperation);
-  }, [user?.id, debouncedSearch, filters.categoria, filters.status, filters.marcaModelo, filters.search]); // Added filters.search to detect clearing
+  }, [user?.id, activeEmpresaId, debouncedSearch, filters.categoria, filters.status, filters.marcaModelo, filters.search]); // Added activeEmpresaId dependency
 
   // Escutar eventos de atualização da frota
   useEffect(() => {
