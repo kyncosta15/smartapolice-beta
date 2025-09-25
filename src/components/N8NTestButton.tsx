@@ -21,10 +21,14 @@ export function N8NTestButton() {
         toast.error('❌ Erro: ' + error.message);
       } else {
         console.log('✅ Resultado da função:', data);
-        if (data.success) {
-          toast.success(`✅ Empresa criada: ${data.empresa_id}`);
+        
+        const resultData = data as any;
+        if (resultData.success) {
+          toast.success(`✅ Empresa criada: ${resultData.empresa_id}`);
+          // Disparar evento para recarregar perfil
+          window.dispatchEvent(new CustomEvent('profile-updated'));
         } else {
-          toast.error(`❌ Falha: ${data.message || data.error}`);
+          toast.error(`❌ Falha: ${resultData.message || resultData.error}`);
         }
       }
     } catch (err) {

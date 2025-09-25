@@ -206,12 +206,21 @@ export function useUserProfile() {
       load();
     });
 
+    // Listen for profile updates from other components
+    const handleProfileUpdate = () => {
+      console.log('🔄 Evento profile-updated recebido, recarregando perfil...');
+      load();
+    };
+    
+    window.addEventListener('profile-updated', handleProfileUpdate);
+
     // Initial load
     load();
 
     return () => {
       subscription.unsubscribe();
       unsubscribeEvents();
+      window.removeEventListener('profile-updated', handleProfileUpdate);
     };
   }, [load]);
 
