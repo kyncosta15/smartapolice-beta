@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Upload, X, FileText, Image, Loader2 } from 'lucide-react';
+import { DragDropUpload } from '@/components/ui/drag-drop-upload';
 
 import {
   Dialog,
@@ -87,46 +88,7 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
   const watchedTipo = form.watch('tipo');
   const needsInsurance = ['tirar_do_seguro', 'colocar_no_seguro'].includes(watchedTipo);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(event.target.files || []);
-    
-    // Validar arquivos
-    const validFiles = selectedFiles.filter(file => {
-      const isValidType = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'].includes(file.type);
-      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
-      
-      if (!isValidType) {
-        alert(`Arquivo ${file.name} tem tipo inválido. Aceitos: PDF, JPG, PNG`);
-        return false;
-      }
-      
-      if (!isValidSize) {
-        alert(`Arquivo ${file.name} é muito grande. Máximo 10MB`);
-        return false;
-      }
-      
-      return true;
-    });
-
-    if (files.length + validFiles.length > 10) {
-      alert('Máximo 10 arquivos permitidos');
-      return;
-    }
-
-    setFiles(prev => [...prev, ...validFiles]);
-  };
-
-  const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+  // Função removida - agora é gerenciada pelo DragDropUpload
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -432,68 +394,26 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium">Anexos (opcional)</h3>
+                    <h3 className="text-lg font-medium">Documentos Anexos</h3>
                     <Badge variant="outline" className="text-xs">
-                      Máx 10 arquivos, 10MB cada
+                      Anexe documentos relevantes à sua solicitação (opcional)
                     </Badge>
                   </div>
 
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                    <div className="text-sm text-gray-600 mb-2">
-                      Arraste arquivos aqui ou clique para selecionar
-                    </div>
-                    <div className="text-xs text-gray-500 mb-4">
-                      PDF, JPG, PNG - Máximo 10MB por arquivo
-                    </div>
-                    <input
-                      type="file"
-                      multiple
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="file-upload"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => document.getElementById('file-upload')?.click()}
-                    >
-                      Selecionar arquivos
-                    </Button>
-                  </div>
-
-                  {/* Lista de arquivos */}
-                  {files.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Arquivos selecionados:</h4>
-                      {files.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            {file.type === 'application/pdf' ? (
-                              <FileText className="h-5 w-5 text-red-500" />
-                            ) : (
-                              <Image className="h-5 w-5 text-blue-500" />
-                            )}
-                            <div>
-                              <div className="text-sm font-medium">{file.name}</div>
-                              <div className="text-xs text-gray-500">{formatFileSize(file.size)}</div>
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeFile(index)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <DragDropUpload
+                    onFilesChange={(uploadedFiles) => {
+                      // Extrair apenas os arquivos originais para manter compatibilidade
+                      const originalFiles = uploadedFiles
+                        .filter(f => f.uploaded)
+                        .map(f => f.file);
+                      setFiles(originalFiles);
+                    }}
+                    maxFiles={10}
+                    maxSize={10 * 1024 * 1024}
+                    bucketName="fleet-documents"
+                    acceptedTypes={['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                    disabled={submitting}
+                  />
                 </div>
               </CardContent>
             </Card>

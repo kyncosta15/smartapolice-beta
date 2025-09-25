@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, MessageSquare } from 'lucide-react';
+import { Check, X, MessageSquare, Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -58,6 +58,13 @@ export function FleetRequestApprovalActions({
 
       const newStatus = actionType === 'approve' ? 'aprovado' : 'recusado';
       
+      // Toast inicial com loading
+      const loadingToast = toast({
+        title: actionType === 'approve' ? 'Processando aprovação...' : 'Processando recusa...',
+        description: 'Aguarde enquanto processamos sua solicitação',
+        duration: 0, // Toast permanente até ser atualizado
+      });
+      
       // Chamar edge function para processar aprovação/rejeição
       const { data, error } = await supabase.functions.invoke('process-fleet-request-approval', {
         body: {
@@ -70,22 +77,44 @@ export function FleetRequestApprovalActions({
 
       if (error) throw error;
 
+      // Fechar modal e atualizar
       setActionModalOpen(false);
       setComments('');
       onUpdate();
 
-      toast({
-        title: actionType === 'approve' ? 'Solicitação aprovada!' : 'Solicitação recusada!',
-        description: actionType === 'approve' ? 
-          'A alteração será processada automaticamente' : 
-          'O solicitante será notificado',
-      });
+      // Toast de sucesso com animação de progresso
+      let progress = 0;
+      const successMessage = actionType === 'approve' ? 'Solicitação aprovada com sucesso!' : 'Solicitação recusada!';
+      const successDescription = actionType === 'approve' ? 
+        'A alteração foi processada automaticamente no sistema' : 
+        'O solicitante será notificado sobre a decisão';
+
+      // Simular progresso por 3 segundos
+      const progressInterval = setInterval(() => {
+        progress += 10;
+        if (progress <= 100) {
+          toast({
+            title: `${successMessage} (${progress}%)`,
+            description: successDescription,
+            duration: 100, // Toast rápido para atualizar
+          });
+        } else {
+          clearInterval(progressInterval);
+          toast({
+            title: actionType === 'approve' ? '✅ Aprovação Concluída' : '❌ Recusa Processada',
+            description: successDescription,
+            duration: 5000,
+          });
+        }
+      }, 300);
+
     } catch (error: any) {
       console.error('Erro ao processar aprovação:', error);
       toast({
-        title: 'Erro ao processar',
-        description: error.message,
+        title: '⚠️ Erro ao processar',
+        description: `Falha: ${error.message}`,
         variant: 'destructive',
+        duration: 8000,
       });
     } finally {
       setProcessing(false);
@@ -100,18 +129,28 @@ export function FleetRequestApprovalActions({
           variant="default"
           size="sm"
           className="gap-1"
+          disabled={processing}
         >
-          <Check className="h-4 w-4" />
-          Aprovar
+          {processing && actionType === 'approve' ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Check className="h-4 w-4" />
+          )}
+          {processing && actionType === 'approve' ? 'Aprovando...' : 'Aprovar'}
         </Button>
         <Button
           onClick={handleReject}
           variant="destructive"
           size="sm"
           className="gap-1"
+          disabled={processing}
         >
-          <X className="h-4 w-4" />
-          Recusar
+          {processing && actionType === 'reject' ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <X className="h-4 w-4" />
+          )}
+          {processing && actionType === 'reject' ? 'Recusando...' : 'Recusar'}
         </Button>
       </div>
 
@@ -179,8 +218,23 @@ export function FleetRequestApprovalActions({
                 onClick={processAction}
                 disabled={processing || (actionType === 'reject' && !comments.trim())}
                 variant={actionType === 'approve' ? 'default' : 'destructive'}
+                className="gap-2"
               >
-                {processing ? 'Processando...' : (actionType === 'approve' ? 'Aprovar' : 'Recusar')}
+                {processing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    {actionType === 'approve' ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <X className="h-4 w-4" />
+                    )}
+                    {actionType === 'approve' ? 'Confirmar Aprovação' : 'Confirmar Recusa'}
+                  </>
+                )}
               </Button>
             </div>
           </div>
