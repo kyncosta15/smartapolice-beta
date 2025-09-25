@@ -313,30 +313,6 @@ export function FleetRequestDetailsModal({
                       </div>
                     ))}
 
-                    {/* Anexos Legados (mantidos para compatibilidade) */}
-                    {request.anexos?.map((anexo, index) => (
-                      <div key={`legacy-${index}`} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
-                        <div className="flex items-center gap-3 flex-1">
-                          <FileText className="h-5 w-5 text-orange-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium truncate">{anexo.name}</div>
-                            <div className="flex items-center gap-3 text-xs text-orange-600">
-                              <span>{formatFileSize(anexo.size)}</span>
-                              <span>• Anexo legado</span>
-                            </div>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => window.open(anexo.url, '_blank')}
-                          className="gap-1 flex-shrink-0"
-                        >
-                          <Download className="h-4 w-4" />
-                          Baixar
-                        </Button>
-                      </div>
-                    ))}
                   </div>
                 ) : (
                   <div className="text-center py-6 text-gray-500">
