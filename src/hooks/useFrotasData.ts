@@ -231,8 +231,7 @@ export function useFrotasData(filters: FrotaFilters) {
           .insert({
             user_id: user.id,
             empresa_id: empresaId,
-            role: 'owner',
-            status: 'active'
+            role: 'owner'
           });
           
         if (membershipError) {
