@@ -220,7 +220,21 @@ export class N8NUploadService {
         
         if (result.veiculos && Array.isArray(result.veiculos) && result.veiculos.length > 0) {
           console.log('✅ Condições atendidas - iniciando salvamento no Supabase...');
-          await this.saveFleetDataToSupabase(result, metadata);
+          
+          // Validar metadata obrigatório
+          if (!metadata?.empresa_id || !metadata?.user_id) {
+            throw new Error('Metadata obrigatório (empresa_id, user_id) não fornecido para salvamento');
+          }
+          
+          const validatedMetadata = {
+            empresa_id: metadata.empresa_id,
+            empresa_nome: metadata.empresa_nome || 'Empresa',
+            user_id: metadata.user_id,
+            user_email: metadata.user_email || '',
+            razao_social: metadata.razao_social || metadata.empresa_nome || 'Empresa'
+          };
+          
+          await this.saveFleetDataToSupabase(result, validatedMetadata);
         } else {
           console.warn('❌ Condições não atendidas para salvamento:', {
             veiculosExists: !!result.veiculos,
@@ -293,145 +307,84 @@ export class N8NUploadService {
     }
   }
 
-  private static async saveFleetDataToSupabase(n8nResponse: N8NResponse, metadata?: N8NUploadMetadata) {
+  static async saveFleetDataToSupabase(
+    data: N8NResponse,
+    metadata: {
+      empresa_id: string;
+      empresa_nome: string;
+      user_id: string;
+      user_email: string;
+      razao_social: string;
+    }
+  ): Promise<void> {
+    console.log('💾 Iniciando salvamento no Supabase...');
+    console.log('📋 Metadata:', metadata);
+    
+    if (!data?.veiculos?.length) {
+      throw new Error('Nenhum dado de veículo para salvar');
+    }
+
+    if (!metadata.empresa_id) {
+      throw new Error('empresa_id é obrigatório para salvar os dados');
+    }
+
     try {
-      console.log('=== SALVANDO DADOS DA FROTA NO SUPABASE ===');
-      console.log('Resposta N8N completa:', JSON.stringify(n8nResponse, null, 2));
-      console.log('Metadata recebida:', metadata);
-      
-      // Obter empresa específica do usuário (cria automaticamente se não existir)
-      const { data: empresaId, error: empresaError } = await supabase
-        .rpc('get_user_empresa_id');
-
-      if (empresaError) {
-        console.error('Erro ao obter empresa do usuário:', empresaError);
-        throw new Error('Erro ao obter empresa específica do usuário');
+      // Verificar se o usuário existe
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
       }
 
-      console.log('✅ Empresa ID confirmada:', empresaId);
+      console.log('✅ Usando empresa_id do metadata:', metadata.empresa_id);
 
-      // Buscar dados da empresa
-      const { data: empresa, error: empresaExisteError } = await supabase
-        .from('empresas')
-        .select('id, nome')
-        .eq('id', empresaId)
-        .single();
+      // Processar dados dos veículos
+      const veiculosData = data.veiculos.map((vehicle: any, index: number) => {
+        const categoria = this.mapCategoria(vehicle.familia);
+        const statusSeguro = vehicle.status === 'ativo' ? 'segurado' : 'sem_seguro';
+        
+        return {
+          empresa_id: metadata.empresa_id,
+          placa: vehicle.placa || `VEICULO-${index + 1}`,
+          renavam: vehicle.renavam || null,
+          marca: vehicle.marca || this.extractMarcaFromModelo(vehicle.modelo || 'Não informado'),
+          modelo: vehicle.modelo || 'Não informado',
+          ano_modelo: vehicle.ano ? Number(vehicle.ano) : null,
+          chassi: vehicle.chassi || null,
+          categoria: categoria,
+          codigo: vehicle.codigo || null,
+          localizacao: vehicle.localizacao || null,
+          status_seguro: statusSeguro,
+          status_veiculo: vehicle.status || 'ativo',
+          proprietario_tipo: 'pj',
+          proprietario_nome: vehicle.proprietario || metadata.empresa_nome,
+          proprietario_doc: metadata.user_email?.replace('@', '').replace(/\./g, ''),
+          origem_planilha: vehicle.origem_planilha || null,
+          observacoes: vehicle.origem_planilha ? `Importado do N8N - ${vehicle.origem_planilha} (${vehicle.familia || 'sem categoria'})` : null,
+          user_id: user.id,
+          created_by: user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      });
 
-      if (empresaExisteError || !empresa) {
-        console.error('Erro ao buscar empresa após criação:', empresaExisteError);
-        throw new Error('Erro ao confirmar empresa no sistema');
+      console.log('📋 Inserindo veículos no banco:', veiculosData.length);
+
+      // Inserir todos os veículos de uma vez
+      const { data: veiculosInseridos, error: veiculosError } = await supabase
+        .from('frota_veiculos')
+        .insert(veiculosData)
+        .select('id');
+
+      if (veiculosError) {
+        console.error('❌ Erro ao inserir veículos:', veiculosError);
+        throw new Error(`Erro ao inserir veículos: ${veiculosError.message}`);
       }
 
-      console.log('✅ Empresa confirmada:', empresa.nome);
+      console.log(`✅ ${veiculosInseridos?.length || 0} veículos inseridos com sucesso`);
 
-      // Processar cada veículo
-      console.log(`🚗 Processando ${n8nResponse.veiculos.length} veículos...`);
-      let sucessos = 0;
-      let erros = 0;
-      
-      for (let i = 0; i < n8nResponse.veiculos.length; i++) {
-        const veiculo = n8nResponse.veiculos[i];
-        console.log(`\n[${i + 1}/${n8nResponse.veiculos.length}] 🔄 Processando veículo:`, veiculo.placa || 'SEM PLACA');
-
-        try {
-          // Preparar dados do veículo - MAPEAR TODOS OS CAMPOS DO N8N
-          const categoria = this.mapCategoria(veiculo.familia);
-          const statusSeguro = veiculo.status === 'ativo' ? 'segurado' : 'sem_seguro';
-          
-          const veiculoData = {
-            empresa_id: empresaId,
-            placa: veiculo.placa || `VEICULO-${i + 1}`,
-            renavam: veiculo.renavam || null,
-            marca: veiculo.marca || this.extractMarcaFromModelo(veiculo.modelo || 'Não informado'),
-            modelo: veiculo.modelo || 'Não informado',
-            ano_modelo: veiculo.ano ? Number(veiculo.ano) : null,
-            chassi: veiculo.chassi || null,
-            categoria: categoria,
-            codigo: veiculo.codigo || null,
-            localizacao: veiculo.localizacao || null,
-            status_seguro: statusSeguro,
-            status_veiculo: veiculo.status || 'ativo',
-            proprietario_tipo: 'pj',
-            proprietario_nome: veiculo.proprietario || n8nResponse.empresa?.nome || empresa.nome,
-            proprietario_doc: n8nResponse.empresa?.cnpj || metadata?.cnpj,
-            origem_planilha: veiculo.origem_planilha || null,
-            observacoes: veiculo.origem_planilha ? `Importado do N8N - ${veiculo.origem_planilha} (${veiculo.familia || 'sem categoria'})` : null,
-          };
-
-          console.log('📋 Dados do veículo para inserir:', veiculoData);
-
-          // Inserir veículo
-          const { data: veiculoInserido, error: veiculoError } = await supabase
-            .from('frota_veiculos')
-            .insert([veiculoData])
-            .select('id')
-            .single();
-
-          if (veiculoError) {
-            console.error('❌ Erro ao inserir veículo:', veiculoError);
-            console.error('📋 Dados que causaram erro:', veiculoData);
-            erros++;
-            continue;
-          }
-
-          const veiculoId = veiculoInserido.id;
-          console.log('✅ Veículo inserido com sucesso:', veiculoId);
-          sucessos++;
-
-          // Inserir responsável se houver informação
-          if (veiculo.localizacao) {
-            const { error: responsavelError } = await supabase
-              .from('frota_responsaveis')
-              .insert([{
-                veiculo_id: veiculoId,
-                nome: `Responsável - ${veiculo.localizacao}`,
-              }]);
-              
-            if (responsavelError) {
-              console.error('⚠️ Erro ao inserir responsável:', responsavelError);
-            } else {
-              console.log('👤 Responsável inserido para veículo:', veiculoId);
-            }
-          }
-
-          // Inserir pagamento de seguro se ativo
-          if (veiculo.status === 'ativo') {
-            const proximoVencimento = new Date();
-            proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
-            
-            const { error: pagamentoError } = await supabase
-              .from('frota_pagamentos')
-              .insert([{
-                veiculo_id: veiculoId,
-                tipo: 'seguro',
-                valor: 500,
-                vencimento: proximoVencimento.toISOString().split('T')[0],
-                status: 'pendente',
-                observacoes: `Importado do N8N - ${veiculo.familia || 'categoria não informada'}`,
-              }]);
-              
-            if (pagamentoError) {
-              console.error('⚠️ Erro ao inserir pagamento:', pagamentoError);
-            } else {
-              console.log('💰 Pagamento inserido para veículo:', veiculoId);
-            }
-          }
-        } catch (err) {
-          console.error(`❌ Erro geral ao processar veículo ${i + 1}:`, err);
-          erros++;
-        }
-      }
-
-      console.log(`\n🎉 RESUMO DO SALVAMENTO:`);
-      console.log(`✅ Sucessos: ${sucessos}`);
-      console.log(`❌ Erros: ${erros}`);
-      console.log(`📊 Total processado: ${sucessos + erros}`);
-      
-      if (sucessos > 0) {
-        // Disparar evento para atualizar o dashboard
-        window.dispatchEvent(new CustomEvent('frota-data-updated'));
-        console.log('📡 Evento frota-data-updated disparado');
-      }
+      // Disparar evento para atualizar o dashboard
+      window.dispatchEvent(new CustomEvent('frota-data-updated'));
+      console.log('📡 Evento frota-data-updated disparado');
       
     } catch (error: any) {
       console.error('💥 Erro geral ao salvar dados no Supabase:', error);

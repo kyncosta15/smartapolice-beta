@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { N8NUploadService, N8NUploadMetadata, N8NResponse } from '@/services/n8nUploadService';
 import { supabase } from '@/integrations/supabase/client';
+import { ensureProfileAndCompany } from '@/utils/profileUtils';
 
 interface FrotasUploadProps {
   onSuccess: () => void;
@@ -105,14 +106,26 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     setIsProcessing(true);
     
     try {
-      // Preparar metadados baseados no usuário logado
+      // Garantir que usuário tem perfil e empresa configurados
+      const { user: authenticatedUser, empresa_id } = await ensureProfileAndCompany(supabase);
+      
+      // Buscar dados da empresa
+      const { data: empresa } = await supabase
+        .from('empresas')
+        .select('nome')
+        .eq('id', empresa_id)
+        .single();
+
+      // Preparar metadados
       const metadata: N8NUploadMetadata = {
-        empresa_id: activeEmpresaId || user!.id, // Usar user_id se não tiver empresa
-        empresa_nome: activeEmpresaName || user!.email?.split('@')[0] || 'Usuario',
-        user_id: user!.id,
-        user_email: user!.email, // Adicionar email para resolução
-        razao_social: activeEmpresaName || user!.email?.split('@')[0] || 'Usuario',
+        empresa_id,
+        empresa_nome: empresa?.nome || 'Empresa',
+        user_id: authenticatedUser.id,
+        user_email: authenticatedUser.email,
+        razao_social: empresa?.nome || 'Empresa'
       };
+
+      console.log('Metadata recebida:', metadata);
 
       // Processar cada arquivo individualmente
       for (const fileItem of files) {
@@ -157,11 +170,10 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
           try {
             console.log('Chamando preenchimento de dados vazios...');
             
-            const empresaParaPreenchimento = activeEmpresaId || user!.id;
             const { data: preencherResult } = await supabase.functions.invoke('preencher-dados-veiculos', {
               body: { 
-                empresaId: empresaParaPreenchimento,
-                userEmail: user!.email 
+                empresaId: empresa_id,
+                userEmail: authenticatedUser.email 
               }
             });
             
