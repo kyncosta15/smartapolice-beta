@@ -7,7 +7,6 @@ import { DashboardCards } from '@/components/DashboardCards';
 import { DynamicDashboard } from '@/components/DynamicDashboard';
 import { ContentRenderer } from '@/components/ContentRenderer';
 import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
-import { TestProfileSetup } from '@/components/TestProfileSetup';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useRealDashboardData } from '@/hooks/useRealDashboardData';
@@ -383,9 +382,6 @@ export function DashboardContent() {
                 isLoading={false}
                 onSectionChange={setActiveSection}
               />
-
-              {/* Componente de teste temporário */}
-              <TestProfileSetup />
               
               {/* Complete Dashboard with Charts - hide cards section to avoid duplication */}
               <div className="mt-6 sm:mt-8">

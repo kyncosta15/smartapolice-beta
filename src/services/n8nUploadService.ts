@@ -392,10 +392,12 @@ export class N8NUploadService {
     }
   }
 
-  private static mapCategoria(familia: string): string {
-    if (!familia) return 'outros';
+  private static mapCategoria(familia: string | number): string {
+    if (!familia && familia !== 0) return 'outros';
     
-    const familiaLower = familia.toLowerCase();
+    // Convert to string to handle both numeric and string inputs
+    const familiaStr = String(familia);
+    const familiaLower = familiaStr.toLowerCase();
     
     // Mapear família do N8N para categorias válidas do banco
     if (familiaLower.includes('carro') || familiaLower.includes('automovel') || familiaLower.includes('passeio')) {
