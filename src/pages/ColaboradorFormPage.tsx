@@ -198,7 +198,7 @@ const ColaboradorFormPage = () => {
             <AlertTriangle className="h-12 w-12 mx-auto text-red-500 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Ops! Algo deu errado</h2>
             <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={() => navigate('/')}>
+            <Button onClick={() => navigate('/system-selection')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar ao Início
             </Button>

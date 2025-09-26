@@ -12,8 +12,7 @@ const SmartApoliceAuthContent = () => {
 
   useEffect(() => {
     if (user) {
-      // Se o usuário fez login no SmartApolice, vai para o dashboard do SmartApolice
-      // independente do role (respeitando a escolha do sistema)
+      console.log('✅ SmartApolice: Usuário autenticado, redirecionando para dashboard');
       navigate('/dashboard');
     }
   }, [user, navigate]);

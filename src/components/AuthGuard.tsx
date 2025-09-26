@@ -10,7 +10,7 @@ const AuthGuardContent = () => {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      navigate('/');
+      navigate('/system-selection');
     }
   }, [user, isLoading, navigate]);
 

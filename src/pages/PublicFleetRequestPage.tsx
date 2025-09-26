@@ -92,7 +92,7 @@ export default function PublicFleetRequestPage() {
 
   useEffect(() => {
     if (!token) {
-      navigate('/');
+      navigate('/system-selection');
       return;
     }
 
@@ -199,7 +199,7 @@ export default function PublicFleetRequestPage() {
               <p className="text-gray-500 mb-4">
                 O link que você acessou não é válido ou já expirou.
               </p>
-              <Button onClick={() => navigate('/')} variant="outline">
+              <Button onClick={() => navigate('/system-selection')} variant="outline">
                 Voltar ao Início
               </Button>
             </div>
