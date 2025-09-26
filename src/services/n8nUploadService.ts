@@ -360,10 +360,7 @@ export class N8NUploadService {
           proprietario_doc: metadata.user_email?.replace('@', '').replace(/\./g, ''),
           origem_planilha: vehicle.origem_planilha || null,
           observacoes: vehicle.origem_planilha ? `Importado do N8N - ${vehicle.origem_planilha} (${vehicle.familia || 'sem categoria'})` : null,
-          user_id: user.id,
-          created_by: user.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_by: user.id
         };
       });
 
