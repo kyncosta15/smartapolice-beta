@@ -71,7 +71,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
             className={cn(
               "group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm w-full text-left",
               "transition-all duration-200 ease-out font-medium relative overflow-hidden",
-              "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+              "text-muted-foreground hover:bg-accent/50",
+              "hover:text-[#161616]",
               "hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] hover:translate-x-0.5",
               "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
               activeSection === item.id && [
@@ -85,7 +86,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
               "size-4 transition-all duration-200 flex-shrink-0",
               activeSection === item.id 
                 ? "text-primary drop-shadow-sm" 
-                : "text-muted-foreground group-hover:text-foreground group-hover:scale-110"
+                : "text-muted-foreground group-hover:text-[#161616] group-hover:scale-110"
             )} />
             <span className="truncate">{item.title}</span>
             {activeSection === item.id && (
@@ -103,7 +104,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
           onClick={() => navigate('/system-selection')}
           className={cn(
             "w-full flex items-center gap-3 px-3.5 py-2.5 text-sm rounded-xl",
-            "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+            "text-muted-foreground hover:text-[#161616] hover:bg-accent/50",
             "transition-all duration-200 ease-out font-medium",
             "hover:scale-[1.01] active:scale-[0.99] hover:shadow-sm",
             "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1"
