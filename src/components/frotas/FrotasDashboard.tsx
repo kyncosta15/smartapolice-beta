@@ -9,9 +9,6 @@ import PieCard from '@/components/charts/PieCard';
 import { shouldUseUIV2 } from '@/config/features';
 // Phase 1 - UI V2 components
 import { FrotasEmptyState } from './FrotasEmptyState';
-// Debug components - TEMPORÁRIO
-import { DebugEmpresaButton } from '../DebugEmpresaButton';
-import { LimparDadosButton } from '../LimparDadosButton';
 
 // Consistent color palette for all charts
 const chartColors = [
@@ -92,16 +89,6 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* DEBUG TOOLS - TEMPORÁRIO */}
-      <Card className="bg-yellow-50 border-yellow-200">
-        <CardContent className="p-4">
-          <div className="flex gap-3 items-center">
-            <span className="text-sm font-medium text-yellow-800">Debug Tools (Temporário):</span>
-            <DebugEmpresaButton />
-            <LimparDadosButton />
-          </div>
-        </CardContent>
-      </Card>
       
       {/* Charts and Analytics */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 2xl:grid-cols-3">
