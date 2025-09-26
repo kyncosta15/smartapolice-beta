@@ -184,17 +184,70 @@ export function useFrotasData(filters: FrotaFilters) {
         .from('user_memberships')
         .select('empresa_id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       console.log('🔍 DEBUG: User membership:', userMembership);
       
-      if (!userMembership?.empresa_id) {
-        console.error('❌ Empresa não encontrada para o usuário');
+      let empresaId = userMembership?.empresa_id;
+      
+      // Se não tem membership, tentar criar empresa e membership
+      if (!empresaId) {
+        console.log('⚠️ Membership não encontrado, tentando criar empresa...');
+        
+        // Criar empresa baseada no email do usuário
+        const empresaName = 'Cliente - ' + user.email;
+        
+        // Verificar se empresa já existe
+        const { data: existingEmpresa } = await supabase
+          .from('empresas')
+          .select('id')
+          .eq('nome', empresaName)
+          .maybeSingle();
+          
+        if (existingEmpresa) {
+          empresaId = existingEmpresa.id;
+        } else {
+          // Criar nova empresa
+          const { data: newEmpresa, error: empresaError } = await supabase
+            .from('empresas')
+            .insert({
+              nome: empresaName,
+              cnpj: user.email.replace('@', ''),
+            })
+            .select('id')
+            .single();
+            
+          if (empresaError) {
+            console.error('❌ Erro ao criar empresa:', empresaError);
+            throw new Error('Não foi possível criar empresa para o usuário');
+          }
+          
+          empresaId = newEmpresa.id;
+        }
+        
+        // Criar membership
+        const { error: membershipError } = await supabase
+          .from('user_memberships')
+          .insert({
+            user_id: user.id,
+            empresa_id: empresaId,
+            role: 'owner',
+            status: 'active'
+          });
+          
+        if (membershipError) {
+          console.error('❌ Erro ao criar membership:', membershipError);
+          // Não falhar aqui, apenas log do erro
+        }
+      }
+      
+      if (!empresaId) {
+        console.error('❌ Não foi possível obter empresa_id');
         throw new Error('Empresa não encontrada para o usuário. Entre em contato com o suporte.');
       }
       
       // Filter by user's company
-      query = query.eq('empresa_id', userMembership.empresa_id);
+      query = query.eq('empresa_id', empresaId);
 
       // Aplicar filtros
       if (debouncedFilters.search) {
