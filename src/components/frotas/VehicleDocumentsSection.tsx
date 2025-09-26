@@ -187,21 +187,30 @@ export function VehicleDocumentsSection({
     let savedCount = 0;
     const errors: string[] = [];
     
+    // Aguardar um pouco para garantir que o DragDropUpload terminou o processamento
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     // Filtrar apenas arquivos que foram realmente enviados com sucesso
-    const successfulFiles = files.filter(f => f.uploaded && f.url && !f.error);
-    const failedFiles = files.filter(f => !f.uploaded || !f.url || f.error);
+    const successfulFiles = files.filter(f => f.url && f.uploaded !== false && !f.error);
+    const failedFiles = files.filter(f => !f.url || f.error);
+    
+    console.log('🔍 Arquivos para processar:', { 
+      total: files.length, 
+      successful: successfulFiles.length, 
+      failed: failedFiles.length 
+    });
     
     try {
       // Processar apenas arquivos que foram enviados com sucesso para o storage
-      for (const { file, url } of successfulFiles) {
+      for (const fileItem of successfulFiles) {
         try {
           const documentData = {
             veiculo_id: vehicleId,
-            tipo: getDocumentType(file.name),
-            nome_arquivo: file.name,
-            url: url!,
-            tamanho_arquivo: file.size,
-            tipo_mime: file.type,
+            tipo: getDocumentType(fileItem.file.name),
+            nome_arquivo: fileItem.file.name,
+            url: fileItem.url!,
+            tamanho_arquivo: fileItem.file.size,
+            tipo_mime: fileItem.file.type,
             origem: 'upload' as const,
           };
 
@@ -210,33 +219,31 @@ export function VehicleDocumentsSection({
             .insert([documentData]);
 
           if (error) {
-            console.error('Erro ao salvar documento:', file.name, error);
-            errors.push(`${file.name}: ${error.message}`);
+            console.error('Erro ao salvar documento:', fileItem.file.name, error);
+            errors.push(`${fileItem.file.name}: ${error.message}`);
           } else {
             savedCount++;
           }
         } catch (fileError: any) {
-          console.error('Erro ao processar arquivo:', file.name, fileError);
-          errors.push(`${file.name}: Erro ao processar arquivo`);
+          console.error('Erro ao processar arquivo:', fileItem.file.name, fileError);
+          errors.push(`${fileItem.file.name}: Erro ao processar arquivo`);
         }
       }
 
-      // Adicionar erros de upload aos erros totais
-      failedFiles.forEach(f => {
-        errors.push(`${f.file.name}: Falha no upload para o storage`);
-      });
-
-      // Mostrar resultado baseado no que foi salvo
-      if (savedCount > 0 && errors.length === 0) {
-        toast.success(`${savedCount} documento(s) adicionado(s) com sucesso!`);
-      } else if (savedCount > 0 && errors.length > 0) {
-        toast.success(`${savedCount} documento(s) salvos. ${errors.length} falharam.`);
-        // Mostrar detalhes dos erros em um toast separado
-        setTimeout(() => {
-          toast.error(`Erros: ${errors.slice(0, 3).join(', ')}${errors.length > 3 ? '...' : ''}`);
-        }, 1000);
-      } else {
-        toast.error(`Nenhum documento foi salvo${errors.length > 0 ? '. Erros nos uploads.' : '.'}`);
+      // Apenas mostrar toast se realmente houve tentativa de salvar arquivos
+      if (successfulFiles.length > 0) {
+        // Mostrar resultado baseado no que foi salvo
+        if (savedCount > 0 && errors.length === 0) {
+          toast.success(`${savedCount} documento(s) adicionado(s) com sucesso!`);
+        } else if (savedCount > 0 && errors.length > 0) {
+          toast.success(`${savedCount} documento(s) salvos. ${errors.length} falharam.`);
+          // Mostrar detalhes dos erros em um toast separado
+          setTimeout(() => {
+            toast.error(`Erros: ${errors.slice(0, 3).join(', ')}${errors.length > 3 ? '...' : ''}`);
+          }, 1000);
+        } else if (errors.length > 0) {
+          toast.error(`Não foi possível salvar os documentos: ${errors.slice(0, 2).join(', ')}`);
+        }
       }
       
       if (savedCount > 0) {

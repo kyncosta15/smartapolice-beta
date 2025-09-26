@@ -165,11 +165,7 @@ export function DragDropUpload({
 
       await Promise.all(uploadPromises);
       
-      toast({
-        title: 'Upload concluído',
-        description: `${newFilesWithPreview.length} arquivo(s) enviado(s) com sucesso`,
-      });
-      
+      // Não mostrar toast aqui - deixar o componente pai tratar o resultado
       console.log('✅ Upload concluído!', {
         totalFiles: newFilesWithPreview.length,
         uploadedFiles: updatedFiles.filter(f => f.uploaded),
