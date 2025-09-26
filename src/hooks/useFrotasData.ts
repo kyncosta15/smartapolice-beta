@@ -179,9 +179,22 @@ export function useFrotasData(filters: FrotaFilters) {
           documentos:frota_documentos(*)
         `);
 
-      console.log('🔍 DEBUG: Testando função current_empresa_id diretamente');
-      const { data: empresaTest } = await supabase.rpc('current_empresa_id');
-      console.log('🔍 DEBUG: current_empresa_id retornou:', empresaTest);
+      // Get user's empresa_id from membership data instead of RPC
+      const { data: userMembership } = await supabase
+        .from('user_memberships')
+        .select('empresa_id')
+        .eq('user_id', user.id)
+        .single();
+      
+      console.log('🔍 DEBUG: User membership:', userMembership);
+      
+      if (!userMembership?.empresa_id) {
+        console.error('❌ Empresa não encontrada para o usuário');
+        throw new Error('Empresa não encontrada para o usuário. Entre em contato com o suporte.');
+      }
+      
+      // Filter by user's company
+      query = query.eq('empresa_id', userMembership.empresa_id);
 
       // Aplicar filtros
       if (debouncedFilters.search) {
