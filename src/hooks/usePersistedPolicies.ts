@@ -61,16 +61,26 @@ export function usePersistedPolicies() {
     setError(null);
 
     try {
-      // CORREÇÃO: Verificar sessão antes de fazer queries
+      // CORREÇÃO: Verificar sessão antes de fazer queries - mas permitir para novos usuários
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error('❌ Erro na sessão:', sessionError);
-        throw new Error('Sessão inválida - faça login novamente');
+        // Para novos usuários, não falhar imediatamente
+        console.log('⚠️ Erro de sessão, mas continuando para novos usuários...');
+      }
+
+      // Para novos usuários, retornar lista vazia e não bloquear outras funcionalidades
+      if (!session && user?.id) {
+        console.log('⚠️ Sessão temporariamente indisponível, mas user.id existe - continuando...');
+        setPolicies([]);
+        setIsLoading(false);
+        setError(null); // Importante: limpar erro
+        return;
       }
 
       if (!session) {
-        console.error('❌ Sessão não encontrada');
+        console.error('❌ Sessão não encontrada e user.id também não existe');
         throw new Error('Sessão não encontrada - faça login novamente');
       }
 
