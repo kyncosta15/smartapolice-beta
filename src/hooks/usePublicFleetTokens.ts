@@ -9,21 +9,25 @@ export function usePublicFleetTokens() {
   const [generating, setGenerating] = useState(false);
 
   const generatePublicLink = useCallback(async (validityDays: number = 7) => {
-    if (!user?.company) {
-      throw new Error('Usuário não está associado a uma empresa');
+    if (!user?.id) {
+      throw new Error('Usuário não autenticado');
     }
 
     try {
       setGenerating(true);
 
-      // Buscar empresa
-      const { data: empresa } = await supabase
-        .from('empresas')
-        .select('id')
-        .eq('nome', user.company)
+      // Buscar empresa do usuário através do user_profiles
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('default_empresa_id')
+        .eq('id', user.id)
         .single();
 
-      if (!empresa) throw new Error('Empresa não encontrada');
+      if (profileError || !profile?.default_empresa_id) {
+        throw new Error('Empresa não encontrada. Configure uma empresa padrão no seu perfil.');
+      }
+
+      const empresaId = profile.default_empresa_id;
 
       // Gerar token único
       const token = generateSecureToken();
@@ -41,7 +45,7 @@ export function usePublicFleetTokens() {
         .from('public_fleet_tokens')
         .insert({
           token,
-          empresa_id: empresa.id,
+          empresa_id: empresaId,
           expires_at: isPermanent ? null : expiresAt?.toISOString(),
           created_by: user.id,
         })
