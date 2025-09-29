@@ -120,7 +120,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                   {preferredDisplayName || 'Usuário'}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {activeEmpresaName || 'Gestão de perfil'}
+                  {activeEmpresaName || 'Usuário'}
                 </p>
               </div>
               <ChevronDown className="w-4 h-4 text-gray-500" />
