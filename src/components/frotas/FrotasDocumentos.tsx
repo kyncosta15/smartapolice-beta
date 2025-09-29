@@ -171,17 +171,34 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
         variant: 'info'
       });
 
-      // Download do arquivo do storage do Supabase
-      const { data, error } = await supabase.storage
-        .from('frotas_docs')
-        .download(documento.url.split('/').pop()); // Pegar apenas o nome do arquivo da URL
+      let downloadData: Blob;
+      
+      // Tentar diferentes métodos de download baseado na URL
+      if (documento.url.includes('supabase.co/storage/v1/object/public/')) {
+        // Para URLs públicas do Supabase Storage
+        const response = await fetch(documento.url);
+        if (!response.ok) throw new Error('Falha ao baixar arquivo');
+        downloadData = await response.blob();
+      } else {
+        // Tentar baixar do bucket frotas_docs
+        const fileName = documento.url.split('/').pop() || documento.nome_arquivo;
+        const { data, error } = await supabase.storage
+          .from('frotas_docs')
+          .download(fileName);
 
-      if (error) {
-        throw error;
+        if (error) {
+          // Fallback: tentar download direto da URL
+          console.log('Fallback para download direto da URL:', documento.url);
+          const response = await fetch(documento.url);
+          if (!response.ok) throw new Error('Falha ao baixar arquivo');
+          downloadData = await response.blob();
+        } else {
+          downloadData = data;
+        }
       }
 
       // Criar blob URL para download
-      const url = URL.createObjectURL(data);
+      const url = URL.createObjectURL(downloadData);
       const link = document.createElement('a');
       link.href = url;
       link.download = documento.nome_arquivo;
