@@ -16,6 +16,8 @@ import {
   FileImage,
   FileSpreadsheet
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useProgressToast } from '@/hooks/use-progress-toast';
 import {
   Table,
   TableBody,
@@ -53,6 +55,7 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFilter, setTipoFilter] = useState<string>('all');
   const [selectedVeiculo, setSelectedVeiculo] = useState<string>('all');
+  const { progressToast } = useProgressToast();
 
   // Extrair todos os documentos de todos os veículos
   const allDocuments = React.useMemo(() => {
@@ -146,6 +149,74 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
         Manual
       </Badge>
     );
+  };
+
+  const handleViewDocument = async (documento: any) => {
+    try {
+      // Abrir documento em nova aba
+      window.open(documento.url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('Erro ao visualizar documento:', error);
+      progressToast({
+        title: 'Erro ao visualizar documento',
+        variant: 'error'
+      });
+    }
+  };
+
+  const handleDownloadDocument = async (documento: any) => {
+    try {
+      progressToast({
+        title: 'Download iniciado com sucesso',
+        variant: 'success'
+      });
+
+      // Criar link temporário para download
+      const link = document.createElement('a');
+      link.href = documento.url;
+      link.download = documento.nome_arquivo;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Erro ao baixar documento:', error);
+      progressToast({
+        title: 'Erro ao baixar documento',
+        variant: 'error'
+      });
+    }
+  };
+
+  const handleDeleteDocument = async (documento: any) => {
+    if (!confirm('Tem certeza que deseja excluir este documento? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('frota_documentos')
+        .delete()
+        .eq('id', documento.id);
+
+      if (error) {
+        throw error;
+      }
+
+      progressToast({
+        title: 'Documento excluído com sucesso',
+        variant: 'success'
+      });
+
+      // Trigger refresh of the vehicle data
+      window.dispatchEvent(new CustomEvent('frota-data-updated'));
+    } catch (error) {
+      console.error('Erro ao excluir documento:', error);
+      progressToast({
+        title: 'Erro ao excluir documento',
+        variant: 'error'
+      });
+    }
   };
 
   if (loading) {
@@ -328,13 +399,31 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
 
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleViewDocument(item.documento)}
+                            title="Visualizar documento"
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleDownloadDocument(item.documento)}
+                            title="Baixar documento"
+                          >
                             <Download className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleDeleteDocument(item.documento)}
+                            title="Excluir documento"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
