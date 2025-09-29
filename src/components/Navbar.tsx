@@ -119,9 +119,6 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                 <p className="text-sm font-medium text-gray-900 leading-tight">
                   {preferredDisplayName || 'Usuário'}
                 </p>
-                <p className="text-xs text-gray-500">
-                  {activeEmpresaName || 'Usuário'}
-                </p>
               </div>
               <ChevronDown className="w-4 h-4 text-gray-500" />
             </Button>
