@@ -11,7 +11,8 @@ import {
   Settings,
   Upload,
   Mail,
-  ArrowLeft
+  ArrowLeft,
+  LogOut
 } from "lucide-react";
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { cn } from '@/lib/utils';
@@ -24,7 +25,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const clientNavigation = [
@@ -96,12 +97,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         ))}
       </nav>
 
-      {/* Bottom Section - Back Button */}
+      {/* Bottom Section - Logout Button */}
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/30 bg-gradient-to-t from-background to-muted/5 backdrop-blur-sm">
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/system-selection')}
+          onClick={logout}
           className={cn(
             "w-full flex items-center gap-3 px-3.5 py-2.5 text-sm rounded-xl",
             "text-muted-foreground hover:text-[#161616] hover:bg-accent/50",
@@ -109,11 +110,11 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
             "hover:scale-[1.01] active:scale-[0.99] hover:shadow-sm",
             "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1"
           )}
-          aria-label="Voltar para seleção de sistemas"
-          title="Voltar para seleção de sistemas"
+          aria-label="Sair do sistema"
+          title="Sair do sistema"
         >
-          <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
-          <span className="truncate">Voltar aos sistemas</span>
+          <LogOut className="size-4 transition-transform duration-200" />
+          <span className="truncate">Sair</span>
         </Button>
       </div>
     </aside>
