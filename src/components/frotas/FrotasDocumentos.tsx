@@ -167,18 +167,35 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
   const handleDownloadDocument = async (documento: any) => {
     try {
       progressToast({
-        title: 'Download iniciado com sucesso',
-        variant: 'success'
+        title: 'Iniciando download...',
+        variant: 'info'
       });
 
-      // Criar link temporário para download
+      // Download do arquivo do storage do Supabase
+      const { data, error } = await supabase.storage
+        .from('frotas_docs')
+        .download(documento.url.split('/').pop()); // Pegar apenas o nome do arquivo da URL
+
+      if (error) {
+        throw error;
+      }
+
+      // Criar blob URL para download
+      const url = URL.createObjectURL(data);
       const link = document.createElement('a');
-      link.href = documento.url;
+      link.href = url;
       link.download = documento.nome_arquivo;
-      link.target = '_blank';
       document.body.appendChild(link);
       link.click();
+      
+      // Limpar recursos
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      progressToast({
+        title: 'Download concluído com sucesso',
+        variant: 'success'
+      });
     } catch (error) {
       console.error('Erro ao baixar documento:', error);
       progressToast({
