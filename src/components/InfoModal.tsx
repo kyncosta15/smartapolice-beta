@@ -52,14 +52,6 @@ export function InfoModal({ isOpen, onClose }: InfoModalProps) {
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Button onClick={handleShowSuccessToast} variant="default" className="flex-1">
-              Toast Sucesso
-            </Button>
-            <Button onClick={handleShowErrorToast} variant="destructive" className="flex-1">
-              Toast Erro  
-            </Button>
-          </div>
           <Button onClick={onClose} variant="outline" className="w-full">
             Fechar
           </Button>

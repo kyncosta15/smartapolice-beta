@@ -426,38 +426,6 @@ export function DashboardContent() {
         />
 
         {/* Botão de teste para toasts com progresso */}
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-          <button
-            onClick={() => progressToast({
-              title: "Veículo atualizado com sucesso!",
-              variant: "success",
-              duration: 5000,
-            })}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm font-medium"
-          >
-            Toast Sucesso
-          </button>
-          <button
-            onClick={() => progressToast({
-              title: "Erro ao processar solicitação",
-              variant: "error",
-              duration: 5000,
-            })}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm font-medium"
-          >
-            Toast Erro
-          </button>
-          <button
-            onClick={() => progressToast({
-              title: "Atenção: Verificar dados",
-              variant: "warning",
-              duration: 5000,
-            })}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm font-medium"
-          >
-            Toast Aviso
-          </button>
-        </div>
       </main>
     </div>
   );
