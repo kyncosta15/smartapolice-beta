@@ -48,7 +48,7 @@ const SystemSelection = () => {
               
               <CardHeader className="text-center pb-4 relative z-10">
                 <div className="w-28 h-28 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
-                  <img src={smartapoliceShield} alt="SmartApólice Shield" className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-300" />
+                  <img src={smartapoliceShield} alt="SmartApólice Shield" className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-300" loading="eager" fetchPriority="high" />
                 </div>
                 <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">SmartApólice</CardTitle>
               </CardHeader>
@@ -77,7 +77,7 @@ const SystemSelection = () => {
               
               <CardHeader className="text-center pb-4 relative z-10">
                 <div className="w-28 h-28 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-secondary/30 group-hover:to-secondary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
-                  <img src={smartbeneficiosPeopleHeart} alt="SmartBenefícios People and Heart" className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-300" />
+                  <img src={smartbeneficiosPeopleHeart} alt="SmartBenefícios People and Heart" className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-300" loading="eager" fetchPriority="high" />
                 </div>
                 <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-secondary bg-clip-text text-transparent">SmartBenefícios</CardTitle>
               </CardHeader>
