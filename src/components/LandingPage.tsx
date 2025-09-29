@@ -26,6 +26,7 @@ export const LandingPage = () => {
                   width="80"
                   height="80"
                   loading="eager"
+                  fetchPriority="high"
                   decoding="sync"
                 />
               </picture>
@@ -126,7 +127,8 @@ export const LandingPage = () => {
             className="absolute inset-0 w-full h-full object-cover"
             width="960"
             height="1080"
-            loading="lazy"
+            loading="eager"
+            fetchPriority="high"
             decoding="async"
           />
         </picture>
