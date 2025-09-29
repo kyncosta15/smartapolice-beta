@@ -445,13 +445,9 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Nenhum documento encontrado
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-500">
                 Não há documentos que correspondam aos filtros aplicados.
               </p>
-              <Button variant="outline">
-                <Upload className="h-4 w-4 mr-2" />
-                Fazer Upload
-              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">
