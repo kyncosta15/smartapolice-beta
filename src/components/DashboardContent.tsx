@@ -8,6 +8,7 @@ import { DynamicDashboard } from '@/components/DynamicDashboard';
 import { ContentRenderer } from '@/components/ContentRenderer';
 import { PolicyDetailsModal } from '@/components/PolicyDetailsModal';
 import { useToast } from '@/hooks/use-toast';
+import { useProgressToast } from '@/hooks/use-progress-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
@@ -44,6 +45,7 @@ export function DashboardContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { progressToast } = useProgressToast();
 
   // Hook para persistência de apólices
   const { 
@@ -422,6 +424,40 @@ export function DashboardContent() {
           policy={selectedPolicy}
           onDelete={handleDeletePolicy}
         />
+
+        {/* Botão de teste para toasts com progresso */}
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+          <button
+            onClick={() => progressToast({
+              title: "Veículo atualizado com sucesso!",
+              variant: "success",
+              duration: 5000,
+            })}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm font-medium"
+          >
+            Toast Sucesso
+          </button>
+          <button
+            onClick={() => progressToast({
+              title: "Erro ao processar solicitação",
+              variant: "error",
+              duration: 5000,
+            })}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm font-medium"
+          >
+            Toast Erro
+          </button>
+          <button
+            onClick={() => progressToast({
+              title: "Atenção: Verificar dados",
+              variant: "warning",
+              duration: 5000,
+            })}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm font-medium"
+          >
+            Toast Aviso
+          </button>
+        </div>
       </main>
     </div>
   );

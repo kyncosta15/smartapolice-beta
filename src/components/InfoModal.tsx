@@ -3,6 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Clock } from 'lucide-react';
+import { useProgressToast } from '@/hooks/use-progress-toast';
 
 interface InfoModalProps {
   isOpen: boolean;
@@ -10,6 +11,26 @@ interface InfoModalProps {
 }
 
 export function InfoModal({ isOpen, onClose }: InfoModalProps) {
+  const { progressToast } = useProgressToast();
+
+  const handleShowSuccessToast = () => {
+    progressToast({
+      title: "Veículo atualizado com sucesso!",
+      variant: "success",
+      duration: 5000,
+    });
+    onClose();
+  };
+
+  const handleShowErrorToast = () => {
+    progressToast({
+      title: "Erro ao processar solicitação",
+      variant: "error", 
+      duration: 5000,
+    });
+    onClose();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -31,8 +52,16 @@ export function InfoModal({ isOpen, onClose }: InfoModalProps) {
             </p>
           </div>
 
-          <Button onClick={onClose} className="w-full">
-            OK
+          <div className="flex gap-2">
+            <Button onClick={handleShowSuccessToast} variant="default" className="flex-1">
+              Toast Sucesso
+            </Button>
+            <Button onClick={handleShowErrorToast} variant="destructive" className="flex-1">
+              Toast Erro  
+            </Button>
+          </div>
+          <Button onClick={onClose} variant="outline" className="w-full">
+            Fechar
           </Button>
         </div>
       </DialogContent>
