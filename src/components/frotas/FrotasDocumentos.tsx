@@ -33,6 +33,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -55,6 +62,11 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFilter, setTipoFilter] = useState<string>('all');
   const [selectedVeiculo, setSelectedVeiculo] = useState<string>('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [uploadingVeiculoId, setUploadingVeiculoId] = useState<string>('');
+  const [uploadingTipo, setUploadingTipo] = useState<string>('nf');
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { progressToast } = useProgressToast();
 
   // Extrair todos os documentos de todos os veículos
@@ -253,6 +265,77 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
     }
   };
 
+  const handleUploadDocument = async () => {
+    if (!uploadingFile || !uploadingVeiculoId) {
+      progressToast({
+        title: 'Selecione um veículo e um arquivo',
+        variant: 'error'
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      // Upload file to Supabase Storage
+      const fileExt = uploadingFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${uploadingVeiculoId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('frotas_docs')
+        .upload(filePath, uploadingFile);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('frotas_docs')
+        .getPublicUrl(filePath);
+
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('frota_documentos')
+        .insert({
+          veiculo_id: uploadingVeiculoId,
+          tipo: uploadingTipo,
+          nome_arquivo: uploadingFile.name,
+          url: publicUrl,
+          tamanho_arquivo: uploadingFile.size,
+          tipo_mime: uploadingFile.type,
+          origem: 'upload'
+        });
+
+      if (dbError) {
+        throw dbError;
+      }
+
+      progressToast({
+        title: 'Documento enviado com sucesso',
+        variant: 'success'
+      });
+
+      // Reset form and close modal
+      setIsModalOpen(false);
+      setUploadingFile(null);
+      setUploadingVeiculoId('');
+      setUploadingTipo('nf');
+
+      // Trigger refresh
+      window.dispatchEvent(new CustomEvent('frota-data-updated'));
+    } catch (error) {
+      console.error('Erro ao enviar documento:', error);
+      progressToast({
+        title: 'Erro ao enviar documento',
+        variant: 'error'
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -291,7 +374,10 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
           </p>
         </div>
         
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => setIsModalOpen(true)}
+        >
           <Plus className="h-4 w-4" />
           Adicionar Documento
         </Button>
@@ -470,6 +556,85 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Upload */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar Documento</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="veiculo">Veículo *</Label>
+              <Select value={uploadingVeiculoId} onValueChange={setUploadingVeiculoId}>
+                <SelectTrigger id="veiculo">
+                  <SelectValue placeholder="Selecione um veículo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {veiculos.map((veiculo) => (
+                    <SelectItem key={veiculo.id} value={veiculo.id}>
+                      {veiculo.placa || 'Sem placa'} - {veiculo.marca || ''} {veiculo.modelo || ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tipo">Tipo de Documento *</Label>
+              <Select value={uploadingTipo} onValueChange={setUploadingTipo}>
+                <SelectTrigger id="tipo">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {tipoDocumentoOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="arquivo">Arquivo *</Label>
+              <Input
+                id="arquivo"
+                type="file"
+                onChange={(e) => setUploadingFile(e.target.files?.[0] || null)}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+              />
+              {uploadingFile && (
+                <p className="text-sm text-muted-foreground">
+                  {uploadingFile.name} ({formatFileSize(uploadingFile.size)})
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setUploadingFile(null);
+                  setUploadingVeiculoId('');
+                  setUploadingTipo('nf');
+                }}
+                disabled={isUploading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleUploadDocument}
+                disabled={!uploadingFile || !uploadingVeiculoId || isUploading}
+              >
+                {isUploading ? 'Enviando...' : 'Enviar'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
