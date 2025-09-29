@@ -62,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Group policies by company
     const companiesMap = new Map();
-    expiringPolicies.forEach(policy => {
+    expiringPolicies.forEach((policy: any) => {
       const company = policy.users.company;
       if (!companiesMap.has(company)) {
         companiesMap.set(company, {

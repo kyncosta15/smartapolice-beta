@@ -27,9 +27,10 @@ Deno.serve(async (req) => {
     )
 
     // Baixar arquivo do storage
-    const { data: fileData, error } = await supabaseAdmin.storage
+    const downloadResult = await (supabaseAdmin.storage
       .from('pdfs')
-      .download(pdfPath)
+      .download(pdfPath) as any)
+    const { data: fileData, error } = downloadResult
 
     if (error) {
       console.error('Erro ao baixar arquivo:', error)

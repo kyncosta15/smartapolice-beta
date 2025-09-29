@@ -44,15 +44,15 @@ Deno.serve(async (req) => {
     const token = authHeader.replace('Bearer ', '')
 
     // CORREÇÃO: Verificar o usuário usando o token de forma mais robusta
-    let user;
+    let user: any;
     try {
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token)
+      const { data: { user: authUser }, error: authError } = await (supabase.auth as any).getUser(token)
       
       if (authError) {
         console.error('Auth error:', authError);
         
         // Tentar verificar JWT manualmente se getUser falhar
-        const { data: { user: jwtUser }, error: jwtError } = await supabase.auth.getUser(token)
+        const { data: { user: jwtUser }, error: jwtError } = await (supabase.auth as any).getUser(token)
         
         if (jwtError || !jwtUser) {
           return new Response(

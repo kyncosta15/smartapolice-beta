@@ -80,7 +80,7 @@ serve(async (req) => {
       }
 
       // Buscar veículos similares
-      const similares = veiculosReferencia.filter(v => 
+      const similares = veiculosReferencia.filter((v: any) =>
         v.marca?.toLowerCase().includes(marca?.toLowerCase() || '') ||
         v.modelo?.toLowerCase().includes(modelo?.toLowerCase() || '') ||
         Math.abs((v.ano_modelo || 0) - ano) <= 2
@@ -89,7 +89,7 @@ serve(async (req) => {
       if (similares.length === 0) return null
 
       // Analisar padrões de RENAVAM dos similares
-      const renavams = similares.map(v => v.renavam).filter(Boolean)
+      const renavams = similares.map((v: any) => v.renavam).filter(Boolean)
       console.log(`Analisando ${renavams.length} RENAVAMs de referência para ${marca} ${modelo}`)
       
       return null // Por enquanto, não sugerir RENAVAM - aguardar dados reais
@@ -102,7 +102,7 @@ serve(async (req) => {
       }
 
       // Buscar veículos da mesma marca
-      const mesmamarca = veiculosReferencia.filter(v => 
+      const mesmamarca = veiculosReferencia.filter((v: any) =>
         v.marca?.toLowerCase().includes(marca?.toLowerCase() || '') &&
         Math.abs((v.ano_modelo || 0) - ano) <= 3
       )
@@ -110,7 +110,7 @@ serve(async (req) => {
       if (mesmamarca.length === 0) return null
 
       // Analisar padrões de chassi dos similares
-      const chassis = mesmamarca.map(v => v.chassi).filter(Boolean)
+      const chassis = mesmamarca.map((v: any) => v.chassi).filter(Boolean)
       console.log(`Analisando ${chassis.length} chassis de referência para ${marca}`)
       
       return null // Por enquanto, não sugerir chassi - aguardar dados reais
@@ -123,31 +123,31 @@ serve(async (req) => {
       }
 
       // Buscar veículos similares (mesma marca/modelo)
-      const similares = veiculosReferencia.filter(v => 
+      const similares = veiculosReferencia.filter((v: any) => 
         v.marca?.toLowerCase().includes(marca?.toLowerCase() || '') &&
         v.modelo?.toLowerCase().includes(modelo?.toLowerCase() || '')
       )
 
       if (similares.length === 0) {
         // Buscar apenas pela marca
-        const mesmamarca = veiculosReferencia.filter(v => 
+        const mesmamarca = veiculosReferencia.filter((v: any) =>
           v.marca?.toLowerCase().includes(marca?.toLowerCase() || '')
         )
         
         if (mesmamarca.length > 0) {
           // Calcular ano médio dos veículos da mesma marca
-          const anos = mesmamarca.map(v => v.ano_modelo).filter(Boolean)
+          const anos = mesmamarca.map((v: any) => v.ano_modelo).filter(Boolean)
           if (anos.length > 0) {
-            const anoMedio = Math.round(anos.reduce((sum, ano) => sum + ano, 0) / anos.length)
+            const anoMedio = Math.round(anos.reduce((sum: number, ano: number) => sum + ano, 0) / anos.length)
             console.log(`Sugerindo ano ${anoMedio} baseado em ${anos.length} veículos da marca ${marca}`)
             return anoMedio
           }
         }
       } else {
         // Calcular ano médio dos similares
-        const anos = similares.map(v => v.ano_modelo).filter(Boolean)
+        const anos = similares.map((v: any) => v.ano_modelo).filter(Boolean)
         if (anos.length > 0) {
-          const anoMedio = Math.round(anos.reduce((sum, ano) => sum + ano, 0) / anos.length)
+          const anoMedio = Math.round(anos.reduce((sum: number, ano: number) => sum + ano, 0) / anos.length)
           console.log(`Sugerindo ano ${anoMedio} baseado em ${anos.length} veículos similares`)
           return anoMedio
         }
@@ -163,16 +163,16 @@ serve(async (req) => {
       }
 
       // Buscar veículos da mesma categoria
-      const mesmaCategoria = veiculosReferencia.filter(v => 
+      const mesmaCategoria = veiculosReferencia.filter((v: any) => 
         v.categoria?.toLowerCase() === categoria?.toLowerCase()
       )
 
       if (mesmaCategoria.length > 0) {
         // Encontrar a localização mais comum da categoria
-        const localizacoes = mesmaCategoria.map(v => v.localizacao).filter(Boolean)
+        const localizacoes = mesmaCategoria.map((v: any) => v.localizacao).filter(Boolean)
         const contagem: { [key: string]: number } = {}
         
-        localizacoes.forEach(loc => {
+        localizacoes.forEach((loc: any) => {
           contagem[loc] = (contagem[loc] || 0) + 1
         })
 
@@ -186,15 +186,15 @@ serve(async (req) => {
       }
 
       // Se não encontrou por categoria, buscar por marca
-      const mesmamarca = veiculosReferencia.filter(v => 
+      const mesmamarca = veiculosReferencia.filter((v: any) => 
         v.marca?.toLowerCase().includes(marca?.toLowerCase() || '')
       )
 
       if (mesmamarca.length > 0) {
-        const localizacoes = mesmamarca.map(v => v.localizacao).filter(Boolean)
+        const localizacoes = mesmamarca.map((v: any) => v.localizacao).filter(Boolean)
         const contagem: { [key: string]: number } = {}
         
-        localizacoes.forEach(loc => {
+        localizacoes.forEach((loc: any) => {
           contagem[loc] = (contagem[loc] || 0) + 1
         })
 
@@ -217,13 +217,13 @@ serve(async (req) => {
       }
 
       // Buscar padrões de códigos existentes
-      const codigos = veiculosReferencia.map(v => v.codigo).filter(Boolean)
+      const codigos = veiculosReferencia.map((v: any) => v.codigo).filter(Boolean)
       
       if (codigos.length === 0) return null
 
       // Analisar padrões comuns
       const padroes: { [key: string]: number } = {}
-      codigos.forEach(codigo => {
+      codigos.forEach((codigo: any) => {
         // Extrair possível prefixo (primeiras 3-4 letras)
         const prefixo = codigo.match(/^[A-Z]+/)?.[0] || ''
         if (prefixo) {
@@ -246,7 +246,7 @@ serve(async (req) => {
 
     console.log('Preparando atualizações BASEADAS EM ANÁLISE DE DADOS REAIS...')
     // Atualizar veículos baseado em análise de dados existentes no banco
-    const updates = veiculos.map(veiculo => {
+    const updates = veiculos.map((veiculo: any) => {
       console.log(`Analisando veículo ${veiculo.placa} (${veiculo.marca} ${veiculo.modelo})...`)
       
       const dadosAnalisados: any = {

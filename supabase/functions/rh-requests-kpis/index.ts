@@ -51,7 +51,7 @@ serve(async (req) => {
       const { data, error } = await query;
       if (error) throw error;
       
-      return (data || []).reduce((sum, col) => sum + (col.custo_mensal || 0), 0);
+      return (data || []).reduce((sum: number, col: any) => sum + (col.custo_mensal || 0), 0);
     };
 
     // Contagem de tickets abertos

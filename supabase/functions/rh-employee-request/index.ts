@@ -34,7 +34,7 @@ serve(async (req) => {
     }
 
     // Validar token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    const { data: { user }, error: authError } = await (supabase.auth as any).getUser(authHeader.replace('Bearer ', ''));
     
     if (authError || !user) {
       return new Response(

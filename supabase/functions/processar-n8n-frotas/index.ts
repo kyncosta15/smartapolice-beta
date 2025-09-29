@@ -62,7 +62,7 @@ serve(async (req) => {
     // Tentar obter empresa do usuário autenticado (se houver token)
     const authHeader = req.headers.get('Authorization');
     if (authHeader) {
-      const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+      const { data: { user } } = await (supabase.auth as any).getUser(authHeader.replace('Bearer ', ''));
       if (user) {
         console.log('Usuário autenticado encontrado:', user.id);
         
