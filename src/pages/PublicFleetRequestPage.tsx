@@ -41,22 +41,25 @@ const formSchema = z.object({
     'mudanca_responsavel',
     'documentacao'
   ]),
-  placa: z.string().optional(),
-  chassi: z.string().optional(),
-  renavam: z.string().optional(),
-  motivo: z.string().min(10, 'Motivo deve ter pelo menos 10 caracteres'),
-  solicitante_nome: z.string().min(2, 'Nome é obrigatório'),
-  solicitante_email: z.string().email('Email inválido'),
-  solicitante_telefone: z.string().optional(),
-  solicitante_setor: z.string().min(2, 'Setor é obrigatório'),
-  seguradora: z.string().optional(),
-  numero_apolice: z.string().optional(),
+  placa: z.string().trim().optional(),
+  chassi: z.string().trim().optional(),
+  renavam: z.string().trim().optional(),
+  motivo: z.string().trim().min(10, 'Motivo deve ter pelo menos 10 caracteres').max(1000, 'Motivo muito longo'),
+  solicitante_nome: z.string().trim().min(2, 'Nome é obrigatório').max(100, 'Nome muito longo'),
+  solicitante_email: z.string().trim().email('Email inválido').max(255, 'Email muito longo'),
+  solicitante_telefone: z.string().trim().optional(),
+  solicitante_setor: z.string().trim().min(2, 'Setor é obrigatório').max(100, 'Setor muito longo'),
+  seguradora: z.string().trim().optional(),
+  numero_apolice: z.string().trim().optional(),
   vigencia_inicio: z.string().optional(),
   vigencia_fim: z.string().optional(),
-  cobertura: z.string().optional(),
-  responsavel_nome: z.string().optional(),
-  responsavel_telefone: z.string().optional(),
-  responsavel_email: z.string().email('Email inválido').optional().or(z.literal('')),
+  cobertura: z.string().trim().optional(),
+  responsavel_nome: z.string().trim().optional(),
+  responsavel_telefone: z.string().trim().optional(),
+  responsavel_email: z.union([
+    z.string().trim().email('Email inválido'),
+    z.literal(''),
+  ]).optional(),
 }).refine((data) => {
   return data.placa || data.chassi;
 }, {
@@ -129,41 +132,111 @@ export default function PublicFleetRequestPage() {
     }
   };
 
+  const uploadFilesToStorage = async (files: File[]): Promise<Array<{ name: string; url: string; size: number; type: string }>> => {
+    const uploadedFiles: Array<{ name: string; url: string; size: number; type: string }> = [];
+    
+    for (const file of files) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${empresaId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('fleet_request_docs')
+        .upload(fileName, file);
+      
+      if (error) {
+        console.error('Erro ao fazer upload:', error);
+        throw new Error(`Erro ao fazer upload do arquivo ${file.name}`);
+      }
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('fleet_request_docs')
+        .getPublicUrl(fileName);
+      
+      uploadedFiles.push({
+        name: file.name,
+        url: publicUrl,
+        size: file.size,
+        type: file.type,
+      });
+    }
+    
+    return uploadedFiles;
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!token) return;
+    if (!token || !empresaId) {
+      toast({
+        title: 'Erro',
+        description: 'Informações do link inválidas',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
       setSubmitting(true);
 
       console.log('🚀 Enviando solicitação pública...');
       console.log('📝 Dados do formulário:', values);
-      console.log('📎 Arquivos anexados:', uploadedFiles);
+
+      // Fazer upload dos arquivos antes de enviar
+      let filesData: Array<{ name: string; url: string; size: number; type: string }> = [];
+      
+      if (uploadedFiles.length > 0) {
+        console.log('📤 Fazendo upload de', uploadedFiles.length, 'arquivo(s)...');
+        const filesToUpload = uploadedFiles.map(f => f as any as File).filter(f => f instanceof File);
+        
+        if (filesToUpload.length > 0) {
+          try {
+            filesData = await uploadFilesToStorage(filesToUpload);
+            console.log('✅ Upload concluído:', filesData.length, 'arquivo(s)');
+          } catch (uploadError: any) {
+            console.error('❌ Erro no upload:', uploadError);
+            toast({
+              title: 'Erro ao fazer upload',
+              description: uploadError.message || 'Não foi possível fazer upload dos arquivos',
+              variant: 'destructive',
+            });
+            return;
+          }
+        }
+      }
 
       // Chamar edge function para processar solicitação pública
+      console.log('📨 Enviando dados para edge function...');
       const { data, error } = await supabase.functions.invoke('public-fleet-request', {
         body: {
           token,
           formData: values,
-          anexos: uploadedFiles,
+          anexos: filesData,
         }
       });
 
       console.log('📤 Resposta da edge function:', { data, error });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('Token inválido')) {
+          throw new Error('Link expirado ou já utilizado. Solicite um novo link.');
+        }
+        throw error;
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao processar solicitação');
+      }
 
       setProtocolCode(data.protocolCode);
       setSubmitted(true);
       
       toast({
         title: 'Solicitação enviada com sucesso!',
-        description: `Protocolo: ${data.protocolCode}${uploadedFiles.length > 0 ? ` • ${uploadedFiles.length} arquivo(s) anexado(s)` : ''}`,
+        description: `Protocolo: ${data.protocolCode}${filesData.length > 0 ? ` • ${filesData.length} arquivo(s) anexado(s)` : ''}`,
       });
     } catch (error: any) {
       console.error('❌ Erro ao enviar solicitação:', error);
       toast({
         title: 'Erro ao enviar solicitação',
-        description: error.message || 'Não foi possível enviar a solicitação',
+        description: error.message || 'Não foi possível enviar a solicitação. Tente novamente.',
         variant: 'destructive',
       });
     } finally {

@@ -114,15 +114,18 @@ serve(async (req) => {
       .from('fleet_change_requests')
       .insert({
         empresa_id: tokenData.empresa_id,
-        user_id: tokenData.created_by, // Usuário que gerou o link
+        user_id: tokenData.created_by,
         vehicle_id: vehicleId,
         tipo: formData.tipo,
-        placa: formData.placa,
-        chassi: formData.chassi,
-        renavam: formData.renavam,
+        placa: formData.placa?.toUpperCase() || null,
+        chassi: formData.chassi?.toUpperCase() || null,
+        renavam: formData.renavam || null,
         status: 'aberto',
         prioridade: 'normal',
-        payload,
+        payload: {
+          ...payload,
+          protocol_code: protocolCode,
+        },
         anexos: anexos || [],
       })
       .select()
@@ -161,22 +164,16 @@ serve(async (req) => {
       console.log('📄 Nenhum documento para anexar');
     }
 
-    // Marcar token como usado
-    await supabase
+    // Marcar token como usado APENAS após sucesso completo
+    const { error: tokenUpdateError } = await supabase
       .from('public_fleet_tokens')
       .update({ used_at: new Date().toISOString() })
       .eq('id', tokenData.id);
 
-    // Atualizar solicitação com protocolo
-    await supabase
-      .from('fleet_change_requests')
-      .update({ 
-        payload: { 
-          ...payload, 
-          protocol_code: protocolCode 
-        } 
-      })
-      .eq('id', request.id);
+    if (tokenUpdateError) {
+      console.error('Warning: Could not mark token as used:', tokenUpdateError);
+      // Não falhar por isso, já que a solicitação foi criada
+    }
 
     console.log('Public fleet request created successfully:', request.id);
 
