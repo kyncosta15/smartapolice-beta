@@ -68,7 +68,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
 
   // Use profile data with proper fallbacks
   const preferredAvatarUrl = userProfile?.avatar_url || userProfile?.photo_url;
-  const preferredDisplayName = userProfile?.display_name || user?.name || user?.email?.split('@')[0] || 'Usuário';
+  const preferredDisplayName = userProfile?.display_name || user?.name || 'Usuário';
   
   // Get active empresa name with null check
   const activeEmpresaName = memberships?.find(m => m.empresa_id === activeEmpresa)?.empresa?.nome;
