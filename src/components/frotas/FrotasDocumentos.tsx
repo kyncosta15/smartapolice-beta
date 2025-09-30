@@ -403,7 +403,7 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
               <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Todos os veículos" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[320px] overflow-y-auto">
                 <SelectItem value="all">Todos os veículos</SelectItem>
                 {veiculos.map((veiculo) => (
                   <SelectItem key={veiculo.id} value={veiculo.id}>
@@ -567,7 +567,7 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
                 <SelectTrigger id="veiculo">
                   <SelectValue placeholder="Selecione um veículo" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[320px] overflow-y-auto">
                   {veiculos.map((veiculo) => (
                     <SelectItem key={veiculo.id} value={veiculo.id}>
                       {veiculo.placa || 'Sem placa'} - {veiculo.marca || ''} {veiculo.modelo || ''}
