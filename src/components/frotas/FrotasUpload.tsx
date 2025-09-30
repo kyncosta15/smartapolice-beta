@@ -159,9 +159,23 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
             'production'
           );
 
+          console.log('Resultado do upload:', result);
+
           // Verificar se há duplicatas detectadas
-          if (result.duplicates && result.duplicates.length > 0 && !overwriteDuplicates) {
-            console.log('Duplicatas detectadas:', result.duplicates);
+          if (result.duplicates && result.duplicates.length > 0) {
+            console.log(`⚠️ ${result.duplicates.length} duplicatas detectadas:`, result.duplicates);
+            
+            // Marcar arquivo como "aguardando confirmação"
+            setFiles(prev => prev.map(f => 
+              f.id === fileItem.id 
+                ? { 
+                    ...f, 
+                    status: 'processing', 
+                    progress: 80,
+                    result 
+                  }
+                : f
+            ));
             
             // Pausar processamento e mostrar modal
             setDetectedDuplicates(result.duplicates);

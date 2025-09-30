@@ -243,16 +243,14 @@ export class N8NUploadService {
             overwrite_duplicates: metadata.overwrite_duplicates
           };
           
-          try {
-            await this.saveFleetDataToSupabase(result, validatedMetadata);
-          } catch (saveError: any) {
-            // Se for erro de duplicatas, adicionar ao resultado e retornar sem throw
-            if (saveError.message === 'Duplicatas detectadas' && saveError.duplicates) {
-              console.log('🔄 Retornando resultado com duplicatas para confirmação');
-              result.duplicates = saveError.duplicates;
-              return result;
-            }
-            throw saveError;
+          const saveResult = await this.saveFleetDataToSupabase(result, validatedMetadata);
+          
+          // Se houver duplicatas, adicionar ao resultado sem erro
+          if (saveResult.duplicates && saveResult.duplicates.length > 0) {
+            console.log('🔄 Duplicatas detectadas - aguardando confirmação do usuário');
+            result.duplicates = saveResult.duplicates;
+            result.success = false;
+            result.message = 'Duplicatas detectadas - aguardando confirmação';
           }
         } else {
           console.warn('❌ Condições não atendidas para salvamento:', {
@@ -336,7 +334,7 @@ export class N8NUploadService {
       razao_social: string;
       overwrite_duplicates?: boolean;
     }
-  ): Promise<void> {
+  ): Promise<{ duplicates?: any[] }> {
     console.log('💾 Iniciando salvamento no Supabase...');
     console.log('📋 Metadata:', metadata);
     
@@ -373,22 +371,22 @@ export class N8NUploadService {
       const duplicates = veiculosExistentes || [];
       
       if (duplicates.length > 0 && !metadata.overwrite_duplicates) {
-        console.log(`⚠️ Encontradas ${duplicates.length} duplicatas`);
+        console.log(`⚠️ Encontradas ${duplicates.length} duplicatas - retornando para confirmação`);
         
         // Criar array de duplicatas com dados comparativos
         const duplicatesInfo = duplicates.map(existing => {
           const newVehicle = data.veiculos.find(v => v.placa === existing.placa);
           return {
             placa: existing.placa,
+            marca: existing.marca,
+            modelo: existing.modelo,
             existingData: existing,
             newData: newVehicle
           };
         });
 
-        // Lançar erro especial com informação de duplicatas
-        const error: any = new Error('Duplicatas detectadas');
-        error.duplicates = duplicatesInfo;
-        throw error;
+        // Retornar duplicatas sem salvar
+        return { duplicates: duplicatesInfo };
       }
 
       // Processar dados dos veículos
@@ -452,6 +450,9 @@ export class N8NUploadService {
       // Disparar evento para atualizar o dashboard
       window.dispatchEvent(new CustomEvent('frota-data-updated'));
       console.log('📡 Evento frota-data-updated disparado');
+      
+      // Retornar sucesso sem duplicatas
+      return {};
       
     } catch (error: any) {
       console.error('💥 Erro geral ao salvar dados no Supabase:', error);
