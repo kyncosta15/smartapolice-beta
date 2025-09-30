@@ -1,49 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { NovoTicketModal } from './NovoTicketModal';
-import { SinistrosListModal } from './SinistrosListModal';
-import { MegaCard } from './MegaCard';
+import { NovoTicketModalV4 } from './NovoTicketModalV4';
 import { MetricCard } from './MetricCard';
 import { useClaimsStats } from '@/hooks/useClaimsStats';
 import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
-import { TicketsList } from '@/components/tickets/TicketsList';
-import { shouldUseUIV2, shouldUseTabsV2 } from '@/config/features';
-// Phase 1 - UI V2 components
-import { NovoTicketModalV2 } from './NovoTicketModalV2'
-import { NovoTicketModalV3 } from './NovoTicketModalV3'
-import { NovoTicketModalV4 } from './NovoTicketModalV4'
-import { useUIVersion } from '@/hooks/useUIVersion'
-import { TicketsListV2 } from '@/components/tickets/TicketsListV2'
-import { TabsRCorp, TabItem } from '@/components/ui-v2/tabs-rcorp'
-import { SinistrosFilter } from './SinistrosFilter'
-import { Badge } from '@/components/ui/badge'
+import { SinistrosFilter } from './SinistrosFilter';
+import { Badge } from '@/components/ui/badge';
 import { 
   FileText, 
   CheckCircle, 
   Clock,
   Plus,
   Wrench,
-  GitBranch,
   AlertTriangle,
   BarChart3,
   Moon,
-  Sun
+  Sun,
+  X
 } from 'lucide-react';
 import { Claim, Assistance } from '@/types/claims';
-
-interface ClaimFilter {
-  tipo?: 'sinistro' | 'assistencia';
-  status?: string[];
-  createdFromDays?: number;
-}
-
-interface ModalFilter {
-  tipo?: 'sinistro' | 'assistencia';
-  status?: string;
-  periodo?: 'last60d';
-}
 
 interface SinistrosDashboardProps {
   onNavigateToList?: (scope: 'all' | 'claims' | 'assists', filter?: string, value?: string) => void;
@@ -56,19 +33,19 @@ export function SinistrosDashboard({
 }: SinistrosDashboardProps) {
   console.log('🚗 SinistrosDashboard renderizando...');
   
-  const uiVersion = useUIVersion('sinistros');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toast } = useToast();
   
   // State for data
   const [claims, setClaims] = useState<Claim[]>([]);
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   
-  // Modal state
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalFilter, setModalFilter] = useState<ModalFilter>({});
-  
-  const { toast } = useToast();
+  // URL params
+  const type = searchParams.get('type') || 'todos';
+  const status = searchParams.get('status') || 'todos';
+  const period = searchParams.get('period') || 'all';
 
   // Calculate KPIs using the custom hook
   const stats = useClaimsStats(claims, assistances);
@@ -101,40 +78,36 @@ export function SinistrosDashboard({
     }
   };
 
-  // Navigate to list with specific filter
-  const goToListWith = (filter: ClaimFilter) => {
-    let title = '';
-    let modalFilterFormatted: ModalFilter = {};
-    
-    if (filter.tipo && filter.status) {
-      const statusText = filter.status.includes('finalizado') ? 'Finalizados' : 'em Aberto';
-      title = `${filter.tipo === 'sinistro' ? 'Sinistros' : 'Assistências'} ${statusText}`;
-      modalFilterFormatted = { 
-        tipo: filter.tipo, 
-        status: filter.status.includes('finalizado') ? 'closed' : 'open' 
-      };
-    } else if (filter.tipo) {
-      title = `Total de ${filter.tipo === 'sinistro' ? 'Sinistros' : 'Assistências'}`;
-      modalFilterFormatted = { tipo: filter.tipo };
-    } else if (filter.createdFromDays === 60) {
-      title = 'Últimos 60 dias';
-      modalFilterFormatted = { periodo: 'last60d' };
-    } else {
-      title = 'Todos os Tickets';
-      modalFilterFormatted = {};
-    }
-    
-    setModalTitle(title);
-    setModalFilter(modalFilterFormatted);
-    setModalOpen(true);
-  };
-
   const handleTicketCreated = () => {
     loadData();
   };
 
-  // Dark mode state
-  const [darkMode, setDarkMode] = useState(false);
+  // Update URL params
+  const updateFilters = (newType?: string, newStatus?: string, newPeriod?: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (newType) params.set('type', newType);
+    if (newStatus) params.set('status', newStatus);
+    if (newPeriod !== undefined) params.set('period', newPeriod);
+    setSearchParams(params);
+    
+    // Scroll to list
+    setTimeout(() => {
+      document.getElementById('tickets-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
+  const clearFilters = () => {
+    setSearchParams({ type: 'todos', status: 'todos', period: 'all' });
+  };
+
+  // Get active filter labels
+  const getFilterLabels = () => {
+    const labels: string[] = [];
+    if (type !== 'todos') labels.push(type === 'sinistro' ? 'Sinistros' : 'Assistências');
+    if (status !== 'todos') labels.push(status === 'aberto' ? 'Em aberto' : 'Finalizados');
+    if (period === 'last60d') labels.push('Últimos 60 dias');
+    return labels;
+  };
 
   useEffect(() => {
     if (darkMode) {
@@ -174,155 +147,133 @@ export function SinistrosDashboard({
             </Button>
 
             {/* Botão de novo registro */}
-            {uiVersion.useV2 ? (
-              <NovoTicketModalV4
-                trigger={
-                  <Button 
-                    size="default" 
-                    className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-xl px-6"
-                  >
-                    <Plus className="h-5 w-5" />
-                    <span className="hidden sm:inline">Novo Registro</span>
-                    <span className="sm:hidden">Novo</span>
-                  </Button>
-                }
-                onTicketCreated={handleTicketCreated}
-                initialTipo="sinistro"
-              />
-            ) : (
-              <NovoTicketModal
-                trigger={
-                  <Button 
-                    size="default" 
-                    className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-xl px-6"
-                  >
-                    <Plus className="h-5 w-5" />
-                    <span className="hidden sm:inline">Novo Registro</span>
-                    <span className="sm:hidden">Novo</span>
-                  </Button>
-                }
-                onTicketCreated={handleTicketCreated}
-                initialTipo="sinistro"
-              />
-            )}
+            <NovoTicketModalV4
+              trigger={
+                <Button 
+                  size="default" 
+                  className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-xl px-6"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span className="hidden sm:inline">Novo Registro</span>
+                  <span className="sm:hidden">Novo</span>
+                </Button>
+              }
+              onTicketCreated={handleTicketCreated}
+              initialTipo="sinistro"
+            />
           </div>
         </div>
 
-      {/* TabsRCorp V2 ou Tabs tradicionais baseado na feature flag */}
-      {shouldUseTabsV2() ? (
-        <TabsRCorp
-          items={createTabsV2Items()}
-          initialTabId="dashboard"
-          urlSync={true}
-          className="w-full"
-        />
-      ) : (
-        // Layout original (fallback)
-        <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="tickets" className="flex items-center gap-2">
-              <GitBranch className="h-4 w-4" />
-              Tickets
-            </TabsTrigger>
-          </TabsList>
+        {/* Chips de filtro compactos */}
+        <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-2">
+          <button
+            onClick={() => updateFilters('todos', status, period)}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+              type === 'todos'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+            role="button"
+            aria-pressed={type === 'todos'}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Todos
+            <Badge variant="secondary" className="ml-1 bg-white/20 text-inherit border-0">
+              {stats.totais.tickets}
+            </Badge>
+          </button>
 
-          <TabsContent value="dashboard" className="mt-6 space-y-6">
-            {renderDashboardContent()}
-          </TabsContent>
+          <button
+            onClick={() => updateFilters('sinistro', status, period)}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+              type === 'sinistro'
+                ? 'bg-red-600 text-white shadow-md'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+            role="button"
+            aria-pressed={type === 'sinistro'}
+          >
+            <AlertTriangle className="h-4 w-4" />
+            Sinistros
+            <Badge variant="secondary" className="ml-1 bg-white/20 text-inherit border-0">
+              {stats.sinistros.total}
+            </Badge>
+          </button>
 
-          <TabsContent value="tickets" className="mt-6">
-            {renderTicketsContent()}
-          </TabsContent>
-        </Tabs>
-      )}
+          <button
+            onClick={() => updateFilters('assistencia', status, period)}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+              type === 'assistencia'
+                ? 'bg-green-600 text-white shadow-md'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+            role="button"
+            aria-pressed={type === 'assistencia'}
+          >
+            <Wrench className="h-4 w-4" />
+            Assistências
+            <Badge variant="secondary" className="ml-1 bg-white/20 text-inherit border-0">
+              {stats.assistencias.total}
+            </Badge>
+          </button>
 
-        {/* Modal com lista filtrada - compartilhado entre versões */}
-        <SinistrosListModal
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-          title={modalTitle}
-          initialFilter={modalFilter}
-        />
+          {/* Seletor de período */}
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Período:</span>
+            <button
+              onClick={() => updateFilters(type, status, period === 'last60d' ? 'all' : 'last60d')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                period === 'last60d'
+                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`}
+            >
+              {period === 'last60d' ? 'Últimos 60 dias' : 'Todos'}
+            </button>
+          </div>
+        </div>
+
+        {/* Dashboard Content */}
+        {renderDashboardContent()}
+
+        {/* Breadcrumbs e Lista de Tickets */}
+        <div id="tickets-list" className="space-y-4 scroll-mt-6">
+          {getFilterLabels().length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+              <span className="text-sm font-medium text-blue-900 dark:text-blue-300">
+                Filtros ativos:
+              </span>
+              {getFilterLabels().map((label, idx) => (
+                <Badge key={idx} variant="secondary" className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                  {label}
+                </Badge>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="ml-auto text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Limpar filtros
+              </Button>
+            </div>
+          )}
+
+          <SinistrosFilter
+            claims={claims}
+            assistances={assistances}
+            loading={loading}
+            filter={type === 'sinistro' ? 'sinistro' : type === 'assistencia' ? 'assistencia' : 'todos'}
+            onViewClaim={(id) => console.log('View claim:', id)}
+            onEditClaim={(id) => console.log('Edit claim:', id)}
+            onDeleteClaim={(id) => console.log('Delete claim:', id)}
+          />
+        </div>
       </div>
     </div>
   );
 
-  // Função para criar os itens das abas V2
-  function createTabsV2Items(): TabItem[] {
-    return [
-      {
-        id: 'dashboard',
-        label: 'Dashboard',
-        icon: <BarChart3 className="h-4 w-4" />,
-        count: stats.totais.tickets,
-        content: <div className="mt-6 space-y-6">{renderDashboardContent()}</div>
-      },
-      {
-        id: 'sinistros',
-        label: 'Sinistros',
-        icon: <AlertTriangle className="h-4 w-4" />,
-        count: stats.sinistros.total,
-        lazy: true,
-        content: (
-          <div className="mt-6">
-            <SinistrosFilter
-              claims={claims}
-              assistances={assistances}
-              loading={loading}
-              filter="sinistro"
-              onViewClaim={(id) => console.log('View claim:', id)}
-              onEditClaim={(id) => console.log('Edit claim:', id)}
-              onDeleteClaim={(id) => console.log('Delete claim:', id)}
-            />
-          </div>
-        )
-      },
-      {
-        id: 'assistencias',
-        label: 'Assistências',
-        icon: <Wrench className="h-4 w-4" />,
-        count: stats.assistencias.total,
-        lazy: true,
-        content: (
-          <div className="mt-6">
-            <SinistrosFilter
-              claims={claims}
-              assistances={assistances}
-              loading={loading}
-              filter="assistencia"
-              onViewClaim={(id) => console.log('View claim:', id)}
-              onEditClaim={(id) => console.log('Edit claim:', id)}
-              onDeleteClaim={(id) => console.log('Delete claim:', id)}
-            />
-          </div>
-        )
-      },
-      {
-        id: 'todos',
-        label: 'Todos',
-        icon: <GitBranch className="h-4 w-4" />,
-        count: stats.totais.tickets,
-        lazy: true,
-        content: (
-          <div className="mt-6">
-            <SinistrosFilter
-              claims={claims}
-              assistances={assistances}
-              loading={loading}
-              filter="todos"
-              onViewClaim={(id) => console.log('View claim:', id)}
-              onEditClaim={(id) => console.log('Edit claim:', id)}
-              onDeleteClaim={(id) => console.log('Delete claim:', id)}
-            />
-          </div>
-        )
-      }
-    ];
-  }
 
   // Função para renderizar conteúdo do dashboard (reutilizada)
   function renderDashboardContent() {
@@ -334,8 +285,11 @@ export function SinistrosDashboard({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Card Totais */}
             <div 
-              onClick={() => goToListWith({})}
+              onClick={() => updateFilters('todos', 'todos', period)}
               className="group bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 dark:border-gray-700"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && updateFilters('todos', 'todos', period)}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
@@ -369,8 +323,11 @@ export function SinistrosDashboard({
 
             {/* Card Últimos 60 dias */}
             <div 
-              onClick={() => goToListWith({ createdFromDays: 60 })}
+              onClick={() => updateFilters(type, status, period === 'last60d' ? 'all' : 'last60d')}
               className="group bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer text-white"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && updateFilters(type, status, period === 'last60d' ? 'all' : 'last60d')}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="p-3 bg-white/10 backdrop-blur-sm rounded-xl">
@@ -405,7 +362,7 @@ export function SinistrosDashboard({
               value={stats.sinistros.total}
               variant="total"
               icon={FileText}
-              onClick={() => goToListWith({ tipo: 'sinistro' })}
+              onClick={() => updateFilters('sinistro', 'todos', period)}
               ariaLabel="Ver todos os sinistros"
               isLoading={loading}
             />
@@ -414,7 +371,7 @@ export function SinistrosDashboard({
               value={stats.sinistros.abertos}
               variant="aberto"
               icon={Clock}
-              onClick={() => goToListWith({ tipo: 'sinistro', status: ['aberto', 'em_analise', 'em_andamento'] })}
+              onClick={() => updateFilters('sinistro', 'aberto', period)}
               ariaLabel="Ver sinistros em aberto"
               isLoading={loading}
               pulse={stats.sinistros.abertos > 0}
@@ -424,7 +381,7 @@ export function SinistrosDashboard({
               value={stats.sinistros.finalizados}
               variant="finalizado"
               icon={CheckCircle}
-              onClick={() => goToListWith({ tipo: 'sinistro', status: ['finalizado'] })}
+              onClick={() => updateFilters('sinistro', 'finalizado', period)}
               ariaLabel="Ver sinistros finalizados"
               isLoading={loading}
             />
@@ -443,7 +400,7 @@ export function SinistrosDashboard({
               value={stats.assistencias.total}
               variant="assistencia"
               icon={Wrench}
-              onClick={() => goToListWith({ tipo: 'assistencia' })}
+              onClick={() => updateFilters('assistencia', 'todos', period)}
               ariaLabel="Ver todas as assistências"
               isLoading={loading}
             />
@@ -452,7 +409,7 @@ export function SinistrosDashboard({
               value={stats.assistencias.abertos}
               variant="aberto"
               icon={Clock}
-              onClick={() => goToListWith({ tipo: 'assistencia', status: ['aberto', 'em_analise', 'em_andamento'] })}
+              onClick={() => updateFilters('assistencia', 'aberto', period)}
               ariaLabel="Ver assistências em aberto"
               isLoading={loading}
               pulse={stats.assistencias.abertos > 0}
@@ -462,7 +419,7 @@ export function SinistrosDashboard({
               value={stats.assistencias.finalizados}
               variant="finalizado"
               icon={CheckCircle}
-              onClick={() => goToListWith({ tipo: 'assistencia', status: ['finalizado'] })}
+              onClick={() => updateFilters('assistencia', 'finalizado', period)}
               ariaLabel="Ver assistências finalizadas"
               isLoading={loading}
             />
@@ -472,20 +429,4 @@ export function SinistrosDashboard({
     );
   }
 
-  // Função para renderizar conteúdo dos tickets (reutilizada)
-  function renderTicketsContent() {
-    return (
-      <div className="space-y-4">
-        <SinistrosFilter
-          claims={claims}
-          assistances={assistances}
-          loading={loading}
-          filter="todos"
-          onViewClaim={(id) => console.log('View claim:', id)}
-          onEditClaim={(id) => console.log('Edit claim:', id)}
-          onDeleteClaim={(id) => console.log('Delete claim:', id)}
-        />
-      </div>
-    );
-  }
 }
