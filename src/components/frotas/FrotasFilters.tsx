@@ -11,7 +11,8 @@ import {
   Calendar,
   Check,
   AlertTriangle,
-  Wrench
+  Wrench,
+  ArrowUpAZ
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -21,6 +22,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FrotaFilters } from '../GestaoFrotas';
@@ -87,6 +95,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
       categoria: [],
       status: [],
       marcaModelo: [],
+      ordenacao: 'padrao',
     });
   };
 
@@ -171,6 +180,25 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
               <X className="h-4 w-4" />
             </button>
           )}
+        </div>
+
+        {/* Sort Select */}
+        <div className="w-40">
+          <Select
+            value={filters.ordenacao || 'padrao'}
+            onValueChange={(value) => onFilterChange({ ordenacao: value })}
+            disabled={loading}
+          >
+            <SelectTrigger className="h-8 sm:h-9">
+              <ArrowUpAZ className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Ordenar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="padrao">Padrão</SelectItem>
+              <SelectItem value="a-z">A-Z</SelectItem>
+              <SelectItem value="z-a">Z-A</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Unified Filter Button */}

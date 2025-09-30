@@ -45,6 +45,7 @@ export interface FrotaFilters {
   marcaModelo: string[];
   categoria: string[];
   status: string[];
+  ordenacao: string;
 }
 
 export function GestaoFrotas() {
@@ -57,7 +58,8 @@ export function GestaoFrotas() {
     search: '',
     marcaModelo: [],
     categoria: [],
-    status: []
+    status: [],
+    ordenacao: 'padrao'
   });
 
   // Mock policies data - replace with real data from your API
