@@ -22,9 +22,10 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 interface FrotasFipeProps {
   veiculos: FrotaVeiculo[];
   loading: boolean;
+  hasActiveFilters?: boolean;
 }
 
-export function FrotasFipe({ veiculos, loading }: FrotasFipeProps) {
+export function FrotasFipe({ veiculos, loading, hasActiveFilters = false }: FrotasFipeProps) {
   // Filtrar apenas veículos com dados FIPE e NF
   const veiculosComFipe = veiculos.filter(v => v.preco_fipe && v.preco_nf);
 
@@ -219,10 +220,14 @@ export function FrotasFipe({ veiculos, loading }: FrotasFipeProps) {
             <div className="text-center py-12">
               <Calculator className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Nenhum dado FIPE disponível
+                {hasActiveFilters || veiculos.length === 0 
+                  ? 'Nenhum veículo encontrado' 
+                  : 'Nenhum dado FIPE disponível'}
               </h3>
               <p className="text-gray-500">
-                Para exibir a análise FIPE, é necessário ter veículos com dados de preço FIPE e valor da NF.
+                {hasActiveFilters || veiculos.length === 0
+                  ? 'Não foram encontrados veículos com os filtros aplicados. Tente ajustar sua busca.'
+                  : 'Para exibir a análise FIPE, é necessário ter veículos com dados de preço FIPE e valor da NF.'}
               </p>
             </div>
           ) : (
