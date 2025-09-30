@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { NovoTicketModalV4 } from './NovoTicketModalV4';
 import { MetricCard } from './MetricCard';
 import { useClaimsStats } from '@/hooks/useClaimsStats';
 import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
-import { SinistrosFilter } from './SinistrosFilter';
-import { Badge } from '@/components/ui/badge';
+import { SinistrosDetailsModal } from './SinistrosDetailsModal';
 import { 
   FileText, 
   CheckCircle, 
@@ -17,8 +16,7 @@ import {
   AlertTriangle,
   BarChart3,
   Moon,
-  Sun,
-  X
+  Sun
 } from 'lucide-react';
 import { Claim, Assistance } from '@/types/claims';
 
@@ -33,7 +31,6 @@ export function SinistrosDashboard({
 }: SinistrosDashboardProps) {
   console.log('🚗 SinistrosDashboard renderizando...');
   
-  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   
   // State for data
@@ -42,10 +39,9 @@ export function SinistrosDashboard({
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   
-  // URL params
-  const type = searchParams.get('type') || 'todos';
-  const status = searchParams.get('status') || 'todos';
-  const period = searchParams.get('period') || 'all';
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalFilter, setModalFilter] = useState<'sinistro' | 'assistencia' | 'todos'>('todos');
 
   // Calculate KPIs using the custom hook
   const stats = useClaimsStats(claims, assistances);
@@ -82,31 +78,10 @@ export function SinistrosDashboard({
     loadData();
   };
 
-  // Update URL params
-  const updateFilters = (newType?: string, newStatus?: string, newPeriod?: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (newType) params.set('type', newType);
-    if (newStatus) params.set('status', newStatus);
-    if (newPeriod !== undefined) params.set('period', newPeriod);
-    setSearchParams(params);
-    
-    // Scroll to list
-    setTimeout(() => {
-      document.getElementById('tickets-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  };
-
-  const clearFilters = () => {
-    setSearchParams({ type: 'todos', status: 'todos', period: 'all' });
-  };
-
-  // Get active filter labels
-  const getFilterLabels = () => {
-    const labels: string[] = [];
-    if (type !== 'todos') labels.push(type === 'sinistro' ? 'Sinistros' : 'Assistências');
-    if (status !== 'todos') labels.push(status === 'aberto' ? 'Em aberto' : 'Finalizados');
-    if (period === 'last60d') labels.push('Últimos 60 dias');
-    return labels;
+  // Open modal with filter
+  const openModal = (filter: 'sinistro' | 'assistencia' | 'todos') => {
+    setModalFilter(filter);
+    setModalOpen(true);
   };
 
   useEffect(() => {
@@ -164,128 +139,18 @@ export function SinistrosDashboard({
           </div>
         </div>
 
-        {/* Chips de filtro compactos */}
-        <div className="space-y-3">
-          <div className="overflow-x-auto overflow-y-visible -mx-4 pl-8 pr-6 md:mx-0 md:px-0 pt-5 pb-3">
-            <div className="flex items-center justify-center gap-6 min-w-max md:min-w-0">
-              <button
-                onClick={() => updateFilters('todos', status, period)}
-                className={`relative inline-flex items-center justify-center w-14 h-14 rounded-full text-sm font-medium transition-all duration-200 ${
-                  type === 'todos'
-                    ? 'bg-blue-600 text-white shadow-lg scale-110'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105'
-                }`}
-                role="button"
-                aria-pressed={type === 'todos'}
-                aria-label="Todos"
-                title="Todos"
-              >
-                <BarChart3 className="h-5 w-5 shrink-0" />
-                <Badge 
-                  variant="secondary" 
-                  className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 bg-blue-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0.5 min-w-[22px] h-[22px] flex items-center justify-center rounded-full shadow-sm"
-                >
-                  {stats.totais.tickets}
-                </Badge>
-              </button>
-
-              <button
-                onClick={() => updateFilters('sinistro', status, period)}
-                className={`relative inline-flex items-center justify-center w-14 h-14 rounded-full text-sm font-medium transition-all duration-200 ${
-                  type === 'sinistro'
-                    ? 'bg-red-600 text-white shadow-lg scale-110'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105'
-                }`}
-                role="button"
-                aria-pressed={type === 'sinistro'}
-                aria-label="Sinistros"
-                title="Sinistros"
-              >
-                <AlertTriangle className="h-5 w-5 shrink-0" />
-                <Badge 
-                  variant="secondary" 
-                  className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 bg-red-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0.5 min-w-[22px] h-[22px] flex items-center justify-center rounded-full shadow-sm"
-                >
-                  {stats.sinistros.total}
-                </Badge>
-              </button>
-
-              <button
-                onClick={() => updateFilters('assistencia', status, period)}
-                className={`relative inline-flex items-center justify-center w-14 h-14 rounded-full text-sm font-medium transition-all duration-200 ${
-                  type === 'assistencia'
-                    ? 'bg-green-600 text-white shadow-lg scale-110'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105'
-                }`}
-                role="button"
-                aria-pressed={type === 'assistencia'}
-                aria-label="Assistências"
-                title="Assistências"
-              >
-                <Wrench className="h-5 w-5 shrink-0" />
-                <Badge 
-                  variant="secondary" 
-                  className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 bg-green-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0.5 min-w-[22px] h-[22px] flex items-center justify-center rounded-full shadow-sm"
-                >
-                  {stats.assistencias.total}
-                </Badge>
-              </button>
-            </div>
-          </div>
-
-          {/* Seletor de período */}
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap">Período:</span>
-            <button
-              onClick={() => updateFilters(type, status, period === 'last60d' ? 'all' : 'last60d')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                period === 'last60d'
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
-            >
-              {period === 'last60d' ? 'Últimos 60 dias' : 'Todos'}
-            </button>
-          </div>
-        </div>
-
         {/* Dashboard Content */}
         {renderDashboardContent()}
 
-        {/* Breadcrumbs e Lista de Tickets */}
-        <div id="tickets-list" className="space-y-4 scroll-mt-6">
-          {getFilterLabels().length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
-              <span className="text-sm font-medium text-blue-900 dark:text-blue-300">
-                Filtros ativos:
-              </span>
-              {getFilterLabels().map((label, idx) => (
-                <Badge key={idx} variant="secondary" className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
-                  {label}
-                </Badge>
-              ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="ml-auto text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Limpar filtros
-              </Button>
-            </div>
-          )}
-
-          <SinistrosFilter
-            claims={claims}
-            assistances={assistances}
-            loading={loading}
-            filter={type === 'sinistro' ? 'sinistro' : type === 'assistencia' ? 'assistencia' : 'todos'}
-            onViewClaim={(id) => console.log('View claim:', id)}
-            onEditClaim={(id) => console.log('Edit claim:', id)}
-            onDeleteClaim={(id) => console.log('Delete claim:', id)}
-          />
-        </div>
+        {/* Modal de detalhes */}
+        <SinistrosDetailsModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          filter={modalFilter}
+          claims={claims}
+          assistances={assistances}
+          loading={loading}
+        />
       </div>
     </div>
   );
@@ -301,11 +166,11 @@ export function SinistrosDashboard({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Card Totais */}
             <div 
-              onClick={() => updateFilters('todos', 'todos', period)}
+              onClick={() => openModal('todos')}
               className="group bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 dark:border-gray-700"
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => e.key === 'Enter' && updateFilters('todos', 'todos', period)}
+              onKeyDown={(e) => e.key === 'Enter' && openModal('todos')}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
@@ -339,11 +204,7 @@ export function SinistrosDashboard({
 
             {/* Card Últimos 60 dias */}
             <div 
-              onClick={() => updateFilters(type, status, period === 'last60d' ? 'all' : 'last60d')}
-              className="group bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer text-white"
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === 'Enter' && updateFilters(type, status, period === 'last60d' ? 'all' : 'last60d')}
+              className="group bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 text-white"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="p-3 bg-white/10 backdrop-blur-sm rounded-xl">
@@ -378,7 +239,7 @@ export function SinistrosDashboard({
               value={stats.sinistros.total}
               variant="total"
               icon={FileText}
-              onClick={() => updateFilters('sinistro', 'todos', period)}
+              onClick={() => openModal('sinistro')}
               ariaLabel="Ver todos os sinistros"
               isLoading={loading}
             />
@@ -387,7 +248,7 @@ export function SinistrosDashboard({
               value={stats.sinistros.abertos}
               variant="aberto"
               icon={Clock}
-              onClick={() => updateFilters('sinistro', 'aberto', period)}
+              onClick={() => openModal('sinistro')}
               ariaLabel="Ver sinistros em aberto"
               isLoading={loading}
               pulse={stats.sinistros.abertos > 0}
@@ -397,7 +258,7 @@ export function SinistrosDashboard({
               value={stats.sinistros.finalizados}
               variant="finalizado"
               icon={CheckCircle}
-              onClick={() => updateFilters('sinistro', 'finalizado', period)}
+              onClick={() => openModal('sinistro')}
               ariaLabel="Ver sinistros finalizados"
               isLoading={loading}
             />
@@ -416,7 +277,7 @@ export function SinistrosDashboard({
               value={stats.assistencias.total}
               variant="assistencia"
               icon={Wrench}
-              onClick={() => updateFilters('assistencia', 'todos', period)}
+              onClick={() => openModal('assistencia')}
               ariaLabel="Ver todas as assistências"
               isLoading={loading}
             />
@@ -425,7 +286,7 @@ export function SinistrosDashboard({
               value={stats.assistencias.abertos}
               variant="aberto"
               icon={Clock}
-              onClick={() => updateFilters('assistencia', 'aberto', period)}
+              onClick={() => openModal('assistencia')}
               ariaLabel="Ver assistências em aberto"
               isLoading={loading}
               pulse={stats.assistencias.abertos > 0}
@@ -435,7 +296,7 @@ export function SinistrosDashboard({
               value={stats.assistencias.finalizados}
               variant="finalizado"
               icon={CheckCircle}
-              onClick={() => updateFilters('assistencia', 'finalizado', period)}
+              onClick={() => openModal('assistencia')}
               ariaLabel="Ver assistências finalizadas"
               isLoading={loading}
             />
