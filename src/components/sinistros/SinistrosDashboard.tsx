@@ -166,65 +166,67 @@ export function SinistrosDashboard({
 
         {/* Chips de filtro compactos */}
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => updateFilters('todos', status, period)}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                type === 'todos'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
-              role="button"
-              aria-pressed={type === 'todos'}
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span>Todos</span>
-              <Badge variant="secondary" className="ml-0.5 bg-white/20 text-inherit border-0 text-xs px-1.5 py-0">
-                {stats.totais.tickets}
-              </Badge>
-            </button>
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex items-center gap-2 min-w-max md:min-w-0">
+              <button
+                onClick={() => updateFilters('todos', status, period)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  type === 'todos'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+                role="button"
+                aria-pressed={type === 'todos'}
+              >
+                <BarChart3 className="h-4 w-4 shrink-0" />
+                <span>Todos</span>
+                <Badge variant="secondary" className="ml-0.5 bg-white/20 text-inherit border-0 text-xs px-1.5 py-0">
+                  {stats.totais.tickets}
+                </Badge>
+              </button>
 
-            <button
-              onClick={() => updateFilters('sinistro', status, period)}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                type === 'sinistro'
-                  ? 'bg-red-600 text-white shadow-md'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
-              role="button"
-              aria-pressed={type === 'sinistro'}
-            >
-              <AlertTriangle className="h-4 w-4" />
-              <span>Sinistros</span>
-              <Badge variant="secondary" className="ml-0.5 bg-white/20 text-inherit border-0 text-xs px-1.5 py-0">
-                {stats.sinistros.total}
-              </Badge>
-            </button>
+              <button
+                onClick={() => updateFilters('sinistro', status, period)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  type === 'sinistro'
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+                role="button"
+                aria-pressed={type === 'sinistro'}
+              >
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>Sinistros</span>
+                <Badge variant="secondary" className="ml-0.5 bg-white/20 text-inherit border-0 text-xs px-1.5 py-0">
+                  {stats.sinistros.total}
+                </Badge>
+              </button>
 
-            <button
-              onClick={() => updateFilters('assistencia', status, period)}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                type === 'assistencia'
-                  ? 'bg-green-600 text-white shadow-md'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
-              role="button"
-              aria-pressed={type === 'assistencia'}
-            >
-              <Wrench className="h-4 w-4" />
-              <span>Assistências</span>
-              <Badge variant="secondary" className="ml-0.5 bg-white/20 text-inherit border-0 text-xs px-1.5 py-0">
-                {stats.assistencias.total}
-              </Badge>
-            </button>
+              <button
+                onClick={() => updateFilters('assistencia', status, period)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  type === 'assistencia'
+                    ? 'bg-green-600 text-white shadow-md'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+                role="button"
+                aria-pressed={type === 'assistencia'}
+              >
+                <Wrench className="h-4 w-4 shrink-0" />
+                <span>Assistências</span>
+                <Badge variant="secondary" className="ml-0.5 bg-white/20 text-inherit border-0 text-xs px-1.5 py-0">
+                  {stats.assistencias.total}
+                </Badge>
+              </button>
+            </div>
           </div>
 
           {/* Seletor de período */}
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-600 dark:text-gray-400 font-medium">Período:</span>
+            <span className="text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap">Período:</span>
             <button
               onClick={() => updateFilters(type, status, period === 'last60d' ? 'all' : 'last60d')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                 period === 'last60d'
                   ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
