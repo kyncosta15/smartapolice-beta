@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface NavbarProps {
   onMobileMenuToggle: () => void;
@@ -76,8 +77,12 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
   return (
     <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
       <div className="h-16 flex items-center justify-between px-6">
-        {/* Left side - Mobile Menu Toggle */}
-        <div className="flex items-center">
+        {/* Left side - Toggle buttons */}
+        <div className="flex items-center gap-2">
+          {/* Desktop Sidebar Toggle */}
+          <SidebarTrigger className="hidden lg:flex p-2 text-gray-700 hover:text-gray-900 hover:bg-slate-50 transition-all duration-300 rounded-lg" />
+          
+          {/* Mobile Menu Toggle */}
           <Button
             variant="ghost"
             size="sm"

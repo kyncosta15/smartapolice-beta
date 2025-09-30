@@ -345,13 +345,7 @@ export function DashboardContent() {
   })));
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Desktop Sidebar */}
-      <AppSidebar 
-        onSectionChange={setActiveSection} 
-        activeSection={activeSection} 
-      />
-      
+    <div className="min-h-screen flex w-full bg-gray-50">
       {/* Mobile Drawer */}
       <MobileDrawer
         isOpen={isMobileMenuOpen}
@@ -361,8 +355,14 @@ export function DashboardContent() {
         onSectionChange={setActiveSection}
       />
       
+      {/* Desktop Sidebar */}
+      <AppSidebar 
+        onSectionChange={setActiveSection} 
+        activeSection={activeSection} 
+      />
+      
       {/* Main Content */}
-      <main className="flex-1 lg:ml-60 min-w-0">
+      <main className="flex-1 min-w-0">
         <Navbar 
           onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
           isMobileMenuOpen={isMobileMenuOpen}
