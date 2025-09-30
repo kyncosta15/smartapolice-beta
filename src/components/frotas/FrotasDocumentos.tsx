@@ -364,22 +364,22 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
   return (
     <div className="space-y-6">
       {/* Header com botão de upload */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="flex-1">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
             Documentos da Frota
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Gerencie todos os documentos dos veículos
           </p>
         </div>
         
         <Button 
-          className="flex items-center gap-2"
+          className="flex items-center justify-center gap-2 w-full sm:w-auto shrink-0"
           onClick={() => setIsModalOpen(true)}
         >
           <Plus className="h-4 w-4" />
-          Adicionar Documento
+          <span className="text-sm">Adicionar Documento</span>
         </Button>
       </div>
 
