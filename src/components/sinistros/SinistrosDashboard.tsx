@@ -166,8 +166,8 @@ export function SinistrosDashboard({
 
         {/* Chips de filtro compactos */}
         <div className="space-y-3">
-          <div className="overflow-x-auto overflow-y-visible -mx-4 pl-6 pr-4 md:mx-0 md:px-0 pt-4 pb-2">
-            <div className="flex items-center gap-5 min-w-max md:min-w-0">
+          <div className="overflow-x-auto overflow-y-visible -mx-4 pl-8 pr-6 md:mx-0 md:px-0 pt-5 pb-3">
+            <div className="flex items-center gap-6 min-w-max md:min-w-0">
               <button
                 onClick={() => updateFilters('todos', status, period)}
                 className={`relative inline-flex items-center justify-center w-14 h-14 rounded-full text-sm font-medium transition-all duration-200 ${
