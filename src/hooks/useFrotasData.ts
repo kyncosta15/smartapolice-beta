@@ -279,22 +279,7 @@ export function useFrotasData(filters: FrotaFilters) {
       }
 
       // Sempre setar o array, mesmo que vazio
-      let veiculosData = Array.isArray(data) ? data : [];
-      
-      // Aplicar ordenação se solicitado
-      if (filters.ordenacao && filters.ordenacao !== 'padrao') {
-        veiculosData = [...veiculosData].sort((a, b) => {
-          const nomeA = `${a.marca || ''} ${a.modelo || ''}`.trim().toLowerCase();
-          const nomeB = `${b.marca || ''} ${b.modelo || ''}`.trim().toLowerCase();
-          
-          if (filters.ordenacao === 'a-z') {
-            return nomeA.localeCompare(nomeB, 'pt-BR');
-          } else if (filters.ordenacao === 'z-a') {
-            return nomeB.localeCompare(nomeA, 'pt-BR');
-          }
-          return 0;
-        });
-      }
+      const veiculosData = Array.isArray(data) ? data : [];
       
       if (fetchAll) {
         // Se é busca de todos, atualizar allVeiculos
@@ -368,7 +353,44 @@ export function useFrotasData(filters: FrotaFilters) {
     // Determine if this is a search operation
     const isSearchOperation = debouncedSearch !== '';
     fetchVeiculos(isSearchOperation);
-  }, [user?.id, activeEmpresaId, debouncedSearch, filters.categoria, filters.status, filters.marcaModelo, filters.search, filters.ordenacao]); // Added activeEmpresaId and ordenacao dependency
+  }, [user?.id, activeEmpresaId, debouncedSearch, filters.categoria, filters.status, filters.marcaModelo, filters.search]); // Removido filters.ordenacao
+
+  // Aplicar ordenação no frontend usando useMemo para performance
+  const veiculosOrdenados = useMemo(() => {
+    if (!filters.ordenacao || filters.ordenacao === 'padrao') {
+      return veiculos;
+    }
+
+    return [...veiculos].sort((a, b) => {
+      const nomeA = `${a.marca || ''} ${a.modelo || ''}`.trim().toLowerCase();
+      const nomeB = `${b.marca || ''} ${b.modelo || ''}`.trim().toLowerCase();
+      
+      if (filters.ordenacao === 'a-z') {
+        return nomeA.localeCompare(nomeB, 'pt-BR');
+      } else if (filters.ordenacao === 'z-a') {
+        return nomeB.localeCompare(nomeA, 'pt-BR');
+      }
+      return 0;
+    });
+  }, [veiculos, filters.ordenacao]);
+
+  const allVeiculosOrdenados = useMemo(() => {
+    if (!filters.ordenacao || filters.ordenacao === 'padrao') {
+      return allVeiculos;
+    }
+
+    return [...allVeiculos].sort((a, b) => {
+      const nomeA = `${a.marca || ''} ${a.modelo || ''}`.trim().toLowerCase();
+      const nomeB = `${b.marca || ''} ${b.modelo || ''}`.trim().toLowerCase();
+      
+      if (filters.ordenacao === 'a-z') {
+        return nomeA.localeCompare(nomeB, 'pt-BR');
+      } else if (filters.ordenacao === 'z-a') {
+        return nomeB.localeCompare(nomeA, 'pt-BR');
+      }
+      return 0;
+    });
+  }, [allVeiculos, filters.ordenacao]);
 
   // Escutar eventos de atualização da frota
   useEffect(() => {
@@ -384,14 +406,14 @@ export function useFrotasData(filters: FrotaFilters) {
     };
   }, []); // No dependencies to avoid re-creating the listener
 
-  // Calcular KPIs - sempre com array válido
+  // Calcular KPIs - sempre com array válido e usando veiculosOrdenados
   const kpis = useMemo((): FrotaKPIs => {
     const today = new Date();
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(today.getDate() + 30);
 
-    // Garantir que veiculos é sempre um array
-    const veiculosArray = Array.isArray(veiculos) ? veiculos : [];
+    // Garantir que veiculosOrdenados é sempre um array
+    const veiculosArray = Array.isArray(veiculosOrdenados) ? veiculosOrdenados : [];
     
     const totalVeiculos = veiculosArray.length;
     const semSeguro = veiculosArray.filter(v => v.status_seguro === 'sem_seguro').length;
@@ -430,15 +452,15 @@ export function useFrotasData(filters: FrotaFilters) {
       valorizacaoMedia,
       modalidadeDistribuicao,
     };
-  }, [veiculos]);
+  }, [veiculosOrdenados]);
 
   const refetch = useCallback(() => {
     fetchVeiculos(false);
   }, [fetchVeiculos]);
 
   return {
-    veiculos,
-    allVeiculos,
+    veiculos: veiculosOrdenados,
+    allVeiculos: allVeiculosOrdenados,
     loading,
     searchLoading,
     error,
