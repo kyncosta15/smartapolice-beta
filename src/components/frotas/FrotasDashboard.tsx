@@ -1,10 +1,12 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, Car, PieChart as PieChartIcon, Package } from 'lucide-react';
 import { FrotasTable } from './FrotasTable';
 import { FrotasFilters } from './FrotasFilters';
 import { FrotaVeiculo, FrotaKPIs } from '@/hooks/useFrotasData';
 import { FrotaFilters } from '../GestaoFrotas';
-import { Car, PieChart as PieChartIcon, Package } from 'lucide-react';
 import PieCard from '@/components/charts/PieCard';
 import { shouldUseUIV2 } from '@/config/features';
 // Phase 1 - UI V2 components
@@ -27,6 +29,7 @@ const chartColors = [
 interface FrotasDashboardProps {
   kpis: FrotaKPIs;
   veiculos: FrotaVeiculo[];
+  allVeiculos: FrotaVeiculo[];
   loading: boolean;
   searchLoading: boolean;
   onRefetch?: () => void;
@@ -34,11 +37,17 @@ interface FrotasDashboardProps {
   onFilterChange: (filters: Partial<FrotaFilters>) => void;
 }
 
-export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefetch, filters, onFilterChange }: FrotasDashboardProps) {
+export function FrotasDashboard({ kpis, veiculos, allVeiculos, loading, searchLoading, onRefetch, filters, onFilterChange }: FrotasDashboardProps) {
+  // Determinar se há filtros ativos e se a busca retornou 0 resultados
+  const hasActiveFilters = filters.search !== '' || filters.categoria.length > 0 || filters.status.length > 0 || filters.marcaModelo.length > 0;
+  const noResultsFound = hasActiveFilters && veiculos.length === 0 && allVeiculos.length > 0;
+  
+  // Usar veiculos filtrados se houver, senão usar todos
+  const displayVeiculos = noResultsFound ? allVeiculos : veiculos;
 
-  // Preparar dados para gráficos
+  // Preparar dados para gráficos usando displayVeiculos
   const categoriaData = React.useMemo(() => {
-    const categorias = veiculos.reduce((acc, v) => {
+    const categorias = displayVeiculos.reduce((acc, v) => {
       const cat = v.categoria || 'Outros';
       const normalizedCat = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
       acc[normalizedCat] = (acc[normalizedCat] || 0) + 1;
@@ -49,10 +58,10 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
       name,
       count
     }));
-  }, [veiculos]);
+  }, [displayVeiculos]);
 
   const marcasData = React.useMemo(() => {
-    const marcas = veiculos.reduce((acc, v) => {
+    const marcas = displayVeiculos.reduce((acc, v) => {
       if (!v.marca) return acc;
       acc[v.marca] = (acc[v.marca] || 0) + 1;
       return acc;
@@ -62,10 +71,10 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
       name,
       count
     }));
-  }, [veiculos]);
+  }, [displayVeiculos]);
 
   const modelosData = React.useMemo(() => {
-    const modelos = veiculos.reduce((acc, v) => {
+    const modelos = displayVeiculos.reduce((acc, v) => {
       if (!v.modelo) return acc;
       acc[v.modelo] = (acc[v.modelo] || 0) + 1;
       return acc;
@@ -75,10 +84,10 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
       name,
       count
     }));
-  }, [veiculos]);
+  }, [displayVeiculos]);
 
-  // Estado vazio - mostrar quando não há dados
-  if (!loading && Array.isArray(veiculos) && veiculos.length === 0) {
+  // Estado vazio - mostrar quando não há dados E não tem filtros ativos
+  if (!loading && Array.isArray(allVeiculos) && allVeiculos.length === 0 && !hasActiveFilters) {
     return (
       <FrotasEmptyState 
         onUploadClick={() => {}} 
@@ -119,10 +128,26 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
         <CardHeader className="p-3 md:p-4">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <Car className="h-5 w-5" />
-            Lista de Veículos ({veiculos.length})
+            Lista de Veículos ({displayVeiculos.length})
+            {noResultsFound && (
+              <Badge variant="secondary" className="ml-2">
+                Mostrando todos - busca sem resultados
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-0 space-y-4">
+          {/* Alert quando busca não retorna resultados */}
+          {noResultsFound && (
+            <Alert className="border-amber-200 bg-amber-50">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                <strong>Nenhum resultado encontrado para "{filters.search}"</strong>
+                <p className="text-sm mt-1">Mostrando todos os {allVeiculos.length} veículos disponíveis. Ajuste sua busca para filtrar os resultados.</p>
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <div className="relative">
             {/* Search loading overlay */}
             {searchLoading && (
@@ -153,13 +178,12 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
                 </div>
               )}
               
-              {/* Feature Flag: Use standard table */}
-              <FrotasTable 
-                veiculos={veiculos} 
-                loading={loading} 
-                onRefetch={onRefetch}
-                hideHeader={true}
-              />
+          <FrotasTable
+            veiculos={displayVeiculos}
+            loading={loading}
+            onRefetch={onRefetch || (() => {})}
+            hideHeader
+          />
             </div>
         </CardContent>
       </Card>

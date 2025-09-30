@@ -76,6 +76,7 @@ export function GestaoFrotas() {
 
   const { 
     veiculos, 
+    allVeiculos,
     loading, 
     searchLoading,
     error, 
@@ -235,7 +236,8 @@ export function GestaoFrotas() {
             <TabsContent value="frotas" className="h-full flex flex-col min-h-0 p-3 sm:p-4 md:p-6 m-0">
               <FrotasDashboard 
                 kpis={kpis} 
-                veiculos={veiculos} 
+                veiculos={veiculos}
+                allVeiculos={allVeiculos}
                 loading={loading} 
                 searchLoading={searchLoading}
                 onRefetch={refetch}
@@ -254,7 +256,7 @@ export function GestaoFrotas() {
 
             <TabsContent value="fipe" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
               <FrotasFipe 
-                veiculos={veiculos} 
+                veiculos={veiculos.length === 0 ? allVeiculos : veiculos} 
                 loading={loading} 
                 hasActiveFilters={
                   filters.search !== '' || 

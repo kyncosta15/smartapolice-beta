@@ -125,6 +125,7 @@ export function useFrotasData(filters: FrotaFilters) {
   const { toast } = useToast();
   const { activeEmpresaId } = useTenant();
   const [veiculos, setVeiculos] = useState<FrotaVeiculo[]>([]);
+  const [allVeiculos, setAllVeiculos] = useState<FrotaVeiculo[]>([]); // Lista completa sem filtros
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -138,7 +139,7 @@ export function useFrotasData(filters: FrotaFilters) {
     search: debouncedSearch
   }), [filters.categoria, filters.status, filters.marcaModelo, debouncedSearch]);
 
-  const fetchVeiculos = useCallback(async (isSearch = false) => {
+  const fetchVeiculos = useCallback(async (isSearch = false, fetchAll = false) => {
     if (!user) return;
 
     try {
@@ -248,21 +249,24 @@ export function useFrotasData(filters: FrotaFilters) {
       // Filter by user's company
       query = query.eq('empresa_id', empresaId);
 
-      // Aplicar filtros
-      if (debouncedFilters.search) {
-        const searchTerm = debouncedFilters.search.toLowerCase();
-        query = query.or(`placa.ilike.%${searchTerm}%,proprietario_doc.ilike.%${searchTerm}%,proprietario_nome.ilike.%${searchTerm}%,marca.ilike.%${searchTerm}%,modelo.ilike.%${searchTerm}%`);
-        console.log('🔍 Aplicando filtro de busca:', searchTerm);
-      }
+      // Se fetchAll é true, buscar todos sem filtros para manter a lista completa
+      if (!fetchAll) {
+        // Aplicar filtros
+        if (debouncedFilters.search) {
+          const searchTerm = debouncedFilters.search.toLowerCase();
+          query = query.or(`placa.ilike.%${searchTerm}%,proprietario_doc.ilike.%${searchTerm}%,proprietario_nome.ilike.%${searchTerm}%,marca.ilike.%${searchTerm}%,modelo.ilike.%${searchTerm}%`);
+          console.log('🔍 Aplicando filtro de busca:', searchTerm);
+        }
 
-      if (debouncedFilters.categoria.length > 0) {
-        query = query.in('categoria', debouncedFilters.categoria);
-        console.log('🔍 Aplicando filtro de categoria:', debouncedFilters.categoria);
-      }
+        if (debouncedFilters.categoria.length > 0) {
+          query = query.in('categoria', debouncedFilters.categoria);
+          console.log('🔍 Aplicando filtro de categoria:', debouncedFilters.categoria);
+        }
 
-      if (debouncedFilters.status.length > 0) {
-        query = query.in('status_seguro', debouncedFilters.status);
-        console.log('🔍 Aplicando filtro de status:', debouncedFilters.status);
+        if (debouncedFilters.status.length > 0) {
+          query = query.in('status_seguro', debouncedFilters.status);
+          console.log('🔍 Aplicando filtro de status:', debouncedFilters.status);
+        }
       }
 
       const { data, error: fetchError } = await query
@@ -275,8 +279,16 @@ export function useFrotasData(filters: FrotaFilters) {
 
       // Sempre setar o array, mesmo que vazio
       const veiculosData = Array.isArray(data) ? data : [];
-      setVeiculos(veiculosData);
-      console.log(`✅ Veículos carregados: ${veiculosData.length} itens`);
+      
+      if (fetchAll) {
+        // Se é busca de todos, atualizar allVeiculos
+        setAllVeiculos(veiculosData);
+        console.log(`✅ Lista completa carregada: ${veiculosData.length} itens`);
+      } else {
+        // Se é busca filtrada, atualizar veiculos
+        setVeiculos(veiculosData);
+        console.log(`✅ Veículos filtrados: ${veiculosData.length} itens`);
+      }
       
     } catch (err: any) {
       console.error('Erro ao buscar veículos:', err);
@@ -301,7 +313,13 @@ export function useFrotasData(filters: FrotaFilters) {
   useEffect(() => {
     if (user && activeEmpresaId !== null) {
       console.log('🔄 Carregando dados da frota para empresa:', activeEmpresaId);
-      fetchVeiculos(false);
+      // Buscar lista completa primeiro
+      fetchVeiculos(false, true);
+      // Se tem filtros ativos, buscar filtrados também
+      const hasFilters = filters.search !== '' || filters.categoria.length > 0 || filters.status.length > 0;
+      if (hasFilters) {
+        fetchVeiculos(false, false);
+      }
     }
   }, [user?.id, activeEmpresaId]); // Depend on both user and activeEmpresaId
 
@@ -404,6 +422,7 @@ export function useFrotasData(filters: FrotaFilters) {
 
   return {
     veiculos,
+    allVeiculos,
     loading,
     searchLoading,
     error,
