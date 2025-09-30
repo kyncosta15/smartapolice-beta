@@ -167,54 +167,66 @@ export function SinistrosDashboard({
         {/* Chips de filtro compactos */}
         <div className="space-y-3">
           <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-            <div className="flex items-center gap-2 min-w-max md:min-w-0">
+            <div className="flex items-center gap-3 min-w-max md:min-w-0">
               <button
                 onClick={() => updateFilters('todos', status, period)}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                className={`relative inline-flex items-center justify-center w-12 h-12 rounded-full text-sm font-medium transition-all duration-200 ${
                   type === 'todos'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    ? 'bg-blue-600 text-white shadow-lg scale-110'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105'
                 }`}
                 role="button"
                 aria-pressed={type === 'todos'}
+                aria-label="Todos"
+                title="Todos"
               >
-                <BarChart3 className="h-4 w-4 shrink-0" />
-                <span>Todos</span>
-                <Badge variant="secondary" className="ml-0.5 bg-white/20 text-inherit border-0 text-xs px-1.5 py-0">
+                <BarChart3 className="h-5 w-5 shrink-0" />
+                <Badge 
+                  variant="secondary" 
+                  className="absolute -top-1 -right-1 bg-blue-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0 min-w-[20px] h-5 flex items-center justify-center rounded-full"
+                >
                   {stats.totais.tickets}
                 </Badge>
               </button>
 
               <button
                 onClick={() => updateFilters('sinistro', status, period)}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                className={`relative inline-flex items-center justify-center w-12 h-12 rounded-full text-sm font-medium transition-all duration-200 ${
                   type === 'sinistro'
-                    ? 'bg-red-600 text-white shadow-md'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    ? 'bg-red-600 text-white shadow-lg scale-110'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105'
                 }`}
                 role="button"
                 aria-pressed={type === 'sinistro'}
+                aria-label="Sinistros"
+                title="Sinistros"
               >
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                <span>Sinistros</span>
-                <Badge variant="secondary" className="ml-0.5 bg-white/20 text-inherit border-0 text-xs px-1.5 py-0">
+                <AlertTriangle className="h-5 w-5 shrink-0" />
+                <Badge 
+                  variant="secondary" 
+                  className="absolute -top-1 -right-1 bg-red-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0 min-w-[20px] h-5 flex items-center justify-center rounded-full"
+                >
                   {stats.sinistros.total}
                 </Badge>
               </button>
 
               <button
                 onClick={() => updateFilters('assistencia', status, period)}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                className={`relative inline-flex items-center justify-center w-12 h-12 rounded-full text-sm font-medium transition-all duration-200 ${
                   type === 'assistencia'
-                    ? 'bg-green-600 text-white shadow-md'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    ? 'bg-green-600 text-white shadow-lg scale-110'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105'
                 }`}
                 role="button"
                 aria-pressed={type === 'assistencia'}
+                aria-label="Assistências"
+                title="Assistências"
               >
-                <Wrench className="h-4 w-4 shrink-0" />
-                <span>Assistências</span>
-                <Badge variant="secondary" className="ml-0.5 bg-white/20 text-inherit border-0 text-xs px-1.5 py-0">
+                <Wrench className="h-5 w-5 shrink-0" />
+                <Badge 
+                  variant="secondary" 
+                  className="absolute -top-1 -right-1 bg-green-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0 min-w-[20px] h-5 flex items-center justify-center rounded-full"
+                >
                   {stats.assistencias.total}
                 </Badge>
               </button>
