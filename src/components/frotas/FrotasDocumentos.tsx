@@ -403,11 +403,16 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
               <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Todos os veículos" />
               </SelectTrigger>
-              <SelectContent className="max-h-[320px] overflow-y-auto">
+              <SelectContent className="max-h-[280px] w-[calc(100vw-2rem)] sm:w-auto max-w-[400px]">
                 <SelectItem value="all">Todos os veículos</SelectItem>
                 {veiculos.map((veiculo) => (
                   <SelectItem key={veiculo.id} value={veiculo.id}>
-                    {veiculo.placa || 'Sem placa'} - {veiculo.marca || ''} {veiculo.modelo || ''}
+                    <div className="flex flex-col sm:flex-row sm:gap-1 truncate max-w-full">
+                      <span className="font-medium truncate">{veiculo.placa || 'Sem placa'}</span>
+                      <span className="text-muted-foreground text-xs sm:text-sm truncate">
+                        {veiculo.marca || ''} {veiculo.modelo || ''}
+                      </span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -567,10 +572,15 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
                 <SelectTrigger id="veiculo">
                   <SelectValue placeholder="Selecione um veículo" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[320px] overflow-y-auto">
+                <SelectContent className="max-h-[280px] w-[calc(100vw-3rem)] sm:w-auto max-w-[400px]">
                   {veiculos.map((veiculo) => (
                     <SelectItem key={veiculo.id} value={veiculo.id}>
-                      {veiculo.placa || 'Sem placa'} - {veiculo.marca || ''} {veiculo.modelo || ''}
+                      <div className="flex flex-col truncate max-w-full">
+                        <span className="font-medium text-sm truncate">{veiculo.placa || 'Sem placa'}</span>
+                        <span className="text-muted-foreground text-xs truncate">
+                          {veiculo.marca || ''} {veiculo.modelo || ''}
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
