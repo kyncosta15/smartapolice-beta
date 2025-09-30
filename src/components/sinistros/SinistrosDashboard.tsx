@@ -27,7 +27,9 @@ import {
   Wrench,
   GitBranch,
   AlertTriangle,
-  BarChart3
+  BarChart3,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { Claim, Assistance } from '@/types/claims';
 
@@ -131,40 +133,80 @@ export function SinistrosDashboard({
     loadData();
   };
 
+  // Dark mode state
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
   return (
-    <div className="container mx-auto max-w-7xl px-4 md:px-6 space-y-6 md:space-y-8">
-      {/* Header com botão único */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">Gestão de Sinistros</h2>
-          <p className="text-sm text-muted-foreground">Dashboard e acompanhamento de tickets</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+      <div className="container mx-auto max-w-7xl px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
+        {/* Header moderno */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Dashboard de Sinistros e Assistências
+            </h1>
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+              Gerencie e acompanhe todos os registros em tempo real
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {/* Dark mode toggle */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setDarkMode(!darkMode)}
+              className="h-10 w-10 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              {darkMode ? (
+                <Sun className="h-5 w-5 text-yellow-500" />
+              ) : (
+                <Moon className="h-5 w-5 text-gray-700" />
+              )}
+            </Button>
+
+            {/* Botão de novo registro */}
+            {uiVersion.useV2 ? (
+              <NovoTicketModalV4
+                trigger={
+                  <Button 
+                    size="default" 
+                    className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-xl px-6"
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span className="hidden sm:inline">Novo Registro</span>
+                    <span className="sm:hidden">Novo</span>
+                  </Button>
+                }
+                onTicketCreated={handleTicketCreated}
+                initialTipo="sinistro"
+              />
+            ) : (
+              <NovoTicketModal
+                trigger={
+                  <Button 
+                    size="default" 
+                    className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-xl px-6"
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span className="hidden sm:inline">Novo Registro</span>
+                    <span className="sm:hidden">Novo</span>
+                  </Button>
+                }
+                onTicketCreated={handleTicketCreated}
+                initialTipo="sinistro"
+              />
+            )}
+          </div>
         </div>
-        
-        {/* Botão único - removendo redundâncias */}
-        {uiVersion.useV2 ? (
-          <NovoTicketModalV4
-            trigger={
-              <Button size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Novo Ticket
-              </Button>
-            }
-            onTicketCreated={handleTicketCreated}
-            initialTipo="sinistro"
-          />
-        ) : (
-          <NovoTicketModal
-            trigger={
-              <Button size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Novo Ticket
-              </Button>
-            }
-            onTicketCreated={handleTicketCreated}
-            initialTipo="sinistro"
-          />
-        )}
-      </div>
 
       {/* TabsRCorp V2 ou Tabs tradicionais baseado na feature flag */}
       {shouldUseTabsV2() ? (
@@ -198,13 +240,14 @@ export function SinistrosDashboard({
         </Tabs>
       )}
 
-      {/* Modal com lista filtrada - compartilhado entre versões */}
-      <SinistrosListModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        title={modalTitle}
-        initialFilter={modalFilter}
-      />
+        {/* Modal com lista filtrada - compartilhado entre versões */}
+        <SinistrosListModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          title={modalTitle}
+          initialFilter={modalFilter}
+        />
+      </div>
     </div>
   );
 
@@ -285,21 +328,78 @@ export function SinistrosDashboard({
   function renderDashboardContent() {
     return (
       <>
-        {/* MegaCard - Totais */}
-        <MegaCard
-          totalTickets={stats.totais.tickets}
-          totalAbertos={stats.sinistros.abertos + stats.assistencias.abertos}
-          totalFinalizados={stats.sinistros.finalizados + stats.assistencias.finalizados}
-          ultimos60d={stats.totais.ultimos60d}
-          onTotalClick={() => goToListWith({})}
-          onUltimos60dClick={() => goToListWith({ createdFromDays: 60 })}
-          isLoading={loading}
-        />
+        {/* Visão Geral - 2 cards grandes lado a lado */}
+        <section aria-label="Visão Geral" className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Visão Geral</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {/* Card Totais */}
+            <div 
+              onClick={() => goToListWith({})}
+              className="group bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 dark:border-gray-700"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                  <BarChart3 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <Badge variant="secondary" className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                  Total
+                </Badge>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total de Tickets</p>
+                <p className="text-4xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {loading ? '...' : stats.totais.tickets}
+                </p>
+                <div className="flex items-center gap-4 text-sm pt-2">
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4 text-orange-500" />
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {stats.sinistros.abertos + stats.assistencias.abertos} em aberto
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {stats.sinistros.finalizados + stats.assistencias.finalizados} finalizados
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-        {/* Linha de Sinistros */}
-        <section aria-labelledby="sinistros">
-          <h3 id="sinistros" className="sr-only">Sinistros</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {/* Card Últimos 60 dias */}
+            <div 
+              onClick={() => goToListWith({ createdFromDays: 60 })}
+              className="group bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer text-white"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-white/10 backdrop-blur-sm rounded-xl">
+                  <Clock className="h-6 w-6 text-white" />
+                </div>
+                <Badge className="bg-white/20 text-white border-white/30">
+                  60 dias
+                </Badge>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-blue-100">Últimos 60 dias</p>
+                <p className="text-4xl font-bold text-white group-hover:scale-105 transition-transform inline-block">
+                  {loading ? '...' : stats.totais.ultimos60d}
+                </p>
+                <p className="text-sm text-blue-100 pt-2">
+                  tickets registrados recentemente
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Cards detalhados - Sinistros */}
+        <section aria-labelledby="sinistros" className="space-y-4">
+          <h2 id="sinistros" className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+            Sinistros
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <MetricCard
               title="Total de Sinistros"
               value={stats.sinistros.total}
@@ -310,16 +410,17 @@ export function SinistrosDashboard({
               isLoading={loading}
             />
             <MetricCard
-              title="Sinistros em Aberto"
+              title="Em Aberto"
               value={stats.sinistros.abertos}
               variant="aberto"
               icon={Clock}
               onClick={() => goToListWith({ tipo: 'sinistro', status: ['aberto', 'em_analise', 'em_andamento'] })}
               ariaLabel="Ver sinistros em aberto"
               isLoading={loading}
+              pulse={stats.sinistros.abertos > 0}
             />
             <MetricCard
-              title="Sinistros Finalizados"
+              title="Finalizados"
               value={stats.sinistros.finalizados}
               variant="finalizado"
               icon={CheckCircle}
@@ -330,10 +431,13 @@ export function SinistrosDashboard({
           </div>
         </section>
 
-        {/* Linha de Assistências */}
-        <section aria-labelledby="assistencias">
-          <h3 id="assistencias" className="sr-only">Assistências</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        {/* Cards detalhados - Assistências */}
+        <section aria-labelledby="assistencias" className="space-y-4">
+          <h2 id="assistencias" className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <Wrench className="h-5 w-5 text-green-600 dark:text-green-400" />
+            Assistências
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <MetricCard
               title="Total de Assistências"
               value={stats.assistencias.total}
@@ -344,16 +448,17 @@ export function SinistrosDashboard({
               isLoading={loading}
             />
             <MetricCard
-              title="Assistências em Aberto"
+              title="Em Aberto"
               value={stats.assistencias.abertos}
               variant="aberto"
               icon={Clock}
               onClick={() => goToListWith({ tipo: 'assistencia', status: ['aberto', 'em_analise', 'em_andamento'] })}
               ariaLabel="Ver assistências em aberto"
               isLoading={loading}
+              pulse={stats.assistencias.abertos > 0}
             />
             <MetricCard
-              title="Assistências Finalizadas"
+              title="Finalizadas"
               value={stats.assistencias.finalizados}
               variant="finalizado"
               icon={CheckCircle}
