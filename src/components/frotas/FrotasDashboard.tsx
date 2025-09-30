@@ -138,6 +138,7 @@ export function FrotasDashboard({ kpis, veiculos, loading, searchLoading, onRefe
               filters={filters}
               onFilterChange={onFilterChange}
               loading={loading}
+              searchLoading={searchLoading}
             />
           </div>
           

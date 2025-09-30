@@ -31,6 +31,7 @@ interface FrotasFiltersProps {
   filters: FrotaFilters;
   onFilterChange: (filters: Partial<FrotaFilters>) => void;
   loading: boolean;
+  searchLoading?: boolean;
 }
 
 const categoriaOptions = [
@@ -45,7 +46,7 @@ const statusOptions = [
   { value: 'sem_seguro', label: 'Sem Seguro' },
 ];
 
-export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFiltersProps) {
+export function FrotasFilters({ filters, onFilterChange, loading, searchLoading = false }: FrotasFiltersProps) {
   const [marcaOptions, setMarcaOptions] = useState<{ value: string; label: string }[]>([]);
   const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0;
   const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length;
@@ -145,16 +146,22 @@ export function FrotasFilters({ filters, onFilterChange, loading }: FrotasFilter
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Search Input */}
         <div className="relative flex-1 min-w-0">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${searchLoading ? 'text-primary animate-pulse' : 'text-gray-400'}`} />
           <Input
             placeholder="Buscar por placa, CNPJ, CPF ou proprietário..."
             value={filters.search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-10 pr-10 h-9 sm:h-10 w-full"
+            className={`pl-10 pr-10 h-9 sm:h-10 w-full ${searchLoading ? 'border-primary' : ''}`}
             disabled={loading}
           />
+          {/* Search loading indicator */}
+          {searchLoading && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
           {/* Clear search button */}
-          {filters.search && (
+          {filters.search && !searchLoading && (
             <button
               onClick={() => handleSearchChange('')}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors"
