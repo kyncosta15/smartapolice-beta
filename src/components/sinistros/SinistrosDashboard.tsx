@@ -166,8 +166,8 @@ export function SinistrosDashboard({
 
         {/* Chips de filtro compactos */}
         <div className="space-y-3">
-          <div className="overflow-x-auto overflow-y-visible -mx-4 px-4 md:mx-0 md:px-0 py-3">
-            <div className="flex items-center gap-4 min-w-max md:min-w-0">
+          <div className="overflow-x-auto overflow-y-visible -mx-4 px-4 md:mx-0 md:px-0 pt-4 pb-2">
+            <div className="flex items-center gap-5 min-w-max md:min-w-0">
               <button
                 onClick={() => updateFilters('todos', status, period)}
                 className={`relative inline-flex items-center justify-center w-14 h-14 rounded-full text-sm font-medium transition-all duration-200 ${
@@ -183,7 +183,7 @@ export function SinistrosDashboard({
                 <BarChart3 className="h-5 w-5 shrink-0" />
                 <Badge 
                   variant="secondary" 
-                  className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0.5 min-w-[22px] h-[22px] flex items-center justify-center rounded-full shadow-sm"
+                  className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 bg-blue-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0.5 min-w-[22px] h-[22px] flex items-center justify-center rounded-full shadow-sm"
                 >
                   {stats.totais.tickets}
                 </Badge>
@@ -204,7 +204,7 @@ export function SinistrosDashboard({
                 <AlertTriangle className="h-5 w-5 shrink-0" />
                 <Badge 
                   variant="secondary" 
-                  className="absolute -top-0.5 -right-0.5 bg-red-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0.5 min-w-[22px] h-[22px] flex items-center justify-center rounded-full shadow-sm"
+                  className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 bg-red-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0.5 min-w-[22px] h-[22px] flex items-center justify-center rounded-full shadow-sm"
                 >
                   {stats.sinistros.total}
                 </Badge>
@@ -225,7 +225,7 @@ export function SinistrosDashboard({
                 <Wrench className="h-5 w-5 shrink-0" />
                 <Badge 
                   variant="secondary" 
-                  className="absolute -top-0.5 -right-0.5 bg-green-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0.5 min-w-[22px] h-[22px] flex items-center justify-center rounded-full shadow-sm"
+                  className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 bg-green-600 text-white border-2 border-white dark:border-gray-900 text-xs px-1.5 py-0.5 min-w-[22px] h-[22px] flex items-center justify-center rounded-full shadow-sm"
                 >
                   {stats.assistencias.total}
                 </Badge>
