@@ -20,6 +20,7 @@ export interface N8NUploadMetadata {
   numero_apolice?: string;
   inicio_vigencia?: string;
   fim_vigencia?: string;
+  overwrite_duplicates?: boolean;
 }
 
 export interface N8NResponse {
@@ -62,6 +63,13 @@ export interface N8NResponse {
     dados_preenchidos?: number;
   };
   erros?: any[];
+  duplicates?: Array<{
+    placa: string;
+    marca?: string;
+    modelo?: string;
+    existingData?: any;
+    newData?: any;
+  }>;
 }
 
 export class N8NUploadService {
@@ -231,10 +239,21 @@ export class N8NUploadService {
             empresa_nome: metadata.empresa_nome || 'Empresa',
             user_id: metadata.user_id,
             user_email: metadata.user_email || '',
-            razao_social: metadata.razao_social || metadata.empresa_nome || 'Empresa'
+            razao_social: metadata.razao_social || metadata.empresa_nome || 'Empresa',
+            overwrite_duplicates: metadata.overwrite_duplicates
           };
           
-          await this.saveFleetDataToSupabase(result, validatedMetadata);
+          try {
+            await this.saveFleetDataToSupabase(result, validatedMetadata);
+          } catch (saveError: any) {
+            // Se for erro de duplicatas, adicionar ao resultado e retornar sem throw
+            if (saveError.message === 'Duplicatas detectadas' && saveError.duplicates) {
+              console.log('🔄 Retornando resultado com duplicatas para confirmação');
+              result.duplicates = saveError.duplicates;
+              return result;
+            }
+            throw saveError;
+          }
         } else {
           console.warn('❌ Condições não atendidas para salvamento:', {
             veiculosExists: !!result.veiculos,
@@ -315,6 +334,7 @@ export class N8NUploadService {
       user_id: string;
       user_email: string;
       razao_social: string;
+      overwrite_duplicates?: boolean;
     }
   ): Promise<void> {
     console.log('💾 Iniciando salvamento no Supabase...');
@@ -336,6 +356,40 @@ export class N8NUploadService {
       }
 
       console.log('✅ Usando empresa_id do metadata:', metadata.empresa_id);
+
+      // VERIFICAR DUPLICATAS antes de inserir
+      const placasNovas = data.veiculos.map(v => v.placa).filter(Boolean);
+      
+      const { data: veiculosExistentes, error: checkError } = await supabase
+        .from('frota_veiculos')
+        .select('placa, marca, modelo, categoria, ano_modelo, status_seguro')
+        .eq('empresa_id', metadata.empresa_id)
+        .in('placa', placasNovas);
+
+      if (checkError) {
+        console.error('Erro ao verificar duplicatas:', checkError);
+      }
+
+      const duplicates = veiculosExistentes || [];
+      
+      if (duplicates.length > 0 && !metadata.overwrite_duplicates) {
+        console.log(`⚠️ Encontradas ${duplicates.length} duplicatas`);
+        
+        // Criar array de duplicatas com dados comparativos
+        const duplicatesInfo = duplicates.map(existing => {
+          const newVehicle = data.veiculos.find(v => v.placa === existing.placa);
+          return {
+            placa: existing.placa,
+            existingData: existing,
+            newData: newVehicle
+          };
+        });
+
+        // Lançar erro especial com informação de duplicatas
+        const error: any = new Error('Duplicatas detectadas');
+        error.duplicates = duplicatesInfo;
+        throw error;
+      }
 
       // Processar dados dos veículos
       const veiculosData = data.veiculos.map((vehicle: any, index: number) => {
@@ -365,6 +419,22 @@ export class N8NUploadService {
       });
 
       console.log('📋 Inserindo veículos no banco:', veiculosData.length);
+
+      // Se deve sobrescrever, deletar duplicatas primeiro
+      if (metadata.overwrite_duplicates && duplicates.length > 0) {
+        const placasDuplicadas = duplicates.map(d => d.placa);
+        console.log('🗑️ Deletando duplicatas para sobrescrever:', placasDuplicadas);
+        
+        const { error: deleteError } = await supabase
+          .from('frota_veiculos')
+          .delete()
+          .eq('empresa_id', metadata.empresa_id)
+          .in('placa', placasDuplicadas);
+
+        if (deleteError) {
+          console.error('Erro ao deletar duplicatas:', deleteError);
+        }
+      }
 
       // Inserir todos os veículos de uma vez
       const { data: veiculosInseridos, error: veiculosError } = await supabase

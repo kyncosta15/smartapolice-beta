@@ -22,6 +22,7 @@ import { useTenant } from '@/contexts/TenantContext';
 import { N8NUploadService, N8NUploadMetadata, N8NResponse } from '@/services/n8nUploadService';
 import { supabase } from '@/integrations/supabase/client';
 import { ensureProfileAndCompany } from '@/utils/profileUtils';
+import { DuplicateVehiclesModal } from './DuplicateVehiclesModal';
 
 interface FrotasUploadProps {
   onSuccess: () => void;
@@ -42,6 +43,9 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   const { activeEmpresaId, activeEmpresaName } = useTenant();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [duplicatesModalOpen, setDuplicatesModalOpen] = useState(false);
+  const [detectedDuplicates, setDetectedDuplicates] = useState<any[]>([]);
+  const [pendingUploadData, setPendingUploadData] = useState<any>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const validFiles: UploadFile[] = [];
@@ -84,7 +88,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     setFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  const processFiles = async () => {
+  const processFiles = async (overwriteDuplicates: boolean = false) => {
     if (files.length === 0) {
       toast({
         title: "Erro de configuração",
@@ -122,7 +126,8 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
         empresa_nome: empresa?.nome || 'Empresa',
         user_id: authenticatedUser.id,
         user_email: authenticatedUser.email,
-        razao_social: empresa?.nome || 'Empresa'
+        razao_social: empresa?.nome || 'Empresa',
+        overwrite_duplicates: overwriteDuplicates
       };
 
       console.log('Metadata recebida:', metadata);
@@ -153,6 +158,18 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
             metadata,
             'production'
           );
+
+          // Verificar se há duplicatas detectadas
+          if (result.duplicates && result.duplicates.length > 0 && !overwriteDuplicates) {
+            console.log('Duplicatas detectadas:', result.duplicates);
+            
+            // Pausar processamento e mostrar modal
+            setDetectedDuplicates(result.duplicates);
+            setPendingUploadData({ fileItem, metadata });
+            setDuplicatesModalOpen(true);
+            setIsProcessing(false);
+            return;
+          }
 
           // Status: Completed
           setFiles(prev => prev.map(f => 
@@ -275,12 +292,45 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const handleDuplicateConfirmation = async (shouldOverwrite: boolean) => {
+    if (!pendingUploadData) return;
+
+    setDuplicatesModalOpen(false);
+    
+    if (shouldOverwrite) {
+      // Reprocessar com flag de sobrescrever
+      await processFiles(true);
+    } else {
+      // Continuar sem sobrescrever
+      toast({
+        title: "Processamento cancelado",
+        description: "Os dados existentes foram mantidos. Veículos duplicados não foram importados.",
+      });
+      setIsProcessing(false);
+    }
+
+    // Limpar estados
+    setDetectedDuplicates([]);
+    setPendingUploadData(null);
+  };
+
   const totalFiles = files.length;
   const completedFiles = files.filter(f => f.status === 'completed').length;
   const errorFiles = files.filter(f => f.status === 'error').length;
 
   return (
     <div className="space-y-6">
+      <DuplicateVehiclesModal
+        isOpen={duplicatesModalOpen}
+        onClose={() => {
+          setDuplicatesModalOpen(false);
+          setIsProcessing(false);
+        }}
+        duplicates={detectedDuplicates}
+        onConfirm={handleDuplicateConfirmation}
+        isProcessing={isProcessing}
+      />
+
       {/* Header */}
       <div>
         <h2 className="text-xl font-semibold text-gray-900">
@@ -345,7 +395,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
               </CardTitle>
               
                 <Button
-                  onClick={processFiles}
+                  onClick={() => processFiles(false)}
                   disabled={isProcessing || files.every(f => f.status !== 'pending')}
                   className="flex items-center gap-2"
                   size="default"
