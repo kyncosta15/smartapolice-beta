@@ -47,6 +47,7 @@ const categoriaOptions = [
   { value: 'utilitario', label: 'Utilitário' },
   { value: 'caminhao', label: 'Caminhão' },
   { value: 'moto', label: 'Moto' },
+  { value: 'outros', label: 'Outros' },
 ];
 
 const statusOptions = [
