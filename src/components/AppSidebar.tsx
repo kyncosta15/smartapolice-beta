@@ -24,8 +24,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarProvider,
-  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
 
@@ -34,7 +32,7 @@ interface AppSidebarProps {
   activeSection: string;
 }
 
-function SidebarContent_({ onSectionChange, activeSection }: AppSidebarProps) {
+export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
   const { user, logout } = useAuth();
   const { open } = useSidebar();
 
@@ -135,13 +133,5 @@ function SidebarContent_({ onSectionChange, activeSection }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  );
-}
-
-export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
-  return (
-    <SidebarProvider defaultOpen={true}>
-      <SidebarContent_ onSectionChange={onSectionChange} activeSection={activeSection} />
-    </SidebarProvider>
   );
 }

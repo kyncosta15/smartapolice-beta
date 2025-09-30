@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from '@/components/AppSidebar';
 import { MobileDrawer } from '@/components/MobileDrawer';
 import { Navbar } from '@/components/Navbar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { DashboardCards } from '@/components/DashboardCards';
 import { DynamicDashboard } from '@/components/DynamicDashboard';
 import { ContentRenderer } from '@/components/ContentRenderer';
@@ -345,28 +346,29 @@ export function DashboardContent() {
   })));
 
   return (
-    <div className="min-h-screen flex w-full bg-gray-50">
-      {/* Mobile Drawer */}
-      <MobileDrawer
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        navigation={navigation}
-        activeSection={activeSection}
-        onSectionChange={setActiveSection}
-      />
-      
-      {/* Desktop Sidebar */}
-      <AppSidebar 
-        onSectionChange={setActiveSection} 
-        activeSection={activeSection} 
-      />
-      
-      {/* Main Content */}
-      <main className="flex-1 min-w-0">
-        <Navbar 
-          onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
-          isMobileMenuOpen={isMobileMenuOpen}
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-gray-50">
+        {/* Mobile Drawer */}
+        <MobileDrawer
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+          navigation={navigation}
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
         />
+        
+        {/* Desktop Sidebar */}
+        <AppSidebar 
+          onSectionChange={setActiveSection} 
+          activeSection={activeSection} 
+        />
+        
+        {/* Main Content */}
+        <main className="flex-1 min-w-0">
+          <Navbar 
+            onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
+            isMobileMenuOpen={isMobileMenuOpen}
+          />
 
         <div className="w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
           {/* Complete Dashboard Content */}
@@ -427,6 +429,7 @@ export function DashboardContent() {
 
         {/* Botão de teste para toasts com progresso */}
       </main>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }
