@@ -337,10 +337,19 @@ export function usePersistedPolicies() {
       if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
       if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
       if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = updates.policyNumber;
+      // Campos básicos
+      if (updates.name !== undefined) dbUpdates.nome_segurado = updates.name;
+      if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
+      if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
       if (updates.premium !== undefined) dbUpdates.valor_premio = updates.premium;
-      if (updates.monthlyAmount !== undefined) dbUpdates.custo_mensal = updates.monthlyAmount;
+      if (updates.monthlyAmount !== undefined) {
+        dbUpdates.custo_mensal = updates.monthlyAmount;
+        dbUpdates.valor_parcela = updates.monthlyAmount;
+      }
       if (updates.startDate !== undefined) dbUpdates.inicio_vigencia = updates.startDate;
       if (updates.endDate !== undefined) dbUpdates.fim_vigencia = updates.endDate;
+      if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = updates.policyNumber;
+      if (updates.installments !== undefined) dbUpdates.quantidade_parcelas = updates.installments;
       
       // CORREÇÃO: Mapear status corretamente
       if (updates.status !== undefined) {
@@ -363,9 +372,6 @@ export function usePersistedPolicies() {
       if (updates.uf !== undefined) dbUpdates.uf = updates.uf;
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
       if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
-      
-      // Também atualizar valor_parcela quando monthlyAmount for atualizado
-      if (updates.monthlyAmount !== undefined) dbUpdates.valor_parcela = updates.monthlyAmount;
 
       console.log('📤 Enviando atualização para o banco:', dbUpdates);
 
