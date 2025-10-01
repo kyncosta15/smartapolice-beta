@@ -194,34 +194,56 @@ export function MyPolicies() {
   };
 
   const handleSaveEdit = async (updatedPolicy: any) => {
-    console.log('🔄 MyPolicies: Iniciando salvamento da edição');
-    console.log('📝 MyPolicies: Dados a serem salvos:', JSON.stringify(updatedPolicy, null, 2));
+    console.log('🔄 [MyPolicies] ============ INICIANDO SAVE ============');
+    console.log('📝 [MyPolicies] Policy ID:', updatedPolicy.id);
+    console.log('📝 [MyPolicies] Dados do formulário:', {
+      name: updatedPolicy.name,
+      type: updatedPolicy.type,
+      tipo_seguro: updatedPolicy.tipo_seguro,
+      valor_premio: updatedPolicy.valor_premio,
+      custo_mensal: updatedPolicy.custo_mensal
+    });
+    
+    // Fechar modal antes de processar
+    setShowEditModal(false);
     
     const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
     
-    console.log('📊 MyPolicies: Resultado da atualização:', success);
+    console.log('📊 [MyPolicies] Resultado do update:', success ? '✅ SUCESSO' : '❌ FALHA');
     
     if (success) {
-      console.log('✅ MyPolicies: Atualização bem-sucedida');
+      // CRÍTICO: Aguardar um momento para o banco processar
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Aguardar refresh para obter dados atualizados do banco
+      // Recarregar TUDO do banco
+      console.log('🔄 [MyPolicies] Forçando refresh completo do banco...');
       await refreshPolicies();
       
-      // Buscar a apólice atualizada do banco para garantir dados corretos
+      console.log('🔍 [MyPolicies] Total de apólices após refresh:', policies.length);
+      
+      // Buscar apólice atualizada
       const updatedFromDB = policies.find(p => p.id === updatedPolicy.id);
       
-      console.log('🔍 MyPolicies: Dados do banco após refresh:', updatedFromDB);
-      
-      // Atualizar selectedPolicy com dados do banco
       if (updatedFromDB) {
+        console.log('✅ [MyPolicies] Apólice encontrada no banco:', {
+          id: updatedFromDB.id,
+          name: updatedFromDB.name,
+          tipo_seguro: (updatedFromDB as any).tipo_seguro
+        });
         setSelectedPolicy(updatedFromDB);
       } else {
-        // Fallback para dados do formulário se não encontrar no banco
+        console.warn('⚠️ [MyPolicies] Apólice não encontrada após refresh, usando dados do form');
         setSelectedPolicy(updatedPolicy);
       }
+      
+      // Limpar selectedPolicy após um tempo
+      setTimeout(() => setSelectedPolicy(null), 100);
     } else {
-      console.error('❌ MyPolicies: Falha na atualização');
+      console.error('❌ [MyPolicies] Falha na atualização - mantendo modal aberto');
+      setShowEditModal(true);
     }
+    
+    console.log('🏁 [MyPolicies] ============ SAVE CONCLUÍDO ============');
   };
 
   return (

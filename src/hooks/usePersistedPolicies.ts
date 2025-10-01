@@ -412,6 +412,7 @@ export function usePersistedPolicies() {
       if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
 
       console.log('📤 [updatePolicy] Dados preparados para o banco:', JSON.stringify(dbUpdates, null, 2));
+      console.log('🔑 [updatePolicy] Condições WHERE:', { policyId, userId: user.id });
 
       const { data, error } = await supabase
         .from('policies')
@@ -419,6 +420,12 @@ export function usePersistedPolicies() {
         .eq('id', policyId)
         .eq('user_id', user.id)
         .select();
+
+      console.log('📨 [updatePolicy] Resposta completa do Supabase:', {
+        data: JSON.stringify(data, null, 2),
+        error: error ? JSON.stringify(error, null, 2) : null,
+        recordsAffected: data ? data.length : 0
+      });
 
       if (error) {
         console.error('❌ [updatePolicy] ERRO NO SUPABASE:', {
@@ -429,7 +436,7 @@ export function usePersistedPolicies() {
         });
         toast({
           title: "❌ Erro ao Atualizar",
-          description: error.message || "Não foi possível salvar as alterações",
+          description: `${error.message}${error.hint ? ` - ${error.hint}` : ''}`,
           variant: "destructive",
         });
         throw error;
@@ -559,13 +566,14 @@ export function usePersistedPolicies() {
   };
 
   // MÉTODO MELHORADO: Recarregar dados COM FORÇA
-  const refreshPolicies = () => {
-    console.log('🔄 refreshPolicies chamado');
-    if (user?.id) {
-      console.log('✅ Usuário autenticado, recarregando dados');
-      loadPersistedPolicies();
-    } else {
-      console.log('❌ Usuário não autenticado para refresh');
+  const refreshPolicies = async () => {
+    console.log('🔄 [refreshPolicies] Forçando reload completo do banco...');
+    setIsLoading(true);
+    try {
+      await loadPersistedPolicies();
+      console.log('✅ [refreshPolicies] Reload concluído');
+    } finally {
+      setIsLoading(false);
     }
   };
 
