@@ -141,21 +141,57 @@ export function MyPolicies() {
   };
 
   const handleViewPolicy = (policy: PolicyWithStatus) => {
-    setSelectedPolicy(policy);
-    toast({
-      title: "Visualizar Apólice",
-      description: `Abrindo detalhes de ${policy.name}`,
-    });
+    const originalPolicy = policies.find(p => p.id === policy.id);
+    if (originalPolicy?.pdfPath) {
+      window.open(originalPolicy.pdfPath, '_blank');
+    } else {
+      toast({
+        title: "Arquivo não disponível",
+        description: "Esta apólice não possui arquivo anexado",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDownloadPolicy = async (policy: PolicyWithStatus) => {
-    toast({
-      title: "Download em desenvolvimento",
-      description: "Funcionalidade de download será implementada em breve",
-    });
+    const originalPolicy = policies.find(p => p.id === policy.id);
+    if (!originalPolicy?.pdfPath) {
+      toast({
+        title: "Arquivo não disponível",
+        description: "Esta apólice não possui arquivo para download",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(originalPolicy.pdfPath);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${policy.name}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Download iniciado",
+        description: `Baixando ${policy.name}`,
+      });
+    } catch (error) {
+      console.error('Erro ao baixar arquivo:', error);
+      toast({
+        title: "Erro no download",
+        description: "Não foi possível baixar o arquivo",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditPolicy = (policy: PolicyWithStatus) => {
+    setSelectedPolicy(policy);
     toast({
       title: "Edição em desenvolvimento",
       description: "Funcionalidade de edição será implementada em breve",
@@ -234,47 +270,43 @@ export function MyPolicies() {
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-2 border-t">
+                <div className="flex gap-1 pt-3 border-t justify-end">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleViewPolicy(policy)}
-                    className="flex-1 gap-2"
+                    className="h-8 w-8 p-0 hover:bg-primary/10"
                     title="Visualizar apólice"
                   >
                     <Eye className="h-4 w-4" />
-                    Ver
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDownloadPolicy(policy)}
-                    className="flex-1 gap-2"
+                    className="h-8 w-8 p-0 hover:bg-primary/10"
                     title="Baixar apólice"
                   >
                     <Download className="h-4 w-4" />
-                    Baixar
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleEditPolicy(policy)}
-                    className="flex-1 gap-2"
+                    className="h-8 w-8 p-0 hover:bg-primary/10"
                     title="Editar apólice"
                   >
                     <Edit className="h-4 w-4" />
-                    Editar
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={(e) => handleDeleteClick(e, policy)}
-                    className="flex-1 gap-2 hover:bg-red-50 hover:text-red-600"
+                    className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
                     title="Deletar apólice"
                     disabled={isDeleting}
                   >
                     <Trash2 className="h-4 w-4" />
-                    Excluir
                   </Button>
                 </div>
               </CardContent>
