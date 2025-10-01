@@ -98,6 +98,7 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       ...policy,
       name: formData.name,
       type: formData.type,
+      tipo_seguro: formData.type, // CRÍTICO: Campo do banco
       insurer: formData.insurer,
       // CRÍTICO: Garantir que premium seja salvo como valor_premio no banco
       premium: premiumValue,

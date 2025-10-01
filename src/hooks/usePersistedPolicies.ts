@@ -341,6 +341,7 @@ export function usePersistedPolicies() {
         dbUpdates.segurado = updates.name;
       }
       if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
+      if ((updates as any).tipo_seguro !== undefined) dbUpdates.tipo_seguro = (updates as any).tipo_seguro;
       if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
       if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = updates.policyNumber;
       
@@ -458,7 +459,9 @@ export function usePersistedPolicies() {
               numero_apolice: dbUpdates.numero_apolice !== undefined ? dbUpdates.numero_apolice : (p as any).numero_apolice,
               policyNumber: dbUpdates.numero_apolice !== undefined ? dbUpdates.numero_apolice : (p as any).policyNumber,
               forma_pagamento: dbUpdates.forma_pagamento !== undefined ? dbUpdates.forma_pagamento : (p as any).forma_pagamento,
-              paymentForm: dbUpdates.forma_pagamento !== undefined ? dbUpdates.forma_pagamento : (p as any).paymentForm
+              paymentForm: dbUpdates.forma_pagamento !== undefined ? dbUpdates.forma_pagamento : (p as any).paymentForm,
+              tipo_seguro: dbUpdates.tipo_seguro !== undefined ? dbUpdates.tipo_seguro : (p as any).tipo_seguro,
+              type: dbUpdates.tipo_seguro !== undefined ? dbUpdates.tipo_seguro : (p as any).type
             };
             
             console.log('🔄 [updatePolicy] State local atualizado com dados do banco:', {

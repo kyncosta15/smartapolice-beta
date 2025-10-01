@@ -51,12 +51,17 @@ export function normalizePolicy(raw: any) {
   const premio = toNumberSafe(
     raw.valor_premio ?? raw.premio ?? raw.premium
   ) ?? 0;
+  
+  // CRÍTICO: Priorizar tipo_seguro do banco
+  const tipoSeguro = safeString(
+    raw.tipo_seguro ?? raw.tipo ?? raw.type ?? "N/A"
+  );
 
   return {
     ...raw,
     seguradoraEmpresa,
     seguradoraEntidade,
-    tipoCategoria,
+    tipoCategoria: tipoSeguro, // Usar tipo_seguro consistentemente
     tipoCobertura,
     // CRÍTICO: Garantir que todos os campos financeiros sejam incluídos
     valorMensal,
@@ -69,8 +74,9 @@ export function normalizePolicy(raw: any) {
     // Campos principais - SEMPRE STRINGS
     seguradora: seguradoraEmpresa,
     insurer: seguradoraEmpresa,
-    tipo: tipoCategoria,
-    type: tipoCategoria,
+    tipo: tipoSeguro, // Usar tipo_seguro
+    tipo_seguro: tipoSeguro, // Garantir campo do banco
+    type: tipoSeguro, // Mapear para campo do frontend
     name: safeString(raw.name ?? raw.segurado ?? "N/A"),
     policyNumber: safeString(raw.policyNumber ?? raw.numero_apolice ?? "N/A"),
     documento: safeString(raw.documento ?? ""),
