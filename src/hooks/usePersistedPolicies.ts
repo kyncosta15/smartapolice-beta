@@ -344,23 +344,28 @@ export function usePersistedPolicies() {
       if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
       if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = updates.policyNumber;
       
-      // CRÍTICO: Valores financeiros - priorizar campos do banco
-      if ((updates as any).valor_premio !== undefined) {
-        dbUpdates.valor_premio = typeof (updates as any).valor_premio === 'number' ? (updates as any).valor_premio : parseFloat((updates as any).valor_premio) || 0;
-        console.log('💰 [updatePolicy] valor_premio:', dbUpdates.valor_premio);
-      } else if (updates.premium !== undefined) {
-        dbUpdates.valor_premio = typeof updates.premium === 'number' ? updates.premium : parseFloat(String(updates.premium)) || 0;
-        console.log('💰 [updatePolicy] premium -> valor_premio:', dbUpdates.valor_premio);
+      // CRÍTICO: Valores financeiros - garantir que sejam sempre atualizados
+      const premiumValue = (updates as any).valor_premio !== undefined 
+        ? (typeof (updates as any).valor_premio === 'number' ? (updates as any).valor_premio : parseFloat((updates as any).valor_premio) || 0)
+        : (updates.premium !== undefined 
+          ? (typeof updates.premium === 'number' ? updates.premium : parseFloat(String(updates.premium)) || 0)
+          : null);
+      
+      if (premiumValue !== null) {
+        dbUpdates.valor_premio = premiumValue;
+        console.log('💰 [updatePolicy] SALVANDO valor_premio no banco:', dbUpdates.valor_premio);
       }
       
-      if ((updates as any).custo_mensal !== undefined) {
-        dbUpdates.custo_mensal = typeof (updates as any).custo_mensal === 'number' ? (updates as any).custo_mensal : parseFloat((updates as any).custo_mensal) || 0;
-        dbUpdates.valor_parcela = dbUpdates.custo_mensal;
-        console.log('💰 [updatePolicy] custo_mensal:', dbUpdates.custo_mensal);
-      } else if (updates.monthlyAmount !== undefined) {
-        dbUpdates.custo_mensal = typeof updates.monthlyAmount === 'number' ? updates.monthlyAmount : parseFloat(String(updates.monthlyAmount)) || 0;
-        dbUpdates.valor_parcela = dbUpdates.custo_mensal;
-        console.log('💰 [updatePolicy] monthlyAmount -> custo_mensal:', dbUpdates.custo_mensal);
+      const monthlyValue = (updates as any).custo_mensal !== undefined
+        ? (typeof (updates as any).custo_mensal === 'number' ? (updates as any).custo_mensal : parseFloat((updates as any).custo_mensal) || 0)
+        : (updates.monthlyAmount !== undefined
+          ? (typeof updates.monthlyAmount === 'number' ? updates.monthlyAmount : parseFloat(String(updates.monthlyAmount)) || 0)
+          : null);
+      
+      if (monthlyValue !== null) {
+        dbUpdates.custo_mensal = monthlyValue;
+        dbUpdates.valor_parcela = monthlyValue;
+        console.log('💰 [updatePolicy] SALVANDO custo_mensal no banco:', dbUpdates.custo_mensal);
       }
       
       if (updates.startDate !== undefined) dbUpdates.inicio_vigencia = updates.startDate;
@@ -442,13 +447,28 @@ export function usePersistedPolicies() {
             const updated: any = {
               ...p,
               ...mappedUpdates,
-              // Garantir que os valores do banco sejam refletidos no estado
+              // CRÍTICO: Garantir que TODOS os campos sejam sincronizados (banco + frontend)
               valor_premio: dbUpdates.valor_premio !== undefined ? dbUpdates.valor_premio : (p as any).valor_premio,
+              premium: dbUpdates.valor_premio !== undefined ? dbUpdates.valor_premio : (p as any).premium,
               custo_mensal: dbUpdates.custo_mensal !== undefined ? dbUpdates.custo_mensal : (p as any).custo_mensal,
+              monthlyAmount: dbUpdates.custo_mensal !== undefined ? dbUpdates.custo_mensal : (p as any).monthlyAmount,
+              valor_parcela: dbUpdates.valor_parcela !== undefined ? dbUpdates.valor_parcela : (p as any).valor_parcela,
               quantidade_parcelas: dbUpdates.quantidade_parcelas !== undefined ? dbUpdates.quantidade_parcelas : (p as any).quantidade_parcelas,
+              installments: dbUpdates.quantidade_parcelas !== undefined ? [] : (p as any).installments,
               numero_apolice: dbUpdates.numero_apolice !== undefined ? dbUpdates.numero_apolice : (p as any).numero_apolice,
-              forma_pagamento: dbUpdates.forma_pagamento !== undefined ? dbUpdates.forma_pagamento : (p as any).forma_pagamento
+              policyNumber: dbUpdates.numero_apolice !== undefined ? dbUpdates.numero_apolice : (p as any).policyNumber,
+              forma_pagamento: dbUpdates.forma_pagamento !== undefined ? dbUpdates.forma_pagamento : (p as any).forma_pagamento,
+              paymentForm: dbUpdates.forma_pagamento !== undefined ? dbUpdates.forma_pagamento : (p as any).paymentForm
             };
+            
+            console.log('🔄 [updatePolicy] State local atualizado com dados do banco:', {
+              id: updated.id,
+              valor_premio: updated.valor_premio,
+              premium: updated.premium,
+              custo_mensal: updated.custo_mensal,
+              monthlyAmount: updated.monthlyAmount
+            });
+            
             return updated;
           }
           return p;

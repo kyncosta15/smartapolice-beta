@@ -203,9 +203,22 @@ export function MyPolicies() {
     
     if (success) {
       console.log('✅ MyPolicies: Atualização bem-sucedida');
-      // CRÍTICO: Atualizar selectedPolicy para refletir mudanças no modal de detalhes
-      setSelectedPolicy(updatedPolicy);
-      refreshPolicies();
+      
+      // Aguardar refresh para obter dados atualizados do banco
+      await refreshPolicies();
+      
+      // Buscar a apólice atualizada do banco para garantir dados corretos
+      const updatedFromDB = policies.find(p => p.id === updatedPolicy.id);
+      
+      console.log('🔍 MyPolicies: Dados do banco após refresh:', updatedFromDB);
+      
+      // Atualizar selectedPolicy com dados do banco
+      if (updatedFromDB) {
+        setSelectedPolicy(updatedFromDB);
+      } else {
+        // Fallback para dados do formulário se não encontrar no banco
+        setSelectedPolicy(updatedPolicy);
+      }
     } else {
       console.error('❌ MyPolicies: Falha na atualização');
     }
