@@ -203,6 +203,8 @@ export function MyPolicies() {
     
     if (success) {
       console.log('✅ MyPolicies: Atualização bem-sucedida');
+      // CRÍTICO: Atualizar selectedPolicy para refletir mudanças no modal de detalhes
+      setSelectedPolicy(updatedPolicy);
       refreshPolicies();
     } else {
       console.error('❌ MyPolicies: Falha na atualização');
