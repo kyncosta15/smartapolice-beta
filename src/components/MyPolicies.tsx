@@ -261,16 +261,18 @@ export function MyPolicies() {
     : policiesWithStatus;
 
   return (
-    <div className="space-y-6 p-4 md:p-0">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h2 className="text-2xl font-bold text-gray-900">Minhas Apólices</h2>
-        <div className="flex items-center gap-3 flex-wrap">
-          <Badge variant="secondary" className="text-sm">
+    <div className="space-y-4 md:space-y-6 p-3 sm:p-4 md:p-0">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Minhas Apólices</h2>
+          <Badge variant="secondary" className="text-xs sm:text-sm shrink-0">
             {policiesWithStatus.length} apólice{policiesWithStatus.length !== 1 ? 's' : ''}
           </Badge>
-          
+        </div>
+        
+        <div className="flex items-center justify-between gap-2">
           {/* Toggle de visualização */}
-          <div className="flex items-center border rounded-md">
+          <div className="flex items-center border rounded-md shadow-sm">
             <Button
               variant={viewMode === 'cards' ? 'default' : 'ghost'}
               size="sm"
@@ -278,7 +280,7 @@ export function MyPolicies() {
                 setViewMode('cards');
                 setCurrentPage(1);
               }}
-              className="rounded-r-none h-9"
+              className="rounded-r-none h-8 sm:h-9 w-9 sm:w-10 p-0"
               title="Visualizar em cards"
             >
               <LayoutGrid className="w-4 h-4" />
@@ -290,7 +292,7 @@ export function MyPolicies() {
                 setViewMode('list');
                 setCurrentPage(1);
               }}
-              className="rounded-l-none h-9"
+              className="rounded-l-none h-8 sm:h-9 w-9 sm:w-10 p-0"
               title="Visualizar em lista"
             >
               <List className="w-4 h-4" />
@@ -299,18 +301,18 @@ export function MyPolicies() {
 
           <Button
             onClick={() => setShowNewPolicyModal(true)}
-            className="gap-2 h-9 sm:h-10 px-3 sm:px-4 whitespace-nowrap bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg active:shadow-sm active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 transition-all duration-200 rounded-md font-medium"
+            className="gap-1.5 sm:gap-2 h-8 sm:h-10 px-3 sm:px-4 whitespace-nowrap bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg active:shadow-sm active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 transition-all duration-200 rounded-md font-medium text-xs sm:text-sm"
           >
-            <Plus className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
-            <span className="hidden sm:inline text-sm">Nova Apólice</span>
-            <span className="sm:hidden text-sm">Nova</span>
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline">Nova</span>
+            <span className="hidden sm:inline">Apólice</span>
           </Button>
         </div>
       </div>
 
       {/* Visualização em Cards */}
       {viewMode === 'cards' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
           {currentPolicies.map((policy) => {
             const originalPolicy = policies.find(p => p.id === policy.id);
             const installmentsCount = originalPolicy?.quantidade_parcelas || 
@@ -321,28 +323,28 @@ export function MyPolicies() {
             
             return (
               <Card key={policy.id} className="hover:shadow-lg transition-shadow overflow-hidden">
-                <CardHeader className="pb-3 space-y-2">
-                  <div className="flex justify-between items-start gap-3">
-                    <CardTitle className="text-base sm:text-lg leading-tight break-words flex-1 min-w-0">
+                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6 space-y-1.5 sm:space-y-2">
+                  <div className="flex justify-between items-start gap-2 sm:gap-3">
+                    <CardTitle className="text-sm sm:text-base md:text-lg leading-tight break-words flex-1 min-w-0">
                       {toText(policy.name)}
                     </CardTitle>
-                    <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} shrink-0 text-xs whitespace-nowrap`}>
+                    <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} shrink-0 text-[10px] sm:text-xs whitespace-nowrap px-1.5 sm:px-2 py-0.5`}>
                       {formatStatusText(policy.status)}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-500 truncate">{toText(policy.insurer)}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">{toText(policy.insurer)}</p>
                 </CardHeader>
                 
-                <CardContent className="space-y-3">
-                  <div className="space-y-3">
+                <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-6 pb-3 sm:pb-6">
+                  <div className="space-y-2 sm:space-y-3">
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 mb-1">Número</p>
-                        <p className="font-medium text-sm break-all leading-tight">{policy.policyNumber}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Número</p>
+                        <p className="font-medium text-xs sm:text-sm break-all leading-tight">{policy.policyNumber}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-xs text-gray-500 mb-1">Valor Mensal</p>
-                        <p className="font-semibold text-sm text-green-600 whitespace-nowrap">
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Valor Mensal</p>
+                        <p className="font-semibold text-xs sm:text-sm text-green-600 whitespace-nowrap">
                           {moedaBR(policy.monthlyAmount)}
                         </p>
                       </div>
@@ -350,12 +352,12 @@ export function MyPolicies() {
                     
                     <div className="flex justify-between items-start gap-2">
                       <div>
-                        <p className="text-xs text-gray-500 mb-1">Parcelas</p>
-                        <p className="font-medium text-sm">{installmentsCount}x</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Parcelas</p>
+                        <p className="font-medium text-xs sm:text-sm">{installmentsCount}x</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500 mb-1">Vencimento</p>
-                        <p className={`font-medium text-sm whitespace-nowrap ${
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Vencimento</p>
+                        <p className={`font-medium text-xs sm:text-sm whitespace-nowrap ${
                           new Date(policy.expirationDate || policy.endDate) < new Date() 
                             ? 'text-red-600' 
                             : 'text-gray-900'
@@ -366,43 +368,43 @@ export function MyPolicies() {
                     </div>
                   </div>
 
-                  <div className="flex gap-1.5 pt-3 border-t justify-end">
+                  <div className="flex gap-1 sm:gap-1.5 pt-2 sm:pt-3 border-t justify-end">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleViewPolicy(policy)}
-                      className="h-9 w-9 p-0 hover:bg-primary/10"
+                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10"
                       title="Visualizar apólice"
                     >
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDownloadPolicy(policy)}
-                      className="h-9 w-9 p-0 hover:bg-primary/10"
+                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10"
                       title="Baixar apólice"
                     >
-                      <Download className="h-4 w-4" />
+                      <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEditPolicy(policy)}
-                      className="h-9 w-9 p-0 hover:bg-primary/10"
+                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10"
                       title="Editar apólice"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={(e) => handleDeleteClick(e, policy)}
-                      className="h-9 w-9 p-0 hover:bg-red-50 hover:text-red-600"
+                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-red-50 hover:text-red-600"
                       title="Deletar apólice"
                       disabled={isDeleting}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 </CardContent>
