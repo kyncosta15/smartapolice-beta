@@ -75,26 +75,26 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-50 to-white">
-          <DialogHeader className="border-b border-gray-200 pb-4">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-2xl font-bold text-gray-900 font-sf-pro">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-6xl xl:max-w-7xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-0">
+          <DialogHeader className="border-b border-gray-200 pb-3 px-4 pt-4 sm:px-6 sm:pt-6 sticky top-0 bg-white/95 backdrop-blur-sm z-10">
+            <div className="flex items-center justify-between gap-2">
+              <DialogTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 font-sf-pro">
                 Detalhes da Apólice
               </DialogTitle>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleDelete}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 shrink-0"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Excluir
+                <Trash2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Excluir</span>
               </Button>
             </div>
           </DialogHeader>
 
           {/* GRID DE CARDS: 2 POR LINHA EM TELAS GRANDES */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 p-6 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 items-stretch">
             <GeneralInfoCard policy={policy} />
             <InsurerInfoCard 
               insurer={policy.seguradora || policy.insurer || 'Não informado'}

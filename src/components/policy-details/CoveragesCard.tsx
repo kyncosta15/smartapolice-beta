@@ -127,27 +127,27 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
 
   return (
     <Card className="flex flex-col h-full border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
-      <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-blue-200 pb-4">
-        <CardTitle className="flex items-center justify-between text-xl font-bold text-blue-900 font-sf-pro">
-          <div className="flex items-center">
-            <Shield className="h-6 w-6 mr-3 text-blue-600" />
-            Coberturas
+      <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-blue-200 pb-3 px-4 sm:px-6 pt-4">
+        <CardTitle className="flex items-center justify-between text-lg sm:text-xl font-bold text-blue-900 font-sf-pro">
+          <div className="flex items-center min-w-0">
+            <Shield className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-blue-600 shrink-0" />
+            <span className="truncate">Coberturas</span>
           </div>
           {!readOnly && (
             <Button
               onClick={handleAddNew}
               size="sm"
               variant="outline"
-              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+              className="text-blue-600 border-blue-200 hover:bg-blue-50 ml-2 shrink-0"
             >
-              <Plus className="h-4 w-4 mr-1" />
-              Adicionar
+              <Plus className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Adicionar</span>
             </Button>
           )}
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="p-6 space-y-4">
+      <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
         {hasCoverages || isAddingNew ? (
           <div className="space-y-3">
             {hasCoverages && coverages.map((coverage) => (

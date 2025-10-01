@@ -113,12 +113,12 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Editar Apólice</DialogTitle>
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl lg:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-0">
+        <DialogHeader className="border-b pb-3 px-4 pt-4 sm:px-6 sm:pt-6 sticky top-0 bg-white z-10">
+          <DialogTitle className="text-lg sm:text-xl">Editar Apólice</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6">
           <div className="space-y-4">
             <div>
               <Label htmlFor="name">Nome da Apólice</Label>
@@ -359,11 +359,11 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
           </div>
         </div>
 
-        <div className="flex justify-end space-x-4 mt-6">
-          <Button variant="outline" onClick={onClose}>
+        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mt-4 px-4 pb-4 sm:px-6 sm:pb-6 border-t pt-4 sticky bottom-0 bg-white">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} className="w-full sm:w-auto">
             Salvar Alterações
           </Button>
         </div>
