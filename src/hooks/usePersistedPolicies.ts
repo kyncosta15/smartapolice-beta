@@ -411,7 +411,7 @@ export function usePersistedPolicies() {
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
       if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
 
-      console.log('📤 [updatePolicy] Enviando para banco:', JSON.stringify(dbUpdates, null, 2));
+      console.log('📤 [updatePolicy] Dados preparados para o banco:', JSON.stringify(dbUpdates, null, 2));
 
       const { data, error } = await supabase
         .from('policies')
@@ -421,55 +421,62 @@ export function usePersistedPolicies() {
         .select();
 
       if (error) {
-        console.error('❌ [updatePolicy] Erro do Supabase:', error);
-        console.error('❌ [updatePolicy] Error code:', error.code);
-        console.error('❌ [updatePolicy] Error message:', error.message);
-        console.error('❌ [updatePolicy] Error details:', error.details);
+        console.error('❌ [updatePolicy] ERRO NO SUPABASE:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         toast({
-          title: "Erro ao Atualizar",
+          title: "❌ Erro ao Atualizar",
           description: error.message || "Não foi possível salvar as alterações",
           variant: "destructive",
         });
         throw error;
       }
 
-      console.log('✅ [updatePolicy] Atualização bem-sucedida:', JSON.stringify(data, null, 2));
+      if (data && data.length > 0) {
+        console.log('✅ [updatePolicy] UPDATE CONFIRMADO NO BANCO:', JSON.stringify(data[0], null, 2));
+      } else {
+        console.warn('⚠️ [updatePolicy] Update retornou, mas sem dados confirmados');
+      }
 
-      // Atualizar estado local com mapeamento de status
-      const mappedUpdates = {
-        ...updates,
-        status: updates.status ? mapLegacyStatus(updates.status) : undefined
-      };
+      // CRÍTICO: Usar dados retornados do banco para garantir sincronização
+      const dbRecord = data && data.length > 0 ? data[0] : null;
       
-      // CRÍTICO: Atualizar estado local com os valores corretos do banco
+      // Atualizar estado local com os dados REAIS do banco
       setPolicies(prev => 
         prev.map(p => {
           if (p.id === policyId) {
             const updated: any = {
               ...p,
-              ...mappedUpdates,
-              // CRÍTICO: Garantir que TODOS os campos sejam sincronizados (banco + frontend)
-              valor_premio: dbUpdates.valor_premio !== undefined ? dbUpdates.valor_premio : (p as any).valor_premio,
-              premium: dbUpdates.valor_premio !== undefined ? dbUpdates.valor_premio : (p as any).premium,
-              custo_mensal: dbUpdates.custo_mensal !== undefined ? dbUpdates.custo_mensal : (p as any).custo_mensal,
-              monthlyAmount: dbUpdates.custo_mensal !== undefined ? dbUpdates.custo_mensal : (p as any).monthlyAmount,
-              valor_parcela: dbUpdates.valor_parcela !== undefined ? dbUpdates.valor_parcela : (p as any).valor_parcela,
-              quantidade_parcelas: dbUpdates.quantidade_parcelas !== undefined ? dbUpdates.quantidade_parcelas : (p as any).quantidade_parcelas,
-              installments: dbUpdates.quantidade_parcelas !== undefined ? [] : (p as any).installments,
-              numero_apolice: dbUpdates.numero_apolice !== undefined ? dbUpdates.numero_apolice : (p as any).numero_apolice,
-              policyNumber: dbUpdates.numero_apolice !== undefined ? dbUpdates.numero_apolice : (p as any).policyNumber,
-              forma_pagamento: dbUpdates.forma_pagamento !== undefined ? dbUpdates.forma_pagamento : (p as any).forma_pagamento,
-              paymentForm: dbUpdates.forma_pagamento !== undefined ? dbUpdates.forma_pagamento : (p as any).paymentForm,
-              tipo_seguro: dbUpdates.tipo_seguro !== undefined ? dbUpdates.tipo_seguro : (p as any).tipo_seguro,
-              type: dbUpdates.tipo_seguro !== undefined ? dbUpdates.tipo_seguro : (p as any).type
+              // PRIORIZAR DADOS DO BANCO retornados pelo SELECT
+              ...(dbRecord || {}),
+              // Mapeamento de campos do banco para frontend
+              name: dbRecord?.segurado || p.name,
+              type: dbRecord?.tipo_seguro || p.type,
+              tipo_seguro: dbRecord?.tipo_seguro || (p as any).tipo_seguro,
+              insurer: dbRecord?.seguradora || p.insurer,
+              policyNumber: dbRecord?.numero_apolice || p.policyNumber,
+              numero_apolice: dbRecord?.numero_apolice || (p as any).numero_apolice,
+              premium: dbRecord?.valor_premio || p.premium,
+              valor_premio: dbRecord?.valor_premio || (p as any).valor_premio,
+              monthlyAmount: dbRecord?.custo_mensal || p.monthlyAmount,
+              custo_mensal: dbRecord?.custo_mensal || (p as any).custo_mensal,
+              valor_parcela: dbRecord?.valor_parcela || (p as any).valor_parcela,
+              installments: dbRecord?.quantidade_parcelas || (p as any).installments,
+              quantidade_parcelas: dbRecord?.quantidade_parcelas || (p as any).quantidade_parcelas,
+              startDate: dbRecord?.inicio_vigencia || p.startDate,
+              endDate: dbRecord?.fim_vigencia || p.endDate,
+              status: dbRecord?.status ? mapLegacyStatus(dbRecord.status) : p.status
             };
             
-            console.log('🔄 [updatePolicy] State local atualizado com dados do banco:', {
+            console.log('✅ [updatePolicy] ESTADO ATUALIZADO COM DADOS DO BANCO:', {
               id: updated.id,
+              tipo_seguro: updated.tipo_seguro,
               valor_premio: updated.valor_premio,
-              premium: updated.premium,
               custo_mensal: updated.custo_mensal,
-              monthlyAmount: updated.monthlyAmount
+              quantidade_parcelas: updated.quantidade_parcelas
             });
             
             return updated;

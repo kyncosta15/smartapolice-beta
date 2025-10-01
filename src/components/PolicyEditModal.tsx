@@ -89,58 +89,54 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       premium: formData.premium,
       monthlyAmount: formData.monthlyAmount,
       installments: formData.installments,
+      type: formData.type,
       premiumValue,
       monthlyValue,
       installmentsCount
     });
     
     const updatedPolicy = {
-      ...policy,
+      id: policy.id,
       name: formData.name,
       type: formData.type,
-      tipo_seguro: formData.type, // CRÍTICO: Campo do banco
+      tipo_seguro: formData.type,
       insurer: formData.insurer,
-      // CRÍTICO: Garantir que premium seja salvo como valor_premio no banco
-      premium: premiumValue,
-      valor_premio: premiumValue, // Campo do banco
-      monthlyAmount: monthlyValue,
-      custo_mensal: monthlyValue, // Campo do banco
-      valor_parcela: monthlyValue, // Campo do banco
-      status: formData.status,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      policyNumber: formData.policyNumber,
-      numero_apolice: formData.policyNumber, // Campo do banco
-      category: formData.category,
-      entity: formData.entity,
-      coverage: formData.coverage.split(', ').map(c => c.trim()),
-      paymentForm: formData.paymentForm,
-      forma_pagamento: formData.paymentForm, // Campo do banco
-      installments: installmentsCount,
-      quantidade_parcelas: installmentsCount, // Campo do banco
-      deductible: parseFloat(formData.deductible) || 0,
-      franquia: parseFloat(formData.deductible) || 0, // Campo do banco
-      limits: formData.limits,
-      // Campos específicos do N8N
-      insuredName: formData.insuredName,
-      documento: formData.documento,
-      documento_tipo: formData.documento_tipo,
-      vehicleModel: formData.vehicleModel,
-      modelo_veiculo: formData.vehicleModel, // Campo do banco
-      uf: formData.uf,
-      responsavel_nome: formData.responsavel_nome
-    };
-
-    console.log('💾 [PolicyEditModal] Salvando apólice atualizada:', {
-      id: policy.id,
       premium: premiumValue,
       valor_premio: premiumValue,
       monthlyAmount: monthlyValue,
       custo_mensal: monthlyValue,
-      quantidade_parcelas: installmentsCount
-    });
+      valor_parcela: monthlyValue,
+      status: formData.status,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      policyNumber: formData.policyNumber,
+      numero_apolice: formData.policyNumber,
+      category: formData.category,
+      entity: formData.entity,
+      coverage: formData.coverage.split(', ').map(c => c.trim()),
+      paymentForm: formData.paymentForm,
+      forma_pagamento: formData.paymentForm,
+      installments: installmentsCount,
+      quantidade_parcelas: installmentsCount,
+      deductible: parseFloat(formData.deductible) || 0,
+      franquia: parseFloat(formData.deductible) || 0,
+      limits: formData.limits,
+      insuredName: formData.insuredName,
+      documento: formData.documento,
+      documento_tipo: formData.documento_tipo,
+      vehicleModel: formData.vehicleModel,
+      modelo_veiculo: formData.vehicleModel,
+      uf: formData.uf,
+      responsavel_nome: formData.responsavel_nome
+    };
 
-    console.log('📤 [PolicyEditModal] Objeto completo sendo enviado:', JSON.stringify(updatedPolicy, null, 2));
+    console.log('💾 [PolicyEditModal] DADOS FINAIS:', JSON.stringify({
+      id: policy.id,
+      tipo_seguro: updatedPolicy.tipo_seguro,
+      valor_premio: updatedPolicy.valor_premio,
+      custo_mensal: updatedPolicy.custo_mensal,
+      quantidade_parcelas: updatedPolicy.quantidade_parcelas
+    }, null, 2));
 
     onSave(updatedPolicy);
     
