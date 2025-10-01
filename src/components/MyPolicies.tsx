@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyWithStatus, PolicyStatus } from '@/types/policyStatus';
 import { STATUS_COLORS, formatStatusText } from '@/utils/statusColors';
@@ -32,6 +32,7 @@ export function MyPolicies() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showNewPolicyModal, setShowNewPolicyModal] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<PolicyWithStatus | null>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<PolicyWithStatus | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { policies, updatePolicy, deletePolicy, refreshPolicies } = usePersistedPolicies();
   const { toast } = useToast();
@@ -139,6 +140,28 @@ export function MyPolicies() {
     setPolicyToDelete(null);
   };
 
+  const handleViewPolicy = (policy: PolicyWithStatus) => {
+    setSelectedPolicy(policy);
+    toast({
+      title: "Visualizar Apólice",
+      description: `Abrindo detalhes de ${policy.name}`,
+    });
+  };
+
+  const handleDownloadPolicy = async (policy: PolicyWithStatus) => {
+    toast({
+      title: "Download em desenvolvimento",
+      description: "Funcionalidade de download será implementada em breve",
+    });
+  };
+
+  const handleEditPolicy = (policy: PolicyWithStatus) => {
+    toast({
+      title: "Edição em desenvolvimento",
+      description: "Funcionalidade de edição será implementada em breve",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -173,21 +196,9 @@ export function MyPolicies() {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg">{toText(policy.name)}</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge className={STATUS_COLORS[policy.status] || STATUS_COLORS.vigente}>
-                      {formatStatusText(policy.status)}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => handleDeleteClick(e, policy)}
-                      className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
-                      title="Deletar apólice"
-                      disabled={isDeleting}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Badge className={STATUS_COLORS[policy.status] || STATUS_COLORS.vigente}>
+                    {formatStatusText(policy.status)}
+                  </Badge>
                 </div>
                 <p className="text-sm text-gray-500">{toText(policy.insurer)}</p>
               </CardHeader>
@@ -221,6 +232,50 @@ export function MyPolicies() {
                       {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
+                </div>
+
+                <div className="flex gap-2 pt-2 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleViewPolicy(policy)}
+                    className="flex-1 gap-2"
+                    title="Visualizar apólice"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Ver
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDownloadPolicy(policy)}
+                    className="flex-1 gap-2"
+                    title="Baixar apólice"
+                  >
+                    <Download className="h-4 w-4" />
+                    Baixar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditPolicy(policy)}
+                    className="flex-1 gap-2"
+                    title="Editar apólice"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => handleDeleteClick(e, policy)}
+                    className="flex-1 gap-2 hover:bg-red-50 hover:text-red-600"
+                    title="Deletar apólice"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Excluir
+                  </Button>
                 </div>
               </CardContent>
             </Card>
