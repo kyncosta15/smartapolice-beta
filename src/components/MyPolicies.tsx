@@ -262,16 +262,17 @@ export function MyPolicies() {
 
   return (
     <div className="space-y-4 md:space-y-6 p-3 sm:p-4 md:p-0">
-      <div className="flex flex-col gap-3 sm:gap-4">
-        <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
+        {/* Título + Badge */}
+        <div className="flex items-center gap-2">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Minhas Apólices</h2>
           <Badge variant="secondary" className="text-xs sm:text-sm shrink-0">
-            {policiesWithStatus.length} apólice{policiesWithStatus.length !== 1 ? 's' : ''}
+            {policiesWithStatus.length}
           </Badge>
         </div>
         
-        <div className="flex items-center justify-between gap-2">
-          {/* Toggle de visualização */}
+        {/* Toggle de visualização + Botão Nova Apólice */}
+        <div className="flex items-center gap-2">
           <div className="flex items-center border rounded-md shadow-sm">
             <Button
               variant={viewMode === 'cards' ? 'default' : 'ghost'}
