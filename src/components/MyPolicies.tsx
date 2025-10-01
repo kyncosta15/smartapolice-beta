@@ -195,15 +195,30 @@ export function MyPolicies() {
 
   const handleSaveEdit = async (updatedPolicy: any) => {
     try {
+      console.log('💾 Salvando apólice editada:', {
+        id: updatedPolicy.id,
+        name: updatedPolicy.name,
+        monthlyAmount: updatedPolicy.monthlyAmount,
+        custo_mensal: updatedPolicy.custo_mensal,
+        premium: updatedPolicy.premium
+      });
+      
       const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
       
       if (success) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('✅ Update bem-sucedido, recarregando dados...');
+        
+        // Aguardar um pouco para garantir que o banco foi atualizado
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Recarregar dados do banco para garantir valores atualizados
         await refreshPolicies();
+        
+        console.log('✅ Dados recarregados do banco');
         
         toast({
           title: "✅ Alterações Salvas",
-          description: "A apólice foi atualizada com sucesso",
+          description: "A apólice foi atualizada e os valores foram sincronizados",
         });
       } else {
         toast({
@@ -213,7 +228,7 @@ export function MyPolicies() {
         });
       }
     } catch (error) {
-      console.error('Erro ao salvar edição:', error);
+      console.error('❌ Erro ao salvar edição:', error);
       toast({
         title: "❌ Erro",
         description: "Ocorreu um erro ao salvar as alterações",
