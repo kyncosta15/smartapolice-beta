@@ -73,8 +73,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       </SidebarHeader>
 
       {/* Navigation */}
-      <SidebarContent className="px-2 py-4">
-        <SidebarMenu className="space-y-1">
+      <SidebarContent className={cn("px-2", open ? "py-4" : "py-6")}>
+        <SidebarMenu className={cn(open ? "space-y-1" : "space-y-4")}>
           {navigation.map((item) => (
             <SidebarMenuItem key={item.id}>
               <SidebarMenuButton
@@ -82,16 +82,18 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 isActive={activeSection === item.id}
                 tooltip={item.title}
                 className={cn(
-                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm w-full",
+                  "group flex items-center gap-3 text-sm w-full",
                   "transition-all duration-200 ease-out font-medium relative overflow-hidden",
                   "text-muted-foreground hover:bg-accent/50",
                   "hover:text-[#161616]",
                   "hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]",
                   "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
+                  // Quando colapsado: circular, caso contrário: rounded-xl
+                  open ? "rounded-xl px-3 py-2.5" : "rounded-full w-10 h-10 p-0 justify-center",
                   activeSection === item.id && [
                     "bg-gradient-to-r from-primary/15 to-primary/5 text-[#161616] shadow-sm border border-primary/10",
                     "hover:from-primary/20 hover:to-primary/8 hover:text-[#161616]",
-                    "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-gradient-to-b before:from-primary before:to-primary/80 before:rounded-r-full"
+                    open && "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-gradient-to-b before:from-primary before:to-primary/80 before:rounded-r-full"
                   ]
                 )}
               >
@@ -101,7 +103,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                     ? "text-[#161616] drop-shadow-sm" 
                     : "text-muted-foreground group-hover:text-[#161616] group-hover:scale-110"
                 )} />
-                <span className="truncate">{item.title}</span>
+                {open && <span className="truncate">{item.title}</span>}
                 {activeSection === item.id && open && (
                   <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 )}
@@ -119,15 +121,17 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
               onClick={logout}
               tooltip="Sair do sistema"
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl w-full",
+                "flex items-center gap-3 text-sm w-full",
                 "text-muted-foreground hover:text-[#161616] hover:bg-accent/50",
                 "transition-all duration-200 ease-out font-medium",
                 "hover:scale-[1.01] active:scale-[0.99] hover:shadow-sm",
-                "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1"
+                "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
+                // Quando colapsado: circular, caso contrário: rounded-xl
+                open ? "rounded-xl px-3 py-2.5" : "rounded-full w-10 h-10 p-0 justify-center"
               )}
             >
               <LogOut className="size-4 transition-transform duration-200 flex-shrink-0" />
-              <span className="truncate">Sair</span>
+              {open && <span className="truncate">Sair</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
