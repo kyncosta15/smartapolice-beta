@@ -47,6 +47,7 @@ export function DashboardContent() {
   const dashboardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { progressToast } = useProgressToast();
+  const [lastRefresh, setLastRefresh] = useState<number>(Date.now());
 
   // Hook para persistência de apólices
   const { 
@@ -55,6 +56,7 @@ export function DashboardContent() {
     deletePolicy: deletePersistedPolicy,
     updatePolicy: updatePersistedPolicy,
     downloadPDF: downloadPersistedPDF,
+    refreshPolicies,
     hasPersistedData 
   } = usePersistedPolicies();
 
@@ -326,6 +328,23 @@ export function DashboardContent() {
   console.log(`🔍 Dashboard Stats:`, enhancedDashboardStats);
   console.log(`🔍 Normalized Policies (primeiras 3):`, normalizedPolicies.slice(0, 3));
   console.log(`🔍 Usuário atual:`, { id: user?.id, email: user?.email, role: user?.role });
+  
+  // Auto-refresh quando voltar para o dashboard
+  useEffect(() => {
+    if (activeSection === 'dashboard') {
+      console.log('🔄 Dashboard ativo - verificando se precisa atualizar dados');
+      const timeSinceLastRefresh = Date.now() - lastRefresh;
+      
+      // Se passou mais de 2 segundos desde o último refresh, recarregar
+      if (timeSinceLastRefresh > 2000) {
+        console.log('🔄 Recarregando dados do banco...');
+        refreshPolicies().then(() => {
+          console.log('✅ Dados atualizados');
+          setLastRefresh(Date.now());
+        });
+      }
+    }
+  }, [activeSection]);
   
   // Verificação crítica de autenticação
   if (!user?.id) {
