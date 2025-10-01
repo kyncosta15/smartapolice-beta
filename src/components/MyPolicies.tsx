@@ -273,7 +273,16 @@ export function MyPolicies() {
         
         {/* Toggle de visualização + Botão Nova Apólice */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center border rounded-md shadow-sm">
+          <Button
+            onClick={() => setShowNewPolicyModal(true)}
+            className="order-1 sm:order-2 gap-1.5 sm:gap-2 h-8 sm:h-10 px-3 sm:px-4 whitespace-nowrap bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg active:shadow-sm active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 transition-all duration-200 rounded-md font-medium text-xs sm:text-sm"
+          >
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline">Nova</span>
+            <span className="hidden sm:inline">Apólice</span>
+          </Button>
+          
+          <div className="order-2 sm:order-1 flex items-center border rounded-md shadow-sm">
             <Button
               variant={viewMode === 'cards' ? 'default' : 'ghost'}
               size="sm"
@@ -299,15 +308,6 @@ export function MyPolicies() {
               <List className="w-4 h-4" />
             </Button>
           </div>
-
-          <Button
-            onClick={() => setShowNewPolicyModal(true)}
-            className="gap-1.5 sm:gap-2 h-8 sm:h-10 px-3 sm:px-4 whitespace-nowrap bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg active:shadow-sm active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 transition-all duration-200 rounded-md font-medium text-xs sm:text-sm"
-          >
-            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline">Nova</span>
-            <span className="hidden sm:inline">Apólice</span>
-          </Button>
         </div>
       </div>
 
