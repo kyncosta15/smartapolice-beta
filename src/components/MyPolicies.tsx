@@ -14,7 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
+import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyWithStatus, PolicyStatus } from '@/types/policyStatus';
 import { STATUS_COLORS, formatStatusText } from '@/utils/statusColors';
 import { useRenewalChecker } from '@/hooks/useRenewalChecker';
@@ -29,6 +30,7 @@ import { toText, moedaBR } from '@/lib/policies';
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showNewPolicyModal, setShowNewPolicyModal] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<PolicyWithStatus | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { policies, updatePolicy, deletePolicy, refreshPolicies } = usePersistedPolicies();
@@ -141,9 +143,20 @@ export function MyPolicies() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Minhas Apólices</h2>
-        <Badge variant="secondary">
-          {policiesWithStatus.length} apólice{policiesWithStatus.length !== 1 ? 's' : ''}
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="secondary">
+            {policiesWithStatus.length} apólice{policiesWithStatus.length !== 1 ? 's' : ''}
+          </Badge>
+          <Button
+            onClick={() => setShowNewPolicyModal(true)}
+            size="sm"
+            variant="outline"
+            className="gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nova Apólice
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -226,6 +239,12 @@ export function MyPolicies() {
       <InfoModal 
         isOpen={showInfoModal}
         onClose={() => setShowInfoModal(false)}
+      />
+
+      <NewPolicyManualModal
+        open={showNewPolicyModal}
+        onOpenChange={setShowNewPolicyModal}
+        onSuccess={refreshPolicies}
       />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={(open) => {
