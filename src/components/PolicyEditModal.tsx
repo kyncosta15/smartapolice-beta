@@ -82,6 +82,8 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
 
   const handleSave = async () => {
     console.log('🚀 [PolicyEditModal] ========== HANDLERSAVE INICIADO ==========');
+    console.log('📋 [PolicyEditModal] formData.name:', formData.name);
+    console.log('📋 [PolicyEditModal] policy original:', policy);
     
     const premiumValue = parseFloat(formData.premium) || 0;
     const monthlyValue = parseFloat(formData.monthlyAmount) || 0;
@@ -94,9 +96,10 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       type: formData.type
     });
     
+    // CRÍTICO: Garantir que name vem do formData, NÃO do policy original
     const updatedPolicy = {
       id: policy.id,
-      name: formData.name,
+      name: formData.name,  // ← Este é o valor editado no formulário
       type: formData.type,
       tipo_seguro: formData.type,
       insurer: formData.insurer,

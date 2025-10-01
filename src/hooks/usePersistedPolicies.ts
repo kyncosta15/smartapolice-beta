@@ -331,7 +331,11 @@ export function usePersistedPolicies() {
     try {
       console.log('🔄 [updatePolicy] Iniciando atualização');
       console.log('📝 [updatePolicy] Policy ID:', policyId);
-      console.log('📝 [updatePolicy] Updates:', JSON.stringify(updates, null, 2));
+      console.log('📝 [updatePolicy] Updates recebido:', JSON.stringify(updates, null, 2));
+      
+      // CRÍTICO: Mostrar EXATAMENTE o que está em updates.name
+      console.log('🔍 [updatePolicy] updates.name =', updates.name);
+      console.log('🔍 [updatePolicy] typeof updates.name =', typeof updates.name);
       
       // Converter dados para formato do banco - mapeando TODOS os campos editáveis
       const dbUpdates: any = {};
@@ -339,6 +343,7 @@ export function usePersistedPolicies() {
       // Campos básicos
       if (updates.name !== undefined) {
         dbUpdates.segurado = updates.name;
+        console.log('✅ [updatePolicy] dbUpdates.segurado definido como:', dbUpdates.segurado);
       }
       if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
       if ((updates as any).tipo_seguro !== undefined) dbUpdates.tipo_seguro = (updates as any).tipo_seguro;
