@@ -413,8 +413,24 @@ export function usePersistedPolicies() {
         status: updates.status ? mapLegacyStatus(updates.status) : undefined
       };
       
+      // CRÍTICO: Atualizar estado local com os valores corretos do banco
       setPolicies(prev => 
-        prev.map(p => p.id === policyId ? { ...p, ...mappedUpdates } : p)
+        prev.map(p => {
+          if (p.id === policyId) {
+            const updated: any = {
+              ...p,
+              ...mappedUpdates,
+              // Garantir que os valores do banco sejam refletidos no estado
+              valor_premio: dbUpdates.valor_premio !== undefined ? dbUpdates.valor_premio : (p as any).valor_premio,
+              custo_mensal: dbUpdates.custo_mensal !== undefined ? dbUpdates.custo_mensal : (p as any).custo_mensal,
+              quantidade_parcelas: dbUpdates.quantidade_parcelas !== undefined ? dbUpdates.quantidade_parcelas : (p as any).quantidade_parcelas,
+              numero_apolice: dbUpdates.numero_apolice !== undefined ? dbUpdates.numero_apolice : (p as any).numero_apolice,
+              forma_pagamento: dbUpdates.forma_pagamento !== undefined ? dbUpdates.forma_pagamento : (p as any).forma_pagamento
+            };
+            return updated;
+          }
+          return p;
+        })
       );
       
       toast({

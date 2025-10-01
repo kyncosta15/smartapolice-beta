@@ -49,24 +49,31 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
         name: policy.name || '',
         type: policy.type || '',
         insurer: policy.insurer || '',
-        premium: policy.premium?.toString() || '',
-        monthlyAmount: policy.monthlyAmount?.toString() || '',
+        // CORREÇÃO: Priorizar valor_premio do banco
+        premium: (policy.valor_premio || policy.premium)?.toString() || '',
+        // CORREÇÃO: Priorizar custo_mensal do banco
+        monthlyAmount: (policy.custo_mensal || policy.valor_parcela || policy.monthlyAmount)?.toString() || '',
         status: policy.status || '',
         startDate: policy.startDate || '',
         endDate: policy.endDate || '',
-        policyNumber: policy.policyNumber || '',
+        // CORREÇÃO: Priorizar numero_apolice do banco
+        policyNumber: policy.numero_apolice || policy.policyNumber || '',
         category: policy.category || '',
         entity: policy.entity || '',
-        coverage: Array.isArray(policy.coverage) ? policy.coverage.join(', ') : policy.coverage || ' ',
-        paymentForm: policy.paymentForm || '',
-        installments: policy.installments?.toString() || '',
-        deductible: policy.deductible?.toString() || '',
+        coverage: Array.isArray(policy.coverage) ? policy.coverage.join(', ') : policy.coverage || '',
+        // CORREÇÃO: Priorizar forma_pagamento do banco
+        paymentForm: policy.forma_pagamento || policy.paymentForm || '',
+        // CORREÇÃO: Priorizar quantidade_parcelas do banco
+        installments: (policy.quantidade_parcelas || policy.installments)?.toString() || '',
+        // CORREÇÃO: Priorizar franquia do banco
+        deductible: (policy.franquia || policy.deductible)?.toString() || '',
         limits: policy.limits || '',
         // Campos específicos do N8N
         insuredName: policy.insuredName || '',
         documento: policy.documento || '',
         documento_tipo: policy.documento_tipo || '',
-        vehicleModel: policy.vehicleModel || '',
+        // CORREÇÃO: Priorizar modelo_veiculo do banco
+        vehicleModel: policy.modelo_veiculo || policy.vehicleModel || '',
         uf: policy.uf || '',
         responsavel_nome: policy.responsavel_nome || ''
       });
