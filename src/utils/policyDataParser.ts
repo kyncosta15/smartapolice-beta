@@ -82,4 +82,7 @@ export interface ParsedPolicyData {
   
   // ADDED: Missing quantidade_parcelas property
   quantidade_parcelas?: number;
+  
+  // ADDED: Missing responsavel_nome property
+  responsavel_nome?: string;
 }

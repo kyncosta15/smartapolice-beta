@@ -362,6 +362,10 @@ export function usePersistedPolicies() {
       if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = updates.vehicleModel;
       if (updates.uf !== undefined) dbUpdates.uf = updates.uf;
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
+      if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
+      
+      // Também atualizar valor_parcela quando monthlyAmount for atualizado
+      if (updates.monthlyAmount !== undefined) dbUpdates.valor_parcela = updates.monthlyAmount;
 
       console.log('📤 Enviando atualização para o banco:', dbUpdates);
 
