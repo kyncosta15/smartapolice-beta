@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, ChevronDown, Menu } from 'lucide-react';
+import { LogOut, ChevronDown, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 
 interface NavbarProps {
   onMobileMenuToggle: () => void;
@@ -20,6 +20,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
   const { logout, user } = useAuth();
   const { profile: userProfile, memberships, activeEmpresa } = useUserProfile();
   const { toast } = useToast();
+  const { open } = useSidebar();
 
   const getRoleLabel = (role: string) => {
     const roles = {
@@ -80,7 +81,13 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
         {/* Left side - Toggle buttons */}
         <div className="flex items-center gap-2">
           {/* Desktop Sidebar Toggle */}
-          <SidebarTrigger className="hidden lg:flex p-2 text-gray-700 hover:text-gray-900 hover:bg-slate-50 transition-all duration-300 rounded-lg" />
+          <SidebarTrigger className="hidden lg:flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 hover:bg-slate-50 transition-all duration-300 rounded-lg">
+            {open ? (
+              <ChevronLeft className="w-5 h-5" />
+            ) : (
+              <ChevronRight className="w-5 h-5" />
+            )}
+          </SidebarTrigger>
           
           {/* Mobile Menu Toggle */}
           <Button
