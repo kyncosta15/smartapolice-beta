@@ -414,6 +414,9 @@ export function usePersistedPolicies() {
       console.log('📤 [updatePolicy] Dados preparados para o banco:', JSON.stringify(dbUpdates, null, 2));
       console.log('🔑 [updatePolicy] Condições WHERE:', { policyId, userId: user.id });
 
+      // CRÍTICO: Adicionar alerta antes do update para debug
+      alert(`🔍 DEBUG UPDATE:\nPolicy ID: ${policyId}\nNome novo: ${dbUpdates.segurado}\nUser ID: ${user.id}`);
+
       const { data, error } = await supabase
         .from('policies')
         .update(dbUpdates)
@@ -426,6 +429,9 @@ export function usePersistedPolicies() {
         error: error ? JSON.stringify(error, null, 2) : null,
         recordsAffected: data ? data.length : 0
       });
+
+      // CRÍTICO: Adicionar alerta após o update para debug
+      alert(`📨 RESULTADO UPDATE:\nSucesso: ${!error}\nRegistros afetados: ${data?.length || 0}\nError: ${error?.message || 'nenhum'}`);
 
       if (error) {
         console.error('❌ [updatePolicy] ERRO NO SUPABASE:', {

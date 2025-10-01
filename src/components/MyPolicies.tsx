@@ -197,25 +197,16 @@ export function MyPolicies() {
     console.log('🚀 [MyPolicies] ========== HANDLE SAVE EDIT CHAMADO ==========');
     console.log('📝 [MyPolicies] Policy ID:', updatedPolicy.id);
     console.log('📝 [MyPolicies] Nome novo:', updatedPolicy.name);
-    console.log('📝 [MyPolicies] Dados completos:', JSON.stringify(updatedPolicy, null, 2));
+    alert(`🚀 EDIT START: ${updatedPolicy.name}`);
     
     try {
-      console.log('📞 [MyPolicies] Chamando updatePolicy...');
       const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
       
-      console.log('📊 [MyPolicies] updatePolicy retornou:', success ? '✅ SUCESSO' : '❌ FALHA');
-      
       if (success) {
-        toast({
-          title: "✅ Salvando Alterações",
-          description: "Atualizando dados no banco...",
-        });
-        
-        // Aguardar processamento
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Aguardar 1 segundo para garantir propagação no banco
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Recarregar do banco
-        console.log('🔄 [MyPolicies] Forçando refresh do banco...');
         await refreshPolicies();
         
         toast({
@@ -240,8 +231,6 @@ export function MyPolicies() {
       setShowEditModal(false);
       setSelectedPolicy(null);
     }
-    
-    console.log('🏁 [MyPolicies] ========== HANDLE SAVE EDIT FINALIZADO ==========');
   };
 
   return (
