@@ -300,8 +300,7 @@ export function MyPolicies() {
           <Button
             onClick={() => setShowNewPolicyModal(true)}
             size="sm"
-            variant="outline"
-            className="gap-2 whitespace-nowrap"
+            className="gap-2 whitespace-nowrap bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Nova Apólice</span>
