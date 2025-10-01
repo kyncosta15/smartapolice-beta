@@ -58,8 +58,14 @@ export function normalizePolicy(raw: any) {
     seguradoraEntidade,
     tipoCategoria,
     tipoCobertura,
+    // CRÍTICO: Garantir que todos os campos financeiros sejam incluídos
     valorMensal,
     premio,
+    premium: premio, // Mapear para campo do frontend
+    monthlyAmount: valorMensal, // Mapear para campo do frontend
+    valor_premio: premio, // Garantir campo do banco
+    custo_mensal: valorMensal, // Garantir campo do banco
+    valor_parcela: valorMensal, // Campo alternativo do banco
     // Campos principais - SEMPRE STRINGS
     seguradora: seguradoraEmpresa,
     insurer: seguradoraEmpresa,
