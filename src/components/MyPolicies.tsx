@@ -194,56 +194,54 @@ export function MyPolicies() {
   };
 
   const handleSaveEdit = async (updatedPolicy: any) => {
-    console.log('🔄 [MyPolicies] ============ INICIANDO SAVE ============');
+    console.log('🚀 [MyPolicies] ========== HANDLE SAVE EDIT CHAMADO ==========');
     console.log('📝 [MyPolicies] Policy ID:', updatedPolicy.id);
-    console.log('📝 [MyPolicies] Dados do formulário:', {
-      name: updatedPolicy.name,
-      type: updatedPolicy.type,
-      tipo_seguro: updatedPolicy.tipo_seguro,
-      valor_premio: updatedPolicy.valor_premio,
-      custo_mensal: updatedPolicy.custo_mensal
-    });
+    console.log('📝 [MyPolicies] Nome novo:', updatedPolicy.name);
+    console.log('📝 [MyPolicies] Dados completos:', JSON.stringify(updatedPolicy, null, 2));
     
-    // Fechar modal antes de processar
-    setShowEditModal(false);
-    
-    const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
-    
-    console.log('📊 [MyPolicies] Resultado do update:', success ? '✅ SUCESSO' : '❌ FALHA');
-    
-    if (success) {
-      // CRÍTICO: Aguardar um momento para o banco processar
-      await new Promise(resolve => setTimeout(resolve, 300));
+    try {
+      console.log('📞 [MyPolicies] Chamando updatePolicy...');
+      const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
       
-      // Recarregar TUDO do banco
-      console.log('🔄 [MyPolicies] Forçando refresh completo do banco...');
-      await refreshPolicies();
+      console.log('📊 [MyPolicies] updatePolicy retornou:', success ? '✅ SUCESSO' : '❌ FALHA');
       
-      console.log('🔍 [MyPolicies] Total de apólices após refresh:', policies.length);
-      
-      // Buscar apólice atualizada
-      const updatedFromDB = policies.find(p => p.id === updatedPolicy.id);
-      
-      if (updatedFromDB) {
-        console.log('✅ [MyPolicies] Apólice encontrada no banco:', {
-          id: updatedFromDB.id,
-          name: updatedFromDB.name,
-          tipo_seguro: (updatedFromDB as any).tipo_seguro
+      if (success) {
+        toast({
+          title: "✅ Salvando Alterações",
+          description: "Atualizando dados no banco...",
         });
-        setSelectedPolicy(updatedFromDB);
+        
+        // Aguardar processamento
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Recarregar do banco
+        console.log('🔄 [MyPolicies] Forçando refresh do banco...');
+        await refreshPolicies();
+        
+        toast({
+          title: "✅ Alterações Salvas",
+          description: "A apólice foi atualizada com sucesso",
+        });
       } else {
-        console.warn('⚠️ [MyPolicies] Apólice não encontrada após refresh, usando dados do form');
-        setSelectedPolicy(updatedPolicy);
+        toast({
+          title: "❌ Erro ao Salvar",
+          description: "Não foi possível atualizar a apólice",
+          variant: "destructive"
+        });
       }
-      
-      // Limpar selectedPolicy após um tempo
-      setTimeout(() => setSelectedPolicy(null), 100);
-    } else {
-      console.error('❌ [MyPolicies] Falha na atualização - mantendo modal aberto');
-      setShowEditModal(true);
+    } catch (error) {
+      console.error('❌ [MyPolicies] Exceção durante save:', error);
+      toast({
+        title: "❌ Erro Inesperado",
+        description: error instanceof Error ? error.message : "Erro ao salvar",
+        variant: "destructive"
+      });
+    } finally {
+      setShowEditModal(false);
+      setSelectedPolicy(null);
     }
     
-    console.log('🏁 [MyPolicies] ============ SAVE CONCLUÍDO ============');
+    console.log('🏁 [MyPolicies] ========== HANDLE SAVE EDIT FINALIZADO ==========');
   };
 
   return (

@@ -80,19 +80,18 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
     }
   }, [policy]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    console.log('🚀 [PolicyEditModal] ========== HANDLERSAVE INICIADO ==========');
+    
     const premiumValue = parseFloat(formData.premium) || 0;
     const monthlyValue = parseFloat(formData.monthlyAmount) || 0;
     const installmentsCount = parseInt(formData.installments) || 12;
     
-    console.log('🔍 [PolicyEditModal] Valores do formulário:', {
-      premium: formData.premium,
-      monthlyAmount: formData.monthlyAmount,
-      installments: formData.installments,
-      type: formData.type,
+    console.log('🔍 [PolicyEditModal] Valores parseados:', {
       premiumValue,
       monthlyValue,
-      installmentsCount
+      installmentsCount,
+      type: formData.type
     });
     
     const updatedPolicy = {
@@ -130,22 +129,19 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       responsavel_nome: formData.responsavel_nome
     };
 
-    console.log('💾 [PolicyEditModal] DADOS FINAIS:', JSON.stringify({
-      id: policy.id,
-      tipo_seguro: updatedPolicy.tipo_seguro,
-      valor_premio: updatedPolicy.valor_premio,
-      custo_mensal: updatedPolicy.custo_mensal,
-      quantidade_parcelas: updatedPolicy.quantidade_parcelas
-    }, null, 2));
+    console.log('💾 [PolicyEditModal] Objeto completo a ser salvo:', JSON.stringify(updatedPolicy, null, 2));
+    console.log('📞 [PolicyEditModal] Chamando onSave callback...');
 
-    onSave(updatedPolicy);
+    try {
+      await onSave(updatedPolicy);
+      console.log('✅ [PolicyEditModal] onSave callback concluído com sucesso');
+    } catch (error) {
+      console.error('❌ [PolicyEditModal] Erro no callback onSave:', error);
+    }
     
-    toast({
-      title: "✅ Salvando...",
-      description: "Atualizando informações da apólice",
-    });
-    
+    console.log('🚪 [PolicyEditModal] Fechando modal...');
     onClose();
+    console.log('🏁 [PolicyEditModal] ========== HANDLERSAVE FINALIZADO ==========');
   };
 
   if (!policy) return null;
@@ -428,7 +424,13 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button onClick={handleSave} className="w-full sm:w-auto">
+          <Button 
+            onClick={() => {
+              console.log('🖱️ [PolicyEditModal] Botão "Salvar Alterações" CLICADO');
+              handleSave();
+            }} 
+            className="w-full sm:w-auto"
+          >
             Salvar Alterações
           </Button>
         </div>
