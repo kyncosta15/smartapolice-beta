@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Trash2, Plus, Eye, Download, Edit } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
+import { PolicyDetailsModal } from './PolicyDetailsModal';
+import { PolicyEditModal } from './PolicyEditModal';
 import { PolicyWithStatus, PolicyStatus } from '@/types/policyStatus';
 import { STATUS_COLORS, formatStatusText } from '@/utils/statusColors';
 import { useRenewalChecker } from '@/hooks/useRenewalChecker';
@@ -31,8 +33,10 @@ export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showNewPolicyModal, setShowNewPolicyModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<PolicyWithStatus | null>(null);
-  const [selectedPolicy, setSelectedPolicy] = useState<PolicyWithStatus | null>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { policies, updatePolicy, deletePolicy, refreshPolicies } = usePersistedPolicies();
   const { toast } = useToast();
@@ -142,15 +146,8 @@ export function MyPolicies() {
 
   const handleViewPolicy = (policy: PolicyWithStatus) => {
     const originalPolicy = policies.find(p => p.id === policy.id);
-    if (originalPolicy?.pdfPath) {
-      window.open(originalPolicy.pdfPath, '_blank');
-    } else {
-      toast({
-        title: "Arquivo não disponível",
-        description: "Esta apólice não possui arquivo anexado",
-        variant: "destructive",
-      });
-    }
+    setSelectedPolicy(originalPolicy || policy);
+    setShowDetailsModal(true);
   };
 
   const handleDownloadPolicy = async (policy: PolicyWithStatus) => {
@@ -191,11 +188,26 @@ export function MyPolicies() {
   };
 
   const handleEditPolicy = (policy: PolicyWithStatus) => {
-    setSelectedPolicy(policy);
-    toast({
-      title: "Edição em desenvolvimento",
-      description: "Funcionalidade de edição será implementada em breve",
-    });
+    const originalPolicy = policies.find(p => p.id === policy.id);
+    setSelectedPolicy(originalPolicy || policy);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async (updatedPolicy: any) => {
+    const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
+    if (success) {
+      toast({
+        title: "✅ Apólice Atualizada",
+        description: "As alterações foram salvas com sucesso",
+      });
+      refreshPolicies();
+    } else {
+      toast({
+        title: "❌ Erro ao Atualizar",
+        description: "Não foi possível salvar as alterações",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -332,6 +344,35 @@ export function MyPolicies() {
         open={showNewPolicyModal}
         onOpenChange={setShowNewPolicyModal}
         onSuccess={refreshPolicies}
+      />
+
+      <PolicyDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedPolicy(null);
+        }}
+        policy={selectedPolicy}
+        onDelete={async (policyId) => {
+          const success = await deletePolicy(policyId);
+          if (success) {
+            toast({
+              title: "✅ Apólice Deletada",
+              description: "A apólice foi removida com sucesso",
+            });
+            refreshPolicies();
+          }
+        }}
+      />
+
+      <PolicyEditModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedPolicy(null);
+        }}
+        policy={selectedPolicy}
+        onSave={handleSaveEdit}
       />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={(open) => {
