@@ -43,8 +43,14 @@ export function normalizePolicy(raw: any) {
     tipoParsed?.cobertura ?? "N/A"
   );
 
-  const valorMensal = toNumberSafe(raw.valorMensal || raw.monthlyAmount) ?? 0;
-  const premio = toNumberSafe(raw.premio || raw.premium) ?? 0;
+  // CRÍTICO: Priorizar campos do banco de dados (valor_premio, custo_mensal)
+  const valorMensal = toNumberSafe(
+    raw.custo_mensal ?? raw.valor_parcela ?? raw.valorMensal ?? raw.monthlyAmount
+  ) ?? 0;
+  
+  const premio = toNumberSafe(
+    raw.valor_premio ?? raw.premio ?? raw.premium
+  ) ?? 0;
 
   return {
     ...raw,

@@ -7,6 +7,20 @@ interface FinancialInfoCardProps {
 }
 
 export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
+  // CRÍTICO: Priorizar campos do banco de dados
+  const premiumValue = policy.valor_premio ?? policy.premium ?? 0;
+  const monthlyValue = policy.custo_mensal ?? policy.valor_parcela ?? policy.monthlyAmount ?? 0;
+  
+  console.log('💰 [FinancialInfoCard] Valores recebidos:', {
+    id: policy.id,
+    valor_premio: policy.valor_premio,
+    premium: policy.premium,
+    custo_mensal: policy.custo_mensal,
+    monthlyAmount: policy.monthlyAmount,
+    premiumValue,
+    monthlyValue
+  });
+  
   // Calcular número de parcelas dos dados da apólice
   const getInstallmentsCount = () => {
     // Priorizar quantidade_parcelas do banco
@@ -28,28 +42,16 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
     return 12;
   };
 
-  // CORREÇÃO: Calcular prêmio mensal corretamente
+  // CORREÇÃO: Calcular prêmio mensal corretamente usando valores já extraídos
   const calculateMonthlyPremium = () => {
-    const premiumValue = policy.valor_premio || policy.premium || 0;
-    
-    // Se há custo_mensal definido, usar ele
-    if (policy.custo_mensal && policy.custo_mensal > 0) {
-      return policy.custo_mensal;
-    }
-    
-    // Se há monthlyAmount definido, usar ele
-    if (policy.monthlyAmount && policy.monthlyAmount > 0) {
-      return policy.monthlyAmount;
-    }
-    
-    // Se há valor_parcela definido, usar ele
-    if (policy.valor_parcela && policy.valor_parcela > 0) {
-      return policy.valor_parcela;
+    // Se há valor mensal definido, usar ele
+    if (monthlyValue && monthlyValue > 0) {
+      return monthlyValue;
     }
     
     // Calcular baseado no número de parcelas
     const installmentsCount = getInstallmentsCount();
-    if (installmentsCount > 0) {
+    if (installmentsCount > 0 && premiumValue > 0) {
       return premiumValue / installmentsCount;
     }
     
@@ -72,7 +74,7 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
         <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 sm:p-6 shadow-md">
           <label className="text-xs sm:text-sm font-medium text-white/90 font-sf-pro block mb-2">Prêmio Anual</label>
           <p className="text-2xl sm:text-3xl font-bold text-white font-sf-pro break-all">
-            R$ {(policy.valor_premio || policy.premium || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            R$ {premiumValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </p>
         </div>
         
