@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus, Eye, Download, Edit } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -28,6 +28,15 @@ import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { useToast } from '@/hooks/use-toast';
 import { renderValue, renderValueAsString, renderCurrency } from '@/utils/renderValue';
 import { toText, moedaBR } from '@/lib/policies';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -38,6 +47,9 @@ export function MyPolicies() {
   const [policyToDelete, setPolicyToDelete] = useState<PolicyWithStatus | null>(null);
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies } = usePersistedPolicies();
   const { toast } = useToast();
   
@@ -240,6 +252,14 @@ export function MyPolicies() {
     }
   };
 
+  // Paginação
+  const totalPages = Math.ceil(policiesWithStatus.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPolicies = viewMode === 'list' 
+    ? policiesWithStatus.slice(startIndex, endIndex)
+    : policiesWithStatus;
+
   return (
     <div className="space-y-6 p-4 md:p-0">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -248,6 +268,35 @@ export function MyPolicies() {
           <Badge variant="secondary" className="text-sm">
             {policiesWithStatus.length} apólice{policiesWithStatus.length !== 1 ? 's' : ''}
           </Badge>
+          
+          {/* Toggle de visualização */}
+          <div className="flex items-center border rounded-md">
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => {
+                setViewMode('cards');
+                setCurrentPage(1);
+              }}
+              className="rounded-r-none h-9"
+              title="Visualizar em cards"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => {
+                setViewMode('list');
+                setCurrentPage(1);
+              }}
+              className="rounded-l-none h-9"
+              title="Visualizar em lista"
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
+
           <Button
             onClick={() => setShowNewPolicyModal(true)}
             size="sm"
@@ -261,106 +310,230 @@ export function MyPolicies() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {policiesWithStatus.map((policy) => {
-          const originalPolicy = policies.find(p => p.id === policy.id);
-          const installmentsCount = originalPolicy?.quantidade_parcelas || 
-                                  originalPolicy?.installments?.length || 
-                                  12;
-          
-          console.log(`🎯 [MyPolicies-Render] Renderizando ${policy.name} com status: ${policy.status}`);
-          
-          return (
-            <Card key={policy.id} className="hover:shadow-lg transition-shadow overflow-hidden">
-              <CardHeader className="pb-3 space-y-2">
-                <div className="flex justify-between items-start gap-3">
-                  <CardTitle className="text-base sm:text-lg leading-tight break-words flex-1 min-w-0">
-                    {toText(policy.name)}
-                  </CardTitle>
-                  <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} shrink-0 text-xs whitespace-nowrap`}>
-                    {formatStatusText(policy.status)}
-                  </Badge>
-                </div>
-                <p className="text-sm text-gray-500 truncate">{toText(policy.insurer)}</p>
-              </CardHeader>
-              
-              <CardContent className="space-y-3">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-500 mb-1">Número</p>
-                      <p className="font-medium text-sm break-all leading-tight">{policy.policyNumber}</p>
+      {/* Visualização em Cards */}
+      {viewMode === 'cards' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {currentPolicies.map((policy) => {
+            const originalPolicy = policies.find(p => p.id === policy.id);
+            const installmentsCount = originalPolicy?.quantidade_parcelas || 
+                                    originalPolicy?.installments?.length || 
+                                    12;
+            
+            console.log(`🎯 [MyPolicies-Render] Renderizando ${policy.name} com status: ${policy.status}`);
+            
+            return (
+              <Card key={policy.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+                <CardHeader className="pb-3 space-y-2">
+                  <div className="flex justify-between items-start gap-3">
+                    <CardTitle className="text-base sm:text-lg leading-tight break-words flex-1 min-w-0">
+                      {toText(policy.name)}
+                    </CardTitle>
+                    <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} shrink-0 text-xs whitespace-nowrap`}>
+                      {formatStatusText(policy.status)}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-500 truncate">{toText(policy.insurer)}</p>
+                </CardHeader>
+                
+                <CardContent className="space-y-3">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-500 mb-1">Número</p>
+                        <p className="font-medium text-sm break-all leading-tight">{policy.policyNumber}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs text-gray-500 mb-1">Valor Mensal</p>
+                        <p className="font-semibold text-sm text-green-600 whitespace-nowrap">
+                          {moedaBR(policy.monthlyAmount)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs text-gray-500 mb-1">Valor Mensal</p>
-                      <p className="font-semibold text-sm text-green-600 whitespace-nowrap">
-                        {moedaBR(policy.monthlyAmount)}
-                      </p>
+                    
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Parcelas</p>
+                        <p className="font-medium text-sm">{installmentsCount}x</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500 mb-1">Vencimento</p>
+                        <p className={`font-medium text-sm whitespace-nowrap ${
+                          new Date(policy.expirationDate || policy.endDate) < new Date() 
+                            ? 'text-red-600' 
+                            : 'text-gray-900'
+                        }`}>
+                          {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="flex justify-between items-start gap-2">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Parcelas</p>
-                      <p className="font-medium text-sm">{installmentsCount}x</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500 mb-1">Vencimento</p>
-                      <p className={`font-medium text-sm whitespace-nowrap ${
-                        new Date(policy.expirationDate || policy.endDate) < new Date() 
-                          ? 'text-red-600' 
-                          : 'text-gray-900'
-                      }`}>
-                        {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="flex gap-1.5 pt-3 border-t justify-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleViewPolicy(policy)}
-                    className="h-9 w-9 p-0 hover:bg-primary/10"
-                    title="Visualizar apólice"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDownloadPolicy(policy)}
-                    className="h-9 w-9 p-0 hover:bg-primary/10"
-                    title="Baixar apólice"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEditPolicy(policy)}
-                    className="h-9 w-9 p-0 hover:bg-primary/10"
-                    title="Editar apólice"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => handleDeleteClick(e, policy)}
-                    className="h-9 w-9 p-0 hover:bg-red-50 hover:text-red-600"
-                    title="Deletar apólice"
-                    disabled={isDeleting}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                  <div className="flex gap-1.5 pt-3 border-t justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewPolicy(policy)}
+                      className="h-9 w-9 p-0 hover:bg-primary/10"
+                      title="Visualizar apólice"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDownloadPolicy(policy)}
+                      className="h-9 w-9 p-0 hover:bg-primary/10"
+                      title="Baixar apólice"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditPolicy(policy)}
+                      className="h-9 w-9 p-0 hover:bg-primary/10"
+                      title="Editar apólice"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDeleteClick(e, policy)}
+                      className="h-9 w-9 p-0 hover:bg-red-50 hover:text-red-600"
+                      title="Deletar apólice"
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Visualização em Lista */}
+      {viewMode === 'list' && (
+        <div className="space-y-4">
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Seguradora</TableHead>
+                  <TableHead>Número</TableHead>
+                  <TableHead className="text-right">Valor Mensal</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Vencimento</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentPolicies.map((policy) => (
+                  <TableRow key={policy.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">{toText(policy.name)}</TableCell>
+                    <TableCell>{toText(policy.insurer)}</TableCell>
+                    <TableCell className="font-mono text-sm">{policy.policyNumber}</TableCell>
+                    <TableCell className="text-right font-semibold text-green-600">
+                      {moedaBR(policy.monthlyAmount)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} text-xs`}>
+                        {formatStatusText(policy.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className={
+                        new Date(policy.expirationDate || policy.endDate) < new Date() 
+                          ? 'text-red-600 font-medium' 
+                          : ''
+                      }>
+                        {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewPolicy(policy)}
+                          className="h-8 w-8 p-0"
+                          title="Visualizar"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadPolicy(policy)}
+                          className="h-8 w-8 p-0"
+                          title="Baixar"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditPolicy(policy)}
+                          className="h-8 w-8 p-0"
+                          title="Editar"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => handleDeleteClick(e, policy)}
+                          className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                          title="Deletar"
+                          disabled={isDeleting}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </div>
+      )}
 
       {renewalAlert && (
         <RenewalModal
