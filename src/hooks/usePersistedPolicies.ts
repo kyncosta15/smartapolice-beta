@@ -343,14 +343,36 @@ export function usePersistedPolicies() {
       if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
       if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
       if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = updates.policyNumber;
-      if (updates.premium !== undefined) dbUpdates.valor_premio = updates.premium;
-      if (updates.monthlyAmount !== undefined) {
-        dbUpdates.custo_mensal = updates.monthlyAmount;
-        dbUpdates.valor_parcela = updates.monthlyAmount;
+      
+      // CRÍTICO: Valores financeiros - priorizar campos do banco
+      if ((updates as any).valor_premio !== undefined) {
+        dbUpdates.valor_premio = typeof (updates as any).valor_premio === 'number' ? (updates as any).valor_premio : parseFloat((updates as any).valor_premio) || 0;
+        console.log('💰 [updatePolicy] valor_premio:', dbUpdates.valor_premio);
+      } else if (updates.premium !== undefined) {
+        dbUpdates.valor_premio = typeof updates.premium === 'number' ? updates.premium : parseFloat(String(updates.premium)) || 0;
+        console.log('💰 [updatePolicy] premium -> valor_premio:', dbUpdates.valor_premio);
       }
+      
+      if ((updates as any).custo_mensal !== undefined) {
+        dbUpdates.custo_mensal = typeof (updates as any).custo_mensal === 'number' ? (updates as any).custo_mensal : parseFloat((updates as any).custo_mensal) || 0;
+        dbUpdates.valor_parcela = dbUpdates.custo_mensal;
+        console.log('💰 [updatePolicy] custo_mensal:', dbUpdates.custo_mensal);
+      } else if (updates.monthlyAmount !== undefined) {
+        dbUpdates.custo_mensal = typeof updates.monthlyAmount === 'number' ? updates.monthlyAmount : parseFloat(String(updates.monthlyAmount)) || 0;
+        dbUpdates.valor_parcela = dbUpdates.custo_mensal;
+        console.log('💰 [updatePolicy] monthlyAmount -> custo_mensal:', dbUpdates.custo_mensal);
+      }
+      
       if (updates.startDate !== undefined) dbUpdates.inicio_vigencia = updates.startDate;
       if (updates.endDate !== undefined) dbUpdates.fim_vigencia = updates.endDate;
-      if (updates.installments !== undefined) dbUpdates.quantidade_parcelas = updates.installments;
+      
+      if ((updates as any).quantidade_parcelas !== undefined) {
+        dbUpdates.quantidade_parcelas = typeof (updates as any).quantidade_parcelas === 'number' ? (updates as any).quantidade_parcelas : parseInt((updates as any).quantidade_parcelas) || 12;
+        console.log('🔢 [updatePolicy] quantidade_parcelas:', dbUpdates.quantidade_parcelas);
+      } else if (updates.installments !== undefined) {
+        dbUpdates.quantidade_parcelas = typeof updates.installments === 'number' ? updates.installments : parseInt(String(updates.installments)) || 12;
+        console.log('🔢 [updatePolicy] installments -> quantidade_parcelas:', dbUpdates.quantidade_parcelas);
+      }
       
       // CORREÇÃO: Mapear status corretamente
       if (updates.status !== undefined) {

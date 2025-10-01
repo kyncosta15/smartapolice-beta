@@ -85,6 +85,15 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
     const monthlyValue = parseFloat(formData.monthlyAmount) || 0;
     const installmentsCount = parseInt(formData.installments) || 12;
     
+    console.log('🔍 [PolicyEditModal] Valores do formulário:', {
+      premium: formData.premium,
+      monthlyAmount: formData.monthlyAmount,
+      installments: formData.installments,
+      premiumValue,
+      monthlyValue,
+      installmentsCount
+    });
+    
     const updatedPolicy = {
       ...policy,
       name: formData.name,
@@ -121,18 +130,24 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       responsavel_nome: formData.responsavel_nome
     };
 
-    console.log('💾 [PolicyEditModal] Salvando apólice com valores:', {
+    console.log('💾 [PolicyEditModal] Salvando apólice atualizada:', {
+      id: policy.id,
       premium: premiumValue,
       valor_premio: premiumValue,
       monthlyAmount: monthlyValue,
-      custo_mensal: monthlyValue
+      custo_mensal: monthlyValue,
+      quantidade_parcelas: installmentsCount
     });
 
+    console.log('📤 [PolicyEditModal] Objeto completo sendo enviado:', JSON.stringify(updatedPolicy, null, 2));
+
     onSave(updatedPolicy);
+    
     toast({
-      title: "Apólice Atualizada",
-      description: "As informações foram salvas com sucesso",
+      title: "✅ Salvando...",
+      description: "Atualizando informações da apólice",
     });
+    
     onClose();
   };
 
