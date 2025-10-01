@@ -339,7 +339,6 @@ export function usePersistedPolicies() {
       // Campos básicos
       if (updates.name !== undefined) {
         dbUpdates.segurado = updates.name;
-        dbUpdates.nome_segurado = updates.name;
       }
       if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
       if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
