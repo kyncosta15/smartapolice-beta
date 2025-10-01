@@ -196,8 +196,11 @@ export function MyPolicies() {
   const handleSaveEdit = async (updatedPolicy: any) => {
     console.log('🚀 [MyPolicies] ========== HANDLE SAVE EDIT CHAMADO ==========');
     console.log('📝 [MyPolicies] Policy ID:', updatedPolicy.id);
-    console.log('📝 [MyPolicies] Nome novo:', updatedPolicy.name);
-    alert(`🚀 EDIT START: ${updatedPolicy.name}`);
+    console.log('📝 [MyPolicies] Nome recebido:', updatedPolicy.name);
+    console.log('📝 [MyPolicies] Objeto completo recebido:', JSON.stringify(updatedPolicy, null, 2));
+    
+    // CRÍTICO: Verificar o objeto RECEBIDO antes de enviar ao updatePolicy
+    alert(`🎯 RECEBIDO NO MYPOLICIES:\nname: ${updatedPolicy.name}\nid: ${updatedPolicy.id}`);
     
     try {
       const success = await updatePolicy(updatedPolicy.id, updatedPolicy);

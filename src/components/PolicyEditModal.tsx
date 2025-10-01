@@ -132,6 +132,8 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       responsavel_nome: formData.responsavel_nome
     };
 
+    // CRÍTICO: Verificar o objeto ANTES de enviar
+    alert(`📦 OBJETO CRIADO NO MODAL:\nname: ${updatedPolicy.name}\nid: ${updatedPolicy.id}`);
     console.log('💾 [PolicyEditModal] Objeto completo a ser salvo:', JSON.stringify(updatedPolicy, null, 2));
     console.log('📞 [PolicyEditModal] Chamando onSave callback...');
 
