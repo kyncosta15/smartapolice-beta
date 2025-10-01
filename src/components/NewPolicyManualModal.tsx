@@ -165,19 +165,19 @@ export function NewPolicyManualModal({ open, onOpenChange, onSuccess }: NewPolic
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          <ScrollArea className="h-[calc(90vh-180px)] px-6 py-2">
-            <div className="space-y-6 pb-6 pr-4">
+          <ScrollArea className="h-[calc(90vh-180px)] px-6 py-4">
+            <div className="space-y-8 pb-8 pr-4">
               {/* Informações Gerais */}
-              <div>
-                <h3 className="text-sm font-semibold text-primary mb-3">Informações Gerais</h3>
-                <div className="grid grid-cols-2 gap-4">
+              <div className="pt-2">
+                <h3 className="text-sm font-semibold text-primary mb-4">Informações Gerais</h3>
+                <div className="grid grid-cols-2 gap-6">
                   <div className="col-span-2">
-                    <Label htmlFor="nome_apolice">Nome da Apólice *</Label>
+                    <Label htmlFor="nome_apolice" className="mb-2 block">Nome da Apólice *</Label>
                     <Input
                       id="nome_apolice"
                       value={formData.nome_apolice}
                       onChange={(e) => setFormData({ ...formData, nome_apolice: e.target.value })}
-                      className="w-full focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className="w-full"
                       required
                     />
                   </div>
