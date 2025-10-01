@@ -329,18 +329,21 @@ export function usePersistedPolicies() {
     });
 
     try {
+      console.log('🔄 [updatePolicy] Iniciando atualização');
+      console.log('📝 [updatePolicy] Policy ID:', policyId);
+      console.log('📝 [updatePolicy] Updates:', JSON.stringify(updates, null, 2));
+      
       // Converter dados para formato do banco - mapeando TODOS os campos editáveis
       const dbUpdates: any = {};
       
       // Campos básicos
-      if (updates.name !== undefined) dbUpdates.segurado = updates.name;
-      if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
+      if (updates.name !== undefined) {
+        dbUpdates.segurado = updates.name;
+        dbUpdates.nome_segurado = updates.name;
+      }
       if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
+      if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
       if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = updates.policyNumber;
-      // Campos básicos
-      if (updates.name !== undefined) dbUpdates.nome_segurado = updates.name;
-      if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
-      if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
       if (updates.premium !== undefined) dbUpdates.valor_premio = updates.premium;
       if (updates.monthlyAmount !== undefined) {
         dbUpdates.custo_mensal = updates.monthlyAmount;
@@ -348,7 +351,6 @@ export function usePersistedPolicies() {
       }
       if (updates.startDate !== undefined) dbUpdates.inicio_vigencia = updates.startDate;
       if (updates.endDate !== undefined) dbUpdates.fim_vigencia = updates.endDate;
-      if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = updates.policyNumber;
       if (updates.installments !== undefined) dbUpdates.quantidade_parcelas = updates.installments;
       
       // CORREÇÃO: Mapear status corretamente
@@ -373,7 +375,7 @@ export function usePersistedPolicies() {
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
       if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
 
-      console.log('📤 Enviando atualização para o banco:', dbUpdates);
+      console.log('📤 [updatePolicy] Enviando para banco:', JSON.stringify(dbUpdates, null, 2));
 
       const { data, error } = await supabase
         .from('policies')
@@ -383,11 +385,19 @@ export function usePersistedPolicies() {
         .select();
 
       if (error) {
-        console.error('❌ Erro do Supabase:', error);
+        console.error('❌ [updatePolicy] Erro do Supabase:', error);
+        console.error('❌ [updatePolicy] Error code:', error.code);
+        console.error('❌ [updatePolicy] Error message:', error.message);
+        console.error('❌ [updatePolicy] Error details:', error.details);
+        toast({
+          title: "Erro ao Atualizar",
+          description: error.message || "Não foi possível salvar as alterações",
+          variant: "destructive",
+        });
         throw error;
       }
 
-      console.log('✅ Atualização bem-sucedida no banco:', data);
+      console.log('✅ [updatePolicy] Atualização bem-sucedida:', JSON.stringify(data, null, 2));
 
       // Atualizar estado local com mapeamento de status
       const mappedUpdates = {

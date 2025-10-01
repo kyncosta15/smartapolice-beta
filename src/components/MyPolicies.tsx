@@ -194,19 +194,18 @@ export function MyPolicies() {
   };
 
   const handleSaveEdit = async (updatedPolicy: any) => {
+    console.log('🔄 MyPolicies: Iniciando salvamento da edição');
+    console.log('📝 MyPolicies: Dados a serem salvos:', JSON.stringify(updatedPolicy, null, 2));
+    
     const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
+    
+    console.log('📊 MyPolicies: Resultado da atualização:', success);
+    
     if (success) {
-      toast({
-        title: "✅ Apólice Atualizada",
-        description: "As alterações foram salvas com sucesso",
-      });
+      console.log('✅ MyPolicies: Atualização bem-sucedida');
       refreshPolicies();
     } else {
-      toast({
-        title: "❌ Erro ao Atualizar",
-        description: "Não foi possível salvar as alterações",
-        variant: "destructive",
-      });
+      console.error('❌ MyPolicies: Falha na atualização');
     }
   };
 
