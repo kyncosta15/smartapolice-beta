@@ -211,26 +211,27 @@ export function MyPolicies() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-4 md:p-0">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="text-2xl font-bold text-gray-900">Minhas Apólices</h2>
-        <div className="flex items-center gap-3">
-          <Badge variant="secondary">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Badge variant="secondary" className="text-sm">
             {policiesWithStatus.length} apólice{policiesWithStatus.length !== 1 ? 's' : ''}
           </Badge>
           <Button
             onClick={() => setShowNewPolicyModal(true)}
             size="sm"
             variant="outline"
-            className="gap-2"
+            className="gap-2 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
-            Nova Apólice
+            <span className="hidden sm:inline">Nova Apólice</span>
+            <span className="sm:hidden">Nova</span>
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {policiesWithStatus.map((policy) => {
           const originalPolicy = policies.find(p => p.id === policy.id);
           const installmentsCount = originalPolicy?.quantidade_parcelas || 
@@ -240,54 +241,58 @@ export function MyPolicies() {
           console.log(`🎯 [MyPolicies-Render] Renderizando ${policy.name} com status: ${policy.status}`);
           
           return (
-            <Card key={policy.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{toText(policy.name)}</CardTitle>
-                  <Badge className={STATUS_COLORS[policy.status] || STATUS_COLORS.vigente}>
+            <Card key={policy.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+              <CardHeader className="pb-3 space-y-2">
+                <div className="flex justify-between items-start gap-3">
+                  <CardTitle className="text-base sm:text-lg leading-tight break-words flex-1 min-w-0">
+                    {toText(policy.name)}
+                  </CardTitle>
+                  <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} shrink-0 text-xs whitespace-nowrap`}>
                     {formatStatusText(policy.status)}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-500">{toText(policy.insurer)}</p>
+                <p className="text-sm text-gray-500 truncate">{toText(policy.insurer)}</p>
               </CardHeader>
               
               <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-gray-500">Número</p>
-                    <p className="font-medium">{policy.policyNumber}</p>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 mb-1">Número</p>
+                      <p className="font-medium text-sm break-all leading-tight">{policy.policyNumber}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs text-gray-500 mb-1">Valor Mensal</p>
+                      <p className="font-semibold text-sm text-green-600 whitespace-nowrap">
+                        {moedaBR(policy.monthlyAmount)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-gray-500">Valor Mensal</p>
-                    <p className="font-semibold text-green-600">
-                      {moedaBR(policy.monthlyAmount)}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-gray-500">Parcelas</p>
-                    <p className="font-medium">{installmentsCount}x</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Vencimento</p>
-                    <p className={`font-medium ${
-                      new Date(policy.expirationDate || policy.endDate) < new Date() 
-                        ? 'text-red-600' 
-                        : 'text-gray-900'
-                    }`}>
-                      {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
-                    </p>
+                  
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Parcelas</p>
+                      <p className="font-medium text-sm">{installmentsCount}x</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500 mb-1">Vencimento</p>
+                      <p className={`font-medium text-sm whitespace-nowrap ${
+                        new Date(policy.expirationDate || policy.endDate) < new Date() 
+                          ? 'text-red-600' 
+                          : 'text-gray-900'
+                      }`}>
+                        {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex gap-1 pt-3 border-t justify-end">
+                <div className="flex gap-1.5 pt-3 border-t justify-end">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleViewPolicy(policy)}
-                    className="h-8 w-8 p-0 hover:bg-primary/10"
+                    className="h-9 w-9 p-0 hover:bg-primary/10"
                     title="Visualizar apólice"
                   >
                     <Eye className="h-4 w-4" />
@@ -296,7 +301,7 @@ export function MyPolicies() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDownloadPolicy(policy)}
-                    className="h-8 w-8 p-0 hover:bg-primary/10"
+                    className="h-9 w-9 p-0 hover:bg-primary/10"
                     title="Baixar apólice"
                   >
                     <Download className="h-4 w-4" />
@@ -305,7 +310,7 @@ export function MyPolicies() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleEditPolicy(policy)}
-                    className="h-8 w-8 p-0 hover:bg-primary/10"
+                    className="h-9 w-9 p-0 hover:bg-primary/10"
                     title="Editar apólice"
                   >
                     <Edit className="h-4 w-4" />
@@ -314,7 +319,7 @@ export function MyPolicies() {
                     variant="ghost"
                     size="sm"
                     onClick={(e) => handleDeleteClick(e, policy)}
-                    className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                    className="h-9 w-9 p-0 hover:bg-red-50 hover:text-red-600"
                     title="Deletar apólice"
                     disabled={isDeleting}
                   >
