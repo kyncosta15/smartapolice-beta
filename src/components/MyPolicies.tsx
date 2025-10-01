@@ -299,12 +299,11 @@ export function MyPolicies() {
 
           <Button
             onClick={() => setShowNewPolicyModal(true)}
-            size="sm"
-            className="gap-2 whitespace-nowrap bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            className="gap-2 h-9 sm:h-10 px-3 sm:px-4 whitespace-nowrap bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg active:shadow-sm active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 transition-all duration-200 rounded-md font-medium"
           >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Nova Apólice</span>
-            <span className="sm:hidden">Nova</span>
+            <Plus className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+            <span className="hidden sm:inline text-sm">Nova Apólice</span>
+            <span className="sm:hidden text-sm">Nova</span>
           </Button>
         </div>
       </div>
