@@ -367,10 +367,19 @@ export function usePersistedPolicies() {
       
       // Campos específicos do N8N
       if (updates.insuredName !== undefined) dbUpdates.segurado = updates.insuredName;
-      if (updates.documento !== undefined) dbUpdates.documento = updates.documento;
-      if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = updates.documento_tipo;
+      if (updates.documento !== undefined) {
+        // Limitar documento a 20 caracteres
+        dbUpdates.documento = String(updates.documento).substring(0, 20);
+      }
+      if (updates.documento_tipo !== undefined) {
+        // Limitar documento_tipo a 10 caracteres
+        dbUpdates.documento_tipo = String(updates.documento_tipo).substring(0, 10);
+      }
       if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = updates.vehicleModel;
-      if (updates.uf !== undefined) dbUpdates.uf = updates.uf;
+      if (updates.uf !== undefined) {
+        // CRÍTICO: UF deve ter no máximo 2 caracteres (código do estado)
+        dbUpdates.uf = String(updates.uf).toUpperCase().substring(0, 2);
+      }
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
       if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
 
