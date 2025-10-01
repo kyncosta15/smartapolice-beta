@@ -399,6 +399,7 @@ export class PolicyPersistenceService {
         console.log(`🎯 [loadUserPolicies-${sessionId}] Status da apólice ${policy.id}: ${finalStatus}`);
         
         console.log(`💰 [loadUserPolicies-${sessionId}] Valores financeiros da apólice ${policy.id}:`, {
+          segurado: policy.segurado,
           valor_premio_db: policy.valor_premio,
           custo_mensal_db: policy.custo_mensal,
           valor_parcela_db: policy.valor_parcela,
@@ -406,17 +407,28 @@ export class PolicyPersistenceService {
         });
 
         // CONVERSÃO SEGURA - GARANTIR QUE NÃO RENDERIZAMOS OBJETOS
+        // CRÍTICO: Para valores financeiros, usar SEMPRE os valores diretos do banco, SEM normalização
+        const valorMensalDoBanco = Number(policy.custo_mensal || policy.valor_parcela || policy.valor_mensal_num) || 0;
+        const premioDoBanco = Number(policy.valor_premio) || 0;
+        
+        console.log(`💰💰 [loadUserPolicies-${sessionId}] VALORES FINAIS para ${policy.segurado}:`, {
+          valorMensalDoBanco,
+          premioDoBanco,
+          custo_mensal_original: policy.custo_mensal,
+          valor_parcela_original: policy.valor_parcela
+        });
+        
         const convertedPolicy = {
           id: policy.id,
           name: safeString(normalizedPolicy.name),
           type: safeString(normalizedPolicy.type),
           insurer: safeString(normalizedPolicy.insurer),
-          // CRÍTICO: Buscar valores reais do banco
-          premium: Number(policy.valor_premio) || 0,
-          valor_premio: Number(policy.valor_premio) || 0,
-          monthlyAmount: Number(policy.custo_mensal || policy.valor_mensal_num) || 0,
-          custo_mensal: Number(policy.custo_mensal || policy.valor_mensal_num) || 0,
-          valor_parcela: Number(policy.valor_parcela || policy.custo_mensal) || 0,
+          // CRÍTICO: Usar valores diretos do banco SEM normalização
+          premium: premioDoBanco,
+          valor_premio: premioDoBanco,
+          monthlyAmount: valorMensalDoBanco,
+          custo_mensal: valorMensalDoBanco,
+          valor_parcela: valorMensalDoBanco,
           startDate: safeString(policy.inicio_vigencia || new Date().toISOString().split('T')[0]),
           endDate: safeString(policy.fim_vigencia || new Date().toISOString().split('T')[0]), 
           policyNumber: safeString(policy.numero_apolice),

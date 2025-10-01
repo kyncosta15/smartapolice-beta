@@ -48,7 +48,21 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     const normalizedPolicies = policies.map(normalizePolicy);
 
     const totalPolicies = normalizedPolicies.length;
-    const totalMonthlyCost = normalizedPolicies.reduce((sum, p) => sum + (p.monthlyAmount || 0), 0);
+    
+    // LOG DETALHADO: Mostrar cada apólice e seu valor mensal
+    console.log('💰 [useDashboardData] Calculando totalMonthlyCost com valores individuais:');
+    normalizedPolicies.forEach((p, index) => {
+      console.log(`  ${index + 1}. ${p.name}: R$ ${p.monthlyAmount?.toFixed(2) || '0.00'} (valorMensal: ${p.valorMensal}, custo_mensal: ${(p as any).custo_mensal})`);
+    });
+    
+    const totalMonthlyCost = normalizedPolicies.reduce((sum, p) => {
+      const value = p.monthlyAmount || 0;
+      console.log(`    Somando ${p.name}: ${value} (acumulado: ${sum + value})`);
+      return sum + value;
+    }, 0);
+    
+    console.log(`💰 [useDashboardData] TOTAL FINAL: R$ ${totalMonthlyCost.toFixed(2)}`);
+    
     const totalInsuredValue = normalizedPolicies.reduce((sum, p) => sum + (p.totalCoverage || p.premium || 0), 0);
     
     // Calcular apólices vencendo nos próximos 30 dias

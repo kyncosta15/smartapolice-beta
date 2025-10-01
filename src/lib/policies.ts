@@ -43,14 +43,24 @@ export function normalizePolicy(raw: any) {
     tipoParsed?.cobertura ?? "N/A"
   );
 
-  // CRÍTICO: Priorizar campos do banco de dados (valor_premio, custo_mensal)
+  // CRÍTICO: Priorizar SEMPRE campos do banco de dados
+  // Se vier do banco, usar direto. Se vier de extração, usar fallback.
   const valorMensal = toNumberSafe(
-    raw.custo_mensal ?? raw.valor_parcela ?? raw.valorMensal ?? raw.monthlyAmount
+    raw.custo_mensal ?? raw.valor_parcela ?? raw.valor_mensal_num ?? raw.valorMensal ?? raw.monthlyAmount
   ) ?? 0;
   
   const premio = toNumberSafe(
     raw.valor_premio ?? raw.premio ?? raw.premium
   ) ?? 0;
+  
+  console.log(`💰 [normalizePolicy] ${raw.segurado || raw.name}:`, {
+    fonte: raw.custo_mensal ? 'BANCO (custo_mensal)' : raw.valor_parcela ? 'BANCO (valor_parcela)' : 'OUTRO',
+    custo_mensal_raw: raw.custo_mensal,
+    valor_parcela_raw: raw.valor_parcela, 
+    valor_mensal_num_raw: raw.valor_mensal_num,
+    valorMensal_calculado: valorMensal,
+    premio_calculado: premio
+  });
   
   // CRÍTICO: Priorizar tipo_seguro do banco
   const tipoSeguro = safeString(
