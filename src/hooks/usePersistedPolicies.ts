@@ -313,7 +313,6 @@ export function usePersistedPolicies() {
   // Atualizar apólice no banco de dados
   const updatePolicy = async (policyId: string, updates: Partial<ParsedPolicyData>): Promise<boolean> => {
     if (!user?.id) {
-      console.error('❌ Tentativa de atualização sem autenticação');
       toast({
         title: "❌ Erro de Autenticação",
         description: "Usuário não autenticado",
@@ -322,38 +321,19 @@ export function usePersistedPolicies() {
       return false;
     }
 
-    console.log('🔄 Iniciando atualização da apólice:', { 
-      policyId, 
-      updates,
-      userId: user.id 
-    });
-
-    // CRÍTICO: Verificar o que está chegando EXATAMENTE na função
-    alert(`🔍 CHEGOU NO UPDATEPOLICY:\nname: ${updates.name}\nid: ${policyId}`);
-
     try {
-      console.log('🔄 [updatePolicy] Iniciando atualização');
-      console.log('📝 [updatePolicy] Policy ID:', policyId);
-      console.log('📝 [updatePolicy] Updates recebido:', JSON.stringify(updates, null, 2));
+      // CRÍTICO: Criar objeto limpo DIRETAMENTE dos updates, sem buscar dados antigos
+      const dbUpdates: any = {
+        segurado: updates.name, // SEMPRE usar o valor de updates.name
+      };
       
-      // CRÍTICO: Mostrar EXATAMENTE o que está em updates.name
-      console.log('🔍 [updatePolicy] updates.name =', updates.name);
-      console.log('🔍 [updatePolicy] typeof updates.name =', typeof updates.name);
-      
-      // Converter dados para formato do banco - mapeando TODOS os campos editáveis
-      const dbUpdates: any = {};
-      
-      // Campos básicos
-      if (updates.name !== undefined) {
-        dbUpdates.segurado = updates.name;
-        console.log('✅ [updatePolicy] dbUpdates.segurado definido como:', dbUpdates.segurado);
-      }
+      // Adicionar outros campos apenas se estiverem definidos
       if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
       if ((updates as any).tipo_seguro !== undefined) dbUpdates.tipo_seguro = (updates as any).tipo_seguro;
       if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
       if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = updates.policyNumber;
       
-      // CRÍTICO: Valores financeiros - garantir que sejam sempre atualizados
+      // Valores financeiros
       const premiumValue = (updates as any).valor_premio !== undefined 
         ? (typeof (updates as any).valor_premio === 'number' ? (updates as any).valor_premio : parseFloat((updates as any).valor_premio) || 0)
         : (updates.premium !== undefined 
@@ -362,7 +342,6 @@ export function usePersistedPolicies() {
       
       if (premiumValue !== null) {
         dbUpdates.valor_premio = premiumValue;
-        console.log('💰 [updatePolicy] SALVANDO valor_premio no banco:', dbUpdates.valor_premio);
       }
       
       const monthlyValue = (updates as any).custo_mensal !== undefined
@@ -374,7 +353,6 @@ export function usePersistedPolicies() {
       if (monthlyValue !== null) {
         dbUpdates.custo_mensal = monthlyValue;
         dbUpdates.valor_parcela = monthlyValue;
-        console.log('💰 [updatePolicy] SALVANDO custo_mensal no banco:', dbUpdates.custo_mensal);
       }
       
       if (updates.startDate !== undefined) dbUpdates.inicio_vigencia = updates.startDate;
@@ -382,48 +360,24 @@ export function usePersistedPolicies() {
       
       if ((updates as any).quantidade_parcelas !== undefined) {
         dbUpdates.quantidade_parcelas = typeof (updates as any).quantidade_parcelas === 'number' ? (updates as any).quantidade_parcelas : parseInt((updates as any).quantidade_parcelas) || 12;
-        console.log('🔢 [updatePolicy] quantidade_parcelas:', dbUpdates.quantidade_parcelas);
       } else if (updates.installments !== undefined) {
         dbUpdates.quantidade_parcelas = typeof updates.installments === 'number' ? updates.installments : parseInt(String(updates.installments)) || 12;
-        console.log('🔢 [updatePolicy] installments -> quantidade_parcelas:', dbUpdates.quantidade_parcelas);
       }
       
-      // CORREÇÃO: Mapear status corretamente
       if (updates.status !== undefined) {
         const mappedStatus = mapLegacyStatus(updates.status);
         dbUpdates.status = mappedStatus;
-        console.log('📝 Status mapeado:', { 
-          original: updates.status, 
-          mapped: mappedStatus 
-        });
       }
       
       if (updates.category !== undefined) dbUpdates.forma_pagamento = updates.category;
       if (updates.entity !== undefined) dbUpdates.corretora = updates.entity;
-      
-      // Campos específicos do N8N
       if (updates.insuredName !== undefined) dbUpdates.segurado = updates.insuredName;
-      if (updates.documento !== undefined) {
-        // Limitar documento a 20 caracteres
-        dbUpdates.documento = String(updates.documento).substring(0, 20);
-      }
-      if (updates.documento_tipo !== undefined) {
-        // Limitar documento_tipo a 10 caracteres
-        dbUpdates.documento_tipo = String(updates.documento_tipo).substring(0, 10);
-      }
+      if (updates.documento !== undefined) dbUpdates.documento = String(updates.documento).substring(0, 20);
+      if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = String(updates.documento_tipo).substring(0, 10);
       if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = updates.vehicleModel;
-      if (updates.uf !== undefined) {
-        // CRÍTICO: UF deve ter no máximo 2 caracteres (código do estado)
-        dbUpdates.uf = String(updates.uf).toUpperCase().substring(0, 2);
-      }
+      if (updates.uf !== undefined) dbUpdates.uf = String(updates.uf).toUpperCase().substring(0, 2);
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
       if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
-
-      console.log('📤 [updatePolicy] Dados preparados para o banco:', JSON.stringify(dbUpdates, null, 2));
-      console.log('🔑 [updatePolicy] Condições WHERE:', { policyId, userId: user.id });
-
-      // CRÍTICO: Adicionar alerta antes do update para debug
-      alert(`🔍 DEBUG UPDATE:\nPolicy ID: ${policyId}\nNome novo: ${dbUpdates.segurado}\nUser ID: ${user.id}`);
 
       const { data, error } = await supabase
         .from('policies')
@@ -432,22 +386,7 @@ export function usePersistedPolicies() {
         .eq('user_id', user.id)
         .select();
 
-      console.log('📨 [updatePolicy] Resposta completa do Supabase:', {
-        data: JSON.stringify(data, null, 2),
-        error: error ? JSON.stringify(error, null, 2) : null,
-        recordsAffected: data ? data.length : 0
-      });
-
-      // CRÍTICO: Adicionar alerta após o update para debug
-      alert(`📨 RESULTADO UPDATE:\nSucesso: ${!error}\nRegistros afetados: ${data?.length || 0}\nError: ${error?.message || 'nenhum'}`);
-
       if (error) {
-        console.error('❌ [updatePolicy] ERRO NO SUPABASE:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
         toast({
           title: "❌ Erro ao Atualizar",
           description: `${error.message}${error.hint ? ` - ${error.hint}` : ''}`,
@@ -456,13 +395,6 @@ export function usePersistedPolicies() {
         throw error;
       }
 
-      if (data && data.length > 0) {
-        console.log('✅ [updatePolicy] UPDATE CONFIRMADO NO BANCO:', JSON.stringify(data[0], null, 2));
-      } else {
-        console.warn('⚠️ [updatePolicy] Update retornou, mas sem dados confirmados');
-      }
-
-      // CRÍTICO: Usar dados retornados do banco para garantir sincronização
       const dbRecord = data && data.length > 0 ? data[0] : null;
       
       // Atualizar estado local com os dados REAIS do banco
@@ -471,9 +403,7 @@ export function usePersistedPolicies() {
           if (p.id === policyId) {
             const updated: any = {
               ...p,
-              // PRIORIZAR DADOS DO BANCO retornados pelo SELECT
               ...(dbRecord || {}),
-              // Mapeamento de campos do banco para frontend
               name: dbRecord?.segurado || p.name,
               type: dbRecord?.tipo_seguro || p.type,
               tipo_seguro: dbRecord?.tipo_seguro || (p as any).tipo_seguro,
@@ -492,14 +422,6 @@ export function usePersistedPolicies() {
               status: dbRecord?.status ? mapLegacyStatus(dbRecord.status) : p.status
             };
             
-            console.log('✅ [updatePolicy] ESTADO ATUALIZADO COM DADOS DO BANCO:', {
-              id: updated.id,
-              tipo_seguro: updated.tipo_seguro,
-              valor_premio: updated.valor_premio,
-              custo_mensal: updated.custo_mensal,
-              quantidade_parcelas: updated.quantidade_parcelas
-            });
-            
             return updated;
           }
           return p;
@@ -513,7 +435,6 @@ export function usePersistedPolicies() {
       
       return true;
     } catch (error: any) {
-      console.error('❌ Erro na atualização da apólice:', error);
       toast({
         title: "❌ Erro ao Atualizar",
         description: error?.message || "Não foi possível salvar as alterações",

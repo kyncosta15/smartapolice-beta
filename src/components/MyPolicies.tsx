@@ -194,60 +194,11 @@ export function MyPolicies() {
   };
 
   const handleSaveEdit = async (updatedPolicy: any) => {
-    console.log('🚀 [MyPolicies] ========== HANDLE SAVE EDIT CHAMADO ==========');
-    console.log('📝 [MyPolicies] Policy ID:', updatedPolicy.id);
-    console.log('📝 [MyPolicies] Nome recebido:', updatedPolicy.name);
-    console.log('📝 [MyPolicies] Objeto completo recebido:', JSON.stringify(updatedPolicy, null, 2));
-    
-    // CRÍTICO: Verificar o objeto RECEBIDO antes de enviar ao updatePolicy
-    alert(`🎯 RECEBIDO NO MYPOLICIES:\nname: ${updatedPolicy.name}\nid: ${updatedPolicy.id}`);
-    
-    // CRÍTICO: Criar cópia limpa do objeto para evitar referências
-    const cleanUpdates = {
-      id: updatedPolicy.id,
-      name: updatedPolicy.name,
-      type: updatedPolicy.type,
-      tipo_seguro: updatedPolicy.tipo_seguro,
-      insurer: updatedPolicy.insurer,
-      premium: updatedPolicy.premium,
-      valor_premio: updatedPolicy.valor_premio,
-      monthlyAmount: updatedPolicy.monthlyAmount,
-      custo_mensal: updatedPolicy.custo_mensal,
-      valor_parcela: updatedPolicy.valor_parcela,
-      status: updatedPolicy.status,
-      startDate: updatedPolicy.startDate,
-      endDate: updatedPolicy.endDate,
-      policyNumber: updatedPolicy.policyNumber,
-      numero_apolice: updatedPolicy.numero_apolice,
-      category: updatedPolicy.category,
-      entity: updatedPolicy.entity,
-      coverage: updatedPolicy.coverage,
-      paymentForm: updatedPolicy.paymentForm,
-      forma_pagamento: updatedPolicy.forma_pagamento,
-      installments: updatedPolicy.installments,
-      quantidade_parcelas: updatedPolicy.quantidade_parcelas,
-      deductible: updatedPolicy.deductible,
-      franquia: updatedPolicy.franquia,
-      limits: updatedPolicy.limits,
-      insuredName: updatedPolicy.insuredName,
-      documento: updatedPolicy.documento,
-      documento_tipo: updatedPolicy.documento_tipo,
-      vehicleModel: updatedPolicy.vehicleModel,
-      modelo_veiculo: updatedPolicy.modelo_veiculo,
-      uf: updatedPolicy.uf,
-      responsavel_nome: updatedPolicy.responsavel_nome
-    };
-    
-    alert(`🔧 OBJETO LIMPO CRIADO:\nname: ${cleanUpdates.name}\nid: ${cleanUpdates.id}`);
-    
     try {
-      const success = await updatePolicy(cleanUpdates.id, cleanUpdates);
+      const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
       
       if (success) {
-        // Aguardar 1 segundo para garantir propagação no banco
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Recarregar do banco
+        await new Promise(resolve => setTimeout(resolve, 500));
         await refreshPolicies();
         
         toast({
@@ -258,15 +209,15 @@ export function MyPolicies() {
         toast({
           title: "❌ Erro ao Salvar",
           description: "Não foi possível atualizar a apólice",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('❌ [MyPolicies] Exceção durante save:', error);
+      console.error('Erro ao salvar edição:', error);
       toast({
-        title: "❌ Erro Inesperado",
-        description: error instanceof Error ? error.message : "Erro ao salvar",
-        variant: "destructive"
+        title: "❌ Erro",
+        description: "Ocorreu um erro ao salvar as alterações",
+        variant: "destructive",
       });
     } finally {
       setShowEditModal(false);

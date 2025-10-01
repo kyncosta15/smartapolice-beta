@@ -81,25 +81,13 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
   }, [policy]);
 
   const handleSave = async () => {
-    console.log('🚀 [PolicyEditModal] ========== HANDLERSAVE INICIADO ==========');
-    console.log('📋 [PolicyEditModal] formData.name:', formData.name);
-    console.log('📋 [PolicyEditModal] policy original:', policy);
-    
     const premiumValue = parseFloat(formData.premium) || 0;
     const monthlyValue = parseFloat(formData.monthlyAmount) || 0;
     const installmentsCount = parseInt(formData.installments) || 12;
     
-    console.log('🔍 [PolicyEditModal] Valores parseados:', {
-      premiumValue,
-      monthlyValue,
-      installmentsCount,
-      type: formData.type
-    });
-    
-    // CRÍTICO: Garantir que name vem do formData, NÃO do policy original
     const updatedPolicy = {
       id: policy.id,
-      name: formData.name,  // ← Este é o valor editado no formulário
+      name: formData.name,
       type: formData.type,
       tipo_seguro: formData.type,
       insurer: formData.insurer,
@@ -132,21 +120,13 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       responsavel_nome: formData.responsavel_nome
     };
 
-    // CRÍTICO: Verificar o objeto ANTES de enviar
-    alert(`📦 OBJETO CRIADO NO MODAL:\nname: ${updatedPolicy.name}\nid: ${updatedPolicy.id}`);
-    console.log('💾 [PolicyEditModal] Objeto completo a ser salvo:', JSON.stringify(updatedPolicy, null, 2));
-    console.log('📞 [PolicyEditModal] Chamando onSave callback...');
-
     try {
       await onSave(updatedPolicy);
-      console.log('✅ [PolicyEditModal] onSave callback concluído com sucesso');
     } catch (error) {
-      console.error('❌ [PolicyEditModal] Erro no callback onSave:', error);
+      console.error('Erro ao salvar:', error);
     }
     
-    console.log('🚪 [PolicyEditModal] Fechando modal...');
     onClose();
-    console.log('🏁 [PolicyEditModal] ========== HANDLERSAVE FINALIZADO ==========');
   };
 
   if (!policy) return null;
