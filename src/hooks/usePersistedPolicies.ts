@@ -371,7 +371,7 @@ export function usePersistedPolicies() {
       
       if (updates.category !== undefined) dbUpdates.forma_pagamento = updates.category;
       if (updates.entity !== undefined) dbUpdates.corretora = updates.entity;
-      if (updates.insuredName !== undefined) dbUpdates.segurado = updates.insuredName;
+      // REMOVIDO: if (updates.insuredName !== undefined) - usar apenas updates.name como fonte
       if (updates.documento !== undefined) dbUpdates.documento = String(updates.documento).substring(0, 20);
       if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = String(updates.documento_tipo).substring(0, 10);
       if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = updates.vehicleModel;
