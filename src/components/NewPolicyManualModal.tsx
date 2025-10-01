@@ -159,14 +159,14 @@ export function NewPolicyManualModal({ open, onOpenChange, onSuccess }: NewPolic
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-4">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle className="text-xl font-semibold">Adicionar Apólice Individual</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <ScrollArea className="h-[calc(90vh-140px)] px-6">
-            <div className="space-y-6 pb-6">
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+          <ScrollArea className="h-[calc(90vh-180px)] px-6 py-2">
+            <div className="space-y-6 pb-6 pr-4">
               {/* Informações Gerais */}
               <div>
                 <h3 className="text-sm font-semibold text-primary mb-3">Informações Gerais</h3>
@@ -177,6 +177,7 @@ export function NewPolicyManualModal({ open, onOpenChange, onSuccess }: NewPolic
                       id="nome_apolice"
                       value={formData.nome_apolice}
                       onChange={(e) => setFormData({ ...formData, nome_apolice: e.target.value })}
+                      className="w-full focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       required
                     />
                   </div>
