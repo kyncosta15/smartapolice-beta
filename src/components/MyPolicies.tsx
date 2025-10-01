@@ -202,8 +202,46 @@ export function MyPolicies() {
     // CRÍTICO: Verificar o objeto RECEBIDO antes de enviar ao updatePolicy
     alert(`🎯 RECEBIDO NO MYPOLICIES:\nname: ${updatedPolicy.name}\nid: ${updatedPolicy.id}`);
     
+    // CRÍTICO: Criar cópia limpa do objeto para evitar referências
+    const cleanUpdates = {
+      id: updatedPolicy.id,
+      name: updatedPolicy.name,
+      type: updatedPolicy.type,
+      tipo_seguro: updatedPolicy.tipo_seguro,
+      insurer: updatedPolicy.insurer,
+      premium: updatedPolicy.premium,
+      valor_premio: updatedPolicy.valor_premio,
+      monthlyAmount: updatedPolicy.monthlyAmount,
+      custo_mensal: updatedPolicy.custo_mensal,
+      valor_parcela: updatedPolicy.valor_parcela,
+      status: updatedPolicy.status,
+      startDate: updatedPolicy.startDate,
+      endDate: updatedPolicy.endDate,
+      policyNumber: updatedPolicy.policyNumber,
+      numero_apolice: updatedPolicy.numero_apolice,
+      category: updatedPolicy.category,
+      entity: updatedPolicy.entity,
+      coverage: updatedPolicy.coverage,
+      paymentForm: updatedPolicy.paymentForm,
+      forma_pagamento: updatedPolicy.forma_pagamento,
+      installments: updatedPolicy.installments,
+      quantidade_parcelas: updatedPolicy.quantidade_parcelas,
+      deductible: updatedPolicy.deductible,
+      franquia: updatedPolicy.franquia,
+      limits: updatedPolicy.limits,
+      insuredName: updatedPolicy.insuredName,
+      documento: updatedPolicy.documento,
+      documento_tipo: updatedPolicy.documento_tipo,
+      vehicleModel: updatedPolicy.vehicleModel,
+      modelo_veiculo: updatedPolicy.modelo_veiculo,
+      uf: updatedPolicy.uf,
+      responsavel_nome: updatedPolicy.responsavel_nome
+    };
+    
+    alert(`🔧 OBJETO LIMPO CRIADO:\nname: ${cleanUpdates.name}\nid: ${cleanUpdates.id}`);
+    
     try {
-      const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
+      const success = await updatePolicy(cleanUpdates.id, cleanUpdates);
       
       if (success) {
         // Aguardar 1 segundo para garantir propagação no banco
