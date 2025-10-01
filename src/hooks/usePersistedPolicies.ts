@@ -15,15 +15,34 @@ export function usePersistedPolicies() {
 
   // Mapeamento de status para compatibilidade com dados antigos
   const mapLegacyStatus = (status: string) => {
-    switch (status) {
+    // Primeiro normalizar o status para minúsculas
+    const normalizedStatus = status?.toLowerCase() || '';
+    
+    switch (normalizedStatus) {
       case 'active':
+      case 'ativa':
         return 'vigente';
       case 'expiring':
-        return 'renovada_aguardando';
+        return 'vencendo';
       case 'expired':
+      case 'vencida':
         return 'nao_renovada';
+      case 'aguardando_emissao':
+      case 'aguardando emissao':
+        return 'aguardando_emissao';
+      case 'nao_renovada':
+      case 'não renovada':
+        return 'nao_renovada';
+      case 'pendente_analise':
+      case 'pendente analise':
+        return 'pendente_analise';
+      case 'vigente':
+        return 'vigente';
+      case 'vencendo':
+        return 'vencendo';
       default:
-        return status;
+        // Se não encontrar mapeamento, retornar o status original
+        return status || 'vigente';
     }
   };
 
@@ -294,6 +313,7 @@ export function usePersistedPolicies() {
   // Atualizar apólice no banco de dados
   const updatePolicy = async (policyId: string, updates: Partial<ParsedPolicyData>): Promise<boolean> => {
     if (!user?.id) {
+      console.error('❌ Tentativa de atualização sem autenticação');
       toast({
         title: "❌ Erro de Autenticação",
         description: "Usuário não autenticado",
@@ -301,6 +321,12 @@ export function usePersistedPolicies() {
       });
       return false;
     }
+
+    console.log('🔄 Iniciando atualização da apólice:', { 
+      policyId, 
+      updates,
+      userId: user.id 
+    });
 
     try {
       // Converter dados para formato do banco - mapeando TODOS os campos editáveis
@@ -315,7 +341,17 @@ export function usePersistedPolicies() {
       if (updates.monthlyAmount !== undefined) dbUpdates.custo_mensal = updates.monthlyAmount;
       if (updates.startDate !== undefined) dbUpdates.inicio_vigencia = updates.startDate;
       if (updates.endDate !== undefined) dbUpdates.fim_vigencia = updates.endDate;
-      if (updates.status !== undefined) dbUpdates.status = mapLegacyStatus(updates.status);
+      
+      // CORREÇÃO: Mapear status corretamente
+      if (updates.status !== undefined) {
+        const mappedStatus = mapLegacyStatus(updates.status);
+        dbUpdates.status = mappedStatus;
+        console.log('📝 Status mapeado:', { 
+          original: updates.status, 
+          mapped: mappedStatus 
+        });
+      }
+      
       if (updates.category !== undefined) dbUpdates.forma_pagamento = updates.category;
       if (updates.entity !== undefined) dbUpdates.corretora = updates.entity;
       
@@ -327,15 +363,21 @@ export function usePersistedPolicies() {
       if (updates.uf !== undefined) dbUpdates.uf = updates.uf;
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
 
-      const { error } = await supabase
+      console.log('📤 Enviando atualização para o banco:', dbUpdates);
+
+      const { data, error } = await supabase
         .from('policies')
         .update(dbUpdates)
         .eq('id', policyId)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select();
 
       if (error) {
+        console.error('❌ Erro do Supabase:', error);
         throw error;
       }
+
+      console.log('✅ Atualização bem-sucedida no banco:', data);
 
       // Atualizar estado local com mapeamento de status
       const mappedUpdates = {
@@ -353,10 +395,11 @@ export function usePersistedPolicies() {
       });
       
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Erro na atualização da apólice:', error);
       toast({
         title: "❌ Erro ao Atualizar",
-        description: "Não foi possível salvar as alterações",
+        description: error?.message || "Não foi possível salvar as alterações",
         variant: "destructive",
       });
       return false;
