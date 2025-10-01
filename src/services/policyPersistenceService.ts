@@ -397,6 +397,13 @@ export class PolicyPersistenceService {
         const finalStatus = this.mapToValidStatus(policy.status || 'vigente');
 
         console.log(`🎯 [loadUserPolicies-${sessionId}] Status da apólice ${policy.id}: ${finalStatus}`);
+        
+        console.log(`💰 [loadUserPolicies-${sessionId}] Valores financeiros da apólice ${policy.id}:`, {
+          valor_premio_db: policy.valor_premio,
+          custo_mensal_db: policy.custo_mensal,
+          valor_parcela_db: policy.valor_parcela,
+          quantidade_parcelas: policy.quantidade_parcelas
+        });
 
         // CONVERSÃO SEGURA - GARANTIR QUE NÃO RENDERIZAMOS OBJETOS
         const convertedPolicy = {
@@ -404,8 +411,12 @@ export class PolicyPersistenceService {
           name: safeString(normalizedPolicy.name),
           type: safeString(normalizedPolicy.type),
           insurer: safeString(normalizedPolicy.insurer),
-          premium: 0,
-          monthlyAmount: Number(policy.valor_mensal_num || policy.custo_mensal) || 0,
+          // CRÍTICO: Buscar valores reais do banco
+          premium: Number(policy.valor_premio) || 0,
+          valor_premio: Number(policy.valor_premio) || 0,
+          monthlyAmount: Number(policy.custo_mensal || policy.valor_mensal_num) || 0,
+          custo_mensal: Number(policy.custo_mensal || policy.valor_mensal_num) || 0,
+          valor_parcela: Number(policy.valor_parcela || policy.custo_mensal) || 0,
           startDate: safeString(policy.inicio_vigencia || new Date().toISOString().split('T')[0]),
           endDate: safeString(policy.fim_vigencia || new Date().toISOString().split('T')[0]), 
           policyNumber: safeString(policy.numero_apolice),
@@ -448,7 +459,12 @@ export class PolicyPersistenceService {
           limits: 'R$ 100.000 por sinistro'
         };
 
-        console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada e CONVERTIDA COM SEGURANÇA`);
+        console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada e CONVERTIDA COM SEGURANÇA`, {
+          premium: convertedPolicy.premium,
+          valor_premio: convertedPolicy.valor_premio,
+          monthlyAmount: convertedPolicy.monthlyAmount,
+          custo_mensal: convertedPolicy.custo_mensal
+        });
 
         return convertedPolicy;
       });
