@@ -328,6 +328,9 @@ export function usePersistedPolicies() {
       userId: user.id 
     });
 
+    // CRÍTICO: Verificar o que está chegando EXATAMENTE na função
+    alert(`🔍 CHEGOU NO UPDATEPOLICY:\nname: ${updates.name}\nid: ${policyId}`);
+
     try {
       console.log('🔄 [updatePolicy] Iniciando atualização');
       console.log('📝 [updatePolicy] Policy ID:', policyId);
