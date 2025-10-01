@@ -81,32 +81,52 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
   }, [policy]);
 
   const handleSave = () => {
+    const premiumValue = parseFloat(formData.premium) || 0;
+    const monthlyValue = parseFloat(formData.monthlyAmount) || 0;
+    const installmentsCount = parseInt(formData.installments) || 12;
+    
     const updatedPolicy = {
       ...policy,
       name: formData.name,
       type: formData.type,
       insurer: formData.insurer,
-      premium: parseFloat(formData.premium) || 0,
-      monthlyAmount: parseFloat(formData.monthlyAmount) || 0,
+      // CRÍTICO: Garantir que premium seja salvo como valor_premio no banco
+      premium: premiumValue,
+      valor_premio: premiumValue, // Campo do banco
+      monthlyAmount: monthlyValue,
+      custo_mensal: monthlyValue, // Campo do banco
+      valor_parcela: monthlyValue, // Campo do banco
       status: formData.status,
       startDate: formData.startDate,
       endDate: formData.endDate,
       policyNumber: formData.policyNumber,
+      numero_apolice: formData.policyNumber, // Campo do banco
       category: formData.category,
       entity: formData.entity,
-      coverage: formData.coverage.split(', ').map(c => c.trim( )),
+      coverage: formData.coverage.split(', ').map(c => c.trim()),
       paymentForm: formData.paymentForm,
-      installments: parseInt(formData.installments) || 0,
+      forma_pagamento: formData.paymentForm, // Campo do banco
+      installments: installmentsCount,
+      quantidade_parcelas: installmentsCount, // Campo do banco
       deductible: parseFloat(formData.deductible) || 0,
+      franquia: parseFloat(formData.deductible) || 0, // Campo do banco
       limits: formData.limits,
       // Campos específicos do N8N
       insuredName: formData.insuredName,
       documento: formData.documento,
       documento_tipo: formData.documento_tipo,
       vehicleModel: formData.vehicleModel,
+      modelo_veiculo: formData.vehicleModel, // Campo do banco
       uf: formData.uf,
       responsavel_nome: formData.responsavel_nome
     };
+
+    console.log('💾 [PolicyEditModal] Salvando apólice com valores:', {
+      premium: premiumValue,
+      valor_premio: premiumValue,
+      monthlyAmount: monthlyValue,
+      custo_mensal: monthlyValue
+    });
 
     onSave(updatedPolicy);
     toast({
@@ -169,8 +189,21 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
                 type="number"
                 step="0.01"
                 value={formData.premium}
-                onChange={(e) => setFormData({...formData, premium: e.target.value})}
+                onChange={(e) => {
+                  const annualValue = e.target.value;
+                  const installments = parseInt(formData.installments) || 12;
+                  const monthlyValue = annualValue ? (parseFloat(annualValue) / installments).toFixed(2) : '';
+                  
+                  setFormData({
+                    ...formData, 
+                    premium: annualValue,
+                    monthlyAmount: monthlyValue
+                  });
+                }}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                {formData.installments && formData.premium && `${formData.installments}x de R$ ${(parseFloat(formData.premium) / parseInt(formData.installments)).toFixed(2)}`}
+              </p>
             </div>
 
             <div>
@@ -180,8 +213,21 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
                 type="number"
                 step="0.01"
                 value={formData.monthlyAmount}
-                onChange={(e) => setFormData({...formData, monthlyAmount: e.target.value})}
+                onChange={(e) => {
+                  const monthlyValue = e.target.value;
+                  const installments = parseInt(formData.installments) || 12;
+                  const annualValue = monthlyValue ? (parseFloat(monthlyValue) * installments).toFixed(2) : '';
+                  
+                  setFormData({
+                    ...formData, 
+                    monthlyAmount: monthlyValue,
+                    premium: annualValue
+                  });
+                }}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Valor anual calculado: R$ {formData.monthlyAmount && formData.installments ? (parseFloat(formData.monthlyAmount) * parseInt(formData.installments)).toFixed(2) : '0.00'}
+              </p>
             </div>
 
             <div>
