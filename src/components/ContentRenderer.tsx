@@ -4,6 +4,7 @@ import { DynamicDashboard } from './DynamicDashboard';
 import { AdminDashboardNew } from './AdminDashboardNew';
 import { EnhancedPDFUpload } from './EnhancedPDFUpload';
 import { EnhancedPolicyViewer } from './EnhancedPolicyViewer';
+import { MyPolicies } from './MyPolicies';
 import { VidasBeneficiarios } from './VidasBeneficiarios';
 import { ClientsList } from './ClientsList';
 import { ContactSection } from './ContactSection';
@@ -129,14 +130,7 @@ export function ContentRenderer({
     case 'policies':
       return (
         <div className="p-6">
-          <EnhancedPolicyViewer 
-            policies={extractedPolicies}
-            onPolicySelect={onPolicySelect}
-            onPolicyEdit={onPolicyUpdate}
-            onPolicyDelete={onPolicyDelete}
-            onPolicyDownload={onPolicyDownload}
-            viewMode={user?.role === 'administrador' ? 'admin' : 'client'}
-          />
+          <MyPolicies />
         </div>
       );
 
