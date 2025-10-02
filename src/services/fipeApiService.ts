@@ -304,11 +304,9 @@ export async function consultarTradicional(
     codigoMarca: Number(marca.Value),
   });
   
-  // Palavras genéricas para remover na busca
+  // Palavras genéricas para remover na busca (só as MUITO genéricas)
   const stopWords = [
-    'caminhao', 'caminhão', 'carro', 'veiculo', 'veículo',
-    'compactador', 'basculante', 'truck', 'van', 'utilitario',
-    'de', 'da', 'do', 'lixo', 'carga', 'passageiro', 'cab'
+    'de', 'da', 'do', 'com', 'para', 'tipo', 'modelo'
   ];
   
   const modelNorm = normalizeString(model);
@@ -339,46 +337,41 @@ export async function consultarTradicional(
         let score = 0;
         let matchDetails = [];
         
-        // 1. Números são importantes mas flexíveis
+        // 1. Números têm peso alto
         let numbersMatched = 0;
         if (modelNumbers.length > 0) {
           modelNumbers.forEach(num => {
             if (labelNorm.includes(num)) {
               numbersMatched++;
-              score += 15;
+              score += 20;
               matchDetails.push(`num:${num}`);
             }
           });
-          
-          // Se temos números mas nenhum bateu, é provavelmente modelo errado
-          if (numbersMatched === 0) {
-            return { modelo: m, score: 0, details: 'sem números' };
-          }
         }
         
-        // 2. Palavras-chave são muito importantes
+        // 2. Palavras-chave também são importantes
         let keywordsMatched = 0;
         modelKeywords.forEach(keyword => {
           if (labelNorm.includes(keyword)) {
             keywordsMatched++;
             // Palavras curtas e específicas (CG, XRE, etc) valem mais
-            const keywordScore = keyword.length <= 3 ? 20 : 10;
+            const keywordScore = keyword.length <= 3 ? 15 : 8;
             score += keywordScore;
             matchDetails.push(`word:${keyword}`);
           }
         });
         
-        // Se não bateu nenhuma palavra-chave, provavelmente não é o modelo
-        if (keywordsMatched === 0 && modelKeywords.length > 0) {
-          return { modelo: m, score: 0, details: 'sem palavras-chave' };
-        }
-        
         // 3. Bonus por match de múltiplos elementos
         if (numbersMatched > 0 && keywordsMatched > 0) {
-          score += 10; // Bonus por ter números E palavras batendo
+          score += 15; // Bonus forte por ter números E palavras batendo
         }
         
-        return { modelo: m, score, details: matchDetails.join(', ') };
+        // 4. Match parcial - se tem pelo menos um número OU uma palavra
+        if (numbersMatched > 0 || keywordsMatched > 0) {
+          score += 5; // Bonus base por ter qualquer match
+        }
+        
+        return { modelo: m, score, details: matchDetails.join(', ') || 'sem match' };
       })
       .filter(x => x.score > 0)
       .sort((a, b) => b.score - a.score);
@@ -401,21 +394,27 @@ export async function consultarTradicional(
   }
   
   if (!modelo) {
-    // Retornar candidatos com valores para o usuário escolher
-    if (candidatos.length > 0) {
-      const error: any = new Error('MULTIPLE_CANDIDATES');
-      error.candidates = candidatos.slice(0, 5).map(c => ({
-        modelo: c.modelo,
-        score: c.score,
-        details: c.details
+    // Se não encontrou match, tentar pegar os 10 primeiros modelos como sugestões
+    if (candidatos.length === 0) {
+      console.log('[FIPE] ⚠️ Nenhum candidato com score, mostrando primeiros modelos como sugestão');
+      candidatos = modelosResp.Modelos.slice(0, 10).map(m => ({
+        modelo: m,
+        score: 0,
+        details: 'sugestão geral'
       }));
-      error.marca = marca;
-      error.tabelaRef = ref;
-      error.tipoVeiculo = tipoVeiculo;
-      throw error;
     }
     
-    throw new Error(`❌ Modelo "${model}" não encontrado para ${marca.Label}.`);
+    // Sempre retornar candidatos para o usuário escolher
+    const error: any = new Error('MULTIPLE_CANDIDATES');
+    error.candidates = candidatos.slice(0, 10).map(c => ({
+      modelo: c.modelo,
+      score: c.score,
+      details: c.details
+    }));
+    error.marca = marca;
+    error.tabelaRef = ref;
+    error.tipoVeiculo = tipoVeiculo;
+    throw error;
   }
   
   console.log(`[FIPE] ✅ Modelo encontrado: ${modelo.Label}`);
