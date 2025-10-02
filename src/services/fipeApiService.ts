@@ -329,10 +329,11 @@ export async function consultarTradicional(
   
   // Tentar match exato primeiro
   let modelo = modelosResp.Modelos.find(x => normalizeString(x.Label) === modelNorm);
+  let candidatos: Array<{ modelo: Modelo; score: number; details: string }> = [];
   
   // Se não encontrou, buscar por palavras-chave relevantes
   if (!modelo) {
-    const candidatos = modelosResp.Modelos
+    candidatos = modelosResp.Modelos
       .map(m => {
         const labelNorm = normalizeString(m.Label);
         let score = 0;
@@ -400,25 +401,21 @@ export async function consultarTradicional(
   }
   
   if (!modelo) {
-    // Sugerir modelos similares
-    const similarModels = modelosResp.Modelos
-      .filter(x => {
-        const labelNorm = normalizeString(x.Label);
-        return modelKeywords.some(keyword => {
-          if (/\d/.test(keyword)) {
-            return labelNorm.includes(keyword);
-          }
-          return keyword.length > 3 && labelNorm.includes(keyword);
-        });
-      })
-      .slice(0, 5)
-      .map(m => m.Label);
+    // Retornar candidatos com valores para o usuário escolher
+    if (candidatos.length > 0) {
+      const error: any = new Error('MULTIPLE_CANDIDATES');
+      error.candidates = candidatos.slice(0, 5).map(c => ({
+        modelo: c.modelo,
+        score: c.score,
+        details: c.details
+      }));
+      error.marca = marca;
+      error.tabelaRef = ref;
+      error.tipoVeiculo = tipoVeiculo;
+      throw error;
+    }
     
-    const suggestion = similarModels.length > 0
-      ? `\n\n💡 Modelos disponíveis para ${marca.Label}:\n  • ${similarModels.join('\n  • ')}`
-      : `\n\n💡 Tente simplificar o nome do modelo (ex: use apenas o código principal)`;
-    
-    throw new Error(`❌ Modelo "${model}" não encontrado para ${marca.Label}.${suggestion}`);
+    throw new Error(`❌ Modelo "${model}" não encontrado para ${marca.Label}.`);
   }
   
   console.log(`[FIPE] ✅ Modelo encontrado: ${modelo.Label}`);
@@ -481,6 +478,51 @@ export async function consultarTradicional(
     : '';
   
   throw new Error(`❌ Não encontramos esse veículo na FIPE.\n\n${marca.Label} ${modelo.Label} ${ano}\n${errors.join('\n')}${suggestion}`);
+}
+
+export async function consultarModeloCandidato(
+  candidato: { Label: string; Value: number },
+  marca: { Label: string; Value: string },
+  ano: number,
+  fuel: Fuel,
+  tipoVeiculo: number,
+  tabelaRef: number
+): Promise<{ valor: ValorFIPE; fuelCode: number } | null> {
+  const anos = await postFIPE<AnoModelo[]>("ConsultarAnoModelo", {
+    codigoTabelaReferencia: tabelaRef,
+    codigoTipoVeiculo: tipoVeiculo,
+    codigoMarca: Number(marca.Value),
+    codigoModelo: Number(candidato.Value),
+  });
+
+  const fuelCandidates = fuelToCode(fuel);
+  
+  for (const fc of fuelCandidates) {
+    const anoItem = anos.find(a => 
+      a.Value.startsWith(`${ano}-`) && a.Value.endsWith(`-${fc}`)
+    );
+    
+    if (!anoItem) continue;
+
+    try {
+      const valor = await postFIPE<ValorFIPE>("ConsultarValorComTodosParametros", {
+        codigoTabelaReferencia: tabelaRef,
+        codigoTipoVeiculo: tipoVeiculo,
+        codigoMarca: Number(marca.Value),
+        ano: anoItem.Value,
+        codigoTipoCombustivel: fc,
+        anoModelo: ano,
+        codigoModelo: Number(candidato.Value),
+        tipoConsulta: "tradicional",
+      });
+      
+      return { valor, fuelCode: fc };
+    } catch (error) {
+      continue;
+    }
+  }
+  
+  return null;
 }
 
 export async function consultarFIPEComCache(

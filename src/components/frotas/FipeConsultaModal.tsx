@@ -24,7 +24,7 @@ interface FipeConsultaModalProps {
 }
 
 export function FipeConsultaModal({ open, onOpenChange, vehicle }: FipeConsultaModalProps) {
-  const { consultar, isLoading, result } = useFipeConsulta();
+  const { consultar, isLoading, result, candidates, selectCandidate } = useFipeConsulta();
   const { toast } = useToast();
   const [hasConsulted, setHasConsulted] = useState(false);
 
@@ -154,6 +154,40 @@ Data da Consulta: ${new Date(result.data.data_consulta).toLocaleString('pt-BR')}
               </Button>
             )}
           </div>
+
+          {/* Candidatos */}
+          {candidates.length > 0 && (
+            <div className="space-y-3 border-t pt-4">
+              <h3 className="font-semibold">Modelos Similares Encontrados</h3>
+              <p className="text-sm text-muted-foreground">
+                Não encontramos o modelo exato. Selecione o modelo correto abaixo:
+              </p>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {candidates.map((candidate, idx) => (
+                  <Button
+                    key={idx}
+                    variant="outline"
+                    className="w-full justify-between h-auto py-3 px-4"
+                    onClick={() => selectCandidate(candidate)}
+                  >
+                    <div className="flex flex-col items-start gap-1 flex-1">
+                      <div className="font-medium text-left">{candidate.modelo.Label}</div>
+                      {candidate.valor ? (
+                        <div className="text-lg font-bold text-primary">
+                          {candidate.valor}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          Valor não disponível
+                        </div>
+                      )}
+                    </div>
+                    <Badge variant="secondary">Score: {candidate.score}</Badge>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Resultado */}
           {result && (
