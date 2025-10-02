@@ -99,11 +99,13 @@ async function postFIPE<T>(path: string, body: any, retries = 2): Promise<T> {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
         
         // Use Edge Function proxy to avoid CORS/mixed-content issues
         const SUPABASE_URL = "https://jhvbfvqhuemuvwgqpskz.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpodmJmdnFodWVtdXZ3Z3Fwc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTI2MDEsImV4cCI6MjA2Njg4ODYwMX0.V8I0byW7xs0iMBEBc6C3h0lvPhgPZ4mGwjfm31XkEQg";
+        
+        console.log(`[FIPE Client] Calling proxy for: ${path}`);
         
         const res = await fetch(`${SUPABASE_URL}/functions/v1/fipe-proxy`, {
           method: "POST",
@@ -117,22 +119,36 @@ async function postFIPE<T>(path: string, body: any, retries = 2): Promise<T> {
         
         clearTimeout(timeoutId);
         
+        console.log(`[FIPE Client] Proxy response status: ${res.status}`);
+        
         if (!res.ok) {
+          const errorText = await res.text();
+          console.error(`[FIPE Client] Error response:`, errorText);
+          
           if (res.status === 429 || res.status === 403) {
             throw new Error('RATE_LIMIT');
           }
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.details || `FIPE ${path} ${res.status}`);
+          
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(errorData.details || errorData.error || `FIPE ${path} ${res.status}`);
+          } catch (e) {
+            throw new Error(`Erro na comunicação com a API: ${res.status}`);
+          }
         }
         
-        return res.json();
+        const data = await res.json();
+        console.log(`[FIPE Client] Success for ${path}`);
+        return data;
       } catch (error: any) {
+        console.error(`[FIPE Client] Attempt ${attempt + 1} failed:`, error.message);
+        
         if (error.message === 'RATE_LIMIT') {
           throw new Error('Consulta temporariamente indisponível. Tente novamente mais tarde.');
         }
         
         if (error.name === 'AbortError') {
-          console.error('Request timeout:', path);
+          console.error('[FIPE Client] Request timeout:', path);
         }
         
         if (attempt === retries) {
@@ -140,7 +156,9 @@ async function postFIPE<T>(path: string, body: any, retries = 2): Promise<T> {
         }
         
         // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, 300 * Math.pow(2, attempt)));
+        const delay = 500 * Math.pow(2, attempt);
+        console.log(`[FIPE Client] Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
     throw new Error('Falha após múltiplas tentativas');
