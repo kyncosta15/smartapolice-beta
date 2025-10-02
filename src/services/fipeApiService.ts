@@ -324,7 +324,8 @@ export async function consultarTradicional(
       return !stopWords.includes(normalized) && word.length > 1 && !/^\d+$/.test(word);
     });
   
-  console.log(`[FIPE] Buscando modelo. Números críticos: [${modelNumbers.join(', ')}], Palavras: [${modelKeywords.join(', ')}]`);
+  console.log(`[FIPE] 🔍 Buscando: "${model}"`);
+  console.log(`[FIPE] 📋 Números: [${modelNumbers.join(', ')}] | Palavras-chave: [${modelKeywords.join(', ')}]`);
   
   // Tentar match exato primeiro
   let modelo = modelosResp.Modelos.find(x => normalizeString(x.Label) === modelNorm);
@@ -335,38 +336,67 @@ export async function consultarTradicional(
       .map(m => {
         const labelNorm = normalizeString(m.Label);
         let score = 0;
+        let matchDetails = [];
         
-        // CRÍTICO: Todos os números do modelo DEVEM estar presentes no label
-        // Se faltar qualquer número importante, score = 0
+        // 1. Números são importantes mas flexíveis
+        let numbersMatched = 0;
         if (modelNumbers.length > 0) {
-          const allNumbersPresent = modelNumbers.every(num => labelNorm.includes(num));
+          modelNumbers.forEach(num => {
+            if (labelNorm.includes(num)) {
+              numbersMatched++;
+              score += 15;
+              matchDetails.push(`num:${num}`);
+            }
+          });
           
-          if (!allNumbersPresent) {
-            // Se tem números no modelo mas não batem, este não é o modelo certo
-            return { modelo: m, score: 0 };
+          // Se temos números mas nenhum bateu, é provavelmente modelo errado
+          if (numbersMatched === 0) {
+            return { modelo: m, score: 0, details: 'sem números' };
           }
-          
-          // Se todos os números batem, score alto
-          score += modelNumbers.length * 20;
         }
         
-        // Adicionar pontos por palavras-chave que batem
+        // 2. Palavras-chave são muito importantes
+        let keywordsMatched = 0;
         modelKeywords.forEach(keyword => {
           if (labelNorm.includes(keyword)) {
-            score += 5;
+            keywordsMatched++;
+            // Palavras curtas e específicas (CG, XRE, etc) valem mais
+            const keywordScore = keyword.length <= 3 ? 20 : 10;
+            score += keywordScore;
+            matchDetails.push(`word:${keyword}`);
           }
         });
         
-        return { modelo: m, score };
+        // Se não bateu nenhuma palavra-chave, provavelmente não é o modelo
+        if (keywordsMatched === 0 && modelKeywords.length > 0) {
+          return { modelo: m, score: 0, details: 'sem palavras-chave' };
+        }
+        
+        // 3. Bonus por match de múltiplos elementos
+        if (numbersMatched > 0 && keywordsMatched > 0) {
+          score += 10; // Bonus por ter números E palavras batendo
+        }
+        
+        return { modelo: m, score, details: matchDetails.join(', ') };
       })
       .filter(x => x.score > 0)
       .sort((a, b) => b.score - a.score);
     
     if (candidatos.length > 0) {
       modelo = candidatos[0].modelo;
-      console.log(`[FIPE] ✅ Modelo aproximado encontrado: "${modelo.Label}" (score: ${candidatos[0].score})`);
-      console.log(`[FIPE] 📝 Original: "${model}"`);
+      console.log(`[FIPE] ✅ Modelo encontrado: "${modelo.Label}"`);
+      console.log(`[FIPE] 📊 Score: ${candidatos[0].score} (${candidatos[0].details})`);
+      
+      // Mostrar top 3 candidatos para debug
+      if (candidatos.length > 1) {
+        console.log(`[FIPE] 🔄 Outros candidatos:`);
+        candidatos.slice(1, 4).forEach((c, i) => {
+          console.log(`[FIPE]    ${i + 2}. "${c.modelo.Label}" (score: ${c.score})`);
+        });
+      }
     }
+  } else {
+    console.log(`[FIPE] ✅ Match exato encontrado: "${modelo.Label}"`);
   }
   
   if (!modelo) {
