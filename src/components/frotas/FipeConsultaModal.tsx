@@ -16,7 +16,7 @@ interface FipeConsultaModalProps {
     marca: string;
     modelo: string;
     ano_modelo: number;
-    combustivel: Fuel;
+    combustivel?: Fuel; // Opcional - se não informado, tenta todos os tipos
     tipo_veiculo: number;
     codigo_fipe?: string;
     preco_nf?: number;
@@ -35,7 +35,7 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle }: FipeConsultaM
         brand: vehicle.marca,
         model: vehicle.modelo,
         year: vehicle.ano_modelo,
-        fuel: vehicle.combustivel,
+        fuel: vehicle.combustivel || "Flex", // Fallback para tentar todos os tipos
         tipoVeiculo: vehicle.tipo_veiculo,
         fipeCode: vehicle.codigo_fipe,
       }, forceRefresh);
@@ -51,7 +51,7 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle }: FipeConsultaM
     const text = `
 Valor FIPE: ${result.data.price_label}
 Marca/Modelo: ${vehicle.marca} / ${vehicle.modelo}
-Ano/Combustível: ${vehicle.ano_modelo} / ${vehicle.combustivel}
+Ano/Combustível: ${vehicle.ano_modelo} / ${vehicle.combustivel || 'Automático'}
 Mês de Referência: ${result.data.mes_referencia}
 Código FIPE: ${result.data.fipe_code || 'N/A'}
 Data da Consulta: ${new Date(result.data.data_consulta).toLocaleString('pt-BR')}
@@ -110,7 +110,11 @@ Data da Consulta: ${new Date(result.data.data_consulta).toLocaleString('pt-BR')}
               </div>
               <div>
                 <span className="text-muted-foreground">Combustível:</span>
-                <span className="ml-2 font-medium">{vehicle.combustivel}</span>
+                <span className="ml-2 font-medium">
+                  {vehicle.combustivel || (
+                    <span className="text-amber-600">Automático (tenta todos)</span>
+                  )}
+                </span>
               </div>
               {vehicle.preco_nf && (
                 <div className="col-span-2">

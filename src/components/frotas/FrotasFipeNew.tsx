@@ -104,12 +104,11 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
   }, [veiculosComFipe]);
 
   const handleConsultarFipe = (vehicle: FrotaVeiculo) => {
-    // Validar campos obrigatórios
+    // Validar campos obrigatórios mínimos
     const missingFields = [];
     if (!vehicle.marca) missingFields.push('Marca');
     if (!vehicle.modelo) missingFields.push('Modelo');
     if (!vehicle.ano_modelo) missingFields.push('Ano do Modelo');
-    if (!vehicle.combustivel) missingFields.push('Combustível');
     
     if (missingFields.length > 0) {
       toast({
@@ -341,9 +340,9 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
                       size="sm"
                       variant="outline"
                       onClick={() => handleConsultarFipe(veiculo)}
-                      disabled={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo || !veiculo.combustivel}
-                      title={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo || !veiculo.combustivel 
-                        ? "Dados incompletos para consulta FIPE" 
+                      disabled={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo}
+                      title={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo 
+                        ? "Dados incompletos: precisa de Marca, Modelo e Ano" 
                         : "Consultar valor FIPE"}
                     >
                       <DollarSign className="w-4 h-4 mr-1" />
@@ -360,8 +359,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
       {selectedVehicle && 
        selectedVehicle.marca && 
        selectedVehicle.modelo && 
-       selectedVehicle.ano_modelo && 
-       selectedVehicle.combustivel && (
+       selectedVehicle.ano_modelo && (
         <FipeConsultaModal
           open={modalOpen}
           onOpenChange={setModalOpen}
@@ -371,7 +369,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
             marca: selectedVehicle.marca,
             modelo: selectedVehicle.modelo,
             ano_modelo: selectedVehicle.ano_modelo,
-            combustivel: selectedVehicle.combustivel as Fuel,
+            combustivel: selectedVehicle.combustivel as Fuel | undefined,
             tipo_veiculo: selectedVehicle.tipo_veiculo || 1,
             codigo_fipe: selectedVehicle.codigo_fipe,
             preco_nf: selectedVehicle.preco_nf,
