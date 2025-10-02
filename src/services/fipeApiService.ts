@@ -304,27 +304,59 @@ export async function consultarTradicional(
     codigoMarca: Number(marca.Value),
   });
   
+  // Palavras genéricas para remover na busca
+  const stopWords = [
+    'caminhao', 'caminhão', 'carro', 'veiculo', 'veículo',
+    'compactador', 'basculante', 'truck', 'van', 'utilitario',
+    'de', 'da', 'do', 'lixo', 'carga', 'passageiro', 'cab'
+  ];
+  
   const modelNorm = normalizeString(model);
+  
+  // Extrair partes relevantes (números e palavras-chave)
+  const modelKeywords = modelNorm
+    .split(' ')
+    .filter(word => {
+      const normalized = normalizeString(word);
+      return !stopWords.includes(normalized) && word.length > 1;
+    });
+  
+  console.log(`[FIPE] Buscando modelo com palavras-chave: ${modelKeywords.join(', ')}`);
+  
+  // Tentar match exato primeiro
   let modelo = modelosResp.Modelos.find(x => normalizeString(x.Label) === modelNorm);
   
-  // Se não encontrou match exato, busca parcial
+  // Se não encontrou, buscar por palavras-chave relevantes
   if (!modelo) {
     const candidatos = modelosResp.Modelos
-      .filter(x => {
-        const labelNorm = normalizeString(x.Label);
-        return labelNorm.includes(modelNorm) || modelNorm.includes(labelNorm);
+      .map(m => {
+        const labelNorm = normalizeString(m.Label);
+        const labelWords = labelNorm.split(' ');
+        
+        // Calcular score baseado em quantas palavras-chave batem
+        let score = 0;
+        
+        // Prioriza números e códigos (ex: 1719/48, L1620)
+        modelKeywords.forEach(keyword => {
+          if (/\d/.test(keyword)) {
+            // Palavra contém número - mais importante
+            if (labelWords.some(w => w === keyword)) score += 10;
+            else if (labelNorm.includes(keyword)) score += 8;
+          } else if (keyword.length > 3) {
+            // Palavra comum
+            if (labelWords.some(w => w === keyword)) score += 3;
+            else if (labelNorm.includes(keyword)) score += 1;
+          }
+        });
+        
+        return { modelo: m, score };
       })
-      .sort((a, b) => {
-        // Prioriza matches mais próximos
-        const aSimilarity = normalizeString(a.Label).length - Math.abs(normalizeString(a.Label).length - modelNorm.length);
-        const bSimilarity = normalizeString(b.Label).length - Math.abs(normalizeString(b.Label).length - modelNorm.length);
-        return bSimilarity - aSimilarity;
-      });
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score);
     
-    modelo = candidatos[0];
-    
-    if (modelo) {
-      console.log(`[FIPE] ⚠️ Modelo "${model}" não encontrado exatamente. Usando: "${modelo.Label}"`);
+    if (candidatos.length > 0) {
+      modelo = candidatos[0].modelo;
+      console.log(`[FIPE] ⚠️ Modelo "${model}" não encontrado exatamente. Usando: "${modelo.Label}" (score: ${candidatos[0].score})`);
     }
   }
   
@@ -333,15 +365,19 @@ export async function consultarTradicional(
     const similarModels = modelosResp.Modelos
       .filter(x => {
         const labelNorm = normalizeString(x.Label);
-        const words = modelNorm.split(' ');
-        return words.some(word => word.length > 3 && labelNorm.includes(word));
+        return modelKeywords.some(keyword => {
+          if (/\d/.test(keyword)) {
+            return labelNorm.includes(keyword);
+          }
+          return keyword.length > 3 && labelNorm.includes(keyword);
+        });
       })
       .slice(0, 5)
       .map(m => m.Label);
     
     const suggestion = similarModels.length > 0
-      ? `\n\n💡 Modelos disponíveis:\n  • ${similarModels.join('\n  • ')}`
-      : '';
+      ? `\n\n💡 Modelos disponíveis para ${marca.Label}:\n  • ${similarModels.join('\n  • ')}`
+      : `\n\n💡 Tente simplificar o nome do modelo (ex: use apenas o código principal)`;
     
     throw new Error(`❌ Modelo "${model}" não encontrado para ${marca.Label}.${suggestion}`);
   }
