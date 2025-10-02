@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { FipeConsultaModal } from './FipeConsultaModal';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { Fuel } from '@/services/fipeApiService';
+import { useToast } from '@/hooks/use-toast';
 
 interface FrotasFipeProps {
   veiculos: FrotaVeiculo[];
@@ -25,6 +26,7 @@ interface FrotasFipeProps {
 }
 
 export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: FrotasFipeProps) {
+  const { toast } = useToast();
   const [selectedVehicle, setSelectedVehicle] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   
@@ -102,6 +104,22 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
   }, [veiculosComFipe]);
 
   const handleConsultarFipe = (vehicle: FrotaVeiculo) => {
+    // Validar campos obrigatórios
+    const missingFields = [];
+    if (!vehicle.marca) missingFields.push('Marca');
+    if (!vehicle.modelo) missingFields.push('Modelo');
+    if (!vehicle.ano_modelo) missingFields.push('Ano do Modelo');
+    if (!vehicle.combustivel) missingFields.push('Combustível');
+    
+    if (missingFields.length > 0) {
+      toast({
+        title: "Dados incompletos",
+        description: `O veículo precisa ter os seguintes dados cadastrados: ${missingFields.join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedVehicle(vehicle);
     setModalOpen(true);
   };
@@ -323,7 +341,10 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
                       size="sm"
                       variant="outline"
                       onClick={() => handleConsultarFipe(veiculo)}
-                      disabled={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo}
+                      disabled={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo || !veiculo.combustivel}
+                      title={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo || !veiculo.combustivel 
+                        ? "Dados incompletos para consulta FIPE" 
+                        : "Consultar valor FIPE"}
                     >
                       <DollarSign className="w-4 h-4 mr-1" />
                       Consultar
