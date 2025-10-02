@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "exported_at": "2025-10-02",
+    "total_vehicles": 100,
+    "description": "Exportação dos veículos da frota"
+  },
+  "veiculos": [
+    {
+      "placa": "MMH0A42",
+      "marca": "CAVALINHO",
+      "modelo": "CAVALINHO",
+      "chassi": "9BFZTBAA6DBL50587",
+      "categoria": "utilitario",
+      "status_seguro": "sem_seguro",
+      "status_veiculo": "ativo",
+      "tipo_veiculo": "1",
+      "proprietario": {
+        "nome": "RCaldas",
+        "documento": "rcaldasrcaldascombr",
+        "tipo": "pj"
+      }
+    },
+    {
+      "placa": "SEH7C83",
+      "marca": "CARRO",
+      "modelo": "CARRO DE APOIO BONGO",
+      "chassi": "9UWSHX76APN035519",
+      "categoria": "utilitario",
+      "status_seguro": "sem_seguro",
+      "status_veiculo": "ativo",
+      "tipo_veiculo": "1",
+      "proprietario": {
+        "nome": "RCaldas",
+        "documento": "rcaldasrcaldascombr",
+        "tipo": "pj"
+      }
+    },
+    {
+      "placa": "TGZ0J76",
+      "marca": "EFFA",
+      "modelo": "EFFA V21 CAB SIMPLES 1.5L",
+      "chassi": "95DBN21AXTMB07044",
+      "categoria": "utilitario",
+      "status_seguro": "sem_seguro",
+      "status_veiculo": "ativo",
+      "tipo_veiculo": "1",
+      "proprietario": {
+        "nome": "RCaldas",
+        "documento": "rcaldasrcaldascombr",
+        "tipo": "pj"
+      }
+    },
+    {
+      "placa": "RPX7G02",
+      "marca": "MOTOCICLETA",
+      "modelo": "MOTOCICLETA YAMAHA",
+      "chassi": "9C6RG3160P0088774",
+      "categoria": "moto",
+      "status_seguro": "sem_seguro",
+      "status_veiculo": "ativo",
+      "tipo_veiculo": "1",
+      "proprietario": {
+        "nome": "RCaldas",
+        "documento": "rcaldasrcaldascombr",
+        "tipo": "pj"
+      }
+    },
+    {
+      "placa": "QRM7H23",
+      "marca": "HONDA",
+      "modelo": "MOTOCICLETA HONDA",
+      "chassi": "9C2KC2500LR028994",
+      "categoria": "moto",
+      "status_seguro": "sem_seguro",
+      "status_veiculo": "ativo",
+      "tipo_veiculo": "1",
+      "proprietario": {
+        "nome": "RCaldas",
+        "documento": "rcaldasrcaldascombr",
+        "tipo": "pj"
+      }
+    }
+  ]
+}
