@@ -188,6 +188,48 @@ function normalizeString(str: string): string {
     .replace(/\s+/g, " ");
 }
 
+// Mapa de normalização de marcas
+const BRAND_NORMALIZATIONS: Record<string, string> = {
+  // Mercedes-Benz
+  "m.benz": "Mercedes-Benz",
+  "mbenz": "Mercedes-Benz",
+  "mb": "Mercedes-Benz",
+  "mercedes": "Mercedes-Benz",
+  "mercedes benz": "Mercedes-Benz",
+  
+  // Volkswagen
+  "vw": "Volkswagen",
+  "volks": "Volkswagen",
+  "volkswagem": "Volkswagen",
+  
+  // Chevrolet
+  "gm": "Chevrolet",
+  "chevy": "Chevrolet",
+  
+  // Outros
+  "ford": "Ford",
+  "fiat": "Fiat",
+  "honda": "Honda",
+  "toyota": "Toyota",
+  "hyundai": "Hyundai",
+  "nissan": "Nissan",
+  "renault": "Renault",
+  "peugeot": "Peugeot",
+  "citroen": "Citroen",
+  "jeep": "Jeep",
+  "mitsubishi": "Mitsubishi",
+  "bmw": "BMW",
+  "audi": "Audi",
+  "volvo": "Volvo",
+  "iveco": "Iveco",
+  "scania": "Scania",
+};
+
+function normalizeBrand(brand: string): string {
+  const normalized = normalizeString(brand);
+  return BRAND_NORMALIZATIONS[normalized] || brand;
+}
+
 export async function consultarPorCodigoFIPE(
   ref: number,
   tipoVeiculo: number,
@@ -215,18 +257,45 @@ export async function consultarTradicional(
   ano: number,
   fuel: Fuel
 ): Promise<FIPEConsultaResult> {
-  // 1) Buscar marca
+  // 1) Normalizar e buscar marca
+  const brandNormalized = normalizeBrand(brand);
+  console.log(`[FIPE] Marca original: "${brand}" → normalizada: "${brandNormalized}"`);
+  
   const marcas = await postFIPE<Marca[]>("ConsultarMarcas", {
     codigoTabelaReferencia: ref,
     codigoTipoVeiculo: tipoVeiculo,
   });
   
-  const brandNorm = normalizeString(brand);
-  const marca = marcas.find(m => normalizeString(m.Label).includes(brandNorm));
+  const brandNorm = normalizeString(brandNormalized);
+  let marca = marcas.find(m => normalizeString(m.Label) === brandNorm);
+  
+  // Se não encontrou com match exato, tenta match parcial
+  if (!marca) {
+    marca = marcas.find(m => {
+      const labelNorm = normalizeString(m.Label);
+      return labelNorm.includes(brandNorm) || brandNorm.includes(labelNorm);
+    });
+  }
   
   if (!marca) {
-    throw new Error(`Marca "${brand}" não encontrada na FIPE`);
+    // Sugerir marcas similares
+    const similarBrands = marcas
+      .filter(m => {
+        const labelNorm = normalizeString(m.Label);
+        return labelNorm.includes(brandNorm.substring(0, 3)) || 
+               brandNorm.includes(labelNorm.substring(0, 3));
+      })
+      .slice(0, 3)
+      .map(m => m.Label);
+    
+    const suggestion = similarBrands.length > 0 
+      ? `\n\n💡 Sugestões: ${similarBrands.join(', ')}`
+      : '\n\n💡 Verifique se a marca está correta (ex: "Mercedes-Benz", "Volkswagen", "Chevrolet")';
+    
+    throw new Error(`❌ Marca "${brand}" não foi encontrada na FIPE.${suggestion}`);
   }
+  
+  console.log(`[FIPE] ✅ Marca encontrada: ${marca.Label}`);
 
   // 2) Buscar modelo
   const modelosResp = await postFIPE<ModelosResponse>("ConsultarModelos", {
@@ -236,13 +305,48 @@ export async function consultarTradicional(
   });
   
   const modelNorm = normalizeString(model);
-  const modelo = modelosResp.Modelos
-    .filter(x => normalizeString(x.Label).includes(modelNorm))
-    .sort((a, b) => b.Label.length - a.Label.length)[0];
+  let modelo = modelosResp.Modelos.find(x => normalizeString(x.Label) === modelNorm);
+  
+  // Se não encontrou match exato, busca parcial
+  if (!modelo) {
+    const candidatos = modelosResp.Modelos
+      .filter(x => {
+        const labelNorm = normalizeString(x.Label);
+        return labelNorm.includes(modelNorm) || modelNorm.includes(labelNorm);
+      })
+      .sort((a, b) => {
+        // Prioriza matches mais próximos
+        const aSimilarity = normalizeString(a.Label).length - Math.abs(normalizeString(a.Label).length - modelNorm.length);
+        const bSimilarity = normalizeString(b.Label).length - Math.abs(normalizeString(b.Label).length - modelNorm.length);
+        return bSimilarity - aSimilarity;
+      });
+    
+    modelo = candidatos[0];
+    
+    if (modelo) {
+      console.log(`[FIPE] ⚠️ Modelo "${model}" não encontrado exatamente. Usando: "${modelo.Label}"`);
+    }
+  }
   
   if (!modelo) {
-    throw new Error(`Modelo "${model}" não encontrado na FIPE`);
+    // Sugerir modelos similares
+    const similarModels = modelosResp.Modelos
+      .filter(x => {
+        const labelNorm = normalizeString(x.Label);
+        const words = modelNorm.split(' ');
+        return words.some(word => word.length > 3 && labelNorm.includes(word));
+      })
+      .slice(0, 5)
+      .map(m => m.Label);
+    
+    const suggestion = similarModels.length > 0
+      ? `\n\n💡 Modelos disponíveis:\n  • ${similarModels.join('\n  • ')}`
+      : '';
+    
+    throw new Error(`❌ Modelo "${model}" não encontrado para ${marca.Label}.${suggestion}`);
   }
+  
+  console.log(`[FIPE] ✅ Modelo encontrado: ${modelo.Label}`);
 
   // 3) Buscar ano e combustível
   const anos = await postFIPE<AnoModelo[]>("ConsultarAnoModelo", {
@@ -253,13 +357,19 @@ export async function consultarTradicional(
   });
 
   const fuelCandidates = fuelToCode(fuel);
+  console.log(`[FIPE] Testando combustíveis: ${fuelCandidates.join(', ')}`);
+  
+  const errors: string[] = [];
   
   for (const fc of fuelCandidates) {
     const anoItem = anos.find(a => 
       a.Value.startsWith(`${ano}-`) && a.Value.endsWith(`-${fc}`)
     );
     
-    if (!anoItem) continue;
+    if (!anoItem) {
+      console.log(`[FIPE] Ano ${ano} não disponível para combustível ${fc}`);
+      continue;
+    }
 
     // 4) Consultar valor
     try {
@@ -274,14 +384,28 @@ export async function consultarTradicional(
         tipoConsulta: "tradicional",
       });
       
+      console.log(`[FIPE] ✅ Valor encontrado: ${valor.Valor} (combustível: ${valor.Combustivel})`);
       return { valor, fuelCode: fc, anoValue: anoItem.Value, marca, modelo, tabelaRef: ref };
-    } catch (error) {
-      console.error(`Tentativa falhou para combustível ${fc}:`, error);
+    } catch (error: any) {
+      const errorMsg = `Combustível ${fc}: ${error.message}`;
+      errors.push(errorMsg);
+      console.error(`[FIPE] ${errorMsg}`);
       continue;
     }
   }
   
-  throw new Error(`Combinação ano/combustível não encontrada na FIPE para ${brand} ${model} ${ano}`);
+  // Se não encontrou nenhum, tentar anos próximos
+  const anosDisponiveis = anos
+    .map(a => parseInt(a.Value.split('-')[0]))
+    .filter((v, i, arr) => arr.indexOf(v) === i)
+    .sort((a, b) => Math.abs(a - ano) - Math.abs(b - ano))
+    .slice(0, 3);
+  
+  const suggestion = anosDisponiveis.length > 0
+    ? `\n\n💡 Anos disponíveis próximos: ${anosDisponiveis.join(', ')}`
+    : '';
+  
+  throw new Error(`❌ Não encontramos esse veículo na FIPE.\n\n${marca.Label} ${modelo.Label} ${ano}\n${errors.join('\n')}${suggestion}`);
 }
 
 export async function consultarFIPEComCache(
