@@ -257,9 +257,9 @@ export function GestaoFrotas() {
             </TabsContent>
 
             <TabsContent value="fipe" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
-              <FrotasFipe 
+              <FrotasFipeNew 
                 veiculos={veiculos.length === 0 ? allVeiculos : veiculos} 
-                loading={loading} 
+                loading={loading}
                 hasActiveFilters={
                   filters.search !== '' || 
                   filters.categoria.length > 0 || 

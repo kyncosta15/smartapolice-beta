@@ -16,6 +16,7 @@ import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar } from 'l
 import { Skeleton } from '@/components/ui/skeleton';
 import { FipeConsultaModal } from './FipeConsultaModal';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
+import { Fuel } from '@/services/fipeApiService';
 
 interface FrotasFipeProps {
   veiculos: FrotaVeiculo[];
@@ -335,11 +336,25 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
         </Table>
       </Card>
 
-      {selectedVehicle && (
+      {selectedVehicle && 
+       selectedVehicle.marca && 
+       selectedVehicle.modelo && 
+       selectedVehicle.ano_modelo && 
+       selectedVehicle.combustivel && (
         <FipeConsultaModal
           open={modalOpen}
           onOpenChange={setModalOpen}
-          vehicle={selectedVehicle}
+          vehicle={{
+            id: selectedVehicle.id,
+            placa: selectedVehicle.placa,
+            marca: selectedVehicle.marca,
+            modelo: selectedVehicle.modelo,
+            ano_modelo: selectedVehicle.ano_modelo,
+            combustivel: selectedVehicle.combustivel as Fuel,
+            tipo_veiculo: selectedVehicle.tipo_veiculo || 1,
+            codigo_fipe: selectedVehicle.codigo_fipe,
+            preco_nf: selectedVehicle.preco_nf,
+          }}
         />
       )}
     </div>

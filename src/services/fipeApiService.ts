@@ -345,20 +345,23 @@ export async function consultarFIPEComCache(
   // Converter valor para número
   const priceValue = parseFloat(result.valor.Valor.replace(/[^0-9,]/g, '').replace(',', '.'));
 
-  // Salvar no cache via INSERT direto (RLS preenche tenant_id)
-  const { error: insertError } = await supabase.from('fipe_cache').insert({
-    vehicle_id: vehicleId,
-    tabela_ref: tabelaRef,
-    price_value: priceValue,
-    price_label: result.valor.Valor,
-    brand: result.valor.Marca,
-    model: result.valor.Modelo,
-    year_model: year,
-    fuel: result.valor.Combustivel,
-    fuel_code: result.fuelCode,
-    fipe_code: result.valor.CodigoFipe,
-    raw_response: result.valor as any,
-  });
+  // Salvar no cache - tenant_id será preenchido automaticamente pela policy RLS
+  const { error: insertError } = await supabase
+    .from('fipe_cache')
+    .insert([{
+      vehicle_id: vehicleId,
+      tabela_ref: tabelaRef,
+      price_value: priceValue,
+      price_label: result.valor.Valor,
+      brand: result.valor.Marca,
+      model: result.valor.Modelo,
+      year_model: year,
+      fuel: result.valor.Combustivel,
+      fuel_code: result.fuelCode,
+      fipe_code: result.valor.CodigoFipe,
+      raw_response: result.valor as any,
+      tenant_id: '00000000-0000-0000-0000-000000000000', // Placeholder - será substituído por RLS
+    } as any]);
   
   if (insertError) {
     console.log('Cache FIPE:', insertError.message);
