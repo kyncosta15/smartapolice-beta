@@ -8,7 +8,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { TenantProvider } from '@/contexts/TenantContext';
 import { LandingPage } from "@/components/LandingPage";
 
-// Temporary: Regular imports to isolate lazy loading issue
+// Protected and Auth components
 import ProtectedRoute from '@/components/ProtectedRoute';
 import SystemSelection from "@/components/SystemSelection";
 import SmartApoliceAuth from "@/components/SmartApoliceAuth";
@@ -23,7 +23,14 @@ import NotFound from "./pages/NotFound";
 import RHDashboard from './pages/RHDashboard';
 import RHColaboradores from './pages/RHColaboradores';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   return (

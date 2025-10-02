@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
+// Hook para consultar FIPE via webhook N8N
+
 interface VehicleData {
   id: string;
   brand: string;
