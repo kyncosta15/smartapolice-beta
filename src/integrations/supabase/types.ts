@@ -917,6 +917,71 @@ export type Database = {
           },
         ]
       }
+      fipe_cache: {
+        Row: {
+          brand: string | null
+          created_at: string
+          data_consulta: string
+          fipe_code: string | null
+          fuel: string | null
+          fuel_code: number | null
+          id: string
+          model: string | null
+          price_label: string | null
+          price_value: number | null
+          raw_response: Json | null
+          tabela_ref: number
+          tenant_id: string
+          updated_at: string
+          vehicle_id: string
+          year_model: number | null
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          data_consulta?: string
+          fipe_code?: string | null
+          fuel?: string | null
+          fuel_code?: number | null
+          id?: string
+          model?: string | null
+          price_label?: string | null
+          price_value?: number | null
+          raw_response?: Json | null
+          tabela_ref: number
+          tenant_id: string
+          updated_at?: string
+          vehicle_id: string
+          year_model?: number | null
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          data_consulta?: string
+          fipe_code?: string | null
+          fuel?: string | null
+          fuel_code?: number | null
+          id?: string
+          model?: string | null
+          price_label?: string | null
+          price_value?: number | null
+          raw_response?: Json | null
+          tabela_ref?: number
+          tenant_id?: string
+          updated_at?: string
+          vehicle_id?: string
+          year_model?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fipe_cache_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fleet_change_requests: {
         Row: {
           anexos: Json
@@ -1139,7 +1204,9 @@ export type Database = {
           categoria: string | null
           chassi: string | null
           codigo: string | null
+          codigo_fipe: string | null
           codigo_interno: string | null
+          combustivel: string | null
           consorcio_cota: string | null
           consorcio_grupo: string | null
           consorcio_taxa_adm: number | null
@@ -1166,6 +1233,7 @@ export type Database = {
           renavam: string | null
           status_seguro: string | null
           status_veiculo: string | null
+          tipo_veiculo: number | null
           uf_emplacamento: string | null
           updated_at: string
         }
@@ -1174,7 +1242,9 @@ export type Database = {
           categoria?: string | null
           chassi?: string | null
           codigo?: string | null
+          codigo_fipe?: string | null
           codigo_interno?: string | null
+          combustivel?: string | null
           consorcio_cota?: string | null
           consorcio_grupo?: string | null
           consorcio_taxa_adm?: number | null
@@ -1201,6 +1271,7 @@ export type Database = {
           renavam?: string | null
           status_seguro?: string | null
           status_veiculo?: string | null
+          tipo_veiculo?: number | null
           uf_emplacamento?: string | null
           updated_at?: string
         }
@@ -1209,7 +1280,9 @@ export type Database = {
           categoria?: string | null
           chassi?: string | null
           codigo?: string | null
+          codigo_fipe?: string | null
           codigo_interno?: string | null
+          combustivel?: string | null
           consorcio_cota?: string | null
           consorcio_grupo?: string | null
           consorcio_taxa_adm?: number | null
@@ -1236,6 +1309,7 @@ export type Database = {
           renavam?: string | null
           status_seguro?: string | null
           status_veiculo?: string | null
+          tipo_veiculo?: number | null
           uf_emplacamento?: string | null
           updated_at?: string
         }

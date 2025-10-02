@@ -23,7 +23,7 @@ import {
 import { FrotasDashboard } from './frotas/FrotasDashboard';
 import { FrotasTable } from './frotas/FrotasTable';
 import { FrotasKPICards } from './frotas/FrotasKPICards';
-import { FrotasFipe } from './frotas/FrotasFipe';
+import { FrotasFipeNew } from './frotas/FrotasFipeNew';
 import { FrotasDocumentos } from './frotas/FrotasDocumentos';
 import { FrotasUpload } from './frotas/FrotasUpload';
 
