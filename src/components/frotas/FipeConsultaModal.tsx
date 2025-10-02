@@ -38,6 +38,7 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle }: FipeConsultaM
         fuel: vehicle.combustivel || "Flex", // Fallback para tentar todos os tipos
         tipoVeiculo: vehicle.tipo_veiculo,
         fipeCode: vehicle.codigo_fipe,
+        placa: vehicle.placa,
       }, forceRefresh);
       setHasConsulted(true);
     } catch (error) {

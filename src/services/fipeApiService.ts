@@ -291,7 +291,8 @@ export async function consultarFIPEComCache(
   year: number,
   fuel: Fuel,
   tipoVeiculo: number,
-  fipeCode?: string
+  fipeCode?: string,
+  placa?: string
 ): Promise<{
   cached: boolean;
   data: {
@@ -336,7 +337,57 @@ export async function consultarFIPEComCache(
     }
   }
 
-  // Consultar FIPE
+  // Se tem placa, tentar consulta pela placa primeiro
+  if (placa) {
+    try {
+      console.log(`[FIPE] Tentando consulta por placa: ${placa}`);
+      const placaResult = await consultarPorPlaca(placa);
+      
+      if (placaResult && placaResult.valorFipe) {
+        const priceValue = parseFloat(
+          placaResult.valorFipe.replace(/[^0-9,]/g, '').replace(',', '.')
+        );
+        
+        // Salvar no cache
+        const { error: insertError } = await supabase
+          .from('fipe_cache')
+          .insert([{
+            vehicle_id: vehicleId,
+            tabela_ref: tabelaRef,
+            price_value: priceValue,
+            price_label: placaResult.valorFipe,
+            brand: placaResult.marca || brand,
+            model: placaResult.modelo || model,
+            year_model: placaResult.anoModelo || year,
+            fuel: placaResult.combustivel || fuel,
+            fuel_code: fuelToCode(placaResult.combustivel || fuel)[0],
+            fipe_code: placaResult.codigoFipe || fipeCode,
+            raw_response: placaResult.rawData as any,
+            tenant_id: '00000000-0000-0000-0000-000000000000',
+          } as any]);
+        
+        if (insertError) {
+          console.log('Cache FIPE (placa):', insertError.message);
+        }
+        
+        return {
+          cached: false,
+          data: {
+            price_value: priceValue,
+            price_label: placaResult.valorFipe,
+            fipe_code: placaResult.codigoFipe,
+            mes_referencia: placaResult.mesReferencia || new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+            data_consulta: new Date().toISOString(),
+            dias_desde_consulta: 0,
+          },
+        };
+      }
+    } catch (error) {
+      console.log('[FIPE] Consulta por placa falhou, tentando método tradicional:', error);
+    }
+  }
+
+  // Consultar FIPE pelo método tradicional (fallback)
   let result: FIPEConsultaResult;
   
   if (fipeCode) {
@@ -404,4 +455,25 @@ export async function consultarFIPEComCache(
       dias_desde_consulta: 0,
     },
   };
+}
+
+async function consultarPorPlaca(placa: string): Promise<any> {
+  const SUPABASE_URL = "https://jhvbfvqhuemuvwgqpskz.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpodmJmdnFodWVtdXZ3Z3Fwc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTI2MDEsImV4cCI6MjA2Njg4ODYwMX0.V8I0byW7xs0iMBEBc6C3h0lvPhgPZ4mGwjfm31XkEQg";
+  
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/placa-fipe`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ placa }),
+  });
+  
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Erro ao consultar placa');
+  }
+  
+  return res.json();
 }

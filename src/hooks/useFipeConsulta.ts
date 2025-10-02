@@ -10,6 +10,7 @@ interface VehicleData {
   fuel: Fuel;
   tipoVeiculo: number;
   fipeCode?: string;
+  placa?: string;
 }
 
 export function useFipeConsulta() {
@@ -34,7 +35,8 @@ export function useFipeConsulta() {
         vehicle.year,
         vehicle.fuel,
         vehicle.tipoVeiculo,
-        vehicle.fipeCode
+        vehicle.fipeCode,
+        vehicle.placa
       );
 
       setResult(response);
