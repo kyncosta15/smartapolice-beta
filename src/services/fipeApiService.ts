@@ -101,14 +101,17 @@ async function postFIPE<T>(path: string, body: any, retries = 2): Promise<T> {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
-        const res = await fetch(`http://veiculos.fipe.org.br/api/veiculos/${path}`, {
+        // Use Edge Function proxy to avoid CORS/mixed-content issues
+        const SUPABASE_URL = "https://jhvbfvqhuemuvwgqpskz.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpodmJmdnFodWVtdXZ3Z3Fwc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTI2MDEsImV4cCI6MjA2Njg4ODYwMX0.V8I0byW7xs0iMBEBc6C3h0lvPhgPZ4mGwjfm31XkEQg";
+        
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/fipe-proxy`, {
           method: "POST",
           headers: {
-            "Host": "veiculos.fipe.org.br",
-            "Referer": "http://veiculos.fipe.org.br",
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
           },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ path, body }),
           signal: controller.signal,
         });
         
@@ -118,7 +121,8 @@ async function postFIPE<T>(path: string, body: any, retries = 2): Promise<T> {
           if (res.status === 429 || res.status === 403) {
             throw new Error('RATE_LIMIT');
           }
-          throw new Error(`FIPE ${path} ${res.status}`);
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.details || `FIPE ${path} ${res.status}`);
         }
         
         return res.json();
@@ -127,8 +131,12 @@ async function postFIPE<T>(path: string, body: any, retries = 2): Promise<T> {
           throw new Error('Consulta temporariamente indisponível. Tente novamente mais tarde.');
         }
         
+        if (error.name === 'AbortError') {
+          console.error('Request timeout:', path);
+        }
+        
         if (attempt === retries) {
-          throw error;
+          throw new Error(`Erro ao consultar FIPE: ${error.message}`);
         }
         
         // Exponential backoff
