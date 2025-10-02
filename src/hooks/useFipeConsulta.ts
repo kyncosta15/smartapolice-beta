@@ -1,114 +1,100 @@
 import { useState } from 'react';
-import { consultarFIPEComCache, consultarModeloCandidato, type Fuel } from '@/services/fipeApiService';
 import { useToast } from '@/hooks/use-toast';
 
 interface VehicleData {
   id: string;
   brand: string;
   model: string;
-  year: number;
-  fuel: Fuel;
+  year: number | null;
+  fuel?: string;
   tipoVeiculo: number;
   fipeCode?: string;
   placa?: string;
 }
 
-interface Candidate {
-  modelo: { Label: string; Value: number };
-  score: number;
-  details: string;
-  valor?: string;
-  fipe_code?: string;
-  price_value?: number;
+interface FipeResponse {
+  vehicle_id: string;
+  status: 'ok' | 'review' | 'error';
+  normalized?: {
+    brand: string;
+    model: string;
+    year_hint: string;
+    confidence: number;
+    reason?: string;
+  };
+  plan?: any[];
+  error?: string;
 }
 
 export function useFipeConsulta() {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [result, setResult] = useState<FipeResponse | null>(null);
+  const [fullResponse, setFullResponse] = useState<any>(null);
   const { toast } = useToast();
 
-  const consultar = async (vehicle: VehicleData, forceRefresh = false) => {
+  const consultar = async (vehicle: VehicleData, refId?: number) => {
     setIsLoading(true);
     setResult(null);
+    setFullResponse(null);
 
     try {
-      toast({
-        title: "Consultando FIPE",
-        description: "Buscando valor atualizado...",
+      const WEBHOOK_URL = 'https://rcorpoficial.app.n8n.cloud/webhook-test/smartapolice/fipe/llm';
+      
+      const payload = {
+        ref_id: refId || 331,
+        vehicle: {
+          id: String(vehicle.id || ''),
+          plate: vehicle.placa || '',
+          brand: vehicle.brand || '',
+          model: vehicle.model || '',
+          year: vehicle.year || null,
+        },
+      };
+
+      console.log('Consultando FIPE via webhook:', payload);
+
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
 
-      const response = await consultarFIPEComCache(
-        vehicle.id,
-        vehicle.brand,
-        vehicle.model,
-        vehicle.year,
-        vehicle.fuel,
-        vehicle.tipoVeiculo,
-        vehicle.fipeCode,
-        vehicle.placa
-      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
-      setResult(response);
+      const data: FipeResponse = await response.json();
+      setResult(data);
+      setFullResponse(data);
 
-      if (response.cached && !forceRefresh) {
+      if (data.status === 'ok') {
         toast({
-          title: "Valor FIPE (cache)",
-          description: `Consultado há ${response.data.dias_desde_consulta} dias`,
+          title: "FIPE padronizado com sucesso!",
+          description: `Confiança: ${(data.normalized?.confidence || 0) * 100}%`,
+        });
+      } else if (data.status === 'review') {
+        toast({
+          title: "Revisar padronização",
+          description: data.normalized?.reason || "Necessário revisar os dados",
+          variant: "default",
         });
       } else {
         toast({
-          title: "Valor FIPE atualizado",
-          description: `Valor: ${response.data.price_label}`,
+          title: "Erro na padronização",
+          description: data.error || "Não foi possível padronizar o veículo",
+          variant: "destructive",
         });
       }
 
-      return response;
+      return data;
     } catch (error: any) {
       console.error('Erro ao consultar FIPE:', error);
       
-      // Se encontrou múltiplos candidatos
-      if (error.message === 'MULTIPLE_CANDIDATES' && error.candidates) {
-        toast({
-          title: "Modelos similares encontrados",
-          description: "Escolha o modelo correto na lista abaixo",
-        });
-        
-        // Buscar valores FIPE para cada candidato
-        const candidatesWithValues = await Promise.all(
-          error.candidates.map(async (c: any) => {
-            try {
-              const valorResult = await consultarModeloCandidato(
-                c.modelo,
-                error.marca,
-                vehicle.year,
-                vehicle.fuel,
-                error.tipoVeiculo,
-                error.tabelaRef
-              );
-              
-              if (valorResult) {
-                return {
-                  ...c,
-                  valor: valorResult.valor.Valor,
-                  fipe_code: valorResult.valor.CodigoFipe,
-                  price_value: parseFloat(valorResult.valor.Valor.replace(/[^0-9,]/g, '').replace(',', '.')),
-                };
-              }
-            } catch (e) {
-              console.log(`Não foi possível obter valor para ${c.modelo.Label}`);
-            }
-            return c;
-          })
-        );
-        
-        setCandidates(candidatesWithValues);
-        return;
-      }
-      
       toast({
         title: "Erro ao consultar FIPE",
-        description: error.message || "Não foi possível obter o valor FIPE",
+        description: error.message || "Falha na conexão com o webhook",
         variant: "destructive",
       });
       
@@ -118,22 +104,5 @@ export function useFipeConsulta() {
     }
   };
 
-  const selectCandidate = (candidate: Candidate) => {
-    if (candidate.valor) {
-      setResult({
-        cached: false,
-        data: {
-          price_value: candidate.price_value || 0,
-          price_label: candidate.valor,
-          fipe_code: candidate.fipe_code,
-          mes_referencia: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-          data_consulta: new Date().toISOString(),
-          dias_desde_consulta: 0,
-        },
-      });
-      setCandidates([]);
-    }
-  };
-
-  return { consultar, isLoading, result, candidates, selectCandidate };
+  return { consultar, isLoading, result, fullResponse };
 }

@@ -1,77 +1,119 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, Copy, TrendingUp, TrendingDown, Calendar, DollarSign } from 'lucide-react';
+import { Loader2, Copy, DollarSign, CheckCircle, AlertCircle, XCircle, FileJson } from 'lucide-react';
 import { useFipeConsulta } from '@/hooks/useFipeConsulta';
 import { useToast } from '@/hooks/use-toast';
-import { Fuel } from '@/services/fipeApiService';
+
+interface VehicleData {
+  id: string;
+  placa?: string;
+  marca: string;
+  modelo: string;
+  ano_modelo: number;
+  combustivel?: string;
+  tipo_veiculo: number;
+  codigo_fipe?: string;
+  preco_nf?: number;
+}
 
 interface FipeConsultaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  vehicle: {
-    id: string;
-    placa?: string;
-    marca: string;
-    modelo: string;
-    ano_modelo: number;
-    combustivel?: Fuel; // Opcional - se não informado, tenta todos os tipos
-    tipo_veiculo: number;
-    codigo_fipe?: string;
-    preco_nf?: number;
-  };
+  vehicle: VehicleData;
+  onVehicleUpdate?: (updates: Partial<VehicleData>) => void;
 }
 
-export function FipeConsultaModal({ open, onOpenChange, vehicle }: FipeConsultaModalProps) {
-  const { consultar, isLoading, result, candidates, selectCandidate } = useFipeConsulta();
+export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate }: FipeConsultaModalProps) {
+  const { consultar, isLoading, result, fullResponse } = useFipeConsulta();
   const { toast } = useToast();
-  const [hasConsulted, setHasConsulted] = useState(false);
+  const [showDetailsDrawer, setShowDetailsDrawer] = useState(false);
+  const [normalizedData, setNormalizedData] = useState({
+    marca: vehicle.marca,
+    modelo: vehicle.modelo,
+    ano: vehicle.ano_modelo,
+  });
 
-  const handleConsultar = async (forceRefresh = false) => {
+  const handleConsultar = async () => {
     try {
-      await consultar({
+      const response = await consultar({
         id: vehicle.id,
         brand: vehicle.marca,
         model: vehicle.modelo,
         year: vehicle.ano_modelo,
-        fuel: vehicle.combustivel || "Flex", // Fallback para tentar todos os tipos
+        fuel: vehicle.combustivel,
         tipoVeiculo: vehicle.tipo_veiculo,
         fipeCode: vehicle.codigo_fipe,
         placa: vehicle.placa,
-      }, forceRefresh);
-      setHasConsulted(true);
+      });
+
+      // Atualizar dados normalizados se status OK
+      if (response?.status === 'ok' && response.normalized) {
+        const yearStr = response.normalized.year_hint?.split('-')[0] || String(vehicle.ano_modelo);
+        const yearNum = parseInt(yearStr, 10);
+        
+        setNormalizedData({
+          marca: response.normalized.brand.toUpperCase(),
+          modelo: response.normalized.model,
+          ano: yearNum,
+        });
+
+        // Notificar componente pai sobre as atualizações
+        if (onVehicleUpdate) {
+          onVehicleUpdate({
+            marca: response.normalized.brand.toUpperCase(),
+            modelo: response.normalized.model,
+            ano_modelo: yearNum,
+          });
+        }
+      }
     } catch (error) {
       // Erro já tratado no hook
     }
   };
 
-  const handleCopyResult = () => {
-    if (!result) return;
-
-    const text = `
-Valor FIPE: ${result.data.price_label}
-Marca/Modelo: ${vehicle.marca} / ${vehicle.modelo}
-Ano/Combustível: ${vehicle.ano_modelo} / ${vehicle.combustivel || 'Automático'}
-Mês de Referência: ${result.data.mes_referencia}
-Código FIPE: ${result.data.fipe_code || 'N/A'}
-Data da Consulta: ${new Date(result.data.data_consulta).toLocaleString('pt-BR')}
-    `.trim();
-
-    navigator.clipboard.writeText(text);
+  const handleCopyJSON = () => {
+    if (!fullResponse) return;
+    
+    const jsonText = JSON.stringify(fullResponse, null, 2);
+    navigator.clipboard.writeText(jsonText);
     toast({
-      title: "Copiado!",
-      description: "Resultado copiado para a área de transferência",
+      title: "JSON copiado!",
+      description: "Resposta completa copiada para a área de transferência",
     });
   };
 
-  const getDifferencePercentage = () => {
-    if (!result || !vehicle.preco_nf) return null;
-    const diff = ((result.data.price_value - vehicle.preco_nf) / vehicle.preco_nf) * 100;
-    return diff.toFixed(2);
-  };
+  const getStatusBadge = () => {
+    if (!result) return null;
 
-  const diffPercentage = getDifferencePercentage();
+    const confidence = result.normalized?.confidence || 0;
+    const confidencePercent = Math.round(confidence * 100);
+
+    if (result.status === 'ok') {
+      return (
+        <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Padronizado FIPE ✓ ({confidencePercent}%)
+        </Badge>
+      );
+    } else if (result.status === 'review') {
+      return (
+        <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Revisar
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge variant="destructive">
+          <XCircle className="w-3 h-3 mr-1" />
+          Erro
+        </Badge>
+      );
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -99,39 +141,29 @@ Data da Consulta: ${new Date(result.data.data_consulta).toLocaleString('pt-BR')}
               )}
               <div>
                 <span className="text-muted-foreground">Marca:</span>
-                <span className="ml-2 font-medium">{vehicle.marca}</span>
+                <span className="ml-2 font-medium">{normalizedData.marca}</span>
               </div>
               <div className="col-span-2">
                 <span className="text-muted-foreground">Modelo:</span>
-                <span className="ml-2 font-medium">{vehicle.modelo}</span>
+                <span className="ml-2 font-medium">{normalizedData.modelo}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Ano:</span>
-                <span className="ml-2 font-medium">{vehicle.ano_modelo}</span>
+                <span className="ml-2 font-medium">{normalizedData.ano}</span>
               </div>
-              <div>
-                <span className="text-muted-foreground">Combustível:</span>
-                <span className="ml-2 font-medium">
-                  {vehicle.combustivel || (
-                    <span className="text-amber-600">Automático (tenta todos)</span>
-                  )}
-                </span>
-              </div>
-              {vehicle.preco_nf && (
-                <div className="col-span-2">
-                  <span className="text-muted-foreground">Valor NF:</span>
-                  <span className="ml-2 font-medium">
-                    R$ {vehicle.preco_nf.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
+              {vehicle.combustivel && (
+                <div>
+                  <span className="text-muted-foreground">Combustível:</span>
+                  <span className="ml-2 font-medium">{vehicle.combustivel}</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Botões de Ação */}
+          {/* Botão de Ação */}
           <div className="flex gap-2">
             <Button
-              onClick={() => handleConsultar(false)}
+              onClick={handleConsultar}
               disabled={isLoading}
               className="flex-1"
             >
@@ -144,131 +176,97 @@ Data da Consulta: ${new Date(result.data.data_consulta).toLocaleString('pt-BR')}
                 <>Consultar FIPE</>
               )}
             </Button>
-            {hasConsulted && (
-              <Button
-                onClick={() => handleConsultar(true)}
-                disabled={isLoading}
-                variant="outline"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </Button>
-            )}
           </div>
 
-          {/* Candidatos */}
-          {candidates.length > 0 && (
-            <div className="space-y-3 border-t pt-4">
-              <h3 className="font-semibold">Modelos Similares Encontrados</h3>
-              <p className="text-sm text-muted-foreground">
-                Não encontramos o modelo exato. Selecione o modelo correto abaixo:
-              </p>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {candidates.map((candidate, idx) => (
-                  <Button
-                    key={idx}
-                    variant="outline"
-                    className="w-full justify-between h-auto py-3 px-4"
-                    onClick={() => selectCandidate(candidate)}
-                  >
-                    <div className="flex flex-col items-start gap-1 flex-1">
-                      <div className="font-medium text-left">{candidate.modelo.Label}</div>
-                      {candidate.valor ? (
-                        <div className="text-lg font-bold text-primary">
-                          {candidate.valor}
-                        </div>
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          Valor não disponível
-                        </div>
-                      )}
-                    </div>
-                    <Badge variant="secondary">Score: {candidate.score}</Badge>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Resultado */}
+          {/* Status Badge e Link para Detalhes */}
           {result && (
             <div className="space-y-4 border-t pt-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Resultado da Consulta</h3>
-                <div className="flex items-center gap-2">
-                  {result.cached && (
-                    <Badge variant="secondary">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      Cache ({result.data.dias_desde_consulta}d)
-                    </Badge>
-                  )}
-                  {!result.cached && (
-                    <Badge variant="default">
-                      Atualizado
-                    </Badge>
-                  )}
-                </div>
+                <h3 className="font-semibold">Resultado</h3>
+                {getStatusBadge()}
               </div>
 
-              <div className="bg-primary/5 p-6 rounded-lg space-y-3">
-                <div className="text-center">
-                  <div className="text-sm text-muted-foreground mb-1">Valor FIPE</div>
-                  <div className="text-3xl font-bold text-primary">
-                    {result.data.price_label}
+              {/* Dados Normalizados */}
+              {result.status === 'ok' && result.normalized && (
+                <div className="bg-primary/5 p-4 rounded-lg space-y-2">
+                  <div className="text-sm text-muted-foreground">Dados Padronizados</div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Marca:</span>
+                      <div className="font-medium">{result.normalized.brand.toUpperCase()}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Modelo:</span>
+                      <div className="font-medium">{result.normalized.model}</div>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-muted-foreground">Ano:</span>
+                      <div className="font-medium">{result.normalized.year_hint}</div>
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {diffPercentage && (
-                  <div className="flex items-center justify-center gap-2 pt-2">
-                    {parseFloat(diffPercentage) > 0 ? (
-                      <TrendingUp className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <TrendingDown className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className={parseFloat(diffPercentage) > 0 ? 'text-green-500' : 'text-red-500'}>
-                      {diffPercentage}% {parseFloat(diffPercentage) > 0 ? 'acima' : 'abaixo'} da NF
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Mês de Referência:</span>
-                  <div className="font-medium mt-1">{result.data.mes_referencia}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Data da Consulta:</span>
-                  <div className="font-medium mt-1">
-                    {new Date(result.data.data_consulta).toLocaleString('pt-BR')}
+              {/* Mensagem de Review */}
+              {result.status === 'review' && result.normalized?.reason && (
+                <div className="bg-yellow-500/5 p-4 rounded-lg border border-yellow-500/20">
+                  <div className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                    Motivo: {result.normalized.reason}
                   </div>
                 </div>
-                {result.data.fipe_code && (
-                  <div className="col-span-2">
-                    <span className="text-muted-foreground">Código FIPE:</span>
-                    <div className="font-medium mt-1">{result.data.fipe_code}</div>
+              )}
+
+              {/* Mensagem de Erro */}
+              {result.status === 'error' && result.error && (
+                <div className="bg-destructive/5 p-4 rounded-lg border border-destructive/20">
+                  <div className="text-sm font-medium text-destructive">
+                    {result.error}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              <div className="flex gap-2 pt-2">
-                <Button
-                  onClick={handleCopyResult}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copiar Resultado
-                </Button>
-              </div>
-
-              <div className="text-xs text-muted-foreground text-center pt-2">
-                Fonte: Tabela FIPE (consulta automática; uso informativo)
-              </div>
+              {/* Link para Ver Detalhes */}
+              <Button
+                onClick={() => setShowDetailsDrawer(true)}
+                variant="outline"
+                size="sm"
+                className="w-full"
+              >
+                <FileJson className="w-4 h-4 mr-2" />
+                Ver Detalhes FIPE (LLM)
+              </Button>
             </div>
           )}
         </div>
       </DialogContent>
+
+      {/* Drawer com Detalhes JSON */}
+      <Drawer open={showDetailsDrawer} onOpenChange={setShowDetailsDrawer}>
+        <DrawerContent className="max-h-[80vh]">
+          <DrawerHeader>
+            <DrawerTitle>Detalhes da Resposta FIPE (LLM)</DrawerTitle>
+            <DrawerDescription>
+              JSON completo retornado pelo webhook de normalização
+            </DrawerDescription>
+          </DrawerHeader>
+          
+          <div className="p-4 overflow-auto flex-1">
+            <pre className="bg-muted p-4 rounded-lg text-xs overflow-auto">
+              {JSON.stringify(fullResponse, null, 2)}
+            </pre>
+          </div>
+
+          <div className="p-4 border-t flex gap-2">
+            <Button onClick={handleCopyJSON} className="flex-1">
+              <Copy className="w-4 h-4 mr-2" />
+              Copiar JSON
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="outline">Fechar</Button>
+            </DrawerClose>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </Dialog>
   );
 }
