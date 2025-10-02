@@ -35,6 +35,7 @@ import { AssistenciaDashboard } from './frotas/AssistenciaDashboard';
 
 import { FleetRequestsList } from './fleet-requests/FleetRequestsList';
 import { PublicLinkGenerator } from './fleet-requests/PublicLinkGenerator';
+import { ExportVeiculosButton } from './frotas/ExportVeiculosButton';
 import { useFrotasData } from '@/hooks/useFrotasData';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -166,6 +167,7 @@ export function GestaoFrotas() {
               <span className="hidden sm:inline">PDF</span>
             </Button>
             
+            <ExportVeiculosButton />
             
             <Button
               variant="secondary"
