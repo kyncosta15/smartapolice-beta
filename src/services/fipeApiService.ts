@@ -313,15 +313,18 @@ export async function consultarTradicional(
   
   const modelNorm = normalizeString(model);
   
-  // Extrair partes relevantes (números e palavras-chave)
+  // Extrair números (códigos de modelo) - são críticos para matching
+  const modelNumbers = modelNorm.match(/\d+/g) || [];
+  
+  // Extrair palavras-chave (removendo stopwords)
   const modelKeywords = modelNorm
-    .split(' ')
+    .split(/[\s\/\-]+/)
     .filter(word => {
       const normalized = normalizeString(word);
-      return !stopWords.includes(normalized) && word.length > 1;
+      return !stopWords.includes(normalized) && word.length > 1 && !/^\d+$/.test(word);
     });
   
-  console.log(`[FIPE] Buscando modelo com palavras-chave: ${modelKeywords.join(', ')}`);
+  console.log(`[FIPE] Buscando modelo. Números críticos: [${modelNumbers.join(', ')}], Palavras: [${modelKeywords.join(', ')}]`);
   
   // Tentar match exato primeiro
   let modelo = modelosResp.Modelos.find(x => normalizeString(x.Label) === modelNorm);
@@ -331,21 +334,26 @@ export async function consultarTradicional(
     const candidatos = modelosResp.Modelos
       .map(m => {
         const labelNorm = normalizeString(m.Label);
-        const labelWords = labelNorm.split(' ');
-        
-        // Calcular score baseado em quantas palavras-chave batem
         let score = 0;
         
-        // Prioriza números e códigos (ex: 1719/48, L1620)
+        // CRÍTICO: Todos os números do modelo DEVEM estar presentes no label
+        // Se faltar qualquer número importante, score = 0
+        if (modelNumbers.length > 0) {
+          const allNumbersPresent = modelNumbers.every(num => labelNorm.includes(num));
+          
+          if (!allNumbersPresent) {
+            // Se tem números no modelo mas não batem, este não é o modelo certo
+            return { modelo: m, score: 0 };
+          }
+          
+          // Se todos os números batem, score alto
+          score += modelNumbers.length * 20;
+        }
+        
+        // Adicionar pontos por palavras-chave que batem
         modelKeywords.forEach(keyword => {
-          if (/\d/.test(keyword)) {
-            // Palavra contém número - mais importante
-            if (labelWords.some(w => w === keyword)) score += 10;
-            else if (labelNorm.includes(keyword)) score += 8;
-          } else if (keyword.length > 3) {
-            // Palavra comum
-            if (labelWords.some(w => w === keyword)) score += 3;
-            else if (labelNorm.includes(keyword)) score += 1;
+          if (labelNorm.includes(keyword)) {
+            score += 5;
           }
         });
         
@@ -356,7 +364,8 @@ export async function consultarTradicional(
     
     if (candidatos.length > 0) {
       modelo = candidatos[0].modelo;
-      console.log(`[FIPE] ⚠️ Modelo "${model}" não encontrado exatamente. Usando: "${modelo.Label}" (score: ${candidatos[0].score})`);
+      console.log(`[FIPE] ✅ Modelo aproximado encontrado: "${modelo.Label}" (score: ${candidatos[0].score})`);
+      console.log(`[FIPE] 📝 Original: "${model}"`);
     }
   }
   
