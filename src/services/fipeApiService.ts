@@ -170,8 +170,8 @@ export function fuelToCode(fuel: Fuel): number[] {
   if (f.includes("gasol")) return [1];
   if (f.includes("álcool") || f.includes("alcool") || f.includes("etanol")) return [2];
   if (f.includes("diesel")) return [3, 4];
-  if (f.includes("flex")) return [3, 1, 2];
-  return [1, 2, 3, 4];
+  if (f.includes("flex")) return [3, 5, 1, 2]; // Flex pode ser código 3 ou 5 na FIPE
+  return [1, 2, 3, 4, 5];
 }
 
 export async function getTabelaReferenciaCodigo(): Promise<number> {
