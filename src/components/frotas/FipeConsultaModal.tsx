@@ -236,17 +236,31 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
 
               {/* Erro ao buscar valor FIPE */}
               {result.status === 'ok' && !result.fipeValue && !isLoading && result.error && (
-                <div className="bg-yellow-500/5 p-4 rounded-lg border border-yellow-500/20">
+                <div className="bg-yellow-500/5 p-4 rounded-lg border border-yellow-500/20 space-y-3">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
                     <div className="flex-1">
                       <div className="text-sm font-medium text-yellow-700 dark:text-yellow-400 mb-1">
                         Valor FIPE não encontrado
                       </div>
-                      <div className="text-sm text-yellow-600 dark:text-yellow-500">
+                      <div className="text-sm text-yellow-600 dark:text-yellow-500 whitespace-pre-wrap">
                         {result.error}
                       </div>
                     </div>
+                  </div>
+                  
+                  {/* Dicas para resolver o problema */}
+                  <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded border border-yellow-500/10">
+                    <p className="font-medium mb-2">💡 Possíveis causas:</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>O modelo normalizado pode ter variação de nome na FIPE</li>
+                      <li>Ano/combustível não disponíveis para este modelo</li>
+                      <li>Tipo de veículo incorreto (carro/caminhão/moto)</li>
+                      <li>Modelo pode ter sido descontinuado antes deste ano</li>
+                    </ul>
+                    <p className="mt-2 text-xs italic">
+                      📋 Verifique os "Detalhes FIPE (LLM)" abaixo para mais informações
+                    </p>
                   </div>
                 </div>
               )}

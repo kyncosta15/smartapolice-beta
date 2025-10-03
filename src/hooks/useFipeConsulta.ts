@@ -136,16 +136,24 @@ export function useFipeConsulta() {
       // Se dados foram normalizados com sucesso, consultar valor FIPE
       if (mappedData.status === 'ok' && apiData.normalized) {
         try {
-          console.log('Consultando valor FIPE com dados normalizados...');
+          console.log('=== Consultando valor FIPE com dados normalizados ===');
+          console.log('Marca:', apiData.normalized.brand);
+          console.log('Modelo:', apiData.normalized.model);
+          console.log('Ano hint:', apiData.normalized.yearHint);
           
           const yearNum = parseInt(apiData.normalized.yearHint.split('-')[0], 10);
-          const fuelType = vehicle.fuel || 'gasolina';
+          const fuelType = vehicle.fuel || 'diesel';
+          
+          console.log('Ano numérico:', yearNum);
+          console.log('Combustível:', fuelType);
+          console.log('Tipo veículo:', vehicle.tipoVeiculo);
           
           let fipeResult = null;
           let usedYear = yearNum;
           
           try {
             // Tentar com o ano original
+            console.log('Tentativa 1: Ano original', yearNum);
             fipeResult = await consultarFIPEComCache(
               vehicle.id,
               apiData.normalized.brand,
@@ -157,17 +165,20 @@ export function useFipeConsulta() {
               vehicle.placa
             );
           } catch (yearError: any) {
+            console.error('Erro na consulta com ano original:', yearError?.message);
+            
             // Se falhar por ano indisponível, tentar com anos próximos
             const errorMsg = yearError?.message || '';
             const yearsMatch = errorMsg.match(/Anos disponíveis próximos: ([\d, ]+)/);
             
             if (yearsMatch) {
               const availableYears = yearsMatch[1].split(',').map((y: string) => parseInt(y.trim(), 10));
-              console.log('Tentando anos próximos:', availableYears);
+              console.log('📅 Tentando anos próximos:', availableYears);
               
               // Tentar cada ano próximo em ordem
               for (const tryYear of availableYears) {
                 try {
+                  console.log(`Tentativa: Ano ${tryYear}`);
                   fipeResult = await consultarFIPEComCache(
                     vehicle.id,
                     apiData.normalized.brand,
@@ -179,22 +190,23 @@ export function useFipeConsulta() {
                     vehicle.placa
                   );
                   usedYear = tryYear;
-                  console.log(`Sucesso com ano ${tryYear}`);
+                  console.log(`✅ Sucesso com ano ${tryYear}`);
                   break;
-                } catch (e) {
-                  console.log(`Falhou com ano ${tryYear}, tentando próximo...`);
+                } catch (e: any) {
+                  console.log(`❌ Falhou com ano ${tryYear}:`, e?.message);
                   continue;
                 }
               }
             }
             
             if (!fipeResult) {
+              // Manter o erro original para propagar com detalhes
               throw yearError;
             }
           }
 
           if (fipeResult) {
-            console.log('Valor FIPE obtido:', fipeResult);
+            console.log('✅ Valor FIPE obtido:', fipeResult);
 
             // Adicionar valor FIPE ao resultado
             mappedData.fipeValue = {
@@ -210,22 +222,28 @@ export function useFipeConsulta() {
             setResult({ ...mappedData });
           }
         } catch (fipeError: any) {
-          console.error('Erro ao consultar valor FIPE:', fipeError);
+          console.error('❌ Erro final ao consultar valor FIPE:', fipeError);
+          console.error('Mensagem completa:', fipeError?.message);
           
-          // Verificar se o erro tem informação sobre anos disponíveis
+          // Verificar o tipo de erro e mostrar mensagem apropriada
           const errorMsg = fipeError?.message || '';
-          const hasAvailableYears = errorMsg.includes('Anos disponíveis');
           
-          if (hasAvailableYears) {
-            // Extrair anos disponíveis da mensagem de erro
+          if (errorMsg.includes('MULTIPLE_CANDIDATES')) {
+            mappedData.error = `Múltiplos modelos encontrados na FIPE. Verifique os detalhes para escolher o modelo correto.`;
+          } else if (errorMsg.includes('Anos disponíveis')) {
             const yearsMatch = errorMsg.match(/Anos disponíveis próximos: ([\d, ]+)/);
             const availableYears = yearsMatch ? yearsMatch[1] : '';
-            
-            mappedData.error = `Ano ${apiData.normalized.yearHint.split('-')[0]} não disponível na FIPE para este modelo.${availableYears ? ` Anos próximos: ${availableYears}` : ''}`;
+            mappedData.error = `Ano ${apiData.normalized.yearHint.split('-')[0]} não disponível.${availableYears ? ` Anos próximos: ${availableYears}` : ''}`;
+          } else if (errorMsg.includes('não foi encontrada')) {
+            mappedData.error = `Marca "${apiData.normalized.brand}" não encontrada na FIPE.`;
+          } else if (errorMsg.includes('Não encontramos esse veículo')) {
+            mappedData.error = 'Modelo não encontrado na FIPE para este ano/combustível.';
           } else {
-            mappedData.error = 'Não foi possível consultar o valor FIPE';
+            // Mostrar a mensagem de erro completa para debug
+            mappedData.error = errorMsg || 'Não foi possível consultar o valor FIPE';
           }
           
+          console.log('Erro formatado para usuário:', mappedData.error);
           setResult({ ...mappedData });
         }
       }
