@@ -188,7 +188,7 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
 
               {/* Dados Normalizados */}
               {result.status === 'ok' && result.normalized && (
-                <div className="bg-primary/5 p-4 rounded-lg space-y-2">
+                <div className="bg-primary/5 p-4 rounded-lg space-y-3">
                   <div className="text-sm text-muted-foreground">Dados Padronizados</div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
@@ -204,6 +204,27 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
                       <div className="font-medium">{result.normalized.year_hint}</div>
                     </div>
                   </div>
+
+                  {/* Valor FIPE */}
+                  {result.fipeValue && (
+                    <div className="mt-4 pt-4 border-t border-primary/10">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-muted-foreground">Valor FIPE</div>
+                        {result.fipeValue.cached && (
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                            Cache
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-2xl font-bold text-primary mt-1">
+                        {result.fipeValue.price_label}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {result.fipeValue.mes_referencia}
+                        {result.fipeValue.fipe_code && ` • Código: ${result.fipeValue.fipe_code}`}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { consultarFIPEComCache } from '@/services/fipeApiService';
 
 // Hook para consultar FIPE via webhook N8N
 
@@ -37,6 +38,14 @@ interface FipeResponse {
     year_hint: string;
     confidence: number;
     reason?: string;
+  };
+  fipeValue?: {
+    price_value: number;
+    price_label: string;
+    fipe_code?: string;
+    mes_referencia: string;
+    data_consulta: string;
+    cached: boolean;
   };
   plan?: any[];
   error?: string;
@@ -123,10 +132,51 @@ export function useFipeConsulta() {
       console.log('Mapped FIPE data:', mappedData);
       setResult(mappedData);
 
+      // Se dados foram normalizados com sucesso, consultar valor FIPE
+      if (mappedData.status === 'ok' && apiData.normalized) {
+        try {
+          console.log('Consultando valor FIPE com dados normalizados...');
+          
+          const yearNum = parseInt(apiData.normalized.yearHint.split('-')[0], 10);
+          const fuelType = vehicle.fuel || 'gasolina';
+          
+          const fipeResult = await consultarFIPEComCache(
+            vehicle.id,
+            apiData.normalized.brand,
+            apiData.normalized.model,
+            yearNum,
+            fuelType as any,
+            vehicle.tipoVeiculo,
+            vehicle.fipeCode,
+            vehicle.placa
+          );
+
+          console.log('Valor FIPE obtido:', fipeResult);
+
+          // Adicionar valor FIPE ao resultado
+          mappedData.fipeValue = {
+            price_value: fipeResult.data.price_value,
+            price_label: fipeResult.data.price_label,
+            fipe_code: fipeResult.data.fipe_code,
+            mes_referencia: fipeResult.data.mes_referencia,
+            data_consulta: fipeResult.data.data_consulta,
+            cached: fipeResult.cached,
+          };
+
+          setResult({ ...mappedData });
+        } catch (fipeError) {
+          console.error('Erro ao consultar valor FIPE:', fipeError);
+          // Continua mesmo sem o valor, já tem a normalização
+        }
+      }
+
       if (mappedData.status === 'ok') {
+        const hasValue = mappedData.fipeValue?.price_label;
         toast({
           title: "FIPE padronizado com sucesso!",
-          description: `Confiança: ${(mappedData.normalized?.confidence || 0) * 100}%`,
+          description: hasValue 
+            ? `Valor: ${mappedData.fipeValue?.price_label}` 
+            : `Confiança: ${(mappedData.normalized?.confidence || 0) * 100}%`,
         });
       } else if (mappedData.status === 'review') {
         toast({
