@@ -83,10 +83,11 @@ export function useFipeConsulta() {
 
       const apiData: FipeApiResponse = await response.json();
       setFullResponse(apiData);
+      console.log('FIPE API Response:', apiData);
 
       // Mapear resposta da API para formato interno
       const mappedData: FipeResponse = {
-        status: apiData.ok ? 'ok' : 'error',
+        status: 'error', // default
         normalized: apiData.normalized ? {
           brand: apiData.normalized.brand,
           model: apiData.normalized.model,
@@ -98,11 +99,28 @@ export function useFipeConsulta() {
         error: apiData.error,
       };
 
-      // Se tem dados normalizados mas ok=false, pode ser review
-      if (!apiData.ok && apiData.normalized && apiData.normalized.confidence < 1) {
-        mappedData.status = 'review';
+      // Determinar status baseado na presença e qualidade dos dados normalizados
+      if (apiData.normalized) {
+        const confidence = apiData.normalized.confidence;
+        
+        // Se tem dados normalizados com alta confiança, é sucesso
+        if (confidence >= 0.9) {
+          mappedData.status = 'ok';
+        } 
+        // Se tem dados mas com confiança baixa, precisa revisar
+        else if (confidence >= 0.5) {
+          mappedData.status = 'review';
+        }
+        // Confiança muito baixa = erro
+        else {
+          mappedData.status = 'error';
+        }
+      } else {
+        // Sem dados normalizados = erro
+        mappedData.status = 'error';
       }
 
+      console.log('Mapped FIPE data:', mappedData);
       setResult(mappedData);
 
       if (mappedData.status === 'ok') {
