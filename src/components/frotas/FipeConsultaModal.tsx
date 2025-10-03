@@ -186,45 +186,35 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
                 {getStatusBadge()}
               </div>
 
-              {/* Dados Normalizados */}
-              {result.status === 'ok' && result.normalized && (
-                <div className="bg-primary/5 p-4 rounded-lg space-y-3">
-                  <div className="text-sm text-muted-foreground">Dados Padronizados</div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Marca:</span>
-                      <div className="font-medium">{result.normalized.brand.toUpperCase()}</div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Modelo:</span>
-                      <div className="font-medium">{result.normalized.model}</div>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-muted-foreground">Ano:</span>
-                      <div className="font-medium">{result.normalized.year_hint}</div>
-                    </div>
+              {/* Valor FIPE */}
+              {result.status === 'ok' && result.fipeValue && (
+                <div className="bg-primary/5 p-6 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm text-muted-foreground">Valor FIPE</div>
+                    {result.fipeValue.cached && (
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                        Cache
+                      </span>
+                    )}
                   </div>
+                  <div className="text-3xl font-bold text-primary">
+                    {result.fipeValue.price_label}
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-2">
+                    {result.fipeValue.mes_referencia}
+                    {result.fipeValue.fipe_code && (
+                      <span className="ml-2">• Código: {result.fipeValue.fipe_code}</span>
+                    )}
+                  </div>
+                </div>
+              )}
 
-                  {/* Valor FIPE */}
-                  {result.fipeValue && (
-                    <div className="mt-4 pt-4 border-t border-primary/10">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-muted-foreground">Valor FIPE</div>
-                        {result.fipeValue.cached && (
-                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                            Cache
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-2xl font-bold text-primary mt-1">
-                        {result.fipeValue.price_label}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {result.fipeValue.mes_referencia}
-                        {result.fipeValue.fipe_code && ` • Código: ${result.fipeValue.fipe_code}`}
-                      </div>
-                    </div>
-                  )}
+              {/* Mensagem se não tem valor FIPE ainda */}
+              {result.status === 'ok' && !result.fipeValue && (
+                <div className="bg-muted/50 p-4 rounded-lg text-center">
+                  <div className="text-sm text-muted-foreground">
+                    Consultando valor na tabela FIPE...
+                  </div>
                 </div>
               )}
 
