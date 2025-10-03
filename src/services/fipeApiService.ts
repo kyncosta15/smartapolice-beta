@@ -335,18 +335,36 @@ export async function consultarTradicional(
       .map(m => {
         const labelNorm = normalizeString(m.Label);
         let score = 0;
-        let matchDetails = [];
+        let matchDetails: string[] = [];
         
-        // 1. Números têm peso alto
+        // 1. Números têm peso MUITO alto - devem bater TODOS
         let numbersMatched = 0;
+        const numbersInLabel = labelNorm.match(/\d+/g) || [];
+        
         if (modelNumbers.length > 0) {
+          // Contar quantos números do input estão no label
           modelNumbers.forEach(num => {
             if (labelNorm.includes(num)) {
               numbersMatched++;
-              score += 20;
+              score += 25;
               matchDetails.push(`num:${num}`);
             }
           });
+          
+          // PENALIZAR se tem números no label que NÃO estão no input
+          numbersInLabel.forEach(num => {
+            const isInModel = modelNumbers.some(mn => mn === num);
+            if (!isInModel) {
+              score -= 15; // Penalidade por número extra não solicitado
+              matchDetails.push(`extra-num:${num}`);
+            }
+          });
+          
+          // Se não bateu TODOS os números do input, desconsiderar
+          if (numbersMatched < modelNumbers.length) {
+            score = 0; // Zera o score se falta algum número
+            matchDetails.push('incomplete-numbers');
+          }
         }
         
         // 2. Palavras-chave também são importantes
@@ -354,7 +372,7 @@ export async function consultarTradicional(
         modelKeywords.forEach(keyword => {
           if (labelNorm.includes(keyword)) {
             keywordsMatched++;
-            // Palavras curtas e específicas (CG, XRE, etc) valem mais
+            // Palavras curtas e específicas (CG, XRE, VM, etc) valem mais
             const keywordScore = keyword.length <= 3 ? 15 : 8;
             score += keywordScore;
             matchDetails.push(`word:${keyword}`);
@@ -363,10 +381,10 @@ export async function consultarTradicional(
         
         // 3. Bonus por match de múltiplos elementos
         if (numbersMatched > 0 && keywordsMatched > 0) {
-          score += 15; // Bonus forte por ter números E palavras batendo
+          score += 20; // Bonus forte por ter números E palavras batendo
         }
         
-        // 4. Match parcial - se tem pelo menos um número OU uma palavra
+        // 4. Match parcial - precisa ter pelo menos um número OU uma palavra
         if (numbersMatched > 0 || keywordsMatched > 0) {
           score += 5; // Bonus base por ter qualquer match
         }
