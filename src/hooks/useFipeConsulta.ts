@@ -164,19 +164,35 @@ export function useFipeConsulta() {
           };
 
           setResult({ ...mappedData });
-        } catch (fipeError) {
+        } catch (fipeError: any) {
           console.error('Erro ao consultar valor FIPE:', fipeError);
-          // Continua mesmo sem o valor, já tem a normalização
+          
+          // Verificar se o erro tem informação sobre anos disponíveis
+          const errorMsg = fipeError?.message || '';
+          const hasAvailableYears = errorMsg.includes('Anos disponíveis');
+          
+          if (hasAvailableYears) {
+            // Extrair anos disponíveis da mensagem de erro
+            const yearsMatch = errorMsg.match(/Anos disponíveis próximos: ([\d, ]+)/);
+            const availableYears = yearsMatch ? yearsMatch[1] : '';
+            
+            mappedData.error = `Ano ${apiData.normalized.yearHint.split('-')[0]} não disponível na FIPE para este modelo.${availableYears ? ` Anos próximos: ${availableYears}` : ''}`;
+          } else {
+            mappedData.error = 'Não foi possível consultar o valor FIPE';
+          }
+          
+          setResult({ ...mappedData });
         }
       }
 
       if (mappedData.status === 'ok') {
         const hasValue = mappedData.fipeValue?.price_label;
         toast({
-          title: "FIPE padronizado com sucesso!",
+          title: hasValue ? "Valor FIPE encontrado!" : "Dados normalizados",
           description: hasValue 
             ? `Valor: ${mappedData.fipeValue?.price_label}` 
-            : `Confiança: ${(mappedData.normalized?.confidence || 0) * 100}%`,
+            : mappedData.error || `Confiança: ${(mappedData.normalized?.confidence || 0) * 100}%`,
+          variant: hasValue ? "default" : "destructive",
         });
       } else if (mappedData.status === 'review') {
         toast({
