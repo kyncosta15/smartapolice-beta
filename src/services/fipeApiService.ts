@@ -337,7 +337,7 @@ export async function consultarTradicional(
         let score = 0;
         let matchDetails: string[] = [];
         
-        // 1. Números têm peso MUITO alto - devem bater TODOS
+        // 1. Números têm peso MUITO alto - mas agora mais flexível
         let numbersMatched = 0;
         const numbersInLabel = labelNorm.match(/\d+/g) || [];
         
@@ -346,24 +346,27 @@ export async function consultarTradicional(
           modelNumbers.forEach(num => {
             if (labelNorm.includes(num)) {
               numbersMatched++;
-              score += 25;
+              score += 30; // Aumentado de 25 para 30
               matchDetails.push(`num:${num}`);
             }
           });
           
-          // PENALIZAR se tem números no label que NÃO estão no input
+          // PENALIZAR MENOS se tem números no label que NÃO estão no input
+          // (permite variações como "L 1620" quando input é "1620")
           numbersInLabel.forEach(num => {
             const isInModel = modelNumbers.some(mn => mn === num);
-            if (!isInModel) {
-              score -= 15; // Penalidade por número extra não solicitado
+            if (!isInModel && numbersMatched === 0) {
+              // Só penalizar se não bateu nenhum número principal
+              score -= 10; // Reduzido de 15 para 10
               matchDetails.push(`extra-num:${num}`);
             }
           });
           
-          // Se não bateu TODOS os números do input, desconsiderar
-          if (numbersMatched < modelNumbers.length) {
-            score = 0; // Zera o score se falta algum número
-            matchDetails.push('incomplete-numbers');
+          // Se bateu PELO MENOS UM número importante, considerar
+          // (removido a exigência de bater TODOS os números)
+          if (numbersMatched === 0) {
+            score = 0; // Zera o score apenas se não bateu nenhum número
+            matchDetails.push('no-numbers-matched');
           }
         }
         
@@ -372,8 +375,8 @@ export async function consultarTradicional(
         modelKeywords.forEach(keyword => {
           if (labelNorm.includes(keyword)) {
             keywordsMatched++;
-            // Palavras curtas e específicas (CG, XRE, VM, etc) valem mais
-            const keywordScore = keyword.length <= 3 ? 15 : 8;
+            // Palavras curtas e específicas (CG, XRE, VM, L, etc) valem mais
+            const keywordScore = keyword.length <= 3 ? 12 : 6;
             score += keywordScore;
             matchDetails.push(`word:${keyword}`);
           }
@@ -381,12 +384,13 @@ export async function consultarTradicional(
         
         // 3. Bonus por match de múltiplos elementos
         if (numbersMatched > 0 && keywordsMatched > 0) {
-          score += 20; // Bonus forte por ter números E palavras batendo
+          score += 25; // Aumentado de 20 para 25
         }
         
-        // 4. Match parcial - precisa ter pelo menos um número OU uma palavra
-        if (numbersMatched > 0 || keywordsMatched > 0) {
-          score += 5; // Bonus base por ter qualquer match
+        // 4. Bonus especial se bateu o número principal
+        // Para modelos como "1620", se o label contém "1620", é muito relevante
+        if (numbersMatched > 0) {
+          score += 10; // Bonus por ter número batendo
         }
         
         return { modelo: m, score, details: matchDetails.join(', ') || 'sem match' };
