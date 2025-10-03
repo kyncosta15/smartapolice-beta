@@ -217,11 +217,28 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
               )}
 
               {/* Mensagem de Erro */}
-              {result.status === 'error' && result.error && (
-                <div className="bg-destructive/5 p-4 rounded-lg border border-destructive/20">
+              {result.status === 'error' && (
+                <div className="bg-destructive/5 p-4 rounded-lg border border-destructive/20 space-y-3">
                   <div className="text-sm font-medium text-destructive">
-                    {result.error}
+                    {result.error === 'MISSING_FIELDS' 
+                      ? 'Campos obrigatórios faltando (marca, modelo ou ano)'
+                      : result.error || 'Erro desconhecido'}
                   </div>
+                  
+                  {/* Mostrar dados normalizados mesmo com erro, se existirem */}
+                  {result.normalized && (
+                    <div className="text-sm text-muted-foreground mt-2 pt-2 border-t border-destructive/20">
+                      <div className="font-medium mb-1">Dados detectados:</div>
+                      <div className="space-y-1 ml-2">
+                        <div>Marca: {result.normalized.brand}</div>
+                        <div>Modelo: {result.normalized.model}</div>
+                        <div>Ano: {result.normalized.year_hint}</div>
+                        {result.normalized.reason && (
+                          <div className="mt-2 italic">{result.normalized.reason}</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

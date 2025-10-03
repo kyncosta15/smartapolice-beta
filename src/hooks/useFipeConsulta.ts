@@ -14,8 +14,22 @@ interface VehicleData {
   placa?: string;
 }
 
+interface FipeApiResponse {
+  ok: boolean;
+  vehicleId: string | null;
+  refId: number | null;
+  normalized?: {
+    brand: string;
+    model: string;
+    yearHint: string;
+    confidence: number;
+    reason?: string;
+  };
+  plan?: any[];
+  error?: string;
+}
+
 interface FipeResponse {
-  vehicle_id: string;
   status: 'ok' | 'review' | 'error';
   normalized?: {
     brand: string;
@@ -67,30 +81,54 @@ export function useFipeConsulta() {
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const data: FipeResponse = await response.json();
-      setResult(data);
-      setFullResponse(data);
+      const apiData: FipeApiResponse = await response.json();
+      setFullResponse(apiData);
 
-      if (data.status === 'ok') {
+      // Mapear resposta da API para formato interno
+      const mappedData: FipeResponse = {
+        status: apiData.ok ? 'ok' : 'error',
+        normalized: apiData.normalized ? {
+          brand: apiData.normalized.brand,
+          model: apiData.normalized.model,
+          year_hint: apiData.normalized.yearHint,
+          confidence: apiData.normalized.confidence,
+          reason: apiData.normalized.reason,
+        } : undefined,
+        plan: apiData.plan,
+        error: apiData.error,
+      };
+
+      // Se tem dados normalizados mas ok=false, pode ser review
+      if (!apiData.ok && apiData.normalized && apiData.normalized.confidence < 1) {
+        mappedData.status = 'review';
+      }
+
+      setResult(mappedData);
+
+      if (mappedData.status === 'ok') {
         toast({
           title: "FIPE padronizado com sucesso!",
-          description: `Confiança: ${(data.normalized?.confidence || 0) * 100}%`,
+          description: `Confiança: ${(mappedData.normalized?.confidence || 0) * 100}%`,
         });
-      } else if (data.status === 'review') {
+      } else if (mappedData.status === 'review') {
         toast({
           title: "Revisar padronização",
-          description: data.normalized?.reason || "Necessário revisar os dados",
+          description: mappedData.normalized?.reason || "Necessário revisar os dados",
           variant: "default",
         });
       } else {
+        const errorMessage = mappedData.error === 'MISSING_FIELDS' 
+          ? 'Campos obrigatórios faltando (marca, modelo ou ano)'
+          : mappedData.error || 'Não foi possível padronizar o veículo';
+        
         toast({
           title: "Erro na padronização",
-          description: data.error || "Não foi possível padronizar o veículo",
+          description: errorMessage,
           variant: "destructive",
         });
       }
 
-      return data;
+      return mappedData;
     } catch (error: any) {
       console.error('Erro ao consultar FIPE:', error);
       
