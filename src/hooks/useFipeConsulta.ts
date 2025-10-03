@@ -46,6 +46,7 @@ interface FipeResponse {
     mes_referencia: string;
     data_consulta: string;
     cached: boolean;
+    used_year?: number;
   };
   plan?: any[];
   error?: string;
@@ -140,30 +141,74 @@ export function useFipeConsulta() {
           const yearNum = parseInt(apiData.normalized.yearHint.split('-')[0], 10);
           const fuelType = vehicle.fuel || 'gasolina';
           
-          const fipeResult = await consultarFIPEComCache(
-            vehicle.id,
-            apiData.normalized.brand,
-            apiData.normalized.model,
-            yearNum,
-            fuelType as any,
-            vehicle.tipoVeiculo,
-            vehicle.fipeCode,
-            vehicle.placa
-          );
+          let fipeResult = null;
+          let usedYear = yearNum;
+          
+          try {
+            // Tentar com o ano original
+            fipeResult = await consultarFIPEComCache(
+              vehicle.id,
+              apiData.normalized.brand,
+              apiData.normalized.model,
+              yearNum,
+              fuelType as any,
+              vehicle.tipoVeiculo,
+              vehicle.fipeCode,
+              vehicle.placa
+            );
+          } catch (yearError: any) {
+            // Se falhar por ano indisponível, tentar com anos próximos
+            const errorMsg = yearError?.message || '';
+            const yearsMatch = errorMsg.match(/Anos disponíveis próximos: ([\d, ]+)/);
+            
+            if (yearsMatch) {
+              const availableYears = yearsMatch[1].split(',').map((y: string) => parseInt(y.trim(), 10));
+              console.log('Tentando anos próximos:', availableYears);
+              
+              // Tentar cada ano próximo em ordem
+              for (const tryYear of availableYears) {
+                try {
+                  fipeResult = await consultarFIPEComCache(
+                    vehicle.id,
+                    apiData.normalized.brand,
+                    apiData.normalized.model,
+                    tryYear,
+                    fuelType as any,
+                    vehicle.tipoVeiculo,
+                    vehicle.fipeCode,
+                    vehicle.placa
+                  );
+                  usedYear = tryYear;
+                  console.log(`Sucesso com ano ${tryYear}`);
+                  break;
+                } catch (e) {
+                  console.log(`Falhou com ano ${tryYear}, tentando próximo...`);
+                  continue;
+                }
+              }
+            }
+            
+            if (!fipeResult) {
+              throw yearError;
+            }
+          }
 
-          console.log('Valor FIPE obtido:', fipeResult);
+          if (fipeResult) {
+            console.log('Valor FIPE obtido:', fipeResult);
 
-          // Adicionar valor FIPE ao resultado
-          mappedData.fipeValue = {
-            price_value: fipeResult.data.price_value,
-            price_label: fipeResult.data.price_label,
-            fipe_code: fipeResult.data.fipe_code,
-            mes_referencia: fipeResult.data.mes_referencia,
-            data_consulta: fipeResult.data.data_consulta,
-            cached: fipeResult.cached,
-          };
+            // Adicionar valor FIPE ao resultado
+            mappedData.fipeValue = {
+              price_value: fipeResult.data.price_value,
+              price_label: fipeResult.data.price_label,
+              fipe_code: fipeResult.data.fipe_code,
+              mes_referencia: fipeResult.data.mes_referencia,
+              data_consulta: fipeResult.data.data_consulta,
+              cached: fipeResult.cached,
+              used_year: usedYear !== yearNum ? usedYear : undefined,
+            };
 
-          setResult({ ...mappedData });
+            setResult({ ...mappedData });
+          }
         } catch (fipeError: any) {
           console.error('Erro ao consultar valor FIPE:', fipeError);
           

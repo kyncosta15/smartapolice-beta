@@ -194,11 +194,18 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
                 <div className="bg-primary/5 p-6 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm text-muted-foreground">Valor FIPE</div>
-                    {result.fipeValue.cached && (
-                      <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                        Cache
-                      </span>
-                    )}
+                    <div className="flex gap-2">
+                      {result.fipeValue.used_year && (
+                        <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-1 rounded">
+                          Ano {result.fipeValue.used_year}
+                        </span>
+                      )}
+                      {result.fipeValue.cached && (
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                          Cache
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-3xl font-bold text-primary">
                     {result.fipeValue.price_label}
@@ -207,6 +214,11 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
                     {result.fipeValue.mes_referencia}
                     {result.fipeValue.fipe_code && (
                       <span className="ml-2">• Código: {result.fipeValue.fipe_code}</span>
+                    )}
+                    {result.fipeValue.used_year && (
+                      <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                        ℹ️ Valor referente ao ano {result.fipeValue.used_year} (ano mais próximo disponível)
+                      </div>
                     )}
                   </div>
                 </div>
