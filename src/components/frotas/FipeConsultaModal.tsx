@@ -30,6 +30,7 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
   const { consultar, isLoading, result, fullResponse } = useFipeConsulta();
   const { toast } = useToast();
   const [showDetailsDrawer, setShowDetailsDrawer] = useState(false);
+  const [isFetchingValue, setIsFetchingValue] = useState(false);
   const [normalizedData, setNormalizedData] = useState({
     marca: vehicle.marca,
     modelo: vehicle.modelo,
@@ -37,6 +38,7 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
   });
 
   const handleConsultar = async () => {
+    setIsFetchingValue(false); // Reset estado
     try {
       const response = await consultar({
         id: vehicle.id,
@@ -71,6 +73,7 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
       }
     } catch (error) {
       // Erro já tratado no hook
+      setIsFetchingValue(false);
     }
   };
 
@@ -209,11 +212,21 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
                 </div>
               )}
 
-              {/* Mensagem se não tem valor FIPE ainda */}
-              {result.status === 'ok' && !result.fipeValue && (
+              {/* Loading da consulta FIPE */}
+              {result.status === 'ok' && !result.fipeValue && isLoading && (
                 <div className="bg-muted/50 p-4 rounded-lg text-center">
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
                   <div className="text-sm text-muted-foreground">
                     Consultando valor na tabela FIPE...
+                  </div>
+                </div>
+              )}
+
+              {/* Erro ao buscar valor FIPE */}
+              {result.status === 'ok' && !result.fipeValue && !isLoading && (
+                <div className="bg-yellow-500/5 p-4 rounded-lg border border-yellow-500/20">
+                  <div className="text-sm text-yellow-700 dark:text-yellow-400">
+                    Não foi possível obter o valor FIPE neste momento.
                   </div>
                 </div>
               )}
