@@ -22,6 +22,7 @@ import AuthGuard from "@/components/AuthGuard";
 import NotFound from "./pages/NotFound";
 import RHDashboard from './pages/RHDashboard';
 import RHColaboradores from './pages/RHColaboradores';
+import AdminApprovalsPage from './pages/AdminApprovalsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +53,16 @@ const App = () => {
               <Route path="/solicitacao-frota/:token" element={<PublicFleetRequestPage />} />
               <Route path="/rh/dashboard" element={<RHDashboard />} />
               <Route path="/rh/colaboradores" element={<RHColaboradores />} />
+              
+              {/* Admin routes */}
+              <Route
+                path="/admin/aprovacoes"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                    <AdminApprovalsPage />
+                  </ProtectedRoute>
+                }
+              />
               
               {/* Protected routes */}
               <Route path="/dashboard" element={<AuthGuard />} />

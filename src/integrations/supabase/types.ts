@@ -1426,6 +1426,66 @@ export type Database = {
           },
         ]
       }
+      insurance_approval_requests: {
+        Row: {
+          created_at: string | null
+          current_status: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          empresa_id: string
+          id: string
+          motivo: string | null
+          requested_by: string
+          requested_status: string
+          status: string
+          veiculo_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_status: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          empresa_id: string
+          id?: string
+          motivo?: string | null
+          requested_by: string
+          requested_status: string
+          status?: string
+          veiculo_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_status?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          empresa_id?: string
+          id?: string
+          motivo?: string | null
+          requested_by?: string
+          requested_status?: string
+          status?: string
+          veiculo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_approval_requests_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_approval_requests_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_projections: {
         Row: {
           actual_cost: number | null
@@ -2421,6 +2481,7 @@ export type Database = {
           default_empresa_id: string | null
           display_name: string
           id: string
+          is_admin: boolean
           photo_path: string | null
           photo_url: string | null
           settings: Json | null
@@ -2432,6 +2493,7 @@ export type Database = {
           default_empresa_id?: string | null
           display_name?: string
           id: string
+          is_admin?: boolean
           photo_path?: string | null
           photo_url?: string | null
           settings?: Json | null
@@ -2443,6 +2505,7 @@ export type Database = {
           default_empresa_id?: string | null
           display_name?: string
           id?: string
+          is_admin?: boolean
           photo_path?: string | null
           photo_url?: string | null
           settings?: Json | null
@@ -2628,6 +2691,10 @@ export type Database = {
       }
     }
     Functions: {
+      approve_insurance_request: {
+        Args: { p_decision_note?: string; p_request_id: string }
+        Returns: undefined
+      }
       auto_fix_frota_status: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -2717,6 +2784,10 @@ export type Database = {
           token: string
         }[]
       }
+      get_current_empresa: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -2724,6 +2795,10 @@ export type Database = {
       get_user_empresa_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       is_company_admin: {
         Args: { check_empresa_id: string }
@@ -2740,6 +2815,10 @@ export type Database = {
       limpar_dados_usuario_teste_v2: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      reject_insurance_request: {
+        Args: { p_decision_note?: string; p_request_id: string }
+        Returns: undefined
       }
       rh_employee_request: {
         Args: {

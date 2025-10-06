@@ -26,6 +26,7 @@ export interface UserProfile {
   photo_url?: string;
   photo_path?: string;
   default_empresa_id?: string;
+  is_admin?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -62,10 +63,10 @@ export function useUserProfile() {
         return;
       }
 
-      // Load user profile
+      // Load user profile (include is_admin field)
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select('id, display_name, avatar_url, photo_url, photo_path, default_empresa_id, is_admin, created_at, updated_at')
         .eq('id', user.id)
         .maybeSingle();
 

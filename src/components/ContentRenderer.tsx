@@ -19,6 +19,7 @@ import { GestaoFrotas } from './GestaoFrotas';
 import { SinistrosManagement } from './SinistrosManagement';
 import { N8NDataTester } from './N8NDataTester';
 import { UserProfile } from './UserProfile';
+import { AdminApprovalsPage } from './insurance/AdminApprovalsPage';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 
@@ -239,6 +240,9 @@ export function ContentRenderer({
           <N8NDataTester />
         </div>
       );
+
+    case 'aprovacoes':
+      return <AdminApprovalsPage />;
 
     default:
       return (

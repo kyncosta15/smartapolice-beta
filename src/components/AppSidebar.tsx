@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { 
   Home,
   FileText, 
@@ -11,7 +12,8 @@ import {
   Settings,
   Upload,
   Mail,
-  LogOut
+  LogOut,
+  CheckSquare
 } from "lucide-react";
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { cn } from '@/lib/utils';
@@ -34,7 +36,10 @@ interface AppSidebarProps {
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
   const { user, logout } = useAuth();
+  const { profile } = useUserProfile();
   const { open } = useSidebar();
+
+  const isAdmin = profile?.is_admin === true;
 
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
@@ -52,12 +57,15 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+    { id: 'aprovacoes', title: 'Aprovações', icon: CheckSquare },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 
-  const navigation = user?.role === 'administrador' ? adminNavigation : clientNavigation;
+  const navigation = isAdmin 
+    ? adminNavigation 
+    : (user?.role === 'administrador' ? adminNavigation.filter(n => n.id !== 'aprovacoes') : clientNavigation);
 
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-border/50">
