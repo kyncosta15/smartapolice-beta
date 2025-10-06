@@ -6,22 +6,31 @@ import { FileProcessingStatus } from '@/types/pdfUpload';
 import { PolicyPersistenceService } from '../policyPersistenceService';
 import { SafeDataExtractor } from '@/utils/safeDataExtractor';
 
+export interface DuplicateInfo {
+  policyNumber: string;
+  policyId: string;
+  policyName: string;
+}
+
 export class BatchFileProcessor {
   private updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void;
   private removeFileStatus: (fileName: string) => void;
   private onPolicyExtracted: (policy: ParsedPolicyData) => void;
+  private onDuplicateDetected?: (info: DuplicateInfo) => void;
   private toast: any;
 
   constructor(
     updateFileStatus: (fileName: string, update: Partial<FileProcessingStatus[string]>) => void,
     removeFileStatus: (fileName: string) => void,
     onPolicyExtracted: (policy: ParsedPolicyData) => void,
-    toast: any
+    toast: any,
+    onDuplicateDetected?: (info: DuplicateInfo) => void
   ) {
     this.updateFileStatus = updateFileStatus;
     this.removeFileStatus = removeFileStatus;
     this.onPolicyExtracted = onPolicyExtracted;
     this.toast = toast;
+    this.onDuplicateDetected = onDuplicateDetected;
   }
 
   async processMultipleFiles(files: File[], userId: string | null, userEmail?: string | null): Promise<ParsedPolicyData[]> {
@@ -134,11 +143,12 @@ export class BatchFileProcessor {
                 const action = saveResult.isUpdate ? '🔄 atualizada' : '✅ criada';
                 console.log(`${action} no banco: ${parsedPolicy.name}`);
                 
-                if (saveResult.isUpdate) {
-                  this.toast({
-                    title: "📋 Apólice Atualizada",
-                    description: `A apólice ${parsedPolicy.policyNumber} já existia e foi atualizada com os novos dados`,
-                    variant: "default",
+                // Se for atualização, notificar com informações da duplicata
+                if (saveResult.isUpdate && this.onDuplicateDetected) {
+                  this.onDuplicateDetected({
+                    policyNumber: parsedPolicy.policyNumber,
+                    policyId: saveResult.policyId || '',
+                    policyName: parsedPolicy.name
                   });
                 }
               } else {

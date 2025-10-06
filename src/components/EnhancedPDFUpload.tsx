@@ -8,9 +8,11 @@ import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { useToast } from '@/hooks/use-toast';
 import { useFileStatusManager } from '@/hooks/useFileStatusManager';
 import { FileProcessor } from '@/services/fileProcessor';
+import { DuplicateInfo } from '@/services/processors/batchFileProcessor';
 import { FileStatusList } from './FileStatusList';
 import { EnhancedPDFUploadProps } from '@/types/pdfUpload';
 import { useAuth } from '@/contexts/AuthContext';
+import { DuplicatePolicyNotification } from './DuplicatePolicyNotification';
 
 export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps) {
   const { 
@@ -24,6 +26,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   const { toast } = useToast();
   const { user } = useAuth();
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
+  const [duplicateInfo, setDuplicateInfo] = useState<DuplicateInfo | null>(null);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!acceptedFiles || acceptedFiles.length === 0) {
@@ -50,13 +53,18 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
     setIsProcessingBatch(true);
 
     try {
-      // Criar FileProcessor com userId válido
+      // Criar FileProcessor com userId válido e callback de duplicatas
       const fileProcessor = new FileProcessor(
         updateFileStatus,
         removeFileStatus,
         user.id, // GARANTIR que userId seja passado
         onPolicyExtracted,
-        toast
+        toast,
+        (info) => {
+          // Callback quando duplicata é detectada
+          console.log('📋 Duplicata detectada:', info);
+          setDuplicateInfo(info);
+        }
       );
 
       console.log(`🚀 Chamando fileProcessor.processMultipleFiles com userId: ${user.id}`);
@@ -134,7 +142,20 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   }
 
   return (
-    <div className="w-full">
+    <>
+      <DuplicatePolicyNotification
+        duplicateInfo={duplicateInfo}
+        onView={() => {
+          toast({
+            title: "📋 Apólice Atualizada",
+            description: `A apólice ${duplicateInfo?.policyNumber} está disponível na sua lista de apólices.`,
+          });
+          setDuplicateInfo(null);
+        }}
+        onDismiss={() => setDuplicateInfo(null)}
+      />
+
+      <div className="w-full">
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -180,5 +201,6 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }
