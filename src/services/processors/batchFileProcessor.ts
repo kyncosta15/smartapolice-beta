@@ -34,9 +34,13 @@ export class BatchFileProcessor {
   }
 
   async processMultipleFiles(files: File[], userId: string | null, userEmail?: string | null): Promise<ParsedPolicyData[]> {
-    console.log(`🚀 BatchFileProcessor iniciando processamento de ${files.length} arquivos`);
-    console.log(`👤 userId recebido:`, userId);
-    console.log(`📧 userEmail recebido:`, userEmail);
+    console.log('🚀🚀🚀 ============================================');
+    console.log('🚀🚀🚀 BATCH FILE PROCESSOR - INÍCIO');
+    console.log('🚀🚀🚀 ============================================');
+    console.log(`🚀 Arquivos: ${files.length}`);
+    console.log(`👤 userId:`, userId);
+    console.log(`📧 userEmail:`, userEmail);
+    console.log(`🔔 Callback duplicata existe?`, !!this.onDuplicateDetected);
     
     // NOTA: userId pode ser null se os dados vierem do N8N com user_id nos dados
     // Verificaremos e resolveremos o user_id durante o processamento
@@ -135,41 +139,45 @@ export class BatchFileProcessor {
             // Salvar no banco usando sistema robusto
             const relatedFile = files[Math.min(index, files.length - 1)];
             if (relatedFile) {
-              console.log(`💾 ============================================`);
-              console.log(`💾 SALVANDO APÓLICE: ${parsedPolicy.name}`);
-              console.log(`💾 Número: ${parsedPolicy.policyNumber}`);
-              console.log(`💾 ============================================`);
+              alert(`💾 SALVANDO: ${parsedPolicy.policyNumber}`);
+              console.log(`💾 💾 💾 ============================================`);
+              console.log(`💾 💾 💾 SALVANDO APÓLICE: ${parsedPolicy.name}`);
+              console.log(`💾 💾 💾 Número: ${parsedPolicy.policyNumber}`);
+              console.log(`💾 💾 💾 ============================================`);
               
               const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
               const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, resolvedUserId);
               
-              console.log(`📊 ================================================`);
-              console.log(`📊 RESULTADO DO SAVE POLICY ROBUST:`);
-              console.log(`📊 ================================================`);
+              alert(`📊 RESULTADO: success=${saveResult.success}, isUpdate=${saveResult.isUpdate}`);
+              console.log(`📊 📊 📊 ================================================`);
+              console.log(`📊 📊 📊 RESULTADO DO SAVE POLICY ROBUST:`);
+              console.log(`📊 📊 📊 ================================================`);
               console.log(`📊 saveResult COMPLETO:`, JSON.stringify(saveResult, null, 2));
               console.log(`📊 saveResult.success:`, saveResult.success);
               console.log(`📊 saveResult.isUpdate:`, saveResult.isUpdate);
               console.log(`📊 saveResult.policyId:`, saveResult.policyId);
               console.log(`📊 Tipo de isUpdate:`, typeof saveResult.isUpdate);
               console.log(`📊 isUpdate é true?`, saveResult.isUpdate === true);
-              console.log(`📊 ================================================`);
+              console.log(`📊 📊 📊 ================================================`);
               
               if (saveResult.success) {
                 const action = saveResult.isUpdate ? '🔄 atualizada' : '✅ criada';
                 console.log(`${action} no banco: ${parsedPolicy.name}`);
                 
                 // SEMPRE chamar callback com informações da apólice salva
-                console.log('🔔 ============================================');
-                console.log('🔔 VERIFICANDO SE É DUPLICATA...');
+                alert(`🔔 VERIFICANDO: isUpdate=${saveResult.isUpdate}`);
+                console.log('🔔 🔔 🔔 ============================================');
+                console.log('🔔 🔔 🔔 VERIFICANDO SE É DUPLICATA...');
                 console.log('🔔 isUpdate:', saveResult.isUpdate);
                 console.log('🔔 onDuplicateDetected existe?', !!this.onDuplicateDetected);
-                console.log('🔔 ============================================');
+                console.log('🔔 🔔 🔔 ============================================');
                 
                 // Se for atualização, notificar com informações da duplicata
                 if (saveResult.isUpdate === true) {
-                  console.log('🔔🔔🔔 ================================================');
-                  console.log('🔔🔔🔔 DUPLICATA CONFIRMADA! CHAMANDO CALLBACK...');
-                  console.log('🔔🔔🔔 ================================================');
+                  alert('🚨 DUPLICATA DETECTADA! Chamando callback...');
+                  console.log('🔔🔔🔔 🔔🔔🔔 🔔🔔🔔 ================================================');
+                  console.log('🔔🔔🔔 🔔🔔🔔 🔔🔔🔔 DUPLICATA CONFIRMADA! CHAMANDO CALLBACK...');
+                  console.log('🔔🔔🔔 🔔🔔🔔 🔔🔔🔔 ================================================');
                   
                   const duplicateInfo = {
                     policyNumber: parsedPolicy.policyNumber,
