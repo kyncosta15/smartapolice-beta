@@ -83,14 +83,21 @@ export class RobustPolicyPersistence {
       }
 
       // 6. SUCESSO - DADOS PERSISTIDOS E AUDITADOS
-      console.log('✅ Persistência robusta concluída com sucesso');
-      console.log('🆔 Policy ID:', persistenceResult.policyId);
+      console.log('✅ ========================================');
+      console.log('✅ PERSISTÊNCIA ROBUSTA CONCLUÍDA COM SUCESSO');
+      console.log('✅ Policy ID:', persistenceResult.policyId);
+      console.log('✅ isUpdate:', persistenceResult.isUpdate);
+      console.log('✅ ========================================');
       
-      return {
+      const finalResult = {
         success: true,
         policyId: persistenceResult.policyId,
         isUpdate: persistenceResult.isUpdate || false
       };
+      
+      console.log('📦 RESULTADO FINAL que será retornado:', finalResult);
+      
+      return finalResult;
 
     } catch (error) {
       const errorMessage = `Erro no fluxo de persistência: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;

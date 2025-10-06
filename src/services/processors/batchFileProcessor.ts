@@ -143,10 +143,16 @@ export class BatchFileProcessor {
               const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
               const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, resolvedUserId);
               
-              console.log(`📊 RESULTADO DO SAVE:`, saveResult);
+              console.log(`📊 ================================================`);
+              console.log(`📊 RESULTADO DO SAVE POLICY ROBUST:`);
+              console.log(`📊 ================================================`);
+              console.log(`📊 saveResult COMPLETO:`, JSON.stringify(saveResult, null, 2));
               console.log(`📊 saveResult.success:`, saveResult.success);
               console.log(`📊 saveResult.isUpdate:`, saveResult.isUpdate);
               console.log(`📊 saveResult.policyId:`, saveResult.policyId);
+              console.log(`📊 Tipo de isUpdate:`, typeof saveResult.isUpdate);
+              console.log(`📊 isUpdate é true?`, saveResult.isUpdate === true);
+              console.log(`📊 ================================================`);
               
               if (saveResult.success) {
                 const action = saveResult.isUpdate ? '🔄 atualizada' : '✅ criada';
@@ -160,8 +166,10 @@ export class BatchFileProcessor {
                 console.log('🔔 ============================================');
                 
                 // Se for atualização, notificar com informações da duplicata
-                if (saveResult.isUpdate) {
+                if (saveResult.isUpdate === true) {
+                  console.log('🔔🔔🔔 ================================================');
                   console.log('🔔🔔🔔 DUPLICATA CONFIRMADA! CHAMANDO CALLBACK...');
+                  console.log('🔔🔔🔔 ================================================');
                   
                   const duplicateInfo = {
                     policyNumber: parsedPolicy.policyNumber,
@@ -169,25 +177,32 @@ export class BatchFileProcessor {
                     policyName: parsedPolicy.name
                   };
                   
-                  console.log('📋 Info da duplicata:', duplicateInfo);
+                  console.log('📋 Info da duplicata que será enviada:', duplicateInfo);
                   
                   // Toast imediato para feedback visual
+                  console.log('🍞 Chamando toast...');
                   this.toast({
                     title: "📋 Apólice Duplicada Detectada",
                     description: `A apólice ${parsedPolicy.policyNumber} foi atualizada com os novos dados`,
                     duration: 5000,
                   });
+                  console.log('🍞 Toast chamado');
                   
                   // Chamar callback se disponível
                   if (this.onDuplicateDetected) {
                     console.log('✅✅✅ CHAMANDO onDuplicateDetected AGORA!');
+                    console.log('✅✅✅ Função callback:', this.onDuplicateDetected);
+                    
                     this.onDuplicateDetected(duplicateInfo);
+                    
                     console.log('✅✅✅ onDuplicateDetected CHAMADO COM SUCESSO!');
                   } else {
                     console.error('❌❌❌ Callback onDuplicateDetected NÃO EXISTE!');
+                    console.error('❌❌❌ this.onDuplicateDetected:', this.onDuplicateDetected);
                   }
                 } else {
                   console.log('ℹ️ Nova apólice criada (não é duplicata)');
+                  console.log('ℹ️ isUpdate era:', saveResult.isUpdate);
                 }
               } else {
                 console.warn(`⚠️ Falha ao salvar apólice no banco: ${parsedPolicy.name}`, saveResult.errors);

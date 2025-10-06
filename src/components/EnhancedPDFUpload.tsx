@@ -220,21 +220,6 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* BOTÃO DE TESTE - Para testar o modal sem fazer upload */}
-          <button
-            onClick={() => {
-              console.log('🧪 Botão de teste clicado - Simulando duplicata');
-              setDuplicateInfo({
-                policyNumber: 'TESTE-123456',
-                policyId: 'test-id',
-                policyName: 'Apólice de Teste'
-              });
-            }}
-            className="mb-4 w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-semibold"
-          >
-            🧪 TESTE: Simular Duplicata
-          </button>
-
           <div
             {...getRootProps()} 
             className={`relative border-2 border-dashed rounded-md p-6 cursor-pointer transition-colors ${
