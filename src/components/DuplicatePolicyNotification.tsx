@@ -28,21 +28,28 @@ export function DuplicatePolicyNotification({
   onView,
   onDismiss,
 }: DuplicatePolicyNotificationProps) {
-  console.log('🔍 DuplicatePolicyNotification renderizado com:', duplicateInfo);
+  console.log('🎭 ============================================');
+  console.log('🎭 DuplicatePolicyNotification RENDERIZADO');
+  console.log('🎭 duplicateInfo:', duplicateInfo);
+  console.log('🎭 duplicateInfo existe?', !!duplicateInfo);
+  console.log('🎭 ============================================');
   
   if (!duplicateInfo) {
-    console.log('⚠️ duplicateInfo é null, não renderizando modal');
+    console.log('⚠️ duplicateInfo é null, retornando null');
     return null;
   }
 
-  console.log('✅ Renderizando modal de duplicata!');
+  console.log('✅✅✅ RENDERIZANDO MODAL DE DUPLICATA!');
 
   return (
-    <AlertDialog open={!!duplicateInfo} onOpenChange={(open) => {
-      console.log('📋 Modal mudou estado:', open);
-      if (!open) onDismiss();
-    }}>
-      <AlertDialogContent className="z-[100] max-w-md">
+    <AlertDialog 
+      open={true} 
+      onOpenChange={(open) => {
+        console.log('📋 Modal mudou estado para:', open);
+        if (!open) onDismiss();
+      }}
+    >
+      <AlertDialogContent className="z-[1000] max-w-md border-4 border-amber-500">
         <AlertDialogHeader className="space-y-3">
           <AlertDialogTitle className="flex items-center gap-3 text-xl">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
@@ -65,11 +72,17 @@ export function DuplicatePolicyNotification({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2 sm:gap-2">
-          <AlertDialogCancel onClick={onDismiss} className="mt-0">
+          <AlertDialogCancel onClick={() => {
+            console.log('❌ Botão Fechar clicado');
+            onDismiss();
+          }} className="mt-0">
             Fechar
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={onView}
+            onClick={() => {
+              console.log('✅ Botão OK clicado');
+              onView();
+            }}
             className="bg-primary hover:bg-primary/90"
           >
             Ok, entendi

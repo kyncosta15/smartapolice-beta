@@ -71,6 +71,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       );
 
       console.log(`🚀 Chamando fileProcessor.processMultipleFiles com userId: ${user.id}`);
+      console.log(`🎯 Callback onDuplicateDetected foi fornecido:`, !!fileProcessor);
       
       // Processar arquivos em lote
       const allResults = await fileProcessor.processMultipleFiles(acceptedFiles, user.email);
@@ -151,17 +152,27 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
 
   return (
     <>
-      <DuplicatePolicyNotification
-        duplicateInfo={duplicateInfo}
-        onView={() => {
-          toast({
-            title: "📋 Apólice Atualizada",
-            description: `A apólice ${duplicateInfo?.policyNumber} está disponível na sua lista de apólices.`,
-          });
-          setDuplicateInfo(null);
-        }}
-        onDismiss={() => setDuplicateInfo(null)}
-      />
+      {/* Modal de Duplicata - SEMPRE VISÍVEL quando duplicateInfo existe */}
+      {duplicateInfo && (
+        <>
+          <div className="fixed inset-0 z-[999] bg-black/50" onClick={() => setDuplicateInfo(null)} />
+          <DuplicatePolicyNotification
+            duplicateInfo={duplicateInfo}
+            onView={() => {
+              console.log('👁️ Botão OK clicado no modal de duplicata');
+              toast({
+                title: "📋 Apólice Atualizada",
+                description: `A apólice ${duplicateInfo?.policyNumber} está disponível na sua lista de apólices.`,
+              });
+              setDuplicateInfo(null);
+            }}
+            onDismiss={() => {
+              console.log('❌ Modal de duplicata fechado');
+              setDuplicateInfo(null);
+            }}
+          />
+        </>
+      )}
 
       <div className="w-full">
       <Card className="w-full">
