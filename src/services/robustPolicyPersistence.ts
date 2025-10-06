@@ -45,7 +45,7 @@ export class RobustPolicyPersistence {
     file: File,
     policyData: ParsedPolicyData,
     userId: string
-  ): Promise<{ success: boolean; policyId?: string; errors?: string[] }> {
+  ): Promise<{ success: boolean; policyId?: string; errors?: string[]; isUpdate?: boolean }> {
     console.log('🔒 INÍCIO DO FLUXO ROBUSTO DE PERSISTÊNCIA');
     console.log('👤 User ID:', userId);
     console.log('📄 Política:', policyData.name);
@@ -88,7 +88,8 @@ export class RobustPolicyPersistence {
       
       return {
         success: true,
-        policyId: persistenceResult.policyId
+        policyId: persistenceResult.policyId,
+        isUpdate: persistenceResult.isUpdate || false
       };
 
     } catch (error) {
@@ -221,8 +222,9 @@ export class RobustPolicyPersistence {
     fileHash: string,
     userId: string,
     file: File
-  ): Promise<{ success: boolean; policyId?: string; errors?: string[] }> {
+  ): Promise<{ success: boolean; policyId?: string; errors?: string[]; isUpdate?: boolean }> {
     console.log('🔄 Atualizando política existente:', existingPolicy.id);
+    console.log('📋 Apólice duplicada detectada - número:', normalizedData.policyNumber);
 
     try {
       // 1. Verificar campos confirmados
@@ -263,7 +265,7 @@ export class RobustPolicyPersistence {
       await this.updateInstallments(existingPolicy.id, normalizedData, userId);
 
       console.log('✅ Política atualizada com sucesso');
-      return { success: true, policyId: existingPolicy.id };
+      return { success: true, policyId: existingPolicy.id, isUpdate: true };
 
     } catch (error) {
       const errorMessage = `Erro ao atualizar política: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;
@@ -280,7 +282,7 @@ export class RobustPolicyPersistence {
     fileHash: string,
     userId: string,
     file: File
-  ): Promise<{ success: boolean; policyId?: string; errors?: string[] }> {
+  ): Promise<{ success: boolean; policyId?: string; errors?: string[]; isUpdate?: boolean }> {
     console.log('🆕 Criando nova política...');
 
     try {
@@ -349,7 +351,7 @@ export class RobustPolicyPersistence {
       await this.saveInstallments(policyId, normalizedData, userId);
 
       console.log('✅ Nova política criada com sucesso');
-      return { success: true, policyId };
+      return { success: true, policyId, isUpdate: false };
 
     } catch (error) {
       const errorMessage = `Erro ao criar política: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;

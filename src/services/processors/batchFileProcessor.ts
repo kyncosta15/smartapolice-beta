@@ -123,19 +123,28 @@ export class BatchFileProcessor {
           
           allResults.push(parsedPolicy);
           
-          // Salvar no banco usando sistema robusto
-          const relatedFile = files[Math.min(index, files.length - 1)];
-          if (relatedFile) {
-            console.log(`💾 Salvando apólice com sistema robusto: ${parsedPolicy.name}`);
-            const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
-            const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, resolvedUserId);
-            
-            if (saveResult.success) {
-              console.log(`✅ Apólice salva com sucesso no banco: ${parsedPolicy.name}`);
-            } else {
-              console.warn(`⚠️ Falha ao salvar apólice no banco: ${parsedPolicy.name}`, saveResult.errors);
+            // Salvar no banco usando sistema robusto
+            const relatedFile = files[Math.min(index, files.length - 1)];
+            if (relatedFile) {
+              console.log(`💾 Salvando apólice com sistema robusto: ${parsedPolicy.name}`);
+              const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
+              const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, resolvedUserId);
+              
+              if (saveResult.success) {
+                const action = saveResult.isUpdate ? '🔄 atualizada' : '✅ criada';
+                console.log(`${action} no banco: ${parsedPolicy.name}`);
+                
+                if (saveResult.isUpdate) {
+                  this.toast({
+                    title: "📋 Apólice Atualizada",
+                    description: `A apólice ${parsedPolicy.policyNumber} já existia e foi atualizada com os novos dados`,
+                    variant: "default",
+                  });
+                }
+              } else {
+                console.warn(`⚠️ Falha ao salvar apólice no banco: ${parsedPolicy.name}`, saveResult.errors);
+              }
             }
-          }
           
           // Notificar componente pai
           console.log(`📢 Notificando componente pai sobre nova apólice: ${parsedPolicy.name}`);
