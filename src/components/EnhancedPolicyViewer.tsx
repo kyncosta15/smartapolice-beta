@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, Edit, Trash2, Search, Filter, Download, TrendingUp, AlertTriangle } from 'lucide-react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { PolicyEditModal } from './PolicyEditModal';
 import { renderValueAsString } from '@/utils/renderValue';
+import { useToast } from '@/hooks/use-toast';
 
 interface EnhancedPolicyViewerProps {
   policies: ParsedPolicyData[];
@@ -35,6 +37,8 @@ export function EnhancedPolicyViewer({
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<ParsedPolicyData | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   const { filteredPolicies, optimizationData } = useMemo(() => {
     let filtered = policies.filter(policy => {
@@ -257,13 +261,121 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
     return null;
   };
 
+  // Funções de multiseleção
+  const togglePolicySelection = (policyId: string) => {
+    setSelectedPolicies(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(policyId)) {
+        newSet.delete(policyId);
+      } else {
+        newSet.add(policyId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleAllPolicies = () => {
+    if (selectedPolicies.size === filteredPolicies.length) {
+      setSelectedPolicies(new Set());
+    } else {
+      setSelectedPolicies(new Set(filteredPolicies.map(p => p.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedPolicies.size === 0) return;
+
+    const confirmDelete = confirm(`Deseja realmente excluir ${selectedPolicies.size} apólice(s) selecionada(s)?`);
+    if (!confirmDelete) return;
+
+    toast({
+      title: "⏳ Excluindo apólices",
+      description: `Excluindo ${selectedPolicies.size} apólice(s)...`,
+    });
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const policyId of selectedPolicies) {
+      try {
+        await onPolicyDelete(policyId);
+        successCount++;
+      } catch (error) {
+        errorCount++;
+        console.error(`Erro ao deletar apólice ${policyId}:`, error);
+      }
+    }
+
+    setSelectedPolicies(new Set());
+
+    if (errorCount === 0) {
+      toast({
+        title: "✅ Exclusão concluída",
+        description: `${successCount} apólice(s) excluída(s) com sucesso!`,
+      });
+    } else {
+      toast({
+        title: "⚠️ Exclusão parcial",
+        description: `${successCount} apólice(s) excluída(s), ${errorCount} falhou(ram)`,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Barra de ações em massa */}
+      {selectedPolicies.size > 0 && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <p className="font-medium text-blue-900">
+                  {selectedPolicies.size} apólice(s) selecionada(s)
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedPolicies(new Set())}
+                  className="border-blue-300 hover:bg-blue-100"
+                >
+                  Limpar seleção
+                </Button>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Excluir selecionadas
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filtros */}
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Filtros e Busca</CardTitle>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="select-all"
+                  checked={filteredPolicies.length > 0 && selectedPolicies.size === filteredPolicies.length}
+                  onCheckedChange={toggleAllPolicies}
+                />
+                <label
+                  htmlFor="select-all"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Selecionar todas
+                </label>
+              </div>
+              <CardTitle>Filtros e Busca</CardTitle>
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -383,12 +495,27 @@ O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegad
       {/* Lista de Apólices */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredPolicies.map((policy) => (
-          <Card key={policy.id} className="hover:shadow-lg transition-shadow">
+          <Card 
+            key={policy.id} 
+            className={`hover:shadow-lg transition-all ${
+              selectedPolicies.has(policy.id) 
+                ? 'ring-2 ring-blue-500 bg-blue-50/20' 
+                : ''
+            }`}
+          >
             <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{policy.name}</h3>
-                  <p className="text-sm text-gray-500">{policy.policyNumber}</p>
+              <div className="flex justify-between items-start gap-3">
+                <div className="flex items-start gap-3 flex-1">
+                  <Checkbox
+                    id={`policy-${policy.id}`}
+                    checked={selectedPolicies.has(policy.id)}
+                    onCheckedChange={() => togglePolicySelection(policy.id)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">{policy.name}</h3>
+                    <p className="text-sm text-gray-500">{policy.policyNumber}</p>
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2">
                   {getStatusBadge(policy)}
