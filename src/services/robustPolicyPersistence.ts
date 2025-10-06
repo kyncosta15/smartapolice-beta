@@ -173,26 +173,26 @@ export class RobustPolicyPersistence {
 
   /**
    * ENCONTRAR POLÍTICA EXISTENTE (UPSERT IDEMPOTENTE)
+   * Verifica se já existe uma apólice com mesmo número para o mesmo usuário
    */
   private static async findExistingPolicy(
     normalizedData: Partial<ParsedPolicyData>,
     userId: string
   ): Promise<any | null> {
     try {
-      console.log('🔍 Verificando política existente...');
+      console.log('🔍 Verificando política existente com critérios:');
+      console.log('  - userId:', userId);
+      console.log('  - seguradora:', normalizedData.insurer);
+      console.log('  - numero_apolice:', normalizedData.policyNumber);
       
-      // Chave única: user_id + seguradora + numero_apolice + (placa ou documento)
-      const identifier = normalizedData.vehicleDetails?.plate || 
-                        normalizedData.documento || 
-                        normalizedData.insuredName?.substring(0, 10) || '';
-
+      // BUSCA SIMPLIFICADA: user_id + seguradora + numero_apolice
+      // Isso garante que duplicatas sejam detectadas independente de placa
       const { data, error } = await supabase
         .from('policies')
         .select('*')
         .eq('user_id', userId)
         .eq('seguradora', normalizedData.insurer)
         .eq('numero_apolice', normalizedData.policyNumber)
-        .eq('placa', normalizedData.vehicleDetails?.plate || null)
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
@@ -201,12 +201,14 @@ export class RobustPolicyPersistence {
       }
 
       if (data) {
-        console.log('📋 Política existente encontrada:', data.id);
+        console.log('🔔 DUPLICATA ENCONTRADA!');
+        console.log('📋 ID da política existente:', data.id);
+        console.log('📋 Número da apólice:', data.numero_apolice);
+        return data;
       } else {
-        console.log('📋 Nenhuma política existente encontrada');
+        console.log('✅ Nenhuma duplicata - Criando nova apólice');
+        return null;
       }
-
-      return data;
     } catch (error) {
       console.error('❌ Erro ao verificar política existente:', error);
       throw error;
@@ -223,8 +225,12 @@ export class RobustPolicyPersistence {
     userId: string,
     file: File
   ): Promise<{ success: boolean; policyId?: string; errors?: string[]; isUpdate?: boolean }> {
-    console.log('🔄 Atualizando política existente:', existingPolicy.id);
-    console.log('📋 Apólice duplicada detectada - número:', normalizedData.policyNumber);
+    console.log('🔄 ========================================');
+    console.log('🔄 ATUALIZANDO POLÍTICA EXISTENTE (DUPLICATA)');
+    console.log('🔄 ========================================');
+    console.log('📋 ID da apólice:', existingPolicy.id);
+    console.log('📋 Número da apólice:', normalizedData.policyNumber);
+    console.log('📋 Nome:', normalizedData.name);
 
     try {
       // 1. Verificar campos confirmados
@@ -264,7 +270,10 @@ export class RobustPolicyPersistence {
       await this.updateCoverages(existingPolicy.id, normalizedData);
       await this.updateInstallments(existingPolicy.id, normalizedData, userId);
 
-      console.log('✅ Política atualizada com sucesso');
+      console.log('✅ ========================================');
+      console.log('✅ POLÍTICA ATUALIZADA COM SUCESSO!');
+      console.log('✅ isUpdate: TRUE - Modal deve aparecer');
+      console.log('✅ ========================================');
       return { success: true, policyId: existingPolicy.id, isUpdate: true };
 
     } catch (error) {
