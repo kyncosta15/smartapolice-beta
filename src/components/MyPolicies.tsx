@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +50,7 @@ export function MyPolicies() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies } = usePersistedPolicies();
   const { toast } = useToast();
@@ -154,6 +156,78 @@ export function MyPolicies() {
     console.log('❌ [handleCancelDelete] Deleção cancelada pelo usuário');
     setShowDeleteDialog(false);
     setPolicyToDelete(null);
+  };
+
+  // Funções de multiseleção
+  const togglePolicySelection = (policyId: string) => {
+    setSelectedPolicies(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(policyId)) {
+        newSet.delete(policyId);
+      } else {
+        newSet.add(policyId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleAllPolicies = () => {
+    if (selectedPolicies.size === currentPolicies.length && currentPolicies.length > 0) {
+      setSelectedPolicies(new Set());
+    } else {
+      setSelectedPolicies(new Set(currentPolicies.map(p => p.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedPolicies.size === 0) return;
+
+    const confirmDelete = confirm(
+      `Deseja realmente excluir ${selectedPolicies.size} apólice(s) selecionada(s)?\n\nEsta ação não pode ser desfeita.`
+    );
+    
+    if (!confirmDelete) return;
+
+    setIsDeleting(true);
+
+    toast({
+      title: "⏳ Excluindo apólices",
+      description: `Processando ${selectedPolicies.size} apólice(s)...`,
+    });
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const policyId of selectedPolicies) {
+      try {
+        const success = await deletePolicy(policyId);
+        if (success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      } catch (error) {
+        errorCount++;
+        console.error(`Erro ao deletar apólice ${policyId}:`, error);
+      }
+    }
+
+    setSelectedPolicies(new Set());
+    setIsDeleting(false);
+    await refreshPolicies();
+
+    if (errorCount === 0) {
+      toast({
+        title: "✅ Exclusão concluída",
+        description: `${successCount} apólice(s) excluída(s) com sucesso!`,
+      });
+    } else {
+      toast({
+        title: "⚠️ Exclusão parcial",
+        description: `${successCount} apólice(s) excluída(s), ${errorCount} falhou(ram)`,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleViewPolicy = (policy: PolicyWithStatus) => {
@@ -311,6 +385,39 @@ export function MyPolicies() {
         </div>
       </div>
 
+      {/* Barra de ações em massa */}
+      {selectedPolicies.size > 0 && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="py-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-4">
+                <p className="font-medium text-blue-900">
+                  {selectedPolicies.size} apólice(s) selecionada(s)
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedPolicies(new Set())}
+                  className="border-blue-300 hover:bg-blue-100"
+                >
+                  Limpar seleção
+                </Button>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Excluir selecionadas
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Visualização em Cards */}
       {viewMode === 'cards' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
@@ -422,6 +529,12 @@ export function MyPolicies() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={currentPolicies.length > 0 && selectedPolicies.size === currentPolicies.length}
+                      onCheckedChange={toggleAllPolicies}
+                    />
+                  </TableHead>
                   <TableHead>Nome</TableHead>
                   <TableHead>Seguradora</TableHead>
                   <TableHead>Número</TableHead>
@@ -433,7 +546,18 @@ export function MyPolicies() {
               </TableHeader>
               <TableBody>
                 {currentPolicies.map((policy) => (
-                  <TableRow key={policy.id} className="hover:bg-muted/50">
+                  <TableRow 
+                    key={policy.id} 
+                    className={`hover:bg-muted/50 ${
+                      selectedPolicies.has(policy.id) ? 'bg-blue-50/50' : ''
+                    }`}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedPolicies.has(policy.id)}
+                        onCheckedChange={() => togglePolicySelection(policy.id)}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{toText(policy.name)}</TableCell>
                     <TableCell>{toText(policy.insurer)}</TableCell>
                     <TableCell className="font-mono text-sm">{policy.policyNumber}</TableCell>
