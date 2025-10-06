@@ -13,7 +13,10 @@ Deno.serve(async (req) => {
   try {
     const { pdfPath } = await req.json()
     
+    console.log('📥 Requisição de download recebida para:', pdfPath)
+    
     if (!pdfPath) {
+      console.error('❌ pdfPath não fornecido')
       return new Response(
         JSON.stringify({ error: 'pdfPath é obrigatório' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -26,19 +29,30 @@ Deno.serve(async (req) => {
       Deno.env.get('SERVICE_ROLE_KEY') ?? ''
     )
 
+    console.log('🔍 Baixando arquivo do bucket pdfs:', pdfPath)
+
     // Baixar arquivo do storage
-    const downloadResult = await (supabaseAdmin.storage
+    const { data: fileData, error } = await supabaseAdmin.storage
       .from('pdfs')
-      .download(pdfPath) as any)
-    const { data: fileData, error } = downloadResult
+      .download(pdfPath)
 
     if (error) {
-      console.error('Erro ao baixar arquivo:', error)
+      console.error('❌ Erro ao baixar arquivo:', error)
       return new Response(
-        JSON.stringify({ error: 'Arquivo não encontrado' }),
+        JSON.stringify({ error: 'Arquivo não encontrado', details: error.message }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    if (!fileData) {
+      console.error('❌ Arquivo vazio retornado do storage')
+      return new Response(
+        JSON.stringify({ error: 'Arquivo está vazio' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('✅ Arquivo baixado com sucesso, tamanho:', fileData.size)
 
     // Retornar arquivo como blob
     return new Response(fileData, {

@@ -482,6 +482,8 @@ export function usePersistedPolicies() {
 
   // Baixar PDF de uma apólice
   const downloadPDF = async (policyId: string, policyName: string) => {
+    console.log('📥 Iniciando download do PDF:', policyId, policyName);
+    
     toast({
       title: "⏳ Download iniciado",
       description: `Baixando ${policyName}`,
@@ -490,6 +492,8 @@ export function usePersistedPolicies() {
     const downloadUrl = await getPDFDownloadUrl(policyId);
     
     if (downloadUrl) {
+      console.log('✅ URL do PDF obtida, iniciando download');
+      
       // Criar link temporário para download
       const link = document.createElement('a');
       link.href = downloadUrl;
@@ -497,14 +501,28 @@ export function usePersistedPolicies() {
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
+      
+      // Aguardar 1 segundo antes de limpar
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       document.body.removeChild(link);
       
-      // Limpar blob URL após download
-      setTimeout(() => URL.revokeObjectURL(downloadUrl), 100);
+      // Limpar blob URL após delay maior
+      setTimeout(() => {
+        console.log('🧹 Limpando blob URL');
+        URL.revokeObjectURL(downloadUrl);
+      }, 3000);
       
       toast({
         title: "✅ Download Concluído",
         description: `${policyName} foi baixado com sucesso`,
+      });
+    } else {
+      console.error('❌ Falha ao obter URL do PDF');
+      toast({
+        title: "❌ Erro no Download",
+        description: "Não foi possível obter o arquivo PDF",
+        variant: "destructive",
       });
     }
   };

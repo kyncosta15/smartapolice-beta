@@ -75,6 +75,14 @@ export class PolicyPersistenceService {
   // Salvar arquivo PDF no storage
   static async uploadPDFToStorage(file: File, userId: string): Promise<string | null> {
     try {
+      // Validar arquivo
+      if (!file || file.size === 0) {
+        console.error('❌ Arquivo inválido ou vazio');
+        return null;
+      }
+
+      console.log(`📤 Preparando upload - Arquivo: ${file.name}, Tamanho: ${file.size} bytes`);
+
       // Sanitizar nome do arquivo - remover espaços e caracteres especiais
       const sanitizedFileName = file.name
         .replace(/\s+/g, '_')
@@ -85,11 +93,13 @@ export class PolicyPersistenceService {
       
       console.log(`📤 Enviando PDF para storage: ${fileName}`);
       
+      // Fazer upload com o arquivo original (não converter)
       const { data, error } = await supabase.storage
         .from('pdfs')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: 'application/pdf'
         });
 
       if (error) {
@@ -98,6 +108,19 @@ export class PolicyPersistenceService {
       }
 
       console.log(`✅ PDF salvo no storage: ${data.path}`);
+      
+      // Verificar se arquivo foi salvo corretamente
+      const { data: checkData, error: checkError } = await supabase.storage
+        .from('pdfs')
+        .list(userId);
+      
+      if (!checkError) {
+        const uploadedFile = checkData?.find(f => f.name === `${Date.now()}_${sanitizedFileName}`.split('/').pop());
+        if (uploadedFile) {
+          console.log(`✅ Verificação: Arquivo existe no bucket, tamanho: ${uploadedFile.metadata?.size || 'desconhecido'}`);
+        }
+      }
+      
       return data.path;
       
     } catch (error) {
@@ -557,6 +580,8 @@ export class PolicyPersistenceService {
 
   static async getPDFDownloadUrl(pdfPath: string): Promise<string | null> {
     try {
+      console.log('🔍 Gerando URL de download para:', pdfPath);
+      
       // Usar Edge Function que tem acesso com service role
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -564,6 +589,8 @@ export class PolicyPersistenceService {
         console.error('❌ Usuário não autenticado');
         return null;
       }
+
+      console.log('📡 Chamando edge function download-pdf');
 
       const response = await fetch(`https://jhvbfvqhuemuvwgqpskz.supabase.co/functions/v1/download-pdf`, {
         method: 'POST',
@@ -575,13 +602,24 @@ export class PolicyPersistenceService {
       });
 
       if (!response.ok) {
-        console.error('❌ Erro na edge function:', response.status);
+        const errorText = await response.text();
+        console.error('❌ Erro na edge function:', response.status, errorText);
         return null;
       }
 
       // Criar blob URL do PDF retornado
       const blob = await response.blob();
+      
+      console.log('📦 Blob recebido - Tamanho:', blob.size, 'Tipo:', blob.type);
+      
+      if (blob.size === 0) {
+        console.error('❌ Blob está vazio!');
+        return null;
+      }
+      
       const blobUrl = URL.createObjectURL(blob);
+      console.log('✅ Blob URL criada:', blobUrl);
+      
       return blobUrl;
     } catch (error) {
       console.error('❌ Erro ao gerar URL de download:', error);
