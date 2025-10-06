@@ -139,7 +139,6 @@ export class BatchFileProcessor {
             // Salvar no banco usando sistema robusto
             const relatedFile = files[Math.min(index, files.length - 1)];
             if (relatedFile) {
-              alert(`💾 SALVANDO: ${parsedPolicy.policyNumber}`);
               console.log(`💾 💾 💾 ============================================`);
               console.log(`💾 💾 💾 SALVANDO APÓLICE: ${parsedPolicy.name}`);
               console.log(`💾 💾 💾 Número: ${parsedPolicy.policyNumber}`);
@@ -148,7 +147,6 @@ export class BatchFileProcessor {
               const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
               const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, resolvedUserId);
               
-              alert(`📊 RESULTADO: success=${saveResult.success}, isUpdate=${saveResult.isUpdate}`);
               console.log(`📊 📊 📊 ================================================`);
               console.log(`📊 📊 📊 RESULTADO DO SAVE POLICY ROBUST:`);
               console.log(`📊 📊 📊 ================================================`);
@@ -165,7 +163,6 @@ export class BatchFileProcessor {
                 console.log(`${action} no banco: ${parsedPolicy.name}`);
                 
                 // SEMPRE chamar callback com informações da apólice salva
-                alert(`🔔 VERIFICANDO: isUpdate=${saveResult.isUpdate}`);
                 console.log('🔔 🔔 🔔 ============================================');
                 console.log('🔔 🔔 🔔 VERIFICANDO SE É DUPLICATA...');
                 console.log('🔔 isUpdate:', saveResult.isUpdate);
@@ -174,7 +171,6 @@ export class BatchFileProcessor {
                 
                 // Se for atualização, notificar com informações da duplicata
                 if (saveResult.isUpdate === true) {
-                  alert('🚨 DUPLICATA DETECTADA! Chamando callback...');
                   console.log('🔔🔔🔔 🔔🔔🔔 🔔🔔🔔 ================================================');
                   console.log('🔔🔔🔔 🔔🔔🔔 🔔🔔🔔 DUPLICATA CONFIRMADA! CHAMANDO CALLBACK...');
                   console.log('🔔🔔🔔 🔔🔔🔔 🔔🔔🔔 ================================================');
@@ -345,7 +341,7 @@ export class BatchFileProcessor {
     const premio = SafeDataExtractor.extractFinancialValue(originalData?.premio) || (1200 + Math.random() * 1800);
     
     const mockPolicyData: ParsedPolicyData = {
-      id: crypto.randomUUID(),
+      id: window.crypto.randomUUID(),
       name: seguradoName,
       type: 'auto',
       insurer: seguradoraName,

@@ -131,7 +131,7 @@ export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => 
   const custoMensal = Number(data.custo_mensal) || valorParcela;
   
   return {
-    id: crypto.randomUUID(),
+    id: window.crypto.randomUUID(),
     name: data.segurado || 'Segurado não informado',
     type: normalizedType,
     insurer: data.seguradora || 'Seguradora não informada',
@@ -198,7 +198,7 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File, us
   const custoMensal = Number(data.custo_mensal) || valorParcela;
   
   const convertedPolicy: ParsedPolicyData = {
-    id: crypto.randomUUID(),
+    id: window.crypto.randomUUID(),
     name: data.segurado || fileName.replace('.pdf', ''),
     type: normalizedType,
     insurer: data.seguradora || 'Seguradora não informada',

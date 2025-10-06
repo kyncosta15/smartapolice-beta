@@ -23,7 +23,7 @@ interface StructuredData {
 export const convertStructuredDataToPolicy = (data: StructuredData): ParsedPolicyData => {
 
   return {
-    id: crypto.randomUUID(),
+    id: window.crypto.randomUUID(),
     name: data.insuredName || 'Segurado não informado',
     type: data.policyType || 'auto',
     insurer: data.insurer || 'Seguradora não informada',
@@ -59,7 +59,7 @@ export const convertStructuredDataToPolicy = (data: StructuredData): ParsedPolic
 
 export const convertStructuredData = (data: any, fileName: string, file: File): ParsedPolicyData => {
   return {
-    id: crypto.randomUUID(),
+    id: window.crypto.randomUUID(),
     name: data.informacoes_gerais?.segurado || fileName.replace('.pdf', ''),
     type: 'auto',
     insurer: data.seguradora || 'Seguradora não informada',

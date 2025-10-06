@@ -1,6 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
-import crypto from 'crypto';
 
 /**
  * SISTEMA ROBUSTO DE PERSISTÊNCIA DE APÓLICES
@@ -105,9 +104,6 @@ export class RobustPolicyPersistence {
       console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'N/A');
       console.error('❌ Tipo do erro:', typeof error);
       console.error('❌ Erro completo:', JSON.stringify(error, null, 2));
-      
-      // ALERT para debug visual
-      alert(`❌ ERRO AO SALVAR: ${error instanceof Error ? error.message : 'Erro desconhecido'}\n\nStack: ${error instanceof Error ? error.stack : 'N/A'}`);
       
       return { success: false, errors: [errorMessage], isUpdate: false };
     }
@@ -314,7 +310,7 @@ export class RobustPolicyPersistence {
       console.log('📄 PDF uploaded:', pdfPath);
 
       // 2. Preparar dados para inserção
-      const policyId = crypto.randomUUID();
+      const policyId = window.crypto.randomUUID();
       const insertData = {
         id: policyId,
         user_id: userId,
@@ -372,7 +368,6 @@ export class RobustPolicyPersistence {
           hint: error.hint,
           code: error.code
         });
-        alert(`❌ ERRO AO INSERIR: ${error.message}\nCódigo: ${error.code}\nDetalhes: ${error.details || 'N/A'}`);
         return { success: false, errors: [error.message], isUpdate: false };
       }
 
@@ -387,7 +382,6 @@ export class RobustPolicyPersistence {
       const errorMessage = `Erro ao criar política: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;
       console.error('❌❌❌ Erro ao criar política:', error);
       console.error('❌ Stack:', error instanceof Error ? error.stack : 'N/A');
-      alert(`❌ ERRO AO CRIAR: ${errorMessage}`);
       return { success: false, errors: [errorMessage], isUpdate: false };
     }
   }
@@ -432,10 +426,17 @@ export class RobustPolicyPersistence {
   // MÉTODOS AUXILIARES
 
   private static async generateFileHash(file: File): Promise<string> {
-    const arrayBuffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      // Usar Web Crypto API disponível no browser
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (error) {
+      console.error('❌ Erro ao gerar hash do arquivo:', error);
+      // Fallback: usar timestamp + nome do arquivo como hash alternativo
+      return `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+    }
   }
 
   private static normalizeMonetaryValue(value: any): number {

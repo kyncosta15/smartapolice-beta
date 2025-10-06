@@ -343,7 +343,7 @@ export class PolicyPersistenceService {
 
   // MÉTODO MELHORADO: Carregar e processar apólices do usuário - USA VIEW SEGURA
   static async loadUserPolicies(userId: string): Promise<ParsedPolicyData[]> {
-    const sessionId = crypto.randomUUID();
+    const sessionId = window.crypto.randomUUID();
     const { normalizePolicy } = await import('@/lib/policies');
     try {
       console.log(`📖 [loadUserPolicies-${sessionId}] Carregando apólices do usuário: ${userId}`);

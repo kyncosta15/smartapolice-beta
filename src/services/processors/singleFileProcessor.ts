@@ -41,7 +41,7 @@ export async function processSingleFile(file: File): Promise<ParsedPolicyData | 
 
 function createFallbackPolicy(file: File): ParsedPolicyData {
   const mockPolicyData: ParsedPolicyData = {
-    id: crypto.randomUUID(),
+    id: window.crypto.randomUUID(),
     name: `Apólice ${file.name}`,
     type: 'auto',
     insurer: 'Seguradora Exemplo',
