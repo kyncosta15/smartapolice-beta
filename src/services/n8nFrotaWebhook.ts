@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 
-const N8N_WEBHOOK_URL = 'https://rcorpoficial.app.n8n.cloud/webhook-test/testewebhook1';
+const N8N_WEBHOOK_URL = 'https://rcorpoficial.app.n8n.cloud/webhook-test/upload-arquivo';
 
 export interface N8NFrotaResponse {
   success: boolean;
