@@ -52,7 +52,7 @@ export function MyPolicies() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
   const itemsPerPage = 10;
-  const { policies, updatePolicy, deletePolicy, refreshPolicies } = usePersistedPolicies();
+  const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
   const { toast } = useToast();
   
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
@@ -247,30 +247,10 @@ export function MyPolicies() {
       return;
     }
 
-    try {
-      const response = await fetch(originalPolicy.pdfPath);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${policy.name}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Download iniciado",
-        description: `Baixando ${policy.name}`,
-      });
-    } catch (error) {
-      console.error('Erro ao baixar arquivo:', error);
-      toast({
-        title: "Erro no download",
-        description: "Não foi possível baixar o arquivo",
-        variant: "destructive",
-      });
-    }
+    console.log('📥 Iniciando download via hook para:', policy.name);
+    
+    // Usar a função do hook que já tem toda a lógica correta
+    await downloadPDF(policy.id, policy.name);
   };
 
   const handleEditPolicy = (policy: PolicyWithStatus) => {
