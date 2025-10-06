@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FilePlus, Cloud, Clock } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,18 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   const { user } = useAuth();
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
   const [duplicateInfo, setDuplicateInfo] = useState<DuplicateInfo | null>(null);
+
+  // DEBUG: Log sempre que duplicateInfo mudar
+  useEffect(() => {
+    console.log('🔔🔔🔔 STATE duplicateInfo MUDOU:', duplicateInfo);
+    if (duplicateInfo) {
+      console.log('✅✅✅ DUPLICATA INFO SETADA NO STATE:', {
+        policyNumber: duplicateInfo.policyNumber,
+        policyId: duplicateInfo.policyId,
+        policyName: duplicateInfo.policyName
+      });
+    }
+  }, [duplicateInfo]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!acceptedFiles || acceptedFiles.length === 0) {
@@ -152,25 +164,47 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
 
   return (
     <>
-      {/* Modal de Duplicata - SEMPRE VISÍVEL quando duplicateInfo existe */}
+      {/* DEBUG VISUAL - Indicador permanente quando duplicata é detectada */}
+      {duplicateInfo && (
+        <div className="fixed top-4 right-4 z-[9999] bg-amber-500 text-white p-4 rounded-lg shadow-2xl border-4 border-white animate-pulse">
+          <div className="font-bold text-lg">🔔 DUPLICATA DETECTADA!</div>
+          <div className="text-sm">{duplicateInfo.policyNumber}</div>
+          <button 
+            onClick={() => setDuplicateInfo(null)}
+            className="mt-2 bg-white text-amber-500 px-3 py-1 rounded font-semibold hover:bg-amber-100"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
+
+      {/* Modal de Duplicata com backdrop */}
       {duplicateInfo && (
         <>
-          <div className="fixed inset-0 z-[999] bg-black/50" onClick={() => setDuplicateInfo(null)} />
-          <DuplicatePolicyNotification
-            duplicateInfo={duplicateInfo}
-            onView={() => {
-              console.log('👁️ Botão OK clicado no modal de duplicata');
-              toast({
-                title: "📋 Apólice Atualizada",
-                description: `A apólice ${duplicateInfo?.policyNumber} está disponível na sua lista de apólices.`,
-              });
+          <div 
+            className="fixed inset-0 z-[998] bg-black/70 backdrop-blur-sm" 
+            onClick={() => {
+              console.log('🖱️ Backdrop clicado');
               setDuplicateInfo(null);
-            }}
-            onDismiss={() => {
-              console.log('❌ Modal de duplicata fechado');
-              setDuplicateInfo(null);
-            }}
+            }} 
           />
+          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+            <DuplicatePolicyNotification
+              duplicateInfo={duplicateInfo}
+              onView={() => {
+                console.log('👁️ Botão OK clicado no modal de duplicata');
+                toast({
+                  title: "📋 Apólice Atualizada",
+                  description: `A apólice ${duplicateInfo?.policyNumber} está disponível na sua lista de apólices.`,
+                });
+                setDuplicateInfo(null);
+              }}
+              onDismiss={() => {
+                console.log('❌ Modal de duplicata fechado');
+                setDuplicateInfo(null);
+              }}
+            />
+          </div>
         </>
       )}
 
@@ -186,7 +220,22 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div 
+          {/* BOTÃO DE TESTE - Para testar o modal sem fazer upload */}
+          <button
+            onClick={() => {
+              console.log('🧪 Botão de teste clicado - Simulando duplicata');
+              setDuplicateInfo({
+                policyNumber: 'TESTE-123456',
+                policyId: 'test-id',
+                policyName: 'Apólice de Teste'
+              });
+            }}
+            className="mb-4 w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-semibold"
+          >
+            🧪 TESTE: Simular Duplicata
+          </button>
+
+          <div
             {...getRootProps()} 
             className={`relative border-2 border-dashed rounded-md p-6 cursor-pointer transition-colors ${
               isProcessingBatch 
