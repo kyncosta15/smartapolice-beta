@@ -28,31 +28,45 @@ export function DuplicatePolicyNotification({
   onView,
   onDismiss,
 }: DuplicatePolicyNotificationProps) {
-  if (!duplicateInfo) return null;
+  console.log('🔍 DuplicatePolicyNotification renderizado com:', duplicateInfo);
+  
+  if (!duplicateInfo) {
+    console.log('⚠️ duplicateInfo é null, não renderizando modal');
+    return null;
+  }
+
+  console.log('✅ Renderizando modal de duplicata!');
 
   return (
-    <AlertDialog open={!!duplicateInfo} onOpenChange={(open) => !open && onDismiss()}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <span className="text-2xl">📋</span>
-            Apólice Duplicada Detectada
+    <AlertDialog open={!!duplicateInfo} onOpenChange={(open) => {
+      console.log('📋 Modal mudou estado:', open);
+      if (!open) onDismiss();
+    }}>
+      <AlertDialogContent className="z-[100] max-w-md">
+        <AlertDialogHeader className="space-y-3">
+          <AlertDialogTitle className="flex items-center gap-3 text-xl">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <span>Apólice Duplicada Detectada</span>
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>
-              A apólice <strong>{duplicateInfo.policyNumber}</strong> já existe no sistema.
+          <AlertDialogDescription className="space-y-3 text-base">
+            <div className="rounded-lg bg-amber-50 p-4 border border-amber-200">
+              <p className="font-medium text-amber-900">
+                A apólice <strong className="text-amber-700">{duplicateInfo.policyNumber}</strong> já existe no sistema.
+              </p>
+            </div>
+            <p className="text-gray-700">
+              Os dados foram <strong>atualizados</strong> com as novas informações do arquivo enviado.
             </p>
-            <p>
-              Os dados foram atualizados com as novas informações do arquivo enviado.
-            </p>
-            <p className="text-sm text-muted-foreground mt-4">
-              A apólice atualizada está disponível na sua lista de apólices.
+            <p className="text-sm text-muted-foreground">
+              ✅ A apólice atualizada está disponível na sua lista de apólices.
             </p>
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={onDismiss}>
-            Não, continuar
+        <AlertDialogFooter className="gap-2 sm:gap-2">
+          <AlertDialogCancel onClick={onDismiss} className="mt-0">
+            Fechar
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onView}

@@ -144,12 +144,32 @@ export class BatchFileProcessor {
                 console.log(`${action} no banco: ${parsedPolicy.name}`);
                 
                 // Se for atualização, notificar com informações da duplicata
-                if (saveResult.isUpdate && this.onDuplicateDetected) {
-                  this.onDuplicateDetected({
+                if (saveResult.isUpdate) {
+                  console.log('🔔 DUPLICATA DETECTADA! Chamando callback...');
+                  console.log('📋 Info da duplicata:', {
                     policyNumber: parsedPolicy.policyNumber,
-                    policyId: saveResult.policyId || '',
+                    policyId: saveResult.policyId,
                     policyName: parsedPolicy.name
                   });
+                  
+                  // Toast imediato para feedback visual
+                  this.toast({
+                    title: "📋 Apólice Duplicada Detectada",
+                    description: `A apólice ${parsedPolicy.policyNumber} foi atualizada com os novos dados`,
+                    duration: 5000,
+                  });
+                  
+                  // Chamar callback se disponível
+                  if (this.onDuplicateDetected) {
+                    console.log('✅ Callback onDuplicateDetected existe, chamando...');
+                    this.onDuplicateDetected({
+                      policyNumber: parsedPolicy.policyNumber,
+                      policyId: saveResult.policyId || '',
+                      policyName: parsedPolicy.name
+                    });
+                  } else {
+                    console.warn('⚠️ Callback onDuplicateDetected NÃO foi fornecido');
+                  }
                 }
               } else {
                 console.warn(`⚠️ Falha ao salvar apólice no banco: ${parsedPolicy.name}`, saveResult.errors);

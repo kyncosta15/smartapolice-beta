@@ -62,8 +62,11 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         toast,
         (info) => {
           // Callback quando duplicata é detectada
-          console.log('📋 Duplicata detectada:', info);
+          console.log('🔔 CALLBACK DE DUPLICATA CHAMADO NO ENHANCED PDF UPLOAD!');
+          console.log('📋 Info recebida:', info);
+          console.log('📋 Setando duplicateInfo no state...');
           setDuplicateInfo(info);
+          console.log('✅ duplicateInfo setado!');
         }
       );
 
