@@ -482,6 +482,11 @@ export function usePersistedPolicies() {
 
   // Baixar PDF de uma apólice
   const downloadPDF = async (policyId: string, policyName: string) => {
+    toast({
+      title: "⏳ Download iniciado",
+      description: `Baixando ${policyName}`,
+    });
+
     const downloadUrl = await getPDFDownloadUrl(policyId);
     
     if (downloadUrl) {
@@ -489,13 +494,17 @@ export function usePersistedPolicies() {
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = `${policyName}.pdf`;
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
+      // Limpar blob URL após download
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 100);
+      
       toast({
-        title: "📥 Download Iniciado",
-        description: `Baixando arquivo: ${policyName}.pdf`,
+        title: "✅ Download Concluído",
+        description: `${policyName} foi baixado com sucesso`,
       });
     }
   };

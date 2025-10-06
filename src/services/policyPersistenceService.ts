@@ -557,11 +557,32 @@ export class PolicyPersistenceService {
 
   static async getPDFDownloadUrl(pdfPath: string): Promise<string | null> {
     try {
-      const { data } = await supabase.storage
-        .from('pdfs')
-        .createSignedUrl(pdfPath, 3600);
+      // Usar Edge Function que tem acesso com service role
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        console.error('❌ Usuário não autenticado');
+        return null;
+      }
 
-      return data?.signedUrl || null;
+      const response = await fetch(`https://jhvbfvqhuemuvwgqpskz.supabase.co/functions/v1/download-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ pdfPath })
+      });
+
+      if (!response.ok) {
+        console.error('❌ Erro na edge function:', response.status);
+        return null;
+      }
+
+      // Criar blob URL do PDF retornado
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      return blobUrl;
     } catch (error) {
       console.error('❌ Erro ao gerar URL de download:', error);
       return null;
