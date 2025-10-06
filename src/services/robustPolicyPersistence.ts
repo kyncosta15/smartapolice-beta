@@ -101,8 +101,15 @@ export class RobustPolicyPersistence {
 
     } catch (error) {
       const errorMessage = `Erro no fluxo de persistência: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;
-      console.error('❌', errorMessage);
-      return { success: false, errors: [errorMessage] };
+      console.error('❌❌❌ [savePolicyRobust] ERRO CRÍTICO:', error);
+      console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'N/A');
+      console.error('❌ Tipo do erro:', typeof error);
+      console.error('❌ Erro completo:', JSON.stringify(error, null, 2));
+      
+      // ALERT para debug visual
+      alert(`❌ ERRO AO SALVAR: ${error instanceof Error ? error.message : 'Erro desconhecido'}\n\nStack: ${error instanceof Error ? error.stack : 'N/A'}`);
+      
+      return { success: false, errors: [errorMessage], isUpdate: false };
     }
   }
 
@@ -358,8 +365,15 @@ export class RobustPolicyPersistence {
         .single();
 
       if (error) {
-        console.error('❌ Erro ao inserir política:', error);
-        return { success: false, errors: [error.message] };
+        console.error('❌❌❌ Erro ao inserir política:', error);
+        console.error('❌ Detalhes do erro:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        alert(`❌ ERRO AO INSERIR: ${error.message}\nCódigo: ${error.code}\nDetalhes: ${error.details || 'N/A'}`);
+        return { success: false, errors: [error.message], isUpdate: false };
       }
 
       // 4. Salvar coberturas e parcelas
@@ -371,8 +385,10 @@ export class RobustPolicyPersistence {
 
     } catch (error) {
       const errorMessage = `Erro ao criar política: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;
-      console.error('❌', errorMessage);
-      return { success: false, errors: [errorMessage] };
+      console.error('❌❌❌ Erro ao criar política:', error);
+      console.error('❌ Stack:', error instanceof Error ? error.stack : 'N/A');
+      alert(`❌ ERRO AO CRIAR: ${errorMessage}`);
+      return { success: false, errors: [errorMessage], isUpdate: false };
     }
   }
 
