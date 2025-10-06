@@ -74,6 +74,11 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       
       console.log(`🎉 Processamento completo! ${allResults.length} apólices extraídas e salvas`);
       
+      // Sempre notificar o componente pai para recarregar os dados
+      allResults.forEach(policy => {
+        onPolicyExtracted(policy);
+      });
+      
       if (allResults.length > 0) {
         toast({
           title: "🎉 Upload Concluído com Sucesso",
