@@ -74,11 +74,27 @@ export class DynamicPDFExtractor {
 
         console.log(`✅ Dados extraídos de ${file.name}:`, data);
         
+        // Verificar se é array ou objeto único
+        const isArray = Array.isArray(data);
+        const resultArray = isArray ? data : [data];
+        
+        console.log(`📊 Tipo de resposta do N8N: ${isArray ? 'ARRAY' : 'OBJETO ÚNICO'}`);
+        console.log(`📊 Total de apólices retornadas pelo N8N: ${resultArray.length}`);
+        
+        if (resultArray.length > 1) {
+          console.log(`🎉 MÚLTIPLAS APÓLICES DETECTADAS NO PDF "${file.name}"`);
+          resultArray.forEach((policy, idx) => {
+            console.log(`  ${idx + 1}. ${policy.segurado || 'Nome não identificado'} - ${policy.numero_apolice || 'Sem número'}`);
+          });
+        } else {
+          console.log(`ℹ️ Apenas UMA apólice detectada no PDF "${file.name}"`);
+        }
+        
         if (!data || (Array.isArray(data) && data.length === 0)) {
           throw new Error(`Dados vazios retornados para ${file.name}`);
         }
 
-        return Array.isArray(data) ? data : [data];
+        return resultArray;
 
       } catch (error) {
         console.error(`❌ Tentativa ${attempt} falhou para ${file.name}:`, error);
