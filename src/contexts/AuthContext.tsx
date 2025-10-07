@@ -23,6 +23,7 @@ interface UserProfile {
   phone?: string;
   department?: string;
   is_active: boolean;
+  is_admin: boolean;
 }
 
 interface AuthContextType {
@@ -103,6 +104,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
       
+      // Buscar is_admin da tabela user_profiles
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('is_admin')
+        .eq('id', userId)
+        .maybeSingle();
+      
       // Construir profile a partir dos dados da tabela users
       const userProfile: UserProfile = {
         id: data.id,
@@ -111,7 +119,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: (data.role || 'cliente') as UserProfile['role'],
         company: data.company,
         phone: data.phone,
-        is_active: data.status === 'active'
+        is_active: data.status === 'active',
+        is_admin: profileData?.is_admin || false
       };
       
       console.log('✅ Perfil encontrado:', userProfile);

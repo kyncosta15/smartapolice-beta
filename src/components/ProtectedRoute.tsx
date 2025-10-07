@@ -55,15 +55,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Check role permissions - aceitar tanto 'admin' quanto 'administrador'
+  // Check role permissions
   const userRole = profile.role;
+  const isAdmin = profile.is_admin === true;
+  
   const hasAccess = requiredRoles.length === 0 || 
     requiredRoles.some(role => {
-      // Normalizar roles para aceitar variações
-      if ((role === 'admin' || role === 'administrador') && 
-          (userRole === 'admin' || userRole === 'administrador')) {
-        return true;
+      // Para roles de admin, verificar is_admin flag (usado nas RLS policies)
+      if (role === 'admin' || role === 'administrador') {
+        return isAdmin;
       }
+      // Para outras roles, verificar profile.role
       return userRole === role;
     });
 
@@ -76,7 +78,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             Você não tem permissão para acessar esta página.
           </p>
           <p className="text-sm text-muted-foreground">
-            Seu perfil: {userRole}
+            Seu perfil: {userRole} {isAdmin ? '(Admin)' : ''}
           </p>
           <p className="text-sm text-muted-foreground">
             Perfil necessário: {requiredRoles.join(', ')}
