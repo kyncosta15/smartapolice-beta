@@ -2820,6 +2820,10 @@ export type Database = {
         Args: { record_empresa_id: string }
         Returns: boolean
       }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       limpar_dados_usuario_teste: {
         Args: Record<PropertyKey, never>
         Returns: Json
