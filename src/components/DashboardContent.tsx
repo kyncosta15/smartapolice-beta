@@ -39,7 +39,6 @@ import {
 
 export function DashboardContent() {
   const { user } = useAuth();
-  const { profile, loading: profileLoading } = useUserProfile();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -52,30 +51,6 @@ export function DashboardContent() {
   const { toast } = useToast();
   const { progressToast } = useProgressToast();
   const [lastRefresh, setLastRefresh] = useState<number>(Date.now());
-
-  // Redirecionar admins automaticamente para o painel admin
-  useEffect(() => {
-    if (!profileLoading && profile?.is_admin === true) {
-      navigate('/admin', { replace: true });
-    }
-  }, [profile, profileLoading, navigate]);
-
-  // Mostrar loading enquanto verifica se é admin
-  if (profileLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Se for admin, não renderiza nada (vai redirecionar)
-  if (profile?.is_admin === true) {
-    return null;
-  }
 
   // Hook para persistência de apólices
   const { 

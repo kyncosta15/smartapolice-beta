@@ -5,8 +5,8 @@ import { useAdminMetrics } from '@/hooks/useAdminMetrics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, AlertCircle, TrendingUp, Building2, Filter } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { FileText, AlertCircle, TrendingUp, Building2, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { CompanySummary } from '@/types/admin';
 
@@ -16,20 +16,26 @@ export default function AdminDashboardPage() {
   const { metrics, companies, loading } = useAdminMetrics();
   const [period, setPeriod] = useState<Period>('30');
   const [selectedCompany, setSelectedCompany] = useState<CompanySummary | null>(null);
-  const [filterCompanyId, setFilterCompanyId] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Filtrar empresas para o select - antes dos early returns
+  // Filtrar empresas e veículos por termo de busca - antes dos early returns
   const filteredCompanies = useMemo(() => {
-    if (filterCompanyId === 'all') return companies;
-    return companies.filter(c => c.empresa_id === filterCompanyId);
-  }, [companies, filterCompanyId]);
+    if (!searchTerm.trim()) return companies;
+    const term = searchTerm.toLowerCase();
+    return companies.filter(c => 
+      c.empresa_nome.toLowerCase().includes(term) ||
+      c.empresa_id.toLowerCase().includes(term)
+    );
+  }, [companies, searchTerm]);
 
-  // Filtrar veículos por empresa - antes dos early returns
+  // Filtrar veículos por empresas filtradas - antes dos early returns
   const filteredVehicles = useMemo(() => {
     if (!metrics) return [];
-    if (filterCompanyId === 'all') return metrics.veiculos_por_empresa;
-    return metrics.veiculos_por_empresa.filter(v => v.empresa_id === filterCompanyId);
-  }, [metrics, filterCompanyId]);
+    if (!searchTerm.trim()) return metrics.veiculos_por_empresa;
+    
+    const filteredIds = filteredCompanies.map(c => c.empresa_id);
+    return metrics.veiculos_por_empresa.filter(v => filteredIds.includes(v.empresa_id));
+  }, [metrics, searchTerm, filteredCompanies]);
 
   if (loading) {
     return (
@@ -57,21 +63,17 @@ export default function AdminDashboardPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-3xl font-bold">Visão Geral do Sistema</h2>
           <div className="flex flex-col sm:flex-row gap-3">
-            {/* Filtro por Empresa */}
-            <Select value={filterCompanyId} onValueChange={setFilterCompanyId}>
-              <SelectTrigger className="w-full sm:w-[280px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filtrar por empresa" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Empresas</SelectItem>
-                {companies.map((company) => (
-                  <SelectItem key={company.empresa_id} value={company.empresa_id}>
-                    {company.empresa_nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Busca por Empresa */}
+            <div className="relative w-full sm:w-[280px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Buscar empresa..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
 
             <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
               <TabsList>
@@ -84,40 +86,40 @@ export default function AdminDashboardPage() {
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
+          <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background border-blue-200 dark:border-blue-900">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Apólices Total</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metrics.apolices_total}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-red-50 to-white dark:from-red-950/20 dark:to-background border-red-200 dark:border-red-900">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Sinistros Total</CardTitle>
-              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metrics.sinistros_total}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-orange-50 to-white dark:from-orange-950/20 dark:to-background border-orange-200 dark:border-orange-900">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Assistências Total</CardTitle>
-              <AlertCircle className="h-4 w-4 text-orange-600" />
+              <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metrics.assistencias_total}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-background border-purple-200 dark:border-purple-900">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Empresas</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <Building2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metrics.veiculos_por_empresa.length}</div>
@@ -191,9 +193,9 @@ export default function AdminDashboardPage() {
           <CardHeader>
             <CardTitle>
               Veículos por Conta
-              {filterCompanyId !== 'all' && (
+              {searchTerm && (
                 <span className="text-sm font-normal text-muted-foreground ml-2">
-                  (Filtrado)
+                  ({filteredVehicles.length} resultados)
                 </span>
               )}
             </CardTitle>
