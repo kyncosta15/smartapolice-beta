@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CompanySidePanel } from '@/components/admin/CompanySidePanel';
 import { useAdminMetrics } from '@/hooks/useAdminMetrics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileText, AlertCircle, TrendingUp, Building2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileText, AlertCircle, TrendingUp, Building2, Filter } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { CompanySummary } from '@/types/admin';
 
@@ -15,6 +16,7 @@ export default function AdminDashboardPage() {
   const { metrics, companies, loading } = useAdminMetrics();
   const [period, setPeriod] = useState<Period>('30');
   const [selectedCompany, setSelectedCompany] = useState<CompanySummary | null>(null);
+  const [filterCompanyId, setFilterCompanyId] = useState<string>('all');
 
   if (loading) {
     return (
@@ -34,19 +36,49 @@ export default function AdminDashboardPage() {
   if (!metrics) return null;
 
   const averages = period === '30' ? metrics.medias_30 : metrics.medias_60;
+  
+  // Filtrar empresas para o select
+  const filteredCompanies = useMemo(() => {
+    if (filterCompanyId === 'all') return companies;
+    return companies.filter(c => c.empresa_id === filterCompanyId);
+  }, [companies, filterCompanyId]);
+
+  // Filtrar veículos por empresa
+  const filteredVehicles = useMemo(() => {
+    if (filterCompanyId === 'all') return metrics.veiculos_por_empresa;
+    return metrics.veiculos_por_empresa.filter(v => v.empresa_id === filterCompanyId);
+  }, [metrics.veiculos_por_empresa, filterCompanyId]);
 
   return (
     <AdminLayout activeSection="overview">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-3xl font-bold">Visão Geral do Sistema</h2>
-          <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <TabsList>
-              <TabsTrigger value="30">30 dias</TabsTrigger>
-              <TabsTrigger value="60">60 dias</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Filtro por Empresa */}
+            <Select value={filterCompanyId} onValueChange={setFilterCompanyId}>
+              <SelectTrigger className="w-full sm:w-[280px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filtrar por empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Empresas</SelectItem>
+                {companies.map((company) => (
+                  <SelectItem key={company.empresa_id} value={company.empresa_id}>
+                    {company.empresa_nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
+              <TabsList>
+                <TabsTrigger value="30">30 dias</TabsTrigger>
+                <TabsTrigger value="60">60 dias</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
 
         {/* KPIs */}
@@ -156,12 +188,19 @@ export default function AdminDashboardPage() {
         {/* Veículos por Empresa */}
         <Card>
           <CardHeader>
-            <CardTitle>Veículos por Conta</CardTitle>
+            <CardTitle>
+              Veículos por Conta
+              {filterCompanyId !== 'all' && (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (Filtrado)
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={400}>
               <BarChart 
-                data={metrics.veiculos_por_empresa.slice(0, 10)} 
+                data={filteredVehicles.slice(0, 10)}
                 layout="vertical"
                 onClick={(data: any) => {
                   if (data && data.activePayload && data.activePayload[0]) {

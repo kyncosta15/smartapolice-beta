@@ -66,8 +66,9 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 
+  // Admin puro não tem navegação normal, apenas o botão de Painel Admin
   const navigation = isAdmin 
-    ? adminNavigation 
+    ? [] 
     : (user?.role === 'administrador' ? adminNavigation.filter(n => n.id !== 'aprovacoes') : clientNavigation);
 
   return (
