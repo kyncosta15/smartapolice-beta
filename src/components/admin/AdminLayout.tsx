@@ -103,10 +103,6 @@ export function AdminLayout({ children, activeSection }: AdminLayoutProps) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                  Dashboard Principal
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="text-destructive">
                   Sair
                 </DropdownMenuItem>
