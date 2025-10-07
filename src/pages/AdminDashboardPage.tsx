@@ -60,199 +60,152 @@ export default function AdminDashboardPage() {
   return (
     <AdminLayout activeSection="overview">
       <div className="space-y-6">
-        {/* Header com Título e Ações */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-1">Dashboard de Apólices</h1>
-            <p className="text-sm text-muted-foreground">Visão executiva das apólices e métricas da empresa</p>
-          </div>
-          
-          <div className="flex gap-2">
-            <Button variant="default" className="gap-2 bg-green-600 hover:bg-green-700">
-              <FileText className="h-4 w-4" />
-              Gerar Relatório PDF
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Mail className="h-4 w-4" />
-              Enviar por Email
-            </Button>
-          </div>
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold mb-1">Painel Administrativo</h1>
+          <p className="text-sm text-muted-foreground">Visão geral de todas as contas do sistema</p>
         </div>
 
-        {/* Filtros */}
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-          <div className="relative w-full sm:w-[320px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Buscar por empresa ou ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="ml-auto">
-            <TabsList>
-              <TabsTrigger value="30">30 dias</TabsTrigger>
-              <TabsTrigger value="60">60 dias</TabsTrigger>
-            </TabsList>
-          </Tabs>
+        {/* Filtro de Busca */}
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar por nome da empresa..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
         </div>
 
-        {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background border-blue-200 dark:border-blue-900">
+        {/* Resumo Geral */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Apólices Total</CardTitle>
-              <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <CardTitle className="text-sm font-medium">Total de Contas</CardTitle>
+              <Building2 className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{metrics.apolices_total}</div>
+              <div className="text-2xl font-bold">{filteredCompanies.length}</div>
+              <p className="text-xs text-muted-foreground">
+                {searchTerm ? 'Filtradas' : 'No sistema'}
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-red-50 to-white dark:from-red-950/20 dark:to-background border-red-200 dark:border-red-900">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sinistros Total</CardTitle>
-              <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+              <CardTitle className="text-sm font-medium">Total de Veículos</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {filteredVehicles.reduce((sum, v) => sum + v.total_veiculos, 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Em todas as contas
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Sinistros Abertos</CardTitle>
+              <AlertCircle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metrics.sinistros_total}</div>
+              <p className="text-xs text-muted-foreground">
+                Total no sistema
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-white dark:from-orange-950/20 dark:to-background border-orange-200 dark:border-orange-900">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Assistências Total</CardTitle>
-              <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+              <CardTitle className="text-sm font-medium">Assistências Abertas</CardTitle>
+              <AlertCircle className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metrics.assistencias_total}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-background border-purple-200 dark:border-purple-900">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Empresas</CardTitle>
-              <Building2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.veiculos_por_empresa.length}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Médias Diárias */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Média Diária - Sinistros ({period}d)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{averages.sinistros.toFixed(1)}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Sinistros por dia nos últimos {period} dias
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Média Diária - Assistências ({period}d)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{averages.assistencias.toFixed(1)}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Assistências por dia nos últimos {period} dias
+              <p className="text-xs text-muted-foreground">
+                Total no sistema
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Apólices por Seguradora */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Apólices por Seguradora</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={metrics.apolices_por_seguradora} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis 
-                  dataKey="seguradora" 
-                  type="category" 
-                  width={150}
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip 
-                  formatter={(value: number, name: string, props: any) => [
-                    `${value} apólices`,
-                    props.payload.seguradora
-                  ]}
-                />
-                <Bar dataKey="total" fill="hsl(var(--primary))" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Veículos por Empresa */}
+        {/* Tabela de Todas as Contas */}
         <Card>
           <CardHeader>
             <CardTitle>
-              Veículos por Conta
+              Todas as Contas
               {searchTerm && (
                 <span className="text-sm font-normal text-muted-foreground ml-2">
-                  ({filteredVehicles.length} resultados)
+                  - {filteredCompanies.length} resultados
                 </span>
               )}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart 
-                data={filteredVehicles.slice(0, 10)}
-                layout="vertical"
-                onClick={(data: any) => {
-                  if (data && data.activePayload && data.activePayload[0]) {
-                    const empresaId = data.activePayload[0].payload.empresa_id;
-                    const company = companies.find(c => c.empresa_id === empresaId);
-                    if (company) setSelectedCompany(company);
-                  }
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis 
-                  dataKey="empresa_nome" 
-                  type="category" 
-                  width={200}
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip 
-                  formatter={(value: number, name: string, props: any) => [
-                    `${value} veículos`,
-                    props.payload.empresa_nome
-                  ]}
-                />
-                <Bar 
-                  dataKey="total_veiculos" 
-                  fill="hsl(var(--primary))" 
-                  cursor="pointer"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-            <p className="text-sm text-muted-foreground mt-2">
-              Clique em uma barra para ver detalhes da empresa
-            </p>
+            <div className="rounded-md border">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="p-3 text-left text-sm font-medium">Empresa</th>
+                      <th className="p-3 text-center text-sm font-medium">Usuários</th>
+                      <th className="p-3 text-center text-sm font-medium">Veículos</th>
+                      <th className="p-3 text-center text-sm font-medium">Sinistros</th>
+                      <th className="p-3 text-center text-sm font-medium">Assistências</th>
+                      <th className="p-3 text-center text-sm font-medium">Última Atividade</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCompanies.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                          Nenhuma empresa encontrada
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredCompanies.map((company) => (
+                        <tr 
+                          key={company.empresa_id}
+                          className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
+                          onClick={() => setSelectedCompany(company)}
+                        >
+                          <td className="p-3">
+                            <div className="font-medium">{company.empresa_nome}</div>
+                            <div className="text-xs text-muted-foreground">{company.empresa_id}</div>
+                          </td>
+                          <td className="p-3 text-center">{company.usuarios}</td>
+                          <td className="p-3 text-center">{company.veiculos}</td>
+                          <td className="p-3 text-center">
+                            <span className={company.sinistros_abertos > 0 ? 'text-red-600 font-semibold' : ''}>
+                              {company.sinistros_abertos}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <span className={company.assistencias_abertas > 0 ? 'text-orange-600 font-semibold' : ''}>
+                              {company.assistencias_abertas}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center text-sm text-muted-foreground">
+                            {new Date(company.ultima_atividade).toLocaleDateString('pt-BR')}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {filteredCompanies.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-4">
+                Clique em uma linha para ver detalhes da empresa
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
