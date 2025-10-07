@@ -11,8 +11,14 @@ const AuthGuardContent = () => {
   useEffect(() => {
     if (!isLoading && !user) {
       navigate('/system-selection');
+      return;
     }
-  }, [user, isLoading, navigate]);
+
+    // Redirecionar admin para /admin
+    if (!isLoading && user && profile?.is_admin) {
+      navigate('/admin', { replace: true });
+    }
+  }, [user, profile, isLoading, navigate]);
 
   if (isLoading) {
     return (
