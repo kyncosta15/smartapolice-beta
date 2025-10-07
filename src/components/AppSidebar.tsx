@@ -40,8 +40,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const { open } = useSidebar();
   const navigate = useNavigate();
 
-  // Verificar se é admin pelo role do profile
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'administrador';
+  // Verificar se é admin pelo is_admin flag
+  const isAdmin = profile?.is_admin === true;
 
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
@@ -65,10 +65,11 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 
-  // Admin puro não tem navegação normal, apenas o botão de Painel Admin
+  // Admin puro sempre tem navegação vazia, só acessa painel admin
+  // Usuários RH/Corretora/etc. têm navegação normal
   const navigation = isAdmin 
     ? [] 
-    : (user?.role === 'administrador' ? adminNavigation.filter(n => n.id !== 'aprovacoes') : clientNavigation);
+    : clientNavigation;
 
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-border/50">

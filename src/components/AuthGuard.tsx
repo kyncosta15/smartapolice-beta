@@ -11,14 +11,8 @@ const AuthGuardContent = () => {
   useEffect(() => {
     if (!isLoading && !user) {
       navigate('/system-selection');
-    } else if (!isLoading && user && profile) {
-      // Redirecionar admin para painel admin
-      if (profile.role === 'admin' || profile.role === 'administrador') {
-        console.log('🔐 Admin detectado, redirecionando para /admin');
-        navigate('/admin', { replace: true });
-      }
     }
-  }, [user, profile, isLoading, navigate]);
+  }, [user, isLoading, navigate]);
 
   if (isLoading) {
     return (
