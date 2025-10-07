@@ -7,15 +7,21 @@ import { ArrowLeft } from 'lucide-react';
 import { useAuth, AuthProvider } from '@/contexts/AuthContext';
 
 const SmartApoliceAuthContent = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      console.log('✅ SmartApolice: Usuário autenticado, redirecionando para dashboard');
-      navigate('/dashboard');
+    if (user && profile) {
+      // Redirecionar admin direto para /admin
+      if (profile.is_admin) {
+        console.log('✅ SmartApolice: Admin autenticado, redirecionando para /admin');
+        navigate('/admin', { replace: true });
+      } else {
+        console.log('✅ SmartApolice: Usuário autenticado, redirecionando para dashboard');
+        navigate('/dashboard', { replace: true });
+      }
     }
-  }, [user, navigate]);
+  }, [user, profile, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">

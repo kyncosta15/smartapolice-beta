@@ -11,14 +11,8 @@ const AuthGuardContent = () => {
   useEffect(() => {
     if (!isLoading && !user) {
       navigate('/system-selection');
-      return;
     }
-
-    // Redirecionar admin para /admin
-    if (!isLoading && user && profile?.is_admin) {
-      navigate('/admin', { replace: true });
-    }
-  }, [user, profile, isLoading, navigate]);
+  }, [user, isLoading, navigate]);
 
   if (isLoading) {
     return (
@@ -58,6 +52,11 @@ const AuthGuardContent = () => {
 
   if (!user) {
     return null; // Redirecionamento será feito pelo useEffect
+  }
+
+  // Se for admin, não renderizar nada (vai redirecionar)
+  if (profile?.is_admin) {
+    return null;
   }
 
   return <DashboardContent />;

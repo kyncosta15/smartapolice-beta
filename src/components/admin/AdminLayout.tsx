@@ -25,12 +25,6 @@ export function AdminLayout({ children, activeSection }: AdminLayoutProps) {
   const { profile } = useUserProfile();
   const { logout } = useAuth();
 
-  // Redirecionar se não for admin
-  if (!profile?.is_admin) {
-    navigate('/dashboard');
-    return null;
-  }
-
   const initials = profile?.display_name
     ?.split(' ')
     .map(n => n[0])
