@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserProfile } from '@/hooks/useUserProfile';
 import { useNavigate } from 'react-router-dom';
 import { 
   Home,
@@ -37,12 +36,12 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
-  const { user, logout } = useAuth();
-  const { profile } = useUserProfile();
+  const { user, profile, logout } = useAuth();
   const { open } = useSidebar();
   const navigate = useNavigate();
 
-  const isAdmin = profile?.is_admin === true;
+  // Verificar se é admin pelo role do profile
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'administrador';
 
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },

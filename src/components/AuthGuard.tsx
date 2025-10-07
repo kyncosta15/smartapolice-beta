@@ -5,14 +5,20 @@ import { DashboardContent } from '@/components/DashboardContent';
 import { Shield, Loader2 } from 'lucide-react';
 
 const AuthGuardContent = () => {
-  const { user, isLoading } = useAuth();
+  const { user, profile, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!isLoading && !user) {
       navigate('/system-selection');
+    } else if (!isLoading && user && profile) {
+      // Redirecionar admin para painel admin
+      if (profile.role === 'admin' || profile.role === 'administrador') {
+        console.log('🔐 Admin detectado, redirecionando para /admin');
+        navigate('/admin', { replace: true });
+      }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, profile, isLoading, navigate]);
 
   if (isLoading) {
     return (

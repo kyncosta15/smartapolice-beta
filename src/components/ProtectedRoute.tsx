@@ -55,8 +55,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Check role permissions
-  if (requiredRoles.length > 0 && !requiredRoles.includes(profile.role)) {
+  // Check role permissions - aceitar tanto 'admin' quanto 'administrador'
+  const userRole = profile.role;
+  const hasAccess = requiredRoles.length === 0 || 
+    requiredRoles.some(role => {
+      // Normalizar roles para aceitar variações
+      if ((role === 'admin' || role === 'administrador') && 
+          (userRole === 'admin' || userRole === 'administrador')) {
+        return true;
+      }
+      return userRole === role;
+    });
+
+  if (!hasAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -65,15 +76,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             Você não tem permissão para acessar esta página.
           </p>
           <p className="text-sm text-muted-foreground">
+            Seu perfil: {userRole}
+          </p>
+          <p className="text-sm text-muted-foreground">
             Perfil necessário: {requiredRoles.join(', ')}
           </p>
           <Button 
-            onClick={() => navigate(-1)} 
+            onClick={() => navigate('/dashboard')} 
             variant="outline" 
             className="mt-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
+            Voltar ao Dashboard
           </Button>
         </div>
       </div>

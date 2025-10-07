@@ -17,7 +17,7 @@ interface UserProfile {
   id: string;
   email: string;
   full_name: string;
-  role: 'cliente' | 'rh' | 'administrador' | 'corretora_admin' | 'gestor_rh' | 'financeiro';
+  role: 'cliente' | 'rh' | 'admin' | 'administrador' | 'corretora_admin' | 'gestor_rh' | 'financeiro';
   company?: string;
   avatar_url?: string;
   phone?: string;
@@ -81,61 +81,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Fetch user profile from new profiles table
+  // Fetch user profile from users table (not profiles table)
   const fetchProfile = async (userId: string) => {
     try {
       console.log('🔍 Buscando perfil do usuário:', userId);
       
+      // Buscar da tabela users que tem o campo role
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
         .eq('id', userId)
-        .maybeSingle(); // Usar maybeSingle em vez de single para evitar erro quando não encontrar
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') { // PGRST116 é quando não encontra nenhum registro
-        console.error('Error fetching profile:', error);
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user:', error);
         return null;
       }
       
       if (!data) {
-        console.log('⚠️ Perfil não encontrado, criando baseado nos dados do usuário...');
-        // Se não encontrou profile, criar um básico baseado nos dados do usuário
-        const userData = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .maybeSingle();
-          
-        if (userData.data) {
-          const newProfile = {
-            id: userId,
-            email: userData.data.email,
-            full_name: userData.data.name,
-            role: userData.data.role || 'rh',
-            company: userData.data.company,
-            is_active: userData.data.status === 'active'
-          };
-          
-          // Tentar criar o profile
-          const { data: createdProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert(newProfile)
-            .select()
-            .maybeSingle();
-            
-          if (!createError && createdProfile) {
-            console.log('✅ Perfil criado com sucesso:', createdProfile);
-            return createdProfile as UserProfile;
-          } else {
-            console.warn('⚠️ Não foi possível criar perfil, usando dados do usuário:', createError);
-            return newProfile as UserProfile; // Retorna os dados mesmo sem conseguir inserir
-          }
-        }
+        console.log('⚠️ Usuário não encontrado');
         return null;
       }
       
-      console.log('✅ Perfil encontrado:', data);
-      return data as UserProfile;
+      // Construir profile a partir dos dados da tabela users
+      const userProfile: UserProfile = {
+        id: data.id,
+        email: data.email,
+        full_name: data.name || data.email,
+        role: (data.role || 'cliente') as UserProfile['role'],
+        company: data.company,
+        phone: data.phone,
+        is_active: data.status === 'active'
+      };
+      
+      console.log('✅ Perfil encontrado:', userProfile);
+      return userProfile;
     } catch (error) {
       console.error('💥 Erro ao buscar perfil:', error);
       return null;
