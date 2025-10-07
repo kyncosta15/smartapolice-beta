@@ -23,6 +23,8 @@ import NotFound from "./pages/NotFound";
 import RHDashboard from './pages/RHDashboard';
 import RHColaboradores from './pages/RHColaboradores';
 import AdminApprovalsPage from './pages/AdminApprovalsPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminRequestsPage from './pages/AdminRequestsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,6 +58,22 @@ const App = () => {
               
               {/* Admin routes */}
               <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                    <AdminDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/solicitacoes"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                    <AdminRequestsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/admin/aprovacoes"
                 element={
                   <ProtectedRoute requiredRoles={['admin', 'administrador']}>
@@ -69,19 +87,6 @@ const App = () => {
               <Route
                 path="/smartbeneficios/dashboard"
                 element={<SmartBeneficiosGuard />}
-              />
-
-              {/* Admin only routes (future) */}
-              <Route
-                path="/admin/*"
-                element={
-                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
-                    <div className="p-8 text-center">
-                      <h1 className="text-2xl font-bold">Painel Administrativo</h1>
-                      <p className="text-muted-foreground mt-2">Em breve...</p>
-                    </div>
-                  </ProtectedRoute>
-                }
               />
               
               <Route path="*" element={<NotFound />} />

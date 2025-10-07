@@ -2691,6 +2691,18 @@ export type Database = {
       }
     }
     Functions: {
+      admin_companies_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      admin_dashboard_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      admin_list_approval_requests: {
+        Args: { p_status?: string }
+        Returns: Json
+      }
       approve_insurance_request: {
         Args: { p_decision_note?: string; p_request_id: string }
         Returns: undefined
