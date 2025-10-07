@@ -414,7 +414,8 @@ export class DashboardPDFGenerator {
       this.addPageFooter();
       
       console.log('✅ PDF com gráficos gerado com sucesso');
-      return new Uint8Array(this.doc.output('arraybuffer'));
+      const arrayBuffer = this.doc.output('arraybuffer') as ArrayBuffer;
+      return new Uint8Array(arrayBuffer);
       
     } catch (error) {
       console.error('❌ Erro na geração do PDF:', error);
@@ -425,7 +426,8 @@ export class DashboardPDFGenerator {
   public download(data: PDFDashboardData, filename?: string) {
     try {
       const pdfBytes = this.generate(data);
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      // Convert to proper ArrayBuffer to avoid TypeScript issues with ArrayBufferLike
+      const blob = new Blob([pdfBytes.slice().buffer], { type: 'application/pdf' });
       
       const defaultFilename = `SmartApolice-Relatorio-${
         data.generatedBy.company?.replace(/[^a-zA-Z0-9]/g, '-') || 'Dashboard'
