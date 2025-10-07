@@ -79,7 +79,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Resumo Geral */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Contas</CardTitle>
@@ -89,6 +89,19 @@ export default function AdminDashboardPage() {
               <div className="text-2xl font-bold">{filteredCompanies.length}</div>
               <p className="text-xs text-muted-foreground">
                 {searchTerm ? 'Filtradas' : 'No sistema'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Apólices</CardTitle>
+              <FileText className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics.apolices_total}</div>
+              <p className="text-xs text-muted-foreground">
+                No sistema
               </p>
             </CardContent>
           </Card>
@@ -155,6 +168,7 @@ export default function AdminDashboardPage() {
                     <tr className="border-b bg-muted/50">
                       <th className="p-3 text-left text-sm font-medium">Empresa</th>
                       <th className="p-3 text-center text-sm font-medium">Usuários</th>
+                      <th className="p-3 text-center text-sm font-medium">Apólices</th>
                       <th className="p-3 text-center text-sm font-medium">Veículos</th>
                       <th className="p-3 text-center text-sm font-medium">Sinistros</th>
                       <th className="p-3 text-center text-sm font-medium">Assistências</th>
@@ -164,7 +178,7 @@ export default function AdminDashboardPage() {
                   <tbody>
                     {filteredCompanies.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                        <td colSpan={7} className="p-8 text-center text-muted-foreground">
                           Nenhuma empresa encontrada
                         </td>
                       </tr>
@@ -180,6 +194,9 @@ export default function AdminDashboardPage() {
                             <div className="text-xs text-muted-foreground">{company.empresa_id}</div>
                           </td>
                           <td className="p-3 text-center">{company.usuarios}</td>
+                          <td className="p-3 text-center">
+                            <span className="font-semibold text-purple-600">{company.apolices}</span>
+                          </td>
                           <td className="p-3 text-center">{company.veiculos}</td>
                           <td className="p-3 text-center">
                             <span className={company.sinistros_abertos > 0 ? 'text-red-600 font-semibold' : ''}>
