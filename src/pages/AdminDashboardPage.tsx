@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { FileText, AlertCircle, TrendingUp, Building2, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { FileText, AlertCircle, TrendingUp, Building2, Search, Mail } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { CompanySummary } from '@/types/admin';
 
@@ -59,29 +60,44 @@ export default function AdminDashboardPage() {
   return (
     <AdminLayout activeSection="overview">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-3xl font-bold">Visão Geral do Sistema</h2>
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Busca por Empresa */}
-            <div className="relative w-full sm:w-[280px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Buscar empresa..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-
-            <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
-              <TabsList>
-                <TabsTrigger value="30">30 dias</TabsTrigger>
-                <TabsTrigger value="60">60 dias</TabsTrigger>
-              </TabsList>
-            </Tabs>
+        {/* Header com Título e Ações */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-1">Dashboard de Apólices</h1>
+            <p className="text-sm text-muted-foreground">Visão executiva das apólices e métricas da empresa</p>
           </div>
+          
+          <div className="flex gap-2">
+            <Button variant="default" className="gap-2 bg-green-600 hover:bg-green-700">
+              <FileText className="h-4 w-4" />
+              Gerar Relatório PDF
+            </Button>
+            <Button variant="outline" className="gap-2">
+              <Mail className="h-4 w-4" />
+              Enviar por Email
+            </Button>
+          </div>
+        </div>
+
+        {/* Filtros */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div className="relative w-full sm:w-[320px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar por empresa ou ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="ml-auto">
+            <TabsList>
+              <TabsTrigger value="30">30 dias</TabsTrigger>
+              <TabsTrigger value="60">60 dias</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* KPIs */}

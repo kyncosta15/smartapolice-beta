@@ -2,17 +2,28 @@ import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, FileCheck, ArrowLeft } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Crown, LogOut } from 'lucide-react';
+import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface AdminLayoutProps {
   children: ReactNode;
   activeSection?: 'overview' | 'requests';
 }
 
-export function AdminLayout({ children, activeSection }: AdminLayoutProps) {
+export function AdminLayout({ children }: AdminLayoutProps) {
   const navigate = useNavigate();
   const { profile } = useUserProfile();
+  const { logout } = useAuth();
 
   // Redirecionar se não for admin
   if (!profile?.is_admin) {
@@ -20,73 +31,82 @@ export function AdminLayout({ children, activeSection }: AdminLayoutProps) {
     return null;
   }
 
-  const menuItems = [
-    {
-      id: 'overview',
-      label: 'Visão Geral',
-      icon: LayoutDashboard,
-      path: '/admin',
-    },
-    {
-      id: 'requests',
-      label: 'Solicitações',
-      icon: FileCheck,
-      path: '/admin/solicitacoes',
-    },
-  ];
+  const initials = profile?.display_name
+    ?.split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'AR';
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar ao Dashboard
-              </Button>
-              <div className="h-6 w-px bg-border" />
-              <h1 className="text-xl font-semibold">Painel de Administração</h1>
-            </div>
+    <div className="flex min-h-screen w-full bg-background">
+      {/* Sidebar Simples */}
+      <aside className="w-80 border-r bg-card flex flex-col">
+        {/* Logo */}
+        <div className="p-6 border-b">
+          <SmartApóliceLogo size="md" showText={true} />
+        </div>
+
+        {/* Painel Admin Button */}
+        <div className="p-6 flex-1">
+          <Button
+            className="w-full justify-start gap-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-base py-6 rounded-xl shadow-md"
+          >
+            <Crown className="h-5 w-5" />
+            Painel Admin
+          </Button>
+        </div>
+
+        {/* Footer com Logout */}
+        <div className="p-6 border-t">
+          <Button
+            onClick={logout}
+            variant="ghost"
+            className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+            Sair
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+          <div className="px-8 py-4 flex items-center justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-3 h-auto py-2 px-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-medium">{profile?.display_name || 'Admin'}</span>
+                    <span className="text-xs text-muted-foreground">RCaldas</span>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  Dashboard Principal
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-destructive">
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex gap-6">
-          {/* Sidebar */}
-          <aside className="w-64 shrink-0">
-            <nav className="space-y-1">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeSection === item.id;
-                
-                return (
-                  <Button
-                    key={item.id}
-                    variant={isActive ? 'secondary' : 'ghost'}
-                    className={cn(
-                      'w-full justify-start',
-                      isActive && 'bg-secondary font-medium'
-                    )}
-                    onClick={() => navigate(item.path)}
-                  >
-                    <Icon className="h-4 w-4 mr-2" />
-                    {item.label}
-                  </Button>
-                );
-              })}
-            </nav>
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1 min-w-0">{children}</main>
-        </div>
+        {/* Content */}
+        <main className="flex-1 p-8 overflow-auto">{children}</main>
       </div>
     </div>
   );
