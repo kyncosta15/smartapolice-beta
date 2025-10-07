@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useNavigate } from 'react-router-dom';
 import { 
   Home,
   FileText, 
@@ -13,7 +14,8 @@ import {
   Upload,
   Mail,
   LogOut,
-  CheckSquare
+  CheckSquare,
+  Crown
 } from "lucide-react";
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { cn } from '@/lib/utils';
@@ -38,6 +40,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const { user, logout } = useAuth();
   const { profile } = useUserProfile();
   const { open } = useSidebar();
+  const navigate = useNavigate();
 
   const isAdmin = profile?.is_admin === true;
 
@@ -82,6 +85,26 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
       {/* Navigation */}
       <SidebarContent className={cn("px-2", open ? "py-4" : "py-6")}>
+        {/* Admin Panel Button */}
+        {isAdmin && (
+          <div className={cn("mb-4", open ? "px-2" : "px-0")}>
+            <Button
+              onClick={() => navigate('/admin')}
+              className={cn(
+                "w-full justify-start gap-3 font-medium",
+                "bg-gradient-to-r from-primary to-primary/80",
+                "hover:from-primary/90 hover:to-primary/70",
+                "text-primary-foreground shadow-lg",
+                "transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                open ? "rounded-xl px-3 py-2.5" : "rounded-full w-10 h-10 p-0 justify-center"
+              )}
+            >
+              <Crown className="size-4" />
+              {open && <span>Painel Admin</span>}
+            </Button>
+          </div>
+        )}
+        
         <SidebarMenu className={cn(open ? "space-y-1" : "space-y-4")}>
           {navigation.map((item) => (
             <SidebarMenuItem key={item.id}>
