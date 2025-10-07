@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { AppSidebar } from '@/components/AppSidebar';
 import { MobileDrawer } from '@/components/MobileDrawer';
 import { Navbar } from '@/components/Navbar';
@@ -37,6 +39,8 @@ import {
 
 export function DashboardContent() {
   const { user } = useAuth();
+  const { profile } = useUserProfile();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [selectedPolicy, setSelectedPolicy] = useState(null);
@@ -48,6 +52,13 @@ export function DashboardContent() {
   const { toast } = useToast();
   const { progressToast } = useProgressToast();
   const [lastRefresh, setLastRefresh] = useState<number>(Date.now());
+
+  // Redirecionar admins automaticamente para o painel admin
+  useEffect(() => {
+    if (profile?.is_admin === true) {
+      navigate('/admin', { replace: true });
+    }
+  }, [profile, navigate]);
 
   // Hook para persistência de apólices
   const { 
