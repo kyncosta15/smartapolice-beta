@@ -77,7 +77,7 @@ export default function AdminRequestsPage() {
   };
 
   return (
-    <AdminLayout activeSection="requests">
+    <AdminLayout activeSection="approvals">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

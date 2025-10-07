@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Button } from '@/components/ui/button';
-import { Crown, LogOut } from 'lucide-react';
+import { Crown, LogOut, CheckCircle } from 'lucide-react';
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,10 +17,10 @@ import {
 
 interface AdminLayoutProps {
   children: ReactNode;
-  activeSection?: 'overview' | 'requests';
+  activeSection?: 'overview' | 'approvals';
 }
 
-export function AdminLayout({ children }: AdminLayoutProps) {
+export function AdminLayout({ children, activeSection }: AdminLayoutProps) {
   const navigate = useNavigate();
   const { profile } = useUserProfile();
   const { logout } = useAuth();
@@ -47,13 +47,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <SmartApóliceLogo size="md" showText={true} />
         </div>
 
-        {/* Painel Admin Button */}
-        <div className="p-6 flex-1">
+        {/* Navigation */}
+        <div className="p-6 flex-1 space-y-2">
           <Button
-            className="w-full justify-start gap-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-base py-6 rounded-xl shadow-md"
+            onClick={() => navigate('/admin')}
+            variant={activeSection === 'overview' ? 'default' : 'ghost'}
+            className="w-full justify-start gap-3 font-medium text-base py-6 rounded-xl"
           >
             <Crown className="h-5 w-5" />
-            Painel Admin
+            Dashboard
+          </Button>
+          <Button
+            onClick={() => navigate('/admin/aprovacoes')}
+            variant={activeSection === 'approvals' ? 'default' : 'ghost'}
+            className="w-full justify-start gap-3 font-medium text-base py-6 rounded-xl"
+          >
+            <CheckCircle className="h-5 w-5" />
+            Aprovações
           </Button>
         </div>
 
