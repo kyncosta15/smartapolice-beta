@@ -1,10 +1,12 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Building2, Users, Car, FileText, AlertCircle, Clock } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Building2, Users, Car, FileText, AlertCircle, Clock, TrendingUp, TrendingDown } from 'lucide-react';
 import type { CompanySummary } from '@/types/admin';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useCompanyDetails } from '@/hooks/useCompanyDetails';
 
 interface CompanySidePanelProps {
   open: boolean;
@@ -13,36 +15,49 @@ interface CompanySidePanelProps {
 }
 
 export function CompanySidePanel({ open, onOpenChange, company }: CompanySidePanelProps) {
+  const { details, loading } = useCompanyDetails(company?.empresa_id || null);
+
   if (!company) return null;
 
-  const stats = [
+  const displayData = details || company;
+
+  const stats: Array<{
+    label: string;
+    value: number;
+    subtitle?: string;
+    icon: any;
+    color: string;
+  }> = [
     {
       label: 'Usuários',
-      value: company.usuarios,
+      value: displayData.usuarios,
       icon: Users,
       color: 'text-blue-600',
     },
     {
       label: 'Veículos',
-      value: company.veiculos,
+      value: displayData.veiculos,
       icon: Car,
       color: 'text-green-600',
     },
     {
       label: 'Apólices',
-      value: company.apolices,
+      value: displayData.apolices,
+      subtitle: details ? `${details.apolices_ativas} ativas` : undefined,
       icon: FileText,
       color: 'text-purple-600',
     },
     {
-      label: 'Sinistros Abertos',
-      value: company.sinistros_abertos,
+      label: 'Sinistros',
+      value: displayData.sinistros_abertos,
+      subtitle: details ? `${details.sinistros_total} total` : undefined,
       icon: AlertCircle,
       color: 'text-red-600',
     },
     {
-      label: 'Assistências Abertas',
-      value: company.assistencias_abertas,
+      label: 'Assistências',
+      value: displayData.assistencias_abertas,
+      subtitle: details ? `${details.assistencias_total} total` : undefined,
       icon: AlertCircle,
       color: 'text-orange-600',
     },
@@ -77,21 +92,36 @@ export function CompanySidePanel({ open, onOpenChange, company }: CompanySidePan
 
           {/* Estatísticas */}
           <div className="grid grid-cols-2 gap-3">
-            {stats.map((stat) => (
-              <Card key={stat.label}>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                      <span className="text-xs text-muted-foreground">
-                        {stat.label}
-                      </span>
+            {loading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="pt-6">
+                    <Skeleton className="h-16 w-full" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              stats.map((stat) => (
+                <Card key={stat.label}>
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                        <span className="text-xs text-muted-foreground">
+                          {stat.label}
+                        </span>
+                      </div>
+                      <p className="text-2xl font-bold">{stat.value}</p>
+                      {stat.subtitle && (
+                        <p className="text-xs text-muted-foreground">
+                          {stat.subtitle}
+                        </p>
+                      )}
                     </div>
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
 
           {/* CTA */}
