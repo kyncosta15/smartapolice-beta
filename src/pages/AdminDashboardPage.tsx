@@ -18,6 +18,19 @@ export default function AdminDashboardPage() {
   const [selectedCompany, setSelectedCompany] = useState<CompanySummary | null>(null);
   const [filterCompanyId, setFilterCompanyId] = useState<string>('all');
 
+  // Filtrar empresas para o select - antes dos early returns
+  const filteredCompanies = useMemo(() => {
+    if (filterCompanyId === 'all') return companies;
+    return companies.filter(c => c.empresa_id === filterCompanyId);
+  }, [companies, filterCompanyId]);
+
+  // Filtrar veículos por empresa - antes dos early returns
+  const filteredVehicles = useMemo(() => {
+    if (!metrics) return [];
+    if (filterCompanyId === 'all') return metrics.veiculos_por_empresa;
+    return metrics.veiculos_por_empresa.filter(v => v.empresa_id === filterCompanyId);
+  }, [metrics, filterCompanyId]);
+
   if (loading) {
     return (
       <AdminLayout activeSection="overview">
@@ -36,18 +49,6 @@ export default function AdminDashboardPage() {
   if (!metrics) return null;
 
   const averages = period === '30' ? metrics.medias_30 : metrics.medias_60;
-  
-  // Filtrar empresas para o select
-  const filteredCompanies = useMemo(() => {
-    if (filterCompanyId === 'all') return companies;
-    return companies.filter(c => c.empresa_id === filterCompanyId);
-  }, [companies, filterCompanyId]);
-
-  // Filtrar veículos por empresa
-  const filteredVehicles = useMemo(() => {
-    if (filterCompanyId === 'all') return metrics.veiculos_por_empresa;
-    return metrics.veiculos_por_empresa.filter(v => v.empresa_id === filterCompanyId);
-  }, [metrics.veiculos_por_empresa, filterCompanyId]);
 
   return (
     <AdminLayout activeSection="overview">
