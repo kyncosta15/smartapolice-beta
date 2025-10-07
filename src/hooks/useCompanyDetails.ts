@@ -53,10 +53,17 @@ export function useCompanyDetails(empresaId: string | null) {
           .eq('empresa_id', empresaId);
 
         // Buscar apólices da empresa
-        const { data: apolices, count: apolicesCount } = await supabase
+        const { data: apolices, count: apolicesCount, error: apolicesError } = await supabase
           .from('apolices_beneficios')
           .select('status', { count: 'exact' })
           .eq('empresa_id', empresaId);
+
+        console.log('🔍 Apólices encontradas:', {
+          empresaId,
+          count: apolicesCount,
+          data: apolices,
+          error: apolicesError
+        });
 
         const apolicesAtivas = apolices?.filter(a => a.status === 'ativa').length || 0;
 
