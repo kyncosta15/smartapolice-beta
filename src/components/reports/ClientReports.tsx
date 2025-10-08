@@ -25,56 +25,30 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
     try {
       console.log('🎯 Gerando relatório para usuário:', user.id);
 
-      // Buscar informações do usuário
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('company, role')
-        .eq('id', user.id)
-        .single();
+      // Usar RPC para obter a empresa do usuário logado (mais confiável)
+      const { data: empresaIdResult, error: empresaError } = await supabase
+        .rpc('get_current_empresa');
 
-      console.log('👤 Dados do usuário:', userData);
+      console.log('🏢 Empresa ID retornado pela função:', empresaIdResult);
 
-      if (userError || !userData?.company) {
+      if (empresaError || !empresaIdResult) {
+        console.error('Erro ao buscar empresa:', empresaError);
         toast.error('Não foi possível identificar sua empresa');
         return;
       }
 
-      // Para usuários RH/Admin/Corretora, usar company diretamente
-      // Para clientes, usar membership
-      let empresaId: string | null = null;
-      let empresaInfo: any = null;
+      const empresaId = empresaIdResult;
 
-      if (['gestor_rh', 'rh', 'admin', 'administrador', 'corretora_admin'].includes(userData.role || '')) {
-        // Buscar empresa pelo nome em users.company
-        const { data: empData } = await supabase
-          .from('empresas')
-          .select('id, nome, cnpj')
-          .eq('nome', userData.company)
-          .single();
+      // Buscar informações completas da empresa
+      const { data: empresaInfo, error: empError } = await supabase
+        .from('empresas')
+        .select('id, nome, cnpj')
+        .eq('id', empresaId)
+        .single();
 
-        if (empData) {
-          empresaId = empData.id;
-          empresaInfo = empData;
-          console.log('✅ Empresa encontrada via users.company (RH/Admin):', empresaId, empData.nome);
-        }
-      } else {
-        // Para clientes, buscar via membership
-        const { data: membershipData } = await supabase
-          .from('user_memberships')
-          .select('empresa_id, empresas(id, nome, cnpj)')
-          .eq('user_id', user.id)
-          .limit(1)
-          .maybeSingle();
-
-        if (membershipData?.empresa_id) {
-          empresaId = membershipData.empresa_id;
-          empresaInfo = membershipData.empresas;
-          console.log('✅ Empresa encontrada via membership (Cliente):', empresaId);
-        }
-      }
-
-      if (!empresaId || !empresaInfo) {
-        toast.error('Empresa não encontrada para este usuário');
+      if (empError || !empresaInfo) {
+        console.error('Erro ao buscar dados da empresa:', empError);
+        toast.error('Empresa não encontrada');
         return;
       }
 
