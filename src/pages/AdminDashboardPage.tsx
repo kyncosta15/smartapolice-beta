@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0 md:p-6">
+          <CardContent className="p-0 md:p-6 max-h-[600px] overflow-y-auto">
             {/* Mobile: Cards */}
             <div className="block md:hidden space-y-4 p-4">
               {filteredCompanies.length === 0 ? (
