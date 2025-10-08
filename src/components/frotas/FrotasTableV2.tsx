@@ -18,6 +18,7 @@ import { VehicleActionsV2 } from './VehicleActionsV2'
 import { VehicleDetailsModalV2 } from './VehicleDetailsModalV2'
 import { VehicleListMobile } from './VehicleListMobile'
 import { FrotasBulkActions } from './FrotasBulkActions'
+import { VehicleStatusBadge } from './VehicleStatusBadge'
 
 interface FrotasTableV2Props {
   veiculos: FrotaVeiculo[]
@@ -87,18 +88,7 @@ export function FrotasTableV2({
   const isAllSelected = selectedVehicles.length === veiculos.length && veiculos.length > 0
   const isPartialSelected = selectedVehicles.length > 0 && selectedVehicles.length < veiculos.length
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'segurado':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Segurado</Badge>
-      case 'sem_seguro':
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Sem Seguro</Badge>
-      case 'cotacao':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Em Cotação</Badge>
-      default:
-        return <Badge variant="secondary">{status}</Badge>
-    }
-  }
+  // Removido - agora usando VehicleStatusBadge component
 
   const getCategoriaBadge = (categoria?: string) => {
     if (!categoria) return null
@@ -289,7 +279,10 @@ export function FrotasTableV2({
                         </TableCell>
 
                         <TableCell>
-                          {getStatusBadge(veiculo.status_seguro)}
+                          <VehicleStatusBadge 
+                            status={veiculo.status_seguro} 
+                            vehicleId={veiculo.id}
+                          />
                         </TableCell>
 
                         <TableCell className="text-right">

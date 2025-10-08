@@ -72,6 +72,7 @@ export function useInsuranceApprovals() {
     current_status: string;
     requested_status: string;
     motivo?: string;
+    silent?: boolean;
   }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -80,26 +81,34 @@ export function useInsuranceApprovals() {
       const { error } = await supabase
         .from('insurance_approval_requests')
         .insert({
-          ...params,
+          veiculo_id: params.veiculo_id,
+          empresa_id: params.empresa_id,
+          current_status: params.current_status,
+          requested_status: params.requested_status,
+          motivo: params.motivo,
           requested_by: user.id,
         });
 
       if (error) throw error;
 
-      toast({
-        title: 'Solicitação enviada',
-        description: 'Sua solicitação foi enviada para aprovação do administrador.',
-      });
+      if (!params.silent) {
+        toast({
+          title: 'Solicitação enviada',
+          description: 'Sua solicitação foi enviada para aprovação do administrador.',
+        });
+      }
 
       await loadRequests();
       return true;
     } catch (error) {
       console.error('Erro ao criar solicitação:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível criar a solicitação.',
-        variant: 'destructive',
-      });
+      if (!params.silent) {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível criar a solicitação.',
+          variant: 'destructive',
+        });
+      }
       return false;
     }
   };

@@ -154,6 +154,7 @@ export function FrotasBulkActions({
             current_status: vehicle.status_seguro,
             requested_status: 'segurado',
             motivo: 'Solicitação de alteração em lote para status Segurado',
+            silent: true,
           });
           
           if (success) successCount++;

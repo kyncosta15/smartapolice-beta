@@ -37,6 +37,7 @@ import { VehicleListMobile } from './VehicleListMobile';
 import { VehicleDetailsModalNew } from './VehicleDetailsModalNew';
 import { FrotasBulkActions } from './FrotasBulkActions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { VehicleStatusBadge } from './VehicleStatusBadge';
 
 interface FrotasTableProps {
   veiculos: FrotaVeiculo[];
@@ -181,18 +182,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
     onRefetch();
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'segurado':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Segurado</Badge>;
-      case 'sem_seguro':
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Sem Seguro</Badge>;
-      case 'cotacao':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Em Cotação</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
+  // Removido - agora usando VehicleStatusBadge component
 
   const getCategoriaBadge = (categoria?: string) => {
     if (!categoria) return null;
@@ -426,7 +416,10 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                         </TableCell>
 
                         <TableCell>
-                          {getStatusBadge(veiculo.status_seguro)}
+                          <VehicleStatusBadge 
+                            status={veiculo.status_seguro} 
+                            vehicleId={veiculo.id}
+                          />
                         </TableCell>
 
                         <TableCell className="w-[120px] min-w-[120px] text-right sticky right-0 bg-background border-l">

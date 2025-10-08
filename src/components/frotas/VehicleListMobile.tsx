@@ -20,6 +20,7 @@ import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { VehicleStatusBadge } from './VehicleStatusBadge';
 
 interface VehicleListMobileProps {
   veiculos: FrotaVeiculo[];
@@ -40,18 +41,7 @@ interface VehicleCardProps {
 }
 
 function VehicleCard({ veiculo, onView, onEdit, onDocs, selectedVehicles, onSelectVehicle }: VehicleCardProps) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'segurado':
-        return <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">Segurado</Badge>;
-      case 'sem_seguro':
-        return <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">Sem Seguro</Badge>;
-      case 'cotacao':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs">Em Cotação</Badge>;
-      default:
-        return <Badge variant="secondary" className="text-xs">{status}</Badge>;
-    }
-  };
+  // Removido - agora usando VehicleStatusBadge component
 
   const getCategoriaBadge = (categoria?: string) => {
     if (!categoria) return null;
@@ -128,7 +118,10 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs, selectedVehicles, onSele
           {/* Badges e placa */}
           <div className="flex flex-wrap items-center gap-2">
             {getCategoriaBadge(veiculo.categoria)}
-            {getStatusBadge(veiculo.status_seguro)}
+            <VehicleStatusBadge 
+              status={veiculo.status_seguro} 
+              vehicleId={veiculo.id}
+            />
             <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded tracking-wide">
               {veiculo.placa}
             </span>
