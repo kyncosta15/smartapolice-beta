@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { FileText, AlertCircle, TrendingUp, Building2, Search, Mail } from 'lucide-react';
+import { Shield, AlertTriangle, Car, Building, Search, Mail, LifeBuoy } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { CompanySummary } from '@/types/admin';
 
@@ -86,7 +86,7 @@ export default function AdminDashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
               <CardTitle className="text-xs md:text-sm font-medium">Total de Contas</CardTitle>
-              <Building2 className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
+              <Building className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
             </CardHeader>
             <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
               <div className="text-xl md:text-2xl font-bold">{filteredCompanies.length}</div>
@@ -99,7 +99,7 @@ export default function AdminDashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
               <CardTitle className="text-xs md:text-sm font-medium">Total de Apólices</CardTitle>
-              <FileText className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
+              <Shield className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
             </CardHeader>
             <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
               <div className="text-xl md:text-2xl font-bold">{metrics.apolices_total}</div>
@@ -112,7 +112,7 @@ export default function AdminDashboardPage() {
           <Card className="col-span-2 md:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
               <CardTitle className="text-xs md:text-sm font-medium">Total de Veículos</CardTitle>
-              <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
+              <Car className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
             </CardHeader>
             <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
               <div className="text-xl md:text-2xl font-bold">
@@ -127,7 +127,7 @@ export default function AdminDashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
               <CardTitle className="text-xs md:text-sm font-medium">Sinistros</CardTitle>
-              <AlertCircle className="h-3 w-3 md:h-4 md:w-4 text-red-600" />
+              <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 text-red-600" />
             </CardHeader>
             <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
               <div className="text-xl md:text-2xl font-bold">{metrics.sinistros_total}</div>
@@ -140,7 +140,7 @@ export default function AdminDashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
               <CardTitle className="text-xs md:text-sm font-medium">Assistências</CardTitle>
-              <AlertCircle className="h-3 w-3 md:h-4 md:w-4 text-orange-600" />
+              <LifeBuoy className="h-3 w-3 md:h-4 md:w-4 text-orange-600" />
             </CardHeader>
             <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
               <div className="text-xl md:text-2xl font-bold">{metrics.assistencias_total}</div>
@@ -172,7 +172,7 @@ export default function AdminDashboardPage() {
               {filteredCompanies.length === 0 ? (
                 <div className="p-12 text-center text-muted-foreground">
                   <div className="flex flex-col items-center gap-2">
-                    <Building2 className="h-12 w-12 text-muted-foreground/50" />
+                    <Building className="h-12 w-12 text-muted-foreground/50" />
                     <p className="font-medium">Nenhuma empresa encontrada</p>
                   </div>
                 </div>
@@ -186,7 +186,7 @@ export default function AdminDashboardPage() {
                     <CardHeader className="pb-3">
                       <div className="flex items-start gap-3">
                         <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="h-6 w-6 text-primary" />
+                          <Building className="h-6 w-6 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-sm truncate">{company.empresa_nome}</h3>
@@ -258,7 +258,7 @@ export default function AdminDashboardPage() {
                       <tr>
                         <td colSpan={7} className="p-12 text-center text-muted-foreground">
                           <div className="flex flex-col items-center gap-2">
-                            <Building2 className="h-12 w-12 text-muted-foreground/50" />
+                            <Building className="h-12 w-12 text-muted-foreground/50" />
                             <p className="font-medium">Nenhuma empresa encontrada</p>
                           </div>
                         </td>
@@ -273,7 +273,7 @@ export default function AdminDashboardPage() {
                           <td className="p-4">
                             <div className="flex items-center gap-3">
                               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <Building2 className="h-5 w-5 text-primary" />
+                                <Building className="h-5 w-5 text-primary" />
                               </div>
                               <div className="flex-1">
                                 <div className="font-semibold text-foreground group-hover:text-primary transition-colors">
