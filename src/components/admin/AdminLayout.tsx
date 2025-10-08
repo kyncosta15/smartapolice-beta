@@ -59,7 +59,7 @@ function AdminSidebar() {
           <img 
             src={adminLogo} 
             alt="RCaldas Admin" 
-            className="h-10 w-10 object-contain"
+            className="h-11 w-11 object-contain"
           />
         )}
       </SidebarHeader>
