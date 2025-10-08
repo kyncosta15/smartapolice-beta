@@ -23,24 +23,64 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
 
     setIsGenerating(true);
     try {
-      // Buscar empresa do usuário
-      const { data: userData } = await supabase
-        .from('users')
-        .select('company')
-        .eq('id', user.id)
+      console.log('🎯 Gerando relatório para usuário:', user.id);
+
+      // Buscar empresa_id do usuário através do membership ou função do banco
+      let empresaId: string | null = null;
+      
+      // Tentar buscar através do membership primeiro
+      const { data: membershipData } = await supabase
+        .from('user_memberships')
+        .select('empresa_id, empresas(nome, cnpj)')
+        .eq('user_id', user.id)
+        .limit(1)
         .single();
 
-      if (!userData?.company) throw new Error('Empresa não encontrada');
+      if (membershipData?.empresa_id) {
+        empresaId = membershipData.empresa_id;
+        console.log('✅ Empresa encontrada via membership:', empresaId);
+      }
 
-      const { data: empresaData } = await supabase
+      // Se não encontrou, tentar pela tabela users
+      if (!empresaId) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('company')
+          .eq('id', user.id)
+          .single();
+
+        if (userData?.company) {
+          const { data: empresaData } = await supabase
+            .from('empresas')
+            .select('id, nome, cnpj')
+            .eq('nome', userData.company)
+            .single();
+
+          if (empresaData?.id) {
+            empresaId = empresaData.id;
+            console.log('✅ Empresa encontrada via users.company:', empresaId);
+          }
+        }
+      }
+
+      if (!empresaId) {
+        toast.error('Empresa não encontrada para este usuário');
+        return;
+      }
+
+      // Buscar informações da empresa
+      const { data: empresaInfo } = await supabase
         .from('empresas')
         .select('id, nome, cnpj')
-        .eq('nome', userData.company)
+        .eq('id', empresaId)
         .single();
 
-      if (!empresaData) throw new Error('Empresa não encontrada');
+      if (!empresaInfo) {
+        toast.error('Não foi possível carregar informações da empresa');
+        return;
+      }
 
-      const empresaId = empresaData.id;
+      console.log('📊 Buscando dados para empresa:', empresaInfo.nome);
 
       // Buscar dados em paralelo
       const [ticketsRes, veiculosRes, apolicesRes] = await Promise.all([
@@ -63,9 +103,26 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
           .eq('empresa_id', empresaId)
       ]);
 
+      console.log('📈 Dados encontrados:', {
+        tickets: ticketsRes.data?.length || 0,
+        veiculos: veiculosRes.data?.length || 0,
+        apolices: apolicesRes.data?.length || 0
+      });
+
+      // Verificar se há erros
+      if (ticketsRes.error) console.error('Erro ao buscar tickets:', ticketsRes.error);
+      if (veiculosRes.error) console.error('Erro ao buscar veículos:', veiculosRes.error);
+      if (apolicesRes.error) console.error('Erro ao buscar apólices:', apolicesRes.error);
+
       const tickets = ticketsRes.data || [];
       const veiculos = veiculosRes.data || [];
       const apolices = apolicesRes.data || [];
+
+      // Verificar se há dados para gerar o relatório
+      if (tickets.length === 0 && veiculos.length === 0 && apolices.length === 0) {
+        toast.error('Nenhum dado encontrado para gerar o relatório. Verifique se há informações cadastradas.');
+        return;
+      }
 
       // Calcular estatísticas
       const sinistros = tickets.filter(t => t.tipo === 'sinistro');
@@ -108,15 +165,15 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
       pdf.setTextColor(51, 51, 51);
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(empresaData.nome, 20, yPos);
+      pdf.text(empresaInfo.nome, 20, yPos);
       
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(102, 102, 102);
       yPos += 7;
       
-      if (empresaData.cnpj) {
-        pdf.text(`CNPJ: ${empresaData.cnpj}`, 20, yPos);
+      if (empresaInfo.cnpj) {
+        pdf.text(`CNPJ: ${empresaInfo.cnpj}`, 20, yPos);
         yPos += 5;
       }
       
@@ -488,7 +545,7 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
       }
 
       // Salvar PDF
-      const fileName = `relatorio-executivo-${empresaData.nome.toLowerCase().replace(/\s+/g, '-')}-${format(new Date(), 'yyyyMMdd-HHmmss')}.pdf`;
+      const fileName = `relatorio-executivo-${empresaInfo.nome.toLowerCase().replace(/\s+/g, '-')}-${format(new Date(), 'yyyyMMdd-HHmmss')}.pdf`;
       pdf.save(fileName);
 
       if (onExportComplete) {
