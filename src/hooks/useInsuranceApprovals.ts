@@ -41,14 +41,18 @@ export function useInsuranceApprovals() {
         .from('insurance_approval_requests')
         .select(`
           *,
-          frota_veiculos!inner(placa, marca, modelo),
-          empresas!inner(nome),
+          frota_veiculos(placa, marca, modelo),
+          empresas(nome),
           user_profiles!insurance_approval_requests_requested_by_fkey(display_name)
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Query error:', error);
+        throw error;
+      }
       
+      console.log('Solicitações carregadas:', data);
       setRequests((data || []) as InsuranceApprovalRequest[]);
     } catch (error) {
       console.error('Erro ao carregar solicitações:', error);
