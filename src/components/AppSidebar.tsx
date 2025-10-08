@@ -50,7 +50,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
-    { id: 'export', title: 'Exportar', icon: BarChart3 },
+    { id: 'export', title: 'Relatórios', icon: BarChart3 },
     { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 
@@ -63,7 +63,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'aprovacoes', title: 'Aprovações', icon: CheckSquare },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
-    { id: 'export', title: 'Exportar', icon: BarChart3 },
+    { id: 'export', title: 'Relatórios', icon: BarChart3 },
     { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 
