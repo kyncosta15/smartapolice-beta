@@ -71,6 +71,37 @@ export function useAdminMetrics() {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    try {
+      setDeleting(true);
+
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { user_id: userId },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Usuário deletado',
+        description: 'Usuário removido com sucesso.',
+      });
+
+      await loadMetrics();
+      await loadCompanies();
+      return true;
+    } catch (error) {
+      console.error('Erro ao deletar usuário:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível deletar o usuário.',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   useEffect(() => {
     loadMetrics();
     loadCompanies();
@@ -84,6 +115,7 @@ export function useAdminMetrics() {
     refreshMetrics: loadMetrics,
     refreshCompanies: loadCompanies,
     deleteCompanies,
+    deleteUser,
   };
 }
 

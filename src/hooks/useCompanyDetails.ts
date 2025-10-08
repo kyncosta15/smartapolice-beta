@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface CompanyUser {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  created_at: string;
+}
+
 export interface CompanyDetails {
   empresa_id: string;
   empresa_nome: string;
@@ -13,6 +21,7 @@ export interface CompanyDetails {
   assistencias_abertas: number;
   assistencias_total: number;
   ultima_atividade: string;
+  users: CompanyUser[];
 }
 
 export function useCompanyDetails(empresaId: string | null) {
@@ -59,6 +68,13 @@ export function useCompanyDetails(empresaId: string | null) {
           .eq('empresa_id', empresaId);
 
         const userIds = empresaMemberships?.map(m => m.user_id) || [];
+
+        // Buscar detalhes dos usuários
+        const { data: usersData } = await supabase
+          .from('users')
+          .select('id, email, name, role, created_at')
+          .in('id', userIds)
+          .order('created_at', { ascending: false });
 
         // Buscar apólices de benefícios
         const { data: apolicesBeneficios, count: beneficiosCount } = await supabase
@@ -123,6 +139,7 @@ export function useCompanyDetails(empresaId: string | null) {
           assistencias_abertas: assistenciasAbertas,
           assistencias_total: assistenciasTotal || 0,
           ultima_atividade: ultimaAtividade?.updated_at || new Date().toISOString(),
+          users: (usersData || []) as CompanyUser[],
         });
       } catch (error) {
         console.error('Erro ao carregar detalhes da empresa:', error);

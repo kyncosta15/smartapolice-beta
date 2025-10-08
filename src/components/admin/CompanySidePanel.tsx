@@ -2,11 +2,23 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Building2, Users, Car, FileText, AlertCircle, Clock, TrendingUp, TrendingDown, Mail, User } from 'lucide-react';
+import { Building2, Users, Car, FileText, AlertCircle, Clock, Mail, User, Trash2 } from 'lucide-react';
 import type { CompanySummary } from '@/types/admin';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useCompanyDetails } from '@/hooks/useCompanyDetails';
+import { useAdminMetrics } from '@/hooks/useAdminMetrics';
+import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface CompanySidePanelProps {
   open: boolean;
@@ -16,8 +28,20 @@ interface CompanySidePanelProps {
 
 export function CompanySidePanel({ open, onOpenChange, company }: CompanySidePanelProps) {
   const { details, loading } = useCompanyDetails(company?.empresa_id || null);
+  const { deleteUser, deleting } = useAdminMetrics();
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   if (!company) return null;
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    const success = await deleteUser(userToDelete);
+    if (success) {
+      setUserToDelete(null);
+      // Recarregar detalhes
+      window.location.reload();
+    }
+  };
 
   const displayData = details || company;
 
@@ -149,6 +173,52 @@ export function CompanySidePanel({ open, onOpenChange, company }: CompanySidePan
             )}
           </div>
 
+          {/* Lista de Usuários */}
+          {!loading && details?.users && details.users.length > 0 && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                    Usuários ({details.users.length})
+                  </div>
+                  {details.users.map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">
+                            {user.name || 'Sem nome'}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {user.email}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {user.role}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                        onClick={() => setUserToDelete(user.id)}
+                        disabled={deleting}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* CTA */}
           <div className="pt-4">
             <Button 
@@ -163,6 +233,29 @@ export function CompanySidePanel({ open, onOpenChange, company }: CompanySidePan
           </div>
         </div>
       </SheetContent>
+
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão de Usuário</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a deletar este usuário e todos os seus dados associados.
+              <p className="mt-3 font-semibold text-destructive">Esta ação não pode ser desfeita!</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Deletando...' : 'Confirmar Exclusão'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }
