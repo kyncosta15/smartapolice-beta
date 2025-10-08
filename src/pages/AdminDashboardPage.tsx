@@ -224,10 +224,12 @@ export default function AdminDashboardPage() {
                       <div className="text-center">
                         <div className="text-xs text-muted-foreground mb-1">Atividade</div>
                         <div className="text-xs font-medium">
-                          {new Date(company.ultima_atividade).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: 'short'
-                          })}
+                          {company.ultima_atividade && new Date(company.ultima_atividade).getFullYear() > 2000
+                            ? new Date(company.ultima_atividade).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: 'short'
+                              })
+                            : 'Sem'}
                         </div>
                       </div>
                     </CardContent>
@@ -321,11 +323,13 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="p-4 text-center">
                             <span className="text-sm text-muted-foreground">
-                              {new Date(company.ultima_atividade).toLocaleDateString('pt-BR', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric'
-                              })}
+                              {company.ultima_atividade && new Date(company.ultima_atividade).getFullYear() > 2000
+                                ? new Date(company.ultima_atividade).toLocaleDateString('pt-BR', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })
+                                : 'Sem atividade'}
                             </span>
                           </td>
                         </tr>
