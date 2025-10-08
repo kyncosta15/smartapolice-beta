@@ -137,7 +137,7 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
 
       // KPIs em grid
       const kpis = [
-        { label: 'Total de Veículos', value: veiculos.length, color: [0, 72, 255] },
+        { label: 'Total de Veiculos', value: veiculos.length, color: [0, 72, 255] },
         { label: 'Segurados', value: veiculosSegurados.length, color: [34, 197, 94] },
         { label: 'Sem Seguro', value: veiculosSemSeguro.length, color: [239, 68, 68] },
         { label: 'Sinistros', value: sinistros.length, color: [249, 115, 22] }
@@ -167,7 +167,9 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
       yPos += kpiHeight + 20;
 
       // === INSIGHTS AUTOMÁTICOS ===
-      const percentualSegurado = ((veiculosSegurados.length / veiculos.length) * 100).toFixed(1);
+      const percentualSegurado = veiculos.length > 0 
+        ? ((veiculosSegurados.length / veiculos.length) * 100).toFixed(1) 
+        : '0.0';
       const categoriaPrincipal = categoriasOrdenadas[0];
       
       pdf.setFillColor(255, 243, 205);
@@ -176,17 +178,17 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
       pdf.setFontSize(10);
       pdf.setTextColor(146, 64, 14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('💡 INSIGHTS', 20, yPos);
+      pdf.text('INSIGHTS', 20, yPos);
       
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(9);
       yPos += 7;
       
       const insights = [
-        `• ${percentualSegurado}% da frota está coberta por seguro`,
-        categoriaPrincipal ? `• ${categoriaPrincipal[0]} representa ${((categoriaPrincipal[1] / veiculos.length) * 100).toFixed(1)}% dos veículos` : null,
+        `• ${percentualSegurado}% da frota esta coberta por seguro`,
+        categoriaPrincipal ? `• ${categoriaPrincipal[0]} representa ${((categoriaPrincipal[1] / veiculos.length) * 100).toFixed(1)}% dos veiculos` : null,
         `• ${sinistros.filter(s => s.status === 'aberto').length} sinistros ativos necessitam acompanhamento`,
-        `• ${assistencias.length} assistências registradas no período`
+        `• ${assistencias.length} assistencias registradas no periodo`
       ].filter(Boolean);
 
       insights.forEach((insight) => {
@@ -320,14 +322,106 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
 
       // === APÓLICES DE BENEFÍCIOS ===
       if (apolices.length > 0) {
-        if (yPos > 230) {
+        if (yPos > 210) {
           pdf.addPage();
           yPos = 20;
         }
 
+        // Cabeçalho da seção
+        pdf.setTextColor(51, 51, 51);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Gestao de Apolices e Beneficios', 20, yPos);
+        yPos += 15;
+
+        // KPIs de Apólices
+        const apolicesAtivas = apolices.filter(a => a.status === 'ativa');
+        const apolicesCanceladas = apolices.filter(a => a.status === 'cancelada');
+        const valorTotalApolices = apolices.reduce((sum, a) => sum + (parseFloat(String(a.valor_total || 0))), 0);
+        const totalVidas = apolices.reduce((sum, a) => sum + (a.quantidade_vidas || 0), 0);
+
+        const apolicesKpis = [
+          { label: 'Total Apolices', value: apolices.length, color: [0, 72, 255] },
+          { label: 'Ativas', value: apolicesAtivas.length, color: [34, 197, 94] },
+          { label: 'Vidas', value: totalVidas, color: [249, 115, 22] },
+          { label: 'Valor Total', value: `R$ ${(valorTotalApolices / 1000).toFixed(0)}k`, color: [168, 85, 247], isText: true }
+        ];
+
+        const apoliceKpiWidth = 42;
+        const apoliceKpiHeight = 25;
+        let apoliceKpiX = 20;
+
+        apolicesKpis.forEach((kpi) => {
+          const [r, g, b] = kpi.color;
+          pdf.setFillColor(r, g, b);
+          pdf.rect(apoliceKpiX, yPos, apoliceKpiWidth, apoliceKpiHeight, 'F');
+          
+          pdf.setTextColor(255, 255, 255);
+          pdf.setFontSize(kpi.isText ? 14 : 18);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(String(kpi.value), apoliceKpiX + apoliceKpiWidth / 2, yPos + 12, { align: 'center' });
+          
+          pdf.setFontSize(8);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text(kpi.label, apoliceKpiX + apoliceKpiWidth / 2, yPos + 19, { align: 'center' });
+          
+          apoliceKpiX += apoliceKpiWidth + 3;
+        });
+
+        yPos += apoliceKpiHeight + 15;
+
+        // Insights de Apólices
+        const percentualAtivas = apolices.length > 0 
+          ? ((apolicesAtivas.length / apolices.length) * 100).toFixed(1)
+          : '0.0';
+        
+        // Agrupar por tipo de benefício
+        const tiposBeneficios = apolices.reduce((acc, a) => {
+          if (a.tipo_beneficio) {
+            acc[a.tipo_beneficio] = (acc[a.tipo_beneficio] || 0) + 1;
+          }
+          return acc;
+        }, {} as Record<string, number>);
+
+        const tipoPrincipal = Object.entries(tiposBeneficios)
+          .sort(([, a], [, b]) => b - a)[0];
+
+        pdf.setFillColor(255, 243, 205);
+        pdf.rect(15, yPos - 5, 180, 30, 'F');
+        
+        pdf.setFontSize(10);
+        pdf.setTextColor(146, 64, 14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('INSIGHTS - APOLICES', 20, yPos);
+        
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        yPos += 7;
+        
+        const apolicesInsights = [
+          `• ${percentualAtivas}% das apolices estao ativas`,
+          tipoPrincipal ? `• ${tipoPrincipal[0]} e o tipo de beneficio mais comum (${tipoPrincipal[1]} apolices)` : null,
+          `• ${totalVidas} vidas cobertas no total`,
+          valorTotalApolices > 0 ? `• Custo mensal total: R$ ${valorTotalApolices.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : null
+        ].filter(Boolean);
+
+        apolicesInsights.forEach((insight) => {
+          pdf.text(insight!, 25, yPos);
+          yPos += 5;
+        });
+
+        yPos += 10;
+
+        // Tabela de apólices
+        if (yPos > 220) {
+          pdf.addPage();
+          yPos = 20;
+        }
+
+        pdf.setTextColor(51, 51, 51);
         pdf.setFontSize(12);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Apólices de Benefícios', 20, yPos);
+        pdf.text('Detalhamento de Apolices', 20, yPos);
         yPos += 10;
 
         const apolicesTableData = apolices.map(a => [
@@ -341,7 +435,7 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
 
         autoTable(pdf, {
           startY: yPos,
-          head: [['Número', 'Seguradora', 'Tipo', 'Status', 'Início', 'Fim']],
+          head: [['Numero', 'Seguradora', 'Tipo', 'Status', 'Inicio', 'Fim']],
           body: apolicesTableData,
           theme: 'striped',
           headStyles: { 
@@ -358,6 +452,8 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
             5: { cellWidth: 25 }
           }
         });
+
+        yPos = (pdf as any).lastAutoTable.finalY + 15;
       }
 
       // === RODAPÉ ===
