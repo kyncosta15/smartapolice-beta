@@ -52,20 +52,33 @@ export function useCompanyDetails(empresaId: string | null) {
           .select('*', { count: 'exact', head: true })
           .eq('empresa_id', empresaId);
 
-        // Buscar apólices da empresa
-        const { data: apolices, count: apolicesCount, error: apolicesError } = await supabase
+        // Buscar usuários da empresa para buscar policies (PDFs)
+        const { data: empresaUsers } = await supabase
+          .from('users')
+          .select('id')
+          .eq('company', empresa.nome);
+
+        const userIds = empresaUsers?.map(u => u.id) || [];
+
+        // Buscar apólices de benefícios
+        const { data: apolicesBeneficios, count: beneficiosCount } = await supabase
           .from('apolices_beneficios')
           .select('status', { count: 'exact' })
           .eq('empresa_id', empresaId);
 
-        console.log('🔍 Apólices encontradas:', {
-          empresaId,
-          count: apolicesCount,
-          data: apolices,
-          error: apolicesError
-        });
+        // Buscar apólices de PDFs (auto)
+        const { data: policiesPdfs, count: pdfsCount } = await supabase
+          .from('policies')
+          .select('status', { count: 'exact' })
+          .in('user_id', userIds);
 
-        const apolicesAtivas = apolices?.filter(a => a.status === 'ativa').length || 0;
+        // Somar ambas as contagens
+        const apolicesCount = (beneficiosCount || 0) + (pdfsCount || 0);
+        
+        // Contar ativas de ambas as tabelas
+        const beneficiosAtivas = apolicesBeneficios?.filter(a => a.status === 'ativa').length || 0;
+        const pdfsAtivas = policiesPdfs?.filter(a => a.status === 'vigente' || a.status === 'ativa').length || 0;
+        const apolicesAtivas = beneficiosAtivas + pdfsAtivas;
 
         // Buscar sinistros da empresa
         const { data: sinistros, count: sinistrosTotal } = await supabase
