@@ -52,13 +52,13 @@ export function useCompanyDetails(empresaId: string | null) {
           .select('*', { count: 'exact', head: true })
           .eq('empresa_id', empresaId);
 
-        // Buscar usuários da empresa para buscar policies (PDFs)
-        const { data: empresaUsers } = await supabase
-          .from('users')
-          .select('id')
-          .eq('company', empresa.nome);
+        // Buscar usuários da empresa através de memberships
+        const { data: empresaMemberships } = await supabase
+          .from('user_memberships')
+          .select('user_id')
+          .eq('empresa_id', empresaId);
 
-        const userIds = empresaUsers?.map(u => u.id) || [];
+        const userIds = empresaMemberships?.map(m => m.user_id) || [];
 
         // Buscar apólices de benefícios
         const { data: apolicesBeneficios, count: beneficiosCount } = await supabase
