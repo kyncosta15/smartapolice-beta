@@ -129,8 +129,8 @@ export function CompanySidePanel({ open, onOpenChange, company }: CompanySidePan
             <Button 
               className="w-full" 
               onClick={() => {
-                // TODO: Implementar navegação para dashboard filtrado por empresa
-                console.log('Ver dados da empresa:', company.empresa_id);
+                onOpenChange(false);
+                window.location.href = `/admin/empresa/${company.empresa_id}`;
               }}
             >
               Ver Dados Completos
