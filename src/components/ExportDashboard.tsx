@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Calendar, Clock, Trash2, AlertCircle, Mail } from 'lucide-react';
+import { 
+  FileText, 
+  Calendar, 
+  Clock, 
+  Trash2, 
+  AlertCircle, 
+  Mail 
+} from 'lucide-react';
 import { ClientReports } from '@/components/reports/ClientReports';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
