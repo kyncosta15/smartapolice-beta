@@ -8,17 +8,30 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Shield, AlertTriangle, Car, Building, Search, Mail, LifeBuoy } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Shield, AlertTriangle, Car, Building, Search, Mail, LifeBuoy, Trash2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { CompanySummary } from '@/types/admin';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type Period = '30' | '60';
 
 export default function AdminDashboardPage() {
-  const { metrics, companies, loading } = useAdminMetrics();
+  const { metrics, companies, loading, deleting, deleteCompanies } = useAdminMetrics();
   const [period, setPeriod] = useState<Period>('30');
   const [selectedCompany, setSelectedCompany] = useState<CompanySummary | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCompanies, setSelectedCompanies] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Filtrar empresas e veículos por termo de busca - antes dos early returns
   const filteredCompanies = useMemo(() => {
@@ -58,6 +71,32 @@ export default function AdminDashboardPage() {
 
   const averages = period === '30' ? metrics.medias_30 : metrics.medias_60;
 
+  const toggleCompanySelection = (companyId: string) => {
+    const newSelection = new Set(selectedCompanies);
+    if (newSelection.has(companyId)) {
+      newSelection.delete(companyId);
+    } else {
+      newSelection.add(companyId);
+    }
+    setSelectedCompanies(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedCompanies.size === filteredCompanies.length) {
+      setSelectedCompanies(new Set());
+    } else {
+      setSelectedCompanies(new Set(filteredCompanies.map(c => c.empresa_id)));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    const success = await deleteCompanies(Array.from(selectedCompanies));
+    if (success) {
+      setSelectedCompanies(new Set());
+      setShowDeleteDialog(false);
+    }
+  };
+
   return (
     <AdminLayout activeSection="overview">
       <div className="space-y-6">
@@ -68,16 +107,31 @@ export default function AdminDashboardPage() {
             <p className="text-xs md:text-sm text-muted-foreground">Visão geral de todas as contas do sistema</p>
           </div>
 
-          {/* Filtro de Busca */}
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Buscar por nome da empresa..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 text-sm"
-            />
+          {/* Filtro de Busca e Ações */}
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+            <div className="relative w-full sm:w-auto sm:min-w-[300px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Buscar por nome da empresa..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 text-sm"
+              />
+            </div>
+            
+            {selectedCompanies.size > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowDeleteDialog(true)}
+                disabled={deleting}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Deletar {selectedCompanies.size} selecionada(s)
+              </Button>
+            )}
           </div>
         </div>
 
@@ -244,6 +298,12 @@ export default function AdminDashboardPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b bg-muted/30">
+                      <th className="p-4 w-12">
+                        <Checkbox
+                          checked={selectedCompanies.size === filteredCompanies.length && filteredCompanies.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </th>
                       <th className="p-4 text-left text-sm font-semibold text-foreground">Empresa</th>
                       <th className="p-4 text-center text-sm font-semibold text-foreground">Usuários</th>
                       <th className="p-4 text-center text-sm font-semibold text-foreground">Apólices</th>
@@ -256,7 +316,7 @@ export default function AdminDashboardPage() {
                   <tbody>
                     {filteredCompanies.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="p-12 text-center text-muted-foreground">
+                        <td colSpan={8} className="p-12 text-center text-muted-foreground">
                           <div className="flex flex-col items-center gap-2">
                             <Building className="h-12 w-12 text-muted-foreground/50" />
                             <p className="font-medium">Nenhuma empresa encontrada</p>
@@ -267,10 +327,15 @@ export default function AdminDashboardPage() {
                       filteredCompanies.map((company) => (
                         <tr 
                           key={company.empresa_id}
-                          className="border-b hover:bg-accent/50 cursor-pointer transition-colors group"
-                          onClick={() => setSelectedCompany(company)}
+                          className="border-b hover:bg-accent/50 transition-colors group"
                         >
-                          <td className="p-4">
+                          <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={selectedCompanies.has(company.empresa_id)}
+                              onCheckedChange={() => toggleCompanySelection(company.empresa_id)}
+                            />
+                          </td>
+                          <td className="p-4 cursor-pointer" onClick={() => setSelectedCompany(company)}>
                             <div className="flex items-center gap-3">
                               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                                 <Building className="h-5 w-5 text-primary" />
@@ -288,22 +353,22 @@ export default function AdminDashboardPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="p-4 text-center">
+                          <td className="p-4 text-center cursor-pointer" onClick={() => setSelectedCompany(company)}>
                             <span className="inline-flex items-center justify-center h-8 px-3 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 font-medium text-sm">
                               {company.usuarios}
                             </span>
                           </td>
-                          <td className="p-4 text-center">
+                          <td className="p-4 text-center cursor-pointer" onClick={() => setSelectedCompany(company)}>
                             <span className="inline-flex items-center justify-center h-8 px-3 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-400 font-semibold text-sm">
                               {company.apolices}
                             </span>
                           </td>
-                          <td className="p-4 text-center">
+                          <td className="p-4 text-center cursor-pointer" onClick={() => setSelectedCompany(company)}>
                             <span className="inline-flex items-center justify-center h-8 px-3 rounded-full bg-green-500/10 text-green-700 dark:text-green-400 font-medium text-sm">
                               {company.veiculos}
                             </span>
                           </td>
-                          <td className="p-4 text-center">
+                          <td className="p-4 text-center cursor-pointer" onClick={() => setSelectedCompany(company)}>
                             <span className={`inline-flex items-center justify-center h-8 px-3 rounded-full font-semibold text-sm ${
                               company.sinistros_abertos > 0 
                                 ? 'bg-red-500/10 text-red-700 dark:text-red-400' 
@@ -312,7 +377,7 @@ export default function AdminDashboardPage() {
                               {company.sinistros_abertos}
                             </span>
                           </td>
-                          <td className="p-4 text-center">
+                          <td className="p-4 text-center cursor-pointer" onClick={() => setSelectedCompany(company)}>
                             <span className={`inline-flex items-center justify-center h-8 px-3 rounded-full font-semibold text-sm ${
                               company.assistencias_abertas > 0 
                                 ? 'bg-orange-500/10 text-orange-700 dark:text-orange-400' 
@@ -321,7 +386,7 @@ export default function AdminDashboardPage() {
                               {company.assistencias_abertas}
                             </span>
                           </td>
-                          <td className="p-4 text-center">
+                          <td className="p-4 text-center cursor-pointer" onClick={() => setSelectedCompany(company)}>
                             <span className="text-sm text-muted-foreground">
                               {company.ultima_atividade && new Date(company.ultima_atividade).getFullYear() > 2000
                                 ? new Date(company.ultima_atividade).toLocaleDateString('pt-BR', {
@@ -354,6 +419,36 @@ export default function AdminDashboardPage() {
         onOpenChange={(open) => !open && setSelectedCompany(null)}
         company={selectedCompany}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a deletar <strong>{selectedCompanies.size}</strong> empresa(s) e todos os seus dados associados:
+              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                <li>Veículos e documentos da frota</li>
+                <li>Colaboradores e dependentes</li>
+                <li>Apólices de benefícios</li>
+                <li>Tickets e sinistros</li>
+                <li>Solicitações de aprovação</li>
+              </ul>
+              <p className="mt-3 font-semibold text-destructive">Esta ação não pode ser desfeita!</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSelected}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Deletando...' : 'Confirmar Exclusão'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }

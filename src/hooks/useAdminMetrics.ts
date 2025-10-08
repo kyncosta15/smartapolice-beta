@@ -7,6 +7,7 @@ export function useAdminMetrics() {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [companies, setCompanies] = useState<CompanySummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
   const loadMetrics = async () => {
@@ -39,6 +40,37 @@ export function useAdminMetrics() {
     }
   };
 
+  const deleteCompanies = async (companyIds: string[]) => {
+    try {
+      setDeleting(true);
+
+      const { data, error } = await supabase.functions.invoke('admin-delete-companies', {
+        body: { company_ids: companyIds },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Empresas deletadas',
+        description: `${companyIds.length} empresa(s) deletada(s) com sucesso.`,
+      });
+
+      await loadMetrics();
+      await loadCompanies();
+      return true;
+    } catch (error) {
+      console.error('Erro ao deletar empresas:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível deletar as empresas.',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   useEffect(() => {
     loadMetrics();
     loadCompanies();
@@ -48,8 +80,10 @@ export function useAdminMetrics() {
     metrics,
     companies,
     loading,
+    deleting,
     refreshMetrics: loadMetrics,
     refreshCompanies: loadCompanies,
+    deleteCompanies,
   };
 }
 
