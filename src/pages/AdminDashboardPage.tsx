@@ -116,31 +116,16 @@ export default function AdminDashboardPage() {
             <p className="text-xs md:text-sm text-muted-foreground">Visão geral de todas as contas do sistema</p>
           </div>
 
-          {/* Filtro de Busca e Ações */}
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <div className="relative w-full sm:w-auto sm:min-w-[300px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Buscar por nome da empresa..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 text-sm"
-              />
-            </div>
-            
-            {selectedCompanies.size > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowDeleteDialog(true)}
-                disabled={deleting}
-                className="gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Deletar {selectedCompanies.size} selecionada(s)
-              </Button>
-            )}
+          {/* Filtro de Busca */}
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar por nome da empresa..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 text-sm"
+            />
           </div>
         </div>
 
@@ -220,14 +205,29 @@ export default function AdminDashboardPage() {
         {/* Tabela de Todas as Contas */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base md:text-xl">
-              Todas as Contas
-              {searchTerm && (
-                <span className="text-sm font-normal text-muted-foreground ml-2">
-                  - {filteredCompanies.length} resultados
-                </span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <CardTitle className="text-base md:text-xl">
+                Todas as Contas
+                {searchTerm && (
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    - {filteredCompanies.length} resultados
+                  </span>
+                )}
+              </CardTitle>
+              
+              {selectedCompanies.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={deleting}
+                  className="gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Deletar {selectedCompanies.size} selecionada(s)
+                </Button>
               )}
-            </CardTitle>
+            </div>
           </CardHeader>
           <CardContent className="p-0 md:p-6 max-h-[600px] overflow-y-auto">
             {/* Mobile: Cards */}
