@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Crown, LogOut, CheckCircle, User } from 'lucide-react';
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { useAuth } from '@/contexts/AuthContext';
+import adminLogo from '@/assets/admin-sidebar-logo.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -55,7 +56,11 @@ function AdminSidebar() {
         {open ? (
           <SmartApóliceLogo size="md" showText={true} />
         ) : (
-          <Crown className="h-6 w-6 text-primary" />
+          <img 
+            src={adminLogo} 
+            alt="RCaldas Admin" 
+            className="h-10 w-10 object-contain"
+          />
         )}
       </SidebarHeader>
 
