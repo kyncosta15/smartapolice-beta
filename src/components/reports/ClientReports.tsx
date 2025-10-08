@@ -81,6 +81,14 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
       console.log('📊 Buscando dados para empresa:', empresaInfo.nome, '(ID:', empresaId, ')');
 
       // Buscar dados em paralelo - incluindo apólices de seguros (policies)
+      // Buscar usuários da empresa para filtrar policies corretamente
+      const { data: empresaUsers } = await supabase
+        .from('user_memberships')
+        .select('user_id')
+        .eq('empresa_id', empresaId);
+
+      const userIds = empresaUsers?.map(m => m.user_id) || [];
+
       const [ticketsRes, veiculosRes, apolicesBeneficiosRes, apolicesSegurosRes] = await Promise.all([
         supabase
           .from('tickets')
@@ -100,11 +108,13 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
           .select('*')
           .eq('empresa_id', empresaId),
 
-        // Buscar também apólices de seguros (da tabela policies)
-        supabase
-          .from('policies')
-          .select('*')
-          .eq('user_id', user.id)
+        // Buscar apólices de seguros dos usuários da empresa
+        userIds.length > 0
+          ? supabase
+              .from('policies')
+              .select('*')
+              .in('user_id', userIds)
+          : Promise.resolve({ data: [], error: null })
       ]);
 
       console.log('📈 Dados encontrados:', {
