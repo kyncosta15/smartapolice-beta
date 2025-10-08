@@ -283,9 +283,6 @@ export default function AdminDashboardPage() {
                                     <span>{company.conta_email}</span>
                                   </div>
                                 )}
-                                <div className="text-xs text-muted-foreground font-mono mt-0.5">
-                                  {company.empresa_nome}
-                                </div>
                               </div>
                             </div>
                           </td>
