@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,13 @@ export default function AdminProfilePage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
+
+  // Sincronizar displayName quando profile atualizar
+  useEffect(() => {
+    if (profile?.display_name) {
+      setDisplayName(profile.display_name);
+    }
+  }, [profile?.display_name]);
 
   const initials = profile?.display_name
     ?.split(' ')
