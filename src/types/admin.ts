@@ -15,6 +15,8 @@ export interface AdminMetrics {
 export interface CompanySummary {
   empresa_id: string;
   empresa_nome: string;
+  conta_nome: string | null;
+  conta_email: string | null;
   usuarios: number;
   veiculos: number;
   apolices: number;
