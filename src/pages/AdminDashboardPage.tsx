@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CompanySidePanel } from '@/components/admin/CompanySidePanel';
+import { AdminCharts } from '@/components/admin/AdminCharts';
 import { useAdminMetrics } from '@/hooks/useAdminMetrics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -147,6 +148,9 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Gráficos */}
+        <AdminCharts metrics={metrics} />
 
         {/* Tabela de Todas as Contas */}
         <Card>
