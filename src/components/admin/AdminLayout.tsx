@@ -113,19 +113,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
           <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-            <div className="px-8 py-4 flex items-center justify-between">
+            <div className="px-4 md:px-8 py-4 flex items-center justify-between">
               <SidebarTrigger className="-ml-2" />
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-3 h-auto py-2 px-3">
-                    <Avatar className="h-8 w-8">
+                  <Button variant="ghost" className="gap-2 md:gap-3 h-auto py-2 px-2 md:px-3">
+                    <Avatar className="h-7 w-7 md:h-8 md:w-8">
                       <AvatarImage src={profile?.avatar_url || undefined} />
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col items-start">
+                    <div className="hidden sm:flex flex-col items-start">
                       <span className="text-sm font-medium">{profile?.display_name || 'Admin'}</span>
                       <span className="text-xs text-muted-foreground">RCaldas</span>
                     </div>
@@ -143,7 +143,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </header>
 
           {/* Content */}
-          <main className="flex-1 p-8 overflow-auto">{children}</main>
+          <main className="flex-1 p-4 md:p-8 overflow-auto">{children}</main>
         </div>
       </div>
     </SidebarProvider>

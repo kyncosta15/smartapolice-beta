@@ -54,7 +54,7 @@ export function AdminCharts({ metrics }: AdminChartsProps) {
       {/* Distribuição por Seguradora */}
       <Card>
         <CardHeader>
-          <CardTitle>Apólices por Seguradora</CardTitle>
+          <CardTitle className="text-base md:text-lg">Apólices por Seguradora</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -64,7 +64,7 @@ export function AdminCharts({ metrics }: AdminChartsProps) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={(entry: any) => `${entry.name}: ${(entry.percent * 100).toFixed(0)}%`}
+                label={false}
                 outerRadius={80}
                 fill="hsl(var(--primary))"
                 dataKey="value"
@@ -73,7 +73,18 @@ export function AdminCharts({ metrics }: AdminChartsProps) {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+              />
+              <Legend 
+                wrapperStyle={{ fontSize: '12px' }}
+                formatter={(value) => value.length > 20 ? value.substring(0, 20) + '...' : value}
+              />
             </PieChart>
           </ResponsiveContainer>
         </CardContent>
@@ -82,22 +93,34 @@ export function AdminCharts({ metrics }: AdminChartsProps) {
       {/* Veículos por Empresa */}
       <Card>
         <CardHeader>
-          <CardTitle>Veículos por Empresa (Top 8)</CardTitle>
+          <CardTitle className="text-base md:text-lg">Veículos por Empresa (Top 8)</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={veiculosEmpresas}>
-              <CartesianGrid strokeDasharray="3 3" />
+            <BarChart data={veiculosEmpresas} margin={{ bottom: 60, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis 
                 dataKey="name" 
                 angle={-45}
                 textAnchor="end"
-                height={100}
-                fontSize={11}
+                height={80}
+                fontSize={10}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="veiculos" fill="hsl(var(--primary))" />
+              <YAxis 
+                fontSize={12}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+                cursor={{ fill: 'hsl(var(--accent))' }}
+              />
+              <Bar dataKey="veiculos" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -106,16 +129,31 @@ export function AdminCharts({ metrics }: AdminChartsProps) {
       {/* Sinistros vs Assistências */}
       <Card>
         <CardHeader>
-          <CardTitle>Tickets Totais</CardTitle>
+          <CardTitle className="text-base md:text-lg">Tickets Totais</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={ticketsData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="total" fill="hsl(var(--primary))" />
+            <BarChart data={ticketsData} margin={{ left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis 
+                dataKey="name" 
+                fontSize={12}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <YAxis 
+                fontSize={12}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+                cursor={{ fill: 'hsl(var(--accent))' }}
+              />
+              <Bar dataKey="total" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -124,18 +162,36 @@ export function AdminCharts({ metrics }: AdminChartsProps) {
       {/* Médias por Período */}
       <Card>
         <CardHeader>
-          <CardTitle>Média Diária de Tickets</CardTitle>
+          <CardTitle className="text-base md:text-lg">Média Diária de Tickets</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={mediasData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="periodo" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="sinistros" fill="hsl(var(--primary))" name="Sinistros" />
-              <Bar dataKey="assistencias" fill="hsl(var(--secondary))" name="Assistências" />
+            <BarChart data={mediasData} margin={{ left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis 
+                dataKey="periodo" 
+                fontSize={12}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <YAxis 
+                fontSize={12}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+                cursor={{ fill: 'hsl(var(--accent))' }}
+              />
+              <Legend 
+                wrapperStyle={{ fontSize: '12px' }}
+                iconType="circle"
+              />
+              <Bar dataKey="sinistros" fill="hsl(var(--primary))" name="Sinistros" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="assistencias" fill="hsl(var(--chart-2))" name="Assistências" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

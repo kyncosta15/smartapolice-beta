@@ -62,32 +62,34 @@ export default function AdminDashboardPage() {
     <AdminLayout activeSection="overview">
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Painel Administrativo</h1>
-          <p className="text-sm text-muted-foreground">Visão geral de todas as contas do sistema</p>
-        </div>
+        <div className="space-y-3 md:space-y-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1">Painel Administrativo</h1>
+            <p className="text-xs md:text-sm text-muted-foreground">Visão geral de todas as contas do sistema</p>
+          </div>
 
-        {/* Filtro de Busca */}
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Buscar por nome da empresa..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
+          {/* Filtro de Busca */}
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar por nome da empresa..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 text-sm"
+            />
+          </div>
         </div>
 
         {/* Resumo Geral */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Contas</CardTitle>
-              <Building2 className="h-4 w-4 text-blue-600" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium">Total de Contas</CardTitle>
+              <Building2 className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{filteredCompanies.length}</div>
+            <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+              <div className="text-xl md:text-2xl font-bold">{filteredCompanies.length}</div>
               <p className="text-xs text-muted-foreground">
                 {searchTerm ? 'Filtradas' : 'No sistema'}
               </p>
@@ -95,25 +97,25 @@ export default function AdminDashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Apólices</CardTitle>
-              <FileText className="h-4 w-4 text-purple-600" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium">Total de Apólices</CardTitle>
+              <FileText className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.apolices_total}</div>
+            <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+              <div className="text-xl md:text-2xl font-bold">{metrics.apolices_total}</div>
               <p className="text-xs text-muted-foreground">
                 No sistema
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Veículos</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
+          <Card className="col-span-2 md:col-span-1">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium">Total de Veículos</CardTitle>
+              <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
+            <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+              <div className="text-xl md:text-2xl font-bold">
                 {filteredVehicles.reduce((sum, v) => sum + v.total_veiculos, 0)}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -123,27 +125,27 @@ export default function AdminDashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sinistros Abertos</CardTitle>
-              <AlertCircle className="h-4 w-4 text-red-600" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium">Sinistros</CardTitle>
+              <AlertCircle className="h-3 w-3 md:h-4 md:w-4 text-red-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.sinistros_total}</div>
+            <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+              <div className="text-xl md:text-2xl font-bold">{metrics.sinistros_total}</div>
               <p className="text-xs text-muted-foreground">
-                Total no sistema
+                Total
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Assistências Abertas</CardTitle>
-              <AlertCircle className="h-4 w-4 text-orange-600" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium">Assistências</CardTitle>
+              <AlertCircle className="h-3 w-3 md:h-4 md:w-4 text-orange-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.assistencias_total}</div>
+            <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+              <div className="text-xl md:text-2xl font-bold">{metrics.assistencias_total}</div>
               <p className="text-xs text-muted-foreground">
-                Total no sistema
+                Total
               </p>
             </CardContent>
           </Card>
@@ -155,7 +157,7 @@ export default function AdminDashboardPage() {
         {/* Tabela de Todas as Contas */}
         <Card>
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="text-base md:text-xl">
               Todas as Contas
               {searchTerm && (
                 <span className="text-sm font-normal text-muted-foreground ml-2">
@@ -164,38 +166,88 @@ export default function AdminDashboardPage() {
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="rounded-lg border shadow-sm">
+          <CardContent className="p-0 md:p-6">
+            {/* Mobile: Cards */}
+            <div className="block md:hidden space-y-4 p-4">
+              {filteredCompanies.length === 0 ? (
+                <div className="p-12 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center gap-2">
+                    <Building2 className="h-12 w-12 text-muted-foreground/50" />
+                    <p className="font-medium">Nenhuma empresa encontrada</p>
+                  </div>
+                </div>
+              ) : (
+                filteredCompanies.map((company) => (
+                  <Card 
+                    key={company.empresa_id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => setSelectedCompany(company)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm truncate">{company.empresa_nome}</h3>
+                          <p className="text-xs text-muted-foreground font-mono">
+                            {company.empresa_id.slice(0, 8)}...
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-3 gap-3">
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Usuários</div>
+                        <div className="text-lg font-semibold text-blue-600">{company.usuarios}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Apólices</div>
+                        <div className="text-lg font-semibold text-purple-600">{company.apolices}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Veículos</div>
+                        <div className="text-lg font-semibold text-green-600">{company.veiculos}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Sinistros</div>
+                        <div className={`text-lg font-semibold ${company.sinistros_abertos > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                          {company.sinistros_abertos}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Assistências</div>
+                        <div className={`text-lg font-semibold ${company.assistencias_abertas > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
+                          {company.assistencias_abertas}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Atividade</div>
+                        <div className="text-xs font-medium">
+                          {new Date(company.ultima_atividade).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'short'
+                          })}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Desktop: Table */}
+            <div className="hidden md:block rounded-lg border shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b bg-muted/30">
                       <th className="p-4 text-left text-sm font-semibold text-foreground">Empresa</th>
-                      <th className="p-4 text-center text-sm font-semibold text-foreground">
-                        <div className="flex flex-col items-center gap-1">
-                          <span>Usuários</span>
-                        </div>
-                      </th>
-                      <th className="p-4 text-center text-sm font-semibold text-foreground">
-                        <div className="flex flex-col items-center gap-1">
-                          <span>Apólices</span>
-                        </div>
-                      </th>
-                      <th className="p-4 text-center text-sm font-semibold text-foreground">
-                        <div className="flex flex-col items-center gap-1">
-                          <span>Veículos</span>
-                        </div>
-                      </th>
-                      <th className="p-4 text-center text-sm font-semibold text-foreground">
-                        <div className="flex flex-col items-center gap-1">
-                          <span>Sinistros</span>
-                        </div>
-                      </th>
-                      <th className="p-4 text-center text-sm font-semibold text-foreground">
-                        <div className="flex flex-col items-center gap-1">
-                          <span>Assistências</span>
-                        </div>
-                      </th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">Usuários</th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">Apólices</th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">Veículos</th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">Sinistros</th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">Assistências</th>
                       <th className="p-4 text-center text-sm font-semibold text-foreground">Última Atividade</th>
                     </tr>
                   </thead>
@@ -279,12 +331,12 @@ export default function AdminDashboardPage() {
                   </tbody>
                 </table>
               </div>
+              {filteredCompanies.length > 0 && (
+                <p className="text-sm text-muted-foreground p-4 border-t">
+                  Clique em uma linha para ver detalhes da empresa
+                </p>
+              )}
             </div>
-            {filteredCompanies.length > 0 && (
-              <p className="text-sm text-muted-foreground mt-4">
-                Clique em uma linha para ver detalhes da empresa
-              </p>
-            )}
           </CardContent>
         </Card>
       </div>
