@@ -32,6 +32,7 @@ export default function AdminDashboardPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompanies, setSelectedCompanies] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState<string | null>(null);
 
   // Filtrar empresas e veículos por termo de busca - antes dos early returns
   const filteredCompanies = useMemo(() => {
@@ -94,6 +95,14 @@ export default function AdminDashboardPage() {
     if (success) {
       setSelectedCompanies(new Set());
       setShowDeleteDialog(false);
+    }
+  };
+
+  const handleDeleteSingle = async () => {
+    if (!companyToDelete) return;
+    const success = await deleteCompanies([companyToDelete]);
+    if (success) {
+      setCompanyToDelete(null);
     }
   };
 
@@ -311,12 +320,13 @@ export default function AdminDashboardPage() {
                       <th className="p-4 text-center text-sm font-semibold text-foreground">Sinistros</th>
                       <th className="p-4 text-center text-sm font-semibold text-foreground">Assistências</th>
                       <th className="p-4 text-center text-sm font-semibold text-foreground">Última Atividade</th>
+                      <th className="p-4 w-12"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredCompanies.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="p-12 text-center text-muted-foreground">
+                        <td colSpan={9} className="p-12 text-center text-muted-foreground">
                           <div className="flex flex-col items-center gap-2">
                             <Building className="h-12 w-12 text-muted-foreground/50" />
                             <p className="font-medium">Nenhuma empresa encontrada</p>
@@ -394,8 +404,19 @@ export default function AdminDashboardPage() {
                                     month: 'short',
                                     year: 'numeric'
                                   })
-                                : 'Sem atividade'}
+                              : 'Sem atividade'}
                             </span>
+                          </td>
+                          <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => setCompanyToDelete(company.empresa_id)}
+                              disabled={deleting}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </td>
                         </tr>
                       ))
@@ -420,7 +441,7 @@ export default function AdminDashboardPage() {
         company={selectedCompany}
       />
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Multiple Companies Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -441,6 +462,36 @@ export default function AdminDashboardPage() {
             <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteSelected}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Deletando...' : 'Confirmar Exclusão'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Single Company Dialog */}
+      <AlertDialog open={!!companyToDelete} onOpenChange={(open) => !open && setCompanyToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a deletar esta empresa e todos os seus dados associados:
+              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                <li>Veículos e documentos da frota</li>
+                <li>Colaboradores e dependentes</li>
+                <li>Apólices de benefícios</li>
+                <li>Tickets e sinistros</li>
+                <li>Solicitações de aprovação</li>
+              </ul>
+              <p className="mt-3 font-semibold text-destructive">Esta ação não pode ser desfeita!</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSingle}
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
