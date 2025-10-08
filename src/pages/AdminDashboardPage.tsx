@@ -275,20 +275,16 @@ export default function AdminDashboardPage() {
                               </div>
                               <div className="flex-1">
                                 <div className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                                  {company.empresa_nome}
+                                  {company.conta_nome || company.empresa_nome}
                                 </div>
-                                {(company.conta_nome || company.conta_email) && (
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Mail className="h-3 w-3 text-muted-foreground" />
-                                    <div className="text-xs text-muted-foreground">
-                                      {company.conta_nome && <span className="font-medium">{company.conta_nome}</span>}
-                                      {company.conta_nome && company.conta_email && <span className="mx-1">•</span>}
-                                      {company.conta_email && <span>{company.conta_email}</span>}
-                                    </div>
+                                {company.conta_email && (
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                    <Mail className="h-3 w-3" />
+                                    <span>{company.conta_email}</span>
                                   </div>
                                 )}
                                 <div className="text-xs text-muted-foreground font-mono mt-0.5">
-                                  ID: {company.empresa_id.slice(0, 8)}...
+                                  {company.empresa_nome}
                                 </div>
                               </div>
                             </div>
