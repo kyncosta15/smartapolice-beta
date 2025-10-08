@@ -2,7 +2,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Building2, Users, Car, FileText, AlertCircle, Clock, TrendingUp, TrendingDown } from 'lucide-react';
+import { Building2, Users, Car, FileText, AlertCircle, Clock, TrendingUp, TrendingDown, Mail, User } from 'lucide-react';
 import type { CompanySummary } from '@/types/admin';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -74,6 +74,31 @@ export function CompanySidePanel({ open, onOpenChange, company }: CompanySidePan
         </SheetHeader>
 
         <div className="mt-6 space-y-4">
+          {/* Informações da Conta */}
+          {(company.conta_nome || company.conta_email) && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                    Conta Responsável
+                  </div>
+                  {company.conta_nome && (
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">{company.conta_nome}</span>
+                    </div>
+                  )}
+                  {company.conta_email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">{company.conta_email}</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Última Atividade */}
           <Card>
             <CardContent className="pt-6">
