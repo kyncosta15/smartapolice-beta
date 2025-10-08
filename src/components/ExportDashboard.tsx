@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Calendar, Clock, Trash2, AlertCircle } from 'lucide-react';
-import { PDFExportButton } from '@/components/PDFExportButton';
+import { FileText, Calendar, Clock, Trash2, AlertCircle } from 'lucide-react';
+import { ClientReports } from '@/components/reports/ClientReports';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -175,23 +175,24 @@ export function ExportDashboard() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5 text-blue-600" />
-            Exportar Dashboard
+            <FileText className="h-5 w-5 text-primary" />
+            Relatório Executivo
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 mb-2">
-                Gere um PDF completo do seu dashboard atual com todas as métricas e gráficos.
+              <p className="text-muted-foreground mb-2">
+                Gere um relatório executivo completo com dashboards visuais, KPIs e insights automáticos.
               </p>
-              <p className="text-sm text-gray-500">
-                O arquivo será baixado automaticamente e salvo no histórico.
+              <p className="text-sm text-muted-foreground">
+                Inclui: gestão de frotas, sinistros, assistências e apólices de benefícios.
               </p>
             </div>
             
-            <PDFExportButton 
+            <ClientReports 
               onExportComplete={addExportRecord}
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
             />
           </div>
         </CardContent>
@@ -280,16 +281,16 @@ export function ExportDashboard() {
       <Card>
         <CardContent className="pt-6">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+            <h4 className="font-medium mb-2 flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
-              Informações sobre Exportação
+              Sobre os Relatórios
             </h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Os PDFs são gerados com alta qualidade (2x)</li>
-              <li>• Incluem todas as métricas e gráficos visíveis</li>
+            <ul className="text-sm space-y-1">
+              <li>• Design executivo profissional no padrão RCORP</li>
+              <li>• KPIs visuais e insights automáticos</li>
+              <li>• Gráficos e tabelas estruturadas</li>
               <li>• Histórico sincronizado entre dispositivos</li>
               <li>• Dados salvos com segurança no banco</li>
-              <li>• Administradores podem ver todos os exports</li>
             </ul>
           </div>
         </CardContent>

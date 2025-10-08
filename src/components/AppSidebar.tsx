@@ -48,9 +48,9 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'policies', title: 'Minhas Apólices', icon: FileText },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
-    { id: 'relatorios', title: 'Relatórios', icon: BarChart3 },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
+    { id: 'export', title: 'Exportar', icon: BarChart3 },
     { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 
@@ -60,10 +60,10 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
-    { id: 'relatorios', title: 'Relatórios', icon: BarChart3 },
     { id: 'aprovacoes', title: 'Aprovações', icon: CheckSquare },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
+    { id: 'export', title: 'Exportar', icon: BarChart3 },
     { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 

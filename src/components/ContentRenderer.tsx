@@ -20,7 +20,6 @@ import { SinistrosManagement } from './SinistrosManagement';
 import { N8NDataTester } from './N8NDataTester';
 import { UserProfile } from './UserProfile';
 import { AdminApprovalsPage } from './insurance/AdminApprovalsPage';
-import { ClientReports } from './reports/ClientReports';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 
@@ -201,10 +200,10 @@ export function ContentRenderer({
         </div>
       );
 
-    case 'relatorios':
+    case 'export':
       return (
         <div className="p-6">
-          <ClientReports />
+          <ExportDashboard />
         </div>
       );
 
