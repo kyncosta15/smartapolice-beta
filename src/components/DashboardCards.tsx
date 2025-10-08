@@ -194,19 +194,6 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
           <Button 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm"
-            size="sm"
-            onClick={handleGeneratePDF}
-            disabled={isGeneratingPDF}
-          >
-            {isGeneratingPDF ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4 mr-2" />
-            )}
-            {isGeneratingPDF ? 'Gerando...' : 'Gerar Relatório PDF'}
-          </Button>
-          <Button 
             variant="outline" 
             size="sm"
             className="rounded-xl border-gray-200 shadow-sm"
