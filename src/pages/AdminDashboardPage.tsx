@@ -165,55 +165,113 @@ export default function AdminDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border">
+            <div className="rounded-lg border shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="p-3 text-left text-sm font-medium">Empresa</th>
-                      <th className="p-3 text-center text-sm font-medium">Usuários</th>
-                      <th className="p-3 text-center text-sm font-medium">Apólices</th>
-                      <th className="p-3 text-center text-sm font-medium">Veículos</th>
-                      <th className="p-3 text-center text-sm font-medium">Sinistros</th>
-                      <th className="p-3 text-center text-sm font-medium">Assistências</th>
-                      <th className="p-3 text-center text-sm font-medium">Última Atividade</th>
+                    <tr className="border-b bg-muted/30">
+                      <th className="p-4 text-left text-sm font-semibold text-foreground">Empresa</th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">
+                        <div className="flex flex-col items-center gap-1">
+                          <span>Usuários</span>
+                        </div>
+                      </th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">
+                        <div className="flex flex-col items-center gap-1">
+                          <span>Apólices</span>
+                        </div>
+                      </th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">
+                        <div className="flex flex-col items-center gap-1">
+                          <span>Veículos</span>
+                        </div>
+                      </th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">
+                        <div className="flex flex-col items-center gap-1">
+                          <span>Sinistros</span>
+                        </div>
+                      </th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">
+                        <div className="flex flex-col items-center gap-1">
+                          <span>Assistências</span>
+                        </div>
+                      </th>
+                      <th className="p-4 text-center text-sm font-semibold text-foreground">Última Atividade</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredCompanies.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                          Nenhuma empresa encontrada
+                        <td colSpan={7} className="p-12 text-center text-muted-foreground">
+                          <div className="flex flex-col items-center gap-2">
+                            <Building2 className="h-12 w-12 text-muted-foreground/50" />
+                            <p className="font-medium">Nenhuma empresa encontrada</p>
+                          </div>
                         </td>
                       </tr>
                     ) : (
                       filteredCompanies.map((company) => (
                         <tr 
                           key={company.empresa_id}
-                          className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
+                          className="border-b hover:bg-accent/50 cursor-pointer transition-colors group"
                           onClick={() => setSelectedCompany(company)}
                         >
-                          <td className="p-3">
-                            <div className="font-medium">{company.empresa_nome}</div>
-                            <div className="text-xs text-muted-foreground">{company.empresa_id}</div>
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Building2 className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <div className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                                  {company.empresa_nome}
+                                </div>
+                                <div className="text-xs text-muted-foreground font-mono">
+                                  {company.empresa_id.slice(0, 8)}...
+                                </div>
+                              </div>
+                            </div>
                           </td>
-                          <td className="p-3 text-center">{company.usuarios}</td>
-                          <td className="p-3 text-center">
-                            <span className="font-semibold text-purple-600">{company.apolices}</span>
+                          <td className="p-4 text-center">
+                            <span className="inline-flex items-center justify-center h-8 px-3 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 font-medium text-sm">
+                              {company.usuarios}
+                            </span>
                           </td>
-                          <td className="p-3 text-center">{company.veiculos}</td>
-                          <td className="p-3 text-center">
-                            <span className={company.sinistros_abertos > 0 ? 'text-red-600 font-semibold' : ''}>
+                          <td className="p-4 text-center">
+                            <span className="inline-flex items-center justify-center h-8 px-3 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-400 font-semibold text-sm">
+                              {company.apolices}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className="inline-flex items-center justify-center h-8 px-3 rounded-full bg-green-500/10 text-green-700 dark:text-green-400 font-medium text-sm">
+                              {company.veiculos}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className={`inline-flex items-center justify-center h-8 px-3 rounded-full font-semibold text-sm ${
+                              company.sinistros_abertos > 0 
+                                ? 'bg-red-500/10 text-red-700 dark:text-red-400' 
+                                : 'bg-gray-500/10 text-gray-600 dark:text-gray-400'
+                            }`}>
                               {company.sinistros_abertos}
                             </span>
                           </td>
-                          <td className="p-3 text-center">
-                            <span className={company.assistencias_abertas > 0 ? 'text-orange-600 font-semibold' : ''}>
+                          <td className="p-4 text-center">
+                            <span className={`inline-flex items-center justify-center h-8 px-3 rounded-full font-semibold text-sm ${
+                              company.assistencias_abertas > 0 
+                                ? 'bg-orange-500/10 text-orange-700 dark:text-orange-400' 
+                                : 'bg-gray-500/10 text-gray-600 dark:text-gray-400'
+                            }`}>
                               {company.assistencias_abertas}
                             </span>
                           </td>
-                          <td className="p-3 text-center text-sm text-muted-foreground">
-                            {new Date(company.ultima_atividade).toLocaleDateString('pt-BR')}
+                          <td className="p-4 text-center">
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(company.ultima_atividade).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </span>
                           </td>
                         </tr>
                       ))
