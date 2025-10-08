@@ -147,26 +147,6 @@ export function GestaoFrotas() {
           </div>
           
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAlertas}
-              className="flex items-center gap-2 h-10 px-3"
-            >
-              <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">Alertas</span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportPDF}
-              className="flex items-center gap-2 h-10 px-3"
-            >
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">PDF</span>
-            </Button>
-            
             <ExportVeiculosButton />
             
             <Button
