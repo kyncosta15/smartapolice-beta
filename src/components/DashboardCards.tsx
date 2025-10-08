@@ -1,21 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { 
   FileText, 
   Shield, 
   DollarSign, 
   AlertTriangle, 
   CheckCircle,
-  Clock,
-  Download,
-  Mail,
-  TrendingUp,
-  Loader2
+  Clock
 } from 'lucide-react';
-import { usePDFDashboardData } from '@/hooks/usePDFDashboardData';
-import { DashboardPDFGenerator } from '@/utils/pdfGenerator';
-import { useToast } from '@/hooks/use-toast';
 
 interface DashboardCardsProps {
   dashboardStats: {
@@ -30,47 +22,6 @@ interface DashboardCardsProps {
 }
 
 export function DashboardCards({ dashboardStats, isLoading = false, onSectionChange }: DashboardCardsProps) {
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const { fetchDashboardData } = usePDFDashboardData();
-  const { toast } = useToast();
-
-  // Função para gerar o PDF
-  const handleGeneratePDF = async () => {
-    try {
-      setIsGeneratingPDF(true);
-      
-      toast({
-        title: "Gerando relatório...",
-        description: "Coletando dados e preparando o PDF",
-      });
-
-      // Buscar dados atuais do Supabase
-      const dashboardData = await fetchDashboardData();
-      
-      if (!dashboardData) {
-        throw new Error('Não foi possível obter os dados do dashboard');
-      }
-
-      // Gerar e baixar o PDF
-      const pdfGenerator = new DashboardPDFGenerator();
-      pdfGenerator.download(dashboardData);
-      
-      toast({
-        title: "✅ Relatório gerado com sucesso!",
-        description: "O download foi iniciado automaticamente",
-      });
-
-    } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
-      toast({
-        title: "❌ Erro ao gerar relatório",
-        description: error instanceof Error ? error.message : "Tente novamente em alguns instantes",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
   
   // Loading skeleton component
   const CardSkeleton = () => (
@@ -191,19 +142,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
           </p>
         </div>
         
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="rounded-xl border-gray-200 shadow-sm"
-            disabled
-            title="Em breve"
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Enviar por Email
-          </Button>
-        </div>
+        {/* Removed action buttons - moved to Reports section */}
       </div>
 
       {/* Cards Grid - Two Rows Layout */}

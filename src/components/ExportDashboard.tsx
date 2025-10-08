@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Calendar, Clock, Trash2, AlertCircle } from 'lucide-react';
+import { FileText, Calendar, Clock, Trash2, AlertCircle, Mail } from 'lucide-react';
 import { ClientReports } from '@/components/reports/ClientReports';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -180,7 +180,7 @@ export function ExportDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
+          <div className="space-y-4">
             <div>
               <p className="text-muted-foreground mb-2">
                 Gere um relatório executivo completo com dashboards visuais, KPIs e insights automáticos.
@@ -190,10 +190,22 @@ export function ExportDashboard() {
               </p>
             </div>
             
-            <ClientReports 
-              onExportComplete={addExportRecord}
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
-            />
+            <div className="flex items-center gap-2">
+              <ClientReports 
+                onExportComplete={addExportRecord}
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+              />
+              <Button 
+                variant="outline" 
+                size="default"
+                className="rounded-xl border-gray-200 shadow-sm"
+                disabled
+                title="Em breve"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Enviar por Email
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
