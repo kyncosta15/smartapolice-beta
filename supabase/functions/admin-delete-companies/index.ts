@@ -60,20 +60,34 @@ serve(async (req) => {
     // Deletar dados relacionados em cascata
     const deletionSteps = [];
 
-    // 1. Deletar documentos de frotas
-    const { error: docError } = await supabaseClient
-      .from('frota_documentos')
-      .delete()
-      .in('veiculo_id', 
-        supabaseClient
-          .from('frota_veiculos')
-          .select('id')
-          .in('empresa_id', company_ids)
-      );
-    if (docError) console.error('Erro ao deletar documentos:', docError);
-    deletionSteps.push('frota_documentos');
+    // 1. Buscar IDs dos veículos dessas empresas
+    const { data: veiculos } = await supabaseClient
+      .from('frota_veiculos')
+      .select('id')
+      .in('empresa_id', company_ids);
+    
+    const veiculoIds = veiculos?.map(v => v.id) || [];
 
-    // 2. Deletar veículos
+    // 2. Deletar documentos de frotas
+    if (veiculoIds.length > 0) {
+      const { error: docError } = await supabaseClient
+        .from('frota_documentos')
+        .delete()
+        .in('veiculo_id', veiculoIds);
+      if (docError) console.error('Erro ao deletar documentos:', docError);
+      deletionSteps.push('frota_documentos');
+    }
+
+    // 3. Deletar pagamentos de frotas
+    if (veiculoIds.length > 0) {
+      const { error: pagamentosError } = await supabaseClient
+        .from('frota_pagamentos')
+        .delete()
+        .in('veiculo_id', veiculoIds);
+      if (pagamentosError) console.error('Erro ao deletar pagamentos:', pagamentosError);
+    }
+
+    // 4. Deletar veículos
     const { error: veiculosError } = await supabaseClient
       .from('frota_veiculos')
       .delete()
@@ -81,18 +95,24 @@ serve(async (req) => {
     if (veiculosError) console.error('Erro ao deletar veículos:', veiculosError);
     deletionSteps.push('frota_veiculos');
 
-    // 3. Deletar colaboradores e dependentes
-    const { error: dependentesError } = await supabaseClient
-      .from('dependentes')
-      .delete()
-      .in('colaborador_id',
-        supabaseClient
-          .from('colaboradores')
-          .select('id')
-          .in('empresa_id', company_ids)
-      );
-    if (dependentesError) console.error('Erro ao deletar dependentes:', dependentesError);
+    // 5. Buscar IDs dos colaboradores dessas empresas
+    const { data: colaboradores } = await supabaseClient
+      .from('colaboradores')
+      .select('id')
+      .in('empresa_id', company_ids);
+    
+    const colaboradorIds = colaboradores?.map(c => c.id) || [];
 
+    // 6. Deletar dependentes
+    if (colaboradorIds.length > 0) {
+      const { error: dependentesError } = await supabaseClient
+        .from('dependentes')
+        .delete()
+        .in('colaborador_id', colaboradorIds);
+      if (dependentesError) console.error('Erro ao deletar dependentes:', dependentesError);
+    }
+
+    // 7. Deletar colaboradores
     const { error: colaboradoresError } = await supabaseClient
       .from('colaboradores')
       .delete()
@@ -100,7 +120,7 @@ serve(async (req) => {
     if (colaboradoresError) console.error('Erro ao deletar colaboradores:', colaboradoresError);
     deletionSteps.push('colaboradores');
 
-    // 4. Deletar apólices de benefícios
+    // 8. Deletar apólices de benefícios
     const { error: apolicesError } = await supabaseClient
       .from('apolices_beneficios')
       .delete()
@@ -108,7 +128,7 @@ serve(async (req) => {
     if (apolicesError) console.error('Erro ao deletar apólices:', apolicesError);
     deletionSteps.push('apolices_beneficios');
 
-    // 5. Deletar tickets
+    // 9. Deletar tickets
     const { error: ticketsError } = await supabaseClient
       .from('tickets')
       .delete()
@@ -116,14 +136,14 @@ serve(async (req) => {
     if (ticketsError) console.error('Erro ao deletar tickets:', ticketsError);
     deletionSteps.push('tickets');
 
-    // 6. Deletar requests
+    // 10. Deletar requests de aprovação
     const { error: requestsError } = await supabaseClient
       .from('insurance_approval_requests')
       .delete()
       .in('empresa_id', company_ids);
     if (requestsError) console.error('Erro ao deletar requests:', requestsError);
 
-    // 7. Deletar memberships
+    // 11. Deletar memberships
     const { error: membershipsError } = await supabaseClient
       .from('user_memberships')
       .delete()
@@ -131,7 +151,7 @@ serve(async (req) => {
     if (membershipsError) console.error('Erro ao deletar memberships:', membershipsError);
     deletionSteps.push('user_memberships');
 
-    // 8. Deletar empresas
+    // 12. Deletar empresas
     const { error: empresasError } = await supabaseClient
       .from('empresas')
       .delete()
