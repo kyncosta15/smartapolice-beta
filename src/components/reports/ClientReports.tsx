@@ -25,65 +25,63 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
     try {
       console.log('🎯 Gerando relatório para usuário:', user.id);
 
-      // Buscar empresa_id do usuário através do membership ou função do banco
-      let empresaId: string | null = null;
-      
-      // Tentar buscar através do membership primeiro
-      const { data: membershipData } = await supabase
-        .from('user_memberships')
-        .select('empresa_id, empresas(nome, cnpj)')
-        .eq('user_id', user.id)
-        .limit(1)
+      // Buscar informações do usuário
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('company, role')
+        .eq('id', user.id)
         .single();
 
-      if (membershipData?.empresa_id) {
-        empresaId = membershipData.empresa_id;
-        console.log('✅ Empresa encontrada via membership:', empresaId);
+      console.log('👤 Dados do usuário:', userData);
+
+      if (userError || !userData?.company) {
+        toast.error('Não foi possível identificar sua empresa');
+        return;
       }
 
-      // Se não encontrou, tentar pela tabela users
-      if (!empresaId) {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('company')
-          .eq('id', user.id)
+      // Para usuários RH/Admin/Corretora, usar company diretamente
+      // Para clientes, usar membership
+      let empresaId: string | null = null;
+      let empresaInfo: any = null;
+
+      if (['gestor_rh', 'rh', 'admin', 'administrador', 'corretora_admin'].includes(userData.role || '')) {
+        // Buscar empresa pelo nome em users.company
+        const { data: empData } = await supabase
+          .from('empresas')
+          .select('id, nome, cnpj')
+          .eq('nome', userData.company)
           .single();
 
-        if (userData?.company) {
-          const { data: empresaData } = await supabase
-            .from('empresas')
-            .select('id, nome, cnpj')
-            .eq('nome', userData.company)
-            .single();
+        if (empData) {
+          empresaId = empData.id;
+          empresaInfo = empData;
+          console.log('✅ Empresa encontrada via users.company (RH/Admin):', empresaId, empData.nome);
+        }
+      } else {
+        // Para clientes, buscar via membership
+        const { data: membershipData } = await supabase
+          .from('user_memberships')
+          .select('empresa_id, empresas(id, nome, cnpj)')
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle();
 
-          if (empresaData?.id) {
-            empresaId = empresaData.id;
-            console.log('✅ Empresa encontrada via users.company:', empresaId);
-          }
+        if (membershipData?.empresa_id) {
+          empresaId = membershipData.empresa_id;
+          empresaInfo = membershipData.empresas;
+          console.log('✅ Empresa encontrada via membership (Cliente):', empresaId);
         }
       }
 
-      if (!empresaId) {
+      if (!empresaId || !empresaInfo) {
         toast.error('Empresa não encontrada para este usuário');
         return;
       }
 
-      // Buscar informações da empresa
-      const { data: empresaInfo } = await supabase
-        .from('empresas')
-        .select('id, nome, cnpj')
-        .eq('id', empresaId)
-        .single();
+      console.log('📊 Buscando dados para empresa:', empresaInfo.nome, '(ID:', empresaId, ')');
 
-      if (!empresaInfo) {
-        toast.error('Não foi possível carregar informações da empresa');
-        return;
-      }
-
-      console.log('📊 Buscando dados para empresa:', empresaInfo.nome);
-
-      // Buscar dados em paralelo
-      const [ticketsRes, veiculosRes, apolicesRes] = await Promise.all([
+      // Buscar dados em paralelo - incluindo apólices de seguros (policies)
+      const [ticketsRes, veiculosRes, apolicesBeneficiosRes, apolicesSegurosRes] = await Promise.all([
         supabase
           .from('tickets')
           .select(`
@@ -100,26 +98,35 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         supabase
           .from('apolices_beneficios')
           .select('*')
-          .eq('empresa_id', empresaId)
+          .eq('empresa_id', empresaId),
+
+        // Buscar também apólices de seguros (da tabela policies)
+        supabase
+          .from('policies')
+          .select('*')
+          .eq('user_id', user.id)
       ]);
 
       console.log('📈 Dados encontrados:', {
         tickets: ticketsRes.data?.length || 0,
         veiculos: veiculosRes.data?.length || 0,
-        apolices: apolicesRes.data?.length || 0
+        apolices_beneficios: apolicesBeneficiosRes.data?.length || 0,
+        apolices_seguros: apolicesSegurosRes.data?.length || 0
       });
 
       // Verificar se há erros
       if (ticketsRes.error) console.error('Erro ao buscar tickets:', ticketsRes.error);
       if (veiculosRes.error) console.error('Erro ao buscar veículos:', veiculosRes.error);
-      if (apolicesRes.error) console.error('Erro ao buscar apólices:', apolicesRes.error);
+      if (apolicesBeneficiosRes.error) console.error('Erro ao buscar apólices benefícios:', apolicesBeneficiosRes.error);
+      if (apolicesSegurosRes.error) console.error('Erro ao buscar apólices seguros:', apolicesSegurosRes.error);
 
       const tickets = ticketsRes.data || [];
       const veiculos = veiculosRes.data || [];
-      const apolices = apolicesRes.data || [];
+      const apolicesBeneficios = apolicesBeneficiosRes.data || [];
+      const apolicesSeguros = apolicesSegurosRes.data || [];
 
       // Verificar se há dados para gerar o relatório
-      if (tickets.length === 0 && veiculos.length === 0 && apolices.length === 0) {
+      if (tickets.length === 0 && veiculos.length === 0 && apolicesBeneficios.length === 0 && apolicesSeguros.length === 0) {
         toast.error('Nenhum dado encontrado para gerar o relatório. Verifique se há informações cadastradas.');
         return;
       }
@@ -141,6 +148,21 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
       const categoriasOrdenadas = Object.entries(categorias)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5);
+
+      // Combinar todas as apólices
+      const todasApolices = [
+        ...apolicesBeneficios,
+        ...apolicesSeguros.map(p => ({
+          numero_apolice: p.numero_apolice || '-',
+          seguradora: p.seguradora || '-',
+          tipo_beneficio: p.tipo_seguro || 'Auto',
+          status: p.status || '-',
+          inicio_vigencia: p.inicio_vigencia,
+          fim_vigencia: p.fim_vigencia,
+          valor_total: parseFloat(String(p.valor_premio || 0)),
+          quantidade_vidas: null
+        }))
+      ];
 
       // Criar PDF com design executivo
       const pdf = new jsPDF();
@@ -197,7 +219,7 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         { label: 'Total de Veiculos', value: veiculos.length, color: [0, 72, 255] },
         { label: 'Segurados', value: veiculosSegurados.length, color: [34, 197, 94] },
         { label: 'Sem Seguro', value: veiculosSemSeguro.length, color: [239, 68, 68] },
-        { label: 'Sinistros', value: sinistros.length, color: [249, 115, 22] }
+        { label: 'Total Apolices', value: todasApolices.length, color: [249, 115, 22] }
       ];
 
       const kpiWidth = 42;
@@ -377,8 +399,8 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         yPos = (pdf as any).lastAutoTable.finalY + 15;
       }
 
-      // === APÓLICES DE BENEFÍCIOS ===
-      if (apolices.length > 0) {
+      // === APÓLICES (BENEFÍCIOS + SEGUROS) ===
+      if (todasApolices.length > 0) {
         if (yPos > 210) {
           pdf.addPage();
           yPos = 20;
@@ -392,16 +414,16 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         yPos += 15;
 
         // KPIs de Apólices
-        const apolicesAtivas = apolices.filter(a => a.status === 'ativa');
-        const apolicesCanceladas = apolices.filter(a => a.status === 'cancelada');
-        const valorTotalApolices = apolices.reduce((sum, a) => sum + (parseFloat(String(a.valor_total || 0))), 0);
-        const totalVidas = apolices.reduce((sum, a) => sum + (a.quantidade_vidas || 0), 0);
+        const apolicesAtivas = todasApolices.filter(a => a.status === 'ativa' || a.status === 'Ativa');
+        const apolicesCanceladas = todasApolices.filter(a => a.status === 'cancelada');
+        const valorTotalApolices = todasApolices.reduce((sum, a) => sum + (parseFloat(String(a.valor_total || 0))), 0);
+        const totalVidas = todasApolices.reduce((sum, a) => sum + (a.quantidade_vidas || 0), 0);
 
         const apolicesKpis = [
-          { label: 'Total Apolices', value: apolices.length, color: [0, 72, 255] },
+          { label: 'Total Apolices', value: todasApolices.length, color: [0, 72, 255] },
           { label: 'Ativas', value: apolicesAtivas.length, color: [34, 197, 94] },
-          { label: 'Vidas', value: totalVidas, color: [249, 115, 22] },
-          { label: 'Valor Total', value: `R$ ${(valorTotalApolices / 1000).toFixed(0)}k`, color: [168, 85, 247], isText: true }
+          { label: 'Vidas', value: totalVidas > 0 ? totalVidas : apolicesBeneficios.length, color: [249, 115, 22] },
+          { label: 'Valor Total', value: valorTotalApolices > 0 ? `R$ ${(valorTotalApolices / 1000).toFixed(0)}k` : '-', color: [168, 85, 247], isText: true }
         ];
 
         const apoliceKpiWidth = 42;
@@ -428,12 +450,12 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         yPos += apoliceKpiHeight + 15;
 
         // Insights de Apólices
-        const percentualAtivas = apolices.length > 0 
-          ? ((apolicesAtivas.length / apolices.length) * 100).toFixed(1)
+        const percentualAtivas = todasApolices.length > 0 
+          ? ((apolicesAtivas.length / todasApolices.length) * 100).toFixed(1)
           : '0.0';
         
         // Agrupar por tipo de benefício
-        const tiposBeneficios = apolices.reduce((acc, a) => {
+        const tiposBeneficios = todasApolices.reduce((acc, a) => {
           if (a.tipo_beneficio) {
             acc[a.tipo_beneficio] = (acc[a.tipo_beneficio] || 0) + 1;
           }
@@ -481,7 +503,7 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         pdf.text('Detalhamento de Apolices', 20, yPos);
         yPos += 10;
 
-        const apolicesTableData = apolices.map(a => [
+        const apolicesTableData = todasApolices.map(a => [
           a.numero_apolice || '-',
           a.seguradora || '-',
           a.tipo_beneficio || '-',
