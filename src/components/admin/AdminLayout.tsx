@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Button } from '@/components/ui/button';
-import { Crown, LogOut, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Crown, LogOut, CheckCircle, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -29,7 +29,7 @@ import {
 
 interface AdminLayoutProps {
   children: ReactNode;
-  activeSection?: 'overview' | 'approvals';
+  activeSection?: 'overview' | 'approvals' | 'profile';
 }
 
 function AdminSidebar() {
@@ -41,6 +41,7 @@ function AdminSidebar() {
   const menuItems = [
     { title: 'Dashboard', url: '/admin', icon: Crown },
     { title: 'Aprovações', url: '/admin/aprovacoes', icon: CheckCircle },
+    { title: 'Meu Perfil', url: '/admin/perfil', icon: User },
   ];
 
   const isActive = (path: string) => location.pathname === path;

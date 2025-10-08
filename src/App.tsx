@@ -26,6 +26,7 @@ import AdminApprovalsPage from './pages/AdminApprovalsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminCompanyDetailsPage from './pages/AdminCompanyDetailsPage';
+import AdminProfilePage from './pages/AdminProfilePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -87,6 +88,14 @@ const App = () => {
                 element={
                   <ProtectedRoute requiredRoles={['admin', 'administrador']}>
                     <AdminApprovalsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/perfil"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                    <AdminProfilePage />
                   </ProtectedRoute>
                 }
               />
