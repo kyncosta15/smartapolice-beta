@@ -15,14 +15,15 @@ export default function AdminProfilePage() {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [displayName, setDisplayName] = useState(profile?.display_name || '');
+  const [displayName, setDisplayName] = useState('');
+  const [hasChanged, setHasChanged] = useState(false);
 
-  // Sincronizar displayName quando profile atualizar
+  // Sincronizar displayName quando profile carregar pela primeira vez ou após save
   useEffect(() => {
-    if (profile?.display_name) {
+    if (profile?.display_name && !hasChanged) {
       setDisplayName(profile.display_name);
     }
-  }, [profile?.display_name]);
+  }, [profile?.display_name, hasChanged]);
 
   const initials = profile?.display_name
     ?.split(' ')
@@ -124,6 +125,7 @@ export default function AdminProfilePage() {
       if (error) throw error;
 
       await reloadProfile();
+      setHasChanged(false);
 
       toast({
         title: 'Nome atualizado',
@@ -222,7 +224,10 @@ export default function AdminProfilePage() {
                 id="display-name"
                 type="text"
                 value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                onChange={(e) => {
+                  setDisplayName(e.target.value);
+                  setHasChanged(true);
+                }}
                 placeholder="Digite seu nome"
               />
             </div>
