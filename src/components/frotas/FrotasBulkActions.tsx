@@ -32,6 +32,8 @@ import {
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useInsuranceApprovals } from '@/hooks/useInsuranceApprovals';
 
 interface FrotasBulkActionsProps {
   selectedVehicles: FrotaVeiculo[];
@@ -48,8 +50,12 @@ export function FrotasBulkActions({
   allVehicles,
   onSelectVehicles
 }: FrotasBulkActionsProps) {
+  const { profile } = useUserProfile();
+  const { createRequest } = useInsuranceApprovals();
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  const isAdmin = profile?.is_admin === true;
   
   // Filtros para seleção múltipla (removido filtro por categoria)
   const [searchFilter, setSearchFilter] = useState<string>('');
@@ -135,6 +141,43 @@ export function FrotasBulkActions({
       return;
     }
 
+    // Se não é admin e está tentando marcar como "segurado", criar solicitação de aprovação
+    if (!isAdmin && bulkStatus === 'segurado') {
+      setLoading(true);
+      try {
+        let successCount = 0;
+        
+        for (const vehicle of selectedVehicles) {
+          const success = await createRequest({
+            veiculo_id: vehicle.id,
+            empresa_id: vehicle.empresa_id,
+            current_status: vehicle.status_seguro,
+            requested_status: 'segurado',
+            motivo: 'Solicitação de alteração em lote para status Segurado',
+          });
+          
+          if (success) successCount++;
+        }
+        
+        if (successCount > 0) {
+          toast.success(
+            `${successCount} solicitaç${successCount === 1 ? 'ão enviada' : 'ões enviadas'} para aprovação do administrador`,
+            { duration: 5000 }
+          );
+        }
+        
+        onClearSelection();
+        setBulkStatus('');
+      } catch (error) {
+        console.error('Erro ao criar solicitações:', error);
+        toast.error('Erro ao criar solicitações de aprovação');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Admin pode alterar diretamente
     setLoading(true);
     try {
       const vehicleIds = selectedVehicles.map(v => v.id);
