@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -108,6 +108,10 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   // Sorting state
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   
+  // Preserve scroll position
+  const lastEditedVehicleId = useRef<string | null>(null);
+  const vehicleRefs = useRef<{ [key: string]: HTMLTableRowElement | null }>({});
+  
   // Clear selection when vehicles list changes (e.g., after filter)
   useEffect(() => {
     setSelectedVehicles([]);
@@ -142,6 +146,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   const handleEdit = (id: string) => {
     const veiculo = veiculos.find(v => v.id === id);
     if (veiculo) {
+      lastEditedVehicleId.current = id;
       setSelectedVeiculo(veiculo);
       setModalMode('edit');
       setModalOpen(true);
@@ -212,6 +217,21 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
       }
     });
   }, [veiculos, sortOrder]);
+
+  // Scroll to last edited vehicle after data refresh
+  useEffect(() => {
+    if (lastEditedVehicleId.current && !modalOpen) {
+      const timer = setTimeout(() => {
+        const element = vehicleRefs.current[lastEditedVehicleId.current!];
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        lastEditedVehicleId.current = null;
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [veiculos, modalOpen]);
 
   // Removido - agora usando VehicleStatusBadge component
 
@@ -404,7 +424,11 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                     const isSelected = isVehicleSelected(veiculo.id);
 
                     return (
-                      <TableRow key={veiculo.id} className={`hover:bg-muted/50 ${isSelected ? 'bg-blue-50' : ''}`}>
+                      <TableRow 
+                        key={veiculo.id} 
+                        className={`hover:bg-muted/50 ${isSelected ? 'bg-blue-50' : ''}`}
+                        ref={(el) => { vehicleRefs.current[veiculo.id] = el; }}
+                      >
                         <TableCell>
                           <Checkbox
                             checked={isSelected}
