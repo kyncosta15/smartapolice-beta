@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +21,10 @@ import {
   User,
   Shield,
   Calendar,
-  DollarSign
+  DollarSign,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -102,6 +105,9 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   // Multiple selection state
   const [selectedVehicles, setSelectedVehicles] = useState<FrotaVeiculo[]>([]);
   
+  // Sorting state
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  
   // Clear selection when vehicles list changes (e.g., after filter)
   useEffect(() => {
     setSelectedVehicles([]);
@@ -181,6 +187,31 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   const handleBulkUpdateComplete = () => {
     onRefetch();
   };
+
+  const toggleSort = () => {
+    if (sortOrder === null) {
+      setSortOrder('asc');
+    } else if (sortOrder === 'asc') {
+      setSortOrder('desc');
+    } else {
+      setSortOrder(null);
+    }
+  };
+
+  const sortedVeiculos = React.useMemo(() => {
+    if (!sortOrder) return veiculos;
+    
+    return [...veiculos].sort((a, b) => {
+      const placaA = a.placa?.toLowerCase() || '';
+      const placaB = b.placa?.toLowerCase() || '';
+      
+      if (sortOrder === 'asc') {
+        return placaA.localeCompare(placaB);
+      } else {
+        return placaB.localeCompare(placaA);
+      }
+    });
+  }, [veiculos, sortOrder]);
 
   // Removido - agora usando VehicleStatusBadge component
 
@@ -328,7 +359,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
           {isMobile ? (
             // Versão mobile: cards
             <VehicleListMobile
-              veiculos={veiculos}
+              veiculos={sortedVeiculos}
               onView={handleView}
               onEdit={handleEdit}
               onDocs={handleDocs}
@@ -350,14 +381,25 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                       />
                     </TableHead>
                     <TableHead className="min-w-[200px] bg-background" scope="col">Veículo</TableHead>
-                    <TableHead className="min-w-[120px] bg-background" scope="col">Placa</TableHead>
+                    <TableHead className="min-w-[120px] bg-background" scope="col">
+                      <Button
+                        variant="ghost"
+                        onClick={toggleSort}
+                        className="h-8 px-2 -ml-2 hover:bg-muted"
+                      >
+                        <span>Placa</span>
+                        {sortOrder === null && <ArrowUpDown className="ml-2 h-4 w-4" />}
+                        {sortOrder === 'asc' && <ArrowUp className="ml-2 h-4 w-4" />}
+                        {sortOrder === 'desc' && <ArrowDown className="ml-2 h-4 w-4" />}
+                      </Button>
+                    </TableHead>
                     <TableHead className="min-w-[150px] bg-background" scope="col">Proprietário</TableHead>
                     <TableHead className="min-w-[120px] bg-background" scope="col">Status Seguro</TableHead>
                      <TableHead className="w-[120px] min-w-[120px] bg-background text-right sticky right-0 bg-background border-l shadow-sm" scope="col">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="[&_tr:hover]:bg-muted/50">
-                  {veiculos.map((veiculo) => {
+                  {sortedVeiculos.map((veiculo) => {
                     const responsavel = veiculo.responsaveis?.[0];
                     const isSelected = isVehicleSelected(veiculo.id);
 
