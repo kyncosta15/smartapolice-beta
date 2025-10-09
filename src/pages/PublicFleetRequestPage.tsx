@@ -113,21 +113,37 @@ export default function PublicFleetRequestPage() {
         .single();
 
       if (error || !data) {
+        console.error('Token validation error:', error);
         setTokenValid(false);
         return;
       }
 
+      console.log('Token data:', data);
+
       // Buscar nome da empresa separadamente
-      const { data: empresa } = await supabase
+      const { data: empresa, error: empresaError } = await supabase
         .from('empresas')
         .select('nome, id')
         .eq('id', data.empresa_id)
         .single();
 
+      if (empresaError || !empresa) {
+        console.error('Company fetch error:', empresaError);
+        toast({
+          title: 'Erro',
+          description: 'Empresa não encontrada para este link',
+          variant: 'destructive',
+        });
+        setTokenValid(false);
+        return;
+      }
+
+      console.log('Company data:', empresa);
       setTokenValid(true);
-      setCompanyName(empresa?.nome || '');
-      setEmpresaId(empresa?.id || '');
+      setCompanyName(empresa.nome);
+      setEmpresaId(empresa.id);
     } catch (error) {
+      console.error('Validation exception:', error);
       setTokenValid(false);
     }
   };
