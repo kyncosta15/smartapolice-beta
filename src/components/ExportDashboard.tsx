@@ -253,30 +253,30 @@ export function ExportDashboard() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               {exportHistory.map((record) => (
                 <div
                   key={record.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-3"
+                  className="flex items-start gap-2 md:gap-3 p-2.5 md:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
-                    <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
-                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm md:text-base truncate">{record.file_name}</h4>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500 mt-1">
-                        <span className="flex items-center gap-1 whitespace-nowrap">
-                          <Calendar className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{formatDate(record.export_date)}</span>
-                        </span>
-                        <span className="flex items-center gap-1 whitespace-nowrap">
-                          <Clock className="h-3 w-3 flex-shrink-0" />
-                          {formatTime(record.export_time)}
-                        </span>
-                        <span className="capitalize">{record.dashboard_type}</span>
-                      </div>
+                  <div className="p-1.5 md:p-2 bg-blue-50 rounded-lg flex-shrink-0 mt-0.5">
+                    <FileText className="h-3.5 w-3.5 md:h-5 md:w-5 text-blue-600" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 text-xs md:text-base leading-tight truncate pr-2">
+                      {record.file_name}
+                    </h4>
+                    <div className="flex flex-wrap items-center gap-x-2 md:gap-x-3 gap-y-0.5 text-[10px] md:text-sm text-gray-500 mt-0.5 md:mt-1">
+                      <span className="flex items-center gap-0.5 md:gap-1 whitespace-nowrap">
+                        <Calendar className="h-2.5 w-2.5 md:h-3 md:w-3 flex-shrink-0" />
+                        <span>{formatDate(record.export_date)}</span>
+                      </span>
+                      <span className="flex items-center gap-0.5 md:gap-1 whitespace-nowrap">
+                        <Clock className="h-2.5 w-2.5 md:h-3 md:w-3 flex-shrink-0" />
+                        <span>{formatTime(record.export_time)}</span>
+                      </span>
+                      <span className="hidden sm:inline capitalize">{record.dashboard_type}</span>
                     </div>
                   </div>
                   
@@ -284,10 +284,10 @@ export function ExportDashboard() {
                     variant="ghost"
                     size="sm"
                     onClick={() => removeExportRecord(record.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 self-end sm:self-auto flex-shrink-0"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0 h-7 w-7 md:h-8 md:w-8 p-0"
                     disabled={isLoading}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   </Button>
                 </div>
               ))}
