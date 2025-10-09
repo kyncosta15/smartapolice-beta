@@ -177,11 +177,11 @@ export function ExportDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-0">
       {/* Cabeçalho com ação de exportar */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
             <FileText className="h-5 w-5 text-primary" />
             Relatório Executivo
           </CardTitle>
@@ -189,28 +189,28 @@ export function ExportDashboard() {
         <CardContent>
           <div className="space-y-4">
             <div>
-              <p className="text-muted-foreground mb-2">
+              <p className="text-muted-foreground mb-2 text-sm md:text-base">
                 Gere um relatório executivo completo com dashboards visuais, KPIs e insights automáticos.
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Inclui: gestão de frotas, sinistros, assistências e apólices de benefícios.
               </p>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <ClientReports 
                 onExportComplete={addExportRecord}
-                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto"
               />
               <Button 
                 variant="outline" 
                 size="default"
-                className="rounded-xl border-gray-200 shadow-sm"
+                className="rounded-xl border-gray-200 shadow-sm w-full sm:w-auto"
                 disabled
                 title="Em breve"
               >
                 <Mail className="w-4 h-4 mr-2" />
-                Enviar por Email
+                <span className="truncate">Enviar por Email</span>
               </Button>
             </div>
           </div>
@@ -219,8 +219,8 @@ export function ExportDashboard() {
 
       {/* Histórico de exportações */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
             <FileText className="h-5 w-5 text-green-600" />
             Histórico de Exportações
           </CardTitle>
@@ -230,7 +230,7 @@ export function ExportDashboard() {
               variant="outline"
               size="sm"
               onClick={clearHistory}
-              className="text-red-600 hover:text-red-700"
+              className="text-red-600 hover:text-red-700 w-full sm:w-auto"
               disabled={isLoading}
             >
               <Trash2 className="h-4 w-4 mr-1" />
@@ -257,22 +257,22 @@ export function ExportDashboard() {
               {exportHistory.map((record) => (
                 <div
                   key={record.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-3"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-blue-50 rounded-lg">
-                      <FileText className="h-5 w-5 text-blue-600" />
+                  <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                    <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                     </div>
                     
-                    <div>
-                      <h4 className="font-medium text-gray-900">{record.file_name}</h4>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(record.export_date)}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 text-sm md:text-base truncate">{record.file_name}</h4>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500 mt-1">
+                        <span className="flex items-center gap-1 whitespace-nowrap">
+                          <Calendar className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{formatDate(record.export_date)}</span>
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
+                        <span className="flex items-center gap-1 whitespace-nowrap">
+                          <Clock className="h-3 w-3 flex-shrink-0" />
                           {formatTime(record.export_time)}
                         </span>
                         <span className="capitalize">{record.dashboard_type}</span>
@@ -284,7 +284,7 @@ export function ExportDashboard() {
                     variant="ghost"
                     size="sm"
                     onClick={() => removeExportRecord(record.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 self-end sm:self-auto flex-shrink-0"
                     disabled={isLoading}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -298,13 +298,13 @@ export function ExportDashboard() {
 
       {/* Informações adicionais */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium mb-2 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
+        <CardContent className="pt-4 md:pt-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4">
+            <h4 className="font-medium mb-2 flex items-center gap-2 text-sm md:text-base">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
               Sobre os Relatórios
             </h4>
-            <ul className="text-sm space-y-1">
+            <ul className="text-xs md:text-sm space-y-1">
               <li>• Design executivo profissional no padrão RCORP</li>
               <li>• KPIs visuais e insights automáticos</li>
               <li>• Gráficos e tabelas estruturadas</li>

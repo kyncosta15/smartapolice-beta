@@ -575,13 +575,13 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
     >
       {isGenerating ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Gerando...
+          <Loader2 className="mr-2 h-4 w-4 animate-spin flex-shrink-0" />
+          <span className="truncate">Gerando...</span>
         </>
       ) : (
         <>
-          <Download className="mr-2 h-4 w-4" />
-          Exportar Relatório
+          <Download className="mr-2 h-4 w-4 flex-shrink-0" />
+          <span className="truncate">Exportar Relatório</span>
         </>
       )}
     </Button>
