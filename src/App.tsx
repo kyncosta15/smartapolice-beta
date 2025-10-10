@@ -27,6 +27,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminCompanyDetailsPage from './pages/AdminCompanyDetailsPage';
 import AdminProfilePage from './pages/AdminProfilePage';
+import AdminEmailSettingsPage from './pages/AdminEmailSettingsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -96,6 +97,14 @@ const App = () => {
                 element={
                   <ProtectedRoute requiredRoles={['admin', 'administrador']}>
                     <AdminProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/email-settings"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                    <AdminEmailSettingsPage />
                   </ProtectedRoute>
                 }
               />

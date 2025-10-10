@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Button } from '@/components/ui/button';
-import { Crown, LogOut, CheckCircle, User } from 'lucide-react';
+import { Crown, LogOut, CheckCircle, User, Mail } from 'lucide-react';
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import adminLogo from '@/assets/admin-sidebar-logo.png';
@@ -30,13 +30,13 @@ import {
 
 interface AdminLayoutProps {
   children: ReactNode;
-  activeSection?: 'overview' | 'approvals' | 'profile';
+  activeSection?: 'overview' | 'approvals' | 'profile' | 'emails';
 }
 
 function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { open } = useSidebar();
 
   const menuItems = [
@@ -44,6 +44,11 @@ function AdminSidebar() {
     { title: 'Aprovações', url: '/admin/aprovacoes', icon: CheckCircle },
     { title: 'Meu Perfil', url: '/admin/perfil', icon: User },
   ];
+
+  // Adicionar Email Settings apenas para admin@rcaldas.com.br
+  if (user?.email === 'admin@rcaldas.com.br') {
+    menuItems.push({ title: 'Email Settings', url: '/admin/email-settings', icon: Mail });
+  }
 
   const isActive = (path: string) => location.pathname === path;
 

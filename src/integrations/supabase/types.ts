@@ -2039,6 +2039,107 @@ export type Database = {
           },
         ]
       }
+      report_schedules: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          dia_envio: number
+          email: string
+          empresa_id: string
+          frequencia_dias: number
+          id: string
+          nome_destinatario: string
+          proximo_envio: string | null
+          ultimo_envio: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          dia_envio?: number
+          email: string
+          empresa_id: string
+          frequencia_dias?: number
+          id?: string
+          nome_destinatario: string
+          proximo_envio?: string | null
+          ultimo_envio?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          dia_envio?: number
+          email?: string
+          empresa_id?: string
+          frequencia_dias?: number
+          id?: string
+          nome_destinatario?: string
+          proximo_envio?: string | null
+          ultimo_envio?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_schedules_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_sends: {
+        Row: {
+          created_at: string
+          email: string
+          empresa_id: string
+          error_message: string | null
+          id: string
+          schedule_id: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          empresa_id: string
+          error_message?: string | null
+          id?: string
+          schedule_id: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          empresa_id?: string
+          error_message?: string | null
+          id?: string
+          schedule_id?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_sends_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_sends_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "report_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       request_approvals: {
         Row: {
           created_at: string | null
