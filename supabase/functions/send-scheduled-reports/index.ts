@@ -85,69 +85,185 @@ serve(async (req) => {
           <html>
           <head>
             <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
-              body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
-              .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px; margin-bottom: 30px; }
-              .section { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #667eea; }
-              .metric { display: inline-block; margin: 10px 20px; text-align: center; }
-              .metric-value { font-size: 32px; font-weight: bold; color: #667eea; }
-              .metric-label { font-size: 14px; color: #666; }
-              .footer { text-align: center; margin-top: 40px; padding: 20px; color: #666; font-size: 12px; }
-              table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-              th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-              th { background: #667eea; color: white; }
+              * { box-sizing: border-box; margin: 0; padding: 0; }
+              body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
+                color: #333; 
+                line-height: 1.6; 
+                background: #f5f5f5;
+                padding: 10px;
+              }
+              .container { 
+                max-width: 800px; 
+                margin: 0 auto; 
+                background: white;
+                border-radius: 12px;
+                overflow: hidden;
+              }
+              .header { 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                color: white; 
+                padding: 30px 20px; 
+                text-align: center;
+              }
+              .header h1 { 
+                font-size: 24px; 
+                margin-bottom: 10px; 
+                font-weight: 600;
+              }
+              .header p { 
+                margin: 5px 0; 
+                opacity: 0.95; 
+                font-size: 14px;
+              }
+              .section { 
+                padding: 24px 20px; 
+                border-bottom: 1px solid #e5e7eb;
+              }
+              .section:last-of-type {
+                border-bottom: none;
+              }
+              .section h2 { 
+                font-size: 18px; 
+                margin-bottom: 20px; 
+                color: #1f2937;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              }
+              .metrics { 
+                display: flex; 
+                flex-wrap: wrap; 
+                gap: 16px;
+                justify-content: center;
+              }
+              .metric { 
+                background: #f9fafb;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 20px;
+                text-align: center; 
+                min-width: 100px;
+                flex: 1;
+              }
+              .metric-value { 
+                font-size: 32px; 
+                font-weight: 700; 
+                color: #667eea;
+                display: block;
+                margin-bottom: 8px;
+              }
+              .metric-label { 
+                font-size: 13px; 
+                color: #6b7280;
+                font-weight: 500;
+              }
+              .footer { 
+                text-align: center; 
+                padding: 30px 20px; 
+                background: #f9fafb;
+                color: #6b7280; 
+                font-size: 12px;
+              }
+              .footer p { 
+                margin: 8px 0; 
+              }
+              .footer strong { 
+                color: #1f2937; 
+                font-size: 14px;
+              }
+              .footer a { 
+                color: #667eea; 
+                text-decoration: none;
+              }
+              
+              @media only screen and (max-width: 600px) {
+                body { padding: 0; }
+                .container { border-radius: 0; }
+                .header { padding: 24px 16px; }
+                .header h1 { font-size: 20px; }
+                .header p { font-size: 13px; }
+                .section { padding: 20px 16px; }
+                .section h2 { font-size: 16px; margin-bottom: 16px; }
+                .metrics { gap: 12px; }
+                .metric { 
+                  padding: 16px 12px; 
+                  min-width: 90px;
+                  flex: 1 1 calc(33.333% - 12px);
+                }
+                .metric-value { font-size: 28px; margin-bottom: 6px; }
+                .metric-label { font-size: 12px; }
+                .footer { padding: 24px 16px; }
+              }
+              
+              @media only screen and (max-width: 400px) {
+                .metric { 
+                  flex: 1 1 calc(50% - 12px);
+                  max-width: calc(50% - 12px);
+                }
+                .metric-value { font-size: 24px; }
+                .metric-label { font-size: 11px; }
+              }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
                 <h1>📊 Relatório Executivo</h1>
-                <p>${schedule.empresas?.nome || "Empresa"}</p>
+                <p><strong>${schedule.empresas?.nome || "Empresa"}</strong></p>
                 <p>Período: ${new Date().toLocaleDateString("pt-BR")}</p>
               </div>
 
               <div class="section">
                 <h2>🚗 Gestão de Frotas</h2>
-                <div class="metric">
-                  <div class="metric-value">${veiculos?.length || 0}</div>
-                  <div class="metric-label">Veículos</div>
-                </div>
-                <div class="metric">
-                  <div class="metric-value">${veiculos?.filter(v => v.status_seguro === 'segurado').length || 0}</div>
-                  <div class="metric-label">Segurados</div>
-                </div>
-                <div class="metric">
-                  <div class="metric-value">${veiculos?.filter(v => v.status_seguro === 'sem_seguro').length || 0}</div>
-                  <div class="metric-label">Sem Seguro</div>
+                <div class="metrics">
+                  <div class="metric">
+                    <span class="metric-value">${veiculos?.length || 0}</span>
+                    <span class="metric-label">Veículos</span>
+                  </div>
+                  <div class="metric">
+                    <span class="metric-value">${veiculos?.filter(v => v.status_seguro === 'segurado').length || 0}</span>
+                    <span class="metric-label">Segurados</span>
+                  </div>
+                  <div class="metric">
+                    <span class="metric-value">${veiculos?.filter(v => v.status_seguro === 'sem_seguro').length || 0}</span>
+                    <span class="metric-label">Sem Seguro</span>
+                  </div>
                 </div>
               </div>
 
               <div class="section">
                 <h2>🏥 Apólices de Benefícios</h2>
-                <div class="metric">
-                  <div class="metric-value">${apolices?.length || 0}</div>
-                  <div class="metric-label">Apólices Ativas</div>
-                </div>
-                <div class="metric">
-                  <div class="metric-value">${apolices?.reduce((sum, a) => sum + (a.quantidade_vidas || 0), 0) || 0}</div>
-                  <div class="metric-label">Vidas</div>
+                <div class="metrics">
+                  <div class="metric">
+                    <span class="metric-value">${apolices?.length || 0}</span>
+                    <span class="metric-label">Apólices Ativas</span>
+                  </div>
+                  <div class="metric">
+                    <span class="metric-value">${apolices?.reduce((sum, a) => sum + (a.quantidade_vidas || 0), 0) || 0}</span>
+                    <span class="metric-label">Vidas</span>
+                  </div>
                 </div>
               </div>
 
               <div class="section">
                 <h2>🚨 Sinistros e Assistências</h2>
-                <div class="metric">
-                  <div class="metric-value">${sinistros?.length || 0}</div>
-                  <div class="metric-label">Sinistros</div>
-                </div>
-                <div class="metric">
-                  <div class="metric-value">${assistencias?.length || 0}</div>
-                  <div class="metric-label">Assistências</div>
-                </div>
-                <div class="metric">
-                  <div class="metric-value">${[...(sinistros || []), ...(assistencias || [])].filter(t => t.status === 'aberto').length}</div>
-                  <div class="metric-label">Em Aberto</div>
+                <div class="metrics">
+                  <div class="metric">
+                    <span class="metric-value">${sinistros?.length || 0}</span>
+                    <span class="metric-label">Sinistros</span>
+                  </div>
+                  <div class="metric">
+                    <span class="metric-value">${assistencias?.length || 0}</span>
+                    <span class="metric-label">Assistências</span>
+                  </div>
+                  <div class="metric">
+                    <span class="metric-value">${[...(sinistros || []), ...(assistencias || [])].filter(t => t.status === 'aberto').length}</span>
+                    <span class="metric-label">Em Aberto</span>
+                  </div>
                 </div>
               </div>
 
