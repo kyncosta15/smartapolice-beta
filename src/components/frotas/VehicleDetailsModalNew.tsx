@@ -221,7 +221,7 @@ export function VehicleDetailsModalNew({
         <div className="flex-1 overflow-hidden flex flex-col">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             <div className="shrink-0 px-2 md:px-4 py-2">
-              <TabsList className="grid grid-cols-4 gap-1 h-auto p-1 bg-gray-100 w-full">
+              <TabsList className="grid grid-cols-7 gap-1 h-auto p-1 bg-gray-100 w-full">
                 <TabsTrigger 
                   value="veiculo" 
                   className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-1 md:px-2 py-2 text-xs"
@@ -250,8 +250,6 @@ export function VehicleDetailsModalNew({
                   <Shield className="h-3 w-3 mr-1" />
                   <span>Seguro</span>
                 </TabsTrigger>
-              </TabsList>
-              <TabsList className="grid grid-cols-3 gap-1 h-auto p-1 bg-gray-100 w-full mt-1">
                 <TabsTrigger 
                   value="operacao" 
                   className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-1 md:px-2 py-2 text-xs"
