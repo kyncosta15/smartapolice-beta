@@ -197,6 +197,15 @@ export function AdminEmailSettings() {
   };
 
   const testSendNow = async () => {
+    if (schedules.length === 0) {
+      toast({
+        title: "Nenhum agendamento",
+        description: "Crie um agendamento antes de testar o envio",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setSending(true);
 
