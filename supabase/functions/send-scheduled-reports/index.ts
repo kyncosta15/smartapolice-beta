@@ -20,8 +20,11 @@ serve(async (req) => {
 
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-    // Buscar agendamentos ativos que precisam ser enviados
-    const { data: schedules, error: schedulesError } = await supabaseAdmin
+    // Verificar se é um teste forçado
+    const { force = false } = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+
+    // Buscar agendamentos ativos
+    let query = supabaseAdmin
       .from("report_schedules")
       .select(`
         *,
@@ -31,8 +34,14 @@ serve(async (req) => {
           cnpj
         )
       `)
-      .eq("ativo", true)
-      .or(`proximo_envio.is.null,proximo_envio.lte.${new Date().toISOString()}`);
+      .eq("ativo", true);
+
+    // Se não for forçado, verificar data de envio
+    if (!force) {
+      query = query.or(`proximo_envio.is.null,proximo_envio.lte.${new Date().toISOString()}`);
+    }
+
+    const { data: schedules, error: schedulesError } = await query;
 
     if (schedulesError) {
       console.error("Erro ao buscar agendamentos:", schedulesError);

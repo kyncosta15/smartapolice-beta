@@ -200,7 +200,9 @@ export function AdminEmailSettings() {
     try {
       setSending(true);
 
-      const { data, error } = await supabase.functions.invoke("send-scheduled-reports");
+      const { data, error } = await supabase.functions.invoke("send-scheduled-reports", {
+        body: { force: true },
+      });
 
       if (error) throw error;
 
