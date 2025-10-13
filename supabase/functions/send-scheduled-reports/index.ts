@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { Resend } from "npm:resend@2.0.0";
-import jsPDF from "npm:jspdf@2.5.1";
-import autoTable from "npm:jspdf-autotable@3.8.2";
+import jsPDF from "https://esm.sh/jspdf@2.5.1";
+import "https://esm.sh/jspdf-autotable@3.8.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,7 +82,7 @@ serve(async (req) => {
           .eq("tipo", "assistencia");
 
         // Gerar relatório PDF
-        const pdf = new jsPDF();
+        const pdf = new jsPDF.default();
         const pageWidth = pdf.internal.pageSize.width;
         const pageHeight = pdf.internal.pageSize.height;
 
@@ -112,7 +112,7 @@ serve(async (req) => {
           ['Tickets em Aberto', ([...(sinistros || []), ...(assistencias || [])].filter(t => t.status === 'aberto').length).toString()]
         ];
 
-        autoTable(pdf, {
+        (pdf as any).autoTable({
           startY: 80,
           head: [['Métrica', 'Valor']],
           body: summaryData,
@@ -144,7 +144,7 @@ serve(async (req) => {
           `${((count as number / (veiculos?.length || 1)) * 100).toFixed(1)}%`
         ]);
 
-        autoTable(pdf, {
+        (pdf as any).autoTable({
           startY: currentY + 10,
           head: [['Status', 'Quantidade', 'Percentual']],
           body: statusData,
@@ -176,7 +176,7 @@ serve(async (req) => {
           `${((count as number / (apolices?.length || 1)) * 100).toFixed(1)}%`
         ]);
 
-        autoTable(pdf, {
+        (pdf as any).autoTable({
           startY: currentY + 10,
           head: [['Seguradora', 'Quantidade', 'Percentual']],
           body: seguradoraData,
