@@ -209,10 +209,10 @@ serve(async (req) => {
 
         // KPIs em grid (4 colunas)
         const kpis = [
-          { label: 'Total Veículos', value: stats.totalVeiculos.toString(), color: rgb(0, 0.28, 1) },
+          { label: 'Total Veiculos', value: stats.totalVeiculos.toString(), color: rgb(0, 0.28, 1) },
           { label: 'Segurados', value: stats.veiculosSegurados.toString(), color: rgb(0.13, 0.77, 0.37) },
           { label: 'Sem Seguro', value: stats.veiculosSemSeguro.toString(), color: rgb(0.94, 0.27, 0.27) },
-          { label: 'Total Apólices', value: stats.totalApolices.toString(), color: rgb(0.98, 0.45, 0.09) }
+          { label: 'Total Apolices', value: stats.totalApolices.toString(), color: rgb(0.98, 0.45, 0.09) }
         ];
 
         let kpiX = 40;
@@ -268,8 +268,8 @@ serve(async (req) => {
         yPosition -= 18;
 
         const insights = [
-          `• ${stats.percentualSegurado}% da frota está coberta por seguro`,
-          `• ${stats.apolicesAtivas} apólices ativas gerenciadas`,
+          `• ${stats.percentualSegurado}% da frota esta coberta por seguro`,
+          `• ${stats.apolicesAtivas} apolices ativas gerenciadas`,
           `• ${stats.ticketsAbertos} tickets necessitam acompanhamento`,
           `• Valor total mensal: R$ ${(stats.valorTotalApolices / 1000).toFixed(1)}k`
         ];
@@ -298,9 +298,9 @@ serve(async (req) => {
         yPosition -= 20;
 
         const frotaItems = [
-          `Total de Veículos: ${stats.totalVeiculos}`,
-          `Veículos Segurados: ${stats.veiculosSegurados} (${stats.percentualSegurado}%)`,
-          `Veículos Sem Seguro: ${stats.veiculosSemSeguro}`
+          `Total de Veiculos: ${stats.totalVeiculos}`,
+          `Veiculos Segurados: ${stats.veiculosSegurados} (${stats.percentualSegurado}%)`,
+          `Veiculos Sem Seguro: ${stats.veiculosSemSeguro}`
         ];
 
         frotaItems.forEach((item) => {
@@ -316,8 +316,8 @@ serve(async (req) => {
 
         yPosition -= 20;
 
-        // === APÓLICES E BENEFÍCIOS ===
-        page.drawText('APÓLICES E BENEFÍCIOS', {
+        // === APOLICES E BENEFICIOS ===
+        page.drawText('APOLICES E BENEFICIOS', {
           x: 40,
           y: yPosition,
           size: 12,
@@ -327,8 +327,8 @@ serve(async (req) => {
         yPosition -= 20;
 
         const apolicesItems = [
-          `Total de Apólices: ${stats.totalApolices}`,
-          `Apólices Ativas: ${stats.apolicesAtivas}`,
+          `Total de Apolices: ${stats.totalApolices}`,
+          `Apolices Ativas: ${stats.apolicesAtivas}`,
           `Total de Vidas Cobertas: ${stats.totalVidas}`,
           `Valor Total Mensal: R$ ${stats.valorTotalApolices.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
         ];
@@ -346,8 +346,8 @@ serve(async (req) => {
 
         yPosition -= 20;
 
-        // === SINISTROS E ASSISTÊNCIAS ===
-        page.drawText('SINISTROS E ASSISTÊNCIAS', {
+        // === SINISTROS E ASSISTENCIAS ===
+        page.drawText('SINISTROS E ASSISTENCIAS', {
           x: 40,
           y: yPosition,
           size: 12,
@@ -358,7 +358,7 @@ serve(async (req) => {
 
         const ticketsItems = [
           `Total de Sinistros: ${stats.totalSinistros}`,
-          `Total de Assistências: ${stats.totalAssistencias}`,
+          `Total de Assistencias: ${stats.totalAssistencias}`,
           `Tickets em Aberto: ${stats.ticketsAbertos}`
         ];
 
@@ -383,7 +383,7 @@ serve(async (req) => {
           color: rgb(0, 0.28, 1),
         });
 
-        page.drawText('Conte com nossa equipe para cuidar das suas apólices.', {
+        page.drawText('Conte com nossa equipe para cuidar das suas apolices.', {
           x: width / 2 - 120,
           y: footerY - 15,
           size: 10,
@@ -391,8 +391,8 @@ serve(async (req) => {
           color: rgb(1, 1, 1),
         });
 
-        page.drawText('📧 contato@smartapolice.com.br | 📱 (11) 99999-9999', {
-          x: width / 2 - 125,
+        page.drawText('Email: contato@smartapolice.com.br | Tel: (11) 99999-9999', {
+          x: width / 2 - 130,
           y: footerY - 30,
           size: 8,
           font: helveticaFont,
@@ -566,17 +566,17 @@ serve(async (req) => {
               </div>
 
               <div class="alert-box">
-                <h3>📎 Relatório em Anexo</h3>
-                <p>O relatório executivo em PDF está anexado a este email. Para análises mais detalhadas e gráficos interativos, acesse o sistema:</p>
+                <h3>Relatorio em Anexo</h3>
+                <p>O relatorio executivo em PDF esta anexado a este email. Para analises mais detalhadas e graficos interativos, acesse o sistema:</p>
                 <a href="https://fdab69fb-cde0-4bb7-ac60-2a713d93f1b4.lovableproject.com" class="download-btn">Acessar Sistema Completo</a>
               </div>
 
               <div class="section">
-                <h2>🚗 Gestão de Frotas</h2>
+                <h2>Gestao de Frotas</h2>
                 <div class="metrics">
                   <div class="metric">
                     <span class="metric-value">${stats.totalVeiculos}</span>
-                    <span class="metric-label">Veículos</span>
+                    <span class="metric-label">Veiculos</span>
                   </div>
                   <div class="metric">
                     <span class="metric-value">${stats.veiculosSegurados}</span>
@@ -590,11 +590,11 @@ serve(async (req) => {
               </div>
 
               <div class="section">
-                <h2>🏥 Apólices de Benefícios</h2>
+                <h2>Apolices de Beneficios</h2>
                 <div class="metrics">
                   <div class="metric">
                     <span class="metric-value">${stats.totalApolices}</span>
-                    <span class="metric-label">Apólices Ativas</span>
+                    <span class="metric-label">Apolices Ativas</span>
                   </div>
                   <div class="metric">
                     <span class="metric-value">${stats.totalVidas}</span>
@@ -604,7 +604,7 @@ serve(async (req) => {
               </div>
 
               <div class="section">
-                <h2>🚨 Sinistros e Assistências</h2>
+                <h2>Sinistros e Assistencias</h2>
                 <div class="metrics">
                   <div class="metric">
                     <span class="metric-value">${stats.totalSinistros}</span>
@@ -612,7 +612,7 @@ serve(async (req) => {
                   </div>
                   <div class="metric">
                     <span class="metric-value">${stats.totalAssistencias}</span>
-                    <span class="metric-label">Assistências</span>
+                    <span class="metric-label">Assistencias</span>
                   </div>
                   <div class="metric">
                     <span class="metric-value">${stats.ticketsAbertos}</span>
@@ -624,7 +624,7 @@ serve(async (req) => {
               <div class="footer">
                 <p><strong>RCORP Gestão de Seguros</strong></p>
                 <p>Este é um relatório automático. Não responda este email.</p>
-                <p>Para acessar o sistema completo e baixar o relatório em PDF, visite: <a href="https://fdab69fb-cde0-4bb7-ac60-2a713d93f1b4.lovableproject.com">Dashboard RCORP</a></p>
+                <p>Para acessar o sistema completo e baixar o relatorio em PDF, visite: <a href="https://fdab69fb-cde0-4bb7-ac60-2a713d93f1b4.lovableproject.com">Dashboard RCORP</a></p>
               </div>
             </div>
           </body>
