@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { Resend } from "npm:resend@2.0.0";
+import jsPDF from "npm:jspdf@2.5.1";
+import autoTable from "npm:jspdf-autotable@3.8.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,6 +80,128 @@ serve(async (req) => {
           .select("*")
           .eq("empresa_id", schedule.empresa_id)
           .eq("tipo", "assistencia");
+
+        // Gerar relatório PDF
+        const pdf = new jsPDF();
+        const pageWidth = pdf.internal.pageSize.width;
+        const pageHeight = pdf.internal.pageSize.height;
+
+        // Header
+        pdf.setFontSize(20);
+        pdf.setTextColor(102, 126, 234);
+        pdf.text('Relatório Executivo', 20, 30);
+
+        pdf.setFontSize(12);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`${schedule.empresas?.nome || "Empresa"}`, 20, 40);
+        pdf.text(`Período: ${new Date().toLocaleDateString("pt-BR")}`, 20, 50);
+
+        // Resumo Executivo
+        pdf.setFontSize(16);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Resumo Executivo', 20, 70);
+
+        const summaryData = [
+          ['Total de Veículos', (veiculos?.length || 0).toString()],
+          ['Veículos Segurados', (veiculos?.filter(v => v.status_seguro === 'segurado').length || 0).toString()],
+          ['Veículos Sem Seguro', (veiculos?.filter(v => v.status_seguro === 'sem_seguro').length || 0).toString()],
+          ['Apólices Ativas', (apolices?.length || 0).toString()],
+          ['Total de Vidas', (apolices?.reduce((sum, a) => sum + (a.quantidade_vidas || 0), 0) || 0).toString()],
+          ['Total de Sinistros', (sinistros?.length || 0).toString()],
+          ['Total de Assistências', (assistencias?.length || 0).toString()],
+          ['Tickets em Aberto', ([...(sinistros || []), ...(assistencias || [])].filter(t => t.status === 'aberto').length).toString()]
+        ];
+
+        autoTable(pdf, {
+          startY: 80,
+          head: [['Métrica', 'Valor']],
+          body: summaryData,
+          theme: 'grid',
+          headStyles: { fillColor: [102, 126, 234] },
+          styles: { fontSize: 10 }
+        });
+
+        // Distribuição de Veículos por Status
+        let currentY = (pdf as any).lastAutoTable.finalY + 20;
+        
+        if (currentY > pageHeight - 60) {
+          pdf.addPage();
+          currentY = 30;
+        }
+        
+        pdf.setFontSize(14);
+        pdf.text('Distribuição de Veículos por Status', 20, currentY);
+
+        const statusCounts = (veiculos || []).reduce((acc: any, v) => {
+          const status = v.status_seguro || 'indefinido';
+          acc[status] = (acc[status] || 0) + 1;
+          return acc;
+        }, {});
+
+        const statusData = Object.entries(statusCounts).map(([status, count]) => [
+          status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
+          count.toString(),
+          `${((count as number / (veiculos?.length || 1)) * 100).toFixed(1)}%`
+        ]);
+
+        autoTable(pdf, {
+          startY: currentY + 10,
+          head: [['Status', 'Quantidade', 'Percentual']],
+          body: statusData,
+          theme: 'grid',
+          headStyles: { fillColor: [76, 175, 80] },
+          styles: { fontSize: 10 }
+        });
+
+        // Distribuição de Apólices por Seguradora
+        currentY = (pdf as any).lastAutoTable.finalY + 20;
+        
+        if (currentY > pageHeight - 60) {
+          pdf.addPage();
+          currentY = 30;
+        }
+        
+        pdf.setFontSize(14);
+        pdf.text('Distribuição de Apólices por Seguradora', 20, currentY);
+
+        const seguradoraCounts = (apolices || []).reduce((acc: any, a) => {
+          const seguradora = a.seguradora || 'Não informada';
+          acc[seguradora] = (acc[seguradora] || 0) + 1;
+          return acc;
+        }, {});
+
+        const seguradoraData = Object.entries(seguradoraCounts).map(([seguradora, count]) => [
+          seguradora,
+          count.toString(),
+          `${((count as number / (apolices?.length || 1)) * 100).toFixed(1)}%`
+        ]);
+
+        autoTable(pdf, {
+          startY: currentY + 10,
+          head: [['Seguradora', 'Quantidade', 'Percentual']],
+          body: seguradoraData,
+          theme: 'grid',
+          headStyles: { fillColor: [255, 152, 0] },
+          styles: { fontSize: 10 }
+        });
+
+        // Footer
+        const totalPages = pdf.internal.pages.length - 1;
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i);
+          pdf.setFontSize(8);
+          pdf.setTextColor(150, 150, 150);
+          pdf.text(
+            `RCORP Gestão de Seguros © ${new Date().getFullYear()} - Página ${i} de ${totalPages}`,
+            pageWidth / 2,
+            pageHeight - 10,
+            { align: 'center' }
+          );
+        }
+
+        // Converter PDF para base64
+        const pdfOutput = pdf.output('arraybuffer');
+        const pdfBase64 = btoa(String.fromCharCode(...new Uint8Array(pdfOutput)));
 
         // Montar HTML do relatório
         const htmlContent = `
@@ -277,12 +401,18 @@ serve(async (req) => {
           </html>
         `;
 
-        // Enviar email via Resend
+        // Enviar email via Resend com anexo PDF
         const { data: emailData, error: emailError } = await resend.emails.send({
           from: "RCORP Relatórios <relatorios@resend.dev>",
           to: [schedule.email],
           subject: `📊 Relatório ${schedule.frequencia_dias} dias - ${schedule.empresas?.nome || "Sua Empresa"}`,
           html: htmlContent,
+          attachments: [
+            {
+              filename: `relatorio-${schedule.empresas?.nome || 'empresa'}-${new Date().toISOString().split('T')[0]}.pdf`,
+              content: pdfBase64,
+            }
+          ],
         });
 
         if (emailError) {

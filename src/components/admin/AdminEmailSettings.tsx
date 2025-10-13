@@ -258,7 +258,10 @@ export function AdminEmailSettings() {
         <div>
           <h2 className="text-2xl font-bold">Envio Automático de Relatórios</h2>
           <p className="text-sm text-muted-foreground">
-            Configure relatórios executivos periódicos por email
+            Configure relatórios executivos periódicos por email com PDF anexado
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            📎 O relatório será enviado como arquivo PDF anexo ao email
           </p>
         </div>
         <div className="flex gap-2">
