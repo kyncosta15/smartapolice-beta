@@ -53,7 +53,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
     },
     {
       id: 'premium',
-      title: 'Custo anual',
+      title: 'Prêmio Mensal',
       value: new Intl.NumberFormat('pt-BR', { 
         style: 'currency', 
         currency: 'BRL' 
@@ -65,7 +65,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
     },
     {
       id: 'coverage',
-      title: 'Valor Segurado',
+      title: 'Custo anual',
       value: new Intl.NumberFormat('pt-BR', { 
         style: 'currency', 
         currency: 'BRL',
