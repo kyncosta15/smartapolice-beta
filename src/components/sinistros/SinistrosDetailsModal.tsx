@@ -17,6 +17,8 @@ interface SinistrosDetailsModalProps {
   claims: Claim[];
   assistances: Assistance[];
   loading: boolean;
+  onDeleteClaim?: (id: string) => void;
+  onDeleteAssistance?: (id: string) => void;
 }
 
 export function SinistrosDetailsModal({
@@ -26,6 +28,8 @@ export function SinistrosDetailsModal({
   claims,
   assistances,
   loading,
+  onDeleteClaim,
+  onDeleteAssistance,
 }: SinistrosDetailsModalProps) {
   const getModalTitle = () => {
     switch (filter) {

@@ -78,6 +78,42 @@ export function SinistrosDashboard({
     loadData();
   };
 
+  const handleDeleteClaim = async (claimId: string) => {
+    try {
+      await ClaimsService.deleteClaim(claimId);
+      setClaims(prev => prev.filter(c => c.id !== claimId));
+      toast({
+        title: "Sucesso",
+        description: "Sinistro deletado com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao deletar sinistro:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível deletar o sinistro",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteAssistance = async (assistanceId: string) => {
+    try {
+      await ClaimsService.deleteAssistance(assistanceId);
+      setAssistances(prev => prev.filter(a => a.id !== assistanceId));
+      toast({
+        title: "Sucesso",
+        description: "Assistência deletada com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao deletar assistência:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível deletar a assistência",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Open modal with filter
   const openModal = (filter: 'sinistro' | 'assistencia' | 'todos') => {
     setModalFilter(filter);

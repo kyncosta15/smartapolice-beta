@@ -247,6 +247,34 @@ export function useTicketsData() {
     }
   };
 
+  // Deletar ticket
+  const deleteTicket = async (ticketId: string) => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('tickets')
+        .delete()
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
+      await loadTickets();
+
+      toast({
+        title: "Sucesso",
+        description: "Ticket deletado com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao deletar ticket:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível deletar o ticket",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Calcular estatísticas
   const stats: TicketStats = useMemo(() => {
     const sinistros = tickets.filter(t => t.tipo === 'sinistro');
@@ -350,6 +378,7 @@ export function useTicketsData() {
     chartData,
     createTicket,
     updateTicketStatus,
+    deleteTicket,
     refreshTickets: loadTickets,
   };
 }

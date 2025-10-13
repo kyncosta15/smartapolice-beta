@@ -10,7 +10,7 @@ import { useTicketsData } from '@/hooks/useTicketsData';
 import { TicketTipo, TicketStatus } from '@/types/tickets';
 
 export function TicketsDashboard() {
-  const { stats, filters, setFilters, loading } = useTicketsData();
+  const { stats, filters, setFilters, loading, deleteTicket } = useTicketsData();
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
   const [showList, setShowList] = useState(false);
 
