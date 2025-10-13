@@ -88,9 +88,6 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps
           <DropdownMenuItem onClick={() => onEdit(veiculo.id)}>
             <Edit className="mr-2 h-4 w-4" /> Editar
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onDocs(veiculo.id)}>
-            <FileText className="mr-2 h-4 w-4" /> Documentos
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
