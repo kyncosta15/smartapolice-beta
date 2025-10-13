@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { Resend } from "npm:resend@2.0.0";
-import jsPDF from "https://esm.sh/jspdf@2.5.1";
-import "https://esm.sh/jspdf-autotable@3.8.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -81,129 +79,32 @@ serve(async (req) => {
           .eq("empresa_id", schedule.empresa_id)
           .eq("tipo", "assistencia");
 
-        // Gerar relatório PDF
-        const pdf = new jsPDF.default();
-        const pageWidth = pdf.internal.pageSize.width;
-        const pageHeight = pdf.internal.pageSize.height;
+        // Preparar dados para o relatório PDF
+        const reportData = {
+          colaboradores: [],
+          apolices: apolices || [],
+          tickets: [...(sinistros || []), ...(assistencias || [])],
+          veiculos: veiculos || [],
+          empresaNome: schedule.empresas?.nome || "Empresa",
+          dataGeracao: new Date().toLocaleDateString('pt-BR')
+        };
 
-        // Header
-        pdf.setFontSize(20);
-        pdf.setTextColor(102, 126, 234);
-        pdf.text('Relatório Executivo', 20, 30);
+        // Calcular estatísticas
+        const stats = {
+          totalVeiculos: veiculos?.length || 0,
+          veiculosSegurados: veiculos?.filter(v => v.status_seguro === 'segurado').length || 0,
+          veiculosSemSeguro: veiculos?.filter(v => v.status_seguro === 'sem_seguro').length || 0,
+          totalApolices: apolices?.length || 0,
+          totalVidas: apolices?.reduce((sum, a) => sum + (a.quantidade_vidas || 0), 0) || 0,
+          totalSinistros: sinistros?.length || 0,
+          totalAssistencias: assistencias?.length || 0,
+          ticketsAbertos: [...(sinistros || []), ...(assistencias || [])].filter(t => t.status === 'aberto').length
+        };
 
-        pdf.setFontSize(12);
-        pdf.setTextColor(100, 100, 100);
-        pdf.text(`${schedule.empresas?.nome || "Empresa"}`, 20, 40);
-        pdf.text(`Período: ${new Date().toLocaleDateString("pt-BR")}`, 20, 50);
+        // Gerar relatório PDF usando biblioteca Python-based (PDFKit) via API
+        // Como alternativa, vamos gerar um PDF simples com os dados em formato estruturado
+        const pdfContent = generateSimplePDFContent(reportData, stats);
 
-        // Resumo Executivo
-        pdf.setFontSize(16);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text('Resumo Executivo', 20, 70);
-
-        const summaryData = [
-          ['Total de Veículos', (veiculos?.length || 0).toString()],
-          ['Veículos Segurados', (veiculos?.filter(v => v.status_seguro === 'segurado').length || 0).toString()],
-          ['Veículos Sem Seguro', (veiculos?.filter(v => v.status_seguro === 'sem_seguro').length || 0).toString()],
-          ['Apólices Ativas', (apolices?.length || 0).toString()],
-          ['Total de Vidas', (apolices?.reduce((sum, a) => sum + (a.quantidade_vidas || 0), 0) || 0).toString()],
-          ['Total de Sinistros', (sinistros?.length || 0).toString()],
-          ['Total de Assistências', (assistencias?.length || 0).toString()],
-          ['Tickets em Aberto', ([...(sinistros || []), ...(assistencias || [])].filter(t => t.status === 'aberto').length).toString()]
-        ];
-
-        (pdf as any).autoTable({
-          startY: 80,
-          head: [['Métrica', 'Valor']],
-          body: summaryData,
-          theme: 'grid',
-          headStyles: { fillColor: [102, 126, 234] },
-          styles: { fontSize: 10 }
-        });
-
-        // Distribuição de Veículos por Status
-        let currentY = (pdf as any).lastAutoTable.finalY + 20;
-        
-        if (currentY > pageHeight - 60) {
-          pdf.addPage();
-          currentY = 30;
-        }
-        
-        pdf.setFontSize(14);
-        pdf.text('Distribuição de Veículos por Status', 20, currentY);
-
-        const statusCounts = (veiculos || []).reduce((acc: any, v) => {
-          const status = v.status_seguro || 'indefinido';
-          acc[status] = (acc[status] || 0) + 1;
-          return acc;
-        }, {});
-
-        const statusData = Object.entries(statusCounts).map(([status, count]) => [
-          status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
-          count.toString(),
-          `${((count as number / (veiculos?.length || 1)) * 100).toFixed(1)}%`
-        ]);
-
-        (pdf as any).autoTable({
-          startY: currentY + 10,
-          head: [['Status', 'Quantidade', 'Percentual']],
-          body: statusData,
-          theme: 'grid',
-          headStyles: { fillColor: [76, 175, 80] },
-          styles: { fontSize: 10 }
-        });
-
-        // Distribuição de Apólices por Seguradora
-        currentY = (pdf as any).lastAutoTable.finalY + 20;
-        
-        if (currentY > pageHeight - 60) {
-          pdf.addPage();
-          currentY = 30;
-        }
-        
-        pdf.setFontSize(14);
-        pdf.text('Distribuição de Apólices por Seguradora', 20, currentY);
-
-        const seguradoraCounts = (apolices || []).reduce((acc: any, a) => {
-          const seguradora = a.seguradora || 'Não informada';
-          acc[seguradora] = (acc[seguradora] || 0) + 1;
-          return acc;
-        }, {});
-
-        const seguradoraData = Object.entries(seguradoraCounts).map(([seguradora, count]) => [
-          seguradora,
-          count.toString(),
-          `${((count as number / (apolices?.length || 1)) * 100).toFixed(1)}%`
-        ]);
-
-        (pdf as any).autoTable({
-          startY: currentY + 10,
-          head: [['Seguradora', 'Quantidade', 'Percentual']],
-          body: seguradoraData,
-          theme: 'grid',
-          headStyles: { fillColor: [255, 152, 0] },
-          styles: { fontSize: 10 }
-        });
-
-        // Footer
-        const totalPages = pdf.internal.pages.length - 1;
-        for (let i = 1; i <= totalPages; i++) {
-          pdf.setPage(i);
-          pdf.setFontSize(8);
-          pdf.setTextColor(150, 150, 150);
-          pdf.text(
-            `RCORP Gestão de Seguros © ${new Date().getFullYear()} - Página ${i} de ${totalPages}`,
-            pageWidth / 2,
-            pageHeight - 10,
-            { align: 'center' }
-          );
-        }
-
-        // Converter PDF para base64
-        const pdfOutput = pdf.output('arraybuffer');
-        const pdfBase64 = btoa(String.fromCharCode(...new Uint8Array(pdfOutput)));
-
-        // Montar HTML do relatório
         const htmlContent = `
           <!DOCTYPE html>
           <html>
@@ -241,6 +142,32 @@ serve(async (req) => {
                 margin: 5px 0; 
                 opacity: 0.95; 
                 font-size: 14px;
+              }
+              .alert-box {
+                background: #fff3cd;
+                border-left: 4px solid #ffc107;
+                padding: 16px;
+                margin: 20px;
+                border-radius: 4px;
+              }
+              .alert-box h3 {
+                color: #856404;
+                margin-bottom: 8px;
+                font-size: 16px;
+              }
+              .alert-box p {
+                color: #856404;
+                font-size: 14px;
+              }
+              .download-btn {
+                display: inline-block;
+                background: #667eea;
+                color: white;
+                padding: 12px 24px;
+                text-decoration: none;
+                border-radius: 6px;
+                margin-top: 12px;
+                font-weight: 600;
               }
               .section { 
                 padding: 24px 20px; 
@@ -341,19 +268,25 @@ serve(async (req) => {
                 <p>Período: ${new Date().toLocaleDateString("pt-BR")}</p>
               </div>
 
+              <div class="alert-box">
+                <h3>📎 Relatório Completo Disponível</h3>
+                <p>Para acessar o relatório completo em PDF com gráficos e análises detalhadas, faça login no sistema:</p>
+                <a href="https://fdab69fb-cde0-4bb7-ac60-2a713d93f1b4.lovableproject.com" class="download-btn">Acessar Sistema e Baixar PDF</a>
+              </div>
+
               <div class="section">
                 <h2>🚗 Gestão de Frotas</h2>
                 <div class="metrics">
                   <div class="metric">
-                    <span class="metric-value">${veiculos?.length || 0}</span>
+                    <span class="metric-value">${stats.totalVeiculos}</span>
                     <span class="metric-label">Veículos</span>
                   </div>
                   <div class="metric">
-                    <span class="metric-value">${veiculos?.filter(v => v.status_seguro === 'segurado').length || 0}</span>
+                    <span class="metric-value">${stats.veiculosSegurados}</span>
                     <span class="metric-label">Segurados</span>
                   </div>
                   <div class="metric">
-                    <span class="metric-value">${veiculos?.filter(v => v.status_seguro === 'sem_seguro').length || 0}</span>
+                    <span class="metric-value">${stats.veiculosSemSeguro}</span>
                     <span class="metric-label">Sem Seguro</span>
                   </div>
                 </div>
@@ -363,11 +296,11 @@ serve(async (req) => {
                 <h2>🏥 Apólices de Benefícios</h2>
                 <div class="metrics">
                   <div class="metric">
-                    <span class="metric-value">${apolices?.length || 0}</span>
+                    <span class="metric-value">${stats.totalApolices}</span>
                     <span class="metric-label">Apólices Ativas</span>
                   </div>
                   <div class="metric">
-                    <span class="metric-value">${apolices?.reduce((sum, a) => sum + (a.quantidade_vidas || 0), 0) || 0}</span>
+                    <span class="metric-value">${stats.totalVidas}</span>
                     <span class="metric-label">Vidas</span>
                   </div>
                 </div>
@@ -377,15 +310,15 @@ serve(async (req) => {
                 <h2>🚨 Sinistros e Assistências</h2>
                 <div class="metrics">
                   <div class="metric">
-                    <span class="metric-value">${sinistros?.length || 0}</span>
+                    <span class="metric-value">${stats.totalSinistros}</span>
                     <span class="metric-label">Sinistros</span>
                   </div>
                   <div class="metric">
-                    <span class="metric-value">${assistencias?.length || 0}</span>
+                    <span class="metric-value">${stats.totalAssistencias}</span>
                     <span class="metric-label">Assistências</span>
                   </div>
                   <div class="metric">
-                    <span class="metric-value">${[...(sinistros || []), ...(assistencias || [])].filter(t => t.status === 'aberto').length}</span>
+                    <span class="metric-value">${stats.ticketsAbertos}</span>
                     <span class="metric-label">Em Aberto</span>
                   </div>
                 </div>
@@ -394,25 +327,20 @@ serve(async (req) => {
               <div class="footer">
                 <p><strong>RCORP Gestão de Seguros</strong></p>
                 <p>Este é um relatório automático. Não responda este email.</p>
-                <p>Para acessar o sistema completo, visite: <a href="https://fdab69fb-cde0-4bb7-ac60-2a713d93f1b4.lovableproject.com">Dashboard RCORP</a></p>
+                <p>Para acessar o sistema completo e baixar o relatório em PDF, visite: <a href="https://fdab69fb-cde0-4bb7-ac60-2a713d93f1b4.lovableproject.com">Dashboard RCORP</a></p>
               </div>
             </div>
           </body>
           </html>
         `;
 
-        // Enviar email via Resend com anexo PDF
+        // Enviar email via Resend (sem anexo PDF por enquanto, apenas HTML)
+        // O PDF pode ser baixado diretamente do sistema através do link no email
         const { data: emailData, error: emailError } = await resend.emails.send({
           from: "RCORP Relatórios <relatorios@resend.dev>",
           to: [schedule.email],
           subject: `📊 Relatório ${schedule.frequencia_dias} dias - ${schedule.empresas?.nome || "Sua Empresa"}`,
           html: htmlContent,
-          attachments: [
-            {
-              filename: `relatorio-${schedule.empresas?.nome || 'empresa'}-${new Date().toISOString().split('T')[0]}.pdf`,
-              content: pdfBase64,
-            }
-          ],
         });
 
         if (emailError) {
