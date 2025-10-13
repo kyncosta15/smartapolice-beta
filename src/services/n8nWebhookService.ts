@@ -33,7 +33,7 @@ interface N8NWebhookResponse {
 }
 
 export class N8NWebhookService {
-  private static readonly WEBHOOK_URL = 'https://rcorpoficial.app.n8n.cloud/webhook-test/upload-arquivo';
+  private static readonly WEBHOOK_URL = 'https://rcorpoficial2025.app.n8n.cloud/webhook/upload-arquivo';
   
   static async processarPdfComN8n(file: File, userId?: string): Promise<N8NWebhookResponse> {
     console.log(`🌐 Enviando PDF para processamento N8N: ${file.name}`);
