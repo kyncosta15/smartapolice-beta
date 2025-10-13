@@ -151,4 +151,20 @@ export class ClaimsService {
       total: filtered.length
     };
   }
+
+  static async deleteClaim(id: string) {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const index = this.mockClaims.findIndex(c => c.id === id);
+    if (index === -1) throw new Error('Sinistro não encontrado');
+    this.mockClaims.splice(index, 1);
+    return { success: true };
+  }
+
+  static async deleteAssistance(id: string) {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const index = this.mockAssistances.findIndex(a => a.id === id);
+    if (index === -1) throw new Error('Assistência não encontrada');
+    this.mockAssistances.splice(index, 1);
+    return { success: true };
+  }
 }

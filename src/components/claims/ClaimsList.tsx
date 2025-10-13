@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Eye, MoreHorizontal, Edit, FileText, Clock } from 'lucide-react';
+import { Eye, MoreHorizontal, Edit, FileText, Clock, Trash2 } from 'lucide-react';
 import { Claim, ClaimStatus } from '@/types/claims';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -14,6 +14,7 @@ interface ClaimsListProps {
   loading?: boolean;
   onClaimSelect: (claim: Claim) => void;
   onClaimEdit: (claim: Claim) => void;
+  onClaimDelete?: (claimId: string) => void;
   statusFilter?: string;
   onStatusFilterChange?: (status: string) => void;
 }
@@ -23,6 +24,7 @@ export function ClaimsList({
   loading = false,
   onClaimSelect,
   onClaimEdit,
+  onClaimDelete,
   statusFilter = 'all',
   onStatusFilterChange
 }: ClaimsListProps) {
@@ -204,6 +206,15 @@ export function ClaimsList({
                                   <FileText className="h-4 w-4 mr-2" />
                                   Documentos
                                 </DropdownMenuItem>
+                                {onClaimDelete && (
+                                  <DropdownMenuItem 
+                                    onClick={() => onClaimDelete(claim.id)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Deletar
+                                  </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -249,6 +260,15 @@ export function ClaimsList({
                                 <Edit className="h-4 w-4 mr-2" />
                                 Editar
                               </DropdownMenuItem>
+                              {onClaimDelete && (
+                                <DropdownMenuItem 
+                                  onClick={() => onClaimDelete(claim.id)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Deletar
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>

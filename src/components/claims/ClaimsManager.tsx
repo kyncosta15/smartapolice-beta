@@ -60,6 +60,15 @@ export function ClaimsManager({ onClaimEdit }: ClaimsManagerProps) {
     onClaimEdit?.(claim);
   };
 
+  const handleClaimDelete = async (claimId: string) => {
+    try {
+      await ClaimsService.deleteClaim(claimId);
+      setClaims(prev => prev.filter(c => c.id !== claimId));
+    } catch (error) {
+      console.error('Error deleting claim:', error);
+    }
+  };
+
   const handleNewClaim = () => {
     setIsNewClaimModalOpen(true);
   };
@@ -91,6 +100,7 @@ export function ClaimsManager({ onClaimEdit }: ClaimsManagerProps) {
           loading={loading}
           onClaimSelect={handleClaimSelect}
           onClaimEdit={handleClaimEdit}
+          onClaimDelete={handleClaimDelete}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
         />
