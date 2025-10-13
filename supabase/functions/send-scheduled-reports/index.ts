@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { Resend } from "npm:resend@2.0.0";
+import { PDFDocument, rgb, StandardFonts } from "https://cdn.skypack.dev/pdf-lib@1.17.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -79,16 +80,6 @@ serve(async (req) => {
           .eq("empresa_id", schedule.empresa_id)
           .eq("tipo", "assistencia");
 
-        // Preparar dados para o relatório PDF
-        const reportData = {
-          colaboradores: [],
-          apolices: apolices || [],
-          tickets: [...(sinistros || []), ...(assistencias || [])],
-          veiculos: veiculos || [],
-          empresaNome: schedule.empresas?.nome || "Empresa",
-          dataGeracao: new Date().toLocaleDateString('pt-BR')
-        };
-
         // Calcular estatísticas
         const stats = {
           totalVeiculos: veiculos?.length || 0,
@@ -101,9 +92,136 @@ serve(async (req) => {
           ticketsAbertos: [...(sinistros || []), ...(assistencias || [])].filter(t => t.status === 'aberto').length
         };
 
-        // Gerar relatório PDF usando biblioteca Python-based (PDFKit) via API
-        // Como alternativa, vamos gerar um PDF simples com os dados em formato estruturado
-        const pdfContent = generateSimplePDFContent(reportData, stats);
+        // Gerar PDF do relatório
+        const pdfDoc = await PDFDocument.create();
+        const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        
+        let page = pdfDoc.addPage([595, 842]); // A4
+        const { width, height } = page.getSize();
+        let yPosition = height - 50;
+
+        // Título
+        page.drawText('Relatório Executivo', {
+          x: 50,
+          y: yPosition,
+          size: 24,
+          font: helveticaBold,
+          color: rgb(0.4, 0.49, 0.92),
+        });
+        yPosition -= 30;
+
+        page.drawText(`${schedule.empresas?.nome || "Empresa"}`, {
+          x: 50,
+          y: yPosition,
+          size: 16,
+          font: helveticaBold,
+        });
+        yPosition -= 20;
+
+        page.drawText(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, {
+          x: 50,
+          y: yPosition,
+          size: 12,
+          font: helveticaFont,
+        });
+        yPosition -= 40;
+
+        // Gestão de Frotas
+        page.drawText('GESTÃO DE FROTAS', {
+          x: 50,
+          y: yPosition,
+          size: 14,
+          font: helveticaBold,
+          color: rgb(0.4, 0.49, 0.92),
+        });
+        yPosition -= 25;
+
+        page.drawText(`Total de Veículos: ${stats.totalVeiculos}`, {
+          x: 60,
+          y: yPosition,
+          size: 12,
+          font: helveticaFont,
+        });
+        yPosition -= 20;
+
+        page.drawText(`Veículos Segurados: ${stats.veiculosSegurados}`, {
+          x: 60,
+          y: yPosition,
+          size: 12,
+          font: helveticaFont,
+        });
+        yPosition -= 20;
+
+        page.drawText(`Veículos Sem Seguro: ${stats.veiculosSemSeguro}`, {
+          x: 60,
+          y: yPosition,
+          size: 12,
+          font: helveticaFont,
+        });
+        yPosition -= 40;
+
+        // Apólices de Benefícios
+        page.drawText('APÓLICES DE BENEFÍCIOS', {
+          x: 50,
+          y: yPosition,
+          size: 14,
+          font: helveticaBold,
+          color: rgb(0.4, 0.49, 0.92),
+        });
+        yPosition -= 25;
+
+        page.drawText(`Apólices Ativas: ${stats.totalApolices}`, {
+          x: 60,
+          y: yPosition,
+          size: 12,
+          font: helveticaFont,
+        });
+        yPosition -= 20;
+
+        page.drawText(`Total de Vidas: ${stats.totalVidas}`, {
+          x: 60,
+          y: yPosition,
+          size: 12,
+          font: helveticaFont,
+        });
+        yPosition -= 40;
+
+        // Sinistros e Assistências
+        page.drawText('SINISTROS E ASSISTÊNCIAS', {
+          x: 50,
+          y: yPosition,
+          size: 14,
+          font: helveticaBold,
+          color: rgb(0.4, 0.49, 0.92),
+        });
+        yPosition -= 25;
+
+        page.drawText(`Total de Sinistros: ${stats.totalSinistros}`, {
+          x: 60,
+          y: yPosition,
+          size: 12,
+          font: helveticaFont,
+        });
+        yPosition -= 20;
+
+        page.drawText(`Total de Assistências: ${stats.totalAssistencias}`, {
+          x: 60,
+          y: yPosition,
+          size: 12,
+          font: helveticaFont,
+        });
+        yPosition -= 20;
+
+        page.drawText(`Tickets em Aberto: ${stats.ticketsAbertos}`, {
+          x: 60,
+          y: yPosition,
+          size: 12,
+          font: helveticaFont,
+        });
+
+        const pdfBytes = await pdfDoc.save();
+        const pdfBase64 = btoa(String.fromCharCode(...pdfBytes));
 
         const htmlContent = `
           <!DOCTYPE html>
@@ -269,9 +387,9 @@ serve(async (req) => {
               </div>
 
               <div class="alert-box">
-                <h3>📎 Relatório Completo Disponível</h3>
-                <p>Para acessar o relatório completo em PDF com gráficos e análises detalhadas, faça login no sistema:</p>
-                <a href="https://fdab69fb-cde0-4bb7-ac60-2a713d93f1b4.lovableproject.com" class="download-btn">Acessar Sistema e Baixar PDF</a>
+                <h3>📎 Relatório em Anexo</h3>
+                <p>O relatório executivo em PDF está anexado a este email. Para análises mais detalhadas e gráficos interativos, acesse o sistema:</p>
+                <a href="https://fdab69fb-cde0-4bb7-ac60-2a713d93f1b4.lovableproject.com" class="download-btn">Acessar Sistema Completo</a>
               </div>
 
               <div class="section">
@@ -334,13 +452,18 @@ serve(async (req) => {
           </html>
         `;
 
-        // Enviar email via Resend (sem anexo PDF por enquanto, apenas HTML)
-        // O PDF pode ser baixado diretamente do sistema através do link no email
+        // Enviar email via Resend com PDF anexado
         const { data: emailData, error: emailError } = await resend.emails.send({
           from: "RCORP Relatórios <relatorios@resend.dev>",
           to: [schedule.email],
           subject: `📊 Relatório ${schedule.frequencia_dias} dias - ${schedule.empresas?.nome || "Sua Empresa"}`,
           html: htmlContent,
+          attachments: [
+            {
+              filename: `relatorio-${schedule.empresas?.nome?.replace(/[^a-zA-Z0-9]/g, '-') || 'empresa'}-${new Date().toISOString().split('T')[0]}.pdf`,
+              content: pdfBase64,
+            },
+          ],
         });
 
         if (emailError) {
