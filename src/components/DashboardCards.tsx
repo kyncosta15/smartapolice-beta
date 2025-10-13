@@ -53,7 +53,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
     },
     {
       id: 'premium',
-      title: 'Prêmio Mensal',
+      title: 'Custo anual',
       value: new Intl.NumberFormat('pt-BR', { 
         style: 'currency', 
         currency: 'BRL' 
