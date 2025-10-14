@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FipeConsultaModal } from './FipeConsultaModal';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
@@ -36,6 +36,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
   const [filterModelo, setFilterModelo] = useState<string>('all');
   const [filterAno, setFilterAno] = useState<string>('all');
   const [filterCombustivel, setFilterCombustivel] = useState<string>('all');
+  const [placaSortOrder, setPlacaSortOrder] = useState<'none' | 'asc' | 'desc'>('none');
 
   // Extract unique filter options
   const marcas = useMemo(() => {
@@ -60,7 +61,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
 
   // Apply filters
   const veiculosFiltrados = useMemo(() => {
-    return veiculos.filter(v => {
+    let filtered = veiculos.filter(v => {
       // Search term
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
@@ -78,7 +79,22 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
 
       return true;
     });
-  }, [veiculos, searchTerm, filterMarca, filterModelo, filterAno, filterCombustivel]);
+
+    // Apply placa sorting
+    if (placaSortOrder !== 'none') {
+      filtered = [...filtered].sort((a, b) => {
+        const placaA = a.placa || '';
+        const placaB = b.placa || '';
+        if (placaSortOrder === 'asc') {
+          return placaA.localeCompare(placaB);
+        } else {
+          return placaB.localeCompare(placaA);
+        }
+      });
+    }
+
+    return filtered;
+  }, [veiculos, searchTerm, filterMarca, filterModelo, filterAno, filterCombustivel, placaSortOrder]);
 
   const veiculosComFipe = veiculosFiltrados.filter(v => v.preco_fipe && v.preco_nf);
 
@@ -282,7 +298,21 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
           <TableHeader>
             <TableRow>
               <TableHead>Veículo</TableHead>
-              <TableHead>Placa</TableHead>
+              <TableHead>
+                <button
+                  onClick={() => {
+                    setPlacaSortOrder(prev => 
+                      prev === 'none' ? 'asc' : prev === 'asc' ? 'desc' : 'none'
+                    );
+                  }}
+                  className="flex items-center gap-2 hover:text-primary transition-colors"
+                >
+                  Placa
+                  {placaSortOrder === 'none' && <ArrowUpDown className="h-4 w-4" />}
+                  {placaSortOrder === 'asc' && <ArrowUp className="h-4 w-4" />}
+                  {placaSortOrder === 'desc' && <ArrowDown className="h-4 w-4" />}
+                </button>
+              </TableHead>
               <TableHead>Ano</TableHead>
               <TableHead>Combustível</TableHead>
               <TableHead className="text-right">Valor NF</TableHead>
