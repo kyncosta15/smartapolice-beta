@@ -26,6 +26,7 @@ import { FrotasKPICards } from './frotas/FrotasKPICards';
 import { FrotasFipeNew } from './frotas/FrotasFipeNew';
 import { FrotasDocumentos } from './frotas/FrotasDocumentos';
 import { FrotasUpload } from './frotas/FrotasUpload';
+import { FipeSpreadsheetUpload } from './frotas/FipeSpreadsheetUpload';
 
 import { ImportConfigurationPage } from './frotas/ImportConfigurationPage';
 import { FrotasFilters } from './frotas/FrotasFilters';
@@ -237,6 +238,9 @@ export function GestaoFrotas() {
             </TabsContent>
 
             <TabsContent value="fipe" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
+              <div className="mb-4 flex justify-end">
+                <FipeSpreadsheetUpload onSuccess={refetch} />
+              </div>
               <FrotasFipeNew 
                 veiculos={veiculos.length === 0 ? allVeiculos : veiculos} 
                 loading={loading}
