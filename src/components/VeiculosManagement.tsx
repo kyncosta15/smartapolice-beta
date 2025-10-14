@@ -23,7 +23,10 @@ import {
   FileText,
   FolderOpen,
   Upload,
-  Settings
+  Settings,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import {
   Table,
@@ -49,6 +52,7 @@ export function VeiculosManagement({
   const [activeTab, setActiveTab] = useState('veiculos');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [placaSortOrder, setPlacaSortOrder] = useState<'none' | 'asc' | 'desc'>('none');
 
   // Extrair dados de veículos das apólices existentes
   const extractVehicleData = (policies: ParsedPolicyData[]) => {
@@ -141,7 +145,7 @@ export function VeiculosManagement({
   });
 
   // Filtrar veículos
-  const filteredVehicles = vehiclesWithFipe.filter(vehicle => {
+  let filteredVehicles = vehiclesWithFipe.filter(vehicle => {
     const matchesCategory = selectedCategory === 'all' || vehicle.categoria === selectedCategory;
     const matchesSearch = !searchTerm || 
       vehicle.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -151,6 +155,17 @@ export function VeiculosManagement({
     
     return matchesCategory && matchesSearch;
   });
+
+  // Ordenar por placa se necessário
+  if (placaSortOrder !== 'none') {
+    filteredVehicles = [...filteredVehicles].sort((a, b) => {
+      if (placaSortOrder === 'asc') {
+        return a.placa.localeCompare(b.placa);
+      } else {
+        return b.placa.localeCompare(a.placa);
+      }
+    });
+  }
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -519,7 +534,21 @@ export function VeiculosManagement({
             <TableHeader>
               <TableRow>
                 <TableHead>Veículo</TableHead>
-                <TableHead>Placa</TableHead>
+                <TableHead>
+                  <button
+                    onClick={() => {
+                      setPlacaSortOrder(prev => 
+                        prev === 'none' ? 'asc' : prev === 'asc' ? 'desc' : 'none'
+                      );
+                    }}
+                    className="flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    Placa
+                    {placaSortOrder === 'none' && <ArrowUpDown className="h-4 w-4" />}
+                    {placaSortOrder === 'asc' && <ArrowUp className="h-4 w-4" />}
+                    {placaSortOrder === 'desc' && <ArrowDown className="h-4 w-4" />}
+                  </button>
+                </TableHead>
                 <TableHead>Valor Compra</TableHead>
                 <TableHead>Valor FIPE</TableHead>
                 <TableHead>Tabela (%)</TableHead>
