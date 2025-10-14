@@ -18,14 +18,16 @@ import { FipeConsultaModal } from './FipeConsultaModal';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { Fuel } from '@/services/fipeApiService';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FrotasFipeProps {
   veiculos: FrotaVeiculo[];
   loading: boolean;
   hasActiveFilters?: boolean;
+  onVehicleUpdate?: () => void;
 }
 
-export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: FrotasFipeProps) {
+export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onVehicleUpdate }: FrotasFipeProps) {
   const { toast } = useToast();
   const [selectedVehicle, setSelectedVehicle] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -149,6 +151,35 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
 
   const hasFilters = searchTerm || filterMarca !== 'all' || filterModelo !== 'all' || 
                      filterAno !== 'all' || filterCombustivel !== 'all';
+
+  const handleVehicleUpdate = async (vehicleId: string, fipeValue: any) => {
+    try {
+      const { error } = await supabase
+        .from('frota_veiculos')
+        .update({
+          preco_fipe: fipeValue.price_value,
+          data_consulta_fipe: fipeValue.data_consulta || new Date().toISOString(),
+        })
+        .eq('id', vehicleId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Valor FIPE atualizado",
+        description: `Preço atualizado para ${fipeValue.price_label}`,
+      });
+
+      // Atualizar a lista de veículos
+      onVehicleUpdate?.();
+    } catch (error) {
+      console.error('Erro ao atualizar valor FIPE:', error);
+      toast({
+        title: "Erro ao atualizar",
+        description: "Não foi possível salvar o valor FIPE no banco de dados",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -411,6 +442,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
             preco_nf: selectedVehicle.preco_nf,
             categoria: selectedVehicle.categoria,
           }}
+          onVehicleUpdate={(fipeValue) => handleVehicleUpdate(selectedVehicle.id, fipeValue)}
         />
       )}
     </div>

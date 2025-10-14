@@ -24,7 +24,7 @@ interface FipeConsultaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   vehicle: VehicleData;
-  onVehicleUpdate?: (updates: Partial<VehicleData>) => void;
+  onVehicleUpdate?: (fipeData: any) => void;
 }
 
 export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate }: FipeConsultaModalProps) {
@@ -64,13 +64,9 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
           ano: yearNum,
         });
 
-        // Notificar componente pai sobre as atualizações
-        if (onVehicleUpdate) {
-          onVehicleUpdate({
-            marca: response.normalized.brand.toUpperCase(),
-            modelo: response.normalized.model,
-            ano_modelo: yearNum,
-          });
+        // Notificar componente pai com os dados da FIPE se houver
+        if (onVehicleUpdate && response.fipeValue) {
+          onVehicleUpdate(response.fipeValue);
         }
       }
     } catch (error) {
