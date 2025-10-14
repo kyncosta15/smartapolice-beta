@@ -246,6 +246,7 @@ export function GestaoFrotas() {
                   filters.status.length > 0 || 
                   filters.marcaModelo.length > 0
                 }
+                onVehicleUpdate={refetch}
               />
             </TabsContent>
 
