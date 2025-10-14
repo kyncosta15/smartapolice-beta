@@ -17,6 +17,7 @@ interface VehicleData {
   tipo_veiculo: number;
   codigo_fipe?: string;
   preco_nf?: number;
+  categoria?: string;
 }
 
 interface FipeConsultaModalProps {
@@ -49,6 +50,7 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
         tipoVeiculo: vehicle.tipo_veiculo,
         fipeCode: vehicle.codigo_fipe,
         placa: vehicle.placa,
+        categoria: vehicle.categoria,
       });
 
       // Atualizar dados normalizados se status OK
@@ -142,22 +144,34 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
                   <span className="ml-2 font-medium">{vehicle.placa}</span>
                 </div>
               )}
+              {vehicle.codigo_fipe && (
+                <div>
+                  <span className="text-muted-foreground">Código FIPE:</span>
+                  <span className="ml-2 font-medium">{vehicle.codigo_fipe}</span>
+                </div>
+              )}
               <div>
                 <span className="text-muted-foreground">Marca:</span>
                 <span className="ml-2 font-medium">{normalizedData.marca}</span>
-              </div>
-              <div className="col-span-2">
-                <span className="text-muted-foreground">Modelo:</span>
-                <span className="ml-2 font-medium">{normalizedData.modelo}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Ano:</span>
                 <span className="ml-2 font-medium">{normalizedData.ano}</span>
               </div>
+              <div className="col-span-2">
+                <span className="text-muted-foreground">Modelo:</span>
+                <span className="ml-2 font-medium">{normalizedData.modelo}</span>
+              </div>
               {vehicle.combustivel && (
                 <div>
                   <span className="text-muted-foreground">Combustível:</span>
                   <span className="ml-2 font-medium">{vehicle.combustivel}</span>
+                </div>
+              )}
+              {vehicle.categoria && (
+                <div>
+                  <span className="text-muted-foreground">Categoria:</span>
+                  <span className="ml-2 font-medium">{vehicle.categoria}</span>
                 </div>
               )}
             </div>

@@ -401,8 +401,9 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
             ano_modelo: selectedVehicle.ano_modelo,
             combustivel: selectedVehicle.combustivel as Fuel | undefined,
             tipo_veiculo: selectedVehicle.tipo_veiculo || 1,
-            codigo_fipe: selectedVehicle.codigo_fipe,
+            codigo_fipe: selectedVehicle.codigo_fipe || selectedVehicle.codigo,
             preco_nf: selectedVehicle.preco_nf,
+            categoria: selectedVehicle.categoria,
           }}
         />
       )}
