@@ -313,6 +313,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
                   {placaSortOrder === 'desc' && <ArrowDown className="h-4 w-4" />}
                 </button>
               </TableHead>
+              <TableHead>Código FIPE</TableHead>
               <TableHead>Ano</TableHead>
               <TableHead>Combustível</TableHead>
               <TableHead className="text-right">Valor NF</TableHead>
@@ -324,7 +325,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
           <TableBody>
             {veiculosFiltrados.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-12">
+                <TableCell colSpan={9} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
                     <DollarSign className="w-12 h-12 text-muted-foreground" />
                     <p className="text-muted-foreground">
@@ -341,6 +342,11 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false }: F
                     <div className="text-sm text-muted-foreground">{veiculo.modelo || 'N/A'}</div>
                   </TableCell>
                   <TableCell className="font-mono">{veiculo.placa || 'N/A'}</TableCell>
+                  <TableCell>
+                    <span className="text-xs font-mono text-muted-foreground">
+                      {veiculo.codigo_fipe || veiculo.codigo || '-'}
+                    </span>
+                  </TableCell>
                   <TableCell>{veiculo.ano_modelo || 'N/A'}</TableCell>
                   <TableCell>{veiculo.combustivel || 'N/A'}</TableCell>
                   <TableCell className="text-right font-medium">
