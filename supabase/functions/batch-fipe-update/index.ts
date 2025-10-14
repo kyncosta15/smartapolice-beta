@@ -6,6 +6,25 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const FIPE_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwOGZmNDQxMi0zNjEyLTQwMTUtOTdmMC04NGJmY2NjYjE1MTEiLCJlbWFpbCI6InRoaWFnb25jb3N0YTE1QGdtYWlsLmNvbSIsImlhdCI6MTc2MDQ0OTcyOX0.VFFyeQceP1H5bxgGYUKtUR5diRVMwZ-6Ate9TAiGDsQ";
+
+// Helper: mapeia categoria para vehicleType
+function resolveVehicleType(category?: string): "cars" | "motorcycles" | "trucks" {
+  const c = (category || "").toLowerCase();
+  if (c.includes("caminh")) return "trucks";
+  if (c.includes("moto")) return "motorcycles";
+  return "cars";
+}
+
+// Helper: transforma "2013" -> "2013-0" (ou aceita "2013-1")
+function toYearId(year?: number): string {
+  if (!year) throw new Error("Ano inválido");
+  const s = String(year).trim();
+  if (/^\d{4}$/.test(s)) return `${s}-0`;
+  if (/^\d{4}-\d$/.test(s)) return s;
+  throw new Error("Ano inválido. Use YYYY ou YYYY-d.");
+}
+
 interface Vehicle {
   id: string;
   placa: string;
@@ -13,6 +32,7 @@ interface Vehicle {
   ano_modelo?: number;
   marca?: string;
   modelo?: string;
+  categoria?: string;
 }
 
 interface BatchResult {
@@ -55,12 +75,13 @@ serve(async (req) => {
 
     console.log(`[Batch FIPE] Empresa: ${empresa_id}, Veículos específicos: ${vehicle_ids?.length || 'todos'}`);
 
-    // Buscar veículos
+    // Buscar veículos com código FIPE e ano preenchidos
     let query = supabase
       .from('frota_veiculos')
-      .select('id, placa, codigo_fipe, ano_modelo, marca, modelo')
+      .select('id, placa, codigo_fipe, ano_modelo, marca, modelo, categoria')
       .eq('empresa_id', empresa_id)
-      .not('placa', 'is', null);
+      .not('codigo_fipe', 'is', null)
+      .not('ano_modelo', 'is', null);
 
     // Se enviou IDs específicos, filtrar por eles
     if (vehicle_ids && Array.isArray(vehicle_ids) && vehicle_ids.length > 0) {
@@ -100,13 +121,45 @@ serve(async (req) => {
     // Processar cada veículo
     for (const vehicle of vehicles) {
       try {
-        console.log(`[Batch FIPE] Consultando placa: ${vehicle.placa}`);
+        // Validar se tem código FIPE e ano
+        if (!vehicle.codigo_fipe) {
+          result.skipped++;
+          result.errors.push({
+            placa: vehicle.placa,
+            error: 'Código FIPE não preenchido'
+          });
+          continue;
+        }
 
-        // Consultar API PlacaFipe
-        const placaClean = vehicle.placa.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-        const response = await fetch(`https://wdapi2.com.br/consulta/${placaClean}`, {
+        if (!vehicle.ano_modelo) {
+          result.skipped++;
+          result.errors.push({
+            placa: vehicle.placa,
+            error: 'Ano do modelo não preenchido'
+          });
+          continue;
+        }
+
+        console.log(`[Batch FIPE] Consultando ${vehicle.placa} - Código: ${vehicle.codigo_fipe}, Ano: ${vehicle.ano_modelo}`);
+
+        // Resolver tipo de veículo baseado na categoria
+        const vehicleType = resolveVehicleType(vehicle.categoria);
+        
+        // Formatar ano para o padrão YYYY-0
+        const yearId = toYearId(vehicle.ano_modelo);
+
+        // Consultar API FIPE
+        const url = `https://fipe.parallelum.com.br/api/v2/${vehicleType}/${encodeURIComponent(vehicle.codigo_fipe)}/years/${encodeURIComponent(yearId)}`;
+        
+        console.log(`[Batch FIPE] URL: ${url}`);
+        
+        const response = await fetch(url, {
           method: "GET",
-          headers: { "Accept": "application/json" },
+          headers: {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "X-Subscription-Token": FIPE_TOKEN
+          }
         });
 
         if (!response.ok) {
@@ -114,17 +167,17 @@ serve(async (req) => {
             result.skipped++;
             result.errors.push({
               placa: vehicle.placa,
-              error: 'Placa não encontrada na API'
+              error: 'Código FIPE ou ano não encontrado na tabela FIPE'
             });
             continue;
           }
-          throw new Error(`API retornou status ${response.status}`);
+          throw new Error(`API FIPE retornou status ${response.status}`);
         }
 
         const data = await response.json();
         
         // Extrair valor FIPE
-        const valorFipeStr = data.fipe || data.FIPE;
+        const valorFipeStr = data.price;
         let precoFipe: number | null = null;
 
         if (valorFipeStr) {
@@ -145,27 +198,23 @@ serve(async (req) => {
           updateData.preco_fipe = precoFipe;
         }
 
-        if (data.codigoFipe || data.codigo_fipe) {
-          updateData.codigo_fipe = data.codigoFipe || data.codigo_fipe;
+        if (data.brand) {
+          updateData.marca = data.brand;
         }
 
-        if (data.marca || data.MARCA) {
-          updateData.marca = data.marca || data.MARCA;
+        if (data.model) {
+          updateData.modelo = data.model;
         }
 
-        if (data.modelo || data.MODELO) {
-          updateData.modelo = data.modelo || data.MODELO;
-        }
-
-        if (data.anoModelo || data.ano_modelo || data.ANO_MODELO) {
-          const ano = parseInt(data.anoModelo || data.ano_modelo || data.ANO_MODELO);
+        if (data.modelYear) {
+          const ano = parseInt(data.modelYear);
           if (!isNaN(ano)) {
             updateData.ano_modelo = ano;
           }
         }
 
-        if (data.combustivel || data.COMBUSTIVEL) {
-          updateData.combustivel = data.combustivel || data.COMBUSTIVEL;
+        if (data.fuel) {
+          updateData.combustivel = data.fuel;
         }
 
         // Atualizar veículo no banco
