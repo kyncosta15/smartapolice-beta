@@ -158,7 +158,6 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
         .from('frota_veiculos')
         .update({
           preco_fipe: fipeValue.price_value,
-          data_consulta_fipe: fipeValue.data_consulta || new Date().toISOString(),
         })
         .eq('id', vehicleId);
 
