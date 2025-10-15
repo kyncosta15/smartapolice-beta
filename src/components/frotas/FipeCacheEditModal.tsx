@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,7 @@ const combustivelOptions = [
 
 export function FipeCacheEditModal({ open, onOpenChange, vehicle, onSuccess }: FipeCacheEditModalProps) {
   const [loading, setLoading] = useState(false);
+  const scrollPositionRef = useRef<number>(0);
   const [formData, setFormData] = useState({
     categoria: vehicle.categoria || '',
     codigoFipe: vehicle.codigo_fipe || vehicle.codigo || '',
@@ -41,6 +42,22 @@ export function FipeCacheEditModal({ open, onOpenChange, vehicle, onSuccess }: F
     combustivel: vehicle.combustivel || '',
     valorFipe: vehicle.preco_fipe?.toString() || '',
   });
+
+  // Salvar e restaurar posição do scroll
+  useEffect(() => {
+    if (open) {
+      // Salvar posição quando abrir
+      scrollPositionRef.current = window.scrollY;
+    } else {
+      // Restaurar posição quando fechar
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: scrollPositionRef.current,
+          behavior: 'instant'
+        });
+      });
+    }
+  }, [open]);
 
   // Reset form when vehicle changes
   useEffect(() => {
@@ -139,7 +156,7 @@ export function FipeCacheEditModal({ open, onOpenChange, vehicle, onSuccess }: F
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Editar Dados FIPE</DialogTitle>

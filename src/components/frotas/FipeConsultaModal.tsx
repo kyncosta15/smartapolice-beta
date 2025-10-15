@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -32,11 +32,28 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
   const { toast } = useToast();
   const [showDetailsDrawer, setShowDetailsDrawer] = useState(false);
   const [isFetchingValue, setIsFetchingValue] = useState(false);
+  const scrollPositionRef = useRef<number>(0);
   const [normalizedData, setNormalizedData] = useState({
     marca: vehicle.marca,
     modelo: vehicle.modelo,
     ano: vehicle.ano_modelo,
   });
+
+  // Salvar e restaurar posição do scroll
+  useEffect(() => {
+    if (open) {
+      // Salvar posição quando abrir
+      scrollPositionRef.current = window.scrollY;
+    } else {
+      // Restaurar posição quando fechar
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: scrollPositionRef.current,
+          behavior: 'instant'
+        });
+      });
+    }
+  }, [open]);
 
   // Reset do estado quando o veículo mudar
   useEffect(() => {
@@ -129,7 +146,7 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
