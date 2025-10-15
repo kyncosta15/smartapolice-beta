@@ -210,16 +210,17 @@ export function GestaoFrotas() {
               </nav>
             </div>
           </div>
-        
-          {/* KPI Cards - shown right after tabs */}
-          <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-6 border-b border-gray-200 bg-gray-50">
-            <FrotasKPICards kpis={kpis} loading={loading} />
-          </div>
 
           {/* Tab Content */}
           <div className="flex-1 min-h-0 bg-gray-50">
-            <TabsContent value="frotas" className="h-full flex flex-col min-h-0 p-3 sm:p-4 md:p-6 m-0">
-              <FrotasDashboard 
+            <TabsContent value="frotas" className="h-full flex flex-col min-h-0 m-0">
+              {/* KPI Cards - apenas na aba Frotas */}
+              <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-6 border-b border-gray-200 bg-gray-50">
+                <FrotasKPICards kpis={kpis} loading={loading} />
+              </div>
+              
+              <div className="p-3 sm:p-4 md:p-6">
+                <FrotasDashboard
                 kpis={kpis} 
                 veiculos={veiculos}
                 allVeiculos={allVeiculos}
@@ -229,6 +230,7 @@ export function GestaoFrotas() {
                 filters={filters}
                 onFilterChange={handleFilterChange}
               />
+              </div>
             </TabsContent>
 
             <TabsContent value="sinistros" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
