@@ -160,11 +160,17 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
                      filterAno !== 'all' || filterCombustivel !== 'all';
 
   const handleVehicleUpdate = async (vehicleId: string, fipeValue: any) => {
-    // Salvar posição do scroll atual
-    scrollPositionRef.current = window.scrollY;
+    // Salvar posição do scroll atual IMEDIATAMENTE
+    const savedScrollPosition = window.scrollY;
+    scrollPositionRef.current = savedScrollPosition;
+    
+    console.log('📍 Posição salva:', savedScrollPosition);
     
     // Fechar o modal primeiro
     setModalOpen(false);
+    
+    // Pequeno delay para o modal fechar suavemente
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     setIsUpdating(true);
     setUpdatedVehicleId(vehicleId);
@@ -186,6 +192,8 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
 
       // Atualizar a lista de veículos
       await onVehicleUpdate?.();
+      
+      console.log('✅ Lista atualizada');
     } catch (error) {
       console.error('Erro ao atualizar valor FIPE:', error);
       toast({
@@ -194,18 +202,32 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
         variant: "destructive",
       });
     } finally {
-      // Delay para mostrar animação e restaurar scroll
+      // Aguardar mais tempo para garantir que a lista foi renderizada
       setTimeout(() => {
-        setIsUpdating(false);
-        // Restaurar posição do scroll
+        // Restaurar posição do scroll em múltiplas tentativas
+        const restoreScroll = () => {
+          console.log('🔄 Restaurando scroll para:', savedScrollPosition);
+          window.scrollTo({ top: savedScrollPosition, behavior: 'instant' });
+        };
+        
+        // Tentar restaurar imediatamente
+        restoreScroll();
+        
+        // Tentar novamente após um frame
         requestAnimationFrame(() => {
-          window.scrollTo({ top: scrollPositionRef.current, behavior: 'instant' });
+          restoreScroll();
+          
+          // E mais uma vez após outro frame para garantir
+          requestAnimationFrame(restoreScroll);
         });
+        
+        setIsUpdating(false);
+        
         // Remover highlight após 3 segundos
         setTimeout(() => {
           setUpdatedVehicleId(null);
         }, 3000);
-      }, 600);
+      }, 800);
     }
   };
 
@@ -218,11 +240,17 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     // Buscar apenas o veículo atualizado
     if (!vehicleToEdit) return;
     
-    // Salvar posição do scroll atual
-    scrollPositionRef.current = window.scrollY;
+    // Salvar posição do scroll atual IMEDIATAMENTE
+    const savedScrollPosition = window.scrollY;
+    scrollPositionRef.current = savedScrollPosition;
+    
+    console.log('📍 Posição salva (edit):', savedScrollPosition);
     
     // Fechar o modal primeiro
     setEditModalOpen(false);
+    
+    // Pequeno delay para o modal fechar suavemente
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     setIsUpdating(true);
     setUpdatedVehicleId(vehicleToEdit.id);
@@ -238,21 +266,37 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
         // Atualizar apenas este veículo na lista pai
         await onVehicleUpdate?.();
       }
+      
+      console.log('✅ Veículo atualizado');
     } catch (error) {
       console.error('Erro ao buscar veículo atualizado:', error);
     } finally {
-      // Delay para mostrar animação suave e restaurar scroll
+      // Aguardar mais tempo para garantir que a lista foi renderizada
       setTimeout(() => {
-        setIsUpdating(false);
-        // Restaurar posição do scroll
+        // Restaurar posição do scroll em múltiplas tentativas
+        const restoreScroll = () => {
+          console.log('🔄 Restaurando scroll para:', savedScrollPosition);
+          window.scrollTo({ top: savedScrollPosition, behavior: 'instant' });
+        };
+        
+        // Tentar restaurar imediatamente
+        restoreScroll();
+        
+        // Tentar novamente após um frame
         requestAnimationFrame(() => {
-          window.scrollTo({ top: scrollPositionRef.current, behavior: 'instant' });
+          restoreScroll();
+          
+          // E mais uma vez após outro frame para garantir
+          requestAnimationFrame(restoreScroll);
         });
+        
+        setIsUpdating(false);
+        
         // Remover highlight após 3 segundos
         setTimeout(() => {
           setUpdatedVehicleId(null);
         }, 3000);
-      }, 600);
+      }, 800);
     }
   };
 

@@ -39,21 +39,19 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
     ano: vehicle.ano_modelo,
   });
 
-  // Salvar e restaurar posição do scroll
-  useEffect(() => {
-    if (open) {
-      // Salvar posição quando abrir
-      scrollPositionRef.current = window.scrollY;
-    } else {
-      // Restaurar posição quando fechar
-      requestAnimationFrame(() => {
-        window.scrollTo({
-          top: scrollPositionRef.current,
-          behavior: 'instant'
-        });
-      });
-    }
-  }, [open]);
+  // Salvar e restaurar posição do scroll - REMOVIDO (gerenciado pelo componente pai)
+  // useEffect(() => {
+  //   if (open) {
+  //     scrollPositionRef.current = window.scrollY;
+  //   } else {
+  //     requestAnimationFrame(() => {
+  //       window.scrollTo({
+  //         top: scrollPositionRef.current,
+  //         behavior: 'instant'
+  //       });
+  //     });
+  //   }
+  // }, [open]);
 
   // Reset do estado quando o veículo mudar
   useEffect(() => {

@@ -43,21 +43,19 @@ export function FipeCacheEditModal({ open, onOpenChange, vehicle, onSuccess }: F
     valorFipe: vehicle.preco_fipe?.toString() || '',
   });
 
-  // Salvar e restaurar posição do scroll
-  useEffect(() => {
-    if (open) {
-      // Salvar posição quando abrir
-      scrollPositionRef.current = window.scrollY;
-    } else {
-      // Restaurar posição quando fechar
-      requestAnimationFrame(() => {
-        window.scrollTo({
-          top: scrollPositionRef.current,
-          behavior: 'instant'
-        });
-      });
-    }
-  }, [open]);
+  // Salvar e restaurar posição do scroll - REMOVIDO (gerenciado pelo componente pai)
+  // useEffect(() => {
+  //   if (open) {
+  //     scrollPositionRef.current = window.scrollY;
+  //   } else {
+  //     requestAnimationFrame(() => {
+  //       window.scrollTo({
+  //         top: scrollPositionRef.current,
+  //         behavior: 'instant'
+  //       });
+  //     });
+  //   }
+  // }, [open]);
 
   // Reset form when vehicle changes
   useEffect(() => {
