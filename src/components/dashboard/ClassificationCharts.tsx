@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LabelList } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LabelList, Label } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NewPolicyModal } from '../NewPolicyModal';
 import { FileText, Calendar, DollarSign, Clock } from 'lucide-react';
@@ -80,6 +80,11 @@ export function ClassificationCharts({
   const [selectedPolicy, setSelectedPolicy] = useState<typeof recentPolicies[0] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Calculate total for donut chart center
+  const totalPolicies = React.useMemo(() => {
+    return typeDistribution.reduce((acc, curr) => acc + curr.value, 0);
+  }, [typeDistribution]);
+
   // Helper function to safely render insurer values
   const safeRenderInsurer = (insurer: any): string => {
     if (!insurer) return "Não informado";
@@ -147,25 +152,53 @@ export function ClassificationCharts({
           </CardHeader>
           <CardContent className={`${isMobile ? 'p-3 pt-1' : 'p-6 pt-2'}`}>
             {typeDistributionWithColors.length > 0 ? (
-              <ResponsiveContainer width="100%" height={isMobile ? 180 : 300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 200 : 300}>
                 <PieChart>
+                  <Tooltip content={<PieTooltip />} />
                   <Pie
                     data={typeDistributionWithColors}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }: { name: string; percent: number }) => 
-                      isMobile ? '' : `${name} ${(percent * 100).toFixed(0)}%`
-                    }
-                    outerRadius={isMobile ? 60 : 80}
+                    innerRadius={isMobile ? 50 : 70}
+                    outerRadius={isMobile ? 70 : 100}
                     fill="#8884d8"
                     dataKey="value"
+                    strokeWidth={3}
+                    stroke="white"
                   >
                     {typeDistributionWithColors.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
+                    <Label
+                      content={({ viewBox }) => {
+                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                          return (
+                            <text
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                            >
+                              <tspan
+                                x={viewBox.cx}
+                                y={viewBox.cy}
+                                className="fill-foreground text-3xl font-bold"
+                              >
+                                {totalPolicies}
+                              </tspan>
+                              <tspan
+                                x={viewBox.cx}
+                                y={(viewBox.cy || 0) + 24}
+                                className="fill-muted-foreground text-sm"
+                              >
+                                Apólices
+                              </tspan>
+                            </text>
+                          );
+                        }
+                      }}
+                    />
                   </Pie>
-                  <Tooltip content={<PieTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
