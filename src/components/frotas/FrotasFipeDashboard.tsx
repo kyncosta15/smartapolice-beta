@@ -143,7 +143,7 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 {formatCurrency(stats.carros)}
               </h3>
               <p className="text-xs text-indigo-600 dark:text-indigo-400">
-                {((stats.carros / stats.total) * 100).toFixed(1)}% do total ({stats.quantidadeCarros} {stats.quantidadeCarros === 1 ? 'veículo' : 'veículos'})
+                {stats.quantidadeCarros} {stats.quantidadeCarros === 1 ? 'veículo' : 'veículos'}
               </p>
             </div>
           </CardContent>
@@ -165,7 +165,7 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 {formatCurrency(stats.caminhoes)}
               </h3>
               <p className="text-xs text-amber-600 dark:text-amber-400">
-                {((stats.caminhoes / stats.total) * 100).toFixed(1)}% do total ({stats.quantidadeCaminhoes} {stats.quantidadeCaminhoes === 1 ? 'veículo' : 'veículos'})
+                {stats.quantidadeCaminhoes} {stats.quantidadeCaminhoes === 1 ? 'veículo' : 'veículos'}
               </p>
             </div>
           </CardContent>
@@ -187,7 +187,7 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 {formatCurrency(stats.motos)}
               </h3>
               <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                {((stats.motos / stats.total) * 100).toFixed(1)}% do total ({stats.quantidadeMotos} {stats.quantidadeMotos === 1 ? 'veículo' : 'veículos'})
+                {stats.quantidadeMotos} {stats.quantidadeMotos === 1 ? 'veículo' : 'veículos'}
               </p>
             </div>
           </CardContent>
