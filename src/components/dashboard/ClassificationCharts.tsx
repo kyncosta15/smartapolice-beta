@@ -190,6 +190,7 @@ export function ClassificationCharts({
                   data={insurerDistributionWithColors} 
                   layout="vertical"
                   margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
+                  barSize={isMobile ? 20 : 28}
                 >
                   <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis type="number" hide />
