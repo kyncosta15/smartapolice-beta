@@ -16,40 +16,46 @@ interface FipeRequest {
   category?: string;
 }
 
-// Helper: mapeia categoria para vehicleType
+// Helper: mapeia categoria para vehicleType (usando as 3 categorias padronizadas)
 function resolveVehicleType(vehicleType?: string, category?: string): "cars" | "motorcycles" | "trucks" {
   if (vehicleType === "cars" || vehicleType === "motorcycles" || vehicleType === "trucks") {
     return vehicleType;
   }
   
-  // Normalizar e remover acentos
+  // Mapeamento direto das 3 categorias padronizadas
+  if (category === "Carros") {
+    console.log(`[Get FIPE] Direct mapping: "${category}" -> cars`);
+    return "cars";
+  }
+  if (category === "Caminhão") {
+    console.log(`[Get FIPE] Direct mapping: "${category}" -> trucks`);
+    return "trucks";
+  }
+  if (category === "Moto") {
+    console.log(`[Get FIPE] Direct mapping: "${category}" -> motorcycles`);
+    return "motorcycles";
+  }
+  
+  // Fallback: normalizar e remover acentos para compatibilidade retroativa
   const c = (category || "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+    .replace(/[\u0300-\u036f]/g, "")
     .trim();
   
-  console.log(`[Get FIPE] Category mapping: "${category}" -> normalized: "${c}"`);
+  console.log(`[Get FIPE] Legacy category mapping: "${category}" -> normalized: "${c}"`);
   
-  // Caminhão -> trucks
   if (c.includes("caminh") || c.includes("truck")) {
     console.log(`[Get FIPE] -> mapped to: trucks`);
     return "trucks";
   }
   
-  // Moto -> motorcycles
   if (c.includes("moto")) {
     console.log(`[Get FIPE] -> mapped to: motorcycles`);
     return "motorcycles";
   }
   
-  // Passeio, Utilitário, Carro -> cars (default)
-  if (c.includes("passeio") || c.includes("utilit") || c.includes("carro") || c.includes("car")) {
-    console.log(`[Get FIPE] -> mapped to: cars`);
-    return "cars";
-  }
-  
-  // Default para cars
+  // Default para cars (inclui passeio, utilitário, etc)
   console.log(`[Get FIPE] -> default to: cars`);
   return "cars";
 }

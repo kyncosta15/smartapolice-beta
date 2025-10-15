@@ -111,31 +111,38 @@ export function useFipeConsulta() {
       console.log('Veículo:', vehicle);
       console.log('RefId:', refId);
 
-      // Determinar vehicleType com mapeamento melhorado
+      // Mapear categoria para vehicleType (usando as 3 categorias padronizadas)
       let vehicleType = vehicle.vehicleType;
+      
       if (!vehicleType && vehicle.categoria) {
-        const cat = vehicle.categoria
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "") // Remove acentos
-          .trim();
-        
-        console.log(`Hook: Mapping category "${vehicle.categoria}" -> normalized: "${cat}"`);
-        
-        if (cat.includes('caminh') || cat.includes('truck')) {
-          vehicleType = 'trucks';
-          console.log('Hook: -> mapped to trucks');
-        } else if (cat.includes('moto')) {
-          vehicleType = 'motorcycles';
-          console.log('Hook: -> mapped to motorcycles');
-        } else if (cat.includes('passeio') || cat.includes('utilit') || cat.includes('carro') || cat.includes('car')) {
-          vehicleType = 'cars';
-          console.log('Hook: -> mapped to cars');
+        // Mapeamento direto das 3 categorias padronizadas
+        if (vehicle.categoria === "Carros") {
+          vehicleType = "cars";
+        } else if (vehicle.categoria === "Caminhão") {
+          vehicleType = "trucks";
+        } else if (vehicle.categoria === "Moto") {
+          vehicleType = "motorcycles";
         } else {
-          vehicleType = 'cars';
-          console.log('Hook: -> default to cars');
+          // Fallback: normalizar para compatibilidade retroativa
+          const cat = vehicle.categoria
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim();
+          
+          console.log(`Hook: Mapping legacy category "${vehicle.categoria}" -> normalized: "${cat}"`);
+          
+          if (cat.includes('caminh') || cat.includes('truck')) {
+            vehicleType = 'trucks';
+          } else if (cat.includes('moto')) {
+            vehicleType = 'motorcycles';
+          } else {
+            vehicleType = 'cars'; // Default para carros
+          }
         }
       }
+      
+      console.log(`Hook: Final vehicleType: ${vehicleType}`);
 
       const payload = {
         fipeCode: vehicle.fipeCode,

@@ -34,6 +34,7 @@ export interface FrotaVeiculo {
   tipo_veiculo?: number;
   codigo_fipe?: string;
   categoria?: string;
+  funcao?: string;
   proprietario_tipo?: string;
   proprietario_doc?: string;
   proprietario_nome?: string;

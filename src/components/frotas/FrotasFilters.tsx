@@ -43,11 +43,9 @@ interface FrotasFiltersProps {
 }
 
 const categoriaOptions = [
-  { value: 'passeio', label: 'Passeio' },
-  { value: 'utilitario', label: 'Utilitário' },
-  { value: 'caminhao', label: 'Caminhão' },
-  { value: 'moto', label: 'Moto' },
-  { value: 'outros', label: 'Outros' },
+  { value: 'Carros', label: 'Carros' },
+  { value: 'Caminhão', label: 'Caminhão' },
+  { value: 'Moto', label: 'Moto' },
 ];
 
 const statusOptions = [

@@ -1216,6 +1216,7 @@ export type Database = {
           data_venc_ultima_parcela: string | null
           empresa_id: string
           familia: string | null
+          funcao: string | null
           id: string
           localizacao: string | null
           marca: string | null
@@ -1254,6 +1255,7 @@ export type Database = {
           data_venc_ultima_parcela?: string | null
           empresa_id: string
           familia?: string | null
+          funcao?: string | null
           id?: string
           localizacao?: string | null
           marca?: string | null
@@ -1292,6 +1294,7 @@ export type Database = {
           data_venc_ultima_parcela?: string | null
           empresa_id?: string
           familia?: string | null
+          funcao?: string | null
           id?: string
           localizacao?: string | null
           marca?: string | null

@@ -165,11 +165,9 @@ export function VehicleDetailsModalNew({
 
   const getCategoriaBadge = (categoria: string) => {
     const labels = {
-      'passeio': 'Passeio',
-      'utilitario': 'Utilitário', 
-      'caminhao': 'Caminhão',
-      'moto': 'Moto',
-      'outros': 'Outros'
+      'Carros': 'Carros',
+      'Caminhão': 'Caminhão',
+      'Moto': 'Moto'
     };
 
     return (
@@ -352,7 +350,7 @@ export function VehicleDetailsModalNew({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="categoria" className="text-sm font-medium text-gray-700">Categoria</Label>
+                      <Label htmlFor="categoria" className="text-sm font-medium text-gray-700">Categoria (API FIPE)</Label>
                       <Select 
                         value={formData.categoria || ''} 
                         onValueChange={(value) => handleInputChange('categoria', value)}
@@ -362,11 +360,27 @@ export function VehicleDetailsModalNew({
                           <SelectValue placeholder="Selecione a categoria" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="passeio">Passeio</SelectItem>
-                          <SelectItem value="utilitario">Utilitário</SelectItem>
-                          <SelectItem value="caminhao">Caminhão</SelectItem>
-                          <SelectItem value="moto">Moto</SelectItem>
-                          <SelectItem value="outros">Outros</SelectItem>
+                          <SelectItem value="Carros">Carros</SelectItem>
+                          <SelectItem value="Caminhão">Caminhão</SelectItem>
+                          <SelectItem value="Moto">Moto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="funcao" className="text-sm font-medium text-gray-700">Função</Label>
+                      <Select 
+                        value={formData.funcao || ''} 
+                        onValueChange={(value) => handleInputChange('funcao', value)}
+                        disabled={mode === 'view'}
+                      >
+                        <SelectTrigger className="h-10 md:h-11">
+                          <SelectValue placeholder="Selecione a função" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Passeio">Passeio</SelectItem>
+                          <SelectItem value="Utilitário">Utilitário</SelectItem>
+                          <SelectItem value="Carga">Carga</SelectItem>
+                          <SelectItem value="Transporte">Transporte</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
