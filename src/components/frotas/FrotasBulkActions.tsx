@@ -66,13 +66,11 @@ export function FrotasBulkActions({
   const [bulkStatus, setBulkStatus] = useState<string>('');
   const [bulkCategory, setBulkCategory] = useState<string>('');
   
-  // Categorias disponíveis para aplicar
+  // Categorias disponíveis para aplicar (padronizadas)
   const availableCategories = [
-    { value: 'passeio', label: 'Passeio' },
-    { value: 'utilitario', label: 'Utilitário' },
-    { value: 'caminhao', label: 'Caminhão' },
-    { value: 'moto', label: 'Moto' },
-    { value: 'outros', label: 'Outros' },
+    { value: 'Carros', label: 'Carros' },
+    { value: 'Caminhão', label: 'Caminhão' },
+    { value: 'Moto', label: 'Moto' },
   ];
   
   // Extrair marcas e modelos únicos dos veículos
