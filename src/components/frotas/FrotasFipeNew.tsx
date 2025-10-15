@@ -416,14 +416,13 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
               <TableHead>Combustível</TableHead>
               <TableHead className="text-right">Valor NF</TableHead>
               <TableHead className="text-right">FIPE Atual</TableHead>
-              <TableHead className="text-center">Cache</TableHead>
               <TableHead className="text-center" colSpan={2}>Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {veiculosFiltrados.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-12">
+                <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
                     <DollarSign className="w-12 h-12 text-muted-foreground" />
                     <p className="text-muted-foreground">
@@ -458,16 +457,6 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
                       ? `R$ ${veiculo.preco_fipe.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                       : '-'
                     }
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {veiculo.preco_fipe ? (
-                      <Badge variant="secondary" className="text-xs">
-                        <Calendar className="w-3 h-3 mr-1" />
-                        Cache
-                      </Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">-</span>
-                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     <Button
