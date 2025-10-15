@@ -157,6 +157,11 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
                      filterAno !== 'all' || filterCombustivel !== 'all';
 
   const handleVehicleUpdate = async (vehicleId: string, fipeValue: any) => {
+    // Salvar posição do scroll atual
+    const scrollPosition = window.scrollY;
+    
+    setIsUpdating(true);
+    
     try {
       const { error } = await supabase
         .from('frota_veiculos')
@@ -181,6 +186,13 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
         description: "Não foi possível salvar o valor FIPE no banco de dados",
         variant: "destructive",
       });
+    } finally {
+      // Delay para mostrar animação e restaurar scroll
+      setTimeout(() => {
+        setIsUpdating(false);
+        // Restaurar posição do scroll
+        window.scrollTo({ top: scrollPosition, behavior: 'auto' });
+      }, 800);
     }
   };
 
@@ -192,6 +204,9 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
   const handleEditSuccess = async () => {
     // Buscar apenas o veículo atualizado
     if (!vehicleToEdit) return;
+    
+    // Salvar posição do scroll atual
+    const scrollPosition = window.scrollY;
     
     setIsUpdating(true);
     
@@ -209,9 +224,11 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     } catch (error) {
       console.error('Erro ao buscar veículo atualizado:', error);
     } finally {
-      // Delay para mostrar animação suave
+      // Delay para mostrar animação suave e restaurar scroll
       setTimeout(() => {
         setIsUpdating(false);
+        // Restaurar posição do scroll
+        window.scrollTo({ top: scrollPosition, behavior: 'auto' });
       }, 800);
     }
   };
