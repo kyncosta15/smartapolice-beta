@@ -12,9 +12,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FipeConsultaModal } from './FipeConsultaModal';
+import { FipeCacheEditModal } from './FipeCacheEditModal';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { Fuel } from '@/services/fipeApiService';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +32,8 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
   const { toast } = useToast();
   const [selectedVehicle, setSelectedVehicle] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [vehicleToEdit, setVehicleToEdit] = useState<FrotaVeiculo | null>(null);
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -178,6 +181,16 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
         variant: "destructive",
       });
     }
+  };
+
+  const handleEditVehicle = (vehicle: FrotaVeiculo) => {
+    setVehicleToEdit(vehicle);
+    setEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    // Atualizar a lista de veículos
+    onVehicleUpdate?.();
   };
 
   if (loading) {
@@ -349,7 +362,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
               <TableHead className="text-right">Valor NF</TableHead>
               <TableHead className="text-right">FIPE Atual</TableHead>
               <TableHead className="text-center">Cache</TableHead>
-              <TableHead className="text-center">Ações</TableHead>
+              <TableHead className="text-center" colSpan={2}>Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -403,6 +416,17 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
                   </TableCell>
                   <TableCell className="text-center">
                     <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleEditVehicle(veiculo)}
+                      title="Editar dados FIPE"
+                      className="h-8 w-8"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleConsultarFipe(veiculo)}
@@ -442,6 +466,15 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
             categoria: selectedVehicle.categoria,
           }}
           onVehicleUpdate={(fipeValue) => handleVehicleUpdate(selectedVehicle.id, fipeValue)}
+        />
+      )}
+
+      {vehicleToEdit && (
+        <FipeCacheEditModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          vehicle={vehicleToEdit}
+          onSuccess={handleEditSuccess}
         />
       )}
     </div>
