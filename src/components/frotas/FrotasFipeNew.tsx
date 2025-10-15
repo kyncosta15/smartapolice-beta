@@ -34,6 +34,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [vehicleToEdit, setVehicleToEdit] = useState<FrotaVeiculo | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -192,6 +193,8 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     // Buscar apenas o veículo atualizado
     if (!vehicleToEdit) return;
     
+    setIsUpdating(true);
+    
     try {
       const { data: updatedVehicle } = await supabase
         .from('frota_veiculos')
@@ -205,12 +208,17 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
       }
     } catch (error) {
       console.error('Erro ao buscar veículo atualizado:', error);
+    } finally {
+      // Delay para mostrar animação suave
+      setTimeout(() => {
+        setIsUpdating(false);
+      }, 800);
     }
   };
 
   if (loading) {
-    return (
-      <div className="space-y-4">
+  return (
+    <div className="space-y-4 relative">
         <Card className="p-6">
           <Skeleton className="h-8 w-48 mb-4" />
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
@@ -230,7 +238,22 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {/* Loading Overlay */}
+      {isUpdating && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-300">
+          <div className="flex flex-col items-center gap-4 animate-in zoom-in duration-500">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-primary/20 rounded-full"></div>
+              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+            </div>
+            <p className="text-sm font-medium text-muted-foreground animate-pulse">
+              Atualizando dados...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <Card className="p-4">
         <div className="space-y-4">
