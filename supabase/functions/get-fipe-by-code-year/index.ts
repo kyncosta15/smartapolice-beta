@@ -22,9 +22,35 @@ function resolveVehicleType(vehicleType?: string, category?: string): "cars" | "
     return vehicleType;
   }
   
-  const c = (category || "").toLowerCase();
-  if (c.includes("caminh")) return "trucks";
-  if (c.includes("moto")) return "motorcycles";
+  // Normalizar e remover acentos
+  const c = (category || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+    .trim();
+  
+  console.log(`[Get FIPE] Category mapping: "${category}" -> normalized: "${c}"`);
+  
+  // Caminhão -> trucks
+  if (c.includes("caminh") || c.includes("truck")) {
+    console.log(`[Get FIPE] -> mapped to: trucks`);
+    return "trucks";
+  }
+  
+  // Moto -> motorcycles
+  if (c.includes("moto")) {
+    console.log(`[Get FIPE] -> mapped to: motorcycles`);
+    return "motorcycles";
+  }
+  
+  // Passeio, Utilitário, Carro -> cars (default)
+  if (c.includes("passeio") || c.includes("utilit") || c.includes("carro") || c.includes("car")) {
+    console.log(`[Get FIPE] -> mapped to: cars`);
+    return "cars";
+  }
+  
+  // Default para cars
+  console.log(`[Get FIPE] -> default to: cars`);
   return "cars";
 }
 

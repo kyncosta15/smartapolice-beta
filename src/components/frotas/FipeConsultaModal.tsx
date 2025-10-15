@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,18 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
     modelo: vehicle.modelo,
     ano: vehicle.ano_modelo,
   });
+
+  // Reset do estado quando o veículo mudar
+  useEffect(() => {
+    setNormalizedData({
+      marca: vehicle.marca,
+      modelo: vehicle.modelo,
+      ano: vehicle.ano_modelo,
+    });
+    // Limpar resultados anteriores
+    setShowDetailsDrawer(false);
+    setIsFetchingValue(false);
+  }, [vehicle.id, vehicle.marca, vehicle.modelo, vehicle.ano_modelo]);
 
   const handleConsultar = async () => {
     setIsFetchingValue(false); // Reset estado

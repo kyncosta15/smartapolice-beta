@@ -111,16 +111,29 @@ export function useFipeConsulta() {
       console.log('Veículo:', vehicle);
       console.log('RefId:', refId);
 
-      // Determinar vehicleType
+      // Determinar vehicleType com mapeamento melhorado
       let vehicleType = vehicle.vehicleType;
       if (!vehicleType && vehicle.categoria) {
-        const cat = vehicle.categoria.toLowerCase();
-        if (cat.includes('caminh')) {
+        const cat = vehicle.categoria
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+          .trim();
+        
+        console.log(`Hook: Mapping category "${vehicle.categoria}" -> normalized: "${cat}"`);
+        
+        if (cat.includes('caminh') || cat.includes('truck')) {
           vehicleType = 'trucks';
+          console.log('Hook: -> mapped to trucks');
         } else if (cat.includes('moto')) {
           vehicleType = 'motorcycles';
+          console.log('Hook: -> mapped to motorcycles');
+        } else if (cat.includes('passeio') || cat.includes('utilit') || cat.includes('carro') || cat.includes('car')) {
+          vehicleType = 'cars';
+          console.log('Hook: -> mapped to cars');
         } else {
           vehicleType = 'cars';
+          console.log('Hook: -> default to cars');
         }
       }
 
