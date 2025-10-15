@@ -92,3 +92,6 @@ verify_jwt = false
 
 [functions.batch-fipe-update]
 verify_jwt = true
+
+[functions.refresh-fipe-batch]
+verify_jwt = true

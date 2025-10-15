@@ -11,11 +11,16 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 
 interface BatchResult {
-  total: number;
-  success: number;
-  failed: number;
-  skipped: number;
-  errors: Array<{ placa: string; error: string }>;
+  ok: boolean;
+  stats: {
+    total: number;
+    processed: number;
+    success: number;
+    fail: number;
+    skipped: number;
+  };
+  updatedSample?: any[];
+  errors: Array<{ id: any; reason: string }>;
 }
 
 interface BatchFipeUpdateProps {
@@ -54,10 +59,15 @@ export function BatchFipeUpdate({ selectedVehicleIds, onSuccess }: BatchFipeUpda
         });
       }, 1000);
 
-      const { data, error } = await supabase.functions.invoke('batch-fipe-update', {
+      const { data, error } = await supabase.functions.invoke('refresh-fipe-batch', {
         body: {
+          mode: "query",
           empresa_id: activeEmpresaId,
-          vehicle_ids: selectedVehicleIds
+          vehicle_ids: selectedVehicleIds,
+          concurrency: 6,
+          pageSize: 50,
+          delayMs: 200,
+          maxRetries: 2
         }
       });
 
@@ -68,10 +78,10 @@ export function BatchFipeUpdate({ selectedVehicleIds, onSuccess }: BatchFipeUpda
 
       setResult(data as BatchResult);
 
-      if (data.success > 0) {
+      if (data.stats.success > 0) {
         toast({
           title: 'Processamento concluído',
-          description: `${data.success} veículo(s) atualizado(s) com sucesso`
+          description: `${data.stats.success} veículo(s) atualizado(s) com sucesso`
         });
         
         if (onSuccess) {
@@ -187,7 +197,7 @@ export function BatchFipeUpdate({ selectedVehicleIds, onSuccess }: BatchFipeUpda
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-blue-600">{result.total}</p>
+                    <p className="text-2xl font-bold text-blue-600">{result.stats.total}</p>
                   </CardContent>
                 </Card>
 
@@ -199,7 +209,7 @@ export function BatchFipeUpdate({ selectedVehicleIds, onSuccess }: BatchFipeUpda
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-green-600">{result.success}</p>
+                    <p className="text-2xl font-bold text-green-600">{result.stats.success}</p>
                   </CardContent>
                 </Card>
 
@@ -211,7 +221,7 @@ export function BatchFipeUpdate({ selectedVehicleIds, onSuccess }: BatchFipeUpda
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-yellow-600">{result.skipped}</p>
+                    <p className="text-2xl font-bold text-yellow-600">{result.stats.skipped}</p>
                   </CardContent>
                 </Card>
 
@@ -223,7 +233,7 @@ export function BatchFipeUpdate({ selectedVehicleIds, onSuccess }: BatchFipeUpda
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-red-600">{result.failed}</p>
+                    <p className="text-2xl font-bold text-red-600">{result.stats.fail}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -236,13 +246,13 @@ export function BatchFipeUpdate({ selectedVehicleIds, onSuccess }: BatchFipeUpda
                   <CardContent>
                     <ScrollArea className="h-48">
                       <div className="space-y-2">
-                        {result.errors.map((error, index) => (
+                         {result.errors.map((error, index) => (
                           <div
                             key={index}
                             className="text-sm p-2 bg-gray-50 rounded border"
                           >
-                            <span className="font-medium font-mono">{error.placa}:</span>{' '}
-                            <span className="text-gray-600">{error.error}</span>
+                            <span className="font-medium font-mono">ID {error.id}:</span>{' '}
+                            <span className="text-gray-600">{error.reason}</span>
                           </div>
                         ))}
                       </div>
