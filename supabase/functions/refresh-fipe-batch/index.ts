@@ -32,12 +32,35 @@ type BatchInputs = {
 
 function mapCategoryToVehicleType(cat?: string): "cars" | "motorcycles" | "trucks" {
   if (!cat) return "cars";
-  const c = cat.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
   
-  if (c.includes("caminh")) return "trucks";
-  if (c.includes("moto")) return "motorcycles";
-  if (c.includes("passeio") || c.includes("utilit")) return "cars";
+  // Normalizar e converter para lowercase
+  const c = cat.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+    .trim();
   
+  console.log(`Mapping category: "${cat}" -> normalized: "${c}"`);
+  
+  // Caminhão -> trucks
+  if (c.includes("caminh") || c.includes("truck")) {
+    console.log(`  -> mapped to: trucks`);
+    return "trucks";
+  }
+  
+  // Moto -> motorcycles
+  if (c.includes("moto")) {
+    console.log(`  -> mapped to: motorcycles`);
+    return "motorcycles";
+  }
+  
+  // Passeio, Utilitário, Carro -> cars (default)
+  if (c.includes("passeio") || c.includes("utilit") || c.includes("carro") || c.includes("car")) {
+    console.log(`  -> mapped to: cars`);
+    return "cars";
+  }
+  
+  // Default para cars
+  console.log(`  -> default to: cars`);
   return "cars";
 }
 
