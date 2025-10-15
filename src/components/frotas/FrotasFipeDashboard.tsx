@@ -22,17 +22,17 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
     
     const total = veiculosComFipe.reduce((acc, v) => acc + (v.preco_fipe || 0), 0);
     
-    const carros = veiculosComFipe
-      .filter(v => !v.categoria || v.categoria.toLowerCase().includes('carro') || v.categoria.toLowerCase() === 'automovel')
-      .reduce((acc, v) => acc + (v.preco_fipe || 0), 0);
+    const veiculosCarros = veiculosComFipe
+      .filter(v => !v.categoria || v.categoria.toLowerCase().includes('carro') || v.categoria.toLowerCase() === 'automovel');
+    const carros = veiculosCarros.reduce((acc, v) => acc + (v.preco_fipe || 0), 0);
     
-    const caminhoes = veiculosComFipe
-      .filter(v => v.categoria?.toLowerCase().includes('caminh'))
-      .reduce((acc, v) => acc + (v.preco_fipe || 0), 0);
+    const veiculosCaminhoes = veiculosComFipe
+      .filter(v => v.categoria?.toLowerCase().includes('caminh'));
+    const caminhoes = veiculosCaminhoes.reduce((acc, v) => acc + (v.preco_fipe || 0), 0);
     
-    const motos = veiculosComFipe
-      .filter(v => v.categoria?.toLowerCase().includes('moto'))
-      .reduce((acc, v) => acc + (v.preco_fipe || 0), 0);
+    const veiculosMotos = veiculosComFipe
+      .filter(v => v.categoria?.toLowerCase().includes('moto'));
+    const motos = veiculosMotos.reduce((acc, v) => acc + (v.preco_fipe || 0), 0);
     
     const outros = total - carros - caminhoes - motos;
 
@@ -42,7 +42,10 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
       caminhoes,
       motos,
       outros,
-      quantidade: veiculosComFipe.length
+      quantidade: veiculosComFipe.length,
+      quantidadeCarros: veiculosCarros.length,
+      quantidadeCaminhoes: veiculosCaminhoes.length,
+      quantidadeMotos: veiculosMotos.length
     };
   }, [veiculos]);
 
@@ -140,7 +143,7 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 {formatCurrency(stats.carros)}
               </h3>
               <p className="text-xs text-indigo-600 dark:text-indigo-400">
-                {((stats.carros / stats.total) * 100).toFixed(1)}% do total
+                {((stats.carros / stats.total) * 100).toFixed(1)}% do total ({stats.quantidadeCarros} {stats.quantidadeCarros === 1 ? 'veículo' : 'veículos'})
               </p>
             </div>
           </CardContent>
@@ -162,7 +165,7 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 {formatCurrency(stats.caminhoes)}
               </h3>
               <p className="text-xs text-amber-600 dark:text-amber-400">
-                {((stats.caminhoes / stats.total) * 100).toFixed(1)}% do total
+                {((stats.caminhoes / stats.total) * 100).toFixed(1)}% do total ({stats.quantidadeCaminhoes} {stats.quantidadeCaminhoes === 1 ? 'veículo' : 'veículos'})
               </p>
             </div>
           </CardContent>
@@ -184,7 +187,7 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 {formatCurrency(stats.motos)}
               </h3>
               <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                {((stats.motos / stats.total) * 100).toFixed(1)}% do total
+                {((stats.motos / stats.total) * 100).toFixed(1)}% do total ({stats.quantidadeMotos} {stats.quantidadeMotos === 1 ? 'veículo' : 'veículos'})
               </p>
             </div>
           </CardContent>
