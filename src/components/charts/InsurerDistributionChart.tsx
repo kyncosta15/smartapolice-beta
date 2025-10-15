@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis, Tooltip } from 'recharts';
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { PolicyData, generateChartData, getEmptyStateData } from './chartData';
 import { renderValueAsString } from '@/utils/renderValue';
 import { ChartConfig, ChartContainer } from '@/components/ui/chart';
@@ -36,9 +36,6 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
       label: "Percentual",
       color: "hsl(var(--chart-1))",
     },
-    label: {
-      color: "hsl(var(--background))",
-    },
   } satisfies ChartConfig;
 
   return (
@@ -51,52 +48,53 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
       </CardHeader>
       <CardContent>
         {hasData ? (
-          <ChartContainer config={chartConfig}>
-            <BarChart
-              accessibilityLayer
-              data={barChartData}
-              layout="vertical"
-              margin={{
-                right: 16,
-              }}
-            >
-              <CartesianGrid horizontal={false} />
-              <YAxis
-                dataKey="insurer"
-                type="category"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-                tickFormatter={(value) => value.slice(0, 15)}
-                hide
-              />
-              <XAxis dataKey="value" type="number" hide />
-              <Tooltip 
-                cursor={false}
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+          <ChartContainer config={chartConfig} className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={barChartData}
+                layout="vertical"
+                margin={{
+                  right: 16,
+                  left: 0,
                 }}
-                formatter={(value: number) => [`${value}%`, 'Percentual']}
-              />
-              <Bar dataKey="value" fill="var(--color-value)" radius={4}>
-                <LabelList
+              >
+                <CartesianGrid horizontal={false} />
+                <YAxis
                   dataKey="insurer"
-                  position="insideLeft"
-                  offset={8}
-                  className="fill-[--color-label]"
-                  fontSize={12}
+                  type="category"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  hide
                 />
-                <LabelList
-                  dataKey="value"
-                  position="right"
-                  offset={8}
-                  className="fill-foreground"
-                  fontSize={12}
+                <XAxis dataKey="value" type="number" hide />
+                <Tooltip 
+                  cursor={false}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                  formatter={(value: number) => [`${value}%`, 'Percentual']}
                 />
-              </Bar>
-            </BarChart>
+                <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={4}>
+                  <LabelList
+                    dataKey="insurer"
+                    position="insideLeft"
+                    offset={8}
+                    style={{ fill: 'white' }}
+                    fontSize={12}
+                  />
+                  <LabelList
+                    dataKey="value"
+                    position="right"
+                    offset={8}
+                    style={{ fill: 'hsl(var(--foreground))' }}
+                    fontSize={12}
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </ChartContainer>
         ) : (
           <div className="flex items-center justify-center h-[300px]">
