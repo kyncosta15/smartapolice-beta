@@ -206,8 +206,8 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 Visualização da composição da frota por valor de mercado
               </p>
             </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 80, bottom: 20 }}>
                 <defs>
                   <linearGradient id="colorCarros" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.9}/>
@@ -233,9 +233,13 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                   axisLine={{ stroke: '#e5e7eb' }}
                 />
                 <YAxis 
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                  tick={{ fill: '#6b7280', fontSize: 11 }}
                   axisLine={{ stroke: '#e5e7eb' }}
-                  tickFormatter={(value) => formatCurrency(value)}
+                  tickFormatter={(value) => {
+                    if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
+                    if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}K`;
+                    return formatCurrency(value);
+                  }}
                 />
                 <Tooltip
                   contentStyle={{
