@@ -163,6 +163,9 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     // Salvar posição do scroll atual
     scrollPositionRef.current = window.scrollY;
     
+    // Fechar o modal primeiro
+    setModalOpen(false);
+    
     setIsUpdating(true);
     setUpdatedVehicleId(vehicleId);
     
@@ -217,6 +220,9 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     
     // Salvar posição do scroll atual
     scrollPositionRef.current = window.scrollY;
+    
+    // Fechar o modal primeiro
+    setEditModalOpen(false);
     
     setIsUpdating(true);
     setUpdatedVehicleId(vehicleToEdit.id);
