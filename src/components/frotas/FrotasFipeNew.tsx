@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Pencil } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Pencil, Car } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FipeConsultaModal } from './FipeConsultaModal';
 import { FipeCacheEditModal } from './FipeCacheEditModal';
@@ -30,6 +31,7 @@ interface FrotasFipeProps {
 
 export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onVehicleUpdate }: FrotasFipeProps) {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [selectedVehicle, setSelectedVehicle] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -462,112 +464,229 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
         </div>
       )}
 
-      {/* Vehicles Table */}
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Veículo</TableHead>
-              <TableHead>
-                <button
-                  onClick={() => {
-                    setPlacaSortOrder(prev => 
-                      prev === 'none' ? 'asc' : prev === 'asc' ? 'desc' : 'none'
-                    );
-                  }}
-                  className="flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                  Placa
-                  {placaSortOrder === 'none' && <ArrowUpDown className="h-4 w-4" />}
-                  {placaSortOrder === 'asc' && <ArrowUp className="h-4 w-4" />}
-                  {placaSortOrder === 'desc' && <ArrowDown className="h-4 w-4" />}
-                </button>
-              </TableHead>
-              <TableHead>Código FIPE</TableHead>
-              <TableHead>Ano</TableHead>
-              <TableHead>Combustível</TableHead>
-              <TableHead className="text-right">Valor NF</TableHead>
-              <TableHead className="text-right">FIPE Atual</TableHead>
-              <TableHead className="text-center" colSpan={2}>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {veiculosFiltrados.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-12">
-                  <div className="flex flex-col items-center gap-2">
-                    <DollarSign className="w-12 h-12 text-muted-foreground" />
-                    <p className="text-muted-foreground">
-                      {hasFilters ? 'Nenhum veículo encontrado com os filtros aplicados' : 'Nenhum veículo disponível'}
-                    </p>
+      {/* Vehicles Table/List */}
+      {isMobile ? (
+        /* Mobile View - Cards */
+        <div className="space-y-3">
+          {veiculosFiltrados.length === 0 ? (
+            <Card>
+              <CardContent className="py-12">
+                <div className="flex flex-col items-center gap-2">
+                  <DollarSign className="w-12 h-12 text-muted-foreground" />
+                  <p className="text-muted-foreground text-center text-sm">
+                    {hasFilters ? 'Nenhum veículo encontrado com os filtros aplicados' : 'Nenhum veículo disponível'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            veiculosFiltrados.map((veiculo) => (
+              <Card 
+                key={veiculo.id}
+                className={`transition-all duration-500 ${
+                  updatedVehicleId === veiculo.id 
+                    ? 'bg-primary/10 shadow-[0_0_0_2px] shadow-primary/30 animate-in fade-in zoom-in-95 duration-500' 
+                    : ''
+                }`}
+              >
+                <CardContent className="p-4 space-y-3">
+                  {/* Header com Marca/Modelo e Placa */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Car className="h-4 w-4 text-primary shrink-0" />
+                        <h3 className="font-semibold text-sm truncate">
+                          {veiculo.marca || 'N/A'}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {veiculo.modelo || 'N/A'}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="font-mono text-xs shrink-0">
+                      {veiculo.placa || 'N/A'}
+                    </Badge>
                   </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              veiculosFiltrados.map((veiculo) => (
-                <TableRow 
-                  key={veiculo.id}
-                  className={`transition-all duration-500 ${
-                    updatedVehicleId === veiculo.id 
-                      ? 'bg-primary/10 shadow-[0_0_0_2px] shadow-primary/30 animate-in fade-in zoom-in-95 duration-500' 
-                      : ''
-                  }`}
-                >
-                  <TableCell>
-                    <div className="font-medium">{veiculo.marca || 'N/A'}</div>
-                    <div className="text-sm text-muted-foreground">{veiculo.modelo || 'N/A'}</div>
-                  </TableCell>
-                  <TableCell className="font-mono">{veiculo.placa || 'N/A'}</TableCell>
-                  <TableCell>
-                    <span className="text-xs font-mono text-muted-foreground">
-                      {veiculo.codigo_fipe || veiculo.codigo || '-'}
-                    </span>
-                  </TableCell>
-                  <TableCell>{veiculo.ano_modelo || 'N/A'}</TableCell>
-                  <TableCell>{veiculo.combustivel || 'N/A'}</TableCell>
-                  <TableCell className="text-right font-medium">
-                    {veiculo.preco_nf 
-                      ? `R$ ${veiculo.preco_nf.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                      : 'N/A'
-                    }
-                  </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {veiculo.preco_fipe 
-                      ? `R$ ${veiculo.preco_fipe.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                      : '-'
-                    }
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleEditVehicle(veiculo)}
-                      title="Editar dados FIPE"
-                      className="h-8 w-8"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                  <TableCell className="text-center">
+
+                  {/* Informações do Veículo */}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Código FIPE</p>
+                      <p className="font-mono text-xs">
+                        {veiculo.codigo_fipe || veiculo.codigo || '-'}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Ano</p>
+                      <p className="font-medium">{veiculo.ano_modelo || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Combustível</p>
+                      <p className="font-medium">{veiculo.combustivel || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  {/* Valores */}
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Valor NF</p>
+                      <p className="text-sm font-semibold">
+                        {veiculo.preco_nf 
+                          ? `R$ ${veiculo.preco_nf.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                          : 'N/A'
+                        }
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">FIPE Atual</p>
+                      <p className="text-sm font-semibold text-primary">
+                        {veiculo.preco_fipe 
+                          ? `R$ ${veiculo.preco_fipe.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                          : '-'
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Ações */}
+                  <div className="flex gap-2 pt-2">
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={() => handleEditVehicle(veiculo)}
+                      title="Editar dados FIPE"
+                      className="flex-1"
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                      Editar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
                       onClick={() => handleConsultarFipe(veiculo)}
                       disabled={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo}
                       title={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo 
                         ? "Dados incompletos: precisa de Marca, Modelo e Ano" 
                         : "Consultar valor FIPE"}
+                      className="flex-1"
                     >
-                      <DollarSign className="w-4 h-4 mr-1" />
+                      <DollarSign className="h-3.5 w-3.5 mr-1.5" />
                       Consultar
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      ) : (
+        /* Desktop View - Table */
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Veículo</TableHead>
+                <TableHead>
+                  <button
+                    onClick={() => {
+                      setPlacaSortOrder(prev => 
+                        prev === 'none' ? 'asc' : prev === 'asc' ? 'desc' : 'none'
+                      );
+                    }}
+                    className="flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    Placa
+                    {placaSortOrder === 'none' && <ArrowUpDown className="h-4 w-4" />}
+                    {placaSortOrder === 'asc' && <ArrowUp className="h-4 w-4" />}
+                    {placaSortOrder === 'desc' && <ArrowDown className="h-4 w-4" />}
+                  </button>
+                </TableHead>
+                <TableHead>Código FIPE</TableHead>
+                <TableHead>Ano</TableHead>
+                <TableHead>Combustível</TableHead>
+                <TableHead className="text-right">Valor NF</TableHead>
+                <TableHead className="text-right">FIPE Atual</TableHead>
+                <TableHead className="text-center" colSpan={2}>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {veiculosFiltrados.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-2">
+                      <DollarSign className="w-12 h-12 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        {hasFilters ? 'Nenhum veículo encontrado com os filtros aplicados' : 'Nenhum veículo disponível'}
+                      </p>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+              ) : (
+                veiculosFiltrados.map((veiculo) => (
+                  <TableRow 
+                    key={veiculo.id}
+                    className={`transition-all duration-500 ${
+                      updatedVehicleId === veiculo.id 
+                        ? 'bg-primary/10 shadow-[0_0_0_2px] shadow-primary/30 animate-in fade-in zoom-in-95 duration-500' 
+                        : ''
+                    }`}
+                  >
+                    <TableCell>
+                      <div className="font-medium">{veiculo.marca || 'N/A'}</div>
+                      <div className="text-sm text-muted-foreground">{veiculo.modelo || 'N/A'}</div>
+                    </TableCell>
+                    <TableCell className="font-mono">{veiculo.placa || 'N/A'}</TableCell>
+                    <TableCell>
+                      <span className="text-xs font-mono text-muted-foreground">
+                        {veiculo.codigo_fipe || veiculo.codigo || '-'}
+                      </span>
+                    </TableCell>
+                    <TableCell>{veiculo.ano_modelo || 'N/A'}</TableCell>
+                    <TableCell>{veiculo.combustivel || 'N/A'}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      {veiculo.preco_nf 
+                        ? `R$ ${veiculo.preco_nf.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                        : 'N/A'
+                      }
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {veiculo.preco_fipe 
+                        ? `R$ ${veiculo.preco_fipe.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                        : '-'
+                      }
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleEditVehicle(veiculo)}
+                        title="Editar dados FIPE"
+                        className="h-8 w-8"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleConsultarFipe(veiculo)}
+                        disabled={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo}
+                        title={!veiculo.marca || !veiculo.modelo || !veiculo.ano_modelo 
+                          ? "Dados incompletos: precisa de Marca, Modelo e Ano" 
+                          : "Consultar valor FIPE"}
+                      >
+                        <DollarSign className="w-4 h-4 mr-1" />
+                        Consultar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
 
       {selectedVehicle && 
        selectedVehicle.marca && 
