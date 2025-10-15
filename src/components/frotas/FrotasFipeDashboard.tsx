@@ -197,17 +197,26 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
       {/* Chart */}
       {chartData.length > 0 && (
         <Card className="overflow-hidden border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <CardContent className="p-4 md:p-6">
+            <div className="mb-3 md:mb-4">
+              <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Distribuição de Valor FIPE por Categoria
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
                 Visualização da composição da frota por valor de mercado
               </p>
             </div>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 80, bottom: 20 }}>
+            <ResponsiveContainer width="100%" height={200} className="md:h-[250px]">
+              <BarChart 
+                data={chartData} 
+                margin={{ 
+                  top: 10, 
+                  right: 10, 
+                  left: 50, 
+                  bottom: 10 
+                }}
+                className="md:ml-8"
+              >
                 <defs>
                   <linearGradient id="colorCarros" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.9}/>
@@ -229,11 +238,13 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                  tick={{ fill: '#6b7280', fontSize: 10 }}
+                  className="md:text-xs"
                   axisLine={{ stroke: '#e5e7eb' }}
                 />
                 <YAxis 
-                  tick={{ fill: '#6b7280', fontSize: 11 }}
+                  tick={{ fill: '#6b7280', fontSize: 9 }}
+                  className="md:text-[11px]"
                   axisLine={{ stroke: '#e5e7eb' }}
                   tickFormatter={(value) => {
                     if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
@@ -247,6 +258,7 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                    fontSize: '12px',
                   }}
                   formatter={(value: number) => [formatCurrency(value), 'Valor FIPE']}
                   labelStyle={{ color: '#111827', fontWeight: 600 }}
