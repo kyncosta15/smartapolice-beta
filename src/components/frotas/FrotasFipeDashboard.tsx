@@ -206,16 +206,17 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 Visualização da composição da frota por valor de mercado
               </p>
             </div>
-            <div className="flex justify-center items-center w-full">
-              <ResponsiveContainer width="100%" height={200} className="md:h-[250px]">
+            <div className="flex justify-center items-center w-full -ml-4 md:ml-0">
+              <ResponsiveContainer width="95%" height={200} className="md:w-full md:h-[250px]">
                 <BarChart 
                   data={chartData} 
                   margin={{ 
                     top: 10, 
-                    right: 20, 
-                    left: 60, 
+                    right: 5, 
+                    left: 45, 
                     bottom: 10 
                   }}
+                  className="md:!ml-4"
                 >
                 <defs>
                   <linearGradient id="colorCarros" x1="0" y1="0" x2="0" y2="1">
