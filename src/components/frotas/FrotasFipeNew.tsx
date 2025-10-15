@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,9 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [vehicleToEdit, setVehicleToEdit] = useState<FrotaVeiculo | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [updatedVehicleId, setUpdatedVehicleId] = useState<string | null>(null);
+  const scrollPositionRef = useRef<number>(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -158,9 +161,10 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
 
   const handleVehicleUpdate = async (vehicleId: string, fipeValue: any) => {
     // Salvar posição do scroll atual
-    const scrollPosition = window.scrollY;
+    scrollPositionRef.current = window.scrollY;
     
     setIsUpdating(true);
+    setUpdatedVehicleId(vehicleId);
     
     try {
       const { error } = await supabase
@@ -178,7 +182,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
       });
 
       // Atualizar a lista de veículos
-      onVehicleUpdate?.();
+      await onVehicleUpdate?.();
     } catch (error) {
       console.error('Erro ao atualizar valor FIPE:', error);
       toast({
@@ -191,8 +195,14 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
       setTimeout(() => {
         setIsUpdating(false);
         // Restaurar posição do scroll
-        window.scrollTo({ top: scrollPosition, behavior: 'auto' });
-      }, 800);
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: scrollPositionRef.current, behavior: 'instant' });
+        });
+        // Remover highlight após 3 segundos
+        setTimeout(() => {
+          setUpdatedVehicleId(null);
+        }, 3000);
+      }, 600);
     }
   };
 
@@ -206,9 +216,10 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     if (!vehicleToEdit) return;
     
     // Salvar posição do scroll atual
-    const scrollPosition = window.scrollY;
+    scrollPositionRef.current = window.scrollY;
     
     setIsUpdating(true);
+    setUpdatedVehicleId(vehicleToEdit.id);
     
     try {
       const { data: updatedVehicle } = await supabase
@@ -219,7 +230,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
 
       if (updatedVehicle) {
         // Atualizar apenas este veículo na lista pai
-        onVehicleUpdate?.();
+        await onVehicleUpdate?.();
       }
     } catch (error) {
       console.error('Erro ao buscar veículo atualizado:', error);
@@ -228,8 +239,14 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
       setTimeout(() => {
         setIsUpdating(false);
         // Restaurar posição do scroll
-        window.scrollTo({ top: scrollPosition, behavior: 'auto' });
-      }, 800);
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: scrollPositionRef.current, behavior: 'instant' });
+        });
+        // Remover highlight após 3 segundos
+        setTimeout(() => {
+          setUpdatedVehicleId(null);
+        }, 3000);
+      }, 600);
     }
   };
 
@@ -255,18 +272,23 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
   }
 
   return (
-    <div className="space-y-4 relative">
+    <div className="space-y-4 relative" ref={containerRef}>
       {/* Loading Overlay */}
       {isUpdating && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-300">
-          <div className="flex flex-col items-center gap-4 animate-in zoom-in duration-500">
+        <div className="fixed inset-0 bg-background/60 backdrop-blur-md z-50 flex items-center justify-center animate-in fade-in duration-300">
+          <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-2xl shadow-2xl border animate-in zoom-in-95 duration-500">
             <div className="relative">
-              <div className="w-16 h-16 border-4 border-primary/20 rounded-full"></div>
-              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+              <div className="w-20 h-20 border-4 border-primary/20 rounded-full"></div>
+              <div className="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
             </div>
-            <p className="text-sm font-medium text-muted-foreground animate-pulse">
-              Atualizando dados...
-            </p>
+            <div className="text-center space-y-1">
+              <p className="text-base font-semibold text-foreground">
+                Atualizando dados
+              </p>
+              <p className="text-sm text-muted-foreground animate-pulse">
+                Aguarde um momento...
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -433,7 +455,14 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
               </TableRow>
             ) : (
               veiculosFiltrados.map((veiculo) => (
-                <TableRow key={veiculo.id}>
+                <TableRow 
+                  key={veiculo.id}
+                  className={`transition-all duration-500 ${
+                    updatedVehicleId === veiculo.id 
+                      ? 'bg-primary/10 shadow-[0_0_0_2px] shadow-primary/30 animate-in fade-in zoom-in-95 duration-500' 
+                      : ''
+                  }`}
+                >
                   <TableCell>
                     <div className="font-medium">{veiculo.marca || 'N/A'}</div>
                     <div className="text-sm text-muted-foreground">{veiculo.modelo || 'N/A'}</div>
