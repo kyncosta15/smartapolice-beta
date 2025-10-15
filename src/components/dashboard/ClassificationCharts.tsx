@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LabelList } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NewPolicyModal } from '../NewPolicyModal';
 import { FileText, Calendar, DollarSign, Clock } from 'lucide-react';
@@ -185,22 +185,39 @@ export function ClassificationCharts({
           </CardHeader>
           <CardContent className={`${isMobile ? 'p-3 pt-1' : 'p-6 pt-2'}`}>
             {insurerDistributionWithColors.length > 0 ? (
-              <ResponsiveContainer width="100%" height={isMobile ? 180 : 300}>
-                <BarChart data={insurerDistributionWithColors} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
+              <ResponsiveContainer width="100%" height={isMobile ? 250 : 350}>
+                <BarChart 
+                  data={insurerDistributionWithColors} 
+                  layout="vertical"
+                  margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
+                >
+                  <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis type="number" hide />
+                  <YAxis 
                     dataKey="name" 
+                    type="category"
                     tick={{ fontSize: isMobile ? 10 : 12 }}
-                    angle={isMobile ? -45 : 0}
-                    textAnchor={isMobile ? 'end' : 'middle'}
-                    height={isMobile ? 60 : 40}
+                    width={isMobile ? 80 : 120}
+                    hide
                   />
-                  <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar 
                     dataKey="value" 
-                    radius={[4, 4, 0, 0]}
+                    radius={4}
                   >
+                    <LabelList
+                      dataKey="name"
+                      position="insideLeft"
+                      offset={8}
+                      style={{ fill: 'white', fontSize: isMobile ? 10 : 12, fontWeight: 500 }}
+                    />
+                    <LabelList
+                      dataKey="value"
+                      position="right"
+                      offset={8}
+                      style={{ fontSize: isMobile ? 10 : 12, fontWeight: 500 }}
+                      formatter={(value: number) => value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    />
                     {insurerDistributionWithColors.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
