@@ -188,9 +188,24 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     setEditModalOpen(true);
   };
 
-  const handleEditSuccess = () => {
-    // Atualizar a lista de veículos
-    onVehicleUpdate?.();
+  const handleEditSuccess = async () => {
+    // Buscar apenas o veículo atualizado
+    if (!vehicleToEdit) return;
+    
+    try {
+      const { data: updatedVehicle } = await supabase
+        .from('frota_veiculos')
+        .select('*')
+        .eq('id', vehicleToEdit.id)
+        .single();
+
+      if (updatedVehicle) {
+        // Atualizar apenas este veículo na lista pai
+        onVehicleUpdate?.();
+      }
+    } catch (error) {
+      console.error('Erro ao buscar veículo atualizado:', error);
+    }
   };
 
   if (loading) {

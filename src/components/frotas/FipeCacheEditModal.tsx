@@ -102,8 +102,14 @@ export function FipeCacheEditModal({ open, onOpenChange, vehicle, onSuccess }: F
       }
 
       toast.success('Dados atualizados com sucesso!');
-      onSuccess?.();
+      
+      // Fechar modal primeiro para manter posição na lista
       onOpenChange(false);
+      
+      // Aguardar modal fechar antes de atualizar lista
+      setTimeout(() => {
+        onSuccess?.();
+      }, 150);
     } catch (error) {
       console.error('Erro ao atualizar dados:', error);
       toast.error('Erro ao atualizar dados. Tente novamente.');
