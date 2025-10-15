@@ -181,17 +181,22 @@ export function ClassificationCharts({
                             >
                               <tspan
                                 x={viewBox.cx}
-                                y={viewBox.cy}
-                                className="fill-foreground text-3xl font-bold"
+                                y={(viewBox.cy || 0) - 10}
+                                className="fill-foreground text-2xl font-bold"
                               >
-                                {totalPolicies}
+                                {totalPolicies.toLocaleString('pt-BR', { 
+                                  style: 'currency', 
+                                  currency: 'BRL',
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2
+                                })}
                               </tspan>
                               <tspan
                                 x={viewBox.cx}
-                                y={(viewBox.cy || 0) + 24}
-                                className="fill-muted-foreground text-sm"
+                                y={(viewBox.cy || 0) + 20}
+                                className="fill-muted-foreground text-xs"
                               >
-                                Apólices
+                                Valor por tipo
                               </tspan>
                             </text>
                           );
