@@ -46,7 +46,7 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
       <CardHeader>
         <CardTitle>Distribuição por Seguradora</CardTitle>
         <CardDescription>
-          {hasData ? 'Percentual de apólices por seguradora' : 'Aguardando dados para análise'}
+          {hasData ? 'Percentual de apólices por seguradora' : 'Aguardando dados'}
         </CardDescription>
       </CardHeader>
       <CardContent>
