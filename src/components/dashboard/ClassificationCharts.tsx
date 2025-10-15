@@ -159,49 +159,21 @@ export function ClassificationCharts({
                     data={typeDistributionWithColors}
                     cx="50%"
                     cy="50%"
-                    innerRadius={isMobile ? 50 : 70}
                     outerRadius={isMobile ? 70 : 100}
                     fill="#8884d8"
                     dataKey="value"
-                    strokeWidth={3}
+                    strokeWidth={2}
                     stroke="white"
                   >
                     {typeDistributionWithColors.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
-                    <Label
-                      content={({ viewBox }) => {
-                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                          return (
-                            <text
-                              x={viewBox.cx}
-                              y={viewBox.cy}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                            >
-                              <tspan
-                                x={viewBox.cx}
-                                y={(viewBox.cy || 0) - 10}
-                                className="fill-foreground text-2xl font-bold"
-                              >
-                                {totalPolicies.toLocaleString('pt-BR', { 
-                                  style: 'currency', 
-                                  currency: 'BRL',
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2
-                                })}
-                              </tspan>
-                              <tspan
-                                x={viewBox.cx}
-                                y={(viewBox.cy || 0) + 20}
-                                className="fill-muted-foreground text-xs"
-                              >
-                                Valor por tipo
-                              </tspan>
-                            </text>
-                          );
-                        }
-                      }}
+                    <LabelList
+                      dataKey="name"
+                      className="fill-background"
+                      stroke="none"
+                      fontSize={isMobile ? 10 : 12}
+                      fontWeight={500}
                     />
                   </Pie>
                 </PieChart>
