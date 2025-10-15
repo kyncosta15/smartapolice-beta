@@ -381,13 +381,14 @@ export function VehicleDetailsModalNew({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="codigo" className="text-sm font-medium text-gray-700">Código</Label>
+                      <Label htmlFor="codigo_fipe" className="text-sm font-medium text-gray-700">Código FIPE</Label>
                       <Input
-                        id="codigo"
-                        value={formData.codigo || ''}
-                        onChange={(e) => handleInputChange('codigo', e.target.value)}
+                        id="codigo_fipe"
+                        value={formData.codigo_fipe || formData.codigo || ''}
+                        onChange={(e) => handleInputChange('codigo_fipe', e.target.value)}
                         disabled={mode === 'view'}
                         className="h-10 md:h-11 font-mono"
+                        placeholder="Ex: 021601-0"
                       />
                     </div>
                     <div className="space-y-2">

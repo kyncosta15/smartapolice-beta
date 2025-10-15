@@ -234,6 +234,8 @@ Deno.serve(async (req) => {
             
             const payload: any = {
               preco_fipe: priceFormatted,
+              codigo_fipe: body?.codeFipe ?? item.codigo_fipe, // Atualiza código FIPE se veio da API
+              codigo: body?.codeFipe ?? item.codigo_fipe, // Também atualiza campo legado 'codigo' para compatibilidade
               marca: body?.brand ?? null,
               modelo: body?.model ?? null,
               combustivel: body?.fuel ?? null,
