@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Shield, Mail, Lock, User, Building, Phone, Loader2 } from 'lucide-react';
+import { Shield, Mail, Lock, User, Building, Phone } from 'lucide-react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Spinner } from '@/components/ui/spinner';
 
 export const AuthPage = () => {
   const { login, register, isLoading } = useAuth();
@@ -205,7 +206,7 @@ export const AuthPage = () => {
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        <Spinner className="size-4 mr-2" />
                         Entrando...
                       </>
                     ) : (
@@ -381,7 +382,7 @@ export const AuthPage = () => {
                   >
                     {(isLoading || isSubmitting) ? (
                       <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        <Spinner className="size-4 mr-2" />
                         Criando...
                       </>
                     ) : (
