@@ -284,11 +284,11 @@ export function ClassificationCharts({
                           {policy.value.toLocaleString('pt-BR', { 
                             style: 'currency', 
                             currency: 'BRL',
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0 
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2 
                           })}
                         </p>
-                        <p className="text-xs text-muted-foreground">Valor da Apólice</p>
+                        <p className="text-xs text-muted-foreground">Prêmio Total</p>
                       </div>
                       
                       <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground">

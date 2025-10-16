@@ -66,10 +66,13 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
     // Find the original policy to get additional data
     const originalPolicy = policies.find(p => p.id === policy.id);
     
+    // Garantir que sempre use o prêmio total (premium)
+    const premiumValue = policy.premium || 0;
+    
     return {
       name: String(policy.name || 'N/A'),
       insurer: String(policy.insurer || 'N/A'),
-      value: policy.premium || policy.monthlyAmount || 0,
+      value: premiumValue,
       dueDate: policy.endDate,
       insertDate: policy.extractedAt,
       type: String(originalPolicy?.type || 'Não informado'),
