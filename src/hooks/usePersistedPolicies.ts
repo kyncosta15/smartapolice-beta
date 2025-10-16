@@ -147,13 +147,6 @@ export function usePersistedPolicies() {
         policyNames: mappedPolicies.map(p => p.name)
       });
 
-      if (mappedPolicies.length > 0) {
-        toast({
-          title: "✅ Dados Carregados",
-          description: `${mappedPolicies.length} apólice(s) encontrada(s)`,
-        });
-      }
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados';
       console.error('❌ Erro DETALHADO no carregamento:', {
