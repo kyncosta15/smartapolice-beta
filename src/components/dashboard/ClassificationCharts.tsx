@@ -159,55 +159,50 @@ export function ClassificationCharts({
           </CardHeader>
           <CardContent className={`${isMobile ? 'p-3 pt-1' : 'p-6 pt-2'}`}>
             {typeDistributionWithColors.length > 0 ? (
-              <ResponsiveContainer width="100%" height={isMobile ? 250 : 350}>
-                <PieChart>
-                  <Tooltip content={<PieTooltip />} cursor={{ fill: 'transparent' }} />
-                  <Pie
-                    data={typeDistributionWithColors}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={isMobile ? 80 : 120}
-                    fill="#8884d8"
-                    dataKey="value"
-                    strokeWidth={3}
-                    stroke="white"
-                    label={({
-                      cx,
-                      cy,
-                      midAngle,
-                      innerRadius,
-                      outerRadius,
-                      name,
-                      percent,
-                    }: any) => {
-                      const RADIAN = Math.PI / 180;
-                      const radius = Number(outerRadius) * 0.7;
-                      const x = Number(cx) + radius * Math.cos(-Number(midAngle) * RADIAN);
-                      const y = Number(cy) + radius * Math.sin(-Number(midAngle) * RADIAN);
-                      
-                      if (Number(percent) < 0.05) return null;
-                      
-                      return (
-                        <text
-                          x={x}
-                          y={y}
-                          fill="white"
-                          textAnchor="middle"
-                          dominantBaseline="central"
-                          className="font-semibold"
-                          style={{ fontSize: isMobile ? '11px' : '13px' }}
-                        >
-                          {name}
-                        </text>
-                      );
-                    }}
-                  >
-                    {typeDistributionWithColors.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+              <>
+                <ResponsiveContainer width="100%" height={isMobile ? 200 : 250}>
+                  <PieChart>
+                    <Tooltip content={<PieTooltip />} cursor={{ fill: 'transparent' }} />
+                    <Pie
+                      data={typeDistributionWithColors}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={isMobile ? 70 : 90}
+                      fill="#8884d8"
+                      dataKey="value"
+                      strokeWidth={3}
+                      stroke="white"
+                    >
+                      {typeDistributionWithColors.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                {/* Legendas customizadas */}
+                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2 mt-4`}>
+                  {typeDistributionWithColors.map((entry, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                        style={{ backgroundColor: entry.color }}
+                      />
+                      <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-700 flex-1`}>
+                        {entry.name}
+                      </span>
+                      <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-semibold text-gray-900`}>
+                        {entry.value.toLocaleString('pt-BR', { 
+                          style: 'currency', 
+                          currency: 'BRL',
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2 
+                        })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="flex items-center justify-center h-48 text-gray-500">
                 <p className="text-sm">Nenhum dado disponível</p>
