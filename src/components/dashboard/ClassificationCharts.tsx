@@ -253,63 +253,57 @@ export function ClassificationCharts({
         </Card>
 
         {/* Novas Apólices (30 dias) - Span completo */}
-        <Card className="bg-white border border-gray-200 shadow-sm lg:col-span-2">
-          <CardHeader className={`${isMobile ? 'p-3 pb-1' : 'p-6 pb-2'}`}>
-            <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold text-gray-900 flex items-center`}>
-              <FileText className="h-5 w-5 mr-2 text-blue-600" />
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
               Novas Apólices (30 dias)
             </CardTitle>
           </CardHeader>
-          <CardContent className={`${isMobile ? 'p-3 pt-1' : 'p-6 pt-2'}`}>
+          <CardContent>
             {recentPolicies.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {recentPolicies.slice(0, 5).map((policy, index) => (
                   <div 
                     key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                    className="group flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 cursor-pointer transition-all"
                     onClick={() => handlePolicyClick(policy)}
                   >
-                    <div className="flex-1">
-                      <div className="flex flex-col">
-                        <p className={`font-medium text-gray-900 ${isMobile ? 'text-sm' : 'text-base'}`}>
-                          {policy.name}
-                        </p>
-                        <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                          {safeRenderInsurer(policy.insurer)}
-                        </p>
-                      </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <p className="font-medium text-sm truncate">
+                        {policy.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {safeRenderInsurer(policy.insurer)}
+                      </p>
                     </div>
                     
-                    <div className="flex flex-col items-end space-y-1">
-                      <div className="flex items-center space-x-4">
-                        <div className="text-center">
-                          <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'} flex items-center justify-center gap-1`}>
-                            <Calendar className="h-3 w-3" />
-                            Inserida
-                          </p>
-                          <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                    <div className="flex items-center gap-6 ml-4">
+                      <div className="text-right">
+                        <p className="text-lg font-semibold text-primary">
+                          {policy.value.toLocaleString('pt-BR', { 
+                            style: 'currency', 
+                            currency: 'BRL',
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0 
+                          })}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Valor da Apólice</p>
+                      </div>
+                      
+                      <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="text-right">
+                          <p className="font-medium text-foreground">
                             {new Date(policy.insertDate).toLocaleDateString('pt-BR')}
                           </p>
+                          <p>Inserida</p>
                         </div>
                         
-                        <div className="text-center">
-                          <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'} flex items-center justify-center gap-1`}>
-                            <DollarSign className="h-3 w-3" />
-                            Valor
-                          </p>
-                          <p className={`font-medium text-green-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                            R$ {policy.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                          </p>
-                        </div>
-                        
-                        <div className="text-center">
-                          <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'} flex items-center justify-center gap-1`}>
-                            <Clock className="h-3 w-3" />
-                            Vencimento
-                          </p>
-                          <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                        <div className="text-right">
+                          <p className="font-medium text-foreground">
                             {new Date(policy.dueDate).toLocaleDateString('pt-BR')}
                           </p>
+                          <p>Vencimento</p>
                         </div>
                       </div>
                     </div>
@@ -317,7 +311,8 @@ export function ClassificationCharts({
                 ))}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-32 text-gray-500">
+              <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+                <FileText className="h-8 w-8 mb-2 opacity-50" />
                 <p className="text-sm">Nenhuma apólice recente</p>
               </div>
             )}
