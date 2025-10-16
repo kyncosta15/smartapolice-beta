@@ -131,9 +131,16 @@ export function ClassificationCharts({
   const PieTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm font-medium text-gray-900">{payload[0].name}</p>
-          <p className="text-sm text-blue-600">{`Valor: ${payload[0].value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}</p>
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg min-w-[160px]">
+          <p className="text-sm font-semibold text-gray-900 mb-1">{payload[0].name}</p>
+          <p className="text-base font-bold text-blue-600">
+            {`Valor: ${payload[0].value.toLocaleString('pt-BR', { 
+              style: 'currency', 
+              currency: 'BRL',
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2 
+            })}`}
+          </p>
         </div>
       );
     }
@@ -152,29 +159,52 @@ export function ClassificationCharts({
           </CardHeader>
           <CardContent className={`${isMobile ? 'p-3 pt-1' : 'p-6 pt-2'}`}>
             {typeDistributionWithColors.length > 0 ? (
-              <ResponsiveContainer width="100%" height={isMobile ? 200 : 300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 250 : 350}>
                 <PieChart>
-                  <Tooltip content={<PieTooltip />} />
+                  <Tooltip content={<PieTooltip />} cursor={{ fill: 'transparent' }} />
                   <Pie
                     data={typeDistributionWithColors}
                     cx="50%"
                     cy="50%"
-                    outerRadius={isMobile ? 70 : 100}
+                    outerRadius={isMobile ? 80 : 120}
                     fill="#8884d8"
                     dataKey="value"
-                    strokeWidth={2}
+                    strokeWidth={3}
                     stroke="white"
+                    label={({
+                      cx,
+                      cy,
+                      midAngle,
+                      innerRadius,
+                      outerRadius,
+                      name,
+                      percent,
+                    }: any) => {
+                      const RADIAN = Math.PI / 180;
+                      const radius = Number(outerRadius) * 0.7;
+                      const x = Number(cx) + radius * Math.cos(-Number(midAngle) * RADIAN);
+                      const y = Number(cy) + radius * Math.sin(-Number(midAngle) * RADIAN);
+                      
+                      if (Number(percent) < 0.05) return null;
+                      
+                      return (
+                        <text
+                          x={x}
+                          y={y}
+                          fill="white"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          className="font-semibold"
+                          style={{ fontSize: isMobile ? '11px' : '13px' }}
+                        >
+                          {name}
+                        </text>
+                      );
+                    }}
                   >
                     {typeDistributionWithColors.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
-                    <LabelList
-                      dataKey="name"
-                      className="fill-background"
-                      stroke="none"
-                      fontSize={isMobile ? 10 : 12}
-                      fontWeight={500}
-                    />
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
