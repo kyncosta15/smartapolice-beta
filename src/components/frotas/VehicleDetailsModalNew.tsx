@@ -103,15 +103,16 @@ export function VehicleDetailsModalNew({
     if (!formData.id) return;
 
     setLoading(true);
+    
+    // Extract only the fields that belong to frota_veiculos table
+    const {
+      responsaveis,
+      pagamentos,
+      documentos,
+      ...vehicleData
+    } = formData;
+    
     try {
-      // Extract only the fields that belong to frota_veiculos table
-      const {
-        responsaveis,
-        pagamentos,
-        documentos,
-        ...vehicleData
-      } = formData;
-
       const { error } = await supabase
         .from('frota_veiculos')
         .update(vehicleData)
@@ -129,9 +130,10 @@ export function VehicleDetailsModalNew({
       window.dispatchEvent(new CustomEvent('vehicleUpdated'));
       window.dispatchEvent(new CustomEvent('frota-data-updated'));
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar:', error);
-      toast.error('Erro ao salvar as alterações');
+      console.error('Dados que tentou salvar:', vehicleData);
+      toast.error(`Erro ao salvar: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }
