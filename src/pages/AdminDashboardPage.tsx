@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CompanySidePanel } from '@/components/admin/CompanySidePanel';
 import { AdminCharts } from '@/components/admin/AdminCharts';
@@ -9,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Shield, AlertTriangle, Car, Building, Search, Mail, LifeBuoy, Trash2 } from 'lucide-react';
+import { Shield, AlertTriangle, Car, Building, Search, Mail, LifeBuoy, Trash2, Plus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { CompanySummary } from '@/types/admin';
 import {
@@ -26,6 +27,7 @@ import {
 type Period = '30' | '60';
 
 export default function AdminDashboardPage() {
+  const navigate = useNavigate();
   const { metrics, companies, loading, deleting, deleteCompanies } = useAdminMetrics();
   const [period, setPeriod] = useState<Period>('30');
   const [selectedCompany, setSelectedCompany] = useState<CompanySummary | null>(null);
@@ -111,9 +113,19 @@ export default function AdminDashboardPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="space-y-3 md:space-y-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-1">Painel Administrativo</h1>
-            <p className="text-xs md:text-sm text-muted-foreground">Visão geral de todas as contas do sistema</p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold mb-1">Painel Administrativo</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">Visão geral de todas as contas do sistema</p>
+            </div>
+            <Button 
+              onClick={() => navigate('/admin/inserir-veiculos')}
+              className="gap-2"
+              variant="default"
+            >
+              <Plus className="h-4 w-4" />
+              Inserir Veículos em Lote
+            </Button>
           </div>
 
           {/* Filtro de Busca */}

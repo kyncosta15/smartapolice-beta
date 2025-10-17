@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Building } from 'lucide-react';
 
 const PLACAS = [
   'GSO7B86',
@@ -22,36 +23,70 @@ const PLACAS = [
   'THC1B48'
 ];
 
+interface Empresa {
+  id: string;
+  nome: string;
+  email?: string;
+}
+
 export default function InserirVeiculosLote() {
   const [loading, setLoading] = useState(false);
+  const [loadingEmpresas, setLoadingEmpresas] = useState(true);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [empresaSelecionada, setEmpresaSelecionada] = useState<string>('');
   const [resultado, setResultado] = useState<Array<{ placa: string; status: string; mensagem: string }>>([]);
 
+  // Carregar lista de empresas ao montar o componente
+  useEffect(() => {
+    const carregarEmpresas = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('empresas')
+          .select('id, nome')
+          .order('nome');
+
+        if (error) throw error;
+
+        // Buscar emails dos usuários de cada empresa
+        const empresasComEmail: Empresa[] = [];
+        for (const empresa of data || []) {
+          const { data: users } = await supabase
+            .from('users')
+            .select('email')
+            .eq('company', empresa.nome)
+            .limit(1)
+            .single();
+          
+          empresasComEmail.push({
+            id: empresa.id,
+            nome: empresa.nome,
+            email: users?.email
+          });
+        }
+
+        setEmpresas(empresasComEmail);
+      } catch (error: any) {
+        console.error('Erro ao carregar empresas:', error);
+        toast.error('Erro ao carregar lista de empresas');
+      } finally {
+        setLoadingEmpresas(false);
+      }
+    };
+
+    carregarEmpresas();
+  }, []);
+
   const inserirVeiculos = async () => {
+    if (!empresaSelecionada) {
+      toast.error('Selecione uma conta primeiro');
+      return;
+    }
+
     setLoading(true);
     setResultado([]);
     
     try {
-      // Buscar empresa_id do usuário atual
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error('Usuário não autenticado');
-        return;
-      }
-
-      // Buscar empresa do usuário via membership
-      const { data: membership, error: membershipError } = await supabase
-        .from('user_memberships')
-        .select('empresa_id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (membershipError || !membership) {
-        toast.error('Empresa não encontrada para o usuário');
-        return;
-      }
-
-      const empresaId = membership.empresa_id;
+      const empresaId = empresaSelecionada;
       const resultados: Array<{ placa: string; status: string; mensagem: string }> = [];
 
       // Inserir cada veículo
@@ -81,7 +116,7 @@ export default function InserirVeiculosLote() {
               placa,
               empresa_id: empresaId,
               status_seguro: 'sem_seguro',
-              categoria: 'outros',
+              categoria: 'Carros',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
@@ -124,14 +159,51 @@ export default function InserirVeiculosLote() {
     }
   };
 
+  const empresaSelecionadaInfo = empresas.find(e => e.id === empresaSelecionada);
+
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
         <CardTitle>Inserir Veículos em Lote</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        {/* Seletor de Empresa/Conta */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Selecione a Conta</label>
+          <Select value={empresaSelecionada} onValueChange={setEmpresaSelecionada} disabled={loadingEmpresas}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={loadingEmpresas ? "Carregando contas..." : "Selecione uma conta"}>
+                {empresaSelecionadaInfo && (
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    <span className="truncate">{empresaSelecionadaInfo.nome}</span>
+                    {empresaSelecionadaInfo.email && (
+                      <span className="text-xs text-muted-foreground">
+                        ({empresaSelecionadaInfo.email})
+                      </span>
+                    )}
+                  </div>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {empresas.map((empresa) => (
+                <SelectItem key={empresa.id} value={empresa.id}>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{empresa.nome}</span>
+                    {empresa.email && (
+                      <span className="text-xs text-muted-foreground">{empresa.email}</span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Lista de Placas */}
         <div className="text-sm text-muted-foreground">
-          <p>Serão inseridos {PLACAS.length} veículos:</p>
+          <p className="font-medium mb-2">Serão inseridos {PLACAS.length} veículos:</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {PLACAS.map(placa => (
               <div key={placa} className="font-mono text-xs bg-muted p-2 rounded">
@@ -143,7 +215,7 @@ export default function InserirVeiculosLote() {
 
         <Button 
           onClick={inserirVeiculos} 
-          disabled={loading}
+          disabled={loading || !empresaSelecionada || loadingEmpresas}
           className="w-full"
         >
           {loading ? (
