@@ -28,6 +28,7 @@ import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminCompanyDetailsPage from './pages/AdminCompanyDetailsPage';
 import AdminProfilePage from './pages/AdminProfilePage';
 import AdminEmailSettingsPage from './pages/AdminEmailSettingsPage';
+import InserirVeiculosLotePage from './pages/InserirVeiculosLotePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +106,14 @@ const App = () => {
                 element={
                   <ProtectedRoute requiredRoles={['admin', 'administrador']}>
                     <AdminEmailSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/inserir-veiculos"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador', 'rh', 'corretora_admin']}>
+                    <InserirVeiculosLotePage />
                   </ProtectedRoute>
                 }
               />
