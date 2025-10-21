@@ -12,7 +12,7 @@ interface SinistrosFilterProps {
   filter?: 'sinistro' | 'assistencia' | 'todos';
   onViewClaim?: (id: string) => void;
   onEditClaim?: (id: string) => void;
-  onDeleteClaim?: (id: string) => void;
+  onDeleteClaim?: (id: string) => void | Promise<void>;
 }
 
 export function SinistrosFilter({ 
@@ -29,6 +29,13 @@ export function SinistrosFilter({
   // Filtrar dados baseado no tipo
   const filteredClaims = filter === 'assistencia' ? [] : claims;
   const filteredAssistances = filter === 'sinistro' ? [] : assistances;
+
+  // Wrapper para garantir que sempre retorna Promise
+  const handleDelete = async (id: string) => {
+    if (onDeleteClaim) {
+      await Promise.resolve(onDeleteClaim(id));
+    }
+  };
 
   const getFilterDescription = () => {
     switch (filter) {
@@ -70,11 +77,13 @@ export function SinistrosFilter({
             loading={loading}
             onViewClaim={onViewClaim}
             onEditClaim={onEditClaim}
-            onDeleteClaim={onDeleteClaim}
+            onDeleteClaim={handleDelete}
           />
         </>
       ) : (
-        <TicketsList />
+        <TicketsList 
+          onDeleteClaim={handleDelete}
+        />
       )}
     </div>
   );

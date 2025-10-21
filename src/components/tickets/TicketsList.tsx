@@ -3,6 +3,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Car, 
   Calendar, 
@@ -15,7 +17,8 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  GitBranch
+  GitBranch,
+  Trash2
 } from 'lucide-react';
 import { useTicketsData } from '@/hooks/useTicketsData';
 import { TicketStatus, Ticket } from '@/types/tickets';
@@ -24,11 +27,23 @@ import { CompactStatusStepper } from '@/components/status-stepper/CompactStatusS
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { ClaimsService } from '@/services/claims';
+import { useToast } from '@/hooks/use-toast';
 
-export function TicketsList() {
+interface TicketsListProps {
+  onDeleteClaim?: (id: string) => Promise<void>;
+  onDeleteAssistance?: (id: string) => Promise<void>;
+}
+
+export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListProps = {}) {
   const { tickets, loading, updateTicketStatus } = useTicketsData();
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
 
   // Mock history para demonstração
   const mockHistory: StatusEvent[] = [
@@ -101,6 +116,81 @@ export function TicketsList() {
     setIsStatusModalOpen(true);
   };
 
+  const toggleSelectTicket = (ticketId: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(ticketId)) {
+        newSet.delete(ticketId);
+      } else {
+        newSet.add(ticketId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === tickets.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(tickets.map(t => t.id)));
+    }
+  };
+
+  const handleDeleteClick = (ticketId: string) => {
+    setTicketToDelete(ticketId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleBulkDeleteClick = () => {
+    if (selectedIds.size > 0) {
+      setIsDeleteDialogOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const idsToDelete = ticketToDelete ? [ticketToDelete] : Array.from(selectedIds);
+      
+      for (const id of idsToDelete) {
+        const ticket = tickets.find(t => t.id === id);
+        if (!ticket) continue;
+
+        if (ticket.tipo === 'sinistro') {
+          if (onDeleteClaim) {
+            await onDeleteClaim(id);
+          } else {
+            await ClaimsService.deleteClaim(id);
+          }
+        } else {
+          if (onDeleteAssistance) {
+            await onDeleteAssistance(id);
+          } else {
+            await ClaimsService.deleteAssistance(id);
+          }
+        }
+      }
+
+      toast({
+        title: 'Sucesso',
+        description: `${idsToDelete.length} registro(s) deletado(s) com sucesso.`,
+      });
+
+      setSelectedIds(new Set());
+      setTicketToDelete(null);
+    } catch (error) {
+      console.error('Erro ao deletar:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível deletar os registros.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -131,34 +221,74 @@ export function TicketsList() {
 
   return (
     <div className="space-y-4">
+      {/* Bulk actions bar */}
+      {tickets.length > 0 && (
+        <div className="flex items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              checked={selectedIds.size === tickets.length}
+              onCheckedChange={toggleSelectAll}
+            />
+            <span className="text-sm font-medium">
+              {selectedIds.size > 0 
+                ? `${selectedIds.size} selecionado(s)` 
+                : 'Selecionar todos'}
+            </span>
+          </div>
+          
+          {selectedIds.size > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDeleteClick}
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Deletar {selectedIds.size} registro(s)
+            </Button>
+          )}
+        </div>
+      )}
+
       {tickets.map((ticket) => {
         const steps = ticket.tipo === 'sinistro' ? SINISTRO_STEPS : ASSISTENCIA_STEPS;
         
         return (
-          <Card key={ticket.id} className="overflow-hidden border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-br from-card to-muted/10">
+          <Card key={ticket.id} className={cn(
+            "overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-br from-card to-muted/10",
+            selectedIds.has(ticket.id) && "border-primary ring-2 ring-primary/20"
+          )}>
             <div className="p-6 space-y-6">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    {getTipoIcon(ticket.tipo)}
-                    <div>
-                      <h3 className="font-semibold text-xl">
-                        {ticket.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{ticket.id}
-                      </h3>
-                      {ticket.subtipo && (
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {ticket.subtipo.replace('_', ' ')}
-                        </p>
-                      )}
+              {/* Header with checkbox */}
+              <div className="flex items-start gap-4">
+                <Checkbox
+                  checked={selectedIds.has(ticket.id)}
+                  onCheckedChange={() => toggleSelectTicket(ticket.id)}
+                  className="mt-1"
+                />
+                
+                <div className="flex-1 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      {getTipoIcon(ticket.tipo)}
+                      <div>
+                        <h3 className="font-semibold text-xl">
+                          {ticket.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{ticket.id.slice(0, 8)}
+                        </h3>
+                        {ticket.subtipo && (
+                          <p className="text-sm text-muted-foreground capitalize">
+                            {ticket.subtipo.replace('_', ' ')}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  
+                  <Badge className={cn("flex items-center gap-1 shrink-0", getStatusColor(ticket.status))}>
+                    {getStatusIcon(ticket.status)}
+                    {ticket.status.replace('_', ' ')}
+                  </Badge>
                 </div>
-                
-                <Badge className={cn("flex items-center gap-1 shrink-0", getStatusColor(ticket.status))}>
-                  {getStatusIcon(ticket.status)}
-                  {ticket.status.replace('_', ' ')}
-                </Badge>
               </div>
 
               {/* Informações do Ticket */}
@@ -232,6 +362,15 @@ export function TicketsList() {
                   <Edit className="h-4 w-4" />
                   Editar
                 </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleDeleteClick(ticket.id)}
+                  className="gap-2 hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-colors ml-auto"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Deletar
+                </Button>
               </div>
             </div>
           </Card>
@@ -278,6 +417,31 @@ export function TicketsList() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              {ticketToDelete 
+                ? 'Tem certeza que deseja deletar este registro? Esta ação não pode ser desfeita.'
+                : `Tem certeza que deseja deletar ${selectedIds.size} registro(s)? Esta ação não pode ser desfeita.`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete} 
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Deletando...' : 'Deletar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

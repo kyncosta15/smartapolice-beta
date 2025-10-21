@@ -5,11 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownRCorp } from '@/components/ui-v2/dropdown-rcorp';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { Claim, Assistance, ClaimStatus } from '@/types/claims';
+import { ClaimsService } from '@/services/claims';
+import { useToast } from '@/hooks/use-toast';
 
 interface TicketsListV2Props {
   claims?: Claim[];
@@ -17,7 +21,7 @@ interface TicketsListV2Props {
   loading?: boolean;
   onViewClaim?: (id: string) => void;
   onEditClaim?: (id: string) => void;
-  onDeleteClaim?: (id: string) => void;
+  onDeleteClaim?: (id: string) => Promise<void>;
   className?: string;
 }
 
@@ -37,6 +41,11 @@ const statusConfig: Record<ClaimStatus | string, { label: string; variant: 'defa
 };
 
 const columns: TableColumn[] = [
+  {
+    key: 'select',
+    name: '',
+    width: 50,
+  },
   {
     key: 'ticketNumber',
     name: 'Ticket',
@@ -88,6 +97,11 @@ export function TicketsListV2({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
   const [sortDescriptor, setSortDescriptor] = useState<{
     column: string;
     direction: 'ascending' | 'descending';
@@ -169,10 +183,91 @@ export function TicketsListV2({
     });
   };
 
+  const toggleSelectItem = (itemId: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === allItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(allItems.map(item => item.id)));
+    }
+  };
+
+  const handleDeleteClick = (itemId: string) => {
+    setItemToDelete(itemId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleBulkDeleteClick = () => {
+    if (selectedIds.size > 0) {
+      setIsDeleteDialogOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const idsToDelete = itemToDelete ? [itemToDelete] : Array.from(selectedIds);
+      
+      for (const id of idsToDelete) {
+        const item = allItems.find(i => i.id === id);
+        if (!item) continue;
+
+        if (onDeleteClaim) {
+          await onDeleteClaim(id);
+        } else {
+          if (item.type === 'sinistro') {
+            await ClaimsService.deleteClaim(id);
+          } else {
+            await ClaimsService.deleteAssistance(id);
+          }
+        }
+      }
+
+      toast({
+        title: 'Sucesso',
+        description: `${idsToDelete.length} registro(s) deletado(s) com sucesso.`,
+      });
+
+      setSelectedIds(new Set());
+      setItemToDelete(null);
+    } catch (error) {
+      console.error('Erro ao deletar:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível deletar os registros.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
   const renderCell = (item: TicketItem, columnKey: any) => {
     const key = String(columnKey);
     
     switch (key) {
+      case 'select':
+        return (
+          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={selectedIds.has(item.id)}
+              onCheckedChange={() => toggleSelectItem(item.id)}
+            />
+          </div>
+        );
+        
       case 'ticketNumber':
         return (
           <div className="font-medium">
@@ -250,7 +345,7 @@ export function TicketsListV2({
                 label: 'Excluir',
                 icon: <Trash2 className="h-4 w-4" />,
                 variant: 'destructive',
-                onClick: () => onDeleteClaim?.(item.id),
+                onClick: () => handleDeleteClick(item.id),
               },
             ]}
           />
@@ -271,6 +366,35 @@ export function TicketsListV2({
 
   return (
     <div className={cn("space-y-4", className)}>
+      {/* Bulk actions bar */}
+      {allItems.length > 0 && (
+        <div className="flex items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              checked={selectedIds.size === allItems.length}
+              onCheckedChange={toggleSelectAll}
+            />
+            <span className="text-sm font-medium">
+              {selectedIds.size > 0 
+                ? `${selectedIds.size} selecionado(s)` 
+                : 'Selecionar todos'}
+            </span>
+          </div>
+          
+          {selectedIds.size > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDeleteClick}
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Deletar {selectedIds.size} registro(s)
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -331,6 +455,31 @@ export function TicketsListV2({
         onAction={(key) => onViewClaim?.(String(key))}
         className="border rounded-lg"
       />
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              {itemToDelete 
+                ? 'Tem certeza que deseja deletar este registro? Esta ação não pode ser desfeita.'
+                : `Tem certeza que deseja deletar ${selectedIds.size} registro(s)? Esta ação não pode ser desfeita.`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete} 
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Deletando...' : 'Deletar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
