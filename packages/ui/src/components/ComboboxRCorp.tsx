@@ -25,6 +25,8 @@ export type ComboboxRCorpProps = {
   isDisabled?: boolean
   className?: string
   popoverClassName?: string
+  disableLocalFiltering?: boolean
+  allowsCustomValue?: boolean
 }
 
 export function ComboboxRCorp({
@@ -42,7 +44,12 @@ export function ComboboxRCorp({
   isDisabled = false,
   className,
   popoverClassName,
+  disableLocalFiltering = false,
+  allowsCustomValue = false,
 }: ComboboxRCorpProps) {
+  // Don't filter locally if items already come filtered from backend
+  const displayItems = disableLocalFiltering ? items : items;
+
   return (
     <ComboBox
       inputValue={inputValue}
@@ -52,6 +59,7 @@ export function ComboboxRCorp({
       isDisabled={isDisabled}
       className={cn('relative w-full', className)}
       menuTrigger="input"
+      allowsCustomValue={allowsCustomValue}
     >
       {label && (
         <Label className="text-sm font-medium text-foreground mb-2 block">
@@ -91,12 +99,12 @@ export function ComboboxRCorp({
         )}
       >
         <ListBox className="outline-none">
-          {items.length === 0 && !isLoading ? (
+          {displayItems.length === 0 && !isLoading ? (
             <div className="px-3 py-2 text-sm text-muted-foreground">
               {noResultsLabel}
             </div>
           ) : (
-            items.map((item) => (
+            displayItems.map((item) => (
               <ListBoxItem
                 key={item.id}
                 id={item.id}

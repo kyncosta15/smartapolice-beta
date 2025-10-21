@@ -35,6 +35,7 @@ export interface ComboboxRCorpProps {
   className?: string;
   allowsCustomValue?: boolean;
   isRequired?: boolean;
+  disableLocalFiltering?: boolean; // Para quando os items já vêm filtrados do backend
 }
 
 export function ComboboxRCorp({
@@ -51,21 +52,37 @@ export function ComboboxRCorp({
   label,
   description,
   className,
-  allowsCustomValue = true,
+  allowsCustomValue = false,
   isRequired = false,
+  disableLocalFiltering = false,
 }: ComboboxRCorpProps) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   
-  // Filter items based on input value
+  // Filter items based on input value only if local filtering is enabled
   const filteredItems = React.useMemo(() => {
+    if (disableLocalFiltering) {
+      console.log('🔍 ComboboxRCorp: Filtragem local desabilitada, usando items do backend:', items.length);
+      return items;
+    }
     if (!inputValue) return items;
-    return items.filter(item =>
+    const filtered = items.filter(item =>
       item.label.toLowerCase().includes(inputValue.toLowerCase()) ||
       item.description?.toLowerCase().includes(inputValue.toLowerCase())
     );
-  }, [items, inputValue]);
+    console.log('🔍 ComboboxRCorp: Filtragem local ativada. Input:', inputValue, 'Items filtrados:', filtered.length);
+    return filtered;
+  }, [items, inputValue, disableLocalFiltering]);
 
   const selectedItem = items.find(item => item.id === selectedKey);
+
+  console.log('🎯 ComboboxRCorp render:', {
+    inputValue,
+    itemsCount: items.length,
+    filteredCount: filteredItems.length,
+    selectedKey,
+    isLoading,
+    disableLocalFiltering
+  });
 
   return (
     <ComboBox
