@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { SinistrosFilter } from './SinistrosFilter';
+import { TicketDetailsDrawer } from './TicketDetailsDrawer';
 import { Claim, Assistance } from '@/types/claims';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Wrench, BarChart3 } from 'lucide-react';
@@ -31,6 +32,14 @@ export function SinistrosDetailsModal({
   onDeleteClaim,
   onDeleteAssistance,
 }: SinistrosDetailsModalProps) {
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
+
+  const handleViewClaim = (id: string) => {
+    setSelectedTicketId(id);
+    setDetailsDrawerOpen(true);
+  };
+
   const getModalTitle = () => {
     switch (filter) {
       case 'sinistro':
@@ -83,12 +92,20 @@ export function SinistrosDetailsModal({
             assistances={assistances}
             loading={loading}
             filter={filter}
-            onViewClaim={(id) => console.log('View claim:', id)}
+            onViewClaim={handleViewClaim}
             onEditClaim={(id) => console.log('Edit claim:', id)}
             onDeleteClaim={onDeleteClaim}
           />
         </div>
       </DialogContent>
+
+      {/* Modal de detalhes do ticket */}
+      <TicketDetailsDrawer
+        open={detailsDrawerOpen}
+        onOpenChange={setDetailsDrawerOpen}
+        ticketId={selectedTicketId}
+        ticketType={filter === 'assistencia' ? 'assistencia' : 'sinistro'}
+      />
     </Dialog>
   );
 }
