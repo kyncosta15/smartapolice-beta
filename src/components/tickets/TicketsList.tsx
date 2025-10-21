@@ -39,6 +39,7 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
   const { tickets, loading, updateTicketStatus } = useTicketsData();
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
@@ -114,6 +115,11 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
   const handleTicketClick = (ticket: Ticket) => {
     setSelectedTicket(ticket);
     setIsStatusModalOpen(true);
+  };
+
+  const handleDetailsClick = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setIsDetailsModalOpen(true);
   };
 
   const toggleSelectTicket = (ticketId: string) => {
@@ -280,11 +286,6 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
                             {ticket.subtipo.replace('_', ' ')}
                           </p>
                         )}
-                        {ticket.vehicle && (
-                          <p className="text-sm font-medium text-primary mt-1">
-                            {ticket.vehicle.placa} • {ticket.vehicle.marca} {ticket.vehicle.modelo}
-                          </p>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -353,6 +354,15 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
                 <Button 
                   variant="outline" 
                   size="sm" 
+                  onClick={() => handleDetailsClick(ticket)}
+                  className="gap-2 hover:bg-primary/5 hover:border-primary/30 transition-colors"
+                >
+                  <Eye className="h-4 w-4" />
+                  Ver Detalhes
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
                   onClick={() => handleTicketClick(ticket)}
                   className="gap-2 hover:bg-primary/5 hover:border-primary/30 transition-colors"
                 >
@@ -413,6 +423,131 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
               onClick={() => setIsStatusModalOpen(false)}
               className="w-full"
             >
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Detalhes */}
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedTicket?.tipo === 'sinistro' ? (
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+              ) : (
+                <Wrench className="h-5 w-5 text-blue-600" />
+              )}
+              Detalhes - {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id?.slice(0, 8)}
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedTicket && (
+            <div className="space-y-6">
+              {/* Informações do Veículo */}
+              {selectedTicket.vehicle && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Car className="h-5 w-5" />
+                    Informações do Veículo
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Placa</p>
+                      <p className="font-medium">{selectedTicket.vehicle.placa}</p>
+                    </div>
+                    {selectedTicket.vehicle.marca && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Marca</p>
+                        <p className="font-medium">{selectedTicket.vehicle.marca}</p>
+                      </div>
+                    )}
+                    {selectedTicket.vehicle.modelo && (
+                      <div className="col-span-2">
+                        <p className="text-sm text-muted-foreground">Modelo</p>
+                        <p className="font-medium">{selectedTicket.vehicle.modelo}</p>
+                      </div>
+                    )}
+                    {selectedTicket.vehicle.status_seguro && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Status Seguro</p>
+                        <p className="font-medium capitalize">{selectedTicket.vehicle.status_seguro}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Detalhes do Sinistro/Assistência */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  {selectedTicket.tipo === 'sinistro' ? (
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                  ) : (
+                    <Wrench className="h-5 w-5 text-blue-600" />
+                  )}
+                  Detalhes do {selectedTicket.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'}
+                </h3>
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                  {selectedTicket.subtipo && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Categoria</p>
+                      <p className="font-medium capitalize">{selectedTicket.subtipo.replace('_', ' ')}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Status</p>
+                    <Badge className={cn("inline-flex", getStatusColor(selectedTicket.status))}>
+                      {selectedTicket.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                  {selectedTicket.data_evento && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Data do Evento</p>
+                      <p className="font-medium">
+                        {format(new Date(selectedTicket.data_evento), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Data de Criação</p>
+                    <p className="font-medium">
+                      {format(new Date(selectedTicket.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    </p>
+                  </div>
+                  {selectedTicket.valor_estimado && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Valor Estimado</p>
+                      <p className="font-medium">{formatCurrency(selectedTicket.valor_estimado)}</p>
+                    </div>
+                  )}
+                  {selectedTicket.localizacao && (
+                    <div className="col-span-2">
+                      <p className="text-sm text-muted-foreground">Localização</p>
+                      <p className="font-medium">{selectedTicket.localizacao}</p>
+                    </div>
+                  )}
+                  {selectedTicket.protocol_code && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Protocolo</p>
+                      <p className="font-medium">{selectedTicket.protocol_code}</p>
+                    </div>
+                  )}
+                </div>
+
+                {selectedTicket.descricao && (
+                  <div className="p-4 bg-muted/30 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-2">Descrição</p>
+                    <p className="text-sm whitespace-pre-wrap">{selectedTicket.descricao}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsDetailsModalOpen(false)}>
               Fechar
             </Button>
           </div>
