@@ -776,8 +776,18 @@ export function VehicleDetailsModalNew({
                       </div>
 
                       {tickets.map((ticket) => (
-                        <Card key={ticket.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                        <Card key={ticket.id} className="overflow-hidden hover:shadow-md transition-shadow relative">
                           <CardContent className="p-4">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setActiveTab('sinistros')}
+                              className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full hover:bg-primary/10"
+                              title="Focar nesta ocorrência"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+
                             <div className="flex items-start gap-3">
                               <div className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
@@ -792,7 +802,7 @@ export function VehicleDetailsModalNew({
                                 )}
                               </div>
 
-                              <div className="flex-1 min-w-0">
+                              <div className="flex-1 min-w-0 pr-8">
                                 <div className="flex items-start justify-between gap-2 mb-2">
                                   <div>
                                     <h4 className="font-semibold text-sm md:text-base capitalize">
