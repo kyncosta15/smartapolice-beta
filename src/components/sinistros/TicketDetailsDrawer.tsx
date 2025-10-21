@@ -27,6 +27,10 @@ import {
   Clock,
   Tag,
 } from 'lucide-react';
+import { EditTicketModal } from '@/components/tickets/EditTicketModal';
+import { Ticket } from '@/types/tickets';
+import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
 interface TicketDetailsDrawerProps {
   open: boolean;
@@ -43,6 +47,10 @@ export function TicketDetailsDrawer({
 }: TicketDetailsDrawerProps) {
   const [ticket, setTicket] = useState<Claim | Assistance | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (open && ticketId) {
@@ -97,6 +105,48 @@ export function TicketDetailsDrawer({
       default:
         return status;
     }
+  };
+
+  const handleEditClick = () => {
+    if (!ticket) return;
+
+    const claim = ticket as Claim;
+    
+    // Converter para formato Ticket
+    const ticketData: Ticket = {
+      id: claim.id,
+      protocol_code: claim.ticket,
+      tipo: ticketType,
+      subtipo: claim.subtipo as any,
+      status: claim.status as any,
+      data_evento: claim.data_evento || new Date().toISOString(),
+      valor_estimado: claim.valor_estimado,
+      localizacao: claim.localizacao || '',
+      descricao: '',
+      gravidade: 'media' as any,
+      vehicle_id: claim.veiculo.id,
+      empresa_id: '',
+      origem: 'portal' as any,
+      payload: {},
+      created_at: claim.created_at,
+      updated_at: claim.updated_at,
+    };
+
+    setEditingTicket(ticketData);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    // Recarregar os dados do ticket
+    loadTicketDetails();
+    
+    // Invalidar queries
+    queryClient.invalidateQueries({ queryKey: ['claims'] });
+    
+    toast({
+      title: 'Sucesso',
+      description: 'Ticket atualizado com sucesso!',
+    });
   };
 
   return (
@@ -248,8 +298,8 @@ export function TicketDetailsDrawer({
                         <Tag className="h-4 w-4" />
                         Tipo de Sinistro
                       </div>
-                      <Badge variant="secondary" className="text-base font-semibold">
-                        {ticket.subtipo}
+                      <Badge variant="secondary" className="text-base font-semibold capitalize">
+                        {ticket.subtipo.replace(/_/g, ' ')}
                       </Badge>
                     </div>
                   )}
@@ -323,7 +373,7 @@ export function TicketDetailsDrawer({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Fechar
               </Button>
-              <Button variant="default">
+              <Button variant="default" onClick={handleEditClick}>
                 Editar Registro
               </Button>
             </div>
@@ -337,6 +387,14 @@ export function TicketDetailsDrawer({
           </div>
         )}
       </DialogContent>
+
+      {/* Modal de edição */}
+      <EditTicketModal
+        ticket={editingTicket}
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        onSuccess={handleEditSuccess}
+      />
     </Dialog>
   );
 }

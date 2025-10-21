@@ -14,6 +14,9 @@ import { cn } from '@/lib/utils';
 import type { Claim, Assistance, ClaimStatus } from '@/types/claims';
 import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
+import { EditTicketModal } from '@/components/tickets/EditTicketModal';
+import { useQueryClient } from '@tanstack/react-query';
+import type { Ticket } from '@/types/tickets';
 
 interface TicketsListV2Props {
   claims?: Claim[];
@@ -94,16 +97,15 @@ export function TicketsListV2({
   onDeleteClaim,
   className,
 }: TicketsListV2Props) {
-  console.log('🔍 TicketsListV2 - Props recebidos:', {
-    claimsLength: claims.length,
-    assistancesLength: assistances.length,
-    loading
-  });
-  
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isLoadingTicket, setIsLoadingTicket] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   // Detectar se os dados já vêm filtrados (usado para esconder filtros desnecessários)
   const isPreFiltered = (claims.length === 0 && assistances.length > 0) || 
@@ -111,7 +113,6 @@ export function TicketsListV2({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { toast } = useToast();
   const [sortDescriptor, setSortDescriptor] = useState<{
     column: string;
     direction: 'ascending' | 'descending';
@@ -226,6 +227,63 @@ export function TicketsListV2({
     }
   };
 
+  const handleEditClick = async (itemId: string) => {
+    setIsLoadingTicket(true);
+    try {
+      const item = allItems.find(i => i.id === itemId);
+      if (!item) return;
+
+      // Buscar dados completos do banco
+      const fullClaim = await ClaimsService.getClaimById(itemId);
+      
+      // Converter para formato de Ticket
+      const ticket: Ticket = {
+        id: fullClaim.id,
+        protocol_code: fullClaim.ticket,
+        tipo: item.type,
+        subtipo: (fullClaim.subtipo || '') as any,
+        status: fullClaim.status as any,
+        data_evento: fullClaim.data_evento || new Date().toISOString(),
+        valor_estimado: fullClaim.valor_estimado,
+        localizacao: fullClaim.localizacao || '',
+        descricao: '',
+        gravidade: 'media' as any,
+        vehicle_id: fullClaim.veiculo.id,
+        empresa_id: '',
+        origem: 'portal' as any,
+        payload: {},
+        created_at: fullClaim.created_at,
+        updated_at: fullClaim.updated_at,
+      };
+
+      setEditingTicket(ticket);
+      setIsEditModalOpen(true);
+      
+      if (onEditClaim) {
+        onEditClaim(itemId);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar ticket:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os dados do ticket.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingTicket(false);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    // Invalidar queries para recarregar dados
+    queryClient.invalidateQueries({ queryKey: ['claims'] });
+    
+    toast({
+      title: 'Sucesso',
+      description: 'Ticket atualizado com sucesso!',
+    });
+  };
+
   const confirmDelete = async () => {
     setIsDeleting(true);
     try {
@@ -245,6 +303,9 @@ export function TicketsListV2({
           }
         }
       }
+
+      // Invalidar queries para recarregar dados
+      queryClient.invalidateQueries({ queryKey: ['claims'] });
 
       toast({
         title: 'Sucesso',
@@ -354,7 +415,7 @@ export function TicketsListV2({
                   id: 'edit',
                   label: 'Editar',
                   icon: <Edit className="h-4 w-4" />,
-                  onClick: () => onEditClaim?.(item.id),
+                  onClick: () => handleEditClick(item.id),
                 },
                 {
                   id: 'delete',
@@ -500,6 +561,14 @@ export function TicketsListV2({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit ticket modal */}
+      <EditTicketModal
+        ticket={editingTicket}
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }

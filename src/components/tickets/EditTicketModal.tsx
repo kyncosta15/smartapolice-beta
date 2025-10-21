@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -40,11 +40,11 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
       setFormData({
         subtipo: ticket.subtipo || '',
         status: ticket.status,
-        data_evento: ticket.data_evento ? new Date(ticket.data_evento) : new Date(),
+        data_evento: ticket.data_evento ? parseISO(ticket.data_evento) : new Date(),
         valor_estimado: ticket.valor_estimado?.toString() || '',
         localizacao: ticket.localizacao || '',
-        descricao: ticket.descricao || '',
-        gravidade: ticket.gravidade || 'media',
+        descricao: ticket.descricao || (ticket.payload?.descricao) || '',
+        gravidade: ticket.gravidade || (ticket.payload?.gravidade) || 'media',
       });
     }
   }, [ticket]);
@@ -54,7 +54,6 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
     if (!ticket) return;
 
     setIsLoading(true);
-    console.log('📝 Editando ticket:', ticket.id, formData);
 
     try {
       const updateData: any = {
@@ -76,12 +75,7 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
         .update(updateData)
         .eq('id', ticket.id);
 
-      if (error) {
-        console.error('❌ Erro ao atualizar ticket:', error);
-        throw error;
-      }
-
-      console.log('✅ Ticket atualizado com sucesso');
+      if (error) throw error;
 
       toast({
         title: 'Sucesso',
