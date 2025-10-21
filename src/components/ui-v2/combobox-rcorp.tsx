@@ -73,11 +73,19 @@ export function ComboboxRCorp({
 
   const selectedItem = items.find(item => item.id === selectedKey);
 
+  // Prevent calling onSelectionChange with null during typing
+  const handleSelectionChange = (key: Key | null) => {
+    // Only call onSelectionChange if key is not null or if we're explicitly clearing
+    if (key !== null || selectedKey !== null) {
+      onSelectionChange?.(key)
+    }
+  }
+
   return (
     <ComboBox
       className={cn("group flex flex-col gap-1", className)}
       selectedKey={selectedKey}
-      onSelectionChange={onSelectionChange}
+      onSelectionChange={handleSelectionChange}
       inputValue={inputValue}
       onInputChange={onInputChange}
       allowsCustomValue={allowsCustomValue}

@@ -50,12 +50,20 @@ export function ComboboxRCorp({
   // Don't filter locally if items already come filtered from backend
   const displayItems = disableLocalFiltering ? items : items;
 
+  // Prevent calling onSelectionChange with null during typing
+  const handleSelectionChange = (key: string | number | null) => {
+    // Only call onSelectionChange if key is not null or if we're explicitly clearing
+    if (key !== null || selectedKey !== null) {
+      onSelectionChange?.(key)
+    }
+  }
+
   return (
     <ComboBox
       inputValue={inputValue}
       onInputChange={onInputChange}
       selectedKey={selectedKey}
-      onSelectionChange={onSelectionChange}
+      onSelectionChange={handleSelectionChange}
       isDisabled={isDisabled}
       className={cn('relative w-full', className)}
       menuTrigger="input"
