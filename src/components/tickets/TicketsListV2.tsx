@@ -44,12 +44,12 @@ const columns: TableColumn[] = [
   {
     key: 'select',
     name: '',
-    width: 50,
+    width: 48,
   },
   {
     key: 'ticketNumber',
     name: 'Ticket',
-    width: 120,
+    width: 110,
     isRowHeader: true,
   },
   {
@@ -60,28 +60,28 @@ const columns: TableColumn[] = [
   {
     key: 'veiculo',
     name: 'Veículo',
-    width: 200,
+    width: 280,
   },
   {
     key: 'status',
     name: 'Status',
-    width: 120,
+    width: 110,
   },
   {
     key: 'valor_estimado',
     name: 'Valor',
-    width: 120,
+    width: 130,
   },
   {
     key: 'created_at',
     name: 'Data',
-    width: 120,
+    width: 110,
     allowsSorting: true,
   },
   {
     key: 'actions',
     name: 'Ações',
-    width: 80,
+    width: 70,
   },
 ];
 
@@ -97,14 +97,7 @@ export function TicketsListV2({
   console.log('🔍 TicketsListV2 - Props recebidos:', {
     claimsLength: claims.length,
     assistancesLength: assistances.length,
-    loading,
-    claimsPreview: claims.slice(0, 2),
-    assistancesPreview: assistances.slice(0, 2)
-  });
-  
-  console.log('🔍 TicketsListV2 - Primeiros registros completos:', {
-    firstClaim: claims[0],
-    firstAssistance: assistances[0]
+    loading
   });
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -146,13 +139,6 @@ export function TicketsListV2({
     }));
 
     const result = [...claimItems, ...assistanceItems];
-    
-    console.log('🔍 TicketsListV2 - allItems transformados:', {
-      claimItemsLength: claimItems.length,
-      assistanceItemsLength: assistanceItems.length,
-      totalItems: result.length,
-      firstItem: result[0]
-    });
 
     return result;
   }, [claims, assistances]);
@@ -189,7 +175,7 @@ export function TicketsListV2({
 
   // Sort items
   const sortedItems = useMemo(() => {
-    const result = [...filteredItems].sort((a, b) => {
+    return [...filteredItems].sort((a, b) => {
       const { column, direction } = sortDescriptor;
       const aValue = a[column as keyof TicketItem];
       const bValue = b[column as keyof TicketItem];
@@ -200,13 +186,6 @@ export function TicketsListV2({
 
       return direction === 'ascending' ? comparison : -comparison;
     });
-    
-    console.log('🔍 TicketsListV2 - sortedItems:', {
-      length: result.length,
-      items: result
-    });
-    
-    return result;
   }, [filteredItems, sortDescriptor]);
 
   const handleSort = (descriptor: { column: any; direction: 'ascending' | 'descending' }) => {
@@ -290,17 +269,10 @@ export function TicketsListV2({
   const renderCell = (item: TicketItem, columnKey: any) => {
     const key = String(columnKey);
     
-    console.log('🔍 TicketsListV2 - renderCell chamado:', {
-      itemId: item.id,
-      itemType: item.type,
-      columnKey: key,
-      item: item
-    });
-    
     switch (key) {
       case 'select':
         return (
-          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-center h-full" onClick={(e) => e.stopPropagation()}>
             <Checkbox
               checked={selectedIds.has(item.id)}
               onCheckedChange={() => toggleSelectItem(item.id)}
@@ -310,23 +282,26 @@ export function TicketsListV2({
         
       case 'ticketNumber':
         return (
-          <div className="font-medium">
-            #{item.ticketNumber}
+          <div className="font-mono font-semibold text-sm">
+            {item.ticketNumber}
           </div>
         );
         
       case 'type':
         return (
-          <Badge variant={item.type === 'sinistro' ? 'destructive' : 'secondary'}>
+          <Badge 
+            variant={item.type === 'sinistro' ? 'destructive' : 'secondary'}
+            className="font-medium"
+          >
             {item.type === 'sinistro' ? 'Sinistro' : 'Assistência'}
           </Badge>
         );
         
       case 'veiculo':
         return (
-          <div>
-            <div className="font-medium">{item.veiculo.placa}</div>
-            <div className="text-sm text-muted-foreground">
+          <div className="space-y-0.5">
+            <div className="font-medium text-sm">{item.veiculo.placa}</div>
+            <div className="text-xs text-muted-foreground line-clamp-1">
               {item.veiculo.marca} {item.veiculo.modelo}
             </div>
           </div>
@@ -334,7 +309,7 @@ export function TicketsListV2({
         
       case 'status':
         return (
-          <Badge variant={item.statusVariant}>
+          <Badge variant={item.statusVariant} className="font-medium">
             {item.displayStatus}
           </Badge>
         );
@@ -342,7 +317,7 @@ export function TicketsListV2({
       case 'valor_estimado':
         if ('valor_estimado' in item && item.valor_estimado) {
           return (
-            <div className="text-right">
+            <div className="font-medium text-sm tabular-nums">
               {new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
                 currency: 'BRL',
@@ -350,11 +325,11 @@ export function TicketsListV2({
             </div>
           );
         }
-        return <div className="text-muted-foreground text-center">-</div>;
+        return <div className="text-muted-foreground text-sm">-</div>;
         
       case 'created_at':
         return (
-          <div className="text-sm">
+          <div className="text-sm tabular-nums">
             {format(new Date(item.created_at), 'dd/MM/yyyy', { locale: ptBR })}
           </div>
         );
@@ -364,10 +339,7 @@ export function TicketsListV2({
           <div onClick={(e) => e.stopPropagation()}>
             <DropdownRCorp
               trigger={
-                <Button variant="ghost" size="sm" onClick={(e) => {
-                  e.stopPropagation();
-                  console.log('🔍 Actions button clicked:', item.id);
-                }}>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               }
@@ -376,29 +348,20 @@ export function TicketsListV2({
                   id: 'view',
                   label: 'Visualizar',
                   icon: <Eye className="h-4 w-4" />,
-                  onClick: () => {
-                    console.log('🔍 Visualizar clicked:', item.id, onViewClaim);
-                    onViewClaim?.(item.id);
-                  },
+                  onClick: () => onViewClaim?.(item.id),
                 },
                 {
                   id: 'edit',
                   label: 'Editar',
                   icon: <Edit className="h-4 w-4" />,
-                  onClick: () => {
-                    console.log('🔍 Editar clicked:', item.id);
-                    onEditClaim?.(item.id);
-                  },
+                  onClick: () => onEditClaim?.(item.id),
                 },
                 {
                   id: 'delete',
                   label: 'Excluir',
                   icon: <Trash2 className="h-4 w-4" />,
                   variant: 'destructive',
-                  onClick: () => {
-                    console.log('🔍 Excluir clicked:', item.id);
-                    handleDeleteClick(item.id);
-                  },
+                  onClick: () => handleDeleteClick(item.id),
                 },
               ]}
             />

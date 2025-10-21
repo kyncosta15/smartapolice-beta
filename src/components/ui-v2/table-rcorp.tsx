@@ -60,13 +60,6 @@ export function TableRCorp<T extends Record<string, any>>({
   getRowId,
   density = 'normal',
 }: TableRCorpProps<T>) {
-  console.log('🔍 TableRCorp - Props recebidos:', {
-    itemsLength: items.length,
-    isLoading,
-    columnsLength: columns.length,
-    firstItem: items[0]
-  });
-
   const densityClasses = {
     compact: 'text-xs',
     normal: 'text-sm',
@@ -74,9 +67,9 @@ export function TableRCorp<T extends Record<string, any>>({
   };
 
   const rowPadding = {
-    compact: 'px-2 py-1',
-    normal: 'px-4 py-2',
-    spacious: 'px-6 py-3',
+    compact: 'px-3 py-2',
+    normal: 'px-4 py-3',
+    spacious: 'px-6 py-4',
   };
 
   if (isLoading) {
@@ -101,7 +94,7 @@ export function TableRCorp<T extends Record<string, any>>({
   }
 
   return (
-    <ResizableTableContainer className={cn("rounded-md border overflow-auto", className)}>
+    <ResizableTableContainer className={cn("rounded-lg border border-border bg-background shadow-sm", className)}>
       <Table
         aria-label="Tabela de tickets"
         className="w-full"
@@ -123,9 +116,8 @@ export function TableRCorp<T extends Record<string, any>>({
               minWidth={column.minWidth}
               maxWidth={column.maxWidth}
               className={cn(
-                "px-4 py-3 text-left font-medium text-muted-foreground border-b",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                densityClasses[density],
+                "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50 border-b border-border",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 column.className
               )}
             >
@@ -133,17 +125,17 @@ export function TableRCorp<T extends Record<string, any>>({
                 <div className="flex items-center gap-2">
                   <span className="truncate">{column.name}</span>
                   {allowsSorting && (
-                    <span className="flex flex-col">
+                    <span className="flex flex-col -space-y-1">
                       <ChevronUp
                         className={cn(
-                          "h-3 w-3 -mb-1",
-                          sortDirection === 'ascending' ? "text-foreground" : "text-muted-foreground/50"
+                          "h-3 w-3",
+                          sortDirection === 'ascending' ? "text-foreground" : "text-muted-foreground/30"
                         )}
                       />
                       <ChevronDown
                         className={cn(
                           "h-3 w-3",
-                          sortDirection === 'descending' ? "text-foreground" : "text-muted-foreground/50"
+                          sortDirection === 'descending' ? "text-foreground" : "text-muted-foreground/30"
                         )}
                       />
                     </span>
@@ -156,28 +148,23 @@ export function TableRCorp<T extends Record<string, any>>({
         <TableBody items={items}>
           {(item) => {
             const rowId = getRowId?.(item) ?? String(item.id);
-            console.log('🔍 TableRCorp - Renderizando Row:', { rowId, item, columns: columns.map(c => c.key) });
             
             return (
-              <Row id={rowId}>
+              <Row id={rowId} className="group hover:bg-muted/30 transition-colors border-b border-border last:border-0">
                 {columns.map((column) => {
-                  console.log('🔍 TableRCorp - Renderizando Cell manual:', { 
-                    columnKey: column.key,
-                    hasRenderCell: !!renderCell
-                  });
-                  
                   const cellContent = renderCell 
                     ? renderCell(item, column.key as unknown as Key) 
                     : item[column.key];
                   
-                  console.log('🔍 TableRCorp - Cell content gerado:', { 
-                    columnKey: column.key,
-                    content: cellContent,
-                    type: typeof cellContent
-                  });
-                  
                   return (
-                    <Cell key={column.key}>
+                    <Cell 
+                      key={column.key}
+                      className={cn(
+                        rowPadding[density],
+                        "align-middle",
+                        densityClasses[density]
+                      )}
+                    >
                       {cellContent}
                     </Cell>
                   );
