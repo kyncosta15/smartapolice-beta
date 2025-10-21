@@ -15,6 +15,7 @@ import type { Claim, Assistance, ClaimStatus } from '@/types/claims';
 import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
 import { EditTicketModal } from '@/components/tickets/EditTicketModal';
+import { StatusStepperModal } from '@/components/sinistros/StatusStepperModal';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Ticket } from '@/types/tickets';
 
@@ -104,6 +105,9 @@ export function TicketsListV2({
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoadingTicket, setIsLoadingTicket] = useState(false);
+  const [statusStepperOpen, setStatusStepperOpen] = useState(false);
+  const [statusStepperTicketId, setStatusStepperTicketId] = useState<string | null>(null);
+  const [statusStepperType, setStatusStepperType] = useState<'sinistro' | 'assistencia'>('sinistro');
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -284,6 +288,12 @@ export function TicketsListV2({
     });
   };
 
+  const handleStatusTrackingClick = (itemId: string, type: 'sinistro' | 'assistencia') => {
+    setStatusStepperTicketId(itemId);
+    setStatusStepperType(type);
+    setStatusStepperOpen(true);
+  };
+
   const confirmDelete = async () => {
     setIsDeleting(true);
     try {
@@ -410,6 +420,12 @@ export function TicketsListV2({
                   label: 'Visualizar',
                   icon: <Eye className="h-4 w-4" />,
                   onClick: () => onViewClaim?.(item.id),
+                },
+                {
+                  id: 'track',
+                  label: 'Acompanhar Status',
+                  icon: <FileText className="h-4 w-4" />,
+                  onClick: () => handleStatusTrackingClick(item.id, item.type),
                 },
                 {
                   id: 'edit',
@@ -568,6 +584,14 @@ export function TicketsListV2({
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
         onSuccess={handleEditSuccess}
+      />
+
+      {/* Status tracking modal */}
+      <StatusStepperModal
+        open={statusStepperOpen}
+        onOpenChange={setStatusStepperOpen}
+        ticketId={statusStepperTicketId}
+        ticketType={statusStepperType}
       />
     </div>
   );

@@ -28,6 +28,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { EditTicketModal } from '@/components/tickets/EditTicketModal';
+import { StatusStepperModal } from '@/components/sinistros/StatusStepperModal';
 import { Ticket } from '@/types/tickets';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +52,7 @@ export function TicketDetailsDrawer({
   const [loading, setLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+  const [statusStepperOpen, setStatusStepperOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -380,6 +382,14 @@ export function TicketDetailsDrawer({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Fechar
               </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => setStatusStepperOpen(true)}
+                className="gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Acompanhar Status
+              </Button>
               <Button variant="default" onClick={handleEditClick}>
                 Editar Registro
               </Button>
@@ -402,6 +412,16 @@ export function TicketDetailsDrawer({
         onOpenChange={setIsEditModalOpen}
         onSuccess={handleEditSuccess}
       />
+
+      {/* Modal de acompanhamento de status */}
+      {ticket && (
+        <StatusStepperModal
+          open={statusStepperOpen}
+          onOpenChange={setStatusStepperOpen}
+          ticketId={ticket.id}
+          ticketType={ticketType}
+        />
+      )}
     </Dialog>
   );
 }
