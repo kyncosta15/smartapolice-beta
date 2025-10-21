@@ -439,7 +439,7 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
               ) : (
                 <Wrench className="h-5 w-5 text-blue-600" />
               )}
-              Detalhes - {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id?.slice(0, 8)}
+              {selectedTicket?.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'} #{selectedTicket?.id?.slice(0, 8)}
             </DialogTitle>
           </DialogHeader>
 
@@ -450,25 +450,21 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
                 <div className="space-y-3">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <Car className="h-5 w-5" />
-                    Informações do Veículo
+                    Veículo
                   </h3>
-                  <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border">
                     <div>
                       <p className="text-sm text-muted-foreground">Placa</p>
-                      <p className="font-medium">{selectedTicket.vehicle.placa}</p>
+                      <p className="font-medium">{selectedTicket.vehicle.placa || 'N/A'}</p>
                     </div>
-                    {selectedTicket.vehicle.marca && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Marca</p>
-                        <p className="font-medium">{selectedTicket.vehicle.marca}</p>
-                      </div>
-                    )}
-                    {selectedTicket.vehicle.modelo && (
-                      <div className="col-span-2">
-                        <p className="text-sm text-muted-foreground">Modelo</p>
-                        <p className="font-medium">{selectedTicket.vehicle.modelo}</p>
-                      </div>
-                    )}
+                    <div>
+                      <p className="text-sm text-muted-foreground">Marca</p>
+                      <p className="font-medium">{selectedTicket.vehicle.marca || 'N/A'}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-sm text-muted-foreground">Modelo</p>
+                      <p className="font-medium">{selectedTicket.vehicle.modelo || 'N/A'}</p>
+                    </div>
                     {selectedTicket.vehicle.status_seguro && (
                       <div>
                         <p className="text-sm text-muted-foreground">Status Seguro</p>
@@ -479,17 +475,10 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
                 </div>
               )}
 
-              {/* Detalhes do Sinistro/Assistência */}
+              {/* Informações Gerais */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  {selectedTicket.tipo === 'sinistro' ? (
-                    <AlertTriangle className="h-5 w-5 text-red-600" />
-                  ) : (
-                    <Wrench className="h-5 w-5 text-blue-600" />
-                  )}
-                  Detalhes do {selectedTicket.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'}
-                </h3>
-                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                <h3 className="text-lg font-semibold">Informações</h3>
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border">
                   {selectedTicket.subtipo && (
                     <div>
                       <p className="text-sm text-muted-foreground">Categoria</p>
@@ -537,7 +526,7 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
                 </div>
 
                 {selectedTicket.descricao && (
-                  <div className="p-4 bg-muted/30 rounded-lg">
+                  <div className="p-4 bg-muted/30 rounded-lg border">
                     <p className="text-sm text-muted-foreground mb-2">Descrição</p>
                     <p className="text-sm whitespace-pre-wrap">{selectedTicket.descricao}</p>
                   </div>
