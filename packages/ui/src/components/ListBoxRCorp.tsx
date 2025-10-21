@@ -55,11 +55,11 @@ function OptionItem({ item, state }: OptionItemProps) {
       {...optionProps}
       ref={ref}
       className={cn(
-        'relative flex cursor-default select-none items-center px-3 py-2 text-sm outline-none',
+        'relative flex cursor-pointer select-none items-center px-3 py-2 text-sm outline-none transition-colors',
         'hover:bg-accent hover:text-accent-foreground',
         isFocused && 'bg-accent text-accent-foreground',
         isPressed && 'bg-accent/80',
-        item.isDisabled && 'pointer-events-none opacity-50'
+        item.isDisabled && 'pointer-events-none opacity-50 cursor-not-allowed'
       )}
     >
       <div className="flex-1">

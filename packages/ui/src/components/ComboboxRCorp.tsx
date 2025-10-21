@@ -94,6 +94,13 @@ export function ComboboxRCorp({
     onFocus: () => state.open(),
   })
 
+  // Abrir automaticamente quando o usuário digitar
+  React.useEffect(() => {
+    if (inputValue && inputValue.length > 0) {
+      state.open()
+    }
+  }, [inputValue, state])
+
   return (
     <div className={cn('relative w-full', className)}>
       {label && (
