@@ -38,6 +38,9 @@ export type Claim = {
   apolice?: Policy | null;
   status: ClaimStatus;
   valor_estimado?: number;
+  data_evento?: string;
+  localizacao?: string;
+  subtipo?: string;
   created_at: string;
   updated_at: string;
   ultima_movimentacao?: string; // ISO date

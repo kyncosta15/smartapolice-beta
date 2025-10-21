@@ -244,6 +244,9 @@ export class ClaimsService {
         },
         status: mappedStatus as 'aberto' | 'em_regulacao' | 'finalizado',
         valor_estimado: ticket.valor_estimado ? Number(ticket.valor_estimado) : undefined,
+        data_evento: ticket.data_evento,
+        localizacao: ticket.localizacao,
+        subtipo: ticket.subtipo,
         created_at: ticket.created_at,
         updated_at: ticket.updated_at
       } as Claim;

@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,8 @@ import {
   FileText,
   Loader2,
   X,
+  Clock,
+  Tag,
 } from 'lucide-react';
 
 interface TicketDetailsDrawerProps {
@@ -56,7 +59,6 @@ export function TicketDetailsDrawer({
         const claim = await ClaimsService.getClaimById(ticketId);
         setTicket(claim);
       } else {
-        // Para assistências, buscar da mesma forma
         const assistance = await ClaimsService.getClaimById(ticketId);
         setTicket(assistance as any);
       }
@@ -76,7 +78,6 @@ export function TicketDetailsDrawer({
       case 'aberto':
         return 'destructive';
       case 'em_regulacao':
-      case 'em_analise':
         return 'secondary';
       case 'finalizado':
         return 'default';
@@ -85,16 +86,33 @@ export function TicketDetailsDrawer({
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'aberto':
+        return 'Aberto';
+      case 'em_regulacao':
+        return 'Em Regulação';
+      case 'finalizado':
+        return 'Finalizado';
+      default:
+        return status;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-3 text-2xl">
               {ticketType === 'sinistro' ? (
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                  <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                </div>
               ) : (
-                <Wrench className="h-6 w-6 text-green-600" />
+                <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                  <Wrench className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
               )}
               <span>Detalhes do {ticketType === 'sinistro' ? 'Sinistro' : 'Assistência'}</span>
             </DialogTitle>
@@ -102,61 +120,79 @@ export function TicketDetailsDrawer({
               <X className="h-4 w-4" />
             </Button>
           </div>
+          <DialogDescription>
+            Informações completas do registro
+          </DialogDescription>
         </DialogHeader>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Carregando informações...</p>
           </div>
         ) : ticket ? (
-          <div className="space-y-6">
-            {/* Informações principais */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Protocolo</div>
-                <div className="font-mono font-semibold text-lg">
-                  {'ticket' in ticket ? ticket.ticket : `ASS-${ticket.id.slice(0, 8)}`}
+          <div className="space-y-6 py-4">
+            {/* Card com informações principais */}
+            <div className="bg-gradient-to-r from-muted/50 to-muted/30 rounded-xl p-6 space-y-4 border">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    Protocolo
+                  </div>
+                  <div className="font-mono font-bold text-xl text-foreground">
+                    {'ticket' in ticket ? ticket.ticket : `ASS-${ticket.id.slice(0, 8)}`}
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Status</div>
-                <Badge variant={getStatusColor(ticket.status)} className="text-sm">
-                  {ticket.status === 'aberto' && 'Aberto'}
-                  {ticket.status === 'em_regulacao' && 'Em Regulação'}
-                  {ticket.status === 'finalizado' && 'Finalizado'}
-                </Badge>
+                <div className="space-y-2">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    Status Atual
+                  </div>
+                  <Badge variant={getStatusColor(ticket.status)} className="text-sm font-semibold">
+                    {getStatusLabel(ticket.status)}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    Data de Abertura
+                  </div>
+                  <div className="font-medium text-base">
+                    {format(new Date(ticket.created_at), 'dd/MM/yyyy HH:mm', {
+                      locale: ptBR,
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <Separator />
-
             {/* Informações do veículo */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                <Car className="h-5 w-5" />
-                <span>Veículo</span>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-lg font-bold text-foreground">
+                <Car className="h-5 w-5 text-primary" />
+                <span>Informações do Veículo</span>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/50 p-4 rounded-lg">
-                <div className="space-y-1">
-                  <div className="text-sm text-muted-foreground">Placa</div>
-                  <div className="font-semibold text-base">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-card border rounded-lg p-5">
+                <div className="space-y-1.5">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide">Placa</div>
+                  <div className="font-bold text-lg tracking-wider">
                     {ticket.veiculo.placa}
                   </div>
                 </div>
                 {ticket.veiculo.marca && (
-                  <div className="space-y-1">
-                    <div className="text-sm text-muted-foreground">Marca/Modelo</div>
-                    <div className="font-medium">
+                  <div className="space-y-1.5">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Marca/Modelo</div>
+                    <div className="font-semibold text-base">
                       {ticket.veiculo.marca} {ticket.veiculo.modelo}
                     </div>
                   </div>
                 )}
                 {ticket.veiculo.proprietario_nome && (
-                  <div className="space-y-1 md:col-span-2">
-                    <div className="text-sm text-muted-foreground">Proprietário</div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Proprietário</div>
                     <div className="font-medium flex items-center gap-2">
-                      <User className="h-4 w-4" />
+                      <User className="h-4 w-4 text-muted-foreground" />
                       {ticket.veiculo.proprietario_nome}
                     </div>
                   </div>
@@ -164,105 +200,140 @@ export function TicketDetailsDrawer({
               </div>
             </div>
 
+            <Separator />
+
             {/* Informações específicas do sinistro */}
             {isClaim(ticket) && (
-              <>
-                <Separator />
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-lg font-semibold">
-                    <FileText className="h-5 w-5" />
-                    <span>Informações do Sinistro</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {ticket.valor_estimado && (
-                      <div className="space-y-1">
-                        <div className="text-sm text-muted-foreground flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          Valor Estimado
-                        </div>
-                        <div className="font-semibold text-lg text-green-600">
-                          {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                          }).format(ticket.valor_estimado)}
-                        </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-lg font-bold text-foreground">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <span>Detalhes do Sinistro</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Valor estimado */}
+                  {ticket.valor_estimado && (
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 rounded-lg p-5 space-y-2">
+                      <div className="text-xs text-green-700 dark:text-green-400 uppercase tracking-wide font-semibold flex items-center gap-1">
+                        <DollarSign className="h-4 w-4" />
+                        Valor Estimado do Sinistro
                       </div>
-                    )}
-                    <div className="space-y-1">
-                      <div className="text-sm text-muted-foreground flex items-center gap-1">
+                      <div className="font-bold text-2xl text-green-700 dark:text-green-400">
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(ticket.valor_estimado)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Data do evento */}
+                  {ticket.data_evento && (
+                    <div className="bg-card border rounded-lg p-5 space-y-2">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        Data de Abertura
+                        Data do Evento/Sinistro
                       </div>
-                      <div className="font-medium">
-                        {format(new Date(ticket.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                      <div className="font-semibold text-lg">
+                        {format(new Date(ticket.data_evento), "dd/MM/yyyy 'às' HH:mm", {
                           locale: ptBR,
                         })}
                       </div>
                     </div>
-                    {ticket.updated_at && ticket.updated_at !== ticket.created_at && (
-                      <div className="space-y-1">
-                        <div className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          Última Atualização
-                        </div>
-                        <div className="font-medium">
-                          {format(new Date(ticket.updated_at), "dd/MM/yyyy 'às' HH:mm", {
-                            locale: ptBR,
-                          })}
-                        </div>
+                  )}
+
+                  {/* Subtipo */}
+                  {ticket.subtipo && (
+                    <div className="bg-card border rounded-lg p-5 space-y-2">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                        <Tag className="h-4 w-4" />
+                        Tipo de Sinistro
                       </div>
-                    )}
-                  </div>
+                      <Badge variant="secondary" className="text-base font-semibold">
+                        {ticket.subtipo}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Localização */}
+                  {ticket.localizacao && (
+                    <div className="bg-card border rounded-lg p-5 space-y-2">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        Local do Sinistro
+                      </div>
+                      <div className="font-medium text-base">
+                        {ticket.localizacao}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Última atualização */}
+                  {ticket.updated_at && ticket.updated_at !== ticket.created_at && (
+                    <div className="bg-card border rounded-lg p-5 space-y-2">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        Última Atualização
+                      </div>
+                      <div className="font-medium text-base">
+                        {format(new Date(ticket.updated_at), "dd/MM/yyyy 'às' HH:mm", {
+                          locale: ptBR,
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </>
+              </div>
             )}
 
             {/* Informações específicas da assistência */}
             {!isClaim(ticket) && 'tipo' in ticket && (
-              <>
-                <Separator />
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-lg font-semibold">
-                    <FileText className="h-5 w-5" />
-                    <span>Informações da Assistência</span>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-lg font-bold text-foreground">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <span>Detalhes da Assistência</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-card border rounded-lg p-5 space-y-2">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Tipo de Assistência</div>
+                    <Badge variant="secondary" className="text-base font-semibold">
+                      {ticket.tipo === 'guincho' && 'Guincho'}
+                      {ticket.tipo === 'vidro' && 'Vidro'}
+                      {ticket.tipo === 'residencia' && 'Residência'}
+                      {ticket.tipo === 'outro' && 'Outro'}
+                    </Badge>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <div className="text-sm text-muted-foreground">Tipo de Assistência</div>
-                      <Badge variant="secondary" className="text-sm">
-                        {ticket.tipo === 'guincho' && 'Guincho'}
-                        {ticket.tipo === 'vidro' && 'Vidro'}
-                        {ticket.tipo === 'residencia' && 'Residência'}
-                        {ticket.tipo === 'outro' && 'Outro'}
-                      </Badge>
+                  <div className="bg-card border rounded-lg p-5 space-y-2">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      Data de Solicitação
                     </div>
-                    <div className="space-y-1">
-                      <div className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        Data de Solicitação
-                      </div>
-                      <div className="font-medium">
-                        {format(new Date(ticket.created_at), "dd/MM/yyyy 'às' HH:mm", {
-                          locale: ptBR,
-                        })}
-                      </div>
+                    <div className="font-semibold text-base">
+                      {format(new Date(ticket.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                        locale: ptBR,
+                      })}
                     </div>
                   </div>
                 </div>
-              </>
+              </div>
             )}
 
             {/* Ações */}
             <Separator />
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Fechar
+              </Button>
+              <Button variant="default">
+                Editar Registro
               </Button>
             </div>
           </div>
         ) : (
-          <div className="text-center py-12 text-muted-foreground">
-            Nenhum dado encontrado
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <FileText className="h-16 w-16 text-muted-foreground/50" />
+            <p className="text-center text-muted-foreground font-medium">
+              Nenhum dado encontrado
+            </p>
           </div>
         )}
       </DialogContent>
