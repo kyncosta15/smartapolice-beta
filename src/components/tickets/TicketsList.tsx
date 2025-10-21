@@ -477,7 +477,6 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
 
               {/* Informações Gerais */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold">Informações</h3>
                 <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border">
                   {selectedTicket.subtipo && (
                     <div>
