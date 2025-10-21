@@ -155,12 +155,20 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
 
   const confirmDelete = async () => {
     setIsDeleting(true);
+    console.log('🗑️ Iniciando deleção...', { ticketToDelete, selectedIds: Array.from(selectedIds) });
+    
     try {
       const idsToDelete = ticketToDelete ? [ticketToDelete] : Array.from(selectedIds);
+      console.log('🗑️ IDs para deletar:', idsToDelete);
       
       for (const id of idsToDelete) {
         const ticket = tickets.find(t => t.id === id);
-        if (!ticket) continue;
+        if (!ticket) {
+          console.log('❌ Ticket não encontrado:', id);
+          continue;
+        }
+
+        console.log('🗑️ Deletando ticket:', { id, tipo: ticket.tipo });
 
         if (ticket.tipo === 'sinistro') {
           if (onDeleteClaim) {
@@ -175,10 +183,14 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
             await ClaimsService.deleteAssistance(id);
           }
         }
+        
+        console.log('✅ Ticket deletado:', id);
       }
 
+      console.log('🔄 Recarregando tickets...');
       // Recarregar a lista de tickets
       await refreshTickets();
+      console.log('✅ Tickets recarregados');
 
       toast({
         title: 'Sucesso',
@@ -188,13 +200,14 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
       setSelectedIds(new Set());
       setTicketToDelete(null);
     } catch (error) {
-      console.error('Erro ao deletar:', error);
+      console.error('❌ Erro ao deletar:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível deletar os registros.',
         variant: 'destructive',
       });
     } finally {
+      console.log('🏁 Finalizando deleção');
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
     }

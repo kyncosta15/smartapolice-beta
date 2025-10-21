@@ -379,6 +379,7 @@ export class ClaimsService {
   }
 
   static async deleteClaim(id: string) {
+    console.log('🗑️ ClaimsService.deleteClaim iniciando:', id);
     try {
       const { error } = await supabase
         .from('tickets')
@@ -386,16 +387,21 @@ export class ClaimsService {
         .eq('id', id)
         .eq('tipo', 'sinistro');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao deletar sinistro:', error);
+        throw error;
+      }
 
+      console.log('✅ Sinistro deletado com sucesso:', id);
       return { success: true };
     } catch (error) {
-      console.error('Erro ao deletar sinistro:', error);
+      console.error('❌ Erro ao deletar sinistro:', error);
       throw error;
     }
   }
 
   static async deleteAssistance(id: string) {
+    console.log('🗑️ ClaimsService.deleteAssistance iniciando:', id);
     try {
       const { error } = await supabase
         .from('tickets')
@@ -403,11 +409,15 @@ export class ClaimsService {
         .eq('id', id)
         .eq('tipo', 'assistencia');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao deletar assistência:', error);
+        throw error;
+      }
 
+      console.log('✅ Assistência deletada com sucesso:', id);
       return { success: true };
     } catch (error) {
-      console.error('Erro ao deletar assistência:', error);
+      console.error('❌ Erro ao deletar assistência:', error);
       throw error;
     }
   }

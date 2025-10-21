@@ -250,27 +250,35 @@ export function useTicketsData() {
   const deleteTicket = async (ticketId: string) => {
     if (!user?.id) return;
 
+    console.log('🗑️ useTicketsData.deleteTicket iniciando:', ticketId);
+    
     try {
       const { error } = await supabase
         .from('tickets')
         .delete()
         .eq('id', ticketId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro na deleção:', error);
+        throw error;
+      }
 
+      console.log('✅ Ticket deletado, recarregando lista...');
       await loadTickets();
+      console.log('✅ Lista recarregada');
 
       toast({
         title: "Sucesso",
         description: "Ticket deletado com sucesso!",
       });
     } catch (error) {
-      console.error('Erro ao deletar ticket:', error);
+      console.error('❌ Erro ao deletar ticket:', error);
       toast({
         title: "Erro",
         description: "Não foi possível deletar o ticket",
         variant: "destructive",
       });
+      throw error; // Re-throw para o componente saber que falhou
     }
   };
 
