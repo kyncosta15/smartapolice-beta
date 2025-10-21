@@ -462,12 +462,6 @@ export function TicketsListV2({
               }
               items={[
                 {
-                  id: 'view',
-                  label: 'Visualizar',
-                  icon: <Eye className="h-4 w-4" />,
-                  onClick: () => onViewClaim?.(item.id),
-                },
-                {
                   id: 'track',
                   label: 'Acompanhar Status',
                   icon: <FileText className="h-4 w-4" />,
