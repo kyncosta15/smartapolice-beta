@@ -60,6 +60,13 @@ export function TableRCorp<T extends Record<string, any>>({
   getRowId,
   density = 'normal',
 }: TableRCorpProps<T>) {
+  console.log('🔍 TableRCorp - Props recebidos:', {
+    itemsLength: items.length,
+    isLoading,
+    columnsLength: columns.length,
+    firstItem: items[0]
+  });
+
   const densityClasses = {
     compact: 'text-xs',
     normal: 'text-sm',
