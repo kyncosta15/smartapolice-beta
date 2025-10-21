@@ -75,19 +75,6 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs, onViewSinistros, tick
         <Eye className="h-3 w-3" />
         <span className="sr-only">Ver detalhes</span>
       </Button>
-
-      {ticketCount > 0 && onViewSinistros && (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onViewSinistros(veiculo.id)}
-          className="h-8 px-3 relative bg-red-50 border-red-300 hover:bg-red-100"
-        >
-          <AlertTriangle className="h-3 w-3 text-red-600" />
-          <span className="ml-1 text-xs font-medium text-red-700">{ticketCount}</span>
-          <span className="sr-only">Ver sinistros</span>
-        </Button>
-      )}
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
