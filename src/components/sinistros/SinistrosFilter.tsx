@@ -26,9 +26,9 @@ export function SinistrosFilter({
 }: SinistrosFilterProps) {
   const uiVersion = useUIVersion('sinistros');
 
-  // Filtrar dados baseado no tipo
-  const filteredClaims = filter === 'assistencia' ? [] : claims;
-  const filteredAssistances = filter === 'sinistro' ? [] : assistances;
+  // Filtrar dados RIGOROSAMENTE baseado no tipo selecionado
+  const filteredClaims = filter === 'sinistro' ? claims : (filter === 'todos' ? claims : []);
+  const filteredAssistances = filter === 'assistencia' ? assistances : (filter === 'todos' ? assistances : []);
 
   // Wrapper para garantir que sempre retorna Promise
   const handleDelete = async (id: string) => {

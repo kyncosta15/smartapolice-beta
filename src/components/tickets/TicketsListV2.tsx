@@ -98,6 +98,10 @@ export function TicketsListV2({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  // Detectar se os dados já vêm filtrados (usado para esconder filtros desnecessários)
+  const isPreFiltered = (claims.length === 0 && assistances.length > 0) || 
+                        (assistances.length === 0 && claims.length > 0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -407,16 +411,19 @@ export function TicketsListV2({
           />
         </div>
         
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os tipos</SelectItem>
-            <SelectItem value="sinistro">Sinistros</SelectItem>
-            <SelectItem value="assistencia">Assistências</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Mostrar filtro de tipo APENAS se os dados não estiverem pré-filtrados */}
+        {!isPreFiltered && (
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              <SelectItem value="sinistro">Sinistros</SelectItem>
+              <SelectItem value="assistencia">Assistências</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-40">
