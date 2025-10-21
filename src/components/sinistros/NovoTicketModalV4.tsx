@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -18,6 +17,33 @@ import { cn } from '@/lib/utils'
 import { Vehicle, Policy } from '@/types/claims'
 import { VehiclesService } from '@/services/vehicles'
 import { ClaimsService } from '@/services/claims'
+
+// Tipos de sinistro e assistência como dados constantes
+const TIPOS_SINISTRO: ComboboxItem[] = [
+  { id: 'colisao', label: 'Colisão' },
+  { id: 'roubo', label: 'Roubo' },
+  { id: 'furto', label: 'Furto' },
+  { id: 'avaria', label: 'Avaria' },
+  { id: 'incendio', label: 'Incêndio' },
+  { id: 'danos_terceiros', label: 'Danos a Terceiros' },
+]
+
+const TIPOS_ASSISTENCIA: ComboboxItem[] = [
+  { id: 'guincho', label: 'Guincho' },
+  { id: 'vidro', label: 'Vidro' },
+  { id: 'mecanica', label: 'Mecânica' },
+  { id: 'chaveiro', label: 'Chaveiro' },
+  { id: 'pneu', label: 'Pneu' },
+  { id: 'combustivel', label: 'Combustível' },
+  { id: 'residencia', label: 'Residência' },
+]
+
+const NIVEIS_GRAVIDADE: ComboboxItem[] = [
+  { id: 'baixa', label: 'Baixa' },
+  { id: 'media', label: 'Média' },
+  { id: 'alta', label: 'Alta' },
+  { id: 'critica', label: 'Crítica' },
+]
 
 type NovoTicketModalV4Props = {
   trigger: React.ReactNode
@@ -271,38 +297,26 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>
-                  {tipoTicket === 'sinistro' ? 'Tipo do Sinistro *' : 'Tipo de Assistência *'}
-                </Label>
                 {tipoTicket === 'sinistro' ? (
-                  <Select value={tipoSinistro} onValueChange={setTipoSinistro}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="colisao">Colisão</SelectItem>
-                      <SelectItem value="roubo">Roubo</SelectItem>
-                      <SelectItem value="furto">Furto</SelectItem>
-                      <SelectItem value="avaria">Avaria</SelectItem>
-                      <SelectItem value="incendio">Incêndio</SelectItem>
-                      <SelectItem value="danos_terceiros">Danos a Terceiros</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <ComboboxRCorp
+                    label="Tipo do Sinistro *"
+                    placeholder="Digite para buscar..."
+                    items={TIPOS_SINISTRO}
+                    selectedKey={tipoSinistro || null}
+                    onSelectionChange={(key) => setTipoSinistro(key as string || '')}
+                    isRequired
+                    allowsCustomValue={false}
+                  />
                 ) : (
-                  <Select value={tipoAssistencia} onValueChange={setTipoAssistencia}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="guincho">Guincho</SelectItem>
-                      <SelectItem value="vidro">Vidro</SelectItem>
-                      <SelectItem value="mecanica">Mecânica</SelectItem>
-                      <SelectItem value="chaveiro">Chaveiro</SelectItem>
-                      <SelectItem value="pneu">Pneu</SelectItem>
-                      <SelectItem value="combustivel">Combustível</SelectItem>
-                      <SelectItem value="residencia">Residência</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <ComboboxRCorp
+                    label="Tipo de Assistência *"
+                    placeholder="Digite para buscar..."
+                    items={TIPOS_ASSISTENCIA}
+                    selectedKey={tipoAssistencia || null}
+                    onSelectionChange={(key) => setTipoAssistencia(key as string || '')}
+                    isRequired
+                    allowsCustomValue={false}
+                  />
                 )}
               </div>
 
@@ -330,18 +344,14 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
                 </div>
 
                 <div>
-                  <Label>Gravidade</Label>
-                  <Select value={gravidade} onValueChange={setGravidade}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a gravidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="baixa">Baixa</SelectItem>
-                      <SelectItem value="media">Média</SelectItem>
-                      <SelectItem value="alta">Alta</SelectItem>
-                      <SelectItem value="critica">Crítica</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <ComboboxRCorp
+                    label="Gravidade"
+                    placeholder="Digite para buscar..."
+                    items={NIVEIS_GRAVIDADE}
+                    selectedKey={gravidade || null}
+                    onSelectionChange={(key) => setGravidade(key as string || '')}
+                    allowsCustomValue={false}
+                  />
                 </div>
               </div>
             )}
