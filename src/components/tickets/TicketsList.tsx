@@ -280,6 +280,11 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
                             {ticket.subtipo.replace('_', ' ')}
                           </p>
                         )}
+                        {ticket.vehicle && (
+                          <p className="text-sm font-medium text-primary mt-1">
+                            {ticket.vehicle.placa} • {ticket.vehicle.marca} {ticket.vehicle.modelo}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
