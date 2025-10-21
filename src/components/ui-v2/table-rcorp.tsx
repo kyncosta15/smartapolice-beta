@@ -168,8 +168,20 @@ export function TableRCorp<T extends Record<string, any>>({
                 )}
               >
                 {(columnKey) => {
+                  console.log('🔍 TableRCorp - Cell callback chamado:', { 
+                    rowId, 
+                    columnKey,
+                    hasRenderCell: !!renderCell,
+                    itemKeys: Object.keys(item)
+                  });
+                  
                   const cellContent = renderCell ? renderCell(item, columnKey as unknown as Key) : item[String(columnKey)];
-                  console.log('🔍 TableRCorp - Renderizando Cell:', { columnKey, cellContent });
+                  
+                  console.log('🔍 TableRCorp - Cell content:', { 
+                    columnKey, 
+                    cellContent,
+                    typeOfContent: typeof cellContent
+                  });
                   
                   return (
                     <Cell
