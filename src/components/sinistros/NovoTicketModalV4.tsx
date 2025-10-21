@@ -10,8 +10,7 @@ import { useUserProfile } from '@/hooks/useUserProfile'
 import { DialogRCorp } from '@/components/ui-v2/dialog-rcorp'
 import { ComboboxRCorp, type ComboboxItem } from '@/components/ui-v2/combobox-rcorp'
 import { DatePickerRCorp } from '@/components/ui-v2/datepicker-rcorp'
-import { useVehicleSearch } from '@/hooks/useVehicleSearch'
-import { CheckCircle, AlertTriangle, Car, Wrench } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Car, Wrench, Search } from 'lucide-react'
 import { today, getLocalTimeZone } from '@internationalized/date'
 import { cn } from '@/lib/utils'
 import { Vehicle, Policy } from '@/types/claims'
@@ -58,6 +57,12 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
   const [relatedPolicy, setRelatedPolicy] = useState<Policy | null | undefined>(undefined)
   const [loadingPolicy, setLoadingPolicy] = useState(false)
   
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [vehicleResults, setVehicleResults] = useState<Vehicle[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
+  
   // Form state
   const [tipoTicket, setTipoTicket] = useState<'sinistro' | 'assistencia'>(initialTipo)
   const [tipoSinistro, setTipoSinistro] = useState('')
@@ -71,44 +76,43 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
   const { toast } = useToast()
   const { activeEmpresa } = useUserProfile()
 
-  // Vehicle search with React Aria hook
-  const {
-    query: vehicleQuery,
-    setQuery: setVehicleQuery,
-    results: vehicleResults,
-    isLoading: isSearchingVehicles,
-    error: searchError,
-    clearSearch
-  } = useVehicleSearch({
-    enabled: open && step === 'veiculo',
-    minQueryLength: 2,
-    debounceMs: 300,
-    empresaId: activeEmpresa || undefined
-  })
-
-  // Convert Vehicle[] to ComboboxItem[]
-  const vehicleComboboxItems: ComboboxItem[] = vehicleResults.map(vehicle => ({
-    id: vehicle.id,
-    label: vehicle.placa,
-    description: `${vehicle.marca} ${vehicle.modelo} • ${vehicle.proprietario_nome || 'N/A'}`,
-  }))
-
-  const handleVehicleSelect = async (vehicleId: string | null) => {
-    if (!vehicleId) {
-      // Only clear if user explicitly cleared selection (not during typing)
-      if (selectedVehicle) {
-        setSelectedVehicle(null)
-        setRelatedPolicy(undefined)
-      }
+  const handleSearch = async () => {
+    if (!searchQuery || searchQuery.length < 2) {
+      toast({
+        title: "Digite pelo menos 2 caracteres",
+        description: "Digite placa, chassi ou nome do proprietário",
+        variant: "destructive"
+      })
       return
     }
 
-    const vehicle = vehicleResults.find(v => v.id === vehicleId)
+    setIsSearching(true)
+    setHasSearched(true)
     
-    if (!vehicle) {
-      return
+    try {
+      const results = await VehiclesService.searchVehicles(searchQuery, activeEmpresa || undefined)
+      setVehicleResults(results)
+      
+      if (results.length === 0) {
+        toast({
+          title: "Nenhum veículo encontrado",
+          description: "Tente buscar por placa, chassi ou proprietário",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error('Erro ao buscar veículos:', error)
+      toast({
+        title: "Erro ao buscar",
+        description: "Não foi possível realizar a busca",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSearching(false)
     }
+  }
 
+  const handleVehicleSelect = async (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle)
     setLoadingPolicy(true)
     
@@ -174,7 +178,9 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
 
   const handleClose = () => {
     setStep('veiculo')
-    clearSearch()
+    setSearchQuery('')
+    setVehicleResults([])
+    setHasSearched(false)
     setSelectedVehicle(null)
     setRelatedPolicy(undefined)
     setTipoTicket(initialTipo)
@@ -191,27 +197,69 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
     <div className="space-y-6">
       {step === 'veiculo' && (
         <div className="space-y-4">
-          <ComboboxRCorp
-            label="Selecionar Veículo"
-            placeholder="Digite placa, chassi ou nome..."
-            items={vehicleComboboxItems}
-            selectedKey={selectedVehicle?.id || null}
-            onSelectionChange={(key) => handleVehicleSelect(key as string | null)}
-            inputValue={vehicleQuery}
-            onInputChange={setVehicleQuery}
-            isLoading={isSearchingVehicles}
-            noResultsLabel="Nenhum veículo encontrado"
-            errorMessage={searchError || undefined}
-            isRequired
-            description="Busque por placa, chassi, marca/modelo ou proprietário"
-            disableLocalFiltering={true}
-            allowsCustomValue={false}
-          />
+          <div>
+            <Label>Buscar Veículo *</Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                placeholder="Digite placa, chassi, marca/modelo ou proprietário..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch()
+                  }
+                }}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSearch}
+                disabled={isSearching || searchQuery.length < 2}
+                className="min-w-[100px]"
+              >
+                {isSearching ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    Buscando...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4 mr-2" />
+                    Buscar
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Digite pelo menos 2 caracteres e clique em "Buscar"
+            </p>
+          </div>
 
-          {vehicleQuery && vehicleQuery.length >= 2 && !isSearchingVehicles && vehicleResults.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
+          {hasSearched && vehicleResults.length > 0 && (
+            <div className="border rounded-lg p-4 max-h-[400px] overflow-y-auto">
+              <h3 className="font-medium mb-3">Resultados da Busca ({vehicleResults.length})</h3>
+              <div className="space-y-2">
+                {vehicleResults.map((vehicle) => (
+                  <button
+                    key={vehicle.id}
+                    onClick={() => handleVehicleSelect(vehicle)}
+                    className="w-full text-left p-3 border rounded-lg hover:bg-accent hover:border-primary transition-colors"
+                  >
+                    <div className="font-medium">{vehicle.placa}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {vehicle.marca} {vehicle.modelo}
+                      {vehicle.proprietario_nome && ` • ${vehicle.proprietario_nome}`}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasSearched && vehicleResults.length === 0 && !isSearching && (
+            <div className="text-center py-8 border rounded-lg bg-muted/30">
+              <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
               <div className="text-lg font-medium mb-2">Nenhum veículo encontrado</div>
-              <div className="text-sm">Tente buscar por placa, chassi ou proprietário</div>
+              <div className="text-sm text-muted-foreground">Tente buscar por placa, chassi ou proprietário</div>
             </div>
           )}
         </div>
