@@ -868,21 +868,6 @@ export function VehicleDetailsModalNew({
                                   <Clock className="h-3 w-3" />
                                   Criado em {format(new Date(ticket.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                                 </div>
-
-                                <div className="mt-3 pt-3 border-t">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      onOpenChange(false);
-                                      navigate('/sinistros');
-                                    }}
-                                    className="w-full gap-2 hover:bg-primary/5"
-                                  >
-                                    <ExternalLink className="h-4 w-4" />
-                                    Ver no Dashboard de Sinistros
-                                  </Button>
-                                </div>
                               </div>
                             </div>
                           </CardContent>
