@@ -81,9 +81,17 @@ export function SinistrosFilter({
           />
         </>
       ) : (
-        <TicketsList 
-          onDeleteClaim={handleDelete}
-        />
+        <>
+          {/* V1 não suporta filtragem, então usamos V2 sempre */}
+          <TicketsListV2
+            claims={filteredClaims as any}
+            assistances={filteredAssistances as any}
+            loading={loading}
+            onViewClaim={onViewClaim}
+            onEditClaim={onEditClaim}
+            onDeleteClaim={handleDelete}
+          />
+        </>
       )}
     </div>
   );
