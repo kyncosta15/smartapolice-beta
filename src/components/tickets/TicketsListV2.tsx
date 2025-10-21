@@ -94,6 +94,14 @@ export function TicketsListV2({
   onDeleteClaim,
   className,
 }: TicketsListV2Props) {
+  console.log('🔍 TicketsListV2 - Props recebidos:', {
+    claimsLength: claims.length,
+    assistancesLength: assistances.length,
+    loading,
+    claimsData: claims,
+    assistancesData: assistances
+  });
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');

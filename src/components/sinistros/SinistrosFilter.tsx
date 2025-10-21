@@ -29,6 +29,14 @@ export function SinistrosFilter({
   // Filtrar dados RIGOROSAMENTE baseado no tipo selecionado
   const filteredClaims = filter === 'sinistro' ? claims : (filter === 'todos' ? claims : []);
   const filteredAssistances = filter === 'assistencia' ? assistances : (filter === 'todos' ? assistances : []);
+  
+  console.log('🔍 SinistrosFilter - Dados recebidos:', {
+    filter,
+    claimsReceived: claims.length,
+    assistancesReceived: assistances.length,
+    filteredClaims: filteredClaims.length,
+    filteredAssistances: filteredAssistances.length
+  });
 
   // Wrapper para garantir que sempre retorna Promise
   const handleDelete = async (id: string) => {
