@@ -4,11 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Vehicle, Policy } from '@/types/claims';
 
 export class VehiclesService {
-  static async searchVehicles(query: string): Promise<Vehicle[]> {
+  static async searchVehicles(query: string, empresaId?: string): Promise<Vehicle[]> {
     if (!query || query.length < 2) return [];
 
     try {
-      const { data, error } = await supabase
+      console.log('🔍 Buscando veículos:', { query, empresaId });
+
+      let supabaseQuery = supabase
         .from('frota_veiculos')
         .select(`
           id,
@@ -17,12 +19,21 @@ export class VehiclesService {
           marca,
           modelo,
           proprietario_nome,
-          proprietario_tipo
+          proprietario_tipo,
+          empresa_id
         `)
-        .or(`placa.ilike.%${query}%,marca.ilike.%${query}%,modelo.ilike.%${query}%,proprietario_nome.ilike.%${query}%,chassi.ilike.%${query}%`)
-        .order('placa');
+        .or(`placa.ilike.%${query}%,marca.ilike.%${query}%,modelo.ilike.%${query}%,proprietario_nome.ilike.%${query}%,chassi.ilike.%${query}%`);
+
+      // Filtrar por empresa se fornecido
+      if (empresaId) {
+        supabaseQuery = supabaseQuery.eq('empresa_id', empresaId);
+      }
+
+      const { data, error } = await supabaseQuery.order('placa').limit(50);
 
       if (error) throw error;
+
+      console.log('✅ Veículos encontrados:', data?.length || 0);
 
       return (data || []).map(v => ({
         id: v.id,
@@ -34,7 +45,7 @@ export class VehiclesService {
         proprietario_tipo: v.proprietario_tipo as 'pf' | 'pj' | undefined
       }));
     } catch (error) {
-      console.error('Erro ao buscar veículos:', error);
+      console.error('❌ Erro ao buscar veículos:', error);
       return [];
     }
   }

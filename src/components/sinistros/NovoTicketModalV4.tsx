@@ -82,7 +82,8 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
   } = useVehicleSearch({
     enabled: open && step === 'veiculo',
     minQueryLength: 2,
-    debounceMs: 300
+    debounceMs: 300,
+    empresaId: activeEmpresa || undefined
   })
 
   // Convert Vehicle[] to ComboboxItem[]

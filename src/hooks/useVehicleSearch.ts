@@ -6,6 +6,7 @@ interface UseVehicleSearchOptions {
   minQueryLength?: number;
   debounceMs?: number;
   enabled?: boolean;
+  empresaId?: string;
 }
 
 export function useVehicleSearch(options: UseVehicleSearchOptions = {}) {
@@ -13,6 +14,7 @@ export function useVehicleSearch(options: UseVehicleSearchOptions = {}) {
     minQueryLength = 2,
     debounceMs = 300,
     enabled = true,
+    empresaId,
   } = options;
 
   const [query, setQuery] = useState('');
@@ -33,7 +35,7 @@ export function useVehicleSearch(options: UseVehicleSearchOptions = {}) {
     setError(null);
 
     try {
-      const vehicles = await VehiclesService.searchVehicles(searchQuery);
+      const vehicles = await VehiclesService.searchVehicles(searchQuery, empresaId);
       
       if (!signal?.aborted) {
         setResults(vehicles);
@@ -48,7 +50,7 @@ export function useVehicleSearch(options: UseVehicleSearchOptions = {}) {
         setIsLoading(false);
       }
     }
-  }, [minQueryLength]);
+  }, [minQueryLength, empresaId]);
 
   const debouncedSearch = useCallback((searchQuery: string) => {
     // Cancel previous request
