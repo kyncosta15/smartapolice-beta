@@ -65,28 +65,39 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
   }))
 
   const handleVehicleSelect = async (vehicleId: string | null) => {
+    console.log('🚗 handleVehicleSelect chamado com:', vehicleId)
+    
     if (!vehicleId) {
+      console.log('❌ vehicleId é null, resetando seleção')
       setSelectedVehicle(null)
       setRelatedPolicy(undefined)
       return
     }
 
     const vehicle = vehicleResults.find(v => v.id === vehicleId)
-    if (!vehicle) return
+    console.log('🔍 Veículo encontrado:', vehicle)
+    
+    if (!vehicle) {
+      console.log('❌ Veículo não encontrado nos resultados')
+      return
+    }
 
+    console.log('✅ Selecionando veículo:', vehicle.placa)
     setSelectedVehicle(vehicle)
     setLoadingPolicy(true)
     
     try {
       const policy = await VehiclesService.getPolicyByVehicleId(vehicle.id)
+      console.log('📋 Apólice encontrada:', policy)
       setRelatedPolicy(policy)
     } catch (error) {
-      console.error('Erro ao buscar apólice:', error)
+      console.error('❌ Erro ao buscar apólice:', error)
       setRelatedPolicy(null)
     } finally {
       setLoadingPolicy(false)
     }
     
+    console.log('🎯 Mudando para step "dados"')
     setStep('dados')
   }
 
