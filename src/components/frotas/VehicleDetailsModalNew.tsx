@@ -36,7 +36,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { SinistrosListModal } from '../sinistros/SinistrosListModal';
 
 interface VehicleDetailsModalNewProps {
   veiculo: FrotaVeiculo | null;
@@ -66,7 +65,6 @@ export function VehicleDetailsModalNew({
   }>({ updated: false });
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
-  const [sinistrosModalOpen, setSinistrosModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -778,18 +776,8 @@ export function VehicleDetailsModalNew({
                       </div>
 
                       {tickets.map((ticket) => (
-                        <Card key={ticket.id} className="overflow-hidden hover:shadow-md transition-shadow relative">
+                        <Card key={ticket.id} className="overflow-hidden hover:shadow-md transition-shadow">
                           <CardContent className="p-4">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSinistrosModalOpen(true)}
-                              className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full hover:bg-primary/10"
-                              title="Ver lista completa de sinistros"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-
                             <div className="flex items-start gap-3">
                               <div className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
@@ -942,15 +930,6 @@ export function VehicleDetailsModalNew({
           </div>
         </div>
       </DialogContent>
-
-      <SinistrosListModal
-        open={sinistrosModalOpen}
-        onOpenChange={setSinistrosModalOpen}
-        title="Lista de Sinistros e Assistências"
-        initialFilter={{
-          tipo: 'sinistro'
-        }}
-      />
     </Dialog>
   );
 }
