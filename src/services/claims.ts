@@ -13,6 +13,19 @@ export class ClaimsService {
     const { search, status, page = 1, limit = 50 } = params;
     
     try {
+      // Get empresa_id from user profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+      
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('default_empresa_id')
+        .eq('id', user.id)
+        .single();
+      
+      const empresaId = profile?.default_empresa_id;
+      if (!empresaId) throw new Error('Empresa não encontrada');
+      
       let query = supabase
         .from('tickets')
         .select(`
@@ -35,6 +48,7 @@ export class ClaimsService {
           )
         `)
         .eq('tipo', 'sinistro')
+        .eq('empresa_id', empresaId)
         .order('created_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
 
@@ -309,6 +323,19 @@ export class ClaimsService {
     const { search, status, page = 1, limit = 50 } = params;
     
     try {
+      // Get empresa_id from user profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+      
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('default_empresa_id')
+        .eq('id', user.id)
+        .single();
+      
+      const empresaId = profile?.default_empresa_id;
+      if (!empresaId) throw new Error('Empresa não encontrada');
+      
       let query = supabase
         .from('tickets')
         .select(`
@@ -327,6 +354,7 @@ export class ClaimsService {
           )
         `)
         .eq('tipo', 'assistencia')
+        .eq('empresa_id', empresaId)
         .order('created_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
 
