@@ -355,10 +355,6 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
                   Acompanhar Status
                 </Button>
                 <Button variant="outline" size="sm" className="gap-2 hover:bg-muted/50 transition-colors">
-                  <Eye className="h-4 w-4" />
-                  Ver Detalhes
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2 hover:bg-muted/50 transition-colors">
                   <Edit className="h-4 w-4" />
                   Editar
                 </Button>
