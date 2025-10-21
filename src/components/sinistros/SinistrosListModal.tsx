@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ClaimsList } from '../claims/ClaimsList';
+import { AssistancesView } from '../claims/AssistancesView';
 import { FilterChips } from './FilterChips';
 import { useFilterState } from '@/hooks/useFilterState';
 import { ClaimsService } from '@/services/claims';
@@ -146,21 +147,29 @@ export function SinistrosListModal({
           />
         </div>
 
-        {/* Claims list */}
+        {/* Claims or Assistances list */}
         <div className="flex-1 overflow-auto">
-          <ClaimsList
-            claims={filters.tipo === 'assistencia' ? [] : claims}
-            loading={loading}
-            statusFilter={filters.status || 'all'}
-            onClaimSelect={(claim) => {
-              console.log('Claim selecionado:', claim);
-              // TODO: Abrir drawer de detalhes
-            }}
-            onClaimEdit={(claim) => {
-              console.log('Editar claim:', claim);
-              // TODO: Abrir modal de edição
-            }}
-          />
+          {filters.tipo === 'assistencia' ? (
+            <AssistancesView
+              searchTerm={filters.search || ''}
+              statusFilter={filters.status || 'all'}
+              onStatusFilterChange={(status) => updateFilter('status', status)}
+            />
+          ) : (
+            <ClaimsList
+              claims={claims}
+              loading={loading}
+              statusFilter={filters.status || 'all'}
+              onClaimSelect={(claim) => {
+                console.log('Claim selecionado:', claim);
+                // TODO: Abrir drawer de detalhes
+              }}
+              onClaimEdit={(claim) => {
+                console.log('Editar claim:', claim);
+                // TODO: Abrir modal de edição
+              }}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>
