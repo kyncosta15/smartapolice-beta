@@ -290,6 +290,13 @@ export function TicketsListV2({
   const renderCell = (item: TicketItem, columnKey: any) => {
     const key = String(columnKey);
     
+    console.log('🔍 TicketsListV2 - renderCell chamado:', {
+      itemId: item.id,
+      itemType: item.type,
+      columnKey: key,
+      item: item
+    });
+    
     switch (key) {
       case 'select':
         return (
