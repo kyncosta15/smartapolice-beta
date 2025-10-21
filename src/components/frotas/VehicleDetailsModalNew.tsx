@@ -322,10 +322,24 @@ export function VehicleDetailsModalNew({
             <div className="flex-1 overflow-y-auto px-2 md:px-4 pb-2">
               <TabsContent value="veiculo" className="mt-0 space-y-4 md:space-y-6">
                 <Card className="p-3 md:p-6">
-                  <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
-                    <Car className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
-                    Informações do Veículo
-                  </h3>
+                  <div className="flex items-center justify-between mb-3 md:mb-4">
+                    <h3 className="text-base md:text-lg font-semibold flex items-center gap-2">
+                      <Car className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+                      Informações do Veículo
+                    </h3>
+                    {tickets.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setActiveTab('sinistros')}
+                        className="gap-2 hover:bg-red-50 hover:border-red-300 transition-colors"
+                      >
+                        <AlertTriangle className="h-4 w-4 text-red-600" />
+                        <span className="hidden sm:inline">{tickets.length} Ocorrência(s)</span>
+                        <span className="sm:hidden">{tickets.length}</span>
+                      </Button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="marca" className="text-sm font-medium text-gray-700">Marca</Label>
