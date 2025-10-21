@@ -32,6 +32,7 @@ export function SinistrosListModal({
   const [claims, setClaims] = useState<Claim[]>([]);
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentType, setCurrentType] = useState<'sinistro' | 'assistencia'>('sinistro');
   
   const {
     filters,
@@ -46,8 +47,14 @@ export function SinistrosListModal({
   // Apply initial filter when modal opens
   useEffect(() => {
     if (open && initialFilter) {
-      // Clear filters first and apply new ones
+      console.log('🔍 Aplicando filtro inicial:', initialFilter);
       clearAllFilters();
+      
+      // Set current type from initial filter
+      if (initialFilter.tipo) {
+        setCurrentType(initialFilter.tipo);
+      }
+      
       Object.entries(initialFilter).forEach(([key, value]) => {
         if (value) {
           updateFilter(key as any, value);
@@ -56,27 +63,31 @@ export function SinistrosListModal({
     }
   }, [open, initialFilter]);
 
-  // Load data when modal opens
+  // Load data when modal opens or type changes
   useEffect(() => {
     if (open) {
-      loadData();
+      const tipoToLoad = filters.tipo || currentType;
+      console.log('🔍 useEffect loadData - tipo:', tipoToLoad);
+      loadData(tipoToLoad);
     }
-  }, [open]);
+  }, [open, filters.tipo, currentType]);
 
-  const loadData = async () => {
+  const loadData = async (tipo: 'sinistro' | 'assistencia') => {
     try {
       setLoading(true);
-      const [claimsData, assistancesData] = await Promise.all([
-        ClaimsService.getClaims({}),
-        ClaimsService.getAssistances({})
-      ]);
+      console.log('🔍 SinistrosListModal - Carregando dados para tipo:', tipo);
       
-      console.log('🔍 SinistrosListModal - Claims carregados:', claimsData.data);
-      console.log('🔍 SinistrosListModal - Assistances carregados:', assistancesData.data);
-      console.log('🔍 SinistrosListModal - Filtro tipo atual:', filters.tipo);
-      
-      setClaims(claimsData.data);
-      setAssistances(assistancesData.data);
+      if (tipo === 'assistencia') {
+        const assistancesData = await ClaimsService.getAssistances({});
+        console.log('🔍 SinistrosListModal - Assistances carregados:', assistancesData.data.length);
+        setAssistances(assistancesData.data);
+        setClaims([]);
+      } else {
+        const claimsData = await ClaimsService.getClaims({});
+        console.log('🔍 SinistrosListModal - Claims carregados:', claimsData.data.length);
+        setClaims(claimsData.data);
+        setAssistances([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast({
@@ -157,11 +168,14 @@ export function SinistrosListModal({
         {/* Claims or Assistances list */}
         <div className="flex-1 overflow-auto">
           {(() => {
+            const tipoAtual = filters.tipo || currentType;
+            console.log('🔍 Renderizando - tipoAtual:', tipoAtual);
             console.log('🔍 Renderizando - filters.tipo:', filters.tipo);
+            console.log('🔍 Renderizando - currentType:', currentType);
             console.log('🔍 Renderizando - claims.length:', claims.length);
             console.log('🔍 Renderizando - assistances.length:', assistances.length);
             
-            if (filters.tipo === 'assistencia') {
+            if (tipoAtual === 'assistencia') {
               return (
                 <AssistancesView
                   searchTerm={filters.search || ''}
