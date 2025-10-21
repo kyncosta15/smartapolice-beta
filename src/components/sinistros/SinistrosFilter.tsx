@@ -27,15 +27,19 @@ export function SinistrosFilter({
   const uiVersion = useUIVersion('sinistros');
 
   // Filtrar dados RIGOROSAMENTE baseado no tipo selecionado
-  const filteredClaims = filter === 'sinistro' ? claims : (filter === 'todos' ? claims : []);
-  const filteredAssistances = filter === 'assistencia' ? assistances : (filter === 'todos' ? assistances : []);
+  const filteredClaims = filter === 'assistencia' ? [] : claims;
+  const filteredAssistances = filter === 'sinistro' ? [] : assistances;
   
-  console.log('🔍 SinistrosFilter - Dados recebidos:', {
+  console.log('🔍 SinistrosFilter - Filtrando dados:', {
     filter,
-    claimsReceived: claims.length,
-    assistancesReceived: assistances.length,
-    filteredClaims: filteredClaims.length,
-    filteredAssistances: filteredAssistances.length
+    claimsInput: claims.length,
+    assistancesInput: assistances.length,
+    claimsOutput: filteredClaims.length,
+    assistancesOutput: filteredAssistances.length,
+    willPass: {
+      claims: filteredClaims,
+      assistances: filteredAssistances
+    }
   });
 
   // Wrapper para garantir que sempre retorna Promise
@@ -48,9 +52,9 @@ export function SinistrosFilter({
   const getFilterDescription = () => {
     switch (filter) {
       case 'sinistro':
-        return `Mostrando apenas sinistros (${claims.length} encontrados)`;
+        return `Mostrando apenas sinistros (${filteredClaims.length} encontrados)`;
       case 'assistencia':
-        return `Mostrando apenas assistências (${assistances.length} encontradas)`;
+        return `Mostrando apenas assistências (${filteredAssistances.length} encontradas)`;
       default:
         return `Mostrando todos os tickets (${claims.length + assistances.length} encontrados)`;
     }
