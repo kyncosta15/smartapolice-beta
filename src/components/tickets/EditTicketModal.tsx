@@ -56,6 +56,7 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
     setIsLoading(true);
 
     try {
+      const previousStatus = ticket.status;
       const updateData: any = {
         subtipo: formData.subtipo || null,
         status: formData.status,
@@ -70,16 +71,39 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase
+      // Atualizar ticket no banco
+      const { error: updateError } = await supabase
         .from('tickets')
         .update(updateData)
         .eq('id', ticket.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Se mudou o status, criar movimento
+      if (previousStatus !== formData.status) {
+        await supabase
+          .from('ticket_movements')
+          .insert({
+            ticket_id: ticket.id,
+            tipo: 'status_change',
+            payload: {
+              status_anterior: previousStatus,
+              status_novo: formData.status,
+              descricao: `Status alterado de "${previousStatus}" para "${formData.status}"`,
+            },
+          });
+      }
+
+      const statusMessages: Record<TicketStatus, string> = {
+        aberto: 'Status alterado para Aberto',
+        em_analise: 'Status alterado para Em Análise',
+        finalizado: 'Ticket finalizado com sucesso!',
+        cancelado: 'Ticket cancelado',
+      };
 
       toast({
         title: 'Sucesso',
-        description: 'Registro atualizado com sucesso!',
+        description: statusMessages[formData.status] || 'Registro atualizado com sucesso!',
       });
 
       onSuccess();
@@ -152,18 +176,26 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
               value={formData.status}
               onValueChange={(value) => setFormData({ ...formData, status: value as TicketStatus })}
             >
-              <SelectTrigger>
+              <SelectTrigger className={cn(
+                formData.status === 'finalizado' && 'border-green-500 bg-green-50 dark:bg-green-950/20',
+                formData.status === 'cancelado' && 'border-red-500 bg-red-50 dark:bg-red-950/20'
+              )}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="aberto">Aberto</SelectItem>
-                <SelectItem value="em_analise">Em Análise</SelectItem>
-                <SelectItem value="aguardando_seguradora">Aguardando Seguradora</SelectItem>
-                <SelectItem value="em_reparo">Em Reparo</SelectItem>
-                <SelectItem value="finalizado">Finalizado</SelectItem>
-                <SelectItem value="cancelado">Cancelado</SelectItem>
+                <SelectItem value="aberto">🔴 Aberto</SelectItem>
+                <SelectItem value="em_analise">🟡 Em Análise</SelectItem>
+                <SelectItem value="aguardando_seguradora">🟠 Aguardando Seguradora</SelectItem>
+                <SelectItem value="em_reparo">🔵 Em Reparo</SelectItem>
+                <SelectItem value="finalizado">✅ Finalizado</SelectItem>
+                <SelectItem value="cancelado">❌ Cancelado</SelectItem>
               </SelectContent>
             </Select>
+            {formData.status === 'finalizado' && (
+              <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                ✓ Este ticket será marcado como finalizado no sistema
+              </p>
+            )}
           </div>
 
           {/* Data do Evento */}
