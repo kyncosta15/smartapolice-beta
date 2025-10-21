@@ -8,7 +8,8 @@ import {
   Edit, 
   FileText, 
   MoreVertical,
-  Car
+  Car,
+  AlertTriangle
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -27,6 +28,8 @@ interface VehicleListMobileProps {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDocs: (id: string) => void;
+  onViewSinistros?: (id: string) => void;
+  getTicketCount?: (id: string) => number;
   selectedVehicles: FrotaVeiculo[];
   onSelectVehicle: (veiculo: FrotaVeiculo, checked: boolean) => void;
 }
@@ -36,12 +39,14 @@ interface VehicleCardProps {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDocs: (id: string) => void;
+  onViewSinistros?: (id: string) => void;
+  getTicketCount?: (id: string) => number;
   selectedVehicles: FrotaVeiculo[];
   onSelectVehicle: (veiculo: FrotaVeiculo, checked: boolean) => void;
 }
 
-function VehicleCard({ veiculo, onView, onEdit, onDocs, selectedVehicles, onSelectVehicle }: VehicleCardProps) {
-  // Removido - agora usando VehicleStatusBadge component
+function VehicleCard({ veiculo, onView, onEdit, onDocs, onViewSinistros, getTicketCount, selectedVehicles, onSelectVehicle }: VehicleCardProps) {
+  const ticketCount = getTicketCount ? getTicketCount(veiculo.id) : 0;
 
   const getCategoriaBadge = (categoria?: string) => {
     if (!categoria) return null;
@@ -197,6 +202,21 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs, selectedVehicles, onSele
           >
             <Eye className="h-3 w-3" />
           </Button>
+
+          {ticketCount > 0 && onViewSinistros && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 w-8 p-0 relative bg-red-50 border-red-300 hover:bg-red-100"
+              onClick={() => onViewSinistros(veiculo.id)}
+              aria-label="Ver sinistros"
+            >
+              <AlertTriangle className="h-3 w-3 text-red-600" />
+              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center font-medium">
+                {ticketCount}
+              </span>
+            </Button>
+          )}
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -225,7 +245,7 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs, selectedVehicles, onSele
   );
 }
 
-export function VehicleListMobile({ veiculos, onView, onEdit, onDocs, selectedVehicles, onSelectVehicle }: VehicleListMobileProps) {
+export function VehicleListMobile({ veiculos, onView, onEdit, onDocs, onViewSinistros, getTicketCount, selectedVehicles, onSelectVehicle }: VehicleListMobileProps) {
   if (veiculos.length === 0) {
     return (
       <div className="text-center py-8">
@@ -249,6 +269,8 @@ export function VehicleListMobile({ veiculos, onView, onEdit, onDocs, selectedVe
           onView={onView}
           onEdit={onEdit}
           onDocs={onDocs}
+          onViewSinistros={onViewSinistros}
+          getTicketCount={getTicketCount}
           selectedVehicles={selectedVehicles}
           onSelectVehicle={onSelectVehicle}
         />

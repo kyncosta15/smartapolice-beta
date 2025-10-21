@@ -41,6 +41,7 @@ interface VehicleDetailsModalNewProps {
   onOpenChange: (open: boolean) => void;
   onSave?: (updatedVeiculo: FrotaVeiculo) => void;
   mode?: 'view' | 'edit';
+  defaultTab?: string;
 }
 
 export function VehicleDetailsModalNew({ 
@@ -48,9 +49,10 @@ export function VehicleDetailsModalNew({
   open, 
   onOpenChange, 
   onSave,
-  mode = 'view'
+  mode = 'view',
+  defaultTab = 'veiculo'
 }: VehicleDetailsModalNewProps) {
-  const [activeTab, setActiveTab] = useState('veiculo');
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [formData, setFormData] = useState<Partial<FrotaVeiculo>>({});
   const [loading, setLoading] = useState(false);
   const [fipeUpdateLoading, setFipeUpdateLoading] = useState(false);
@@ -69,6 +71,12 @@ export function VehicleDetailsModalNew({
       loadVehicleTickets(veiculo.id);
     }
   }, [veiculo]);
+
+  useEffect(() => {
+    if (open) {
+      setActiveTab(defaultTab);
+    }
+  }, [open, defaultTab]);
 
   const loadVehicleTickets = async (vehicleId: string) => {
     console.log('🚗 Carregando tickets para veículo:', vehicleId);

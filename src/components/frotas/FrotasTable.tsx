@@ -24,7 +24,8 @@ import {
   DollarSign,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  AlertTriangle
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -41,6 +42,7 @@ import { VehicleDetailsModalNew } from './VehicleDetailsModalNew';
 import { FrotasBulkActions } from './FrotasBulkActions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { VehicleStatusBadge } from './VehicleStatusBadge';
+import { useVehicleTickets } from '@/hooks/useVehicleTickets';
 
 interface FrotasTableProps {
   veiculos: FrotaVeiculo[];
@@ -57,9 +59,11 @@ interface VehicleActionsProps {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDocs: (id: string) => void;
+  onViewSinistros?: (id: string) => void;
+  ticketCount?: number;
 }
 
-function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps) {
+function VehicleActions({ veiculo, onView, onEdit, onDocs, onViewSinistros, ticketCount = 0 }: VehicleActionsProps) {
   return (
     <div className="flex items-center justify-end gap-1">
       <Button
@@ -71,6 +75,19 @@ function VehicleActions({ veiculo, onView, onEdit, onDocs }: VehicleActionsProps
         <Eye className="h-3 w-3" />
         <span className="sr-only">Ver detalhes</span>
       </Button>
+
+      {ticketCount > 0 && onViewSinistros && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onViewSinistros(veiculo.id)}
+          className="h-8 px-3 relative bg-red-50 border-red-300 hover:bg-red-100"
+        >
+          <AlertTriangle className="h-3 w-3 text-red-600" />
+          <span className="ml-1 text-xs font-medium text-red-700">{ticketCount}</span>
+          <span className="sr-only">Ver sinistros</span>
+        </Button>
+      )}
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -98,6 +115,10 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   const [selectedVeiculo, setSelectedVeiculo] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
+  const [defaultTab, setDefaultTab] = useState('veiculo');
+  
+  const vehicleIds = veiculos.map(v => v.id);
+  const { getTicketCount } = useVehicleTickets(vehicleIds);
   
   // Multiple selection state
   const [selectedVehicles, setSelectedVehicles] = useState<FrotaVeiculo[]>([]);
@@ -131,13 +152,18 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
 
   const isMobile = useIsMobile();
 
-  const handleView = (id: string) => {
+  const handleView = (id: string, tab?: string) => {
     const veiculo = veiculos.find(v => v.id === id);
     if (veiculo) {
       setSelectedVeiculo(veiculo);
       setModalMode('view');
+      setDefaultTab(tab || 'veiculo');
       setModalOpen(true);
     }
+  };
+
+  const handleViewSinistros = (id: string) => {
+    handleView(id, 'sinistros');
   };
 
   const handleEdit = (id: string) => {
@@ -380,6 +406,8 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
               onView={handleView}
               onEdit={handleEdit}
               onDocs={handleDocs}
+              onViewSinistros={handleViewSinistros}
+              getTicketCount={getTicketCount}
               selectedVehicles={selectedVehicles}
               onSelectVehicle={handleSelectVehicle}
             />
@@ -491,6 +519,8 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                             onView={handleView}
                             onEdit={handleEdit}
                             onDocs={handleDocs}
+                            onViewSinistros={handleViewSinistros}
+                            ticketCount={getTicketCount(veiculo.id)}
                           />
                         </TableCell>
                       </TableRow>
@@ -514,6 +544,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
           open={modalOpen}
           onOpenChange={setModalOpen}
           mode={modalMode}
+          defaultTab={defaultTab}
           onSave={(updatedVeiculo) => {
             // Update the selected vehicle data to reflect changes immediately
             setSelectedVeiculo(updatedVeiculo);
@@ -543,6 +574,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
         open={modalOpen}
         onOpenChange={setModalOpen}
         mode={modalMode}
+        defaultTab={defaultTab}
         onSave={(updatedVeiculo) => {
           // Update the selected vehicle data to reflect changes immediately
           setSelectedVeiculo(updatedVeiculo);
