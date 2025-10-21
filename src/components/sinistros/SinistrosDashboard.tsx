@@ -108,19 +108,20 @@ export function SinistrosDashboard({
     try {
       if (itemToDelete.type === 'claim') {
         await ClaimsService.deleteClaim(itemToDelete.id);
-        setClaims(prev => prev.filter(c => c.id !== itemToDelete.id));
         toast({
           title: "Sucesso",
           description: "Sinistro deletado com sucesso!",
         });
       } else {
         await ClaimsService.deleteAssistance(itemToDelete.id);
-        setAssistances(prev => prev.filter(a => a.id !== itemToDelete.id));
         toast({
           title: "Sucesso",
           description: "Assistência deletada com sucesso!",
         });
       }
+      
+      // Recarregar todos os dados
+      await loadData();
     } catch (error) {
       console.error('Erro ao deletar:', error);
       toast({

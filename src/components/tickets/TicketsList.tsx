@@ -36,7 +36,7 @@ interface TicketsListProps {
 }
 
 export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListProps = {}) {
-  const { tickets, loading, updateTicketStatus } = useTicketsData();
+  const { tickets, loading, updateTicketStatus, refreshTickets } = useTicketsData();
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -176,6 +176,9 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
           }
         }
       }
+
+      // Recarregar a lista de tickets
+      await refreshTickets();
 
       toast({
         title: 'Sucesso',
