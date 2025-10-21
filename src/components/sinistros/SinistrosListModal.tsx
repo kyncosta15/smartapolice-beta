@@ -103,16 +103,6 @@ export function SinistrosListModal({
         <div className="space-y-4 flex-shrink-0 border-b pb-4">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             <div className="flex flex-wrap gap-3">
-              <Select value={filters.tipo || 'sinistro'} onValueChange={(value) => updateFilter('tipo', value)}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sinistro">Sinistros</SelectItem>
-                  <SelectItem value="assistencia">Assistências</SelectItem>
-                </SelectContent>
-              </Select>
-
               <Select value={filters.status || 'all'} onValueChange={(value) => updateFilter('status', value)}>
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Status" />
