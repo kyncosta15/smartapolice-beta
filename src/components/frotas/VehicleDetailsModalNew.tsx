@@ -781,11 +781,18 @@ export function VehicleDetailsModalNew({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setActiveTab('sinistros')}
-                              className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full hover:bg-primary/10"
-                              title="Focar nesta ocorrência"
+                              onClick={() => {
+                                // Fecha o modal atual
+                                onOpenChange(false);
+                                // Dispara evento para navegar ao dashboard de sinistros
+                                window.dispatchEvent(new CustomEvent('navigateToSinistros', { 
+                                  detail: { ticketId: ticket.id } 
+                                }));
+                              }}
+                              className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:bg-red-50 border border-transparent hover:border-red-200"
+                              title="Ver no Dashboard de Sinistros"
                             >
-                              <Eye className="h-4 w-4" />
+                              <ExternalLink className="h-4 w-4 text-red-600" />
                             </Button>
 
                             <div className="flex items-start gap-3">
