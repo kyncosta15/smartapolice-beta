@@ -4,10 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownRCorp } from '@/components/ui-v2/dropdown-rcorp';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, FileText, AlertTriangle, Wrench, Clock } from 'lucide-react';
+import { Search, Filter, FileText, AlertTriangle, Wrench, Clock, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -84,11 +83,6 @@ const columns: TableColumn[] = [
     name: 'Data',
     width: 120,
     allowsSorting: true,
-  },
-  {
-    key: 'actions',
-    name: 'Ações',
-    width: 80,
   },
 ];
 
@@ -448,40 +442,6 @@ export function TicketsListV2({
             <span className="tabular-nums font-medium">
               {format(new Date(item.created_at), 'dd/MM/yyyy', { locale: ptBR })}
             </span>
-          </div>
-        );
-        
-      case 'actions':
-        return (
-          <div onClick={(e) => e.stopPropagation()}>
-            <DropdownRCorp
-              trigger={
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary/10">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              }
-              items={[
-                {
-                  id: 'track',
-                  label: 'Acompanhar Status',
-                  icon: <FileText className="h-4 w-4" />,
-                  onClick: () => handleStatusTrackingClick(item.id, item.type),
-                },
-                {
-                  id: 'edit',
-                  label: 'Editar',
-                  icon: <Edit className="h-4 w-4" />,
-                  onClick: () => handleEditClick(item.id),
-                },
-                {
-                  id: 'delete',
-                  label: 'Excluir',
-                  icon: <Trash2 className="h-4 w-4" />,
-                  variant: 'destructive',
-                  onClick: () => handleDeleteClick(item.id),
-                },
-              ]}
-            />
           </div>
         );
         
