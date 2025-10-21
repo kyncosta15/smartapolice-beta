@@ -174,38 +174,38 @@ export function StatusStepperModal({
   };
 
   const getStatusColor = (status: string) => {
-    // Cores baseadas na imagem de referência
-    const colors: Record<string, string> = {
+    // Gradientes elegantes baseados no esquema de cores
+    const gradients: Record<string, string> = {
       // Sinistros
-      'aberto': 'bg-blue-600',
-      'finalizado_com_indenizacao': 'bg-green-600',
-      'na_oficina': 'bg-blue-800',
-      'aguardando_peca': 'bg-amber-900',
-      'aguardando_vistoria': 'bg-amber-200',
-      'aguardando_documento': 'bg-gray-500',
-      'analise_seguradora': 'bg-blue-900',
-      'processo_liquidacao': 'bg-orange-600',
-      'finalizado_sem_indenizacao': 'bg-black',
-      'finalizado_inatividade': 'bg-red-600',
-      'carro_reserva': 'bg-pink-300',
-      'lucros_cessantes': 'bg-pink-500',
-      'dc_danos_corporais': 'bg-teal-500',
-      'acordo': 'bg-lime-500',
-      'aguardando_reparo': 'bg-blue-800',
-      'finalizado_reparado': 'bg-green-600',
+      'aberto': 'bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700',
+      'finalizado_com_indenizacao': 'bg-gradient-to-br from-green-500 via-green-600 to-emerald-700',
+      'na_oficina': 'bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900',
+      'aguardando_peca': 'bg-gradient-to-br from-amber-800 via-amber-900 to-orange-900',
+      'aguardando_vistoria': 'bg-gradient-to-br from-amber-100 via-amber-200 to-amber-300',
+      'aguardando_documento': 'bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600',
+      'analise_seguradora': 'bg-gradient-to-br from-blue-800 via-blue-900 to-indigo-900',
+      'processo_liquidacao': 'bg-gradient-to-br from-orange-500 via-orange-600 to-red-600',
+      'finalizado_sem_indenizacao': 'bg-gradient-to-br from-gray-800 via-gray-900 to-black',
+      'finalizado_inatividade': 'bg-gradient-to-br from-red-500 via-red-600 to-red-700',
+      'carro_reserva': 'bg-gradient-to-br from-pink-200 via-pink-300 to-pink-400',
+      'lucros_cessantes': 'bg-gradient-to-br from-pink-400 via-pink-500 to-pink-600',
+      'dc_danos_corporais': 'bg-gradient-to-br from-teal-400 via-teal-500 to-cyan-600',
+      'acordo': 'bg-gradient-to-br from-lime-400 via-lime-500 to-green-500',
+      'aguardando_reparo': 'bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900',
+      'finalizado_reparado': 'bg-gradient-to-br from-green-500 via-green-600 to-green-700',
       
       // Assistências
-      'finalizado': 'bg-green-600',
-      'reembolso': 'bg-green-400',
-      'aguardando_prestador': 'bg-purple-700',
-      'atendimento_andamento': 'bg-yellow-500',
-      'aguardando_documentos': 'bg-lime-600',
-      'saida_base': 'bg-blue-800',
-      'aguardando_retorno': 'bg-gray-600',
-      'vidros': 'bg-yellow-400',
+      'finalizado': 'bg-gradient-to-br from-green-500 via-green-600 to-emerald-700',
+      'reembolso': 'bg-gradient-to-br from-green-300 via-green-400 to-emerald-500',
+      'aguardando_prestador': 'bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800',
+      'atendimento_andamento': 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-500',
+      'aguardando_documentos': 'bg-gradient-to-br from-lime-500 via-lime-600 to-green-600',
+      'saida_base': 'bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-800',
+      'aguardando_retorno': 'bg-gradient-to-br from-gray-500 via-gray-600 to-gray-700',
+      'vidros': 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-400',
     };
     
-    return colors[status] || 'bg-gray-500';
+    return gradients[status] || 'bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600';
   };
 
   const getLastActivity = () => {
@@ -361,7 +361,7 @@ export function StatusStepperModal({
                         "hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
                         "disabled:cursor-not-allowed disabled:opacity-50",
                         step.completed
-                          ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
+                          ? "bg-gradient-to-br from-green-400 via-green-500 to-emerald-600 border-green-500 text-white hover:from-green-500 hover:via-green-600 hover:to-emerald-700 shadow-lg shadow-green-500/50"
                           : "bg-background border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary"
                       )}
                     >
@@ -375,7 +375,7 @@ export function StatusStepperModal({
                       <div
                         className={cn(
                           "w-0.5 h-8 mt-0.5 transition-all",
-                          step.completed ? "bg-green-500" : "bg-muted-foreground/20"
+                          step.completed ? "bg-gradient-to-b from-green-500 via-green-600 to-emerald-600" : "bg-muted-foreground/20"
                         )}
                       />
                     )}
@@ -387,7 +387,7 @@ export function StatusStepperModal({
                       onClick={() => handleStepClick(step)}
                       disabled={loading}
                       className={cn(
-                        "w-full text-left hover:bg-muted/50 rounded-lg px-3 py-2 transition-colors disabled:cursor-not-allowed",
+                        "w-full text-left rounded-lg px-3 py-2 transition-all disabled:cursor-not-allowed shadow-md hover:shadow-xl hover:scale-[1.02]",
                         getStatusColor(step.status),
                         "text-white"
                       )}
