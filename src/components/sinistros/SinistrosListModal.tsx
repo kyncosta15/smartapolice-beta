@@ -7,7 +7,7 @@ import { ClaimsList } from '../claims/ClaimsList';
 import { AssistancesView } from '../claims/AssistancesView';
 import { FilterChips } from './FilterChips';
 import { useFilterState } from '@/hooks/useFilterState';
-import { ClaimsService } from '@/services/claims';
+import { useClaims } from '@/hooks/useClaims';
 import { useToast } from '@/hooks/use-toast';
 import { Search, X } from 'lucide-react';
 import { Claim, Assistance } from '@/types/claims';
@@ -29,10 +29,8 @@ export function SinistrosListModal({
   title, 
   initialFilter 
 }: SinistrosListModalProps) {
-  const [claims, setClaims] = useState<Claim[]>([]);
-  const [assistances, setAssistances] = useState<Assistance[]>([]);
-  const [loading, setLoading] = useState(true);
   const [currentType, setCurrentType] = useState<'sinistro' | 'assistencia'>('sinistro');
+  const [page, setPage] = useState(1);
   
   const {
     filters,
@@ -44,13 +42,12 @@ export function SinistrosListModal({
   
   const { toast } = useToast();
 
-  // Apply initial filter when modal opens
+  // Aplicar filtro inicial quando modal abre
   useEffect(() => {
     if (open && initialFilter) {
       console.log('🔍 Aplicando filtro inicial:', initialFilter);
       clearAllFilters();
       
-      // Set current type from initial filter
       if (initialFilter.tipo) {
         setCurrentType(initialFilter.tipo);
       }
@@ -63,42 +60,30 @@ export function SinistrosListModal({
     }
   }, [open, initialFilter]);
 
-  // Load data when modal opens or type changes
+  // Resetar paginação quando filtro de tipo ou status muda
   useEffect(() => {
-    if (open) {
-      const tipoToLoad = filters.tipo || currentType;
-      console.log('🔍 useEffect loadData - tipo:', tipoToLoad);
-      loadData(tipoToLoad);
-    }
-  }, [open, filters.tipo, currentType]);
+    console.log('🔄 Resetando página para 1 devido a mudança de filtro');
+    setPage(1);
+  }, [currentType, filters.status, filters.search]);
 
-  const loadData = async (tipo: 'sinistro' | 'assistencia') => {
-    try {
-      setLoading(true);
-      console.log('🔍 SinistrosListModal - Carregando dados para tipo:', tipo);
-      
-      if (tipo === 'assistencia') {
-        const assistancesData = await ClaimsService.getAssistances({});
-        console.log('🔍 SinistrosListModal - Assistances carregados:', assistancesData.data.length);
-        setAssistances(assistancesData.data);
-        setClaims([]);
-      } else {
-        const claimsData = await ClaimsService.getClaims({});
-        console.log('🔍 SinistrosListModal - Claims carregados:', claimsData.data.length);
-        setClaims(claimsData.data);
-        setAssistances([]);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      toast({
-        title: "Erro ao carregar dados",
-        description: "Não foi possível carregar os dados. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Determinar tipo atual baseado em filtro ou estado
+  const tipoAtual = (filters.tipo as 'sinistro' | 'assistencia') || currentType;
+
+  // Buscar dados com React Query - queryKey reativa aos filtros
+  const { data, isLoading, isFetching } = useClaims({
+    tipo: tipoAtual,
+    status: filters.status,
+    search: filters.search,
+    page,
+    limit: 50
+  });
+
+  console.log('🔍 SinistrosListModal - Dados carregados:', {
+    tipo: tipoAtual,
+    quantidade: data.length,
+    isLoading,
+    isFetching
+  });
 
   const handleClose = () => {
     clearAllFilters();
@@ -167,40 +152,27 @@ export function SinistrosListModal({
 
         {/* Claims or Assistances list */}
         <div className="flex-1 overflow-auto">
-          {(() => {
-            const tipoAtual = filters.tipo || currentType;
-            console.log('🔍 Renderizando - tipoAtual:', tipoAtual);
-            console.log('🔍 Renderizando - filters.tipo:', filters.tipo);
-            console.log('🔍 Renderizando - currentType:', currentType);
-            console.log('🔍 Renderizando - claims.length:', claims.length);
-            console.log('🔍 Renderizando - assistances.length:', assistances.length);
-            
-            if (tipoAtual === 'assistencia') {
-              return (
-                <AssistancesView
-                  searchTerm={filters.search || ''}
-                  statusFilter={filters.status || 'all'}
-                  onStatusFilterChange={(status) => updateFilter('status', status)}
-                />
-              );
-            }
-            
-            return (
-              <ClaimsList
-                claims={claims}
-                loading={loading}
-                statusFilter={filters.status || 'all'}
-                onClaimSelect={(claim) => {
-                  console.log('Claim selecionado:', claim);
-                  // TODO: Abrir drawer de detalhes
-                }}
-                onClaimEdit={(claim) => {
-                  console.log('Editar claim:', claim);
-                  // TODO: Abrir modal de edição
-                }}
-              />
-            );
-          })()}
+          {tipoAtual === 'assistencia' ? (
+            <AssistancesView
+              searchTerm={filters.search || ''}
+              statusFilter={filters.status || 'all'}
+              onStatusFilterChange={(status) => updateFilter('status', status)}
+            />
+          ) : (
+            <ClaimsList
+              claims={data as Claim[]}
+              loading={isLoading || isFetching}
+              statusFilter={filters.status || 'all'}
+              onClaimSelect={(claim) => {
+                console.log('Claim selecionado:', claim);
+                // TODO: Abrir drawer de detalhes
+              }}
+              onClaimEdit={(claim) => {
+                console.log('Editar claim:', claim);
+                // TODO: Abrir modal de edição
+              }}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>
