@@ -77,6 +77,7 @@ export function ComboboxRCorp({
       allowsCustomValue={allowsCustomValue}
       isDisabled={isDisabled}
       isRequired={isRequired}
+      menuTrigger="input"
     >
       {label && (
         <Label className="text-sm font-medium text-foreground cursor-default">
@@ -121,7 +122,7 @@ export function ComboboxRCorp({
 
       <Popover
         className={cn(
-          "w-[--trigger-width] bg-popover border border-border rounded-md shadow-md",
+          "w-[--trigger-width] bg-popover border border-border rounded-md shadow-md z-50",
           "entering:animate-in entering:fade-in-0 entering:zoom-in-95",
           "exiting:animate-out exiting:fade-out-0 exiting:zoom-out-95",
           "placement-bottom:slide-in-from-top-2 placement-top:slide-in-from-bottom-2"

@@ -51,7 +51,7 @@ export function ComboboxRCorp({
       onSelectionChange={onSelectionChange}
       isDisabled={isDisabled}
       className={cn('relative w-full', className)}
-      menuTrigger="focus"
+      menuTrigger="input"
     >
       {label && (
         <Label className="text-sm font-medium text-foreground mb-2 block">
@@ -86,7 +86,7 @@ export function ComboboxRCorp({
 
       <Popover
         className={cn(
-          'w-[--trigger-width] mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto entering:animate-in entering:fade-in exiting:animate-out exiting:fade-out',
+          'w-[--trigger-width] mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto z-50 entering:animate-in entering:fade-in exiting:animate-out exiting:fade-out',
           popoverClassName
         )}
       >
