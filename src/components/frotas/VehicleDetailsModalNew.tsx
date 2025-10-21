@@ -798,12 +798,12 @@ export function VehicleDetailsModalNew({
                                     <h4 className="font-semibold text-sm md:text-base capitalize">
                                       {ticket.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'}
                                       {ticket.subtipo && ` - ${ticket.subtipo.replace('_', ' ')}`}
+                                      {ticket.protocol_code && (
+                                        <span className="text-xs text-muted-foreground font-normal ml-2">
+                                          • {ticket.protocol_code}
+                                        </span>
+                                      )}
                                     </h4>
-                                    {ticket.protocol_code && (
-                                      <p className="text-xs text-muted-foreground">
-                                        Protocolo: {ticket.protocol_code}
-                                      </p>
-                                    )}
                                   </div>
                                   <Badge 
                                     variant={
