@@ -31,6 +31,16 @@ export function SinistrosDetailsModal({
   onDeleteClaim,
   onDeleteAssistance,
 }: SinistrosDetailsModalProps) {
+  console.log('🔍 SinistrosDetailsModal - Renderizando:', {
+    open,
+    filter,
+    claimsLength: claims.length,
+    assistancesLength: assistances.length,
+    loading,
+    claimsPreview: claims.slice(0, 2),
+    assistancesPreview: assistances.slice(0, 2)
+  });
+
   const getModalTitle = () => {
     switch (filter) {
       case 'sinistro':

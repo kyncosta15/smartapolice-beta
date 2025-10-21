@@ -98,8 +98,13 @@ export function TicketsListV2({
     claimsLength: claims.length,
     assistancesLength: assistances.length,
     loading,
-    claimsData: claims,
-    assistancesData: assistances
+    claimsPreview: claims.slice(0, 2),
+    assistancesPreview: assistances.slice(0, 2)
+  });
+  
+  console.log('🔍 TicketsListV2 - Primeiros registros completos:', {
+    firstClaim: claims[0],
+    firstAssistance: assistances[0]
   });
   
   const [searchQuery, setSearchQuery] = useState('');
