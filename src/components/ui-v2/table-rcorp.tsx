@@ -156,45 +156,32 @@ export function TableRCorp<T extends Record<string, any>>({
         <TableBody items={items}>
           {(item) => {
             const rowId = getRowId?.(item) ?? String(item.id);
-            console.log('🔍 TableRCorp - Renderizando Row:', { rowId, item });
+            console.log('🔍 TableRCorp - Renderizando Row:', { rowId, item, columns: columns.map(c => c.key) });
             
             return (
-              <Row
-                id={rowId}
-                className={cn(
-                  "border-b hover:bg-muted/50 focus:bg-muted focus:outline-none",
-                  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  onAction && "cursor-pointer"
-                )}
-              >
-                {(columnKey) => {
-                  console.log('🔍 TableRCorp - Cell callback chamado:', { 
-                    rowId, 
-                    columnKey,
-                    hasRenderCell: !!renderCell,
-                    itemKeys: Object.keys(item)
+              <Row id={rowId}>
+                {columns.map((column) => {
+                  console.log('🔍 TableRCorp - Renderizando Cell manual:', { 
+                    columnKey: column.key,
+                    hasRenderCell: !!renderCell
                   });
                   
-                  const cellContent = renderCell ? renderCell(item, columnKey as unknown as Key) : item[String(columnKey)];
+                  const cellContent = renderCell 
+                    ? renderCell(item, column.key as unknown as Key) 
+                    : item[column.key];
                   
-                  console.log('🔍 TableRCorp - Cell content:', { 
-                    columnKey, 
-                    cellContent,
-                    typeOfContent: typeof cellContent
+                  console.log('🔍 TableRCorp - Cell content gerado:', { 
+                    columnKey: column.key,
+                    content: cellContent,
+                    type: typeof cellContent
                   });
                   
                   return (
-                    <Cell
-                      className={cn(
-                        rowPadding[density],
-                        "align-middle border-b-0",
-                        densityClasses[density]
-                      )}
-                    >
+                    <Cell key={column.key}>
                       {cellContent}
                     </Cell>
                   );
-                }}
+                })}
               </Row>
             );
           }}
