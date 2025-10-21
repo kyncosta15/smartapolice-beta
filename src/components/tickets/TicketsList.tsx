@@ -29,6 +29,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
+import { EditTicketModal } from './EditTicketModal';
 
 interface TicketsListProps {
   onDeleteClaim?: (id: string) => Promise<void>;
@@ -40,6 +41,7 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
@@ -120,6 +122,11 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
   const handleDetailsClick = (ticket: Ticket) => {
     setSelectedTicket(ticket);
     setIsDetailsModalOpen(true);
+  };
+
+  const handleEditClick = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setIsEditModalOpen(true);
   };
 
   const toggleSelectTicket = (ticketId: string) => {
@@ -385,7 +392,12 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
                   <GitBranch className="h-4 w-4" />
                   Acompanhar Status
                 </Button>
-                <Button variant="outline" size="sm" className="gap-2 hover:bg-muted/50 transition-colors">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleEditClick(ticket)}
+                  className="gap-2 hover:bg-muted/50 transition-colors"
+                >
                   <Edit className="h-4 w-4" />
                   Editar
                 </Button>
@@ -557,6 +569,14 @@ export function TicketsList({ onDeleteClaim, onDeleteAssistance }: TicketsListPr
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Modal */}
+      <EditTicketModal
+        ticket={selectedTicket}
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        onSuccess={refreshTickets}
+      />
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

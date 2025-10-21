@@ -27,6 +27,7 @@ export interface Ticket {
   valor_estimado?: number;
   descricao?: string;
   localizacao?: string;
+  gravidade?: 'baixa' | 'media' | 'alta' | 'critica';
   origem: 'portal' | 'importacao' | 'api';
   created_by?: string;
   empresa_id?: string;
