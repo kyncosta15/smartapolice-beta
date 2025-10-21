@@ -85,6 +85,14 @@ export function TicketDetailsDrawer({
     return 'valor_estimado' in t;
   };
 
+  // Função para formatar status removendo underscores e capitalizando
+  const formatStatusLabel = (status: string): string => {
+    return status
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'aberto':
@@ -106,8 +114,12 @@ export function TicketDetailsDrawer({
         return 'Em Regulação';
       case 'finalizado':
         return 'Finalizado';
+      case 'em_analise':
+        return 'Em Análise';
+      case 'em_andamento':
+        return 'Em Andamento';
       default:
-        return status;
+        return formatStatusLabel(status);
     }
   };
 
