@@ -21,13 +21,19 @@ import {
   RefreshCw,
   X,
   Eye,
-  Edit
+  Edit,
+  Wrench,
+  Clock
 } from 'lucide-react';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { fipeService } from '@/services/fipeService';
 import { VehicleDocumentsSection } from './VehicleDocumentsSection';
+import { Ticket } from '@/types/tickets';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface VehicleDetailsModalNewProps {
   veiculo: FrotaVeiculo | null;
@@ -53,13 +59,44 @@ export function VehicleDetailsModalNew({
     oldValue?: number;
     newValue?: number;
   }>({ updated: false });
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
 
   useEffect(() => {
     if (veiculo) {
       setFormData({ ...veiculo });
       setFipeUpdateInfo({ updated: false });
+      loadVehicleTickets(veiculo.id);
     }
   }, [veiculo]);
+
+  const loadVehicleTickets = async (vehicleId: string) => {
+    setTicketsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('vehicle_id', vehicleId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedTickets = (data || []).map(ticket => {
+        const payload = ticket.payload as any;
+        return {
+          ...ticket,
+          descricao: payload?.descricao,
+          gravidade: payload?.gravidade,
+        };
+      }) as Ticket[];
+
+      setTickets(mappedTickets);
+    } catch (error) {
+      console.error('Erro ao carregar tickets do veículo:', error);
+    } finally {
+      setTicketsLoading(false);
+    }
+  };
 
   const handleInputChange = (field: keyof FrotaVeiculo, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -667,17 +704,138 @@ export function VehicleDetailsModalNew({
               </TabsContent>
 
               <TabsContent value="sinistros" className="mt-0 space-y-4 md:space-y-6">
-                <Card className="p-3 md:p-6">
-                  <div className="text-center py-6 md:py-8">
-                    <AlertTriangle className="mx-auto h-8 w-8 md:h-12 md:w-12 text-gray-400 mb-3 md:mb-4" />
-                    <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2">
-                      Sinistros do Veículo
-                    </h3>
-                    <p className="text-sm md:text-base text-gray-500 mb-4">
-                      Lista de sinistros relacionados a este veículo será implementada aqui.
-                    </p>
-                  </div>
-                </Card>
+                <div className="p-3 md:p-6">
+                  {ticketsLoading ? (
+                    <Card className="p-6">
+                      <div className="flex items-center justify-center py-8">
+                        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-muted-foreground">Carregando...</span>
+                      </div>
+                    </Card>
+                  ) : tickets.length === 0 ? (
+                    <Card className="p-6">
+                      <div className="text-center py-8">
+                        <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">
+                          Nenhum registro encontrado
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Este veículo não possui sinistros ou assistências registrados.
+                        </p>
+                      </div>
+                    </Card>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold">
+                          Histórico de Ocorrências
+                        </h3>
+                        <Badge variant="secondary">
+                          {tickets.length} registro(s)
+                        </Badge>
+                      </div>
+
+                      {tickets.map((ticket) => (
+                        <Card key={ticket.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <div className={cn(
+                                "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                                ticket.tipo === 'sinistro' 
+                                  ? "bg-red-100 text-red-600" 
+                                  : "bg-blue-100 text-blue-600"
+                              )}>
+                                {ticket.tipo === 'sinistro' ? (
+                                  <AlertTriangle className="h-5 w-5" />
+                                ) : (
+                                  <Wrench className="h-5 w-5" />
+                                )}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <div>
+                                    <h4 className="font-semibold text-sm md:text-base capitalize">
+                                      {ticket.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'}
+                                      {ticket.subtipo && ` - ${ticket.subtipo.replace('_', ' ')}`}
+                                    </h4>
+                                    {ticket.protocol_code && (
+                                      <p className="text-xs text-muted-foreground">
+                                        Protocolo: {ticket.protocol_code}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <Badge 
+                                    variant={
+                                      ticket.status === 'finalizado' ? 'default' :
+                                      ticket.status === 'cancelado' ? 'destructive' :
+                                      ticket.status === 'em_analise' ? 'secondary' :
+                                      'outline'
+                                    }
+                                    className="shrink-0"
+                                  >
+                                    {ticket.status.replace('_', ' ')}
+                                  </Badge>
+                                </div>
+
+                                {ticket.descricao && (
+                                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                                    {ticket.descricao}
+                                  </p>
+                                )}
+
+                                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                                  {ticket.data_evento && (
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {format(new Date(ticket.data_evento), 'dd/MM/yyyy', { locale: ptBR })}
+                                    </div>
+                                  )}
+                                  {ticket.valor_estimado && (
+                                    <div className="flex items-center gap-1">
+                                      <DollarSign className="h-3 w-3" />
+                                      {new Intl.NumberFormat('pt-BR', {
+                                        style: 'currency',
+                                        currency: 'BRL'
+                                      }).format(ticket.valor_estimado)}
+                                    </div>
+                                  )}
+                                  {ticket.localizacao && (
+                                    <div className="flex items-center gap-1 truncate">
+                                      📍 {ticket.localizacao}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {ticket.gravidade && ticket.tipo === 'sinistro' && (
+                                  <div className="mt-2">
+                                    <Badge 
+                                      variant="outline"
+                                      className={cn(
+                                        "text-xs",
+                                        ticket.gravidade === 'critica' && "border-red-500 text-red-700",
+                                        ticket.gravidade === 'alta' && "border-orange-500 text-orange-700",
+                                        ticket.gravidade === 'media' && "border-yellow-500 text-yellow-700",
+                                        ticket.gravidade === 'baixa' && "border-green-500 text-green-700"
+                                      )}
+                                    >
+                                      Gravidade: {ticket.gravidade}
+                                    </Badge>
+                                  </div>
+                                )}
+
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
+                                  <Clock className="h-3 w-3" />
+                                  Criado em {format(new Date(ticket.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </TabsContent>
             </div>
           </Tabs>
