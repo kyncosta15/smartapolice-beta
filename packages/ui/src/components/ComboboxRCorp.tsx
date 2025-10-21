@@ -1,5 +1,5 @@
 import React from 'react'
-import { ComboBox, Input, Button, Popover, ListBox, ListBoxItem, Label, Text } from 'react-aria-components'
+import { ComboBox, Input, Button, Popover, ListBox, ListBoxItem, Label, Text, Group } from 'react-aria-components'
 import { ChevronDown, Loader2, Check } from 'lucide-react'
 import { cn } from '../lib/utils'
 
@@ -68,7 +68,7 @@ export function ComboboxRCorp({
         </Label>
       )}
 
-      <div className="relative">
+      <Group className="relative flex items-center">
         <Input
           placeholder={placeholder}
           className={cn(
@@ -84,7 +84,7 @@ export function ComboboxRCorp({
             <ChevronDown className="h-4 w-4 transition-transform duration-200" />
           )}
         </Button>
-      </div>
+      </Group>
 
       {description && (
         <Text slot="description" className="text-sm text-muted-foreground mt-1">

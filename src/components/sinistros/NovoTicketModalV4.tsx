@@ -66,16 +66,6 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
     description: `${vehicle.marca} ${vehicle.modelo} • ${vehicle.proprietario_nome || 'N/A'}`,
   }))
 
-  console.log('🚗 NovoTicketModalV4 state:', {
-    step,
-    vehicleQuery,
-    vehicleResultsCount: vehicleResults.length,
-    vehicleComboboxItemsCount: vehicleComboboxItems.length,
-    isSearchingVehicles,
-    searchError,
-    selectedVehicle: selectedVehicle?.placa
-  })
-
   const handleVehicleSelect = async (vehicleId: string | null) => {
     console.log('🚗 handleVehicleSelect chamado com:', vehicleId)
     

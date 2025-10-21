@@ -7,6 +7,7 @@ import {
   ListBoxItem,
   Popover,
   Button,
+  Group,
 } from 'react-aria-components';
 import type { Key } from 'react-aria-components';
 import { ChevronDown, Search, X } from 'lucide-react';
@@ -61,28 +62,16 @@ export function ComboboxRCorp({
   // Filter items based on input value only if local filtering is enabled
   const filteredItems = React.useMemo(() => {
     if (disableLocalFiltering) {
-      console.log('🔍 ComboboxRCorp: Filtragem local desabilitada, usando items do backend:', items.length);
       return items;
     }
     if (!inputValue) return items;
-    const filtered = items.filter(item =>
+    return items.filter(item =>
       item.label.toLowerCase().includes(inputValue.toLowerCase()) ||
       item.description?.toLowerCase().includes(inputValue.toLowerCase())
     );
-    console.log('🔍 ComboboxRCorp: Filtragem local ativada. Input:', inputValue, 'Items filtrados:', filtered.length);
-    return filtered;
   }, [items, inputValue, disableLocalFiltering]);
 
   const selectedItem = items.find(item => item.id === selectedKey);
-
-  console.log('🎯 ComboboxRCorp render:', {
-    inputValue,
-    itemsCount: items.length,
-    filteredCount: filteredItems.length,
-    selectedKey,
-    isLoading,
-    disableLocalFiltering
-  });
 
   return (
     <ComboBox
@@ -107,7 +96,7 @@ export function ComboboxRCorp({
         <div className="text-xs text-muted-foreground mb-1">{description}</div>
       )}
 
-      <div className="relative">
+      <Group className="relative flex items-center">
         <Input
           className={cn(
             "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
@@ -131,7 +120,7 @@ export function ComboboxRCorp({
         >
           <ChevronDown className="h-4 w-4" />
         </Button>
-      </div>
+      </Group>
 
       {errorMessage && (
         <div className="text-xs text-destructive mt-1">{errorMessage}</div>
