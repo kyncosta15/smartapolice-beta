@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { ClaimsHeader } from './ClaimsHeader';
 import { ClaimsKpis } from './ClaimsKpis';
 import { ClaimsList } from './ClaimsList';
 import { ClaimsDetailsDrawer } from './ClaimsDetailsDrawer';
-import { NewClaimModal } from './NewClaimModal';
+import { NovoTicketModalV4 } from '@/components/sinistros/NovoTicketModalV4';
 import { AssistancesView } from './AssistancesView';
 import { Claim, Assistance, ClaimsView } from '@/types/claims';
 import { ClaimsService } from '@/services/claims';
-import { useEffect } from 'react';
 
 interface ClaimsManagerProps {
   onClaimEdit?: (claim: Claim) => void;
@@ -22,7 +23,6 @@ export function ClaimsManager({ onClaimEdit }: ClaimsManagerProps) {
   const [loading, setLoading] = useState(true);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
-  const [isNewClaimModalOpen, setIsNewClaimModalOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -69,23 +69,40 @@ export function ClaimsManager({ onClaimEdit }: ClaimsManagerProps) {
     }
   };
 
-  const handleNewClaim = () => {
-    setIsNewClaimModalOpen(true);
-  };
-
-  const handleClaimCreated = (claim: Claim) => {
-    setClaims(prev => [claim, ...prev]);
-    loadData(); // Refresh data
+  const handleTicketCreated = () => {
+    loadData(); // Refresh data after ticket creation
   };
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            Gestão de Sinistros e Assistências
+          </h1>
+          <p className="text-muted-foreground">
+            Acompanhe e gerencie todos os sinistros e assistências
+          </p>
+        </div>
+        
+        <NovoTicketModalV4
+          trigger={
+            <Button className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Ticket
+            </Button>
+          }
+          onTicketCreated={handleTicketCreated}
+          initialTipo={currentView === 'sinistros' ? 'sinistro' : 'assistencia'}
+        />
+      </div>
+
       <ClaimsHeader
         currentView={currentView}
         onViewChange={setCurrentView}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        onNewTicket={handleNewClaim}
+        onNewTicket={() => {}} // Não usado mais, o botão está acima
       />
 
       <ClaimsKpis
@@ -116,12 +133,6 @@ export function ClaimsManager({ onClaimEdit }: ClaimsManagerProps) {
         claim={selectedClaim}
         open={isDetailsDrawerOpen}
         onOpenChange={setIsDetailsDrawerOpen}
-      />
-
-      <NewClaimModal
-        open={isNewClaimModalOpen}
-        onOpenChange={setIsNewClaimModalOpen}
-        onClaimCreated={handleClaimCreated}
       />
     </div>
   );
