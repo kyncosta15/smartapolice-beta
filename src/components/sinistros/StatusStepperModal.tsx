@@ -4,10 +4,13 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -19,8 +22,11 @@ import {
   Loader2,
   AlertTriangle,
   Wrench,
+  Edit2,
+  Save,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface StatusStepperModalProps {
   open: boolean;
@@ -72,6 +78,10 @@ export function StatusStepperModal({
   const [ticketData, setTicketData] = useState<any>(null);
   const [movements, setMovements] = useState<TicketMovement[]>([]);
   const [steps, setSteps] = useState<StatusStep[]>([]);
+  const [editingStep, setEditingStep] = useState<StatusStep | null>(null);
+  const [editDescription, setEditDescription] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (open && ticketId) {
@@ -158,6 +168,64 @@ export function StatusStepperModal({
   const progress = getProgressPercentage();
   const lastActivity = getLastActivity();
 
+  const handleStepClick = (step: StatusStep) => {
+    setEditingStep(step);
+    setEditDescription('');
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!editingStep || !ticketId) return;
+
+    setIsUpdating(true);
+    try {
+      const previousStatus = ticketData.status;
+
+      // Atualizar status no banco
+      const { error: updateError } = await supabase
+        .from('tickets')
+        .update({
+          status: editingStep.status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', ticketId);
+
+      if (updateError) throw updateError;
+
+      // Criar movimento
+      await supabase
+        .from('ticket_movements')
+        .insert({
+          ticket_id: ticketId,
+          tipo: 'status_change',
+          payload: {
+            status_anterior: previousStatus,
+            status_novo: editingStep.status,
+            descricao: editDescription || `Status alterado para "${editingStep.label}"`,
+            motivo: editDescription,
+          },
+        });
+
+      toast({
+        title: 'Status atualizado',
+        description: `Status alterado para "${editingStep.label}"`,
+      });
+
+      // Recarregar dados
+      await loadTicketData();
+      setEditingStep(null);
+      setEditDescription('');
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar o status.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -228,15 +296,19 @@ export function StatusStepperModal({
             {/* Steps timeline */}
             <div className="space-y-1">
               {steps.map((step, index) => (
-                <div key={step.status} className="flex items-start gap-3 py-3">
+                <div key={step.status} className="flex items-start gap-3 py-3 group">
                   {/* Step indicator */}
                   <div className="flex flex-col items-center">
-                    <div
+                    <button
+                      onClick={() => handleStepClick(step)}
+                      disabled={loading}
                       className={cn(
                         "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all",
+                        "hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+                        "disabled:cursor-not-allowed disabled:opacity-50",
                         step.completed
-                          ? "bg-green-500 border-green-500 text-white"
-                          : "bg-background border-muted-foreground/30 text-muted-foreground"
+                          ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
+                          : "bg-background border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary"
                       )}
                     >
                       {step.completed ? (
@@ -244,7 +316,7 @@ export function StatusStepperModal({
                       ) : (
                         <span className="text-xs font-semibold">{step.order}</span>
                       )}
-                    </div>
+                    </button>
                     {index < steps.length - 1 && (
                       <div
                         className={cn(
@@ -257,28 +329,37 @@ export function StatusStepperModal({
 
                   {/* Step content */}
                   <div className="flex-1 pt-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p
-                          className={cn(
-                            "font-semibold text-sm",
-                            step.completed ? "text-foreground" : "text-muted-foreground"
+                    <button
+                      onClick={() => handleStepClick(step)}
+                      disabled={loading}
+                      className="w-full text-left hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p
+                              className={cn(
+                                "font-semibold text-sm",
+                                step.completed ? "text-foreground" : "text-muted-foreground"
+                              )}
+                            >
+                              {step.label}
+                            </p>
+                            <Edit2 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                          {step.completed && step.timestamp && (
+                            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                              Concluída
+                            </p>
                           )}
-                        >
-                          {step.label}
-                        </p>
+                        </div>
                         {step.completed && step.timestamp && (
-                          <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                            Concluída
-                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(step.timestamp), "dd/MM HH:mm", { locale: ptBR })}
+                          </span>
                         )}
                       </div>
-                      {step.completed && step.timestamp && (
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(step.timestamp), "dd/MM HH:mm", { locale: ptBR })}
-                        </span>
-                      )}
-                    </div>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -312,6 +393,79 @@ export function StatusStepperModal({
           </div>
         )}
       </DialogContent>
+
+      {/* Modal de edição de status */}
+      <Dialog open={!!editingStep} onOpenChange={(open) => !open && setEditingStep(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit2 className="h-5 w-5" />
+              Alterar Status: {editingStep?.label}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-medium">Status atual:</p>
+              <Badge variant="outline" className="font-semibold">
+                {ticketData?.status?.replace(/_/g, ' ')}
+              </Badge>
+            </div>
+
+            <div className="bg-primary/10 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-medium">Novo status:</p>
+              <Badge variant="default" className="font-semibold">
+                {editingStep?.label}
+              </Badge>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">
+                Motivo / Descrição da mudança
+                <span className="text-xs text-muted-foreground ml-1">(opcional)</span>
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Descreva o motivo da mudança de status..."
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+              <p className="text-xs text-muted-foreground">
+                Esta descrição será registrada no histórico do ticket
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditingStep(null)}
+              disabled={isUpdating}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleUpdateStatus}
+              disabled={isUpdating}
+              className="gap-2"
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Atualizando...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Confirmar Mudança
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
