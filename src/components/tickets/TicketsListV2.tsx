@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownRCorp } from '@/components/ui-v2/dropdown-rcorp';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, FileText } from 'lucide-react';
+import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, FileText, AlertTriangle, Wrench, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -347,40 +347,77 @@ export function TicketsListV2({
             <Checkbox
               checked={selectedIds.has(item.id)}
               onCheckedChange={() => toggleSelectItem(item.id)}
+              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
           </div>
         );
         
       case 'ticketNumber':
         return (
-          <div className="font-mono font-semibold text-sm">
-            {item.ticketNumber}
+          <div className="flex items-center gap-2">
+            <div className={cn(
+              "w-2 h-2 rounded-full",
+              item.type === 'sinistro' ? "bg-red-500" : "bg-blue-500"
+            )} />
+            <span className="font-mono font-bold text-sm tracking-tight">
+              {item.ticketNumber}
+            </span>
           </div>
         );
         
       case 'type':
         return (
-          <Badge 
-            variant={item.type === 'sinistro' ? 'destructive' : 'secondary'}
-            className="font-medium"
-          >
-            {item.type === 'sinistro' ? 'Sinistro' : 'Assistência'}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {item.type === 'sinistro' ? (
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+            ) : (
+              <Wrench className="h-4 w-4 text-blue-600" />
+            )}
+            <Badge 
+              variant={item.type === 'sinistro' ? 'destructive' : 'default'}
+              className="font-semibold text-xs"
+            >
+              {item.type === 'sinistro' ? 'Sinistro' : 'Assistência'}
+            </Badge>
+          </div>
         );
         
       case 'veiculo':
         return (
-          <div className="space-y-0.5">
-            <div className="font-medium text-sm">{item.veiculo.placa}</div>
-            <div className="text-xs text-muted-foreground line-clamp-1">
-              {item.veiculo.marca} {item.veiculo.modelo}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="font-bold text-sm tracking-wide">{item.veiculo.placa}</span>
             </div>
+            {(item.veiculo.marca || item.veiculo.modelo) && (
+              <div className="text-xs text-muted-foreground line-clamp-1 pl-5">
+                {item.veiculo.marca} {item.veiculo.modelo}
+              </div>
+            )}
+            {item.veiculo.proprietario_nome && (
+              <div className="text-xs text-muted-foreground line-clamp-1 pl-5 flex items-center gap-1">
+                <span className="opacity-70">•</span>
+                {item.veiculo.proprietario_nome}
+              </div>
+            )}
           </div>
         );
         
       case 'status':
+        const statusColors: Record<string, string> = {
+          'aberto': 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
+          'em_regulacao': 'border-yellow-500 bg-yellow-50 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300',
+          'em_analise': 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300',
+          'finalizado': 'border-green-500 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',
+        };
+        
         return (
-          <Badge variant={item.statusVariant} className="font-medium">
+          <Badge 
+            className={cn(
+              "font-semibold border-2 shadow-sm",
+              statusColors[item.status] || "border-gray-500 bg-gray-50 text-gray-700"
+            )}
+          >
             {item.displayStatus}
           </Badge>
         );
@@ -388,20 +425,28 @@ export function TicketsListV2({
       case 'valor_estimado':
         if ('valor_estimado' in item && item.valor_estimado) {
           return (
-            <div className="font-medium text-sm tabular-nums">
-              {new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-              }).format(item.valor_estimado)}
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-green-100 dark:bg-green-950">
+                <span className="text-green-600 dark:text-green-400 text-xs font-bold">R$</span>
+              </div>
+              <span className="font-bold text-sm tabular-nums">
+                {new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                }).format(item.valor_estimado)}
+              </span>
             </div>
           );
         }
-        return <div className="text-muted-foreground text-sm">-</div>;
+        return <span className="text-muted-foreground text-xs">—</span>;
         
       case 'created_at':
         return (
-          <div className="text-sm tabular-nums">
-            {format(new Date(item.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+          <div className="flex items-center gap-2 text-xs">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="tabular-nums font-medium">
+              {format(new Date(item.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+            </span>
           </div>
         );
         
@@ -410,7 +455,7 @@ export function TicketsListV2({
           <div onClick={(e) => e.stopPropagation()}>
             <DropdownRCorp
               trigger={
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary/10">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               }
@@ -462,13 +507,14 @@ export function TicketsListV2({
     <div className={cn("space-y-4", className)}>
       {/* Bulk actions bar */}
       {allItems.length > 0 && (
-        <div className="flex items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
+        <div className="flex items-center justify-between gap-4 p-4 bg-gradient-to-r from-muted/80 to-muted/40 rounded-xl border border-border/50 shadow-sm backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <Checkbox
               checked={selectedIds.size === allItems.length}
               onCheckedChange={toggleSelectAll}
+              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
-            <span className="text-sm font-medium">
+            <span className="text-sm font-semibold">
               {selectedIds.size > 0 
                 ? `${selectedIds.size} selecionado(s)` 
                 : 'Selecionar todos'}
@@ -480,7 +526,7 @@ export function TicketsListV2({
               variant="destructive"
               size="sm"
               onClick={handleBulkDeleteClick}
-              className="gap-2"
+              className="gap-2 shadow-md hover:shadow-lg transition-shadow"
             >
               <Trash2 className="h-4 w-4" />
               Deletar {selectedIds.size} registro(s)
@@ -497,14 +543,14 @@ export function TicketsListV2({
             placeholder="Buscar por ticket, placa ou proprietário..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 bg-background/50 backdrop-blur-sm border-border/50 focus:border-primary transition-colors"
           />
         </div>
         
         {/* Mostrar filtro de tipo APENAS se os dados não estiverem pré-filtrados */}
         {!isPreFiltered && (
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger className="w-full sm:w-40 bg-background/50 backdrop-blur-sm border-border/50">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -516,7 +562,7 @@ export function TicketsListV2({
         )}
         
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-40">
+          <SelectTrigger className="w-full sm:w-40 bg-background/50 backdrop-blur-sm border-border/50">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -530,12 +576,15 @@ export function TicketsListV2({
       </div>
 
       {/* Results count */}
-      <div className="text-sm text-muted-foreground">
-        {loading ? (
-          'Carregando tickets...'
-        ) : (
-          `${sortedItems.length} ticket${sortedItems.length !== 1 ? 's' : ''} encontrado${sortedItems.length !== 1 ? 's' : ''}`
-        )}
+      <div className="flex items-center gap-2 px-1">
+        <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
+        <span className="text-sm font-medium text-muted-foreground">
+          {loading ? (
+            'Carregando tickets...'
+          ) : (
+            `${sortedItems.length} ticket${sortedItems.length !== 1 ? 's' : ''} encontrado${sortedItems.length !== 1 ? 's' : ''}`
+          )}
+        </span>
       </div>
 
       {/* Table */}

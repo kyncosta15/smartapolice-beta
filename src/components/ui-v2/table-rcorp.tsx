@@ -94,7 +94,7 @@ export function TableRCorp<T extends Record<string, any>>({
   }
 
   return (
-    <ResizableTableContainer className={cn("rounded-lg border border-border bg-background shadow-sm", className)}>
+    <ResizableTableContainer className={cn("rounded-xl border border-border bg-card shadow-lg overflow-hidden", className)}>
       <Table
         aria-label="Tabela de tickets"
         className="w-full"
@@ -116,7 +116,7 @@ export function TableRCorp<T extends Record<string, any>>({
               minWidth={column.minWidth}
               maxWidth={column.maxWidth}
               className={cn(
-                "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50 border-b border-border",
+                "px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-foreground/70 bg-muted/80 border-b-2 border-border backdrop-blur-sm",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 column.className
               )}
@@ -128,14 +128,14 @@ export function TableRCorp<T extends Record<string, any>>({
                     <span className="flex flex-col -space-y-1">
                       <ChevronUp
                         className={cn(
-                          "h-3 w-3",
-                          sortDirection === 'ascending' ? "text-foreground" : "text-muted-foreground/30"
+                          "h-3 w-3 transition-colors",
+                          sortDirection === 'ascending' ? "text-primary" : "text-muted-foreground/30"
                         )}
                       />
                       <ChevronDown
                         className={cn(
-                          "h-3 w-3",
-                          sortDirection === 'descending' ? "text-foreground" : "text-muted-foreground/30"
+                          "h-3 w-3 transition-colors",
+                          sortDirection === 'descending' ? "text-primary" : "text-muted-foreground/30"
                         )}
                       />
                     </span>
@@ -150,7 +150,10 @@ export function TableRCorp<T extends Record<string, any>>({
             const rowId = getRowId?.(item) ?? String(item.id);
             
             return (
-              <Row id={rowId} className="group hover:bg-muted/30 transition-colors border-b border-border last:border-0">
+              <Row 
+                id={rowId} 
+                className="group hover:bg-primary/5 transition-all duration-200 border-b border-border/50 last:border-0 cursor-pointer hover:shadow-sm"
+              >
                 {columns.map((column) => {
                   const cellContent = renderCell 
                     ? renderCell(item, column.key as unknown as Key) 
@@ -161,7 +164,7 @@ export function TableRCorp<T extends Record<string, any>>({
                       key={column.key}
                       className={cn(
                         rowPadding[density],
-                        "align-middle",
+                        "align-middle bg-background/50 group-hover:bg-primary/[0.02] transition-colors",
                         densityClasses[density]
                       )}
                     >
