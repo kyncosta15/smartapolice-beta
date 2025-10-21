@@ -48,44 +48,39 @@ const columns: TableColumn[] = [
   {
     key: 'select',
     name: '',
-    width: 48,
+    width: 50,
   },
   {
-    key: 'ticketNumber',
+    key: 'ticket',
     name: 'Ticket',
-    width: 110,
+    width: 200,
     isRowHeader: true,
-  },
-  {
-    key: 'type',
-    name: 'Tipo',
-    width: 100,
   },
   {
     key: 'veiculo',
     name: 'Veículo',
-    width: 280,
+    width: 300,
   },
   {
     key: 'status',
     name: 'Status',
-    width: 110,
+    width: 140,
   },
   {
     key: 'valor_estimado',
     name: 'Valor',
-    width: 130,
+    width: 150,
   },
   {
     key: 'created_at',
     name: 'Data',
-    width: 110,
+    width: 120,
     allowsSorting: true,
   },
   {
     key: 'actions',
     name: 'Ações',
-    width: 70,
+    width: 80,
   },
 ];
 
@@ -352,33 +347,31 @@ export function TicketsListV2({
           </div>
         );
         
-      case 'ticketNumber':
+      case 'ticket':
         return (
-          <div className="flex items-center gap-2">
-            <div className={cn(
-              "w-2 h-2 rounded-full",
-              item.type === 'sinistro' ? "bg-red-500" : "bg-blue-500"
-            )} />
-            <span className="font-mono font-bold text-sm tracking-tight">
-              {item.ticketNumber}
-            </span>
-          </div>
-        );
-        
-      case 'type':
-        return (
-          <div className="flex items-center gap-2">
-            {item.type === 'sinistro' ? (
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-            ) : (
-              <Wrench className="h-4 w-4 text-blue-600" />
-            )}
-            <Badge 
-              variant={item.type === 'sinistro' ? 'destructive' : 'default'}
-              className="font-semibold text-xs"
-            >
-              {item.type === 'sinistro' ? 'Sinistro' : 'Assistência'}
-            </Badge>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <div className={cn(
+                "w-2 h-2 rounded-full flex-shrink-0",
+                item.type === 'sinistro' ? "bg-red-500" : "bg-blue-500"
+              )} />
+              <span className="font-mono font-bold text-sm tracking-tight">
+                {item.ticketNumber}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 pl-4">
+              {item.type === 'sinistro' ? (
+                <AlertTriangle className="h-3.5 w-3.5 text-red-600 flex-shrink-0" />
+              ) : (
+                <Wrench className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
+              )}
+              <Badge 
+                variant={item.type === 'sinistro' ? 'destructive' : 'default'}
+                className="font-medium text-xs"
+              >
+                {item.type === 'sinistro' ? 'Sinistro' : 'Assistência'}
+              </Badge>
+            </div>
           </div>
         );
         
