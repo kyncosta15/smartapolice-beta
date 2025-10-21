@@ -361,34 +361,48 @@ export function TicketsListV2({
         
       case 'actions':
         return (
-          <DropdownRCorp
-            trigger={
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            }
-            items={[
-              {
-                id: 'view',
-                label: 'Visualizar',
-                icon: <Eye className="h-4 w-4" />,
-                onClick: () => onViewClaim?.(item.id),
-              },
-              {
-                id: 'edit',
-                label: 'Editar',
-                icon: <Edit className="h-4 w-4" />,
-                onClick: () => onEditClaim?.(item.id),
-              },
-              {
-                id: 'delete',
-                label: 'Excluir',
-                icon: <Trash2 className="h-4 w-4" />,
-                variant: 'destructive',
-                onClick: () => handleDeleteClick(item.id),
-              },
-            ]}
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <DropdownRCorp
+              trigger={
+                <Button variant="ghost" size="sm" onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('🔍 Actions button clicked:', item.id);
+                }}>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              }
+              items={[
+                {
+                  id: 'view',
+                  label: 'Visualizar',
+                  icon: <Eye className="h-4 w-4" />,
+                  onClick: () => {
+                    console.log('🔍 Visualizar clicked:', item.id, onViewClaim);
+                    onViewClaim?.(item.id);
+                  },
+                },
+                {
+                  id: 'edit',
+                  label: 'Editar',
+                  icon: <Edit className="h-4 w-4" />,
+                  onClick: () => {
+                    console.log('🔍 Editar clicked:', item.id);
+                    onEditClaim?.(item.id);
+                  },
+                },
+                {
+                  id: 'delete',
+                  label: 'Excluir',
+                  icon: <Trash2 className="h-4 w-4" />,
+                  variant: 'destructive',
+                  onClick: () => {
+                    console.log('🔍 Excluir clicked:', item.id);
+                    handleDeleteClick(item.id);
+                  },
+                },
+              ]}
+            />
+          </div>
         );
         
       default:
