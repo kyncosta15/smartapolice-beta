@@ -19,6 +19,16 @@ import {
   Sun
 } from 'lucide-react';
 import { Claim, Assistance } from '@/types/claims';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface SinistrosDashboardProps {
   onNavigateToList?: (scope: 'all' | 'claims' | 'assists', filter?: string, value?: string) => void;
@@ -42,6 +52,10 @@ export function SinistrosDashboard({
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalFilter, setModalFilter] = useState<'sinistro' | 'assistencia' | 'todos'>('todos');
+  
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'claim' | 'assistance' } | null>(null);
 
   // Calculate KPIs using the custom hook
   const stats = useClaimsStats(claims, assistances);
@@ -79,38 +93,44 @@ export function SinistrosDashboard({
   };
 
   const handleDeleteClaim = async (claimId: string) => {
-    try {
-      await ClaimsService.deleteClaim(claimId);
-      setClaims(prev => prev.filter(c => c.id !== claimId));
-      toast({
-        title: "Sucesso",
-        description: "Sinistro deletado com sucesso!",
-      });
-    } catch (error) {
-      console.error('Erro ao deletar sinistro:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível deletar o sinistro",
-        variant: "destructive"
-      });
-    }
+    setItemToDelete({ id: claimId, type: 'claim' });
+    setDeleteDialogOpen(true);
   };
 
   const handleDeleteAssistance = async (assistanceId: string) => {
+    setItemToDelete({ id: assistanceId, type: 'assistance' });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
     try {
-      await ClaimsService.deleteAssistance(assistanceId);
-      setAssistances(prev => prev.filter(a => a.id !== assistanceId));
-      toast({
-        title: "Sucesso",
-        description: "Assistência deletada com sucesso!",
-      });
+      if (itemToDelete.type === 'claim') {
+        await ClaimsService.deleteClaim(itemToDelete.id);
+        setClaims(prev => prev.filter(c => c.id !== itemToDelete.id));
+        toast({
+          title: "Sucesso",
+          description: "Sinistro deletado com sucesso!",
+        });
+      } else {
+        await ClaimsService.deleteAssistance(itemToDelete.id);
+        setAssistances(prev => prev.filter(a => a.id !== itemToDelete.id));
+        toast({
+          title: "Sucesso",
+          description: "Assistência deletada com sucesso!",
+        });
+      }
     } catch (error) {
-      console.error('Erro ao deletar assistência:', error);
+      console.error('Erro ao deletar:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível deletar a assistência",
+        description: `Não foi possível deletar o ${itemToDelete.type === 'claim' ? 'sinistro' : 'assistência'}`,
         variant: "destructive"
       });
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
   };
 
@@ -186,7 +206,31 @@ export function SinistrosDashboard({
           claims={claims}
           assistances={assistances}
           loading={loading}
+          onDeleteClaim={handleDeleteClaim}
+          onDeleteAssistance={handleDeleteAssistance}
         />
+
+        {/* Diálogo de confirmação de exclusão */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja deletar este {itemToDelete?.type === 'claim' ? 'sinistro' : 'assistência'}? 
+                Esta ação não pode ser desfeita e o registro será permanentemente removido do banco de dados.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Deletar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

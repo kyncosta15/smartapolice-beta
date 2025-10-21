@@ -85,7 +85,7 @@ export function SinistrosDetailsModal({
             filter={filter}
             onViewClaim={(id) => console.log('View claim:', id)}
             onEditClaim={(id) => console.log('Edit claim:', id)}
-            onDeleteClaim={(id) => console.log('Delete claim:', id)}
+            onDeleteClaim={onDeleteClaim}
           />
         </div>
       </DialogContent>
