@@ -36,6 +36,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { SinistrosListModal } from '../sinistros/SinistrosListModal';
 
 interface VehicleDetailsModalNewProps {
   veiculo: FrotaVeiculo | null;
@@ -65,6 +66,7 @@ export function VehicleDetailsModalNew({
   }>({ updated: false });
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
+  const [sinistrosModalOpen, setSinistrosModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -781,9 +783,9 @@ export function VehicleDetailsModalNew({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setActiveTab('sinistros')}
+                              onClick={() => setSinistrosModalOpen(true)}
                               className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full hover:bg-primary/10"
-                              title="Focar nesta ocorrência"
+                              title="Ver lista completa de sinistros"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -940,6 +942,15 @@ export function VehicleDetailsModalNew({
           </div>
         </div>
       </DialogContent>
+
+      <SinistrosListModal
+        open={sinistrosModalOpen}
+        onOpenChange={setSinistrosModalOpen}
+        title="Lista de Sinistros e Assistências"
+        initialFilter={{
+          tipo: 'sinistro'
+        }}
+      />
     </Dialog>
   );
 }
