@@ -136,7 +136,45 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
         { value: 'chaveiro', label: 'Chaveiro' },
         { value: 'taxi', label: 'Táxi' },
         { value: 'guincho', label: 'Guincho' },
+        { value: 'vidros', label: 'Vidros' },
         { value: 'outros', label: 'Outros' },
+      ];
+
+  const statusOptions = ticket?.tipo === 'sinistro'
+    ? [
+        { value: 'aberto', label: 'Aberto' },
+        { value: 'analise_seguradora', label: 'Análise na Seguradora' },
+        { value: 'aguardando_documento', label: 'Aguardando Documento' },
+        { value: 'aguardando_vistoria', label: 'Aguardando Vistoria' },
+        { value: 'na_oficina', label: 'Na Oficina' },
+        { value: 'aguardando_peca', label: 'Aguardando Peça' },
+        { value: 'aguardando_reparo', label: 'Aguardando Reparo' },
+        { value: 'processo_liquidacao', label: 'Processo de Liquidação' },
+        { value: 'carro_reserva', label: 'Carro Reserva' },
+        { value: 'lucros_cessantes', label: 'Lucros Cessantes' },
+        { value: 'dc_danos_corporais', label: 'DC - Danos Corporais' },
+        { value: 'acordo', label: 'Acordo' },
+        { value: 'finalizado_reparado', label: 'Finalizado Reparado' },
+        { value: 'finalizado_com_indenizacao', label: 'Finalizado com Indenização' },
+        { value: 'finalizado_sem_indenizacao', label: 'Finalizado sem Indenização' },
+        { value: 'finalizado_inatividade', label: 'Finalizado (inatividade cor/seg)' },
+        { value: 'cancelado', label: 'Cancelado' },
+      ]
+    : [
+        { value: 'aberto', label: 'Aberto' },
+        { value: 'atendimento_andamento', label: 'Atendimento em Andamento' },
+        { value: 'saida_base', label: 'Saída de Base' },
+        { value: 'aguardando_prestador', label: 'Aguardando Prestador' },
+        { value: 'aguardando_vistoria', label: 'Aguardando Vistoria' },
+        { value: 'aguardando_peca', label: 'Aguardando Peça' },
+        { value: 'aguardando_documentos', label: 'Aguardando Documentos' },
+        { value: 'aguardando_retorno', label: 'Aguardando Retorno (Segurado/Corretor)' },
+        { value: 'aguardando_reparo', label: 'Aguardando Reparo' },
+        { value: 'vidros', label: 'Vidros' },
+        { value: 'reembolso', label: 'Reembolso' },
+        { value: 'finalizado', label: 'Finalizado' },
+        { value: 'finalizado_inatividade', label: 'Finalizado (inatividade cor/seg)' },
+        { value: 'cancelado', label: 'Cancelado' },
       ];
 
   return (
@@ -182,13 +220,12 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
               )}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="aberto">🔴 Aberto</SelectItem>
-                <SelectItem value="em_analise">🟡 Em Análise</SelectItem>
-                <SelectItem value="aguardando_seguradora">🟠 Aguardando Seguradora</SelectItem>
-                <SelectItem value="em_reparo">🔵 Em Reparo</SelectItem>
-                <SelectItem value="finalizado">✅ Finalizado</SelectItem>
-                <SelectItem value="cancelado">❌ Cancelado</SelectItem>
+              <SelectContent className="max-h-[300px]">
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             {formData.status === 'finalizado' && (

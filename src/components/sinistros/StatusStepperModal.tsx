@@ -53,19 +53,38 @@ interface TicketMovement {
 // Etapas para sinistros
 const SINISTRO_STEPS = [
   { status: 'aberto', label: 'Aberto', order: 1 },
-  { status: 'em_analise', label: 'Em Análise', order: 2 },
-  { status: 'aguardando_seguradora', label: 'Aguardando Seguradora', order: 3 },
-  { status: 'em_reparo', label: 'Em Reparo', order: 4 },
-  { status: 'finalizado', label: 'Finalizado', order: 5 },
+  { status: 'analise_seguradora', label: 'Análise na Seguradora', order: 2 },
+  { status: 'aguardando_documento', label: 'Aguardando Documento', order: 3 },
+  { status: 'aguardando_vistoria', label: 'Aguardando Vistoria', order: 4 },
+  { status: 'na_oficina', label: 'Na Oficina', order: 5 },
+  { status: 'aguardando_peca', label: 'Aguardando Peça', order: 6 },
+  { status: 'aguardando_reparo', label: 'Aguardando Reparo', order: 7 },
+  { status: 'processo_liquidacao', label: 'Processo de Liquidação', order: 8 },
+  { status: 'carro_reserva', label: 'Carro Reserva', order: 9 },
+  { status: 'lucros_cessantes', label: 'Lucros Cessantes', order: 10 },
+  { status: 'dc_danos_corporais', label: 'DC - Danos Corporais', order: 11 },
+  { status: 'acordo', label: 'Acordo', order: 12 },
+  { status: 'finalizado_reparado', label: 'Finalizado Reparado', order: 13 },
+  { status: 'finalizado_com_indenizacao', label: 'Finalizado com Indenização', order: 14 },
+  { status: 'finalizado_sem_indenizacao', label: 'Finalizado sem Indenização', order: 15 },
+  { status: 'finalizado_inatividade', label: 'Finalizado (inatividade cor/seg)', order: 16 },
 ];
 
 // Etapas para assistências
 const ASSISTENCIA_STEPS = [
-  { status: 'aberto', label: 'Abertura', order: 1 },
-  { status: 'em_analise', label: 'Atendimento em Andamento', order: 2 },
-  { status: 'aguardando_seguradora', label: 'Saída de Base', order: 3 },
-  { status: 'em_reparo', label: 'Aguardando Prestador', order: 4 },
-  { status: 'finalizado', label: 'Finalizado', order: 5 },
+  { status: 'aberto', label: 'Aberto', order: 1 },
+  { status: 'atendimento_andamento', label: 'Atendimento em Andamento', order: 2 },
+  { status: 'saida_base', label: 'Saída de Base', order: 3 },
+  { status: 'aguardando_prestador', label: 'Aguardando Prestador', order: 4 },
+  { status: 'aguardando_vistoria', label: 'Aguardando Vistoria', order: 5 },
+  { status: 'aguardando_peca', label: 'Aguardando Peça', order: 6 },
+  { status: 'aguardando_documentos', label: 'Aguardando Documentos', order: 7 },
+  { status: 'aguardando_retorno', label: 'Aguardando Retorno (Segurado/Corretor)', order: 8 },
+  { status: 'aguardando_reparo', label: 'Aguardando Reparo', order: 9 },
+  { status: 'vidros', label: 'Vidros', order: 10 },
+  { status: 'reembolso', label: 'Reembolso', order: 11 },
+  { status: 'finalizado', label: 'Finalizado', order: 12 },
+  { status: 'finalizado_inatividade', label: 'Finalizado (inatividade cor/seg)', order: 13 },
 ];
 
 export function StatusStepperModal({
@@ -127,9 +146,6 @@ export function StatusStepperModal({
     const stepsTemplate = ticketType === 'sinistro' ? SINISTRO_STEPS : ASSISTENCIA_STEPS;
     const currentStatus = ticket.status;
     
-    // Encontrar a ordem do status atual
-    const currentStepOrder = stepsTemplate.find(s => s.status === currentStatus)?.order || 1;
-
     // Mapear movimentos de status para timestamps
     const statusTimestamps: Record<string, string> = {};
     movementsData.forEach(movement => {
@@ -138,11 +154,14 @@ export function StatusStepperModal({
       }
     });
 
-    // Criar steps processados
+    // Adicionar timestamp do status de criação
+    statusTimestamps['aberto'] = ticket.created_at;
+
+    // Criar steps processados - marcar como completo apenas se passou por ele
     const processedSteps: StatusStep[] = stepsTemplate.map(step => ({
       ...step,
-      completed: step.order <= currentStepOrder,
-      timestamp: statusTimestamps[step.status] || (step.order === 1 ? ticket.created_at : undefined),
+      completed: step.status === currentStatus || !!statusTimestamps[step.status],
+      timestamp: statusTimestamps[step.status],
     }));
 
     setSteps(processedSteps);
@@ -152,6 +171,41 @@ export function StatusStepperModal({
     if (!steps.length) return 0;
     const completedCount = steps.filter(s => s.completed).length;
     return Math.round((completedCount / steps.length) * 100);
+  };
+
+  const getStatusColor = (status: string) => {
+    // Cores baseadas na imagem de referência
+    const colors: Record<string, string> = {
+      // Sinistros
+      'aberto': 'bg-blue-600',
+      'finalizado_com_indenizacao': 'bg-green-600',
+      'na_oficina': 'bg-blue-800',
+      'aguardando_peca': 'bg-amber-900',
+      'aguardando_vistoria': 'bg-amber-200',
+      'aguardando_documento': 'bg-gray-500',
+      'analise_seguradora': 'bg-blue-900',
+      'processo_liquidacao': 'bg-orange-600',
+      'finalizado_sem_indenizacao': 'bg-black',
+      'finalizado_inatividade': 'bg-red-600',
+      'carro_reserva': 'bg-pink-300',
+      'lucros_cessantes': 'bg-pink-500',
+      'dc_danos_corporais': 'bg-teal-500',
+      'acordo': 'bg-lime-500',
+      'aguardando_reparo': 'bg-blue-800',
+      'finalizado_reparado': 'bg-green-600',
+      
+      // Assistências
+      'finalizado': 'bg-green-600',
+      'reembolso': 'bg-green-400',
+      'aguardando_prestador': 'bg-purple-700',
+      'atendimento_andamento': 'bg-yellow-500',
+      'aguardando_documentos': 'bg-lime-600',
+      'saida_base': 'bg-blue-800',
+      'aguardando_retorno': 'bg-gray-600',
+      'vidros': 'bg-yellow-400',
+    };
+    
+    return colors[status] || 'bg-gray-500';
   };
 
   const getLastActivity = () => {
@@ -294,16 +348,16 @@ export function StatusStepperModal({
             <Separator />
 
             {/* Steps timeline */}
-            <div className="space-y-1">
+            <div className="space-y-1 max-h-[50vh] overflow-y-auto pr-2">
               {steps.map((step, index) => (
-                <div key={step.status} className="flex items-start gap-3 py-3 group">
+                <div key={step.status} className="flex items-start gap-3 py-2 group">
                   {/* Step indicator */}
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center flex-shrink-0">
                     <button
                       onClick={() => handleStepClick(step)}
                       disabled={loading}
                       className={cn(
-                        "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all",
+                        "flex items-center justify-center w-7 h-7 rounded-full border-2 transition-all",
                         "hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
                         "disabled:cursor-not-allowed disabled:opacity-50",
                         step.completed
@@ -312,15 +366,15 @@ export function StatusStepperModal({
                       )}
                     >
                       {step.completed ? (
-                        <CheckCircle2 className="h-5 w-5" />
+                        <CheckCircle2 className="h-4 w-4" />
                       ) : (
-                        <span className="text-xs font-semibold">{step.order}</span>
+                        <Circle className="h-3 w-3" />
                       )}
                     </button>
                     {index < steps.length - 1 && (
                       <div
                         className={cn(
-                          "w-0.5 h-12 mt-1 transition-all",
+                          "w-0.5 h-8 mt-0.5 transition-all",
                           step.completed ? "bg-green-500" : "bg-muted-foreground/20"
                         )}
                       />
@@ -328,36 +382,30 @@ export function StatusStepperModal({
                   </div>
 
                   {/* Step content */}
-                  <div className="flex-1 pt-1">
+                  <div className="flex-1 pt-0.5 min-w-0">
                     <button
                       onClick={() => handleStepClick(step)}
                       disabled={loading}
-                      className="w-full text-left hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors disabled:cursor-not-allowed"
+                      className={cn(
+                        "w-full text-left hover:bg-muted/50 rounded-lg px-3 py-2 transition-colors disabled:cursor-not-allowed",
+                        getStatusColor(step.status),
+                        "text-white"
+                      )}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p
-                              className={cn(
-                                "font-semibold text-sm",
-                                step.completed ? "text-foreground" : "text-muted-foreground"
-                              )}
-                            >
+                            <p className="font-semibold text-xs truncate">
                               {step.label}
                             </p>
-                            <Edit2 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Edit2 className="h-3 w-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                           {step.completed && step.timestamp && (
-                            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                              Concluída
+                            <p className="text-[10px] opacity-90 mt-0.5">
+                              {format(new Date(step.timestamp), "dd/MM/yy HH:mm", { locale: ptBR })}
                             </p>
                           )}
                         </div>
-                        {step.completed && step.timestamp && (
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(step.timestamp), "dd/MM HH:mm", { locale: ptBR })}
-                          </span>
-                        )}
                       </div>
                     </button>
                   </div>
