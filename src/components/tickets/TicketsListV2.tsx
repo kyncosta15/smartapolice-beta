@@ -36,6 +36,14 @@ type TicketItem = (Claim | Assistance) & {
   ticketNumber: string; // Generated ticket number for display
 };
 
+// Função para formatar status removendo underscores e capitalizando
+const formatStatusLabel = (status: string): string => {
+  return status
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 const statusConfig: Record<ClaimStatus | string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   aberto: { label: 'Aberto', variant: 'destructive' },
   em_regulacao: { label: 'Em Regulação', variant: 'secondary' },
@@ -125,7 +133,7 @@ export function TicketsListV2({
     const claimItems: TicketItem[] = claims.map((claim, index) => ({
       ...claim,
       type: 'sinistro' as const,
-      displayStatus: statusConfig[claim.status]?.label || claim.status,
+      displayStatus: statusConfig[claim.status]?.label || formatStatusLabel(claim.status),
       statusVariant: statusConfig[claim.status]?.variant || 'outline',
       ticketNumber: `SIN-${String(index + 1).padStart(4, '0')}`,
     }));
@@ -133,7 +141,7 @@ export function TicketsListV2({
     const assistanceItems: TicketItem[] = assistances.map((assistance, index) => ({
       ...assistance,
       type: 'assistencia' as const,
-      displayStatus: statusConfig[assistance.status]?.label || assistance.status,
+      displayStatus: statusConfig[assistance.status]?.label || formatStatusLabel(assistance.status),
       statusVariant: statusConfig[assistance.status]?.variant || 'outline',
       ticketNumber: `ASS-${String(index + 1).padStart(4, '0')}`,
     }));
