@@ -244,10 +244,22 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
                     onClick={() => handleVehicleSelect(vehicle)}
                     className="w-full text-left p-3 border rounded-lg hover:bg-accent hover:border-primary transition-colors"
                   >
-                    <div className="font-medium">{vehicle.placa}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {vehicle.marca} {vehicle.modelo}
-                      {vehicle.proprietario_nome && ` • ${vehicle.proprietario_nome}`}
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="font-medium text-lg">{vehicle.placa}</div>
+                      {vehicle.status_seguro && (
+                        <Badge variant={vehicle.status_seguro === 'ativa' ? 'default' : 'secondary'} className="text-xs">
+                          {vehicle.status_seguro}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-0.5">
+                      <div>{vehicle.marca} {vehicle.modelo} {vehicle.ano_modelo && `(${vehicle.ano_modelo})`}</div>
+                      {vehicle.proprietario_nome && (
+                        <div>Proprietário: {vehicle.proprietario_nome}</div>
+                      )}
+                      {vehicle.chassi && (
+                        <div className="text-xs">Chassi: {vehicle.chassi.slice(-8)}</div>
+                      )}
                     </div>
                   </button>
                 ))}
@@ -269,13 +281,8 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
         <div className="space-y-6">
           {/* Veículo selecionado */}
           <div className="p-4 border rounded-lg bg-muted/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">Veículo Selecionado</h3>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {selectedVehicle.marca} {selectedVehicle.modelo} • {selectedVehicle.placa}
-                </div>
-              </div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium">Veículo Selecionado</h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -284,6 +291,48 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
               >
                 Alterar
               </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-muted-foreground">Placa:</span>
+                <span className="ml-2 font-medium">{selectedVehicle.placa}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Marca/Modelo:</span>
+                <span className="ml-2 font-medium">{selectedVehicle.marca} {selectedVehicle.modelo}</span>
+              </div>
+              {selectedVehicle.ano_modelo && (
+                <div>
+                  <span className="text-muted-foreground">Ano:</span>
+                  <span className="ml-2 font-medium">{selectedVehicle.ano_modelo}</span>
+                </div>
+              )}
+              {selectedVehicle.combustivel && (
+                <div>
+                  <span className="text-muted-foreground">Combustível:</span>
+                  <span className="ml-2 font-medium">{selectedVehicle.combustivel}</span>
+                </div>
+              )}
+              {selectedVehicle.chassi && (
+                <div className="col-span-2">
+                  <span className="text-muted-foreground">Chassi:</span>
+                  <span className="ml-2 font-medium font-mono text-xs">{selectedVehicle.chassi}</span>
+                </div>
+              )}
+              {selectedVehicle.proprietario_nome && (
+                <div className="col-span-2">
+                  <span className="text-muted-foreground">Proprietário:</span>
+                  <span className="ml-2 font-medium">{selectedVehicle.proprietario_nome}</span>
+                </div>
+              )}
+              {selectedVehicle.status_seguro && (
+                <div>
+                  <span className="text-muted-foreground">Status Seguro:</span>
+                  <Badge variant={selectedVehicle.status_seguro === 'ativa' ? 'default' : 'secondary'} className="ml-2">
+                    {selectedVehicle.status_seguro}
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
 

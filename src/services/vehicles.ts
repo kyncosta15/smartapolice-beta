@@ -16,10 +16,20 @@ export class VehiclesService {
           id,
           placa,
           chassi,
+          renavam,
           marca,
           modelo,
+          ano_modelo,
+          categoria,
+          combustivel,
+          codigo_fipe,
           proprietario_nome,
+          proprietario_doc,
           proprietario_tipo,
+          status_seguro,
+          status_veiculo,
+          uf_emplacamento,
+          localizacao,
           empresa_id
         `)
         .or(`placa.ilike.%${query}%,marca.ilike.%${query}%,modelo.ilike.%${query}%,proprietario_nome.ilike.%${query}%,chassi.ilike.%${query}%`);
@@ -39,10 +49,20 @@ export class VehiclesService {
         id: v.id,
         placa: v.placa,
         chassi: v.chassi || undefined,
+        renavam: v.renavam || undefined,
         marca: v.marca || undefined,
         modelo: v.modelo || undefined,
+        ano_modelo: v.ano_modelo || undefined,
+        categoria: v.categoria || undefined,
+        combustivel: v.combustivel || undefined,
+        codigo_fipe: v.codigo_fipe || undefined,
         proprietario_nome: v.proprietario_nome || undefined,
-        proprietario_tipo: v.proprietario_tipo as 'pf' | 'pj' | undefined
+        proprietario_doc: v.proprietario_doc || undefined,
+        proprietario_tipo: v.proprietario_tipo as 'pf' | 'pj' | undefined,
+        status_seguro: v.status_seguro || undefined,
+        status_veiculo: v.status_veiculo || undefined,
+        uf_emplacamento: v.uf_emplacamento || undefined,
+        localizacao: v.localizacao || undefined
       }));
     } catch (error) {
       console.error('❌ Erro ao buscar veículos:', error);

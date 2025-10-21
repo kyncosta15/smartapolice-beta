@@ -4,10 +4,20 @@ export type Vehicle = {
   id: string;
   placa: string;
   chassi?: string;
+  renavam?: string;
   marca?: string;
   modelo?: string;
+  ano_modelo?: number;
+  categoria?: string;
+  combustivel?: string;
+  codigo_fipe?: string;
   proprietario_nome?: string;
+  proprietario_doc?: string;
   proprietario_tipo?: 'pf' | 'pj';
+  status_seguro?: string;
+  status_veiculo?: string;
+  uf_emplacamento?: string;
+  localizacao?: string;
 };
 
 export type Policy = {
