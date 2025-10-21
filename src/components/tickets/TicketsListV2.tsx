@@ -377,20 +377,20 @@ export function TicketsListV2({
         
       case 'veiculo':
         return (
-          <div className="space-y-1">
+          <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="font-bold text-sm tracking-wide">{item.veiculo.placa}</span>
+              <FileText className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="font-bold text-sm tracking-wide truncate">{item.veiculo.placa}</span>
             </div>
             {(item.veiculo.marca || item.veiculo.modelo) && (
-              <div className="text-xs text-muted-foreground line-clamp-1 pl-5">
+              <div className="text-xs text-muted-foreground truncate pl-5">
                 {item.veiculo.marca} {item.veiculo.modelo}
               </div>
             )}
             {item.veiculo.proprietario_nome && (
-              <div className="text-xs text-muted-foreground line-clamp-1 pl-5 flex items-center gap-1">
+              <div className="text-xs text-muted-foreground truncate pl-5 flex items-center gap-1">
                 <span className="opacity-70">•</span>
-                {item.veiculo.proprietario_nome}
+                <span className="truncate">{item.veiculo.proprietario_nome}</span>
               </div>
             )}
           </div>
@@ -418,11 +418,11 @@ export function TicketsListV2({
       case 'valor_estimado':
         if ('valor_estimado' in item && item.valor_estimado) {
           return (
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-md bg-green-100 dark:bg-green-950">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-md bg-green-100 dark:bg-green-950 flex-shrink-0">
                 <span className="text-green-600 dark:text-green-400 text-xs font-bold">R$</span>
               </div>
-              <span className="font-bold text-sm tabular-nums">
+              <span className="font-bold text-sm tabular-nums truncate">
                 {new Intl.NumberFormat('pt-BR', {
                   style: 'currency',
                   currency: 'BRL',

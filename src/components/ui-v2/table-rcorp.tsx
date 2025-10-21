@@ -6,7 +6,6 @@ import {
   TableBody,
   Row,
   Cell,
-  ResizableTableContainer,
 } from 'react-aria-components';
 import type { Key } from 'react-aria-components';
 import { ChevronUp, ChevronDown } from 'lucide-react';
@@ -94,90 +93,94 @@ export function TableRCorp<T extends Record<string, any>>({
   }
 
   return (
-    <ResizableTableContainer className={cn("rounded-xl border border-border bg-card shadow-lg overflow-hidden", className)}>
-      <Table
-        aria-label="Tabela de tickets"
-        className="w-full"
-        selectionMode={selectionMode}
-        selectedKeys={selectedKeys}
-        onSelectionChange={onSelectionChange}
-        sortDescriptor={sortDescriptor}
-        onSortChange={onSortChange}
-        onRowAction={onAction}
-      >
-        <TableHeader>
-          {columns.map((column) => (
-            <Column
-              key={column.key}
-              id={column.key}
-              isRowHeader={column.isRowHeader}
-              allowsSorting={column.allowsSorting}
-              width={typeof column.width === 'number' ? column.width : undefined}
-              minWidth={column.minWidth}
-              maxWidth={column.maxWidth}
-              className={cn(
-                "px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-foreground/70 bg-muted/80 border-b-2 border-border backdrop-blur-sm",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                column.className
-              )}
-            >
-              {({ allowsSorting, sortDirection }) => (
-                <div className="flex items-center gap-2">
-                  <span className="truncate">{column.name}</span>
-                  {allowsSorting && (
-                    <span className="flex flex-col -space-y-1">
-                      <ChevronUp
-                        className={cn(
-                          "h-3 w-3 transition-colors",
-                          sortDirection === 'ascending' ? "text-primary" : "text-muted-foreground/30"
-                        )}
-                      />
-                      <ChevronDown
-                        className={cn(
-                          "h-3 w-3 transition-colors",
-                          sortDirection === 'descending' ? "text-primary" : "text-muted-foreground/30"
-                        )}
-                      />
-                    </span>
-                  )}
-                </div>
-              )}
-            </Column>
-          ))}
-        </TableHeader>
-        <TableBody items={items}>
-          {(item) => {
-            const rowId = getRowId?.(item) ?? String(item.id);
-            
-            return (
-              <Row 
-                id={rowId} 
-                className="group hover:bg-primary/5 transition-all duration-200 border-b border-border/50 last:border-0 cursor-pointer hover:shadow-sm"
+    <div className={cn("rounded-xl border border-border bg-card shadow-lg overflow-hidden", className)}>
+      <div className="overflow-x-auto">
+        <Table
+          aria-label="Tabela de tickets"
+          className="w-full min-w-max"
+          selectionMode={selectionMode}
+          selectedKeys={selectedKeys}
+          onSelectionChange={onSelectionChange}
+          sortDescriptor={sortDescriptor}
+          onSortChange={onSortChange}
+          onRowAction={onAction}
+        >
+          <TableHeader>
+            {columns.map((column) => (
+              <Column
+                key={column.key}
+                id={column.key}
+                isRowHeader={column.isRowHeader}
+                allowsSorting={column.allowsSorting}
+                width={typeof column.width === 'number' ? column.width : undefined}
+                minWidth={column.minWidth}
+                maxWidth={column.maxWidth}
+                className={cn(
+                  "px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-foreground/70 bg-muted/80 border-b-2 border-border backdrop-blur-sm whitespace-nowrap",
+                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring sticky top-0 z-10",
+                  column.className
+                )}
               >
-                {columns.map((column) => {
-                  const cellContent = renderCell 
-                    ? renderCell(item, column.key as unknown as Key) 
-                    : item[column.key];
-                  
-                  return (
-                    <Cell 
-                      key={column.key}
-                      className={cn(
-                        rowPadding[density],
-                        "align-middle bg-background/50 group-hover:bg-primary/[0.02] transition-colors",
-                        densityClasses[density]
-                      )}
-                    >
-                      {cellContent}
-                    </Cell>
-                  );
-                })}
-              </Row>
-            );
-          }}
-        </TableBody>
-      </Table>
-    </ResizableTableContainer>
+                {({ allowsSorting, sortDirection }) => (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="truncate">{column.name}</span>
+                    {allowsSorting && (
+                      <span className="flex flex-col -space-y-1 flex-shrink-0">
+                        <ChevronUp
+                          className={cn(
+                            "h-3 w-3 transition-colors",
+                            sortDirection === 'ascending' ? "text-primary" : "text-muted-foreground/30"
+                          )}
+                        />
+                        <ChevronDown
+                          className={cn(
+                            "h-3 w-3 transition-colors",
+                            sortDirection === 'descending' ? "text-primary" : "text-muted-foreground/30"
+                          )}
+                        />
+                      </span>
+                    )}
+                  </div>
+                )}
+              </Column>
+            ))}
+          </TableHeader>
+          <TableBody items={items}>
+            {(item) => {
+              const rowId = getRowId?.(item) ?? String(item.id);
+              
+              return (
+                <Row 
+                  id={rowId} 
+                  className="group hover:bg-primary/5 transition-all duration-200 border-b border-border/50 last:border-0 cursor-pointer hover:shadow-sm"
+                >
+                  {columns.map((column) => {
+                    const cellContent = renderCell 
+                      ? renderCell(item, column.key as unknown as Key) 
+                      : item[column.key];
+                    
+                    return (
+                      <Cell 
+                        key={column.key}
+                        className={cn(
+                          rowPadding[density],
+                          "align-middle bg-background/50 group-hover:bg-primary/[0.02] transition-colors overflow-hidden",
+                          densityClasses[density]
+                        )}
+                      >
+                        <div className="min-w-0 w-full">
+                          {cellContent}
+                        </div>
+                      </Cell>
+                    );
+                  })}
+                </Row>
+              );
+            }}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }
 
