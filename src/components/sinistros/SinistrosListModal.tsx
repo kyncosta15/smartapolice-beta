@@ -46,13 +46,15 @@ export function SinistrosListModal({
   // Apply initial filter when modal opens
   useEffect(() => {
     if (open && initialFilter) {
+      // Clear filters first and apply new ones
+      clearAllFilters();
       Object.entries(initialFilter).forEach(([key, value]) => {
         if (value) {
           updateFilter(key as any, value);
         }
       });
     }
-  }, [open, initialFilter, updateFilter]);
+  }, [open, initialFilter]);
 
   // Load data when modal opens
   useEffect(() => {
@@ -68,6 +70,11 @@ export function SinistrosListModal({
         ClaimsService.getClaims({}),
         ClaimsService.getAssistances({})
       ]);
+      
+      console.log('🔍 SinistrosListModal - Claims carregados:', claimsData.data);
+      console.log('🔍 SinistrosListModal - Assistances carregados:', assistancesData.data);
+      console.log('🔍 SinistrosListModal - Filtro tipo atual:', filters.tipo);
+      
       setClaims(claimsData.data);
       setAssistances(assistancesData.data);
     } catch (error) {
@@ -149,27 +156,37 @@ export function SinistrosListModal({
 
         {/* Claims or Assistances list */}
         <div className="flex-1 overflow-auto">
-          {filters.tipo === 'assistencia' ? (
-            <AssistancesView
-              searchTerm={filters.search || ''}
-              statusFilter={filters.status || 'all'}
-              onStatusFilterChange={(status) => updateFilter('status', status)}
-            />
-          ) : (
-            <ClaimsList
-              claims={claims}
-              loading={loading}
-              statusFilter={filters.status || 'all'}
-              onClaimSelect={(claim) => {
-                console.log('Claim selecionado:', claim);
-                // TODO: Abrir drawer de detalhes
-              }}
-              onClaimEdit={(claim) => {
-                console.log('Editar claim:', claim);
-                // TODO: Abrir modal de edição
-              }}
-            />
-          )}
+          {(() => {
+            console.log('🔍 Renderizando - filters.tipo:', filters.tipo);
+            console.log('🔍 Renderizando - claims.length:', claims.length);
+            console.log('🔍 Renderizando - assistances.length:', assistances.length);
+            
+            if (filters.tipo === 'assistencia') {
+              return (
+                <AssistancesView
+                  searchTerm={filters.search || ''}
+                  statusFilter={filters.status || 'all'}
+                  onStatusFilterChange={(status) => updateFilter('status', status)}
+                />
+              );
+            }
+            
+            return (
+              <ClaimsList
+                claims={claims}
+                loading={loading}
+                statusFilter={filters.status || 'all'}
+                onClaimSelect={(claim) => {
+                  console.log('Claim selecionado:', claim);
+                  // TODO: Abrir drawer de detalhes
+                }}
+                onClaimEdit={(claim) => {
+                  console.log('Editar claim:', claim);
+                  // TODO: Abrir modal de edição
+                }}
+              />
+            );
+          })()}
         </div>
       </DialogContent>
     </Dialog>
