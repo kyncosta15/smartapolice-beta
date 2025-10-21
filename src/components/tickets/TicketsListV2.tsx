@@ -145,7 +145,16 @@ export function TicketsListV2({
       ticketNumber: `ASS-${String(index + 1).padStart(4, '0')}`,
     }));
 
-    return [...claimItems, ...assistanceItems];
+    const result = [...claimItems, ...assistanceItems];
+    
+    console.log('🔍 TicketsListV2 - allItems transformados:', {
+      claimItemsLength: claimItems.length,
+      assistanceItemsLength: assistanceItems.length,
+      totalItems: result.length,
+      firstItem: result[0]
+    });
+
+    return result;
   }, [claims, assistances]);
 
   // Filter and search
@@ -180,7 +189,7 @@ export function TicketsListV2({
 
   // Sort items
   const sortedItems = useMemo(() => {
-    return [...filteredItems].sort((a, b) => {
+    const result = [...filteredItems].sort((a, b) => {
       const { column, direction } = sortDescriptor;
       const aValue = a[column as keyof TicketItem];
       const bValue = b[column as keyof TicketItem];
@@ -191,6 +200,13 @@ export function TicketsListV2({
 
       return direction === 'ascending' ? comparison : -comparison;
     });
+    
+    console.log('🔍 TicketsListV2 - sortedItems:', {
+      length: result.length,
+      items: result
+    });
+    
+    return result;
   }, [filteredItems, sortDescriptor]);
 
   const handleSort = (descriptor: { column: any; direction: 'ascending' | 'descending' }) => {
