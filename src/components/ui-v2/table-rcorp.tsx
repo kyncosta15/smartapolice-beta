@@ -103,6 +103,7 @@ export function TableRCorp<T extends Record<string, any>>({
   return (
     <ResizableTableContainer className={cn("rounded-md border overflow-auto", className)}>
       <Table
+        aria-label="Tabela de tickets"
         className="w-full"
         selectionMode={selectionMode}
         selectedKeys={selectedKeys}
@@ -153,28 +154,38 @@ export function TableRCorp<T extends Record<string, any>>({
           ))}
         </TableHeader>
         <TableBody items={items}>
-          {(item) => (
-            <Row
-              id={getRowId?.(item) ?? String(item.id)}
-              className={cn(
-                "border-b hover:bg-muted/50 focus:bg-muted focus:outline-none",
-                "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                onAction && "cursor-pointer"
-              )}
-            >
-              {(columnKey) => (
-                <Cell
-                  className={cn(
-                    rowPadding[density],
-                    "align-middle border-b-0",
-                    densityClasses[density]
-                  )}
-                >
-                  {renderCell ? renderCell(item, columnKey as unknown as Key) : item[String(columnKey)]}
-                </Cell>
-              )}
-            </Row>
-          )}
+          {(item) => {
+            const rowId = getRowId?.(item) ?? String(item.id);
+            console.log('🔍 TableRCorp - Renderizando Row:', { rowId, item });
+            
+            return (
+              <Row
+                id={rowId}
+                className={cn(
+                  "border-b hover:bg-muted/50 focus:bg-muted focus:outline-none",
+                  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  onAction && "cursor-pointer"
+                )}
+              >
+                {(columnKey) => {
+                  const cellContent = renderCell ? renderCell(item, columnKey as unknown as Key) : item[String(columnKey)];
+                  console.log('🔍 TableRCorp - Renderizando Cell:', { columnKey, cellContent });
+                  
+                  return (
+                    <Cell
+                      className={cn(
+                        rowPadding[density],
+                        "align-middle border-b-0",
+                        densityClasses[density]
+                      )}
+                    >
+                      {cellContent}
+                    </Cell>
+                  );
+                }}
+              </Row>
+            );
+          }}
         </TableBody>
       </Table>
     </ResizableTableContainer>
