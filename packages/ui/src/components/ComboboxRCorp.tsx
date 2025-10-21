@@ -52,9 +52,8 @@ export function ComboboxRCorp({
 
   // Prevent calling onSelectionChange with null during typing
   const handleSelectionChange = (key: string | number | null) => {
-    // Only call onSelectionChange if key is not null or if we're explicitly clearing
-    if (key !== null || selectedKey !== null) {
-      onSelectionChange?.(key)
+    if (key !== null) {
+      onSelectionChange?.(key as string);
     }
   }
 
@@ -102,7 +101,7 @@ export function ComboboxRCorp({
 
       <Popover
         className={cn(
-          'w-[--trigger-width] mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto z-50 entering:animate-in entering:fade-in exiting:animate-out exiting:fade-out',
+          'w-[--trigger-width] mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto z-[9999] entering:animate-in entering:fade-in exiting:animate-out exiting:fade-out',
           popoverClassName
         )}
       >
