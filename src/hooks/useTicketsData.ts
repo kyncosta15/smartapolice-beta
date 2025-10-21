@@ -117,9 +117,8 @@ export function useTicketsData() {
         const payload = ticket.payload as any;
         return {
           ...ticket,
-          subtipo: payload?.subtipo,
-          valor_estimado: payload?.valor_estimado,
           descricao: payload?.descricao,
+          gravidade: payload?.gravidade,
         };
       }) as Ticket[];
       

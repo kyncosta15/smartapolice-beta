@@ -15,7 +15,7 @@ import { today, getLocalTimeZone } from '@internationalized/date'
 import { cn } from '@/lib/utils'
 import { Vehicle, Policy } from '@/types/claims'
 import { VehiclesService } from '@/services/vehicles'
-import { ClaimsService } from '@/services/claims'
+import { supabase } from '@/integrations/supabase/client'
 
 // Tipos de sinistro e assistência como dados constantes
 const TIPOS_SINISTRO: ComboboxItem[] = [
@@ -130,26 +130,42 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
   }
 
   const handleSubmit = async () => {
-    const currentTipo = tipoTicket === 'sinistro' ? tipoSinistro : tipoAssistencia
-    if (!selectedVehicle || !currentTipo || !dataEvento || !activeEmpresa) return
+    const currentSubtipo = tipoTicket === 'sinistro' ? tipoSinistro : tipoAssistencia
+    if (!selectedVehicle || !currentSubtipo || !dataEvento || !activeEmpresa) return
 
     try {
       setSubmitting(true)
 
-      const claimData = {
-        veiculo_id: selectedVehicle.id,
+      // Preparar dados do ticket
+      const ticketData = {
+        tipo: tipoTicket, // 'sinistro' ou 'assistencia'
+        subtipo: currentSubtipo, // tipo específico (colisao, guincho, etc)
+        vehicle_id: selectedVehicle.id,
         apolice_id: relatedPolicy?.id,
-        tipo: currentTipo,
         data_evento: dataEvento.toString(),
         valor_estimado: valorEstimado ? parseFloat(valorEstimado.replace(/[^\d,]/g, '').replace(',', '.')) : undefined,
-        gravidade: tipoTicket === 'sinistro' ? gravidade : undefined,
-        descricao,
-        is_assistencia: tipoTicket === 'assistencia',
-        tipo_assistencia: tipoTicket === 'assistencia' ? tipoAssistencia : undefined,
-        empresa_id: activeEmpresa
+        localizacao: undefined, // Pode ser adicionado se necessário
+        empresa_id: activeEmpresa,
+        status: 'aberto',
+        origem: 'portal',
+        payload: {
+          descricao,
+          gravidade: tipoTicket === 'sinistro' ? gravidade : undefined,
+        }
       }
 
-      await ClaimsService.createClaim(claimData)
+      console.log('📝 Criando ticket com dados:', ticketData)
+
+      // Usar o hook de tickets ao invés do ClaimsService
+      const { data, error } = await supabase
+        .from('tickets')
+        .insert([ticketData])
+        .select()
+        .single()
+
+      if (error) throw error
+
+      console.log('✅ Ticket criado:', data)
 
       toast({
         title: "Ticket criado com sucesso!",
@@ -172,8 +188,8 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
   }
 
   const isFormValid = () => {
-    const currentTipo = tipoTicket === 'sinistro' ? tipoSinistro : tipoAssistencia
-    return selectedVehicle && currentTipo && dataEvento
+    const currentSubtipo = tipoTicket === 'sinistro' ? tipoSinistro : tipoAssistencia
+    return selectedVehicle && currentSubtipo && dataEvento
   }
 
   const handleClose = () => {
