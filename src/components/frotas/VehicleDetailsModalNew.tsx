@@ -23,7 +23,8 @@ import {
   Eye,
   Edit,
   Wrench,
-  Clock
+  Clock,
+  ExternalLink
 } from 'lucide-react';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ import { Ticket } from '@/types/tickets';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 interface VehicleDetailsModalNewProps {
   veiculo: FrotaVeiculo | null;
@@ -63,6 +65,7 @@ export function VehicleDetailsModalNew({
   }>({ updated: false });
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (veiculo) {
@@ -864,6 +867,21 @@ export function VehicleDetailsModalNew({
                                 <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
                                   <Clock className="h-3 w-3" />
                                   Criado em {format(new Date(ticket.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                </div>
+
+                                <div className="mt-3 pt-3 border-t">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      onOpenChange(false);
+                                      navigate('/sinistros');
+                                    }}
+                                    className="w-full gap-2 hover:bg-primary/5"
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                    Ver no Dashboard de Sinistros
+                                  </Button>
                                 </div>
                               </div>
                             </div>
