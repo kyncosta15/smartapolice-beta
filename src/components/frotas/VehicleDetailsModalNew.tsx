@@ -71,6 +71,7 @@ export function VehicleDetailsModalNew({
   }, [veiculo]);
 
   const loadVehicleTickets = async (vehicleId: string) => {
+    console.log('🚗 Carregando tickets para veículo:', vehicleId);
     setTicketsLoading(true);
     try {
       const { data, error } = await supabase
@@ -79,7 +80,12 @@ export function VehicleDetailsModalNew({
         .eq('vehicle_id', vehicleId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro na query de tickets:', error);
+        throw error;
+      }
+
+      console.log('📊 Tickets encontrados:', data?.length, data);
 
       const mappedTickets = (data || []).map(ticket => {
         const payload = ticket.payload as any;
@@ -90,9 +96,10 @@ export function VehicleDetailsModalNew({
         };
       }) as Ticket[];
 
+      console.log('✅ Tickets mapeados:', mappedTickets.length);
       setTickets(mappedTickets);
     } catch (error) {
-      console.error('Erro ao carregar tickets do veículo:', error);
+      console.error('❌ Erro ao carregar tickets do veículo:', error);
     } finally {
       setTicketsLoading(false);
     }
@@ -327,18 +334,26 @@ export function VehicleDetailsModalNew({
                       <Car className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
                       Informações do Veículo
                     </h3>
-                    {tickets.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setActiveTab('sinistros')}
-                        className="gap-2 hover:bg-red-50 hover:border-red-300 transition-colors"
-                      >
-                        <AlertTriangle className="h-4 w-4 text-red-600" />
-                        <span className="hidden sm:inline">{tickets.length} Ocorrência(s)</span>
-                        <span className="sm:hidden">{tickets.length}</span>
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        console.log('🔄 Navegando para sinistros. Tickets:', tickets.length);
+                        setActiveTab('sinistros');
+                      }}
+                      className={tickets.length > 0 
+                        ? "gap-2 bg-red-50 border-red-300 text-red-700 hover:bg-red-100 hover:border-red-400" 
+                        : "gap-2"
+                      }
+                    >
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="hidden sm:inline">
+                        {tickets.length > 0 ? `${tickets.length} Ocorrência(s)` : 'Ver Ocorrências'}
+                      </span>
+                      <span className="sm:hidden">
+                        {tickets.length > 0 ? tickets.length : 'Ver'}
+                      </span>
+                    </Button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
                     <div className="space-y-2">
