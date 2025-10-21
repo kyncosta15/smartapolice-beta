@@ -37,6 +37,7 @@ interface TicketDetailsDrawerProps {
   onOpenChange: (open: boolean) => void;
   ticketId: string | null;
   ticketType: 'sinistro' | 'assistencia';
+  onTicketUpdated?: () => void;
 }
 
 export function TicketDetailsDrawer({
@@ -44,6 +45,7 @@ export function TicketDetailsDrawer({
   onOpenChange,
   ticketId,
   ticketType,
+  onTicketUpdated,
 }: TicketDetailsDrawerProps) {
   const [ticket, setTicket] = useState<Claim | Assistance | null>(null);
   const [loading, setLoading] = useState(false);
@@ -142,6 +144,11 @@ export function TicketDetailsDrawer({
     
     // Invalidar queries
     queryClient.invalidateQueries({ queryKey: ['claims'] });
+    
+    // Notificar o pai para atualizar os dados
+    if (onTicketUpdated) {
+      onTicketUpdated();
+    }
     
     toast({
       title: 'Sucesso',

@@ -209,6 +209,7 @@ export function SinistrosDashboard({
           loading={loading}
           onDeleteClaim={handleDeleteClaim}
           onDeleteAssistance={handleDeleteAssistance}
+          onRefresh={loadData}
         />
 
         {/* Diálogo de confirmação de exclusão */}

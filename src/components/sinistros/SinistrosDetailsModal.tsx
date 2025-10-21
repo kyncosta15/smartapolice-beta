@@ -20,6 +20,7 @@ interface SinistrosDetailsModalProps {
   loading: boolean;
   onDeleteClaim?: (id: string) => void;
   onDeleteAssistance?: (id: string) => void;
+  onRefresh?: () => void;
 }
 
 export function SinistrosDetailsModal({
@@ -31,6 +32,7 @@ export function SinistrosDetailsModal({
   loading,
   onDeleteClaim,
   onDeleteAssistance,
+  onRefresh,
 }: SinistrosDetailsModalProps) {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
@@ -38,6 +40,13 @@ export function SinistrosDetailsModal({
   const handleViewClaim = (id: string) => {
     setSelectedTicketId(id);
     setDetailsDrawerOpen(true);
+  };
+
+  const handleTicketUpdated = () => {
+    // Atualizar dados no dashboard
+    if (onRefresh) {
+      onRefresh();
+    }
   };
 
   const getModalTitle = () => {
@@ -105,6 +114,7 @@ export function SinistrosDetailsModal({
         onOpenChange={setDetailsDrawerOpen}
         ticketId={selectedTicketId}
         ticketType={filter === 'assistencia' ? 'assistencia' : 'sinistro'}
+        onTicketUpdated={handleTicketUpdated}
       />
     </Dialog>
   );
