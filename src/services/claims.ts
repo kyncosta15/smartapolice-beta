@@ -87,8 +87,35 @@ export class ClaimsService {
     }
   }
 
-  static async createClaim(claimData: Partial<Claim>) {
+  static async createClaim(claimData: Partial<Claim> & { empresa_id?: string }) {
     try {
+      // Obter empresa_id se não fornecido
+      let empresaId = claimData.empresa_id;
+      if (!empresaId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Usuário não autenticado');
+        
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('default_empresa_id')
+          .eq('id', user.id)
+          .single();
+        
+        const { data: membership } = await supabase
+          .from('user_memberships')
+          .select('empresa_id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        empresaId = profile?.default_empresa_id || membership?.empresa_id;
+        
+        if (!empresaId) {
+          throw new Error('Empresa não encontrada para o usuário');
+        }
+      }
+      
       // Preparar payload do ticket
       const ticketPayload = {
         tipo: 'sinistro' as 'sinistro' | 'assistencia',
@@ -96,6 +123,7 @@ export class ClaimsService {
         status: 'aberto',
         valor_estimado: claimData.valor_estimado,
         origem: 'portal' as 'portal' | 'importacao' | 'api',
+        empresa_id: empresaId,
         payload: {}
       };
 

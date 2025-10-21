@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
+import { useUserProfile } from '@/hooks/useUserProfile'
 import { DialogRCorp } from '@/components/ui-v2/dialog-rcorp'
 import { ComboboxRCorp, type ComboboxItem } from '@/components/ui-v2/combobox-rcorp'
 import { DatePickerRCorp } from '@/components/ui-v2/datepicker-rcorp'
@@ -42,6 +43,7 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
   const [submitting, setSubmitting] = useState(false)
   
   const { toast } = useToast()
+  const { activeEmpresa } = useUserProfile()
 
   // Vehicle search with React Aria hook
   const {
@@ -103,7 +105,7 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
 
   const handleSubmit = async () => {
     const currentTipo = tipoTicket === 'sinistro' ? tipoSinistro : tipoAssistencia
-    if (!selectedVehicle || !currentTipo || !dataEvento) return
+    if (!selectedVehicle || !currentTipo || !dataEvento || !activeEmpresa) return
 
     try {
       setSubmitting(true)
@@ -118,6 +120,7 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
         descricao,
         is_assistencia: tipoTicket === 'assistencia',
         tipo_assistencia: tipoTicket === 'assistencia' ? tipoAssistencia : undefined,
+        empresa_id: activeEmpresa
       }
 
       await ClaimsService.createClaim(claimData)
