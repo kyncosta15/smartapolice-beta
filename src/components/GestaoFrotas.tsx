@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,26 +89,6 @@ export function GestaoFrotas() {
     refetch,
     kpis 
   } = useFrotasData(filters);
-
-  // Listen for navigation to sinistros tab
-  useEffect(() => {
-    const handleNavigateToSinistros = (event: Event) => {
-      const customEvent = event as CustomEvent<{ ticketId: string }>;
-      console.log('📍 Navegando para sinistros, ticket:', customEvent.detail?.ticketId);
-      setActiveTab('sinistros');
-      
-      // Optional: scroll to top after navigation
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 100);
-    };
-
-    window.addEventListener('navigateToSinistros', handleNavigateToSinistros);
-    
-    return () => {
-      window.removeEventListener('navigateToSinistros', handleNavigateToSinistros);
-    };
-  }, []);
 
   const handleFilterChange = (newFilters: Partial<FrotaFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
