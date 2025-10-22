@@ -85,12 +85,12 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
   const activeEmpresaName = memberships?.find(m => m.empresa_id === activeEmpresa)?.empresa?.nome;
 
   return (
-    <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
       <div className="h-16 flex items-center justify-between px-6">
         {/* Left side - Toggle buttons */}
         <div className="flex items-center gap-2">
           {/* Desktop Sidebar Toggle */}
-          <SidebarTrigger className="hidden lg:flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 hover:bg-slate-50 transition-all duration-300 rounded-lg">
+          <SidebarTrigger className="hidden lg:flex items-center justify-center p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-800 transition-all duration-300 rounded-lg">
             {open ? (
               <ChevronLeft className="w-5 h-5" />
             ) : (
@@ -103,7 +103,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
             variant="ghost"
             size="sm"
             onClick={onMobileMenuToggle}
-            className="lg:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-slate-50 transition-all duration-300 rounded-lg"
+            className="lg:hidden p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-800 transition-all duration-300 rounded-lg"
             aria-label="Abrir menu"
           >
             <Menu className={cn(
@@ -135,33 +135,33 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
             <Button
               variant="ghost"
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-3 p-2 text-gray-700 hover:text-gray-900 hover:bg-slate-50 transition-colors rounded-lg"
+              className="flex items-center gap-3 p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors rounded-lg"
               aria-haspopup="menu"
               aria-expanded={showUserMenu}
             >
-              <Avatar className="h-8 w-8 ring-2 ring-gray-300">
+              <Avatar className="h-8 w-8 ring-2 ring-gray-300 dark:ring-gray-600">
                 <AvatarImage 
                   src={preferredAvatarUrl} 
                   alt="Foto de perfil"
                   className="object-cover"
                 />
-                <AvatarFallback className="bg-slate-600 text-white font-semibold text-sm">
+                <AvatarFallback className="bg-slate-600 dark:bg-slate-700 text-white font-semibold text-sm">
                   {getInitials(preferredDisplayName)}
                 </AvatarFallback>
               </Avatar>
               <div className="text-left hidden sm:block">
-                <p className="text-sm font-medium text-gray-900 leading-tight">
+                <p className="text-sm font-medium text-gray-900 dark:text-white leading-tight">
                   {preferredDisplayName || 'Usuário'}
                 </p>
               </div>
-              <ChevronDown className="w-4 h-4 text-gray-500" />
+              <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </Button>
 
             {/* User Dropdown */}
             {showUserMenu && (
-              <Card className="absolute right-0 mt-2 w-64 bg-white shadow-xl border border-gray-200 z-[9999] rounded-lg">
+              <Card className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700 z-[9999] rounded-lg">
                 <CardContent className="p-3">
-                  <div className="px-3 py-3 border-b border-gray-100">
+                  <div className="px-3 py-3 border-b border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
                         <AvatarImage 
@@ -169,15 +169,15 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                           alt="Foto de perfil"
                           className="object-cover"
                         />
-                        <AvatarFallback className="bg-slate-600 text-white font-semibold">
+                        <AvatarFallback className="bg-slate-600 dark:bg-slate-700 text-white font-semibold">
                           {getInitials(preferredDisplayName)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900 break-words">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white break-words">
                           {preferredDisplayName || 'Usuário'}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {memberships?.find(m => m.empresa_id === activeEmpresa)?.role === 'admin' ? 'Administrador' : 'Usuário'}
                         </p>
                         {memberships?.length > 0 && (
@@ -192,7 +192,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
                     <Button
                       variant="ghost"
                       onClick={handleLogout}
-                      className="w-full justify-start gap-2 text-sm text-gray-700 hover:bg-slate-50 transition-colors rounded-lg"
+                      className="w-full justify-start gap-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors rounded-lg"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Sair</span>

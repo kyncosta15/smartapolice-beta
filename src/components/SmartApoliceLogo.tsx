@@ -47,14 +47,14 @@ export function SmartApóliceLogo({ size = 'md', showText = true, className = ''
       
       {showText && (
         <div className="flex items-center gap-2">
-          <h1 className={`${textSizeClasses[size]} font-semibold text-gray-900`}>
-            Smart<span className="text-blue-600">Apólice</span>
+          <h1 className={`${textSizeClasses[size]} font-semibold text-gray-900 dark:text-white`}>
+            Smart<span className="text-blue-600 dark:text-blue-400">Apólice</span>
           </h1>
           <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded tracking-wider">
             BETA
           </span>
           {personTypeLabel && (
-            <span className="text-xs font-normal text-gray-500 ml-2">
+            <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-2">
               {personTypeLabel}
             </span>
           )}

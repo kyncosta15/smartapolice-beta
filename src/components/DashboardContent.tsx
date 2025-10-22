@@ -280,7 +280,7 @@ export function DashboardContent() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900">
         {/* Mobile Drawer */}
         <MobileDrawer
           isOpen={isMobileMenuOpen}
