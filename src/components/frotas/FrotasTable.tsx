@@ -441,14 +441,14 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                         className={`hover:bg-muted/50 ${isSelected ? 'bg-blue-50' : ''}`}
                         ref={(el) => { vehicleRefs.current[veiculo.id] = el; }}
                       >
-                        <TableCell>
+                        <TableCell className="bg-background">
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={(checked) => handleSelectVehicle(veiculo, checked as boolean)}
                             aria-label={`Selecionar ${veiculo.placa}`}
                           />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="bg-background">
                           <div className="space-y-1">
                             <div className="font-medium text-foreground">
                               {veiculo.marca} {veiculo.modelo}
@@ -462,7 +462,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                           </div>
                         </TableCell>
                         
-                        <TableCell>
+                        <TableCell className="bg-background">
                           <div className="font-mono font-medium">
                             {veiculo.placa}
                           </div>
@@ -473,7 +473,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                           )}
                         </TableCell>
 
-                        <TableCell>
+                        <TableCell className="bg-background">
                           <div className="space-y-1">
                             {veiculo.proprietario_nome && (
                               <div className="font-medium text-foreground">
@@ -493,7 +493,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                           </div>
                         </TableCell>
 
-                        <TableCell>
+                        <TableCell className="bg-background">
                           <VehicleStatusBadge 
                             status={veiculo.status_seguro} 
                             vehicleId={veiculo.id}
