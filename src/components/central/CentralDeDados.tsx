@@ -1004,35 +1004,6 @@ export default function CentralDeDados() {
         </TabsContent>
       </Tabs>
 
-      {/* Info Card */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Roadmap de Desenvolvimento
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm">
-            <li className="flex items-center gap-2">
-              <Badge variant="default" className="w-20">Fase 1</Badge>
-              <span className="text-muted-foreground">Negócios em cálculo ✅</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Badge variant="default" className="w-20">Fase 2</Badge>
-              <span className="text-muted-foreground">Clientes com detalhes expansíveis ✅</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Badge variant="default" className="w-20">Fase 3</Badge>
-              <span className="text-muted-foreground">Produtores e Ramos ✅</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Badge variant="default" className="w-20">Fase 4</Badge>
-              <span className="text-muted-foreground">Sinistros e Indicadores BI ✅</span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
     </div>
   );
 }
