@@ -202,7 +202,7 @@ export const AdminRequestsDashboard = () => {
                 </thead>
                 <tbody>
                   {requests.map((request) => (
-                    <tr key={request.id} className="border-b hover:bg-gray-50">
+                    <tr key={request.id} className="border-b border-border hover:bg-muted/30">
                       <td className="py-3 px-4">
                         <span className="font-mono text-sm font-medium text-primary">
                           {request.protocol_code}
@@ -272,7 +272,7 @@ export const AdminRequestsDashboard = () => {
                     <User className="h-4 w-4" />
                     Colaborador
                   </h3>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                  <div className="bg-muted/30 p-4 rounded-lg space-y-2">
                     <p><strong>Nome:</strong> {requestDetail.employee.full_name}</p>
                     <p><strong>CPF:</strong> {requestDetail.employee.cpf}</p>
                     {requestDetail.employee.email && (
@@ -290,7 +290,7 @@ export const AdminRequestsDashboard = () => {
                     <Calendar className="h-4 w-4" />
                     Detalhes da Solicitação
                   </h3>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                  <div className="bg-muted/30 p-4 rounded-lg space-y-2">
                     <p><strong>Tipo:</strong> {requestDetail.kind === 'inclusao' ? 'Inclusão de Beneficiário' : 'Exclusão de Beneficiário'}</p>
                     <p><strong>Data de envio:</strong> {new Date(requestDetail.submitted_at).toLocaleString('pt-BR')}</p>
                     <p><strong>Quantidade de itens:</strong> {requestDetail.request_items.length}</p>
@@ -302,7 +302,7 @@ export const AdminRequestsDashboard = () => {
                   <h3 className="font-semibold mb-3">Itens da Solicitação</h3>
                   <div className="space-y-3">
                     {requestDetail.request_items.map((item: any, index: number) => (
-                      <div key={item.id} className="bg-gray-50 p-4 rounded-lg">
+                      <div key={item.id} className="bg-muted/30 p-4 rounded-lg">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <p className="font-medium">
@@ -341,12 +341,12 @@ export const AdminRequestsDashboard = () => {
                                 {new Date(approval.decided_at).toLocaleString('pt-BR')}
                               </p>
                             </div>
-                            <Badge className={approval.decision === 'aprovado' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                            <Badge className={approval.decision === 'aprovado' ? 'bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300' : 'bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300'}>
                               {approval.decision === 'aprovado' ? 'Aprovado' : 'Recusado'}
                             </Badge>
                           </div>
                           {approval.note && (
-                            <p className="text-sm mt-2 p-2 bg-white rounded">
+                            <p className="text-sm mt-2 p-2 bg-muted/30 rounded">
                               <strong>Observação:</strong> {approval.note}
                             </p>
                           )}

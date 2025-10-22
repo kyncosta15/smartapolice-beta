@@ -69,15 +69,15 @@ export const AdminTicketsDashboard = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'aberto':
-        return <Badge className="bg-blue-100 text-blue-800"><Clock className="h-3 w-3 mr-1" />Recebida</Badge>;
+        return <Badge variant="info"><Clock className="h-3 w-3 mr-1" />Recebida</Badge>;
       case 'processada':
-        return <Badge className="bg-green-100 text-green-800"><CheckCircle2 className="h-3 w-3 mr-1" />Processada</Badge>;
+        return <Badge variant="success"><CheckCircle2 className="h-3 w-3 mr-1" />Processada</Badge>;
       case 'erro':
-        return <Badge className="bg-red-100 text-red-800"><AlertTriangle className="h-3 w-3 mr-1" />Com Erro</Badge>;
+        return <Badge variant="error"><AlertTriangle className="h-3 w-3 mr-1" />Com Erro</Badge>;
       case 'aprovado':
-        return <Badge className="bg-green-100 text-green-800"><CheckCircle2 className="h-3 w-3 mr-1" />Aprovado</Badge>;
+        return <Badge variant="success"><CheckCircle2 className="h-3 w-3 mr-1" />Aprovado</Badge>;
       case 'rejeitado':
-        return <Badge className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Rejeitado</Badge>;
+        return <Badge variant="error"><XCircle className="h-3 w-3 mr-1" />Rejeitado</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -419,8 +419,8 @@ export const AdminTicketsDashboard = () => {
 
                   {selectedTicket.payload?.metadata?.notes && (
                     <div>
-                      <label className="text-sm font-medium text-gray-600">Observações</label>
-                      <p className="text-sm bg-gray-50 p-3 rounded-lg">
+                      <label className="text-sm font-medium text-muted-foreground">Observações</label>
+                      <p className="text-sm bg-muted/30 p-3 rounded-lg">
                         {selectedTicket.payload.metadata.notes}
                       </p>
                     </div>

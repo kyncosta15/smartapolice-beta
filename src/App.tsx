@@ -43,7 +43,13 @@ const queryClient = new QueryClient({
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="smartapolice-theme">
+      <ThemeProvider 
+        defaultTheme="system" 
+        storageKey="smartapolice-theme"
+        attribute="class"
+        enableSystem
+        disableTransitionOnChange
+      >
         <TooltipProvider>
           <AuthProvider>
             <TenantProvider>

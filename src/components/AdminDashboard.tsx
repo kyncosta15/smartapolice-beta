@@ -62,8 +62,8 @@ export function AdminDashboard({
     <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Painel Administrativo</h1>
-        <p className="text-gray-600">Gerencie usuários e apólices do sistema</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Painel Administrativo</h1>
+        <p className="text-muted-foreground">Gerencie usuários e apólices do sistema</p>
       </div>
 
       {/* KPIs */}
@@ -152,10 +152,10 @@ export function AdminDashboard({
           <CardContent>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {filteredUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div key={user.id} className="flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 transition-colors rounded-lg">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{user.name}</h4>
-                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <h4 className="font-medium text-foreground">{user.name}</h4>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
                     <Badge className="mt-1" variant="secondary">{user.role}</Badge>
                   </div>
                   <div className="flex space-x-2">
@@ -191,10 +191,10 @@ export function AdminDashboard({
           <CardContent>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {filteredPolicies.map((policy) => (
-                <div key={policy.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div key={policy.id} className="flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 transition-colors rounded-lg">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{policy.name}</h4>
-                    <p className="text-sm text-gray-600">{renderValueAsString(policy.insurer)}</p>
+                    <h4 className="font-medium text-foreground">{policy.name}</h4>
+                    <p className="text-sm text-muted-foreground">{renderValueAsString(policy.insurer)}</p>
                     <div className="flex items-center space-x-2 mt-1">
                       <Badge variant={policy.status === 'active' ? 'default' : 'secondary'}>
                         {policy.status === 'active' ? 'Ativa' : 'Inativa'}

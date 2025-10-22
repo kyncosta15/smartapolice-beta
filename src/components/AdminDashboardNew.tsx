@@ -36,8 +36,8 @@ export function AdminDashboardNew({ policies, allUsers }: AdminDashboardNewProps
     return (
       <div className="space-y-6 p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Administrativo</h1>
-          <p className="text-red-600">Erro ao carregar dados: {error}</p>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard Administrativo</h1>
+          <p className="text-destructive">Erro ao carregar dados: {error}</p>
           <Button onClick={refetch} className="mt-4">
             <RefreshCw className="h-4 w-4 mr-2" />
             Tentar Novamente
@@ -51,8 +51,8 @@ export function AdminDashboardNew({ policies, allUsers }: AdminDashboardNewProps
     <div className="space-y-6 p-6">
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Administrativo</h1>
-          <p className="text-gray-600">Dados sincronizados em tempo real com o banco de dados</p>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard Administrativo</h1>
+          <p className="text-muted-foreground">Dados sincronizados em tempo real com o banco de dados</p>
         </div>
         <Button onClick={refetch} disabled={isLoading} variant="outline">
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -69,7 +69,7 @@ export function AdminDashboardNew({ policies, allUsers }: AdminDashboardNewProps
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <Skeleton className="h-8 w-20 bg-white/20" />
+              <Skeleton className="h-8 w-20 bg-background/20" />
             ) : (
               <div className="text-3xl font-bold">{metrics.totalPolicies}</div>
             )}
@@ -84,7 +84,7 @@ export function AdminDashboardNew({ policies, allUsers }: AdminDashboardNewProps
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <Skeleton className="h-8 w-20 bg-white/20" />
+              <Skeleton className="h-8 w-20 bg-background/20" />
             ) : (
               <div className="text-3xl font-bold">{metrics.totalUsers}</div>
             )}
@@ -99,7 +99,7 @@ export function AdminDashboardNew({ policies, allUsers }: AdminDashboardNewProps
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <Skeleton className="h-8 w-20 bg-white/20" />
+              <Skeleton className="h-8 w-20 bg-background/20" />
             ) : (
               <div className="text-3xl font-bold">{metrics.totalInsurers}</div>
             )}
@@ -114,7 +114,7 @@ export function AdminDashboardNew({ policies, allUsers }: AdminDashboardNewProps
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <Skeleton className="h-8 w-20 bg-white/20" />
+              <Skeleton className="h-8 w-20 bg-background/20" />
             ) : (
               <div className="text-3xl font-bold">{metrics.newPoliciesLast30Days}</div>
             )}
@@ -326,16 +326,16 @@ export function AdminDashboardNew({ policies, allUsers }: AdminDashboardNewProps
           ) : (
             <div className="space-y-3">
               {metrics.recentPolicies.map((policy) => (
-                <div key={policy.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={policy.id} className="flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 transition-colors rounded-lg">
                   <div>
-                    <p className="font-medium">{policy.segurado}</p>
-                    <p className="text-sm text-gray-600">{renderValueAsString(policy.seguradora)} • {policy.tipo_seguro}</p>
+                    <p className="font-medium text-foreground">{policy.segurado}</p>
+                    <p className="text-sm text-muted-foreground">{renderValueAsString(policy.seguradora)} • {policy.tipo_seguro}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-green-600">
+                    <p className="font-medium text-green-600 dark:text-green-400">
                       {formatCurrency(policy.custo_mensal)}/mês
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {new Date(policy.created_at).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
