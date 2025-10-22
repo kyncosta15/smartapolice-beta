@@ -88,7 +88,7 @@ export function MobileDrawer({
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border/30 bg-gradient-to-b from-background to-muted/10">
+        <div className="flex items-center justify-between p-4 border-b border-border/30 bg-gradient-to-b from-sidebar-background to-sidebar-accent/10 dark:from-background dark:to-muted/5">
           <SmartApóliceLogo size="sm" showText={true} />
           <Button
             variant="ghost"

@@ -65,7 +65,7 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
 
   return (
     <div className="space-y-6">
-      <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
+      <Card className="bg-white dark:bg-card backdrop-blur-sm border-0 dark:border shadow-lg">
         <CardHeader className={`${isMobile ? 'pb-4' : 'pb-6'}`}>
           {/* Seu campo de busca e botões aqui, atualizando `search` e `showFilters` */}
         </CardHeader>
@@ -80,11 +80,11 @@ export function PolicyViewer({ policies, onPolicySelect, onPolicyEdit, onPolicyD
         {policies
           .filter(policy => getSearchableText(policy).includes(search.toLowerCase()))
           .map(policy => (
-            <Card key={policy.id}>
+            <Card key={policy.id} className="dark:bg-card dark:border">
               <CardContent>
-                <h3 className="text-lg font-semibold">{toText(policy.name)}</h3>
-                <p className="text-sm">{toText(policy.insurer)}</p>
-                <p className="text-xs text-gray-500">Apólice: {toText(policy.policyNumber)}</p>
+                <h3 className="text-lg font-semibold dark:text-foreground">{toText(policy.name)}</h3>
+                <p className="text-sm dark:text-muted-foreground">{toText(policy.insurer)}</p>
+                <p className="text-xs text-gray-500 dark:text-muted-foreground">Apólice: {toText(policy.policyNumber)}</p>
 
                 <div className="flex space-x-2 mt-4">
                   <Button size="sm" onClick={() => handleDownload(policy)}>

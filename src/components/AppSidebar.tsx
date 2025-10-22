@@ -76,7 +76,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-border/50">
       {/* Header */}
-      <SidebarHeader className="border-b border-border/30 bg-gradient-to-b from-background to-muted/10">
+      <SidebarHeader className="border-b border-border/30 bg-gradient-to-b from-sidebar-background to-sidebar-accent/10 dark:from-sidebar-background dark:to-sidebar-accent/5">
         <div className="flex items-center justify-center p-4">
           {open ? (
             <SmartApóliceLogo size="sm" showText={true} />
@@ -148,7 +148,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       </SidebarContent>
 
       {/* Footer - Logout Button */}
-      <SidebarFooter className="border-t border-border/30 bg-gradient-to-t from-background to-muted/5 p-2">
+      <SidebarFooter className="border-t border-border/30 bg-gradient-to-t from-sidebar-background to-sidebar-accent/10 dark:from-sidebar-background dark:to-sidebar-accent/5 p-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton

@@ -90,12 +90,12 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-900">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-blue-900">
+          <CardTitle className="text-2xl font-bold text-blue-900 dark:text-blue-100">
             Entre em Contato
           </CardTitle>
-          <p className="text-blue-700 mt-2">
+          <p className="text-blue-700 dark:text-blue-300 mt-2">
             Estamos aqui para ajudar você com suas necessidades de seguro
           </p>
         </CardHeader>
@@ -103,20 +103,20 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Informações de Contato */}
-        <Card className="bg-white border border-gray-200">
+        <Card className="bg-white dark:bg-card border border-gray-200 dark:border-border">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-900">
+            <CardTitle className="text-xl font-semibold text-gray-900 dark:text-foreground">
               Informações de Contato
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-start space-x-4">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <Mail className="h-6 w-6 text-blue-600" />
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Email</h3>
-                <p className="text-gray-600">diretoria@rcaldas.com.br</p>
+                <h3 className="font-semibold text-gray-900 dark:text-foreground">Email</h3>
+                <p className="text-gray-600 dark:text-muted-foreground">diretoria@rcaldas.com.br</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -130,12 +130,12 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
             </div>
 
             <div className="flex items-start space-x-4">
-              <div className="p-3 bg-green-50 rounded-lg">
-                <Phone className="h-6 w-6 text-green-600" />
+              <div className="p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                <Phone className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Telefone</h3>
-                <p className="text-gray-600">(71) 98204-7208</p>
+                <h3 className="font-semibold text-gray-900 dark:text-foreground">Telefone</h3>
+                <p className="text-gray-600 dark:text-muted-foreground">(71) 98204-7208</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -149,35 +149,35 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
             </div>
 
             <div className="flex items-start space-x-4">
-              <div className="p-3 bg-orange-50 rounded-lg">
-                <MapPin className="h-6 w-6 text-orange-600" />
+              <div className="p-3 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
+                <MapPin className="h-6 w-6 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Empresa</h3>
-                <p className="text-gray-600 font-medium">RCaldas</p>
-                <p className="text-sm text-gray-500">Soluções em seguros e consultoria</p>
+                <h3 className="font-semibold text-gray-900 dark:text-foreground">Empresa</h3>
+                <p className="text-gray-600 dark:text-muted-foreground font-medium">RCaldas</p>
+                <p className="text-sm text-gray-500 dark:text-muted-foreground">Soluções em seguros e consultoria</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-4">
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <Clock className="h-6 w-6 text-purple-600" />
+              <div className="p-3 bg-purple-50 dark:bg-purple-950/30 rounded-lg">
+                <Clock className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Horário de Atendimento</h3>
-                <p className="text-gray-600">Segunda à Sexta: 8h às 17:30h</p>
+                <h3 className="font-semibold text-gray-900 dark:text-foreground">Horário de Atendimento</h3>
+                <p className="text-gray-600 dark:text-muted-foreground">Segunda à Sexta: 8h às 17:30h</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Formulário de Contato */}
-        <Card className="bg-white border border-gray-200">
+        <Card className="bg-white dark:bg-card border border-gray-200 dark:border-border">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-900">
+            <CardTitle className="text-xl font-semibold text-gray-900 dark:text-foreground">
               Fale Conosco
             </CardTitle>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-muted-foreground">
               Envie sua mensagem e retornaremos em breve
             </p>
           </CardHeader>
@@ -185,7 +185,7 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-foreground mb-1">
                     Nome *
                   </label>
                   <input
@@ -193,13 +193,13 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary focus:border-transparent bg-white dark:bg-background text-foreground"
                     placeholder="Seu nome completo"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-foreground mb-1">
                     Telefone *
                   </label>
                   <input
@@ -207,7 +207,7 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary focus:border-transparent bg-white dark:bg-background text-foreground"
                     placeholder="(00) 00000-0000"
                     required
                   />
@@ -215,7 +215,7 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-foreground mb-1">
                   Email *
                 </label>
                 <input
@@ -223,21 +223,21 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary focus:border-transparent bg-white dark:bg-background text-foreground"
                   placeholder="seu@email.com"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-foreground mb-1">
                   Assunto
                 </label>
                 <select 
                   name="subject"
                   value={formData.subject}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-border rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary focus:border-transparent bg-white dark:bg-background text-foreground"
                 >
                   <option value="">Selecione um assunto</option>
                   <option value="Cotação de Seguro">Cotação de Seguro</option>
@@ -249,7 +249,7 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-foreground mb-1">
                   Mensagem *
                 </label>
                 <Textarea
@@ -257,7 +257,7 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
                   value={formData.message}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full"
+                  className="w-full dark:bg-background dark:border-border dark:text-foreground"
                   placeholder="Descreva sua necessidade ou dúvida..."
                   required
                 />
@@ -265,7 +265,7 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
 
               <Button 
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90"
                 disabled={isSubmitting}
               >
                 <Send className="h-4 w-4 mr-2" />
@@ -277,7 +277,7 @@ Enviado em: ${new Date().toLocaleString('pt-BR')}
       </div>
 
       {/* Informações Adicionais */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
         <CardContent className="py-6">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-blue-900 mb-2">

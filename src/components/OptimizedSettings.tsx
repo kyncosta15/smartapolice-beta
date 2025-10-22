@@ -90,11 +90,11 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
         return (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-foreground mb-4 flex items-center">
                 <User className="h-5 w-5 mr-2" />
                 Meu Perfil
               </h3>
-              <p className="text-gray-600 mb-6">Gerencie suas informações pessoais</p>
+              <p className="text-gray-600 dark:text-muted-foreground mb-6">Gerencie suas informações pessoais</p>
             </div>
             <UserProfile />
           </div>
@@ -104,23 +104,23 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
         return (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-foreground mb-4 flex items-center">
                 <Bell className="h-5 w-5 mr-2" />
                 Preferências de Notificação
               </h3>
-              <p className="text-gray-600 mb-6">Configure como e quando receber notificações</p>
+              <p className="text-gray-600 dark:text-muted-foreground mb-6">Configure como e quando receber notificações</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+              <Card className="dark:bg-card dark:border">
                 <CardHeader>
-                  <CardTitle className="text-base">Canais de Notificação</CardTitle>
+                  <CardTitle className="text-base dark:text-foreground">Canais de Notificação</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="email-notifications">E-mail</Label>
-                      <p className="text-sm text-gray-500">Receber notificações por e-mail</p>
+                      <Label htmlFor="email-notifications" className="dark:text-foreground">E-mail</Label>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Receber notificações por e-mail</p>
                     </div>
                     <Switch
                       id="email-notifications"
@@ -130,8 +130,8 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="push-notifications">Push</Label>
-                      <p className="text-sm text-gray-500">Notificações do navegador</p>
+                      <Label htmlFor="push-notifications" className="dark:text-foreground">Push</Label>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Notificações do navegador</p>
                     </div>
                     <Switch
                       id="push-notifications"
@@ -141,8 +141,8 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="sms-notifications">SMS</Label>
-                      <p className="text-sm text-gray-500">Mensagens de texto</p>
+                      <Label htmlFor="sms-notifications" className="dark:text-foreground">SMS</Label>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Mensagens de texto</p>
                     </div>
                     <Switch
                       id="sms-notifications"
@@ -599,14 +599,14 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Configurações</h1>
-              <p className="text-gray-600 mt-1">Gerencie suas preferências e configurações do sistema</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">Configurações</h1>
+              <p className="text-gray-600 dark:text-muted-foreground mt-1">Gerencie suas preferências e configurações do sistema</p>
             </div>
             {onBackToHome && (
               <Button variant="ghost" onClick={onBackToHome} className="gap-2">
@@ -619,12 +619,12 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
 
         {/* Tabs */}
         <Tabs value={activeSection} onValueChange={setActiveSection} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 mb-8">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 mb-8 dark:bg-muted">
             {sections.map((section) => (
               <TabsTrigger 
                 key={section.value} 
                 value={section.value}
-                className="flex items-center gap-2 text-xs sm:text-sm"
+                className="flex items-center gap-2 text-xs sm:text-sm dark:data-[state=active]:bg-background"
               >
                 <section.icon className="h-4 w-4" />
                 <span className="hidden sm:inline">{section.label}</span>
@@ -632,7 +632,7 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
             ))}
           </TabsList>
 
-          <div className="bg-white rounded-lg shadow-sm border min-h-[600px]">
+          <div className="bg-white dark:bg-card rounded-lg shadow-sm border dark:border-border min-h-[600px]">
             {sections.map((section) => (
               <TabsContent key={section.value} value={section.value} className="p-6 sm:p-8">
                 {renderContent()}
