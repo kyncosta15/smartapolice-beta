@@ -193,3 +193,27 @@ export async function getDadosBI(params: BIParams) {
     throw error;
   }
 }
+
+interface InCorpParams {
+  empresa_id?: number;
+  grupo_id?: number;
+}
+
+export async function getDadosInCorp(params: InCorpParams) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.empresa_id) queryParams.append('empresa_id', params.empresa_id.toString());
+    if (params.grupo_id) queryParams.append('grupo_id', params.grupo_id.toString());
+
+    const response = await fetch(`${RCORP_API_BASE}/incorp?${queryParams.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao buscar dados InCorp:', error);
+    throw error;
+  }
+}

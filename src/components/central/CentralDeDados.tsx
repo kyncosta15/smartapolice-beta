@@ -16,7 +16,8 @@ import {
   getProdutores,
   getRamos,
   getSinistros,
-  getDadosBI
+  getDadosBI,
+  getDadosInCorp
 } from '@/services/rcorp';
 import {
   Collapsible,
@@ -57,6 +58,12 @@ export default function CentralDeDados() {
   const [biAno, setBiAno] = useState('2023');
   const [biTipo, setBiTipo] = useState('producao');
   const [resultBI, setResultBI] = useState<any>(null);
+
+  // Estados para InCorp
+  const [loadingIncorp, setLoadingIncorp] = useState(false);
+  const [empresaId, setEmpresaId] = useState('');
+  const [grupoId, setGrupoId] = useState('');
+  const [resultIncorp, setResultIncorp] = useState<any>(null);
 
   const handleImportNegocios = async () => {
     setLoadingNegocios(true);
@@ -239,6 +246,31 @@ export default function CentralDeDados() {
       });
     } finally {
       setLoadingBI(false);
+    }
+  };
+
+  const handleBuscarInCorp = async () => {
+    setLoadingIncorp(true);
+    try {
+      const data = await getDadosInCorp({
+        empresa_id: empresaId ? Number(empresaId) : undefined,
+        grupo_id: grupoId ? Number(grupoId) : undefined
+      });
+      setResultIncorp(data);
+      
+      toast({
+        title: '✅ Dados InCorp carregados',
+        description: 'Dados corporativos obtidos com sucesso',
+      });
+    } catch (error) {
+      console.error('Erro ao buscar dados InCorp:', error);
+      toast({
+        title: 'Erro ao carregar dados',
+        description: 'Não foi possível carregar os dados do InCorp.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingIncorp(false);
     }
   };
 
@@ -876,6 +908,75 @@ export default function CentralDeDados() {
           </Card>
 
           {/* Visualizações e Gráficos */}
+          <Card>
+            <CardHeader>
+              <CardTitle>InCorp - Dados Corporativos</CardTitle>
+              <CardDescription>
+                Consulte dados corporativos de empresas e grupos
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-2 sm:grid-cols-3">
+                <Input
+                  placeholder="ID da Empresa"
+                  value={empresaId}
+                  onChange={(e) => setEmpresaId(e.target.value)}
+                  disabled={loadingIncorp}
+                  type="number"
+                />
+                <Input
+                  placeholder="ID do Grupo"
+                  value={grupoId}
+                  onChange={(e) => setGrupoId(e.target.value)}
+                  disabled={loadingIncorp}
+                  type="number"
+                />
+                <Button 
+                  onClick={handleBuscarInCorp} 
+                  disabled={loadingIncorp}
+                  className="w-full"
+                >
+                  {loadingIncorp ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Buscar
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {resultIncorp && (
+                <Card className="bg-muted/30">
+                  <CardHeader>
+                    <CardTitle className="text-sm">Dados Corporativos</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="text-xs overflow-auto max-h-[400px] bg-background p-4 rounded-lg">
+                      {JSON.stringify(resultIncorp, null, 2)}
+                    </pre>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!resultIncorp && !loadingIncorp && (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-sm text-muted-foreground">
+                      Informe ID da empresa ou grupo e clique em Buscar
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Dashboards e Gráficos */}
           <Card>
             <CardHeader>
               <CardTitle>Dashboards e Gráficos</CardTitle>
