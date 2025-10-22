@@ -118,15 +118,14 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 className={cn(
                   "group flex items-center gap-3 text-sm w-full",
                   "transition-all duration-200 ease-out font-medium relative overflow-hidden",
-                  "text-muted-foreground hover:bg-accent/50",
-                  "hover:text-[#161616]",
+                  "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                   "hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]",
                   "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
                   // Quando colapsado: circular, caso contrário: rounded-xl
                   open ? "rounded-xl px-3 py-2.5" : "rounded-full w-10 h-10 p-0 justify-center",
                   activeSection === item.id && [
-                    "bg-gradient-to-r from-primary/15 to-primary/5 text-[#161616] shadow-sm border border-primary/10",
-                    "hover:from-primary/20 hover:to-primary/8 hover:text-[#161616]",
+                    "bg-gradient-to-r from-primary/15 to-primary/5 text-foreground shadow-sm border border-primary/10",
+                    "hover:from-primary/20 hover:to-primary/8",
                     open && "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-gradient-to-b before:from-primary before:to-primary/80 before:rounded-r-full"
                   ]
                 )}
@@ -134,8 +133,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 <item.icon className={cn(
                   "size-4 transition-all duration-200 flex-shrink-0",
                   activeSection === item.id 
-                    ? "text-[#161616] drop-shadow-sm" 
-                    : "text-muted-foreground group-hover:text-[#161616] group-hover:scale-110"
+                    ? "text-foreground drop-shadow-sm" 
+                    : "text-muted-foreground group-hover:text-accent-foreground group-hover:scale-110"
                 )} />
                 {open && <span className="truncate">{item.title}</span>}
                 {activeSection === item.id && open && (
@@ -156,7 +155,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
               tooltip="Sair do sistema"
               className={cn(
                 "flex items-center gap-3 text-sm w-full",
-                "text-muted-foreground hover:text-[#161616] hover:bg-accent/50",
+                "text-muted-foreground hover:text-accent-foreground hover:bg-accent",
                 "transition-all duration-200 ease-out font-medium",
                 "hover:scale-[1.01] active:scale-[0.99] hover:shadow-sm",
                 "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
