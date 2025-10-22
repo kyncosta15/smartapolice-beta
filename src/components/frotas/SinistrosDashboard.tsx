@@ -161,21 +161,21 @@ export function SinistrosDashboard({ loading = false }: SinistrosDashboardProps)
         {/* KPI Cards skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse dark:bg-card dark:border-border">
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 dark:bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-gray-200 dark:bg-muted rounded w-1/2"></div>
               </CardContent>
             </Card>
           ))}
         </div>
         
         {/* Table skeleton */}
-        <Card>
+        <Card className="dark:bg-card dark:border-border">
           <CardContent className="p-6">
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div key={i} className="h-4 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
               ))}
             </div>
           </CardContent>
@@ -188,67 +188,67 @@ export function SinistrosDashboard({ loading = false }: SinistrosDashboardProps)
     <div className="space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="dark:bg-card dark:border-border">
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-1">
                 <p className="text-sm font-medium text-muted-foreground">
                   Total de Sinistros
                 </p>
-                <p className="text-2xl font-bold">{kpis.total}</p>
+                <p className="text-2xl font-bold dark:text-foreground">{kpis.total}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-card dark:border-border">
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-1">
                 <p className="text-sm font-medium text-muted-foreground">
                   Em Aberto
                 </p>
-                <p className="text-2xl font-bold text-red-600">{kpis.abertos}</p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{kpis.abertos}</p>
               </div>
-              <Clock className="h-8 w-8 text-red-600" />
+              <Clock className="h-8 w-8 text-red-600 dark:text-red-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-card dark:border-border">
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-1">
                 <p className="text-sm font-medium text-muted-foreground">
                   Finalizados
                 </p>
-                <p className="text-2xl font-bold text-green-600">{kpis.finalizados}</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{kpis.finalizados}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-600" />
+              <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-card dark:border-border">
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-1">
                 <p className="text-sm font-medium text-muted-foreground">
                   Últimos 60 dias
                 </p>
-                <p className="text-2xl font-bold text-blue-600">{kpis.ultimos60Dias}</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{kpis.ultimos60Dias}</p>
               </div>
-              <Calendar className="h-8 w-8 text-blue-600" />
+              <Calendar className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="dark:bg-card dark:border-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-foreground">
             <Filter className="h-5 w-5" />
             Filtros
           </CardTitle>
@@ -257,7 +257,7 @@ export function SinistrosDashboard({ loading = false }: SinistrosDashboardProps)
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-muted-foreground" />
                 <Input
                   placeholder="Buscar por placa, tipo ou descrição..."
                   value={searchTerm}
@@ -295,9 +295,9 @@ export function SinistrosDashboard({ loading = false }: SinistrosDashboardProps)
       </Card>
 
       {/* Sinistros List */}
-      <Card>
+      <Card className="dark:bg-card dark:border-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-foreground">
             <AlertTriangle className="h-5 w-5" />
             Lista de Sinistros ({filteredSinistros.length})
           </CardTitle>
@@ -305,11 +305,11 @@ export function SinistrosDashboard({ loading = false }: SinistrosDashboardProps)
         <CardContent>
           {filteredSinistros.length === 0 ? (
             <div className="text-center py-8">
-              <AlertTriangle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <AlertTriangle className="mx-auto h-12 w-12 text-gray-400 dark:text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-foreground mb-2">
                 Nenhum sinistro encontrado
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-500 dark:text-muted-foreground">
                 Não há sinistros que correspondam aos filtros aplicados.
               </p>
             </div>

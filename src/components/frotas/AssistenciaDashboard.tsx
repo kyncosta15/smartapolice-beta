@@ -239,8 +239,8 @@ export function AssistenciaDashboard({ loading = false }: AssistenciaDashboardPr
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Assistência 24 Horas</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-2">Assistência 24 Horas</h2>
+        <p className="text-gray-600 dark:text-muted-foreground">
           Solicite assistência para guincho, vidros ou serviços residenciais
         </p>
       </div>
@@ -250,15 +250,15 @@ export function AssistenciaDashboard({ loading = false }: AssistenciaDashboardPr
         {services.map((service) => {
           const Icon = service.icon;
           return (
-            <Card key={service.id} className={`cursor-pointer transition-all hover:shadow-lg ${service.bgColor}`}>
+            <Card key={service.id} className={`cursor-pointer transition-all hover:shadow-lg ${service.bgColor} dark:bg-card dark:border-border`}>
               <CardHeader className="text-center">
-                <div className="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
+                <div className="mx-auto w-16 h-16 bg-white dark:bg-background rounded-full flex items-center justify-center mb-4">
                   <Icon className={`h-8 w-8 ${service.color}`} />
                 </div>
-                <CardTitle className="text-lg">{service.title}</CardTitle>
+                <CardTitle className="text-lg dark:text-foreground">{service.title}</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-600 dark:text-muted-foreground mb-4">
                   {service.description}
                 </p>
                 <Button 
@@ -276,20 +276,20 @@ export function AssistenciaDashboard({ loading = false }: AssistenciaDashboardPr
 
       {/* Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+        <Card className="dark:bg-card dark:border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Phone className="h-5 w-5 text-green-600" />
+            <CardTitle className="flex items-center gap-2 dark:text-foreground">
+              <Phone className="h-5 w-5 text-green-600 dark:text-green-400" />
               Central de Atendimento
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p className="text-2xl font-bold text-green-600">0800 123 4567</p>
-              <p className="text-sm text-gray-600">
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">0800 123 4567</p>
+              <p className="text-sm text-gray-600 dark:text-muted-foreground">
                 Disponível 24 horas por dia, 7 dias por semana
               </p>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-muted-foreground">
                 <Clock className="h-4 w-4" />
                 <span>Tempo médio de resposta: 30 minutos</span>
               </div>
@@ -297,20 +297,20 @@ export function AssistenciaDashboard({ loading = false }: AssistenciaDashboardPr
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-card dark:border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-blue-600" />
+            <CardTitle className="flex items-center gap-2 dark:text-foreground">
+              <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               Cobertura
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p className="font-medium">Região Metropolitana</p>
-              <p className="text-sm text-gray-600">
+              <p className="font-medium dark:text-foreground">Região Metropolitana</p>
+              <p className="text-sm text-gray-600 dark:text-muted-foreground">
                 Atendemos toda a região metropolitana e principais rodovias
               </p>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-muted-foreground">
                 <Car className="h-4 w-4" />
                 <span>Raio de atendimento: 100km</span>
               </div>
