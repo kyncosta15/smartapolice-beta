@@ -169,3 +169,27 @@ export async function getSinistros(params: SinistrosParams) {
     throw error;
   }
 }
+
+interface BIParams {
+  tipo?: string;
+  ano?: number;
+}
+
+export async function getDadosBI(params: BIParams) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.tipo) queryParams.append('tipo', params.tipo);
+    if (params.ano) queryParams.append('ano', params.ano.toString());
+
+    const response = await fetch(`${RCORP_API_BASE}/bi?${queryParams.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao buscar dados BI:', error);
+    throw error;
+  }
+}

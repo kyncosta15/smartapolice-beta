@@ -15,7 +15,8 @@ import {
   getTelefonesPorCliente,
   getProdutores,
   getRamos,
-  getSinistros
+  getSinistros,
+  getDadosBI
 } from '@/services/rcorp';
 import {
   Collapsible,
@@ -50,6 +51,12 @@ export default function CentralDeDados() {
   // Estados para Sinistros
   const [loadingSinistros, setLoadingSinistros] = useState(false);
   const [resultSinistros, setResultSinistros] = useState<any[]>([]);
+
+  // Estados para BI
+  const [loadingBI, setLoadingBI] = useState(false);
+  const [biAno, setBiAno] = useState('2023');
+  const [biTipo, setBiTipo] = useState('producao');
+  const [resultBI, setResultBI] = useState<any>(null);
 
   const handleImportNegocios = async () => {
     setLoadingNegocios(true);
@@ -207,6 +214,31 @@ export default function CentralDeDados() {
       });
     } finally {
       setLoadingSinistros(false);
+    }
+  };
+
+  const handleBuscarBI = async () => {
+    setLoadingBI(true);
+    try {
+      const data = await getDadosBI({ 
+        tipo: biTipo, 
+        ano: Number(biAno) 
+      });
+      setResultBI(data);
+      
+      toast({
+        title: '✅ Dados BI carregados',
+        description: 'Indicadores obtidos com sucesso',
+      });
+    } catch (error) {
+      console.error('Erro ao buscar dados BI:', error);
+      toast({
+        title: 'Erro ao carregar indicadores',
+        description: 'Não foi possível carregar os dados de BI.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingBI(false);
     }
   };
 
@@ -779,9 +811,76 @@ export default function CentralDeDados() {
           {/* Dashboards e Gráficos */}
           <Card>
             <CardHeader>
+              <CardTitle>Indicadores BI</CardTitle>
+              <CardDescription>
+                Consulte indicadores de produção, sinistros e outros dados consolidados
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-2 sm:grid-cols-3">
+                <Input
+                  placeholder="Ano (ex: 2023)"
+                  value={biAno}
+                  onChange={(e) => setBiAno(e.target.value)}
+                  disabled={loadingBI}
+                />
+                <Input
+                  placeholder="Tipo (producao, sinistros)"
+                  value={biTipo}
+                  onChange={(e) => setBiTipo(e.target.value)}
+                  disabled={loadingBI}
+                />
+                <Button 
+                  onClick={handleBuscarBI} 
+                  disabled={loadingBI}
+                  className="w-full"
+                >
+                  {loadingBI ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Buscar
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {resultBI && (
+                <Card className="bg-muted/30">
+                  <CardHeader>
+                    <CardTitle className="text-sm">Resultado BI</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="text-xs overflow-auto max-h-[400px] bg-background p-4 rounded-lg">
+                      {JSON.stringify(resultBI, null, 2)}
+                    </pre>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!resultBI && !loadingBI && (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-sm text-muted-foreground">
+                      Configure ano e tipo, depois clique em Buscar
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Visualizações e Gráficos */}
+          <Card>
+            <CardHeader>
               <CardTitle>Dashboards e Gráficos</CardTitle>
               <CardDescription>
-                Visualizações e análises de dados consolidados
+                Visualizações avançadas em desenvolvimento
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -789,13 +888,13 @@ export default function CentralDeDados() {
                 <Card className="border-dashed">
                   <CardContent className="flex flex-col items-center justify-center py-8 text-center">
                     <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-sm text-muted-foreground">Gráficos em desenvolvimento</p>
+                    <p className="text-sm text-muted-foreground">Gráficos interativos em desenvolvimento</p>
                   </CardContent>
                 </Card>
                 <Card className="border-dashed">
                   <CardContent className="flex flex-col items-center justify-center py-8 text-center">
                     <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-sm text-muted-foreground">Relatórios em desenvolvimento</p>
+                    <p className="text-sm text-muted-foreground">Relatórios personalizados em desenvolvimento</p>
                   </CardContent>
                 </Card>
               </div>
@@ -828,7 +927,7 @@ export default function CentralDeDados() {
             </li>
             <li className="flex items-center gap-2">
               <Badge variant="default" className="w-20">Fase 4</Badge>
-              <span className="text-muted-foreground">Sinistros com busca ✅</span>
+              <span className="text-muted-foreground">Sinistros e Indicadores BI ✅</span>
             </li>
           </ul>
         </CardContent>
