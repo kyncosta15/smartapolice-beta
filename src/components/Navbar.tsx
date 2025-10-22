@@ -1,14 +1,21 @@
-import { useState, useEffect } from 'react';
-import { LogOut, ChevronDown, Menu, ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react';
+import { useState } from 'react';
+import { LogOut, ChevronDown, Menu, ChevronLeft, ChevronRight, Moon, Sun, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface NavbarProps {
   onMobileMenuToggle: () => void;
@@ -17,19 +24,11 @@ interface NavbarProps {
 
 export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const { logout, user } = useAuth();
   const { profile: userProfile, memberships, activeEmpresa } = useUserProfile();
   const { toast } = useToast();
   const { open } = useSidebar();
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
+  const { theme, setTheme } = useTheme();
 
   const getRoleLabel = (role: string) => {
     const roles = {
@@ -119,18 +118,34 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
         {/* Right side - Dark Mode Toggle and User Menu */}
         <div className="flex items-center gap-3">
           {/* Dark mode toggle */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setDarkMode(!darkMode)}
-            className="h-10 w-10 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            {darkMode ? (
-              <Sun className="h-5 w-5 text-yellow-500" />
-            ) : (
-              <Moon className="h-5 w-5 text-gray-700" />
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                {theme === 'light' && <Sun className="h-5 w-5 text-amber-500" />}
+                {theme === 'dark' && <Moon className="h-5 w-5 text-blue-500" />}
+                {theme === 'system' && <Monitor className="h-5 w-5 text-gray-600 dark:text-gray-400" />}
+                <span className="sr-only">Alternar tema</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => setTheme('light')} className="cursor-pointer">
+                <Sun className="mr-2 h-4 w-4 text-amber-500" />
+                <span>Claro</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('dark')} className="cursor-pointer">
+                <Moon className="mr-2 h-4 w-4 text-blue-500" />
+                <span>Escuro</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('system')} className="cursor-pointer">
+                <Monitor className="mr-2 h-4 w-4" />
+                <span>Sistema</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <div className="relative">
             <Button
               variant="ghost"

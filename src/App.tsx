@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { ProgressToaster } from "@/components/ui/progress-toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from '@/components/ThemeProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { TenantProvider } from '@/contexts/TenantContext';
 import { LandingPage } from "@/components/LandingPage";
@@ -42,11 +43,12 @@ const queryClient = new QueryClient({
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <TenantProvider>
-          <BrowserRouter>
-            <Routes>
+      <ThemeProvider defaultTheme="system" storageKey="smartapolice-theme">
+        <TooltipProvider>
+          <AuthProvider>
+            <TenantProvider>
+            <BrowserRouter>
+              <Routes>
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/system-selection" element={<SystemSelection />} />
@@ -134,6 +136,7 @@ const App = () => {
         <Sonner />
         <ProgressToaster />
       </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
