@@ -4,70 +4,128 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Download, Users, FileText, AlertCircle, BarChart3, Loader2 } from 'lucide-react';
+import { Search, Download, Users, FileText, AlertCircle, BarChart3, Loader2, MapPin, Mail, Phone, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import {
+  getClientes,
+  getNegociosEmCalculo,
+  getEnderecosPorCliente,
+  getEmailsPorCliente,
+  getTelefonesPorCliente
+} from '@/services/rcorp';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export default function CentralDeDados() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('negocios');
   const { toast } = useToast();
 
-  const handleImport = async (tipo: string) => {
-    setLoading(true);
-    setData(null);
-    
+  // Estados para Negócios
+  const [loadingNegocios, setLoadingNegocios] = useState(false);
+  const [resultNegocios, setResultNegocios] = useState<any>(null);
+
+  // Estados para Clientes
+  const [loadingClientes, setLoadingClientes] = useState(false);
+  const [resultClientes, setResultClientes] = useState<any[]>([]);
+  const [expandedClientId, setExpandedClientId] = useState<number | null>(null);
+  const [detalhesCliente, setDetalhesCliente] = useState<Record<number, any>>({});
+  const [loadingDetalhes, setLoadingDetalhes] = useState<number | null>(null);
+
+  const handleImportNegocios = async () => {
+    setLoadingNegocios(true);
     try {
-      // Simular delay de requisição
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // TODO: Implementar chamada real baseada no tipo
-      // const response = await importarDados(tipo, searchTerm);
-      
-      // Mock data baseado no tipo
-      const mockData = {
-        negocios: {
-          total: 3,
-          items: [
-            { id: 1, protocolo: 'RC-2025-001', cliente: 'Empresa ABC Ltda', cnpj: '12.345.678/0001-90', status: 'em_calculo' },
-            { id: 2, protocolo: 'RC-2025-002', cliente: 'Indústria XYZ S.A.', cnpj: '98.765.432/0001-10', status: 'em_calculo' },
-            { id: 3, protocolo: 'RC-2025-003', cliente: 'Comércio QWE ME', cnpj: '11.222.333/0001-44', status: 'em_calculo' },
-          ]
-        },
-        clientes: {
-          total: 0,
-          items: [],
-          message: 'Funcionalidade em desenvolvimento'
-        },
-        sinistros: {
-          total: 0,
-          items: [],
-          message: 'Funcionalidade em desenvolvimento'
-        },
-        bi: {
-          total: 0,
-          items: [],
-          message: 'Funcionalidade em desenvolvimento'
-        }
-      };
-      
-      setData(mockData[tipo as keyof typeof mockData]);
-      
-      toast({
-        title: '✅ Dados importados',
-        description: `${mockData[tipo as keyof typeof mockData].total || 0} registro(s) encontrado(s)`,
+      const data = await getNegociosEmCalculo({
+        dtini: "01/01/2023",
+        dtfim: "31/12/2025",
+        texto: searchTerm,
+        qtd_pag: 15,
+        pag: 1,
+        status: "TODOS"
       });
       
+      setResultNegocios(data);
+      
+      toast({
+        title: '✅ Negócios importados',
+        description: `${data?.total || 0} negócio(s) encontrado(s)`,
+      });
     } catch (error) {
+      console.error('Erro na importação:', error);
       toast({
         title: 'Erro na importação',
-        description: 'Não foi possível importar os dados.',
+        description: 'Não foi possível importar os negócios.',
         variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setLoadingNegocios(false);
+    }
+  };
+
+  const handleBuscarClientes = async () => {
+    setLoadingClientes(true);
+    setExpandedClientId(null);
+    try {
+      const data = await getClientes({ nome: searchTerm });
+      setResultClientes(data);
+      
+      toast({
+        title: '✅ Clientes encontrados',
+        description: `${data?.length || 0} cliente(s) encontrado(s)`,
+      });
+    } catch (error) {
+      console.error('Erro ao buscar clientes:', error);
+      toast({
+        title: 'Erro na busca',
+        description: 'Não foi possível buscar os clientes.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingClientes(false);
+    }
+  };
+
+  const handleCarregarDetalhes = async (clienteId: number) => {
+    // Se já está expandido, apenas colapsa
+    if (expandedClientId === clienteId) {
+      setExpandedClientId(null);
+      return;
+    }
+
+    // Se já tem detalhes carregados, apenas expande
+    if (detalhesCliente[clienteId]) {
+      setExpandedClientId(clienteId);
+      return;
+    }
+
+    // Carregar detalhes
+    setLoadingDetalhes(clienteId);
+    setExpandedClientId(clienteId);
+    
+    try {
+      const [enderecos, emails, telefones] = await Promise.all([
+        getEnderecosPorCliente({ cliente_id: clienteId }),
+        getEmailsPorCliente({ cliente_id: clienteId }),
+        getTelefonesPorCliente({ cliente_id: clienteId })
+      ]);
+
+      setDetalhesCliente(prev => ({
+        ...prev,
+        [clienteId]: { enderecos, emails, telefones }
+      }));
+    } catch (error) {
+      console.error('Erro ao carregar detalhes do cliente:', error);
+      toast({
+        title: 'Erro ao carregar detalhes',
+        description: 'Não foi possível carregar os detalhes do cliente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingDetalhes(null);
     }
   };
 
@@ -86,56 +144,197 @@ export default function CentralDeDados() {
     </div>
   );
 
-  const renderResults = () => {
-    if (!data) return null;
+  const renderNegociosResults = () => {
+    if (!resultNegocios) return null;
 
-    if (data.message) {
+    if (!resultNegocios.negocios || resultNegocios.negocios.length === 0) {
       return (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-8 text-center">
             <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">{data.message}</p>
+            <p className="text-muted-foreground">Nenhum negócio encontrado</p>
           </CardContent>
         </Card>
       );
     }
 
-    if (data.items && data.items.length > 0) {
-      return (
-        <div className="space-y-3">
-          {data.items.map((item: any) => (
-            <Card key={item.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Badge variant="outline">{item.protocolo}</Badge>
-                      {item.status && (
-                        <Badge variant="secondary">{item.status}</Badge>
-                      )}
-                    </div>
-                    <h4 className="font-semibold text-base">{item.cliente}</h4>
-                    {item.cnpj && (
-                      <p className="text-sm text-muted-foreground">CNPJ: {item.cnpj}</p>
+    return (
+      <div className="space-y-3">
+        {resultNegocios.negocios.map((item: any) => (
+          <Card key={item.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Badge variant="outline">{item.protocolo || item.id}</Badge>
+                    {item.status && (
+                      <Badge variant="secondary">{item.status}</Badge>
                     )}
                   </div>
-                  <Button variant="outline" size="sm">
-                    Ver detalhes
-                  </Button>
+                  <h4 className="font-semibold text-base">{item.cliente || item.nome}</h4>
+                  {item.cnpj && (
+                    <p className="text-sm text-muted-foreground">CNPJ: {item.cnpj}</p>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <Button variant="outline" size="sm">
+                  Ver detalhes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
+  const renderClientesResults = () => {
+    if (!resultClientes || resultClientes.length === 0) {
+      return (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+            <Users className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Nenhum cliente encontrado</p>
+          </CardContent>
+        </Card>
       );
     }
 
     return (
-      <Card className="border-dashed">
-        <CardContent className="py-8 text-center text-muted-foreground">
-          Nenhum resultado encontrado
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        {resultClientes.map((cliente: any) => {
+          const isExpanded = expandedClientId === cliente.id;
+          const detalhes = detalhesCliente[cliente.id];
+          const isLoadingThis = loadingDetalhes === cliente.id;
+
+          return (
+            <Card key={cliente.id} className="overflow-hidden">
+              <Collapsible open={isExpanded}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-base mb-1">{cliente.nome}</h4>
+                      {cliente.cnpj && (
+                        <p className="text-sm text-muted-foreground">CNPJ: {cliente.cnpj}</p>
+                      )}
+                      {cliente.cpf && (
+                        <p className="text-sm text-muted-foreground">CPF: {cliente.cpf}</p>
+                      )}
+                    </div>
+                    <CollapsibleTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleCarregarDetalhes(cliente.id)}
+                        disabled={isLoadingThis}
+                      >
+                        {isLoadingThis ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Carregando...
+                          </>
+                        ) : (
+                          <>
+                            {isExpanded ? (
+                              <>
+                                <ChevronUp className="h-4 w-4 mr-2" />
+                                Ocultar
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="h-4 w-4 mr-2" />
+                                Ver detalhes
+                              </>
+                            )}
+                          </>
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+
+                  <CollapsibleContent className="mt-4 pt-4 border-t space-y-4">
+                    {detalhes && (
+                      <div className="grid gap-4 md:grid-cols-3">
+                        {/* Endereços */}
+                        <Card className="bg-muted/30">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <MapPin className="h-4 w-4" />
+                              Endereços
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {detalhes.enderecos?.length > 0 ? (
+                              detalhes.enderecos.map((end: any, idx: number) => (
+                                <div key={idx} className="text-xs">
+                                  <p className="font-medium">{end.logradouro}, {end.numero}</p>
+                                  <p className="text-muted-foreground">
+                                    {end.bairro} - {end.cidade}/{end.uf}
+                                  </p>
+                                  <p className="text-muted-foreground">CEP: {end.cep}</p>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-xs text-muted-foreground">Nenhum endereço cadastrado</p>
+                            )}
+                          </CardContent>
+                        </Card>
+
+                        {/* E-mails */}
+                        <Card className="bg-muted/30">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Mail className="h-4 w-4" />
+                              E-mails
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {detalhes.emails?.length > 0 ? (
+                              detalhes.emails.map((email: any, idx: number) => (
+                                <div key={idx} className="text-xs">
+                                  <p className="font-medium break-all">{email.email}</p>
+                                  {email.tipo && (
+                                    <p className="text-muted-foreground">{email.tipo}</p>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-xs text-muted-foreground">Nenhum e-mail cadastrado</p>
+                            )}
+                          </CardContent>
+                        </Card>
+
+                        {/* Telefones */}
+                        <Card className="bg-muted/30">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Phone className="h-4 w-4" />
+                              Telefones
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {detalhes.telefones?.length > 0 ? (
+                              detalhes.telefones.map((tel: any, idx: number) => (
+                                <div key={idx} className="text-xs">
+                                  <p className="font-medium">{tel.telefone}</p>
+                                  {tel.tipo && (
+                                    <p className="text-muted-foreground">{tel.tipo}</p>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-xs text-muted-foreground">Nenhum telefone cadastrado</p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
+                  </CollapsibleContent>
+                </CardContent>
+              </Collapsible>
+            </Card>
+          );
+        })}
+      </div>
     );
   };
 
@@ -188,12 +387,12 @@ export default function CentralDeDados() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9"
-                    onKeyDown={(e) => e.key === 'Enter' && handleImport('negocios')}
-                    disabled={loading}
+                    onKeyDown={(e) => e.key === 'Enter' && handleImportNegocios()}
+                    disabled={loadingNegocios}
                   />
                 </div>
-                <Button onClick={() => handleImport('negocios')} disabled={loading}>
-                  {loading ? (
+                <Button onClick={handleImportNegocios} disabled={loadingNegocios}>
+                  {loadingNegocios ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Importando...
@@ -207,7 +406,7 @@ export default function CentralDeDados() {
                 </Button>
               </div>
 
-              {loading ? renderSkeletons() : renderResults()}
+              {loadingNegocios ? renderSkeletons() : renderNegociosResults()}
             </CardContent>
           </Card>
         </TabsContent>
@@ -216,7 +415,7 @@ export default function CentralDeDados() {
         <TabsContent value="clientes" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Importar Clientes</CardTitle>
+              <CardTitle>Buscar Clientes</CardTitle>
               <CardDescription>
                 Busque e visualize dados de clientes cadastrados na RCORP
               </CardDescription>
@@ -226,15 +425,16 @@ export default function CentralDeDados() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar por nome, CNPJ, email..."
+                    placeholder="Buscar por nome, CNPJ, CPF..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9"
-                    disabled={loading}
+                    onKeyDown={(e) => e.key === 'Enter' && handleBuscarClientes()}
+                    disabled={loadingClientes}
                   />
                 </div>
-                <Button onClick={() => handleImport('clientes')} disabled={loading}>
-                  {loading ? (
+                <Button onClick={handleBuscarClientes} disabled={loadingClientes}>
+                  {loadingClientes ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Buscando...
@@ -248,7 +448,7 @@ export default function CentralDeDados() {
                 </Button>
               </div>
 
-              {loading ? renderSkeletons() : renderResults()}
+              {loadingClientes ? renderSkeletons() : renderClientesResults()}
             </CardContent>
           </Card>
         </TabsContent>
@@ -262,34 +462,13 @@ export default function CentralDeDados() {
                 Visualize sinistros relacionados aos clientes
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por protocolo, cliente..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                    disabled={loading}
-                  />
-                </div>
-                <Button onClick={() => handleImport('sinistros')} disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Buscando...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="h-4 w-4 mr-2" />
-                      Buscar
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {loading ? renderSkeletons() : renderResults()}
+            <CardContent>
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                  <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-sm text-muted-foreground">Funcionalidade em desenvolvimento</p>
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
         </TabsContent>
@@ -335,11 +514,11 @@ export default function CentralDeDados() {
           <ul className="space-y-2 text-sm">
             <li className="flex items-center gap-2">
               <Badge variant="default" className="w-20">Fase 1</Badge>
-              <span className="text-muted-foreground">Negócios em cálculo (em desenvolvimento)</span>
+              <span className="text-muted-foreground">Negócios em cálculo ✅</span>
             </li>
             <li className="flex items-center gap-2">
-              <Badge variant="outline" className="w-20">Fase 2</Badge>
-              <span className="text-muted-foreground">Clientes com busca e preview</span>
+              <Badge variant="default" className="w-20">Fase 2</Badge>
+              <span className="text-muted-foreground">Clientes com detalhes expansíveis ✅</span>
             </li>
             <li className="flex items-center gap-2">
               <Badge variant="outline" className="w-20">Fase 3</Badge>
