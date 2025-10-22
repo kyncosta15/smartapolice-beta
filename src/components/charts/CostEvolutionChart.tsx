@@ -103,18 +103,18 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
   });
 
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm print-chart-card">
+    <Card className="bg-card border-border print-chart-card">
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
+            <div className="p-2 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <CardTitle className="text-xl font-semibold text-gray-900">
+              <CardTitle className="text-xl font-semibold text-foreground">
                 Evolução de Custos Mensais
               </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {hasData 
                   ? `Calculado baseado no valor total dividido pelas parcelas - ${policies.length} apólice${policies.length !== 1 ? 's' : ''}`
                   : 'Aguardando dados de apólices para análise'
@@ -126,8 +126,8 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
           {hasData && (
             <div className="flex space-x-4 text-sm">
               <div className="text-center">
-                <p className="text-gray-500">Média Mensal</p>
-                <p className="font-semibold text-blue-600">
+                <p className="text-muted-foreground">Média Mensal</p>
+                <p className="font-semibold text-blue-600 dark:text-blue-400">
                   {formatCurrency(avgCusto, { 
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
@@ -135,8 +135,8 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-gray-500">Pico</p>
-                <p className="font-semibold text-green-600">
+                <p className="text-muted-foreground">Pico</p>
+                <p className="font-semibold text-green-600 dark:text-green-400">
                   {formatCurrency(maxCusto, { 
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
@@ -144,8 +144,8 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-gray-500">Total</p>
-                <p className="font-semibold text-orange-600">
+                <p className="text-muted-foreground">Total</p>
+                <p className="font-semibold text-orange-600 dark:text-orange-400">
                   {formatCurrency(totalCusto, { 
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
@@ -157,23 +157,23 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="w-full h-80 relative">
+        <div className="w-full h-80 relative bg-background rounded-lg [&_svg]:!bg-transparent">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
               data={chartData} 
               margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" opacity={0.5} />
               <XAxis 
                 dataKey="month" 
-                tick={{ fontSize: 12, fill: '#64748b' }}
-                tickLine={{ stroke: '#e2e8f0' }}
-                axisLine={{ stroke: '#e2e8f0' }}
+                className="text-xs fill-muted-foreground"
+                tickLine={{ className: "stroke-border" }}
+                axisLine={{ className: "stroke-border" }}
               />
               <YAxis 
-                tick={{ fontSize: 12, fill: '#64748b' }}
-                tickLine={{ stroke: '#e2e8f0' }}
-                axisLine={{ stroke: '#e2e8f0' }}
+                className="text-xs fill-muted-foreground"
+                tickLine={{ className: "stroke-border" }}
+                axisLine={{ className: "stroke-border" }}
                 tickFormatter={(value) => hasData ? formatCurrency(value, { 
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -190,11 +190,12 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
                 ]}
                 labelFormatter={(label) => `Período: ${label}`}
                 contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
                   borderRadius: '12px',
                   fontSize: '12px',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  color: 'hsl(var(--foreground))'
                 }}
               />
               <Line 
@@ -218,21 +219,21 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
           </ResponsiveContainer>
           
           {!hasData && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80">
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80">
               <div className="text-center">
-                <p className="text-gray-400 text-sm">Faça upload de PDFs para ver a evolução mensal</p>
+                <p className="text-muted-foreground text-sm">Faça upload de PDFs para ver a evolução mensal</p>
               </div>
             </div>
           )}
         </div>
 
         {hasData && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+          <div className="mt-6 p-4 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg">
             <div className="flex items-start space-x-3">
-              <TrendingUp className="h-5 w-5 text-blue-600 mt-0.5" />
+              <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
               <div>
-                <h4 className="font-medium text-blue-900">Algoritmo de Evolução de Custos</h4>
-                <p className="text-sm text-blue-700 mt-1">
+                <h4 className="font-medium text-blue-900 dark:text-blue-100">Algoritmo de Evolução de Custos</h4>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
                   Os valores são calculados dividindo o valor total das apólices pelo número de parcelas, 
                   distribuindo o custo mensal pelos meses de vigência. 
                   Total de {policies.length} apólice{policies.length !== 1 ? 's' : ''} processada{policies.length !== 1 ? 's' : ''}.

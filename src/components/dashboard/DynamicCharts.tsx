@@ -125,31 +125,31 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
       {/* Cards principais com gráficos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 xl:gap-6">
         {/* Vidas Ativas */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Vidas Ativas</p>
-                <p className="text-2xl font-bold">{totalVidas}</p>
+                <p className="text-2xl font-bold text-foreground">{totalVidas}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-500" />
+              <Users className="h-8 w-8 text-blue-500 dark:text-blue-400" />
             </div>
             <div className="flex items-center space-x-1 h-2">
               <Progress value={Math.min((totalVidas / 1000) * 100, 100)} className="flex-1" />
-              <span className="text-xs text-green-600">+{crescimentoVidas}%</span>
+              <span className="text-xs text-green-600 dark:text-green-400">+{crescimentoVidas}%</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Custo Mensal */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Custo Mensal</p>
-                <p className="text-2xl font-bold">{formatCurrency(metrics.custoMensal)}</p>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(metrics.custoMensal)}</p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-500" />
+              <DollarSign className="h-8 w-8 text-green-500 dark:text-green-400" />
             </div>
             <div className="flex space-x-1 h-8 items-end">
               {[...Array(6)].map((_, i) => (
@@ -164,37 +164,37 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
         </Card>
 
         {/* Custo Médio/Vida */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Custo Médio/Vida</p>
-                <p className="text-2xl font-bold">{formatCurrency(custoMedioFormatted)}</p>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(custoMedioFormatted)}</p>
               </div>
-              <Heart className="h-8 w-8 text-orange-500" />
+              <Heart className="h-8 w-8 text-orange-500 dark:text-orange-400" />
             </div>
             <div className="flex items-center space-x-1 h-2">
               <Progress value={60} className="flex-1" />
-              <span className="text-xs text-red-600">{variacaoCusto}%</span>
+              <span className="text-xs text-red-600 dark:text-red-400">{variacaoCusto}%</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Tickets Abertos */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Tickets Abertos</p>
-                <p className="text-2xl font-bold">{metrics.ticketsAbertos}</p>
+                <p className="text-2xl font-bold text-foreground">{metrics.ticketsAbertos}</p>
               </div>
-              <FileText className="h-8 w-8 text-red-500" />
+              <FileText className="h-8 w-8 text-red-500 dark:text-red-400" />
             </div>
             <div className="flex justify-center">
               <div className="relative w-12 h-12">
-                <div className="absolute inset-0 bg-red-100 rounded-full"></div>
-                <div className="absolute inset-1 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">{metrics.ticketsAbertos}</span>
+                <div className="absolute inset-0 bg-red-100 dark:bg-red-950 rounded-full"></div>
+                <div className="absolute inset-1 bg-red-500 dark:bg-red-600 rounded-full flex items-center justify-center">
+                  <span className="text-white dark:text-white text-xs font-bold">{metrics.ticketsAbertos}</span>
                 </div>
               </div>
             </div>
@@ -205,10 +205,10 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
       {/* Terceira linha - Cards com distribuição por tipo */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 xl:gap-6">
         {/* Vencimentos Próximos */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="h-5 w-5 text-orange-500" />
+            <CardTitle className="text-lg flex items-center gap-2 text-foreground">
+              <Clock className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Vencimentos Próximos
             </CardTitle>
           </CardHeader>
@@ -222,16 +222,16 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
                   
                   return (
                     <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${
-                      diffDays <= 7 ? 'bg-red-50' : diffDays <= 15 ? 'bg-yellow-50' : 'bg-blue-50'
+                      diffDays <= 7 ? 'bg-red-50 dark:bg-red-950/30' : diffDays <= 15 ? 'bg-yellow-50 dark:bg-yellow-950/30' : 'bg-blue-50 dark:bg-blue-950/30'
                     }`}>
                       <div>
-                        <p className="font-medium text-sm">{apolice.tipo_beneficio} - {apolice.seguradora}</p>
+                        <p className="font-medium text-sm text-foreground">{apolice.tipo_beneficio} - {apolice.seguradora}</p>
                         <p className="text-xs text-muted-foreground">Vence em {diffDays} dias</p>
                       </div>
                       <Badge className={`text-xs ${
-                        diffDays <= 7 ? 'bg-red-100 text-red-800' : 
-                        diffDays <= 15 ? 'bg-yellow-100 text-yellow-800' : 
-                        'bg-blue-100 text-blue-800'
+                        diffDays <= 7 ? 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200' : 
+                        diffDays <= 15 ? 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200' : 
+                        'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200'
                       }`}>
                         {diffDays <= 7 ? 'Urgente' : diffDays <= 15 ? 'Atenção' : 'Normal'}
                       </Badge>
@@ -249,9 +249,9 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
         </Card>
 
         {/* Status dos Tickets */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-lg">Status dos Tickets</CardTitle>
+            <CardTitle className="text-lg text-foreground">Status dos Tickets</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex justify-center mb-4">
@@ -283,7 +283,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
               {statusData.filter(item => item.value > 0).map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                  <span className="text-sm">{item.name}: {item.value}</span>
+                  <span className="text-sm text-foreground">{item.name}: {item.value}</span>
                 </div>
               ))}
               {statusData.every(item => item.value === 0) && (
@@ -294,9 +294,9 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
         </Card>
 
         {/* Centros de Custo */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-lg">Custos por Centro</CardTitle>
+            <CardTitle className="text-lg text-foreground">Custos por Centro</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -309,12 +309,12 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium">{item.name}</span>
+                          <span className="text-sm font-medium text-foreground">{item.name}</span>
                           <span className="text-xs text-muted-foreground">
                             {formatCurrency(item.valor)}
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-muted rounded-full h-2">
                           <div 
                             className="h-2 rounded-full transition-all duration-500"
                             style={{ 
