@@ -206,7 +206,7 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 Visualização da composição da frota por valor de mercado
               </p>
             </div>
-            <div className="flex justify-center items-center w-full -ml-4 md:ml-0">
+            <div className="flex justify-center items-center w-full -ml-4 md:ml-0 bg-background rounded-lg [&_svg]:!bg-transparent">
               <ResponsiveContainer width="95%" height={200} className="md:w-full md:h-[250px]">
                 <BarChart 
                   data={chartData} 

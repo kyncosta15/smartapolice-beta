@@ -87,6 +87,15 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Force Recharts SVG backgrounds to be transparent */
+  .recharts-surface {
+    background-color: transparent !important;
+  }
+  
+  .recharts-wrapper svg {
+    background-color: transparent !important;
+  }
 }
 
 /* Custom animations */

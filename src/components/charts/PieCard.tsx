@@ -169,7 +169,7 @@ export default function PieCard({
       <CardContent className="p-3 md:p-4">
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_180px] gap-4 items-start">
           {/* Chart Area */}
-          <div className="h-64 w-full min-w-0">
+          <div className="h-64 w-full min-w-0 bg-background rounded-lg [&_svg]:!bg-transparent">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart aria-label={`Gráfico de ${title}`}>
                 <Pie
