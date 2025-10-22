@@ -47,7 +47,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       value: dashboardStats.totalPolicies.toString(),
       subtitle: 'Apólices gerenciadas',
       icon: FileText,
-      badgeColor: 'bg-blue-50 text-blue-700',
+      badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
       iconColor: 'text-blue-600',
       clickable: true
     },
@@ -60,7 +60,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       }).format(dashboardStats.totalMonthlyCost || 0),
       subtitle: 'Valor total dos prêmios',
       icon: DollarSign,
-      badgeColor: 'bg-emerald-50 text-emerald-700',
+      badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
       iconColor: 'text-emerald-600'
     },
     {
@@ -74,7 +74,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       }).format(dashboardStats.totalInsuredValue || 0),
       subtitle: 'Cobertura total',
       icon: Shield,
-      badgeColor: 'bg-purple-50 text-purple-700',
+      badgeColor: 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300',
       iconColor: 'text-purple-600'
     }
   ];
@@ -162,7 +162,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
             >
               <CardContent className="p-0">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor} dark:bg-opacity-20`}>
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor}`}>
                     <IconComponent className="size-3" />
                     {card.title}
                   </span>
