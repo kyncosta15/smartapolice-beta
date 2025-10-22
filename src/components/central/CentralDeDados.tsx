@@ -12,7 +12,8 @@ import {
   getNegociosEmCalculo,
   getEnderecosPorCliente,
   getEmailsPorCliente,
-  getTelefonesPorCliente
+  getTelefonesPorCliente,
+  getProdutores
 } from '@/services/rcorp';
 import {
   Collapsible,
@@ -35,6 +36,10 @@ export default function CentralDeDados() {
   const [expandedClientId, setExpandedClientId] = useState<number | null>(null);
   const [detalhesCliente, setDetalhesCliente] = useState<Record<number, any>>({});
   const [loadingDetalhes, setLoadingDetalhes] = useState<number | null>(null);
+
+  // Estados para Produtores
+  const [loadingProdutores, setLoadingProdutores] = useState(false);
+  const [resultProdutores, setResultProdutores] = useState<any[]>([]);
 
   const handleImportNegocios = async () => {
     setLoadingNegocios(true);
@@ -126,6 +131,28 @@ export default function CentralDeDados() {
       });
     } finally {
       setLoadingDetalhes(null);
+    }
+  };
+
+  const handleBuscarProdutores = async () => {
+    setLoadingProdutores(true);
+    try {
+      const data = await getProdutores({ nome: searchTerm });
+      setResultProdutores(data);
+      
+      toast({
+        title: '✅ Produtores encontrados',
+        description: `${data?.length || 0} produtor(es) encontrado(s)`,
+      });
+    } catch (error) {
+      console.error('Erro ao buscar produtores:', error);
+      toast({
+        title: 'Erro na busca',
+        description: 'Não foi possível buscar os produtores.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingProdutores(false);
     }
   };
 
@@ -475,6 +502,93 @@ export default function CentralDeDados() {
 
         {/* BI Tab */}
         <TabsContent value="bi" className="space-y-4">
+          {/* Produtores Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Buscar Produtores</CardTitle>
+              <CardDescription>
+                Consulte produtores cadastrados na RCORP por nome ou código
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome ou código do produtor..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                    onKeyDown={(e) => e.key === 'Enter' && handleBuscarProdutores()}
+                    disabled={loadingProdutores}
+                  />
+                </div>
+                <Button onClick={handleBuscarProdutores} disabled={loadingProdutores}>
+                  {loadingProdutores ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Buscar
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {loadingProdutores ? (
+                renderSkeletons()
+              ) : resultProdutores && resultProdutores.length > 0 ? (
+                <div className="space-y-3">
+                  {resultProdutores.map((produtor: any, idx: number) => (
+                    <Card key={idx} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <Badge variant="outline">Código: {produtor.codigo}</Badge>
+                              {produtor.ativo && (
+                                <Badge variant="default">Ativo</Badge>
+                              )}
+                            </div>
+                            <h4 className="font-semibold text-base">{produtor.nome}</h4>
+                            {produtor.documento && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                CPF/CNPJ: {produtor.documento}
+                              </p>
+                            )}
+                            {produtor.email && (
+                              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                                <Mail className="h-3 w-3" />
+                                {produtor.email}
+                              </p>
+                            )}
+                            {produtor.telefone && (
+                              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                                <Phone className="h-3 w-3" />
+                                {produtor.telefone}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : resultProdutores && resultProdutores.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhum produtor encontrado</p>
+                  </CardContent>
+                </Card>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          {/* Visualizações BI */}
           <Card>
             <CardHeader>
               <CardTitle>Visualizações e BI</CardTitle>
@@ -492,8 +606,8 @@ export default function CentralDeDados() {
                 </Card>
                 <Card className="border-dashed">
                   <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-sm text-muted-foreground">Produtores em desenvolvimento</p>
+                    <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-sm text-muted-foreground">Relatórios em desenvolvimento</p>
                   </CardContent>
                 </Card>
               </div>
@@ -521,12 +635,12 @@ export default function CentralDeDados() {
               <span className="text-muted-foreground">Clientes com detalhes expansíveis ✅</span>
             </li>
             <li className="flex items-center gap-2">
-              <Badge variant="outline" className="w-20">Fase 3</Badge>
-              <span className="text-muted-foreground">Sinistros relacionados</span>
+              <Badge variant="default" className="w-20">Fase 3</Badge>
+              <span className="text-muted-foreground">Produtores com busca ✅</span>
             </li>
             <li className="flex items-center gap-2">
               <Badge variant="outline" className="w-20">Fase 4</Badge>
-              <span className="text-muted-foreground">Visualizações BI e produtores</span>
+              <span className="text-muted-foreground">Sinistros e visualizações BI</span>
             </li>
           </ul>
         </CardContent>

@@ -104,3 +104,27 @@ export async function getTelefonesPorCliente(params: ClienteDetailsParams) {
     throw error;
   }
 }
+
+interface ProdutoresParams {
+  nome?: string;
+  codigo?: string;
+}
+
+export async function getProdutores(params: ProdutoresParams) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.nome) queryParams.append('nome', params.nome);
+    if (params.codigo) queryParams.append('codigo', params.codigo);
+
+    const response = await fetch(`${RCORP_API_BASE}/produtor?${queryParams.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao buscar produtores:', error);
+    throw error;
+  }
+}
