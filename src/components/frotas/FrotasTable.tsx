@@ -298,11 +298,11 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
       return (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="animate-pulse flex space-x-3 p-3 border rounded-lg">
-              <div className="rounded-full bg-gray-200 h-10 w-10 flex-shrink-0"></div>
+            <div key={i} className="animate-pulse flex space-x-3 p-3 border dark:border-border rounded-lg">
+              <div className="rounded-full bg-gray-200 dark:bg-muted h-10 w-10 flex-shrink-0"></div>
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 dark:bg-muted rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 dark:bg-muted rounded w-1/2"></div>
               </div>
             </div>
           ))}
@@ -311,9 +311,9 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
     }
     
     return (
-      <Card className="border-0 shadow-sm rounded-xl">
+      <Card className="border-0 dark:border shadow-sm dark:bg-card rounded-xl">
         <CardHeader className="p-3 md:p-4">
-          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg dark:text-foreground">
             <Car className="h-5 w-5" />
             Lista de Veículos
           </CardTitle>
@@ -321,11 +321,11 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
         <CardContent className="p-3 md:p-4">
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="animate-pulse flex space-x-3 p-3 border rounded-lg">
-                <div className="rounded-full bg-gray-200 h-10 w-10 flex-shrink-0"></div>
+              <div key={i} className="animate-pulse flex space-x-3 p-3 border dark:border-border rounded-lg">
+                <div className="rounded-full bg-gray-200 dark:bg-muted h-10 w-10 flex-shrink-0"></div>
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-muted rounded w-1/2"></div>
                 </div>
               </div>
             ))}
@@ -338,11 +338,11 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   if (veiculos.length === 0 && !loading) {
     const emptyContent = (
       <div className="text-center py-8 sm:py-12">
-        <Car className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <Car className="mx-auto h-12 w-12 text-gray-400 dark:text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-foreground mb-2">
           Nenhum veículo encontrado
         </h3>
-        <p className="text-gray-500 mb-4 text-sm sm:text-base break-words">
+        <p className="text-gray-500 dark:text-muted-foreground mb-4 text-sm sm:text-base break-words">
           Não há veículos cadastrados ou que correspondam aos filtros aplicados.
         </p>
         <Button onClick={onRefetch} variant="outline" size="sm">
@@ -356,9 +356,9 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
     }
     
     return (
-      <Card className="border-0 shadow-sm rounded-xl">
+      <Card className="border-0 dark:border shadow-sm dark:bg-card rounded-xl">
         <CardHeader className="p-3 md:p-4">
-          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg dark:text-foreground">
             <Car className="h-5 w-5" />
             Lista de Veículos
           </CardTitle>

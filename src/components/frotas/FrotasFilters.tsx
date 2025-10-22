@@ -154,7 +154,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Search Input */}
         <div className="relative flex-1 min-w-0">
-          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${searchLoading ? 'text-primary animate-pulse' : 'text-gray-400'}`} />
+          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${searchLoading ? 'text-primary animate-pulse' : 'text-gray-400 dark:text-muted-foreground'}`} />
           <Input
             placeholder="Buscar por placa, CNPJ, CPF ou proprietário..."
             value={filters.search}
@@ -172,7 +172,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
           {filters.search && !searchLoading && (
             <button
               onClick={() => handleSearchChange('')}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-muted-foreground hover:text-gray-600 dark:hover:text-foreground transition-colors"
               aria-label="Limpar busca"
               disabled={loading}
             >
@@ -311,7 +311,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
                 {option?.label || categoria}
                 <button
                   onClick={() => removeCategoriaFilter(categoria)}
-                  className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                  className="ml-1 hover:bg-muted rounded-full p-0.5"
                   aria-label={`Remover filtro ${option?.label || categoria}`}
                 >
                   <X className="h-3 w-3" />
@@ -332,7 +332,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
                 {option?.label || status}
                 <button
                   onClick={() => removeStatusFilter(status)}
-                  className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                  className="ml-1 hover:bg-muted rounded-full p-0.5"
                   aria-label={`Remover filtro ${option?.label || status}`}
                 >
                   <X className="h-3 w-3" />
@@ -352,7 +352,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
                 {marca}
                 <button
                   onClick={() => removeMarcaFilter(marca)}
-                  className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                  className="ml-1 hover:bg-muted rounded-full p-0.5"
                   aria-label={`Remover filtro ${marca}`}
                 >
                   <X className="h-3 w-3" />

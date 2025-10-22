@@ -73,13 +73,13 @@ export default function PieCard({
   );
 
   const CustomLegend = () => (
-    <div className="space-y-2 max-h-56 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300">
+    <div className="space-y-2 max-h-56 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
       {chartData.map((entry, index) => {
         const percentage = total > 0 ? Math.round((entry.count / total) * 100) : 0;
         return (
           <div 
             key={`legend-${index}`} 
-            className="flex items-start gap-2 p-2 rounded-md hover:bg-gray-50 transition-colors"
+            className="flex items-start gap-2 p-2 rounded-md hover:bg-gray-50 dark:hover:bg-muted transition-colors"
             role="listitem"
             aria-label={`${entry.name}: ${entry.count} veículos, ${percentage}%`}
           >
@@ -89,10 +89,10 @@ export default function PieCard({
               aria-hidden="true"
             />
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-gray-900 leading-tight">
+              <div className="text-sm font-medium text-gray-900 dark:text-foreground leading-tight">
                 {entry.name}
               </div>
-              <div className="text-xs text-gray-600 mt-0.5">
+              <div className="text-xs text-gray-600 dark:text-muted-foreground mt-0.5">
                 {entry.count} veículo{entry.count !== 1 ? 's' : ''} ({percentage}%)
               </div>
             </div>
@@ -109,9 +109,9 @@ export default function PieCard({
     const percentage = total > 0 ? Math.round((data.count / total) * 100) : 0;
     
     return (
-      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-        <div className="font-medium text-gray-900">{data.name}</div>
-        <div className="text-sm text-gray-600">
+      <div className="bg-white dark:bg-card p-3 border border-gray-200 dark:border-border rounded-lg shadow-lg">
+        <div className="font-medium text-gray-900 dark:text-foreground">{data.name}</div>
+        <div className="text-sm text-gray-600 dark:text-muted-foreground">
           {data.count} veículo{data.count !== 1 ? 's' : ''} ({percentage}%)
         </div>
       </div>
@@ -120,15 +120,15 @@ export default function PieCard({
 
   if (chartData.length === 0) {
     return (
-      <Card className="rounded-xl border bg-white">
+      <Card className="rounded-xl border dark:border-border bg-white dark:bg-card">
         <CardHeader className="pb-2 p-3 md:p-4">
-          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+          <CardTitle className="text-base font-semibold text-gray-900 dark:text-foreground flex items-center gap-2">
             {icon}
             {title}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-3 md:p-4">
-          <div className="flex items-center justify-center h-48 text-gray-500">
+          <div className="flex items-center justify-center h-48 text-gray-500 dark:text-muted-foreground">
             Nenhum dado disponível
           </div>
         </CardContent>
@@ -137,10 +137,10 @@ export default function PieCard({
   }
 
   return (
-    <Card className="rounded-xl border bg-white">
+    <Card className="rounded-xl border dark:border-border bg-white dark:bg-card">
       <CardHeader className="pb-2 p-3 md:p-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+          <CardTitle className="text-base font-semibold text-gray-900 dark:text-foreground flex items-center gap-2">
             {icon}
             {title}
           </CardTitle>
@@ -198,14 +198,14 @@ export default function PieCard({
 
           {/* Desktop Legend - Always Visible */}
           <div className="hidden xl:block">
-            <div className="text-xs font-medium text-gray-700 mb-2">Legenda</div>
-            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300">
+            <div className="text-xs font-medium text-gray-700 dark:text-muted-foreground mb-2">Legenda</div>
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
               {chartData.map((entry, index) => {
                 const percentage = total > 0 ? Math.round((entry.count / total) * 100) : 0;
                 return (
                   <div 
                     key={`legend-${index}`} 
-                    className="flex items-start gap-1.5 p-1.5 rounded-md hover:bg-gray-50 transition-colors"
+                    className="flex items-start gap-1.5 p-1.5 rounded-md hover:bg-gray-50 dark:hover:bg-muted transition-colors"
                     role="listitem"
                     aria-label={`${entry.name}: ${entry.count} veículos, ${percentage}%`}
                   >
@@ -215,10 +215,10 @@ export default function PieCard({
                       aria-hidden="true"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-gray-900 leading-tight truncate">
+                      <div className="text-xs font-medium text-gray-900 dark:text-foreground leading-tight truncate">
                         {entry.name}
                       </div>
-                      <div className="text-xs text-gray-600 mt-0.5">
+                      <div className="text-xs text-gray-600 dark:text-muted-foreground mt-0.5">
                         {entry.count} ({percentage}%)
                       </div>
                     </div>
@@ -237,7 +237,7 @@ export default function PieCard({
             role="list"
             aria-label={`Legenda do gráfico ${title}`}
           >
-            <div className="text-sm font-medium text-gray-700 mb-3">Legenda</div>
+            <div className="text-sm font-medium text-gray-700 dark:text-muted-foreground mb-3">Legenda</div>
             <CustomLegend />
           </div>
         </div>
