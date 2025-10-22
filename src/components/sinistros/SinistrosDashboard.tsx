@@ -14,9 +14,7 @@ import {
   Plus,
   Wrench,
   AlertTriangle,
-  BarChart3,
-  Moon,
-  Sun
+  BarChart3
 } from 'lucide-react';
 import { Claim, Assistance } from '@/types/claims';
 import {
@@ -47,7 +45,6 @@ export function SinistrosDashboard({
   const [claims, setClaims] = useState<Claim[]>([]);
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
   
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -141,14 +138,6 @@ export function SinistrosDashboard({
     setModalOpen(true);
   };
 
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
@@ -164,20 +153,6 @@ export function SinistrosDashboard({
           </div>
           
           <div className="flex items-center gap-3">
-            {/* Dark mode toggle */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setDarkMode(!darkMode)}
-              className="h-10 w-10 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              {darkMode ? (
-                <Sun className="h-5 w-5 text-yellow-500" />
-              ) : (
-                <Moon className="h-5 w-5 text-gray-700" />
-              )}
-            </Button>
-
             {/* Botão de novo registro */}
             <NovoTicketModalV4
               trigger={

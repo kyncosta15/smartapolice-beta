@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, ChevronDown, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LogOut, ChevronDown, Menu, ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,10 +17,19 @@ interface NavbarProps {
 
 export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const { logout, user } = useAuth();
   const { profile: userProfile, memberships, activeEmpresa } = useUserProfile();
   const { toast } = useToast();
   const { open } = useSidebar();
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const getRoleLabel = (role: string) => {
     const roles = {
@@ -107,8 +116,21 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
         {/* Spacer to push user menu to the right */}
         <div className="flex-1"></div>
 
-        {/* Right side - User Menu */}
-        <div className="flex items-center">
+        {/* Right side - Dark Mode Toggle and User Menu */}
+        <div className="flex items-center gap-3">
+          {/* Dark mode toggle */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setDarkMode(!darkMode)}
+            className="h-10 w-10 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            {darkMode ? (
+              <Sun className="h-5 w-5 text-yellow-500" />
+            ) : (
+              <Moon className="h-5 w-5 text-gray-700" />
+            )}
+          </Button>
           <div className="relative">
             <Button
               variant="ghost"
