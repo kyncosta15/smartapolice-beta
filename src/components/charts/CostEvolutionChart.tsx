@@ -103,7 +103,7 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
   });
 
   return (
-    <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50 print-chart-card">
+    <Card className="bg-card border-border print-chart-card">
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -157,7 +157,7 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="chart-root w-full h-80 relative bg-card rounded-2xl p-4">
+        <div className="chart-root w-full h-80 relative bg-background rounded-2xl p-4">
           <ResponsiveContainer width="100%" height="100%" className="!bg-transparent">
             <LineChart 
               data={chartData} 

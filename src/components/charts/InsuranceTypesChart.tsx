@@ -32,7 +32,7 @@ export const InsuranceTypesChart = ({ policies = [] }: InsuranceTypesChartProps)
   const colors = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#6b7280'];
 
   return (
-    <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
+    <Card className="bg-card border-border">
       <CardHeader className="pb-6">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-green-500/10 dark:bg-green-500/20 rounded-lg">
@@ -49,7 +49,7 @@ export const InsuranceTypesChart = ({ policies = [] }: InsuranceTypesChartProps)
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="chart-root w-full h-80 relative bg-card rounded-2xl p-4">
+        <div className="chart-root w-full h-80 relative bg-background rounded-2xl p-4">
           <ResponsiveContainer width="100%" height="100%" className="!bg-transparent">
             <LineChart 
               data={trendData} 

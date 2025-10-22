@@ -39,7 +39,7 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
   } satisfies ChartConfig;
 
   return (
-    <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
+    <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle>Distribuição por Seguradora</CardTitle>
         <CardDescription>
@@ -48,7 +48,7 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
       </CardHeader>
       <CardContent>
         {hasData ? (
-          <div className="chart-root bg-card rounded-2xl p-4">
+          <div className="chart-root bg-background rounded-2xl p-4">
             <ChartContainer config={chartConfig} className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%" className="!bg-transparent">
                 <BarChart

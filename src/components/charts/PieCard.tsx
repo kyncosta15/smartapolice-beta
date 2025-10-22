@@ -137,7 +137,7 @@ export default function PieCard({
   }
 
   return (
-    <Card className="rounded-xl bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
+    <Card className="rounded-xl bg-card border-border">
       <CardHeader className="pb-2 p-3 md:p-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
@@ -169,7 +169,7 @@ export default function PieCard({
       <CardContent className="p-3 md:p-4">
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_180px] gap-4 items-start">
           {/* Chart Area */}
-          <div className="chart-root h-64 w-full min-w-0 bg-card rounded-lg p-2">
+          <div className="chart-root h-64 w-full min-w-0 bg-background rounded-lg p-2">
             <ResponsiveContainer width="100%" height="100%" className="!bg-transparent">
               <PieChart aria-label={`Gráfico de ${title}`}>
                 <Pie
