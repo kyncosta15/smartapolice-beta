@@ -207,18 +207,18 @@ export function FrotasTableV2({
               <Table className="min-w-[800px] w-full">
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead className="w-12">
+                    <TableHead className="w-12 bg-background">
                       <Checkbox
                         checked={isAllSelected}
                         onCheckedChange={handleSelectAll}
                         {...(isPartialSelected && { 'data-state': 'indeterminate' })}
                       />
                     </TableHead>
-                    <TableHead className="min-w-[200px]">Veículo</TableHead>
-                    <TableHead className="min-w-[120px]">Placa</TableHead>
-                    <TableHead className="min-w-[150px]">Proprietário</TableHead>
-                    <TableHead className="min-w-[120px]">Status Seguro</TableHead>
-                    <TableHead className="w-[120px] text-right">Ações</TableHead>
+                    <TableHead className="min-w-[200px] bg-background">Veículo</TableHead>
+                    <TableHead className="min-w-[120px] bg-background">Placa</TableHead>
+                    <TableHead className="min-w-[150px] bg-background">Proprietário</TableHead>
+                    <TableHead className="min-w-[120px] bg-background">Status Seguro</TableHead>
+                    <TableHead className="w-[120px] text-right bg-background">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -227,13 +227,13 @@ export function FrotasTableV2({
 
                     return (
                       <TableRow key={veiculo.id} className={`hover:bg-muted/50 ${isSelected ? 'bg-blue-50 dark:bg-blue-950/30' : ''}`}>
-                        <TableCell>
+                        <TableCell className="bg-inherit">
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={(checked) => handleSelectVehicle(veiculo, checked as boolean)}
                           />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="bg-inherit">
                           <div className="space-y-1">
                             <div className="font-medium text-foreground">
                               {veiculo.marca} {veiculo.modelo}
@@ -247,7 +247,7 @@ export function FrotasTableV2({
                           </div>
                         </TableCell>
                         
-                        <TableCell>
+                        <TableCell className="bg-inherit">
                           <div className="font-mono font-medium">
                             {veiculo.placa}
                           </div>
@@ -258,7 +258,7 @@ export function FrotasTableV2({
                           )}
                         </TableCell>
 
-                        <TableCell>
+                        <TableCell className="bg-inherit">
                           <div className="space-y-1">
                             {veiculo.proprietario_nome && (
                               <div className="font-medium text-foreground">
@@ -278,14 +278,14 @@ export function FrotasTableV2({
                           </div>
                         </TableCell>
 
-                        <TableCell>
+                        <TableCell className="bg-inherit">
                           <VehicleStatusBadge 
                             status={veiculo.status_seguro} 
                             vehicleId={veiculo.id}
                           />
                         </TableCell>
 
-                        <TableCell className="text-right">
+                        <TableCell className="text-right bg-inherit">
                           <VehicleActionsV2
                             veiculo={veiculo}
                             onView={handleView}
