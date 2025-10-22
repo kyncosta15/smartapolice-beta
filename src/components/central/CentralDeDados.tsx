@@ -13,7 +13,8 @@ import {
   getEnderecosPorCliente,
   getEmailsPorCliente,
   getTelefonesPorCliente,
-  getProdutores
+  getProdutores,
+  getRamos
 } from '@/services/rcorp';
 import {
   Collapsible,
@@ -40,6 +41,10 @@ export default function CentralDeDados() {
   // Estados para Produtores
   const [loadingProdutores, setLoadingProdutores] = useState(false);
   const [resultProdutores, setResultProdutores] = useState<any[]>([]);
+
+  // Estados para Ramos
+  const [loadingRamos, setLoadingRamos] = useState(false);
+  const [resultRamos, setResultRamos] = useState<any[]>([]);
 
   const handleImportNegocios = async () => {
     setLoadingNegocios(true);
@@ -153,6 +158,28 @@ export default function CentralDeDados() {
       });
     } finally {
       setLoadingProdutores(false);
+    }
+  };
+
+  const handleListarRamos = async () => {
+    setLoadingRamos(true);
+    try {
+      const data = await getRamos();
+      setResultRamos(data);
+      
+      toast({
+        title: '✅ Ramos carregados',
+        description: `${data?.length || 0} ramo(s) encontrado(s)`,
+      });
+    } catch (error) {
+      console.error('Erro ao buscar ramos:', error);
+      toast({
+        title: 'Erro ao carregar ramos',
+        description: 'Não foi possível carregar os ramos.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingRamos(false);
     }
   };
 
@@ -591,9 +618,64 @@ export default function CentralDeDados() {
           {/* Visualizações BI */}
           <Card>
             <CardHeader>
-              <CardTitle>Visualizações e BI</CardTitle>
+              <CardTitle>Ramos de Seguro</CardTitle>
               <CardDescription>
-                Gráficos e dashboards com dados consolidados
+                Liste todos os ramos de seguro disponíveis no sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button 
+                onClick={handleListarRamos} 
+                disabled={loadingRamos}
+                className="w-full sm:w-auto"
+              >
+                {loadingRamos ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Carregando...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Listar Ramos
+                  </>
+                )}
+              </Button>
+
+              {loadingRamos ? (
+                renderSkeletons()
+              ) : resultRamos && resultRamos.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {resultRamos.map((ramo: any, idx: number) => (
+                    <Card key={idx} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Badge variant="secondary">Código: {ramo.codigo}</Badge>
+                          </div>
+                          <h4 className="font-semibold text-sm">{ramo.nome}</h4>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : resultRamos && resultRamos.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhum ramo encontrado</p>
+                  </CardContent>
+                </Card>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          {/* Dashboards e Gráficos */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Dashboards e Gráficos</CardTitle>
+              <CardDescription>
+                Visualizações e análises de dados consolidados
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

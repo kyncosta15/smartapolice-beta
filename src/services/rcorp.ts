@@ -128,3 +128,18 @@ export async function getProdutores(params: ProdutoresParams) {
     throw error;
   }
 }
+
+export async function getRamos() {
+  try {
+    const response = await fetch(`${RCORP_API_BASE}/ramo`);
+    
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao buscar ramos:', error);
+    throw error;
+  }
+}
