@@ -168,7 +168,7 @@ export const AuthPage = () => {
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-6">
                   <div className="space-y-3">
-                    <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+                    <Label htmlFor="login-email" className="text-sm font-semibold text-foreground">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                       <Input
@@ -177,14 +177,14 @@ export const AuthPage = () => {
                         placeholder="seu@email.com"
                         value={loginData.email}
                         onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                        className="pl-12 h-12 text-base"
+                        className="pl-12 h-12 text-base bg-background border-border"
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="login-password" className="text-sm font-medium">Senha</Label>
+                    <Label htmlFor="login-password" className="text-sm font-semibold text-foreground">Senha</Label>
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                       <Input
@@ -193,7 +193,7 @@ export const AuthPage = () => {
                         placeholder="Sua senha"
                         value={loginData.password}
                         onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                        className="pl-12 h-12 text-base"
+                        className="pl-12 h-12 text-base bg-background border-border"
                         required
                       />
                     </div>
@@ -221,26 +221,26 @@ export const AuthPage = () => {
                 <form onSubmit={handleRegister} className="space-y-6">
                   {/* Person Type Selection */}
                   <div className="space-y-4">
-                    <Label className="text-sm font-medium">Tipo de Pessoa</Label>
+                    <Label className="text-sm font-semibold text-foreground">Tipo de Pessoa</Label>
                     <RadioGroup
                       value={personType}
                       onValueChange={(value: 'pf' | 'pj') => setPersonType(value)}
                       className="flex space-x-8"
                     >
                       <div className="flex items-center space-x-3">
-                        <RadioGroupItem value="pf" id="pf" />
-                        <Label htmlFor="pf" className="font-normal text-base">Pessoa Física</Label>
+                        <RadioGroupItem value="pf" id="pf" className="border-border" />
+                        <Label htmlFor="pf" className="font-normal text-base text-foreground cursor-pointer">Pessoa Física</Label>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <RadioGroupItem value="pj" id="pj" />
-                        <Label htmlFor="pj" className="font-normal text-base">Pessoa Jurídica</Label>
+                        <RadioGroupItem value="pj" id="pj" className="border-border" />
+                        <Label htmlFor="pj" className="font-normal text-base text-foreground cursor-pointer">Pessoa Jurídica</Label>
                       </div>
                     </RadioGroup>
                   </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <Label htmlFor="register-name" className="text-sm font-medium">{personType === 'pf' ? 'Nome' : 'Razão Social'} *</Label>
+                      <Label htmlFor="register-name" className="text-sm font-semibold text-foreground">{personType === 'pf' ? 'Nome' : 'Razão Social'} *</Label>
                       <div className="relative">
                         <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                         <Input
@@ -249,22 +249,22 @@ export const AuthPage = () => {
                           placeholder={personType === 'pf' ? 'Seu nome' : 'Nome da empresa'}
                           value={registerData.name}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, name: e.target.value }))}
-                          className="pl-12 h-12 text-base"
+                          className="pl-12 h-12 text-base bg-background border-border"
                           required
                         />
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <Label htmlFor="register-role" className="text-sm font-medium">Tipo de Conta *</Label>
+                      <Label htmlFor="register-role" className="text-sm font-semibold text-foreground">Tipo de Conta *</Label>
                       <Select
                         value={registerData.role}
                         onValueChange={(value: UserRole) => setRegisterData(prev => ({ ...prev, role: value }))}
                       >
-                        <SelectTrigger className="h-12 text-base">
+                        <SelectTrigger className="h-12 text-base bg-background border-border">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-popover border-border">
                           <SelectItem value="cliente">Cliente</SelectItem>
                           <SelectItem value="rh">RH</SelectItem>
                           <SelectItem value="administrador">Administrador</SelectItem>
@@ -277,15 +277,15 @@ export const AuthPage = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="register-classification" className="text-sm font-medium">Classificação *</Label>
+                    <Label htmlFor="register-classification" className="text-sm font-semibold text-foreground">Classificação *</Label>
                     <Select
                       value={registerData.classification}
                       onValueChange={(value: 'Corretora' | 'Gestão RH') => setRegisterData(prev => ({ ...prev, classification: value }))}
                     >
-                      <SelectTrigger className="h-12 text-base">
+                      <SelectTrigger className="h-12 text-base bg-background border-border">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-popover border-border">
                         <SelectItem value="Corretora">Corretora</SelectItem>
                         <SelectItem value="Gestão RH">Gestão RH</SelectItem>
                       </SelectContent>
@@ -293,7 +293,7 @@ export const AuthPage = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="register-email" className="text-sm font-medium">Email *</Label>
+                    <Label htmlFor="register-email" className="text-sm font-semibold text-foreground">Email *</Label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                       <Input
@@ -302,7 +302,7 @@ export const AuthPage = () => {
                         placeholder="seu@email.com"
                         value={registerData.email}
                         onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
-                        className="pl-12 h-12 text-base"
+                        className="pl-12 h-12 text-base bg-background border-border"
                         required
                       />
                     </div>
@@ -310,7 +310,7 @@ export const AuthPage = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <Label htmlFor="register-password" className="text-sm font-medium">Senha *</Label>
+                      <Label htmlFor="register-password" className="text-sm font-semibold text-foreground">Senha *</Label>
                       <div className="relative">
                         <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                         <Input
@@ -319,7 +319,7 @@ export const AuthPage = () => {
                           placeholder="Min. 6 caracteres"
                           value={registerData.password}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
-                          className="pl-12 h-12 text-base"
+                          className="pl-12 h-12 text-base bg-background border-border"
                           required
                           minLength={6}
                         />
@@ -327,7 +327,7 @@ export const AuthPage = () => {
                     </div>
 
                     <div className="space-y-3">
-                      <Label htmlFor="register-confirm" className="text-sm font-medium">Confirmar *</Label>
+                      <Label htmlFor="register-confirm" className="text-sm font-semibold text-foreground">Confirmar *</Label>
                       <div className="relative">
                         <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                         <Input
@@ -336,7 +336,7 @@ export const AuthPage = () => {
                           placeholder="Confirmar senha"
                           value={registerData.confirmPassword}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                          className="pl-12 h-12 text-base"
+                          className="pl-12 h-12 text-base bg-background border-border"
                           required
                         />
                       </div>
@@ -345,7 +345,7 @@ export const AuthPage = () => {
 
                   {personType === 'pj' && (
                     <div className="space-y-3">
-                      <Label htmlFor="register-company" className="text-sm font-medium">Nome Fantasia</Label>
+                      <Label htmlFor="register-company" className="text-sm font-semibold text-foreground">Nome Fantasia</Label>
                       <div className="relative">
                         <Building className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                         <Input
@@ -354,14 +354,14 @@ export const AuthPage = () => {
                           placeholder="Nome fantasia da empresa"
                           value={registerData.company}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, company: e.target.value }))}
-                          className="pl-12 h-12 text-base"
+                          className="pl-12 h-12 text-base bg-background border-border"
                         />
                       </div>
                     </div>
                   )}
 
                   <div className="space-y-3">
-                    <Label htmlFor="register-phone" className="text-sm font-medium">Telefone</Label>
+                    <Label htmlFor="register-phone" className="text-sm font-semibold text-foreground">Telefone</Label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                       <Input
@@ -370,7 +370,7 @@ export const AuthPage = () => {
                         placeholder="(11) 99999-9999"
                         value={registerData.phone}
                         onChange={(e) => setRegisterData(prev => ({ ...prev, phone: e.target.value }))}
-                        className="pl-12 h-12 text-base"
+                        className="pl-12 h-12 text-base bg-background border-border"
                       />
                     </div>
                   </div>
