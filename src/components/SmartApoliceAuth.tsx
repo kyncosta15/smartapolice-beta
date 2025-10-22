@@ -24,7 +24,7 @@ const SmartApoliceAuthContent = () => {
   }, [user, profile, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900/20 via-background to-purple-900/20">
       {/* Header com navegação */}
       <header className="p-6 flex items-center justify-between">
         <Link to="/system-selection" className="flex items-center text-muted-foreground hover:text-primary transition-colors">
@@ -38,7 +38,7 @@ const SmartApoliceAuthContent = () => {
 
       {/* Conteúdo da autenticação */}
       <div className="flex-1 flex items-center justify-center p-6">
-        <Card className="w-full max-w-2xl shadow-lg">
+        <Card className="w-full max-w-2xl shadow-lg bg-card border-border">
           <CardContent className="p-8">
             <AuthPage />
           </CardContent>

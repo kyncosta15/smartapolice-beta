@@ -150,10 +150,10 @@ export const AuthPage = () => {
               </span>
             </div>
           </div>
-          <p className="text-gray-600">Gestão Inteligente de Apólices</p>
+          <p className="text-muted-foreground">Gestão Inteligente de Apólices</p>
         </div>
 
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+        <Card className="bg-card border-border shadow-xl">
           <CardHeader className="pb-6">
             <CardTitle className="text-center text-xl">Acesse sua conta</CardTitle>
           </CardHeader>
@@ -170,7 +170,7 @@ export const AuthPage = () => {
                   <div className="space-y-3">
                     <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                       <Input
                         id="login-email"
                         type="email"
@@ -186,7 +186,7 @@ export const AuthPage = () => {
                   <div className="space-y-3">
                     <Label htmlFor="login-password" className="text-sm font-medium">Senha</Label>
                     <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                       <Input
                         id="login-password"
                         type="password"
@@ -201,7 +201,7 @@ export const AuthPage = () => {
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-medium"
+                    className="w-full h-12 text-base font-medium"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -242,7 +242,7 @@ export const AuthPage = () => {
                     <div className="space-y-3">
                       <Label htmlFor="register-name" className="text-sm font-medium">{personType === 'pf' ? 'Nome' : 'Razão Social'} *</Label>
                       <div className="relative">
-                        <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                         <Input
                           id="register-name"
                           type="text"
@@ -295,7 +295,7 @@ export const AuthPage = () => {
                   <div className="space-y-3">
                     <Label htmlFor="register-email" className="text-sm font-medium">Email *</Label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                       <Input
                         id="register-email"
                         type="email"
@@ -312,7 +312,7 @@ export const AuthPage = () => {
                     <div className="space-y-3">
                       <Label htmlFor="register-password" className="text-sm font-medium">Senha *</Label>
                       <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                         <Input
                           id="register-password"
                           type="password"
@@ -329,7 +329,7 @@ export const AuthPage = () => {
                     <div className="space-y-3">
                       <Label htmlFor="register-confirm" className="text-sm font-medium">Confirmar *</Label>
                       <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                         <Input
                           id="register-confirm"
                           type="password"
@@ -347,7 +347,7 @@ export const AuthPage = () => {
                     <div className="space-y-3">
                       <Label htmlFor="register-company" className="text-sm font-medium">Nome Fantasia</Label>
                       <div className="relative">
-                        <Building className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Building className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                         <Input
                           id="register-company"
                           type="text"
@@ -363,7 +363,7 @@ export const AuthPage = () => {
                   <div className="space-y-3">
                     <Label htmlFor="register-phone" className="text-sm font-medium">Telefone</Label>
                     <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                       <Input
                         id="register-phone"
                         type="tel"
@@ -377,7 +377,7 @@ export const AuthPage = () => {
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-medium"
+                    className="w-full h-12 text-base font-medium"
                     disabled={isLoading || isSubmitting}
                   >
                     {(isLoading || isSubmitting) ? (
