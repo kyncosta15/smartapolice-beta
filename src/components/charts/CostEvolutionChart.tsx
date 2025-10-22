@@ -103,7 +103,7 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
   });
 
   return (
-    <Card className="bg-card border-border print-chart-card">
+    <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50 print-chart-card">
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">

@@ -125,7 +125,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
       {/* Cards principais com gráficos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 xl:gap-6">
         {/* Vidas Ativas */}
-        <Card className="bg-card border-border">
+        <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -142,7 +142,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
         </Card>
 
         {/* Custo Mensal */}
-        <Card className="bg-card border-border">
+        <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -164,7 +164,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
         </Card>
 
         {/* Custo Médio/Vida */}
-        <Card className="bg-card border-border">
+        <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -181,7 +181,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
         </Card>
 
         {/* Tickets Abertos */}
-        <Card className="bg-card border-border">
+        <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -205,7 +205,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
       {/* Terceira linha - Cards com distribuição por tipo */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 xl:gap-6">
         {/* Vencimentos Próximos */}
-        <Card className="bg-card border-border">
+        <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2 text-foreground">
               <Clock className="h-5 w-5 text-orange-500 dark:text-orange-400" />
@@ -249,7 +249,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
         </Card>
 
         {/* Status dos Tickets */}
-        <Card className="bg-card border-border">
+        <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
           <CardHeader>
             <CardTitle className="text-lg text-foreground">Status dos Tickets</CardTitle>
           </CardHeader>
@@ -294,7 +294,7 @@ export const DynamicCharts: React.FC<DynamicChartsProps> = ({
         </Card>
 
         {/* Centros de Custo */}
-        <Card className="bg-card border-border">
+        <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
           <CardHeader>
             <CardTitle className="text-lg text-foreground">Custos por Centro</CardTitle>
           </CardHeader>

@@ -39,7 +39,7 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
   } satisfies ChartConfig;
 
   return (
-    <Card>
+    <Card className="bg-background/60 dark:bg-background/40 backdrop-blur-xl border-border/50">
       <CardHeader>
         <CardTitle>Distribuição por Seguradora</CardTitle>
         <CardDescription>
