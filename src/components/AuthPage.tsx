@@ -159,9 +159,9 @@ export const AuthPage = () => {
           </CardHeader>
           <CardContent className="px-8 pb-8">
             <Tabs defaultValue="login" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="register">Criar Conta</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 h-12">
+                <TabsTrigger value="login" className="h-full">Entrar</TabsTrigger>
+                <TabsTrigger value="register" className="h-full">Criar Conta</TabsTrigger>
               </TabsList>
 
               {/* Login Tab */}
