@@ -14,7 +14,8 @@ import {
   getEmailsPorCliente,
   getTelefonesPorCliente,
   getProdutores,
-  getRamos
+  getRamos,
+  getSinistros
 } from '@/services/rcorp';
 import {
   Collapsible,
@@ -45,6 +46,10 @@ export default function CentralDeDados() {
   // Estados para Ramos
   const [loadingRamos, setLoadingRamos] = useState(false);
   const [resultRamos, setResultRamos] = useState<any[]>([]);
+
+  // Estados para Sinistros
+  const [loadingSinistros, setLoadingSinistros] = useState(false);
+  const [resultSinistros, setResultSinistros] = useState<any[]>([]);
 
   const handleImportNegocios = async () => {
     setLoadingNegocios(true);
@@ -180,6 +185,28 @@ export default function CentralDeDados() {
       });
     } finally {
       setLoadingRamos(false);
+    }
+  };
+
+  const handleBuscarSinistros = async () => {
+    setLoadingSinistros(true);
+    try {
+      const data = await getSinistros({ numeroApolice: searchTerm });
+      setResultSinistros(data);
+      
+      toast({
+        title: '✅ Sinistros encontrados',
+        description: `${data?.length || 0} sinistro(s) encontrado(s)`,
+      });
+    } catch (error) {
+      console.error('Erro ao buscar sinistros:', error);
+      toast({
+        title: 'Erro na busca',
+        description: 'Não foi possível buscar os sinistros.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingSinistros(false);
     }
   };
 
@@ -511,18 +538,97 @@ export default function CentralDeDados() {
         <TabsContent value="sinistros" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Importar Sinistros</CardTitle>
+              <CardTitle>Buscar Sinistros</CardTitle>
               <CardDescription>
-                Visualize sinistros relacionados aos clientes
+                Consulte sinistros por número da apólice, número do sinistro ou cliente
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                  <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-sm text-muted-foreground">Funcionalidade em desenvolvimento</p>
-                </CardContent>
-              </Card>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Número da apólice, sinistro ou cliente..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                    onKeyDown={(e) => e.key === 'Enter' && handleBuscarSinistros()}
+                    disabled={loadingSinistros}
+                  />
+                </div>
+                <Button onClick={handleBuscarSinistros} disabled={loadingSinistros}>
+                  {loadingSinistros ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Buscar
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {loadingSinistros ? (
+                renderSkeletons()
+              ) : resultSinistros && resultSinistros.length > 0 ? (
+                <div className="space-y-3">
+                  {resultSinistros.map((sinistro: any, idx: number) => (
+                    <Card key={idx} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <Badge variant="outline">Nº {sinistro.numeroSinistro}</Badge>
+                              {sinistro.situacao && (
+                                <Badge 
+                                  variant={
+                                    sinistro.situacao.toLowerCase().includes('aberto') ? 'destructive' :
+                                    sinistro.situacao.toLowerCase().includes('fechado') ? 'default' :
+                                    'secondary'
+                                  }
+                                >
+                                  {sinistro.situacao}
+                                </Badge>
+                              )}
+                            </div>
+                            <h4 className="font-semibold text-base mb-1">
+                              Apólice: {sinistro.numeroApolice}
+                            </h4>
+                            {sinistro.cliente && (
+                              <p className="text-sm text-muted-foreground">
+                                Cliente: {sinistro.cliente}
+                              </p>
+                            )}
+                            {sinistro.dataOcorrencia && (
+                              <p className="text-sm text-muted-foreground">
+                                Data: {sinistro.dataOcorrencia}
+                              </p>
+                            )}
+                            {sinistro.valorIndenizado && (
+                              <p className="text-sm font-medium text-primary mt-2">
+                                Valor: R$ {parseFloat(sinistro.valorIndenizado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </p>
+                            )}
+                          </div>
+                          <Button variant="outline" size="sm">
+                            Ver detalhes
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : resultSinistros && resultSinistros.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhum sinistro encontrado</p>
+                  </CardContent>
+                </Card>
+              ) : null}
             </CardContent>
           </Card>
         </TabsContent>
@@ -718,11 +824,11 @@ export default function CentralDeDados() {
             </li>
             <li className="flex items-center gap-2">
               <Badge variant="default" className="w-20">Fase 3</Badge>
-              <span className="text-muted-foreground">Produtores com busca ✅</span>
+              <span className="text-muted-foreground">Produtores e Ramos ✅</span>
             </li>
             <li className="flex items-center gap-2">
-              <Badge variant="outline" className="w-20">Fase 4</Badge>
-              <span className="text-muted-foreground">Sinistros e visualizações BI</span>
+              <Badge variant="default" className="w-20">Fase 4</Badge>
+              <span className="text-muted-foreground">Sinistros com busca ✅</span>
             </li>
           </ul>
         </CardContent>

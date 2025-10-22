@@ -143,3 +143,29 @@ export async function getRamos() {
     throw error;
   }
 }
+
+interface SinistrosParams {
+  numeroApolice?: string;
+  numeroSinistro?: string;
+  cliente?: string;
+}
+
+export async function getSinistros(params: SinistrosParams) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.numeroApolice) queryParams.append('numeroApolice', params.numeroApolice);
+    if (params.numeroSinistro) queryParams.append('numeroSinistro', params.numeroSinistro);
+    if (params.cliente) queryParams.append('cliente', params.cliente);
+
+    const response = await fetch(`${RCORP_API_BASE}/sinistro?${queryParams.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao buscar sinistros:', error);
+    throw error;
+  }
+}
