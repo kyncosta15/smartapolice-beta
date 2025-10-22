@@ -32,12 +32,12 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
     
     switch (status) {
       case 'segurado':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Segurado</Badge>
+        return <Badge className="bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-800">Segurado</Badge>
       case 'sem_seguro':
       case 'nao_segurado':
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Sem Seguro</Badge>
+        return <Badge className="bg-red-100 text-red-800 border-red-200 dark:bg-red-950 dark:text-red-200 dark:border-red-800">Sem Seguro</Badge>
       case 'cotacao':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Em Cotação</Badge>
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-950 dark:text-yellow-200 dark:border-yellow-800">Em Cotação</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
     }
@@ -47,10 +47,10 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
     if (!categoria) return <Badge variant="outline">Não informado</Badge>
     
     const colors = {
-      carro: 'bg-blue-100 text-blue-800 border-blue-200',
-      moto: 'bg-green-100 text-green-800 border-green-200',
-      caminhao: 'bg-orange-100 text-orange-800 border-orange-200',
-      outros: 'bg-gray-100 text-gray-800 border-gray-200',
+      carro: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-800',
+      moto: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-800',
+      caminhao: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950 dark:text-orange-200 dark:border-orange-800',
+      outros: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600',
     }
 
     const labels = {
@@ -92,7 +92,7 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
       <div className="flex flex-wrap items-center gap-3">
         {getCategoriaBadge(veiculo.categoria)}
         {getStatusBadge(veiculo.status_seguro)}
-        <div className="font-mono text-lg font-bold bg-gray-100 px-3 py-1 rounded">
+        <div className="font-mono text-lg font-bold bg-muted px-3 py-1 rounded">
           {veiculo.placa}
         </div>
         {veiculo.uf_emplacamento && (
@@ -102,9 +102,9 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Informações do Veículo */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <Car className="h-5 w-5" />
               Informações do Veículo
             </CardTitle>
@@ -132,9 +132,9 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
         </Card>
 
         {/* Proprietário */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <User className="h-5 w-5" />
               Proprietário
             </CardTitle>
@@ -162,9 +162,9 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
         </Card>
 
         {/* Emplacamento e Licenciamento */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <MapPin className="h-5 w-5" />
               Emplacamento e Licenciamento
             </CardTitle>
@@ -182,9 +182,9 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
         </Card>
 
         {/* Valores Financeiros */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <DollarSign className="h-5 w-5" />
               Valores Financeiros
             </CardTitle>
@@ -192,7 +192,7 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
           <CardContent className="space-y-3">
             <div>
               <span className="text-sm font-medium text-muted-foreground">Preço FIPE:</span>
-              <p className="font-medium text-green-600">{formatCurrencyValue(veiculo.preco_fipe)}</p>
+              <p className="font-medium text-green-600 dark:text-green-400">{formatCurrencyValue(veiculo.preco_fipe)}</p>
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">Valor NF:</span>
@@ -208,9 +208,9 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
 
       {/* Modalidade de Compra */}
       {(veiculo.modalidade_compra || veiculo.consorcio_grupo || veiculo.consorcio_cota) && (
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <CreditCard className="h-5 w-5" />
               Modalidade de Compra
             </CardTitle>
@@ -263,9 +263,9 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
 
       {/* Observações */}
       {veiculo.observacoes && (
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <FileText className="h-5 w-5" />
               Observações
             </CardTitle>
@@ -278,9 +278,9 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
 
       {/* Informações do Sistema */}
       {(veiculo.created_at || veiculo.updated_at) && (
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <Calendar className="h-5 w-5" />
               Informações do Sistema
             </CardTitle>

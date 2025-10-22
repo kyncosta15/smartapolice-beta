@@ -199,10 +199,10 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
         <Card className="overflow-hidden border-0 shadow-lg">
           <CardContent className="p-4 md:p-6">
             <div className="mb-3 md:mb-4">
-              <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <h3 className="text-base md:text-lg font-semibold text-foreground">
                 Distribuição de Valor FIPE por Categoria
               </h3>
-              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Visualização da composição da frota por valor de mercado
               </p>
             </div>
@@ -236,17 +236,15 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                     <stop offset="95%" stopColor="#6b7280" stopOpacity={0.7}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" opacity={0.5} />
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fill: '#6b7280', fontSize: 10 }}
-                  className="md:text-xs"
-                  axisLine={{ stroke: '#e5e7eb' }}
+                  className="text-xs fill-muted-foreground"
+                  axisLine={{ className: "stroke-border" }}
                 />
                 <YAxis 
-                  tick={{ fill: '#6b7280', fontSize: 9 }}
-                  className="md:text-[11px]"
-                  axisLine={{ stroke: '#e5e7eb' }}
+                  className="text-[11px] fill-muted-foreground"
+                  axisLine={{ className: "stroke-border" }}
                   tickFormatter={(value) => {
                     if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
                     if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}K`;
@@ -255,14 +253,15 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                     fontSize: '12px',
+                    color: 'hsl(var(--foreground))'
                   }}
                   formatter={(value: number) => [formatCurrency(value), 'Valor FIPE']}
-                  labelStyle={{ color: '#111827', fontWeight: 600 }}
+                  labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
                 />
                 <Bar dataKey="value" radius={[8, 8, 0, 0]}>
                   {chartData.map((entry, index) => (
@@ -280,13 +279,13 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
       )}
 
       {chartData.length === 0 && !loading && (
-        <Card className="border-dashed">
+        <Card className="border-dashed border-border bg-card">
           <CardContent className="p-12 text-center">
-            <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               Nenhum dado FIPE disponível
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Configure os valores FIPE dos veículos para visualizar o dashboard
             </p>
           </CardContent>

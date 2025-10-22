@@ -94,11 +94,11 @@ export function FrotasTableV2({
     if (!categoria) return null
     
     const colors = {
-      passeio: 'bg-blue-100 text-blue-800 border-blue-200',
-      utilitario: 'bg-purple-100 text-purple-800 border-purple-200',
-      caminhao: 'bg-orange-100 text-orange-800 border-orange-200',
-      moto: 'bg-green-100 text-green-800 border-green-200',
-      outros: 'bg-gray-100 text-gray-800 border-gray-200',
+      passeio: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-800',
+      utilitario: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950 dark:text-purple-200 dark:border-purple-800',
+      caminhao: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950 dark:text-orange-200 dark:border-orange-800',
+      moto: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-800',
+      outros: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600',
     }
 
     const labels = {
@@ -120,11 +120,11 @@ export function FrotasTableV2({
     const loadingContent = (
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="animate-pulse flex space-x-3 p-3 border rounded-lg">
-            <div className="rounded-full bg-gray-200 h-10 w-10 flex-shrink-0"></div>
+          <div key={i} className="animate-pulse flex space-x-3 p-3 border border-border rounded-lg bg-card">
+            <div className="rounded-full bg-muted h-10 w-10 flex-shrink-0"></div>
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+              <div className="h-3 bg-muted rounded w-1/2"></div>
             </div>
           </div>
         ))}
@@ -151,11 +151,11 @@ export function FrotasTableV2({
   if (veiculos.length === 0) {
     const emptyContent = (
       <div className="text-center py-8 sm:py-12">
-        <Car className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <Car className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold text-foreground mb-2">
           Nenhum veículo encontrado
         </h3>
-        <p className="text-gray-500 mb-4 text-sm sm:text-base">
+        <p className="text-muted-foreground mb-4 text-sm sm:text-base">
           Não há veículos cadastrados ou que correspondam aos filtros aplicados.
         </p>
         <Button onClick={onRefetch} variant="outline" size="sm">
@@ -226,7 +226,7 @@ export function FrotasTableV2({
                     const isSelected = isVehicleSelected(veiculo.id)
 
                     return (
-                      <TableRow key={veiculo.id} className={`hover:bg-muted/50 ${isSelected ? 'bg-blue-50' : ''}`}>
+                      <TableRow key={veiculo.id} className={`hover:bg-muted/50 ${isSelected ? 'bg-blue-50 dark:bg-blue-950/30' : ''}`}>
                         <TableCell>
                           <Checkbox
                             checked={isSelected}
