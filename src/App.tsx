@@ -29,6 +29,7 @@ import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminCompanyDetailsPage from './pages/AdminCompanyDetailsPage';
 import AdminProfilePage from './pages/AdminProfilePage';
 import AdminEmailSettingsPage from './pages/AdminEmailSettingsPage';
+import CentralDeDadosPage from './pages/CentralDeDadosPage';
 import InserirVeiculosLotePage from './pages/InserirVeiculosLotePage';
 
 const queryClient = new QueryClient({
@@ -114,6 +115,14 @@ const App = () => {
                 element={
                   <ProtectedRoute requiredRoles={['admin', 'administrador']}>
                     <AdminEmailSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/central-de-dados"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                    <CentralDeDadosPage />
                   </ProtectedRoute>
                 }
               />

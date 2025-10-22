@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Button } from '@/components/ui/button';
-import { Crown, LogOut, CheckCircle, User, Mail } from 'lucide-react';
+import { Crown, LogOut, CheckCircle, User, Mail, DatabaseZap } from 'lucide-react';
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import adminLogo from '@/assets/admin-sidebar-logo.png';
@@ -45,8 +45,9 @@ function AdminSidebar() {
     { title: 'Meu Perfil', url: '/admin/perfil', icon: User },
   ];
 
-  // Adicionar Email Settings apenas para admin@rcaldas.com.br
+  // Adicionar itens especiais apenas para admin@rcaldas.com.br
   if (user?.email === 'admin@rcaldas.com.br') {
+    menuItems.push({ title: 'Central de Dados', url: '/admin/central-de-dados', icon: DatabaseZap });
     menuItems.push({ title: 'Email Settings', url: '/admin/email-settings', icon: Mail });
   }
 
