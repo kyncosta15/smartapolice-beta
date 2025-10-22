@@ -121,10 +121,10 @@ export function GestaoFrotas() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-foreground mb-2">
+          <h3 className="text-lg font-semibold text-foreground mb-2">
             Erro ao carregar dados
           </h3>
-          <p className="text-gray-500 dark:text-muted-foreground mb-4">
+          <p className="text-muted-foreground mb-4">
             Não foi possível carregar os dados da frota
           </p>
           <Button onClick={refetch} variant="outline">
@@ -138,13 +138,13 @@ export function GestaoFrotas() {
   return (
     <div className="flex flex-col min-h-0 w-full">
       {/* Header */}
-      <div className="flex-none border-b border-gray-200 dark:border-border bg-white dark:bg-background py-3 sm:py-4 md:py-6 px-3 sm:px-4 lg:px-6">
+      <div className="flex-none border-b border-border bg-background py-3 sm:py-4 md:py-6 px-3 sm:px-4 lg:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-foreground break-words leading-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words leading-tight">
               Gestão de Frotas
             </h1>
-            <p className="text-sm text-gray-500 dark:text-muted-foreground mt-1 break-words">
+            <p className="text-sm text-muted-foreground mt-1 break-words">
               Gerencie toda sua frota de veículos
             </p>
           </div>
@@ -167,10 +167,10 @@ export function GestaoFrotas() {
       {/* Tabs and Content */}
       <div className="flex-1 min-h-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col min-h-0">
-          <div className="flex-none border-b border-gray-200 dark:border-border bg-white dark:bg-background">
+          <div className="flex-none border-b border-border bg-background">
             <div className="overflow-x-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300">
               <nav className="inline-flex gap-1 px-3 sm:px-4 lg:px-6 py-2">
-                <TabsList className="h-10 sm:h-12 p-1 bg-gray-100 dark:bg-muted rounded-lg flex-shrink-0">
+                <TabsList className="h-10 sm:h-12 p-1 bg-muted rounded-lg flex-shrink-0">
                   <TabsTrigger 
                     value="frotas" 
                     className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
@@ -212,10 +212,10 @@ export function GestaoFrotas() {
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 min-h-0 bg-gray-50">
+          <div className="flex-1 min-h-0 bg-muted/30 dark:bg-background">
             <TabsContent value="frotas" className="h-full flex flex-col min-h-0 m-0">
               {/* KPI Cards - apenas na aba Frotas */}
-              <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-6 border-b border-gray-200 bg-gray-50">
+              <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-6 border-b border-border bg-muted/30 dark:bg-card/50">
                 <FrotasKPICards kpis={kpis} loading={loading} />
               </div>
               
