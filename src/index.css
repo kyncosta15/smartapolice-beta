@@ -96,6 +96,19 @@
   .recharts-wrapper svg {
     background-color: transparent !important;
   }
+
+  /* zera fundo branco de canvases e SVGs de libs */
+  .chart-root canvas,
+  .chart-root svg { 
+    background: transparent !important; 
+  }
+
+  /* tooltips de libs que usam elemento HTML */
+  .apexcharts-tooltip, .echarts-tooltip {
+    background: hsl(var(--card)) !important;
+    color: hsl(var(--foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
 }
 
 /* Custom animations */

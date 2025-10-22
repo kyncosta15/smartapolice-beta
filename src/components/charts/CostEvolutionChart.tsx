@@ -157,23 +157,26 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="w-full h-80 relative bg-background rounded-lg [&_svg]:!bg-transparent">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="chart-root w-full h-80 relative bg-card rounded-2xl p-4">
+          <ResponsiveContainer width="100%" height="100%" className="!bg-transparent">
             <LineChart 
               data={chartData} 
               margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" opacity={0.5} />
+              <CartesianGrid 
+                strokeDasharray="3 3" 
+                stroke="hsl(var(--muted-foreground) / 0.25)" 
+              />
               <XAxis 
                 dataKey="month" 
-                className="text-xs fill-muted-foreground"
-                tickLine={{ className: "stroke-border" }}
-                axisLine={{ className: "stroke-border" }}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                tickLine={{ stroke: 'hsl(var(--border))' }}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <YAxis 
-                className="text-xs fill-muted-foreground"
-                tickLine={{ className: "stroke-border" }}
-                axisLine={{ className: "stroke-border" }}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                tickLine={{ stroke: 'hsl(var(--border))' }}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
                 tickFormatter={(value) => hasData ? formatCurrency(value, { 
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,

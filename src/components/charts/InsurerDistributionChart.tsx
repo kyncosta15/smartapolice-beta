@@ -48,35 +48,40 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
       </CardHeader>
       <CardContent>
         {hasData ? (
-          <ChartContainer config={chartConfig} className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={barChartData}
-                layout="vertical"
-                margin={{
-                  right: 16,
-                  left: 0,
-                }}
-              >
-                <CartesianGrid horizontal={false} />
-                <YAxis
-                  dataKey="insurer"
-                  type="category"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={false}
-                  hide
-                />
-                <XAxis dataKey="value" type="number" hide />
-                <Tooltip 
-                  cursor={false}
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+          <div className="chart-root bg-card rounded-2xl p-4">
+            <ChartContainer config={chartConfig} className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%" className="!bg-transparent">
+                <BarChart
+                  data={barChartData}
+                  layout="vertical"
+                  margin={{
+                    right: 16,
+                    left: 0,
                   }}
-                  formatter={(value: number) => [`${value}%`, 'Percentual']}
-                />
+                >
+                  <CartesianGrid 
+                    horizontal={false} 
+                    stroke="hsl(var(--muted-foreground) / 0.25)" 
+                  />
+                  <YAxis
+                    dataKey="insurer"
+                    type="category"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                    hide
+                  />
+                  <XAxis dataKey="value" type="number" hide />
+                  <Tooltip 
+                    cursor={false}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                    formatter={(value: number) => [`${value}%`, 'Percentual']}
+                  />
                 <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={4}>
                   <LabelList
                     dataKey="insurer"
@@ -96,6 +101,7 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
+          </div>
         ) : (
           <div className="flex items-center justify-center h-[300px]">
             <p className="text-muted-foreground text-sm">Faça upload de PDFs para ver os dados</p>

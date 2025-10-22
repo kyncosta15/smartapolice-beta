@@ -206,8 +206,8 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                 Visualização da composição da frota por valor de mercado
               </p>
             </div>
-            <div className="flex justify-center items-center w-full -ml-4 md:ml-0 bg-background rounded-lg [&_svg]:!bg-transparent">
-              <ResponsiveContainer width="95%" height={200} className="md:w-full md:h-[250px]">
+            <div className="chart-root flex justify-center items-center w-full -ml-4 md:ml-0 bg-card rounded-2xl p-4">
+              <ResponsiveContainer width="95%" height={200} className="md:w-full md:h-[250px] !bg-transparent">
                 <BarChart 
                   data={chartData} 
                   margin={{ 
@@ -219,32 +219,20 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                   className="md:!ml-4"
                 >
                 <defs>
-                  <linearGradient id="colorCarros" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.9}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.7}/>
-                  </linearGradient>
-                  <linearGradient id="colorCaminhoes" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.9}/>
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.7}/>
-                  </linearGradient>
-                  <linearGradient id="colorMotos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.9}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.7}/>
-                  </linearGradient>
-                  <linearGradient id="colorOutros" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6b7280" stopOpacity={0.9}/>
-                    <stop offset="95%" stopColor="#6b7280" stopOpacity={0.7}/>
-                  </linearGradient>
+...
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" opacity={0.5} />
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="hsl(var(--muted-foreground) / 0.25)" 
+                />
                 <XAxis 
                   dataKey="name" 
-                  className="text-xs fill-muted-foreground"
-                  axisLine={{ className: "stroke-border" }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
                 />
                 <YAxis 
-                  className="text-[11px] fill-muted-foreground"
-                  axisLine={{ className: "stroke-border" }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
                   tickFormatter={(value) => {
                     if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
                     if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}K`;
