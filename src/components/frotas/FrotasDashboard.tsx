@@ -124,9 +124,9 @@ export function FrotasDashboard({ kpis, veiculos, allVeiculos, loading, searchLo
       </div>
 
       {/* Lista de Veículos com Filtros */}
-      <Card className="border-0 shadow-sm rounded-xl">
+      <Card className="border-0 dark:border shadow-sm dark:bg-card rounded-xl">
         <CardHeader className="p-3 md:p-4">
-          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg dark:text-foreground">
             <Car className="h-5 w-5" />
             Lista de Veículos ({displayVeiculos.length})
             {noResultsFound && (
@@ -139,9 +139,9 @@ export function FrotasDashboard({ kpis, veiculos, allVeiculos, loading, searchLo
         <CardContent className="p-3 md:p-4 pt-0 space-y-4">
           {/* Alert quando busca não retorna resultados */}
           {noResultsFound && (
-            <Alert className="border-amber-200 bg-amber-50">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800">
+            <Alert className="border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20">
+              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <AlertDescription className="text-amber-800 dark:text-amber-200">
                 <strong>Nenhum resultado encontrado para "{filters.search}"</strong>
                 <p className="text-sm mt-1">Mostrando todos os {allVeiculos.length} veículos disponíveis. Ajuste sua busca para filtrar os resultados.</p>
               </AlertDescription>
