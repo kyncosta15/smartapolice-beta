@@ -25,15 +25,15 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
   
   // Loading skeleton component
   const CardSkeleton = () => (
-    <Card className="bg-white border border-gray-200 rounded-2xl p-4">
+    <Card className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl p-4">
       <CardContent className="p-0">
         <div className="animate-pulse">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
-            <div className="h-3 w-16 bg-gray-200 rounded"></div>
+            <div className="h-6 w-6 bg-gray-200 dark:bg-muted rounded-full"></div>
+            <div className="h-3 w-16 bg-gray-200 dark:bg-muted rounded"></div>
           </div>
-          <div className="h-8 w-20 bg-gray-200 rounded mb-1"></div>
-          <div className="h-3 w-24 bg-gray-200 rounded"></div>
+          <div className="h-8 w-20 bg-gray-200 dark:bg-muted rounded mb-1"></div>
+          <div className="h-3 w-24 bg-gray-200 dark:bg-muted rounded"></div>
         </div>
       </CardContent>
     </Card>
@@ -134,10 +134,10 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       {/* Dashboard Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-foreground tracking-tight">
             Dashboard de Apólices
           </h1>
-          <p className="text-gray-600 mt-1 text-sm">
+          <p className="text-gray-600 dark:text-muted-foreground mt-1 text-sm">
             Visão executiva das apólices e métricas da empresa
           </p>
         </div>
@@ -155,24 +155,24 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
           return (
             <Card 
               key={card.id} 
-              className={`bg-white border border-gray-200 rounded-2xl p-4 shadow-sm transition-all duration-200 ${
+              className={`bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl p-4 shadow-sm transition-all duration-200 ${
                 card.clickable ? 'hover:shadow-md cursor-pointer hover:scale-[1.02]' : 'hover:shadow-md'
               }`}
               onClick={() => card.clickable && onSectionChange?.('policies')}
             >
               <CardContent className="p-0">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor}`}>
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor} dark:bg-opacity-20`}>
                     <IconComponent className="size-3" />
                     {card.title}
                   </span>
                 </div>
                 
-                <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 mb-1">
+                <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1">
                   {card.value}
                 </div>
                 
-                <div className="text-[12px] text-gray-400">
+                <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
                   {card.subtitle}
                 </div>
               </CardContent>
@@ -189,7 +189,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
           return (
             <Card 
               key={card.id} 
-              className={`${card.gradient} rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200 border-0`}
+              className={`${card.gradient} dark:opacity-90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200 border-0`}
             >
               <CardContent className="p-0">
                 <div className="flex items-center gap-2 mb-3">

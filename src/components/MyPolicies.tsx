@@ -319,7 +319,7 @@ export function MyPolicies() {
       <div className="flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
         {/* Título + Badge */}
         <div className="flex items-center gap-2">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Minhas Apólices</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-foreground">Minhas Apólices</h2>
           <Badge variant="secondary" className="text-xs sm:text-sm shrink-0">
             {policiesWithStatus.length}
           </Badge>
@@ -367,18 +367,18 @@ export function MyPolicies() {
 
       {/* Barra de ações em massa */}
       {selectedPolicies.size > 0 && (
-        <Card className="bg-blue-50 border-blue-200">
+        <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
           <CardContent className="py-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-4">
-                <p className="font-medium text-blue-900">
+                <p className="font-medium text-blue-900 dark:text-blue-100">
                   {selectedPolicies.size} apólice(s) selecionada(s)
                 </p>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedPolicies(new Set())}
-                  className="border-blue-300 hover:bg-blue-100"
+                  className="border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/30"
                 >
                   Limpar seleção
                 </Button>
@@ -410,29 +410,29 @@ export function MyPolicies() {
             console.log(`🎯 [MyPolicies-Render] Renderizando ${policy.name} com status: ${policy.status}`);
             
             return (
-              <Card key={policy.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+              <Card key={policy.id} className="hover:shadow-lg transition-shadow overflow-hidden dark:bg-card dark:border-border">
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6 space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between items-start gap-2 sm:gap-3">
-                    <CardTitle className="text-sm sm:text-base md:text-lg leading-tight break-words flex-1 min-w-0">
+                    <CardTitle className="text-sm sm:text-base md:text-lg leading-tight break-words flex-1 min-w-0 dark:text-foreground">
                       {toText(policy.name)}
                     </CardTitle>
                     <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} shrink-0 text-[10px] sm:text-xs whitespace-nowrap px-1.5 sm:px-2 py-0.5`}>
                       {formatStatusText(policy.status)}
                     </Badge>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-500 truncate">{toText(policy.insurer)}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground truncate">{toText(policy.insurer)}</p>
                 </CardHeader>
                 
                 <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-6 pb-3 sm:pb-6">
                   <div className="space-y-2 sm:space-y-3">
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Número</p>
-                        <p className="font-medium text-xs sm:text-sm break-all leading-tight">{policy.policyNumber}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-muted-foreground mb-0.5 sm:mb-1">Número</p>
+                        <p className="font-medium text-xs sm:text-sm dark:text-foreground break-all leading-tight">{policy.policyNumber}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Valor Mensal</p>
-                        <p className="font-semibold text-xs sm:text-sm text-green-600 whitespace-nowrap">
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-muted-foreground mb-0.5 sm:mb-1">Valor Mensal</p>
+                        <p className="font-semibold text-xs sm:text-sm text-green-600 dark:text-green-400 whitespace-nowrap">
                           {moedaBR(policy.monthlyAmount)}
                         </p>
                       </div>
@@ -440,15 +440,15 @@ export function MyPolicies() {
                     
                     <div className="flex justify-between items-start gap-2">
                       <div>
-                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Parcelas</p>
-                        <p className="font-medium text-xs sm:text-sm">{installmentsCount}x</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-muted-foreground mb-0.5 sm:mb-1">Parcelas</p>
+                        <p className="font-medium text-xs sm:text-sm dark:text-foreground">{installmentsCount}x</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Vencimento</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-muted-foreground mb-0.5 sm:mb-1">Vencimento</p>
                         <p className={`font-medium text-xs sm:text-sm whitespace-nowrap ${
                           new Date(policy.expirationDate || policy.endDate) < new Date() 
-                            ? 'text-red-600' 
-                            : 'text-gray-900'
+                            ? 'text-red-600 dark:text-red-400' 
+                            : 'text-gray-900 dark:text-foreground'
                         }`}>
                           {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
                         </p>
@@ -456,12 +456,12 @@ export function MyPolicies() {
                     </div>
                   </div>
 
-                  <div className="flex gap-1 sm:gap-1.5 pt-2 sm:pt-3 border-t justify-end">
+                  <div className="flex gap-1 sm:gap-1.5 pt-2 sm:pt-3 border-t dark:border-border justify-end">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleViewPolicy(policy)}
-                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10"
+                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10 dark:hover:bg-primary/20"
                       title="Visualizar apólice"
                     >
                       <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -470,7 +470,7 @@ export function MyPolicies() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDownloadPolicy(policy)}
-                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10"
+                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10 dark:hover:bg-primary/20"
                       title="Baixar apólice"
                     >
                       <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -479,7 +479,7 @@ export function MyPolicies() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEditPolicy(policy)}
-                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10"
+                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10 dark:hover:bg-primary/20"
                       title="Editar apólice"
                     >
                       <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -488,7 +488,7 @@ export function MyPolicies() {
                       variant="ghost"
                       size="sm"
                       onClick={(e) => handleDeleteClick(e, policy)}
-                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-red-50 hover:text-red-600"
+                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400"
                       title="Deletar apólice"
                       disabled={isDeleting}
                     >
