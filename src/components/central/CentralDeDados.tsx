@@ -282,18 +282,21 @@ export default function CentralDeDados() {
   const handleBuscarCorpNuvem = async () => {
     setLoadingCorpNuvem(true);
     try {
-      const data = await getClientesCorpNuvem();
+      // Busca por nome se houver termo de busca
+      const data = await getClientesCorpNuvem(
+        searchTerm ? { nome: searchTerm } : { codfil: 1 }
+      );
       setResultCorpNuvem(data);
       
       toast({
         title: '✅ Clientes CorpNuvem carregados',
         description: `${data?.length || 0} cliente(s) encontrado(s)`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao buscar clientes CorpNuvem:', error);
       toast({
         title: 'Erro ao carregar clientes',
-        description: 'Não foi possível carregar os clientes da CorpNuvem.',
+        description: error?.response?.data?.message || 'Não foi possível carregar os clientes da CorpNuvem.',
         variant: 'destructive',
       });
     } finally {
