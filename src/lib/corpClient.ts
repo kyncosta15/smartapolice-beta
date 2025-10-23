@@ -60,6 +60,18 @@ corpClient.interceptors.request.use(
   async (config) => {
     const token = await getAuthToken();
     config.headers.Authorization = `Bearer ${token}`;
+    
+    console.log('🔧 [CorpNuvem Request] Configuração da requisição:', {
+      url: config.url,
+      baseURL: config.baseURL,
+      method: config.method,
+      headers: {
+        Authorization: config.headers.Authorization?.substring(0, 50) + '...',
+        'Content-Type': config.headers['Content-Type']
+      },
+      params: config.params
+    });
+    
     return config;
   },
   (error) => {
@@ -69,12 +81,29 @@ corpClient.interceptors.request.use(
 
 // Interceptor para renovar token em caso de 401
 corpClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ [CorpNuvem Response] Resposta recebida com sucesso:', {
+      status: response.status,
+      url: response.config.url,
+      dataType: Array.isArray(response.data) ? 'array' : typeof response.data,
+      dataLength: Array.isArray(response.data) ? response.data.length : 'N/A'
+    });
+    return response;
+  },
   async (error) => {
+    console.error('❌ [CorpNuvem Response] Erro na resposta:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      data: error.response?.data,
+      headers: error.response?.headers
+    });
+    
     const originalRequest = error.config;
     
     // Se retornou 401 e ainda não tentou renovar o token
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log('🔄 [CorpNuvem Auth] Tentando renovar token após 401...');
       originalRequest._retry = true;
       
       // Limpa o cache de token
@@ -86,9 +115,12 @@ corpClient.interceptors.response.use(
         const token = await getAuthToken();
         originalRequest.headers.Authorization = `Bearer ${token}`;
         
+        console.log('🔄 [CorpNuvem Auth] Token renovado, tentando requisição novamente...');
+        
         // Tenta novamente a requisição original
         return corpClient(originalRequest);
       } catch (err) {
+        console.error('❌ [CorpNuvem Auth] Falha ao renovar token:', err);
         return Promise.reject(err);
       }
     }
