@@ -19,7 +19,8 @@ import {
   getDadosBI,
   getDadosInCorp
 } from '@/services/rcorp';
-import { getClientesCorpNuvem } from '@/services/corpnuvem/clientes';
+import { getClientesCorpNuvem, getProducao, getRenovacoes, getDocumento } from '@/services/corpnuvem';
+import { CorpNuvemTabs } from './CorpNuvemTabs';
 import {
   Collapsible,
   CollapsibleContent,
@@ -28,7 +29,7 @@ import {
 
 export default function CentralDeDados() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('negocios');
+  const [activeTab, setActiveTab] = useState('corpnuvem');
   const { toast } = useToast();
 
   // Estados para Negócios
@@ -540,14 +541,18 @@ export default function CentralDeDados() {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="corpnuvem" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">CorpNuvem</span>
+          </TabsTrigger>
           <TabsTrigger value="negocios" className="gap-2">
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Negócios</span>
           </TabsTrigger>
           <TabsTrigger value="clientes" className="gap-2">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Clientes</span>
+            <span className="hidden sm:inline">Clientes RCORP</span>
           </TabsTrigger>
           <TabsTrigger value="sinistros" className="gap-2">
             <AlertCircle className="h-4 w-4" />
@@ -558,6 +563,11 @@ export default function CentralDeDados() {
             <span className="hidden sm:inline">BI</span>
           </TabsTrigger>
         </TabsList>
+
+        {/* CorpNuvem Tab */}
+        <TabsContent value="corpnuvem">
+          <CorpNuvemTabs />
+        </TabsContent>
 
         {/* Negócios Tab */}
         <TabsContent value="negocios" className="space-y-4">
