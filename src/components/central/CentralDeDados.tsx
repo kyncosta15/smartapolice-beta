@@ -607,7 +607,7 @@ export default function CentralDeDados() {
             <CardHeader>
               <CardTitle>Buscar Clientes</CardTitle>
               <CardDescription>
-                Busque e visualize dados de clientes cadastrados na RCORP
+                Busque e visualize dados de clientes cadastrados na CorpNuvem
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -615,16 +615,16 @@ export default function CentralDeDados() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar por nome, CNPJ, CPF..."
+                    placeholder="Buscar por nome..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9"
-                    onKeyDown={(e) => e.key === 'Enter' && handleBuscarClientes()}
-                    disabled={loadingClientes}
+                    onKeyDown={(e) => e.key === 'Enter' && handleBuscarCorpNuvem()}
+                    disabled={loadingCorpNuvem}
                   />
                 </div>
-                <Button onClick={handleBuscarClientes} disabled={loadingClientes}>
-                  {loadingClientes ? (
+                <Button onClick={handleBuscarCorpNuvem} disabled={loadingCorpNuvem}>
+                  {loadingCorpNuvem ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Buscando...
@@ -638,7 +638,73 @@ export default function CentralDeDados() {
                 </Button>
               </div>
 
-              {loadingClientes ? renderSkeletons() : renderClientesResults()}
+              {loadingCorpNuvem ? (
+                renderSkeletons()
+              ) : resultCorpNuvem && resultCorpNuvem.length > 0 ? (
+                <div className="space-y-2">
+                  {resultCorpNuvem.map((cliente: any, idx: number) => (
+                    <Card key={idx} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-base">{cliente.nome}</h4>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            {cliente.cpf_cnpj && (
+                              <div>
+                                <span className="text-muted-foreground">CPF/CNPJ: </span>
+                                <span className="font-medium">{cliente.cpf_cnpj}</span>
+                              </div>
+                            )}
+                            {cliente.codfil && (
+                              <div>
+                                <span className="text-muted-foreground">Filial: </span>
+                                <span className="font-medium">{cliente.codfil}</span>
+                              </div>
+                            )}
+                            {cliente.codigo && (
+                              <div>
+                                <span className="text-muted-foreground">Código: </span>
+                                <span className="font-medium">{cliente.codigo}</span>
+                              </div>
+                            )}
+                            {cliente.email && (
+                              <div>
+                                <span className="text-muted-foreground">Email: </span>
+                                <span className="font-medium">{cliente.email}</span>
+                              </div>
+                            )}
+                            {cliente.telefone && (
+                              <div>
+                                <span className="text-muted-foreground">Telefone: </span>
+                                <span className="font-medium">{cliente.telefone}</span>
+                              </div>
+                            )}
+                            {cliente.cidade && (
+                              <div>
+                                <span className="text-muted-foreground">Cidade: </span>
+                                <span className="font-medium">{cliente.cidade}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : resultCorpNuvem && resultCorpNuvem.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhum cliente encontrado</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Digite um nome e clique em Buscar</p>
+                  </CardContent>
+                </Card>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -1018,65 +1084,6 @@ export default function CentralDeDados() {
                   </CardContent>
                 </Card>
               )}
-            </CardContent>
-          </Card>
-
-          {/* CorpNuvem */}
-          <Card>
-            <CardHeader>
-              <CardTitle>CorpNuvem - Clientes</CardTitle>
-              <CardDescription>
-                Consulte todos os clientes cadastrados na API CorpNuvem
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                onClick={handleBuscarCorpNuvem} 
-                disabled={loadingCorpNuvem}
-                className="w-full sm:w-auto"
-              >
-                {loadingCorpNuvem ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Carregando...
-                  </>
-                ) : (
-                  <>
-                    <Users className="h-4 w-4 mr-2" />
-                    Buscar Clientes
-                  </>
-                )}
-              </Button>
-
-              {loadingCorpNuvem ? (
-                renderSkeletons()
-              ) : resultCorpNuvem && resultCorpNuvem.length > 0 ? (
-                <div className="space-y-2">
-                  {resultCorpNuvem.slice(0, 20).map((cliente: any, idx: number) => (
-                    <div key={idx} className="p-3 rounded-xl bg-muted text-sm">
-                      <p className="font-medium">{cliente.nome || cliente.razao_social}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {cliente.cnpj ? `CNPJ: ${cliente.cnpj}` : cliente.cpf ? `CPF: ${cliente.cpf}` : `ID: ${cliente.id}`}
-                      </p>
-                      {cliente.email && (
-                        <p className="text-xs text-muted-foreground">Email: {cliente.email}</p>
-                      )}
-                    </div>
-                  ))}
-                  {resultCorpNuvem.length > 20 && (
-                    <p className="text-sm text-muted-foreground text-center pt-2">
-                      +{resultCorpNuvem.length - 20} clientes adicionais
-                    </p>
-                  )}
-                </div>
-              ) : resultCorpNuvem && resultCorpNuvem.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">Nenhum cliente encontrado na CorpNuvem</p>
-                  </CardContent>
-                </Card>
-              ) : null}
             </CardContent>
           </Card>
 
