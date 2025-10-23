@@ -59,7 +59,8 @@ export const corpClient = axios.create({
 corpClient.interceptors.request.use(
   async (config) => {
     const token = await getAuthToken();
-    config.headers.Authorization = `Bearer ${token}`;
+    // A API CorpNuvem usa o token diretamente, SEM "Bearer "
+    config.headers.Authorization = token;
     
     console.log('🔧 [CorpNuvem Request] Configuração da requisição:', {
       url: config.url,
@@ -113,7 +114,8 @@ corpClient.interceptors.response.use(
       try {
         // Obtém novo token
         const token = await getAuthToken();
-        originalRequest.headers.Authorization = `Bearer ${token}`;
+        // A API CorpNuvem usa o token diretamente, SEM "Bearer "
+        originalRequest.headers.Authorization = token;
         
         console.log('🔄 [CorpNuvem Auth] Token renovado, tentando requisição novamente...');
         
