@@ -289,6 +289,16 @@ export function CorpNuvemTabs() {
                 </Button>
               </div>
 
+              {!loadingClientes && resultClientes.length === 0 && searchTerm && (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <Search className="h-12 w-12 text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground">Nenhum cliente encontrado</p>
+                    <p className="text-sm text-muted-foreground">Tente buscar com outro termo</p>
+                  </CardContent>
+                </Card>
+              )}
+
               {resultClientes.length > 0 && (
                 <>
                   <div className="space-y-2 max-h-[500px] overflow-auto">
@@ -387,7 +397,17 @@ export function CorpNuvemTabs() {
                 </Button>
               </div>
 
-              {resultProducao && resultProducao.producao && (
+              {!loadingProducao && resultProducao && resultProducao.producao && resultProducao.producao.length === 0 && (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <FileText className="h-12 w-12 text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground">Nenhuma produção encontrada</p>
+                    <p className="text-sm text-muted-foreground">Tente buscar com outro período</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {resultProducao && resultProducao.producao && resultProducao.producao.length > 0 && (
                 <>
                   <div className="space-y-2 max-h-[500px] overflow-auto">
                     {resultProducao.producao
@@ -541,7 +561,17 @@ export function CorpNuvemTabs() {
                 </Button>
               </div>
 
-              {resultRenovacoes && resultRenovacoes.renovacoes && (
+              {!loadingRenovacoes && resultRenovacoes && resultRenovacoes.renovacoes && resultRenovacoes.renovacoes.length === 0 && (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <Calendar className="h-12 w-12 text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground">Nenhuma renovação encontrada</p>
+                    <p className="text-sm text-muted-foreground">Tente buscar com outro período</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {resultRenovacoes && resultRenovacoes.renovacoes && resultRenovacoes.renovacoes.length > 0 && (
                 <>
                   <div className="space-y-2 max-h-[500px] overflow-auto">
                     {resultRenovacoes.renovacoes
@@ -630,7 +660,17 @@ export function CorpNuvemTabs() {
                 </Button>
               </div>
 
-              {resultDocumento && resultDocumento.documento && (
+              {!loadingDocumento && resultDocumento && resultDocumento.documento && resultDocumento.documento.length === 0 && (
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <FileText className="h-12 w-12 text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground">Nenhum documento encontrado</p>
+                    <p className="text-sm text-muted-foreground">Verifique os dados informados</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {resultDocumento && resultDocumento.documento && resultDocumento.documento.length > 0 && (
                 <>
                   <div className="space-y-4 max-h-[500px] overflow-auto">
                     {resultDocumento.documento
