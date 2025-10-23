@@ -234,36 +234,49 @@ export function CorpNuvemTabs() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">API CorpNuvem</h2>
-        <p className="text-muted-foreground">
-          Consultas e buscas na API CorpNuvem
-        </p>
-      </div>
+    <>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-2xl">API CorpNuvem</CardTitle>
+        <CardDescription>
+          Consultas e buscas na base de dados corporativa
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="clientes" className="space-y-6">
+          <TabsList className="w-full justify-start bg-transparent border-b rounded-none h-auto p-0 gap-1">
+            <TabsTrigger 
+              value="clientes" 
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Clientes
+            </TabsTrigger>
+            <TabsTrigger 
+              value="producao"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Produção
+            </TabsTrigger>
+            <TabsTrigger 
+              value="renovacoes"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Renovações
+            </TabsTrigger>
+            <TabsTrigger 
+              value="documentos"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Documentos
+            </TabsTrigger>
+          </TabsList>
 
-      <Tabs defaultValue="clientes" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="clientes">
-            <Users className="h-4 w-4 mr-2" />
-            Clientes
-          </TabsTrigger>
-          <TabsTrigger value="producao">
-            <FileText className="h-4 w-4 mr-2" />
-            Produção
-          </TabsTrigger>
-          <TabsTrigger value="renovacoes">
-            <Calendar className="h-4 w-4 mr-2" />
-            Renovações
-          </TabsTrigger>
-          <TabsTrigger value="documentos">
-            <FileText className="h-4 w-4 mr-2" />
-            Documentos
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Tab Clientes */}
-        <TabsContent value="clientes">
+            {/* Tab Clientes */}
+            <TabsContent value="clientes" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle>Buscar Clientes</CardTitle>
@@ -364,7 +377,7 @@ export function CorpNuvemTabs() {
         </TabsContent>
 
         {/* Tab Produção */}
-        <TabsContent value="producao">
+        <TabsContent value="producao" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle>Consultar Produção</CardTitle>
@@ -528,7 +541,7 @@ export function CorpNuvemTabs() {
         </TabsContent>
 
         {/* Tab Renovações */}
-        <TabsContent value="renovacoes">
+        <TabsContent value="renovacoes" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle>Consultar Renovações</CardTitle>
@@ -627,7 +640,7 @@ export function CorpNuvemTabs() {
         </TabsContent>
 
         {/* Tab Documentos */}
-        <TabsContent value="documentos">
+        <TabsContent value="documentos" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle>Buscar Documento</CardTitle>
@@ -766,6 +779,8 @@ export function CorpNuvemTabs() {
           </Card>
         </TabsContent>
       </Tabs>
+      </CardContent>
+    </Card>
 
       {/* Modal Detalhes do Cliente */}
       <Dialog open={modalClienteOpen} onOpenChange={setModalClienteOpen}>
@@ -1015,6 +1030,6 @@ export function CorpNuvemTabs() {
           ) : null}
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
