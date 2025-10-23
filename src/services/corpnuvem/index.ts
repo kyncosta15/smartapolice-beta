@@ -4,3 +4,4 @@ export * from './documentos';
 export * from './producao';
 export * from './renovacoes';
 export * from './anexos';
+export * from './cliente-detalhado';

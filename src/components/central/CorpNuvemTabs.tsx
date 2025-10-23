@@ -9,6 +9,8 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Search, Users, FileText, Calendar, Loader2, User, MapPin, Info, Download, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getClientesCorpNuvem, getProducao, getRenovacoes, getDocumento, getClienteAnexos } from '@/services/corpnuvem';
+import { getClienteCompleto } from '@/services/corpnuvem/cliente-detalhado';
+import { ClienteDetalhadoModal } from './ClienteDetalhadoModal';
 
 export function CorpNuvemTabs() {
   const { toast } = useToast();
@@ -34,12 +36,10 @@ export function CorpNuvemTabs() {
   const [codfil, setCodfil] = useState('1');
   const [nosnum, setNosnum] = useState('');
   
-  // Estados Modal Cliente
-  const [modalClienteOpen, setModalClienteOpen] = useState(false);
-  const [clienteSelecionado, setClienteSelecionado] = useState<any>(null);
-  const [loadingClienteDetalhes, setLoadingClienteDetalhes] = useState(false);
-  const [clienteAnexos, setClienteAnexos] = useState<any[]>([]);
-  const [loadingAnexos, setLoadingAnexos] = useState(false);
+  // Estados Modal Cliente Detalhado
+  const [modalClienteDetalhadoOpen, setModalClienteDetalhadoOpen] = useState(false);
+  const [clienteDetalhadoDados, setClienteDetalhadoDados] = useState<any>(null);
+  const [loadingClienteDetalhado, setLoadingClienteDetalhado] = useState(false);
 
   // Estados de Paginação
   const [pageClientes, setPageClientes] = useState(1);
@@ -52,7 +52,7 @@ export function CorpNuvemTabs() {
     if (!searchTerm) {
       toast({
         title: 'Atenção',
-        description: 'Digite um nome para buscar',
+        description: 'Digite um nome, CPF ou código para buscar',
         variant: 'destructive',
       });
       return;
@@ -62,7 +62,7 @@ export function CorpNuvemTabs() {
     try {
       const data = await getClientesCorpNuvem({ texto: searchTerm });
       setResultClientes(data);
-      setPageClientes(1); // Reset para primeira página
+      setPageClientes(1);
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -71,6 +71,35 @@ export function CorpNuvemTabs() {
       });
     } finally {
       setLoadingClientes(false);
+    }
+  };
+
+  const handleVerDetalhesCliente = async (cliente: any) => {
+    setLoadingClienteDetalhado(true);
+    setModalClienteDetalhadoOpen(true);
+    setClienteDetalhadoDados(null);
+
+    try {
+      const codfil = cliente.codfil || 1;
+      const codigo = cliente.codigo;
+
+      console.log('🔍 [Cliente Detalhado] Buscando dados completos:', { codfil, codigo });
+
+      const dadosCompletos = await getClienteCompleto(codfil, codigo);
+      
+      console.log('✅ [Cliente Detalhado] Dados carregados:', dadosCompletos);
+      
+      setClienteDetalhadoDados(dadosCompletos);
+    } catch (error: any) {
+      console.error('❌ [Cliente Detalhado] Erro:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar informações do cliente',
+        variant: 'destructive',
+      });
+      setModalClienteDetalhadoOpen(false);
+    } finally {
+      setLoadingClienteDetalhado(false);
     }
   };
 
@@ -151,59 +180,6 @@ export function CorpNuvemTabs() {
     }
   };
 
-  const handleVerDetalhesCliente = async (cliente: any) => {
-    setModalClienteOpen(true);
-    setLoadingClienteDetalhes(true);
-    setClienteSelecionado(null);
-    setClienteAnexos([]);
-    
-    try {
-      // Busca detalhes completos do cliente usando codfil e codigo
-      const data = await getClientesCorpNuvem({ 
-        codfil: 1,
-        codigo: cliente.codigo 
-      });
-      
-      if (data && data.cliente && data.cliente.length > 0) {
-        const clienteCompleto = data.cliente[0];
-        console.log('📋 [Modal Cliente] Dados completos:', clienteCompleto);
-        setClienteSelecionado(clienteCompleto);
-        
-        // Buscar anexos do cliente
-        await handleBuscarAnexosCliente(cliente.codigo);
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao buscar detalhes do cliente',
-        variant: 'destructive',
-      });
-      setModalClienteOpen(false);
-    } finally {
-      setLoadingClienteDetalhes(false);
-    }
-  };
-
-  const handleBuscarAnexosCliente = async (codigoCliente: number) => {
-    setLoadingAnexos(true);
-    try {
-      const data = await getClienteAnexos({
-        codfil: 1,
-        codigo: codigoCliente
-      });
-      
-      if (data && data.anexos) {
-        setClienteAnexos(data.anexos);
-      }
-    } catch (error: any) {
-      console.error('Erro ao buscar anexos:', error);
-      // Não exibir erro para o usuário, apenas registrar no console
-      setClienteAnexos([]);
-    } finally {
-      setLoadingAnexos(false);
-    }
-  };
-
   const handleVisualizarAnexo = (anexo: any) => {
     if (anexo.url || anexo.arquivo_url) {
       window.open(anexo.url || anexo.arquivo_url, '_blank');
@@ -281,7 +257,7 @@ export function CorpNuvemTabs() {
             <CardHeader>
               <CardTitle>Buscar Clientes</CardTitle>
               <CardDescription>
-                Consulte clientes cadastrados
+                Busque clientes por nome, CPF/CNPJ ou código
                 {resultClientes.length > 0 && (
                   <span className="ml-2 font-semibold text-primary">
                     • {resultClientes.length} cliente{resultClientes.length !== 1 ? 's' : ''} encontrado{resultClientes.length !== 1 ? 's' : ''}
@@ -292,7 +268,7 @@ export function CorpNuvemTabs() {
             <CardContent className="space-y-4">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Nome do cliente..."
+                  placeholder="Nome, CPF/CNPJ ou código..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleBuscarClientes()}
@@ -320,7 +296,7 @@ export function CorpNuvemTabs() {
                       .map((cliente: any, idx: number) => (
                         <Card key={idx}>
                           <CardContent className="p-4">
-                            <div className="flex items-start justify-between gap-3">
+                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1">
                                 <h4 className="font-semibold">{cliente.nome}</h4>
                                 <div className="text-sm text-muted-foreground space-y-1">
@@ -329,12 +305,13 @@ export function CorpNuvemTabs() {
                                 </div>
                               </div>
                               <Button
-                                size="icon"
-                                variant="ghost"
+                                size="sm"
+                                variant="outline"
                                 onClick={() => handleVerDetalhesCliente(cliente)}
                                 className="shrink-0"
                               >
-                                <Search className="h-4 w-4" />
+                                <Eye className="h-4 w-4 mr-2" />
+                                Ver Detalhes
                               </Button>
                             </div>
                           </CardContent>
@@ -782,254 +759,13 @@ export function CorpNuvemTabs() {
       </CardContent>
     </Card>
 
-      {/* Modal Detalhes do Cliente */}
-      <Dialog open={modalClienteOpen} onOpenChange={setModalClienteOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Cliente</DialogTitle>
-            <DialogDescription>
-              Informações completas do cliente
-            </DialogDescription>
-          </DialogHeader>
-          
-          {loadingClienteDetalhes ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : clienteSelecionado ? (
-            <div className="space-y-6">
-              {/* Dados Pessoais */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-lg">Dados Pessoais</h3>
-                </div>
-                <Separator />
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  {clienteSelecionado.nome && (
-                    <div className="col-span-2">
-                      <span className="text-muted-foreground">Nome:</span>
-                      <p className="font-medium">{clienteSelecionado.nome}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.codigo && (
-                    <div>
-                      <span className="text-muted-foreground">Código:</span>
-                      <p className="font-medium">{clienteSelecionado.codigo}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.cpf_cnpj && (
-                    <div>
-                      <span className="text-muted-foreground">CPF/CNPJ:</span>
-                      <p className="font-medium">{clienteSelecionado.cpf_cnpj}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.datanas && (
-                    <div>
-                      <span className="text-muted-foreground">Data Nascimento:</span>
-                      <p className="font-medium">{clienteSelecionado.datanas}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.sexo && (
-                    <div>
-                      <span className="text-muted-foreground">Sexo:</span>
-                      <p className="font-medium">{clienteSelecionado.sexo === 'M' ? 'Masculino' : clienteSelecionado.sexo === 'F' ? 'Feminino' : clienteSelecionado.sexo}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.estado_civil && (
-                    <div>
-                      <span className="text-muted-foreground">Estado Civil:</span>
-                      <p className="font-medium">{clienteSelecionado.estado_civil}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.profissao && (
-                    <div>
-                      <span className="text-muted-foreground">Profissão:</span>
-                      <p className="font-medium">{clienteSelecionado.profissao}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.escolaridade && (
-                    <div>
-                      <span className="text-muted-foreground">Escolaridade:</span>
-                      <p className="font-medium">{clienteSelecionado.escolaridade}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.ativo && (
-                    <div>
-                      <span className="text-muted-foreground">Status:</span>
-                      <p className="font-medium">{clienteSelecionado.ativo === 'T' ? 'Ativo' : 'Inativo'}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Contatos */}
-              {((clienteSelecionado.emails && clienteSelecionado.emails.length > 0) || 
-                (clienteSelecionado.telefones && clienteSelecionado.telefones.length > 0)) && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Info className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-lg">Contatos</h3>
-                  </div>
-                  <Separator />
-                  <div className="space-y-4">
-                    {clienteSelecionado.emails && clienteSelecionado.emails.length > 0 && (
-                      <div>
-                        <span className="text-muted-foreground text-sm">Emails:</span>
-                        <div className="mt-1 space-y-1">
-                          {clienteSelecionado.emails.map((emailObj: any, idx: number) => (
-                            <p key={idx} className="font-medium text-sm">
-                              {emailObj.email} {emailObj.padrao === 'T' && <span className="text-xs text-primary">(Principal)</span>}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {clienteSelecionado.telefones && clienteSelecionado.telefones.length > 0 && (
-                      <div>
-                        <span className="text-muted-foreground text-sm">Telefones:</span>
-                        <div className="mt-1 space-y-1">
-                          {clienteSelecionado.telefones.map((telObj: any, idx: number) => (
-                            <p key={idx} className="font-medium text-sm">
-                              ({telObj.ddd}) {telObj.numero}
-                              {telObj.tipo && <span className="text-xs text-muted-foreground"> - {telObj.tipo === 'R' ? 'Residencial' : telObj.tipo === 'C' ? 'Comercial' : telObj.tipo}</span>}
-                              {telObj.padrao === 'T' && <span className="text-xs text-primary"> (Principal)</span>}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Endereço */}
-              {clienteSelecionado.enderecos && clienteSelecionado.enderecos.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-lg">Endereço</h3>
-                  </div>
-                  <Separator />
-                  {clienteSelecionado.enderecos.map((end: any, idx: number) => (
-                    <div key={idx} className="grid grid-cols-2 gap-4 text-sm">
-                      {end.logradouro && (
-                        <div className="col-span-2">
-                          <span className="text-muted-foreground">Logradouro:</span>
-                          <p className="font-medium">
-                            {end.logradouro}
-                            {end.numero ? `, ${end.numero}` : ''}
-                          </p>
-                        </div>
-                      )}
-                      {end.complemento && (
-                        <div className="col-span-2">
-                          <span className="text-muted-foreground">Complemento:</span>
-                          <p className="font-medium">{end.complemento}</p>
-                        </div>
-                      )}
-                      {end.bairro && (
-                        <div>
-                          <span className="text-muted-foreground">Bairro:</span>
-                          <p className="font-medium">{end.bairro}</p>
-                        </div>
-                      )}
-                      {end.cidade && (
-                        <div>
-                          <span className="text-muted-foreground">Cidade:</span>
-                          <p className="font-medium">{end.cidade} - {end.estado}</p>
-                        </div>
-                      )}
-                      {end.cep && (
-                        <div>
-                          <span className="text-muted-foreground">CEP:</span>
-                          <p className="font-medium">{end.cep}</p>
-                        </div>
-                      )}
-                      {end.tipo && (
-                        <div>
-                          <span className="text-muted-foreground">Tipo:</span>
-                          <p className="font-medium">{end.tipo === 'R' ? 'Residencial' : end.tipo === 'C' ? 'Comercial' : end.tipo}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Observações */}
-              {clienteSelecionado.observacoes && clienteSelecionado.observacoes.trim() && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Info className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-lg">Observações</h3>
-                  </div>
-                  <Separator />
-                  <div className="text-sm whitespace-pre-wrap bg-muted p-3 rounded">
-                    {clienteSelecionado.observacoes}
-                  </div>
-                </div>
-              )}
-
-              {/* Documentos */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-lg">Documentos</h3>
-                </div>
-                <Separator />
-                {loadingAnexos ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : clienteAnexos.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {clienteAnexos.map((anexo: any, idx: number) => (
-                      <Card key={idx} className="p-3 hover:bg-muted/50 transition-colors">
-                        <div className="flex flex-col items-center gap-2">
-                          <FileText className="h-10 w-10 text-primary" />
-                          <p className="text-xs font-medium text-center line-clamp-2">
-                            {anexo.nome || anexo.descricao || `Documento ${idx + 1}`}
-                          </p>
-                          {anexo.data && (
-                            <p className="text-xs text-muted-foreground">
-                              {anexo.data}
-                            </p>
-                          )}
-                          <div className="flex gap-1 mt-1">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7"
-                              onClick={() => handleVisualizarAnexo(anexo)}
-                              title="Visualizar"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7"
-                              onClick={() => handleBaixarAnexo(anexo)}
-                              title="Baixar"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground py-4 text-center">
-                    Nenhum documento disponível
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      {/* Modal Cliente Detalhado */}
+      <ClienteDetalhadoModal
+        open={modalClienteDetalhadoOpen}
+        onOpenChange={setModalClienteDetalhadoOpen}
+        dados={clienteDetalhadoDados}
+        loading={loadingClienteDetalhado}
+      />
     </>
   );
 }
