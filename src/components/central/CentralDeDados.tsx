@@ -19,7 +19,6 @@ import {
   getDadosBI,
   getDadosInCorp
 } from '@/services/rcorp';
-import { getClientesCorpNuvem, getProducao, getRenovacoes, getDocumento } from '@/services/corpnuvem';
 import { CorpNuvemTabs } from './CorpNuvemTabs';
 import {
   Collapsible,
@@ -66,10 +65,6 @@ export default function CentralDeDados() {
   const [empresaId, setEmpresaId] = useState('');
   const [grupoId, setGrupoId] = useState('');
   const [resultIncorp, setResultIncorp] = useState<any>(null);
-
-  // Estados para CorpNuvem
-  const [loadingCorpNuvem, setLoadingCorpNuvem] = useState(false);
-  const [resultCorpNuvem, setResultCorpNuvem] = useState<any[]>([]);
 
   const handleImportNegocios = async () => {
     setLoadingNegocios(true);
@@ -277,46 +272,6 @@ export default function CentralDeDados() {
       });
     } finally {
       setLoadingIncorp(false);
-    }
-  };
-
-  const handleBuscarCorpNuvem = async () => {
-    setLoadingCorpNuvem(true);
-    console.log('🔍 [CorpNuvem] Iniciando busca de clientes...');
-    console.log('🔍 [CorpNuvem] Termo de busca:', searchTerm);
-    
-    try {
-      // Busca por nome se houver termo de busca
-      const params = searchTerm ? { nome: searchTerm } : { codfil: 1 };
-      console.log('🔍 [CorpNuvem] Parâmetros:', params);
-      
-      const data = await getClientesCorpNuvem(params);
-      
-      console.log('✅ [CorpNuvem] Dados recebidos:', data);
-      console.log('✅ [CorpNuvem] Total de clientes:', data?.length);
-      
-      setResultCorpNuvem(data);
-      
-      toast({
-        title: '✅ Clientes CorpNuvem carregados',
-        description: `${data?.length || 0} cliente(s) encontrado(s)`,
-      });
-    } catch (error: any) {
-      console.error('❌ [CorpNuvem] Erro detalhado:', {
-        message: error?.message,
-        response: error?.response?.data,
-        status: error?.response?.status,
-        config: error?.config
-      });
-      
-      toast({
-        title: 'Erro ao carregar clientes',
-        description: error?.response?.data?.message || error?.message || 'Não foi possível carregar os clientes da CorpNuvem.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoadingCorpNuvem(false);
-      console.log('🏁 [CorpNuvem] Busca finalizada');
     }
   };
 
@@ -541,7 +496,7 @@ export default function CentralDeDados() {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="corpnuvem" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">CorpNuvem</span>
@@ -549,10 +504,6 @@ export default function CentralDeDados() {
           <TabsTrigger value="negocios" className="gap-2">
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Negócios</span>
-          </TabsTrigger>
-          <TabsTrigger value="clientes" className="gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Clientes RCORP</span>
           </TabsTrigger>
           <TabsTrigger value="sinistros" className="gap-2">
             <AlertCircle className="h-4 w-4" />
@@ -607,114 +558,6 @@ export default function CentralDeDados() {
               </div>
 
               {loadingNegocios ? renderSkeletons() : renderNegociosResults()}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Clientes Tab */}
-        <TabsContent value="clientes" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Buscar Clientes</CardTitle>
-              <CardDescription>
-                Busque e visualize dados de clientes cadastrados na CorpNuvem
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nome..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                    onKeyDown={(e) => e.key === 'Enter' && handleBuscarCorpNuvem()}
-                    disabled={loadingCorpNuvem}
-                  />
-                </div>
-                <Button onClick={handleBuscarCorpNuvem} disabled={loadingCorpNuvem}>
-                  {loadingCorpNuvem ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Buscando...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="h-4 w-4 mr-2" />
-                      Buscar
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {loadingCorpNuvem ? (
-                renderSkeletons()
-              ) : resultCorpNuvem && resultCorpNuvem.length > 0 ? (
-                <div className="space-y-2">
-                  {resultCorpNuvem.map((cliente: any, idx: number) => (
-                    <Card key={idx} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-base">{cliente.nome}</h4>
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            {cliente.cpf_cnpj && (
-                              <div>
-                                <span className="text-muted-foreground">CPF/CNPJ: </span>
-                                <span className="font-medium">{cliente.cpf_cnpj}</span>
-                              </div>
-                            )}
-                            {cliente.codfil && (
-                              <div>
-                                <span className="text-muted-foreground">Filial: </span>
-                                <span className="font-medium">{cliente.codfil}</span>
-                              </div>
-                            )}
-                            {cliente.codigo && (
-                              <div>
-                                <span className="text-muted-foreground">Código: </span>
-                                <span className="font-medium">{cliente.codigo}</span>
-                              </div>
-                            )}
-                            {cliente.email && (
-                              <div>
-                                <span className="text-muted-foreground">Email: </span>
-                                <span className="font-medium">{cliente.email}</span>
-                              </div>
-                            )}
-                            {cliente.telefone && (
-                              <div>
-                                <span className="text-muted-foreground">Telefone: </span>
-                                <span className="font-medium">{cliente.telefone}</span>
-                              </div>
-                            )}
-                            {cliente.cidade && (
-                              <div>
-                                <span className="text-muted-foreground">Cidade: </span>
-                                <span className="font-medium">{cliente.cidade}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : resultCorpNuvem && resultCorpNuvem.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">Nenhum cliente encontrado</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">Digite um nome e clique em Buscar</p>
-                  </CardContent>
-                </Card>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
