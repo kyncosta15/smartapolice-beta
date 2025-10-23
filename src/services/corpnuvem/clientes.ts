@@ -59,7 +59,56 @@ export async function getClientesCorpNuvem(params?: BuscarClienteParams) {
     try {
       let res;
       
-      if (tipoBusca === 'codigo') {
+      if (tipoBusca === 'cpf') {
+        // Busca por CPF usando endpoint específico
+        const cpfLimpo = params.texto.replace(/[^\d]/g, '');
+        console.log('📋 [CorpNuvem Clientes] Buscando por CPF:', cpfLimpo);
+        res = await corpClient.get("/busca_cpf", { 
+          params: { cpf: cpfLimpo } 
+        });
+        console.log('✅ [CorpNuvem Clientes] Resposta busca_cpf:', res.data);
+        
+        // Tratar diferentes formatos de resposta
+        if (Array.isArray(res.data)) {
+          return res.data;
+        }
+        if (res.data?.clientes) {
+          return Array.isArray(res.data.clientes) ? res.data.clientes : [res.data.clientes];
+        }
+        if (res.data?.cliente) {
+          return Array.isArray(res.data.cliente) ? res.data.cliente : [res.data.cliente];
+        }
+        // Se tem dados mas não está em formato conhecido
+        if (res.data && Object.keys(res.data).length > 0 && !res.data.message) {
+          return [res.data];
+        }
+        return [];
+        
+      } else if (tipoBusca === 'cnpj') {
+        // Busca por CNPJ usando endpoint específico
+        const cnpjLimpo = params.texto.replace(/[^\d]/g, '');
+        console.log('🏢 [CorpNuvem Clientes] Buscando por CNPJ:', cnpjLimpo);
+        res = await corpClient.get("/busca_cnpj", { 
+          params: { cnpj: cnpjLimpo } 
+        });
+        console.log('✅ [CorpNuvem Clientes] Resposta busca_cnpj:', res.data);
+        
+        // Tratar diferentes formatos de resposta
+        if (Array.isArray(res.data)) {
+          return res.data;
+        }
+        if (res.data?.clientes) {
+          return Array.isArray(res.data.clientes) ? res.data.clientes : [res.data.clientes];
+        }
+        if (res.data?.cliente) {
+          return Array.isArray(res.data.cliente) ? res.data.cliente : [res.data.cliente];
+        }
+        if (res.data && Object.keys(res.data).length > 0 && !res.data.message) {
+          return [res.data];
+        }
+        return [];
+        
+      } else if (tipoBusca === 'codigo') {
         // Busca por código específico
         const codigo = parseInt(params.texto);
         console.log('🔢 [CorpNuvem Clientes] Buscando por código:', codigo);
@@ -76,15 +125,8 @@ export async function getClientesCorpNuvem(params?: BuscarClienteParams) {
         }
         return [res.data];
       } else {
-        // Busca por nome, CPF ou CNPJ usando lista_clientes
-        if (tipoBusca === 'cpf') {
-          console.log('📋 [CorpNuvem Clientes] Buscando CPF via lista_clientes');
-        } else if (tipoBusca === 'cnpj') {
-          console.log('🏢 [CorpNuvem Clientes] Buscando CNPJ via lista_clientes');
-        } else {
-          console.log('👤 [CorpNuvem Clientes] Buscando por nome');
-        }
-        
+        // Busca por nome usando lista_clientes
+        console.log('👤 [CorpNuvem Clientes] Buscando por nome:', params.texto);
         res = await corpClient.get("/lista_clientes", { 
           params: { texto: params.texto } 
         });
