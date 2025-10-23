@@ -1,9 +1,85 @@
 import axios from "axios";
 
+// Token cache
+let cachedToken: string | null = null;
+let tokenExpiry: number | null = null;
+
+// Credenciais da API
+const API_CREDENTIALS = {
+  email: "rcaldas@api.com.br",
+  senha: "api@2024",
+  aplicacao: 0
+};
+
+async function getAuthToken(): Promise<string> {
+  // Se tem token válido em cache, usa ele
+  if (cachedToken && tokenExpiry && Date.now() < tokenExpiry) {
+    return cachedToken;
+  }
+
+  try {
+    // Faz login para obter novo token
+    const response = await axios.post("https://api.corpnuvem.com/login", API_CREDENTIALS);
+    
+    if (response.data?.token) {
+      cachedToken = response.data.token;
+      // Define expiração para 1 hora (ajuste conforme necessário)
+      tokenExpiry = Date.now() + (60 * 60 * 1000);
+      return cachedToken;
+    }
+    
+    throw new Error("Token não retornado pela API");
+  } catch (error) {
+    console.error("Erro ao fazer login na API CorpNuvem:", error);
+    throw error;
+  }
+}
+
 export const corpClient = axios.create({
   baseURL: "https://api.corpnuvem.com",
   headers: {
-    "Content-Type": "application/json",
-    Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhX2V4cGlyYWNhbyI6IjI2LzEwLzIwMjUgMTI6MDk6NDIiLCJleHAiOjE3NjE0ODA1ODIsInNlc3Npb24iOiIvWkNDZ3VLdlFhYWlRVXpZRXRsN2lOb01tUjJnam5CdEtZQVI4QnQ1S29kMzVua0lYc2NQWkdsUmFGQU9Lb2xkaUdDTUc5N1poUFEyVGVWcFNMWDFZbjViRmZhVE5YNWJqck8wMmFPN3cvTXJ0ZkFwVGlBT0Rob0dFRzdpeElQT2hsN0VwMDFmOWovVGlZQWsvVjNMTXpKZ0JOSEhVZ1p4aFAzUkJjVDhrcXpubkNyd3NGU0tvZGNLK2d6V0dCWFgrdWFWWmVPcHQwUVhWYWJRak9LQUFlakRoYy85ZFA4OU04ZnkraXduek9mRmI5TTM0RWZ0eGlGVTE1VWRMcFdFUHZNb3daekpieHVsbW55MGZaUDJpWk56UEdSTFRlVU41REEzZ1NncDdpU25FUkIrTDlvenZ6ZWhyY2ZmS0pvWlJ2UTdXT1FNVUo2bUo4QUNyenZFM2llRWd0YUdOZDRGaG5KMGVDRk5EZ1BjajFaVFBabGVFUDFoU3lmL1d6RWtBblVHQzdDZmc1T3VTMWtVRG1oY3Q3Ym9CaGF6ZTlzL0ZMalJxQlIyL0c1cVdZMXptMkxKYnV2bGlTNnF2WEk0QkQ3OWJ3UWNKcjd0dU9PVUJScXF0WDFQL1lIeG5MRFVVNjVxRjNITlRCdDFHditYRjMzU0RjUlpJRXlsVU41Q2xpVFg2K0dzWnRWOVhRSWtUU0t2aytEbU9nPT0qaTJ1Z1h3SXNBTllHSXJmMVF2MHR1Zz09KmpjM2tURE5yQVEyR0RLeU1nRWpjeHc9PSpieWt2RDJRaWVkZGowMTJ2UE1USVFnPT0iLCJlbWFpbCI6InJjYWxkYXNAYXBpLmNvbS5iciJ9.L9rtDWLsjQ2sT7F7eXbaS9DgIUrlGasUgftg0yD24k4"
+    "Content-Type": "application/json"
   }
 });
+
+// Interceptor para adicionar o token em todas as requisições
+corpClient.interceptors.request.use(
+  async (config) => {
+    const token = await getAuthToken();
+    config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Interceptor para renovar token em caso de 401
+corpClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Se retornou 401 e ainda não tentou renovar o token
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      // Limpa o cache de token
+      cachedToken = null;
+      tokenExpiry = null;
+      
+      try {
+        // Obtém novo token
+        const token = await getAuthToken();
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        
+        // Tenta novamente a requisição original
+        return corpClient(originalRequest);
+      } catch (err) {
+        return Promise.reject(err);
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
