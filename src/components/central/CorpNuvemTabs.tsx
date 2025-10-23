@@ -54,11 +54,6 @@ export function CorpNuvemTabs() {
     try {
       const data = await getClientesCorpNuvem({ texto: searchTerm });
       setResultClientes(data);
-      
-      toast({
-        title: '✅ Clientes encontrados',
-        description: `${data?.length || 0} cliente(s)`,
-      });
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -85,11 +80,6 @@ export function CorpNuvemTabs() {
       }
       
       setResultProducao(data);
-      
-      toast({
-        title: '✅ Produção encontrada',
-        description: `${data?.producao?.length || 0} registro(s)`,
-      });
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -110,11 +100,6 @@ export function CorpNuvemTabs() {
         texto: searchTerm
       });
       setResultRenovacoes(data);
-      
-      toast({
-        title: '✅ Renovações encontradas',
-        description: `${data?.renovacoes?.length || 0} registro(s)`,
-      });
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -143,10 +128,6 @@ export function CorpNuvemTabs() {
         nosnum: Number(nosnum)
       });
       setResultDocumento(data);
-      
-      toast({
-        title: '✅ Documento encontrado',
-      });
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -274,7 +255,14 @@ export function CorpNuvemTabs() {
           <Card>
             <CardHeader>
               <CardTitle>Buscar Clientes</CardTitle>
-              <CardDescription>Consulte clientes cadastrados</CardDescription>
+              <CardDescription>
+                Consulte clientes cadastrados
+                {resultClientes.length > 0 && (
+                  <span className="ml-2 font-semibold text-primary">
+                    • {resultClientes.length} cliente{resultClientes.length !== 1 ? 's' : ''} encontrado{resultClientes.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
@@ -325,7 +313,14 @@ export function CorpNuvemTabs() {
           <Card>
             <CardHeader>
               <CardTitle>Consultar Produção</CardTitle>
-              <CardDescription>Busque produção por período</CardDescription>
+              <CardDescription>
+                Busque produção por período
+                {resultProducao?.producao && resultProducao.producao.length > 0 && (
+                  <span className="ml-2 font-semibold text-primary">
+                    • {resultProducao.producao.length} registro{resultProducao.producao.length !== 1 ? 's' : ''} encontrado{resultProducao.producao.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2 sm:grid-cols-3">
@@ -439,7 +434,14 @@ export function CorpNuvemTabs() {
           <Card>
             <CardHeader>
               <CardTitle>Consultar Renovações</CardTitle>
-              <CardDescription>Busque renovações por período</CardDescription>
+              <CardDescription>
+                Busque renovações por período
+                {resultRenovacoes?.renovacoes && resultRenovacoes.renovacoes.length > 0 && (
+                  <span className="ml-2 font-semibold text-primary">
+                    • {resultRenovacoes.renovacoes.length} renovaç{resultRenovacoes.renovacoes.length !== 1 ? 'ões' : 'ão'} encontrada{resultRenovacoes.renovacoes.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2 sm:grid-cols-3">
@@ -488,7 +490,14 @@ export function CorpNuvemTabs() {
           <Card>
             <CardHeader>
               <CardTitle>Buscar Documento</CardTitle>
-              <CardDescription>Consulte documento específico</CardDescription>
+              <CardDescription>
+                Consulte documento específico
+                {resultDocumento?.documento && resultDocumento.documento.length > 0 && (
+                  <span className="ml-2 font-semibold text-primary">
+                    • {resultDocumento.documento.length} documento{resultDocumento.documento.length !== 1 ? 's' : ''} encontrado{resultDocumento.documento.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2 sm:grid-cols-3">
