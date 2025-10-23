@@ -355,16 +355,24 @@ export function CorpNuvemTabs() {
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div className="col-span-2">
                             <span className="font-medium">Cliente:</span>{' '}
-                            {prod.codigo || prod.codigo_cliente ? (
-                              <button
-                                onClick={() => handleVerDetalhesCliente({ codigo: prod.codigo || prod.codigo_cliente || prod.codcli })}
-                                className="text-primary hover:underline font-medium"
-                              >
-                                {prod.cliente}
-                              </button>
-                            ) : (
-                              <span className="font-medium">{prod.cliente}</span>
-                            )}
+                            <button
+                              onClick={() => {
+                                const codigoCliente = prod.codigo || prod.codigo_cliente || prod.codcli || prod.cod_cliente;
+                                console.log('🔍 Código do cliente encontrado:', codigoCliente, 'Objeto completo:', prod);
+                                if (codigoCliente) {
+                                  handleVerDetalhesCliente({ codigo: codigoCliente });
+                                } else {
+                                  toast({
+                                    title: 'Aviso',
+                                    description: 'Código do cliente não disponível',
+                                    variant: 'destructive',
+                                  });
+                                }
+                              }}
+                              className="text-primary hover:underline font-medium cursor-pointer"
+                            >
+                              {prod.cliente}
+                            </button>
                           </div>
                           {prod.numapo && (
                             <div>
