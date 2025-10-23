@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { Search, Users, FileText, Calendar, Loader2, User, MapPin, Info } from 'lucide-react';
+import { Search, Users, FileText, Calendar, Loader2, User, MapPin, Info, Download, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getClientesCorpNuvem, getProducao, getRenovacoes, getDocumento } from '@/services/corpnuvem';
+import { getClientesCorpNuvem, getProducao, getRenovacoes, getDocumento, getClienteAnexos } from '@/services/corpnuvem';
 
 export function CorpNuvemTabs() {
   const { toast } = useToast();
@@ -37,6 +37,8 @@ export function CorpNuvemTabs() {
   const [modalClienteOpen, setModalClienteOpen] = useState(false);
   const [clienteSelecionado, setClienteSelecionado] = useState<any>(null);
   const [loadingClienteDetalhes, setLoadingClienteDetalhes] = useState(false);
+  const [clienteAnexos, setClienteAnexos] = useState<any[]>([]);
+  const [loadingAnexos, setLoadingAnexos] = useState(false);
 
   const handleBuscarClientes = async () => {
     if (!searchTerm) {
@@ -154,6 +156,7 @@ export function CorpNuvemTabs() {
     setModalClienteOpen(true);
     setLoadingClienteDetalhes(true);
     setClienteSelecionado(null);
+    setClienteAnexos([]);
     
     try {
       // Busca detalhes completos do cliente usando codfil e codigo
@@ -166,6 +169,9 @@ export function CorpNuvemTabs() {
         const clienteCompleto = data.cliente[0];
         console.log('📋 [Modal Cliente] Dados completos:', clienteCompleto);
         setClienteSelecionado(clienteCompleto);
+        
+        // Buscar anexos do cliente
+        await handleBuscarAnexosCliente(cliente.codigo);
       }
     } catch (error: any) {
       toast({
@@ -176,6 +182,55 @@ export function CorpNuvemTabs() {
       setModalClienteOpen(false);
     } finally {
       setLoadingClienteDetalhes(false);
+    }
+  };
+
+  const handleBuscarAnexosCliente = async (codigoCliente: number) => {
+    setLoadingAnexos(true);
+    try {
+      const data = await getClienteAnexos({
+        codfil: 1,
+        codigo: codigoCliente
+      });
+      
+      if (data && data.anexos) {
+        setClienteAnexos(data.anexos);
+      }
+    } catch (error: any) {
+      console.error('Erro ao buscar anexos:', error);
+      // Não exibir erro para o usuário, apenas registrar no console
+      setClienteAnexos([]);
+    } finally {
+      setLoadingAnexos(false);
+    }
+  };
+
+  const handleVisualizarAnexo = (anexo: any) => {
+    if (anexo.url || anexo.arquivo_url) {
+      window.open(anexo.url || anexo.arquivo_url, '_blank');
+    } else {
+      toast({
+        title: 'Aviso',
+        description: 'URL do documento não disponível',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBaixarAnexo = (anexo: any) => {
+    if (anexo.url || anexo.arquivo_url) {
+      const link = document.createElement('a');
+      link.href = anexo.url || anexo.arquivo_url;
+      link.download = anexo.nome || anexo.descricao || 'documento.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      toast({
+        title: 'Aviso',
+        description: 'URL do documento não disponível',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -624,16 +679,60 @@ export function CorpNuvemTabs() {
                 </div>
               )}
 
-              {/* Documentos - Seção preparada para futura implementação */}
+              {/* Documentos */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-primary" />
                   <h3 className="font-semibold text-lg">Documentos</h3>
                 </div>
                 <Separator />
-                <div className="text-sm text-muted-foreground py-4 text-center">
-                  Nenhum documento disponível
-                </div>
+                {loadingAnexos ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : clienteAnexos.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {clienteAnexos.map((anexo: any, idx: number) => (
+                      <Card key={idx} className="p-3 hover:bg-muted/50 transition-colors">
+                        <div className="flex flex-col items-center gap-2">
+                          <FileText className="h-10 w-10 text-primary" />
+                          <p className="text-xs font-medium text-center line-clamp-2">
+                            {anexo.nome || anexo.descricao || `Documento ${idx + 1}`}
+                          </p>
+                          {anexo.data && (
+                            <p className="text-xs text-muted-foreground">
+                              {anexo.data}
+                            </p>
+                          )}
+                          <div className="flex gap-1 mt-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
+                              onClick={() => handleVisualizarAnexo(anexo)}
+                              title="Visualizar"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
+                              onClick={() => handleBaixarAnexo(anexo)}
+                              title="Baixar"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground py-4 text-center">
+                    Nenhum documento disponível
+                  </div>
+                )}
               </div>
             </div>
           ) : null}
