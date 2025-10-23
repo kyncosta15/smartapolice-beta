@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Search, Users, FileText, Calendar, Loader2, User, MapPin, Info, Download, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getClientesCorpNuvem, getProducao, getRenovacoes, getDocumento, getClienteAnexos } from '@/services/corpnuvem';
@@ -40,6 +41,13 @@ export function CorpNuvemTabs() {
   const [clienteAnexos, setClienteAnexos] = useState<any[]>([]);
   const [loadingAnexos, setLoadingAnexos] = useState(false);
 
+  // Estados de Paginação
+  const [pageClientes, setPageClientes] = useState(1);
+  const [pageProducao, setPageProducao] = useState(1);
+  const [pageRenovacoes, setPageRenovacoes] = useState(1);
+  const [pageDocumentos, setPageDocumentos] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
   const handleBuscarClientes = async () => {
     if (!searchTerm) {
       toast({
@@ -54,6 +62,7 @@ export function CorpNuvemTabs() {
     try {
       const data = await getClientesCorpNuvem({ texto: searchTerm });
       setResultClientes(data);
+      setPageClientes(1); // Reset para primeira página
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -80,6 +89,7 @@ export function CorpNuvemTabs() {
       }
       
       setResultProducao(data);
+      setPageProducao(1); // Reset para primeira página
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -100,6 +110,7 @@ export function CorpNuvemTabs() {
         texto: searchTerm
       });
       setResultRenovacoes(data);
+      setPageRenovacoes(1); // Reset para primeira página
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -128,6 +139,7 @@ export function CorpNuvemTabs() {
         nosnum: Number(nosnum)
       });
       setResultDocumento(data);
+      setPageDocumentos(1); // Reset para primeira página
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -278,31 +290,64 @@ export function CorpNuvemTabs() {
               </div>
 
               {resultClientes.length > 0 && (
-                <div className="space-y-2 max-h-[500px] overflow-auto">
-                  {resultClientes.map((cliente: any, idx: number) => (
-                    <Card key={idx}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <h4 className="font-semibold">{cliente.nome}</h4>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                              {cliente.codigo && <p>Código: {cliente.codigo}</p>}
-                              {cliente.ddd && cliente.numero && <p>Tel: ({cliente.ddd}) {cliente.numero}</p>}
+                <>
+                  <div className="space-y-2 max-h-[500px] overflow-auto">
+                    {resultClientes
+                      .slice((pageClientes - 1) * ITEMS_PER_PAGE, pageClientes * ITEMS_PER_PAGE)
+                      .map((cliente: any, idx: number) => (
+                        <Card key={idx}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1">
+                                <h4 className="font-semibold">{cliente.nome}</h4>
+                                <div className="text-sm text-muted-foreground space-y-1">
+                                  {cliente.codigo && <p>Código: {cliente.codigo}</p>}
+                                  {cliente.ddd && cliente.numero && <p>Tel: ({cliente.ddd}) {cliente.numero}</p>}
+                                </div>
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleVerDetalhesCliente(cliente)}
+                                className="shrink-0"
+                              >
+                                <Search className="h-4 w-4" />
+                              </Button>
                             </div>
-                          </div>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleVerDetalhesCliente(cliente)}
-                            className="shrink-0"
-                          >
-                            <Search className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                  {resultClientes.length > ITEMS_PER_PAGE && (
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setPageClientes(p => Math.max(1, p - 1))}
+                            className={pageClientes === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: Math.ceil(resultClientes.length / ITEMS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              onClick={() => setPageClientes(page)}
+                              isActive={pageClientes === page}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setPageClientes(p => Math.min(Math.ceil(resultClientes.length / ITEMS_PER_PAGE), p + 1))}
+                            className={pageClientes >= Math.ceil(resultClientes.length / ITEMS_PER_PAGE) ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -343,87 +388,120 @@ export function CorpNuvemTabs() {
               </div>
 
               {resultProducao && resultProducao.producao && (
-                <div className="space-y-2 max-h-[500px] overflow-auto">
-                  {resultProducao.producao.map((prod: any, idx: number) => (
-                    <Card key={idx}>
-                      <CardContent className="p-4">
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div className="col-span-2">
-                            <span className="font-medium">Cliente:</span>{' '}
-                            <button
-                              onClick={() => {
-                                const codigoCliente = prod.codigo || prod.codigo_cliente || prod.codcli || prod.cod_cliente;
-                                console.log('🔍 Código do cliente encontrado:', codigoCliente, 'Objeto completo:', prod);
-                                if (codigoCliente) {
-                                  handleVerDetalhesCliente({ codigo: codigoCliente });
-                                } else {
-                                  toast({
-                                    title: 'Aviso',
-                                    description: 'Código do cliente não disponível',
-                                    variant: 'destructive',
-                                  });
-                                }
-                              }}
-                              className="text-primary hover:underline font-medium cursor-pointer"
+                <>
+                  <div className="space-y-2 max-h-[500px] overflow-auto">
+                    {resultProducao.producao
+                      .slice((pageProducao - 1) * ITEMS_PER_PAGE, pageProducao * ITEMS_PER_PAGE)
+                      .map((prod: any, idx: number) => (
+                        <Card key={idx}>
+                          <CardContent className="p-4">
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div className="col-span-2">
+                                <span className="font-medium">Cliente:</span>{' '}
+                                <button
+                                  onClick={() => {
+                                    const codigoCliente = prod.codigo || prod.codigo_cliente || prod.codcli || prod.cod_cliente;
+                                    console.log('🔍 Código do cliente encontrado:', codigoCliente, 'Objeto completo:', prod);
+                                    if (codigoCliente) {
+                                      handleVerDetalhesCliente({ codigo: codigoCliente });
+                                    } else {
+                                      toast({
+                                        title: 'Aviso',
+                                        description: 'Código do cliente não disponível',
+                                        variant: 'destructive',
+                                      });
+                                    }
+                                  }}
+                                  className="text-primary hover:underline font-medium cursor-pointer"
+                                >
+                                  {prod.cliente}
+                                </button>
+                              </div>
+                              {prod.numapo && (
+                                <div>
+                                  <span className="font-medium">Apólice:</span> {prod.numapo}
+                                </div>
+                              )}
+                              {prod.numprop && (
+                                <div>
+                                  <span className="font-medium">Proposta:</span> {prod.numprop}
+                                </div>
+                              )}
+                              {prod.ramo && (
+                                <div>
+                                  <span className="font-medium">Ramo:</span> {prod.ramo}
+                                </div>
+                              )}
+                              {prod.seguradora && (
+                                <div>
+                                  <span className="font-medium">Seguradora:</span> {prod.seguradora}
+                                </div>
+                              )}
+                              {prod.inivig && prod.fimvig && (
+                                <div className="col-span-2">
+                                  <span className="font-medium">Vigência:</span> {prod.inivig} a {prod.fimvig}
+                                </div>
+                              )}
+                              {prod.preliq && (
+                                <div>
+                                  <span className="font-medium">Prêmio Líquido:</span> R$ {prod.preliq.toFixed(2)}
+                                </div>
+                              )}
+                              {prod.pretot && (
+                                <div>
+                                  <span className="font-medium">Prêmio Total:</span> R$ {prod.pretot.toFixed(2)}
+                                </div>
+                              )}
+                              {prod.tipdoc_txt && (
+                                <div>
+                                  <span className="font-medium">Tipo:</span> {prod.tipdoc_txt}
+                                </div>
+                              )}
+                              {prod.cancelado && (
+                                <div>
+                                  <span className="font-medium">Cancelado:</span> {prod.cancelado === 'T' ? 'Sim' : 'Não'}
+                                </div>
+                              )}
+                              {prod.sit_acompanhamento_txt && (
+                                <div className="col-span-2">
+                                  <span className="font-medium">Situação:</span> {prod.sit_acompanhamento_txt}
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                  {resultProducao.producao.length > ITEMS_PER_PAGE && (
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setPageProducao(p => Math.max(1, p - 1))}
+                            className={pageProducao === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: Math.ceil(resultProducao.producao.length / ITEMS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              onClick={() => setPageProducao(page)}
+                              isActive={pageProducao === page}
+                              className="cursor-pointer"
                             >
-                              {prod.cliente}
-                            </button>
-                          </div>
-                          {prod.numapo && (
-                            <div>
-                              <span className="font-medium">Apólice:</span> {prod.numapo}
-                            </div>
-                          )}
-                          {prod.numprop && (
-                            <div>
-                              <span className="font-medium">Proposta:</span> {prod.numprop}
-                            </div>
-                          )}
-                          {prod.ramo && (
-                            <div>
-                              <span className="font-medium">Ramo:</span> {prod.ramo}
-                            </div>
-                          )}
-                          {prod.seguradora && (
-                            <div>
-                              <span className="font-medium">Seguradora:</span> {prod.seguradora}
-                            </div>
-                          )}
-                          {prod.inivig && prod.fimvig && (
-                            <div className="col-span-2">
-                              <span className="font-medium">Vigência:</span> {prod.inivig} a {prod.fimvig}
-                            </div>
-                          )}
-                          {prod.preliq && (
-                            <div>
-                              <span className="font-medium">Prêmio Líquido:</span> R$ {prod.preliq.toFixed(2)}
-                            </div>
-                          )}
-                          {prod.pretot && (
-                            <div>
-                              <span className="font-medium">Prêmio Total:</span> R$ {prod.pretot.toFixed(2)}
-                            </div>
-                          )}
-                          {prod.tipdoc_txt && (
-                            <div>
-                              <span className="font-medium">Tipo:</span> {prod.tipdoc_txt}
-                            </div>
-                          )}
-                          {prod.cancelado && (
-                            <div>
-                              <span className="font-medium">Cancelado:</span> {prod.cancelado === 'T' ? 'Sim' : 'Não'}
-                            </div>
-                          )}
-                          {prod.sit_acompanhamento_txt && (
-                            <div className="col-span-2">
-                              <span className="font-medium">Situação:</span> {prod.sit_acompanhamento_txt}
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setPageProducao(p => Math.min(Math.ceil(resultProducao.producao.length / ITEMS_PER_PAGE), p + 1))}
+                            className={pageProducao >= Math.ceil(resultProducao.producao.length / ITEMS_PER_PAGE) ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -463,23 +541,56 @@ export function CorpNuvemTabs() {
                 </Button>
               </div>
 
-              {resultRenovacoes && (
-                <div className="space-y-2 max-h-[500px] overflow-auto">
-                  {resultRenovacoes.renovacoes?.map((ren: any, idx: number) => (
-                    <Card key={idx}>
-                      <CardContent className="p-4">
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div><span className="font-medium">Cliente:</span> {ren.cliente}</div>
-                          <div><span className="font-medium">Apólice:</span> {ren.numapo}</div>
-                          <div><span className="font-medium">Vigência:</span> {ren.inivig} a {ren.fimvig}</div>
-                          <div><span className="font-medium">Valor:</span> R$ {ren.pretot?.toFixed(2)}</div>
-                          <div><span className="font-medium">Seguradora:</span> {ren.seguradora}</div>
-                          <div><span className="font-medium">Ramo:</span> {ren.ramo}</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+              {resultRenovacoes && resultRenovacoes.renovacoes && (
+                <>
+                  <div className="space-y-2 max-h-[500px] overflow-auto">
+                    {resultRenovacoes.renovacoes
+                      .slice((pageRenovacoes - 1) * ITEMS_PER_PAGE, pageRenovacoes * ITEMS_PER_PAGE)
+                      .map((ren: any, idx: number) => (
+                        <Card key={idx}>
+                          <CardContent className="p-4">
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div><span className="font-medium">Cliente:</span> {ren.cliente}</div>
+                              <div><span className="font-medium">Apólice:</span> {ren.numapo}</div>
+                              <div><span className="font-medium">Vigência:</span> {ren.inivig} a {ren.fimvig}</div>
+                              <div><span className="font-medium">Valor:</span> R$ {ren.pretot?.toFixed(2)}</div>
+                              <div><span className="font-medium">Seguradora:</span> {ren.seguradora}</div>
+                              <div><span className="font-medium">Ramo:</span> {ren.ramo}</div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                  {resultRenovacoes.renovacoes.length > ITEMS_PER_PAGE && (
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setPageRenovacoes(p => Math.max(1, p - 1))}
+                            className={pageRenovacoes === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: Math.ceil(resultRenovacoes.renovacoes.length / ITEMS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              onClick={() => setPageRenovacoes(page)}
+                              isActive={pageRenovacoes === page}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setPageRenovacoes(p => Math.min(Math.ceil(resultRenovacoes.renovacoes.length / ITEMS_PER_PAGE), p + 1))}
+                            className={pageRenovacoes >= Math.ceil(resultRenovacoes.renovacoes.length / ITEMS_PER_PAGE) ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -519,64 +630,97 @@ export function CorpNuvemTabs() {
                 </Button>
               </div>
 
-              {resultDocumento && (
-                <div className="space-y-4 max-h-[500px] overflow-auto">
-                  {resultDocumento.documento?.map((doc: any, idx: number) => (
-                    <Card key={idx}>
-                      <CardContent className="p-4 space-y-3">
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <span className="font-semibold">Cliente:</span> {doc.cliente}
-                          </div>
-                          <div>
-                            <span className="font-semibold">Apólice:</span> {doc.numapo}
-                          </div>
-                          <div>
-                            <span className="font-semibold">Tipo:</span> {doc.tipdoc_txt}
-                          </div>
-                          <div>
-                            <span className="font-semibold">Ramo:</span> {doc.ramo}
-                          </div>
-                          <div>
-                            <span className="font-semibold">Seguradora:</span> {doc.seguradora}
-                          </div>
-                          <div>
-                            <span className="font-semibold">Vigência:</span> {doc.inivig} a {doc.fimvig}
-                          </div>
-                          <div>
-                            <span className="font-semibold">Prêmio Líquido:</span> R$ {doc.preliq?.toFixed(2)}
-                          </div>
-                          <div>
-                            <span className="font-semibold">Prêmio Total:</span> R$ {doc.pretot?.toFixed(2)}
-                          </div>
-                          <div>
-                            <span className="font-semibold">Forma Pagamento:</span> {doc.forma_pag}
-                          </div>
-                          <div>
-                            <span className="font-semibold">Nº Parcelas:</span> {doc.numpar}
-                          </div>
-                          <div className="col-span-2">
-                            <span className="font-semibold">Situação:</span> {doc.sit_acompanhamento_txt}
-                          </div>
-                        </div>
-                        
-                        {doc.parcelas && doc.parcelas.length > 0 && (
-                          <div className="pt-3 border-t">
-                            <h4 className="font-semibold mb-2">Parcelas</h4>
-                            <div className="space-y-1 text-xs">
-                              {doc.parcelas.map((parc: any, i: number) => (
-                                <div key={i} className="flex justify-between">
-                                  <span>Parcela {parc.parc} - Venc: {parc.datvenc}</span>
-                                  <span className="font-medium">R$ {parc.vlvenc?.toFixed(2)}</span>
-                                </div>
-                              ))}
+              {resultDocumento && resultDocumento.documento && (
+                <>
+                  <div className="space-y-4 max-h-[500px] overflow-auto">
+                    {resultDocumento.documento
+                      .slice((pageDocumentos - 1) * ITEMS_PER_PAGE, pageDocumentos * ITEMS_PER_PAGE)
+                      .map((doc: any, idx: number) => (
+                        <Card key={idx}>
+                          <CardContent className="p-4 space-y-3">
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <span className="font-semibold">Cliente:</span> {doc.cliente}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Apólice:</span> {doc.numapo}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Tipo:</span> {doc.tipdoc_txt}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Ramo:</span> {doc.ramo}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Seguradora:</span> {doc.seguradora}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Vigência:</span> {doc.inivig} a {doc.fimvig}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Prêmio Líquido:</span> R$ {doc.preliq?.toFixed(2)}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Prêmio Total:</span> R$ {doc.pretot?.toFixed(2)}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Forma Pagamento:</span> {doc.forma_pag}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Nº Parcelas:</span> {doc.numpar}
+                              </div>
+                              <div className="col-span-2">
+                                <span className="font-semibold">Situação:</span> {doc.sit_acompanhamento_txt}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                            
+                            {doc.parcelas && doc.parcelas.length > 0 && (
+                              <div className="pt-3 border-t">
+                                <h4 className="font-semibold mb-2">Parcelas</h4>
+                                <div className="space-y-1 text-xs">
+                                  {doc.parcelas.map((parc: any, i: number) => (
+                                    <div key={i} className="flex justify-between">
+                                      <span>Parcela {parc.parc} - Venc: {parc.datvenc}</span>
+                                      <span className="font-medium">R$ {parc.vlvenc?.toFixed(2)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                  {resultDocumento.documento.length > ITEMS_PER_PAGE && (
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setPageDocumentos(p => Math.max(1, p - 1))}
+                            className={pageDocumentos === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: Math.ceil(resultDocumento.documento.length / ITEMS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              onClick={() => setPageDocumentos(page)}
+                              isActive={pageDocumentos === page}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setPageDocumentos(p => Math.min(Math.ceil(resultDocumento.documento.length / ITEMS_PER_PAGE), p + 1))}
+                            className={pageDocumentos >= Math.ceil(resultDocumento.documento.length / ITEMS_PER_PAGE) ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
