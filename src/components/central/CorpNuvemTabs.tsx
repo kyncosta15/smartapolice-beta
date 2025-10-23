@@ -61,14 +61,30 @@ export function CorpNuvemTabs() {
     setLoadingClientes(true);
     try {
       const data = await getClientesCorpNuvem({ texto: searchTerm });
-      setResultClientes(data);
+      
+      // Garantir que sempre seja array
+      const clientes = Array.isArray(data) ? data : [data];
+      
+      console.log('📊 [Busca Clientes] Resultado:', clientes);
+      
+      setResultClientes(clientes);
       setPageClientes(1);
+      
+      if (clientes.length === 0) {
+        toast({
+          title: 'Nenhum resultado',
+          description: 'Nenhum cliente encontrado com esse critério',
+          variant: 'default',
+        });
+      }
     } catch (error: any) {
+      console.error('❌ [Busca Clientes] Erro:', error);
       toast({
         title: 'Erro',
         description: error?.response?.data?.message || error.message || 'Erro ao buscar clientes',
         variant: 'destructive',
       });
+      setResultClientes([]);
     } finally {
       setLoadingClientes(false);
     }
@@ -301,6 +317,10 @@ export function CorpNuvemTabs() {
                                 <h4 className="font-semibold">{cliente.nome}</h4>
                                 <div className="text-sm text-muted-foreground space-y-1">
                                   {cliente.codigo && <p>Código: {cliente.codigo}</p>}
+                                  {(cliente.cpf_cnpj || cliente.cpf || cliente.cnpj) && (
+                                    <p>CPF/CNPJ: {cliente.cpf_cnpj || cliente.cpf || cliente.cnpj}</p>
+                                  )}
+                                  {cliente.telefone && <p>Tel: {cliente.telefone}</p>}
                                   {cliente.ddd && cliente.numero && <p>Tel: ({cliente.ddd}) {cliente.numero}</p>}
                                 </div>
                               </div>
