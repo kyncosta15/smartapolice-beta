@@ -341,9 +341,75 @@ export function CorpNuvemTabs() {
                 </Button>
               </div>
 
-              {resultProducao && (
-                <div className="bg-muted p-4 rounded-lg max-h-[500px] overflow-auto">
-                  <pre className="text-xs">{JSON.stringify(resultProducao, null, 2)}</pre>
+              {resultProducao && resultProducao.producao && (
+                <div className="space-y-2 max-h-[500px] overflow-auto">
+                  {resultProducao.producao.map((prod: any, idx: number) => (
+                    <Card key={idx}>
+                      <CardContent className="p-4">
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="col-span-2">
+                            <span className="font-medium">Cliente:</span>{' '}
+                            <button
+                              onClick={() => handleVerDetalhesCliente({ codigo: prod.codcli })}
+                              className="text-primary hover:underline font-medium"
+                            >
+                              {prod.cliente}
+                            </button>
+                          </div>
+                          {prod.numapo && (
+                            <div>
+                              <span className="font-medium">Apólice:</span> {prod.numapo}
+                            </div>
+                          )}
+                          {prod.numprop && (
+                            <div>
+                              <span className="font-medium">Proposta:</span> {prod.numprop}
+                            </div>
+                          )}
+                          {prod.ramo && (
+                            <div>
+                              <span className="font-medium">Ramo:</span> {prod.ramo}
+                            </div>
+                          )}
+                          {prod.seguradora && (
+                            <div>
+                              <span className="font-medium">Seguradora:</span> {prod.seguradora}
+                            </div>
+                          )}
+                          {prod.inivig && prod.fimvig && (
+                            <div className="col-span-2">
+                              <span className="font-medium">Vigência:</span> {prod.inivig} a {prod.fimvig}
+                            </div>
+                          )}
+                          {prod.preliq && (
+                            <div>
+                              <span className="font-medium">Prêmio Líquido:</span> R$ {prod.preliq.toFixed(2)}
+                            </div>
+                          )}
+                          {prod.pretot && (
+                            <div>
+                              <span className="font-medium">Prêmio Total:</span> R$ {prod.pretot.toFixed(2)}
+                            </div>
+                          )}
+                          {prod.tipdoc_txt && (
+                            <div>
+                              <span className="font-medium">Tipo:</span> {prod.tipdoc_txt}
+                            </div>
+                          )}
+                          {prod.cancelado && (
+                            <div>
+                              <span className="font-medium">Cancelado:</span> {prod.cancelado === 'T' ? 'Sim' : 'Não'}
+                            </div>
+                          )}
+                          {prod.sit_acompanhamento_txt && (
+                            <div className="col-span-2">
+                              <span className="font-medium">Situação:</span> {prod.sit_acompanhamento_txt}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               )}
             </CardContent>
