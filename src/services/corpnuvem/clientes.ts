@@ -64,7 +64,7 @@ export async function getClientesCorpNuvem(params?: BuscarClienteParams) {
         const cpfLimpo = params.texto.replace(/[^\d]/g, '');
         console.log('📋 [CorpNuvem Clientes] Buscando por CPF:', cpfLimpo);
         res = await corpClient.get("/busca_cpf", { 
-          params: { cpf: cpfLimpo } 
+          params: { cpf_cnpj: cpfLimpo } 
         });
         console.log('✅ [CorpNuvem Clientes] Resposta busca_cpf:', res.data);
         
@@ -89,7 +89,7 @@ export async function getClientesCorpNuvem(params?: BuscarClienteParams) {
         const cnpjLimpo = params.texto.replace(/[^\d]/g, '');
         console.log('🏢 [CorpNuvem Clientes] Buscando por CNPJ:', cnpjLimpo);
         res = await corpClient.get("/busca_cnpj", { 
-          params: { cnpj: cnpjLimpo } 
+          params: { cpf_cnpj: cnpjLimpo } 
         });
         console.log('✅ [CorpNuvem Clientes] Resposta busca_cnpj:', res.data);
         
