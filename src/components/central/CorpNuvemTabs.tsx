@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, Users, FileText, Calendar, Loader2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Search, Users, FileText, Calendar, Loader2, User, MapPin, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getClientesCorpNuvem, getProducao, getRenovacoes, getDocumento } from '@/services/corpnuvem';
 
@@ -446,76 +447,131 @@ export function CorpNuvemTabs() {
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : clienteSelecionado ? (
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{clienteSelecionado.nome}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
+            <div className="space-y-6">
+              {/* Dados Pessoais */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold text-lg">Dados Pessoais</h3>
+                </div>
+                <Separator />
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Nome:</span>
+                    <p className="font-medium">{clienteSelecionado.nome}</p>
+                  </div>
+                  {clienteSelecionado.codigo && (
+                    <div>
+                      <span className="text-muted-foreground">Código:</span>
+                      <p className="font-medium">{clienteSelecionado.codigo}</p>
+                    </div>
+                  )}
+                  {clienteSelecionado.cpf_cnpj && (
+                    <div>
+                      <span className="text-muted-foreground">CPF/CNPJ:</span>
+                      <p className="font-medium">{clienteSelecionado.cpf_cnpj}</p>
+                    </div>
+                  )}
+                  {clienteSelecionado.email && (
+                    <div>
+                      <span className="text-muted-foreground">Email:</span>
+                      <p className="font-medium">{clienteSelecionado.email}</p>
+                    </div>
+                  )}
+                  {(clienteSelecionado.ddd || clienteSelecionado.numero) && (
+                    <div>
+                      <span className="text-muted-foreground">Telefone:</span>
+                      <p className="font-medium">({clienteSelecionado.ddd}) {clienteSelecionado.numero}</p>
+                    </div>
+                  )}
+                  {clienteSelecionado.celular && (
+                    <div>
+                      <span className="text-muted-foreground">Celular:</span>
+                      <p className="font-medium">{clienteSelecionado.celular}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Endereço */}
+              {(clienteSelecionado.endereco || clienteSelecionado.bairro || clienteSelecionado.cidade || clienteSelecionado.uf || clienteSelecionado.cep) && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <h3 className="font-semibold text-lg">Endereço</h3>
+                  </div>
+                  <Separator />
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    {clienteSelecionado.codigo && (
-                      <div>
-                        <span className="font-semibold">Código:</span> {clienteSelecionado.codigo}
-                      </div>
-                    )}
-                    {clienteSelecionado.cpf_cnpj && (
-                      <div>
-                        <span className="font-semibold">CPF/CNPJ:</span> {clienteSelecionado.cpf_cnpj}
-                      </div>
-                    )}
-                    {clienteSelecionado.email && (
-                      <div>
-                        <span className="font-semibold">Email:</span> {clienteSelecionado.email}
-                      </div>
-                    )}
-                    {(clienteSelecionado.ddd || clienteSelecionado.numero) && (
-                      <div>
-                        <span className="font-semibold">Telefone:</span> ({clienteSelecionado.ddd}) {clienteSelecionado.numero}
-                      </div>
-                    )}
-                    {clienteSelecionado.celular && (
-                      <div>
-                        <span className="font-semibold">Celular:</span> {clienteSelecionado.celular}
-                      </div>
-                    )}
                     {clienteSelecionado.endereco && (
                       <div className="col-span-2">
-                        <span className="font-semibold">Endereço:</span> {clienteSelecionado.endereco}
+                        <span className="text-muted-foreground">Logradouro:</span>
+                        <p className="font-medium">{clienteSelecionado.endereco}</p>
                       </div>
                     )}
                     {clienteSelecionado.bairro && (
                       <div>
-                        <span className="font-semibold">Bairro:</span> {clienteSelecionado.bairro}
+                        <span className="text-muted-foreground">Bairro:</span>
+                        <p className="font-medium">{clienteSelecionado.bairro}</p>
                       </div>
                     )}
                     {clienteSelecionado.cidade && (
                       <div>
-                        <span className="font-semibold">Cidade:</span> {clienteSelecionado.cidade}
+                        <span className="text-muted-foreground">Cidade:</span>
+                        <p className="font-medium">{clienteSelecionado.cidade}</p>
                       </div>
                     )}
                     {clienteSelecionado.uf && (
                       <div>
-                        <span className="font-semibold">UF:</span> {clienteSelecionado.uf}
+                        <span className="text-muted-foreground">UF:</span>
+                        <p className="font-medium">{clienteSelecionado.uf}</p>
                       </div>
                     )}
                     {clienteSelecionado.cep && (
                       <div>
-                        <span className="font-semibold">CEP:</span> {clienteSelecionado.cep}
+                        <span className="text-muted-foreground">CEP:</span>
+                        <p className="font-medium">{clienteSelecionado.cep}</p>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Informações Adicionais */}
+              {(clienteSelecionado.tipo || clienteSelecionado.situacao) && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Info className="h-5 w-5 text-primary" />
+                    <h3 className="font-semibold text-lg">Informações Adicionais</h3>
+                  </div>
+                  <Separator />
+                  <div className="grid grid-cols-2 gap-4 text-sm">
                     {clienteSelecionado.tipo && (
                       <div>
-                        <span className="font-semibold">Tipo:</span> {clienteSelecionado.tipo}
+                        <span className="text-muted-foreground">Tipo:</span>
+                        <p className="font-medium">{clienteSelecionado.tipo}</p>
                       </div>
                     )}
                     {clienteSelecionado.situacao && (
                       <div>
-                        <span className="font-semibold">Situação:</span> {clienteSelecionado.situacao}
+                        <span className="text-muted-foreground">Situação:</span>
+                        <p className="font-medium">{clienteSelecionado.situacao}</p>
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              )}
+
+              {/* Documentos - Seção preparada para futura implementação */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold text-lg">Documentos</h3>
+                </div>
+                <Separator />
+                <div className="text-sm text-muted-foreground py-4 text-center">
+                  Nenhum documento disponível
+                </div>
+              </div>
             </div>
           ) : null}
         </DialogContent>
