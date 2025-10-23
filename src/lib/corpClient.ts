@@ -14,23 +14,36 @@ const API_CREDENTIALS = {
 async function getAuthToken(): Promise<string> {
   // Se tem token válido em cache, usa ele
   if (cachedToken && tokenExpiry && Date.now() < tokenExpiry) {
+    console.log('🔑 [CorpNuvem Auth] Usando token em cache');
     return cachedToken;
   }
 
   try {
+    console.log('🔑 [CorpNuvem Auth] Fazendo login...');
+    
     // Faz login para obter novo token
     const response = await axios.post("https://api.corpnuvem.com/login", API_CREDENTIALS);
+    
+    console.log('🔑 [CorpNuvem Auth] Resposta do login:', {
+      hasToken: !!response.data?.token,
+      data: response.data
+    });
     
     if (response.data?.token) {
       cachedToken = response.data.token;
       // Define expiração para 1 hora (ajuste conforme necessário)
       tokenExpiry = Date.now() + (60 * 60 * 1000);
+      console.log('✅ [CorpNuvem Auth] Token obtido com sucesso');
       return cachedToken;
     }
     
     throw new Error("Token não retornado pela API");
-  } catch (error) {
-    console.error("Erro ao fazer login na API CorpNuvem:", error);
+  } catch (error: any) {
+    console.error("❌ [CorpNuvem Auth] Erro ao fazer login:", {
+      message: error?.message,
+      response: error?.response?.data,
+      status: error?.response?.status
+    });
     throw error;
   }
 }

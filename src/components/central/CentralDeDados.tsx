@@ -281,11 +281,19 @@ export default function CentralDeDados() {
 
   const handleBuscarCorpNuvem = async () => {
     setLoadingCorpNuvem(true);
+    console.log('🔍 [CorpNuvem] Iniciando busca de clientes...');
+    console.log('🔍 [CorpNuvem] Termo de busca:', searchTerm);
+    
     try {
       // Busca por nome se houver termo de busca
-      const data = await getClientesCorpNuvem(
-        searchTerm ? { nome: searchTerm } : { codfil: 1 }
-      );
+      const params = searchTerm ? { nome: searchTerm } : { codfil: 1 };
+      console.log('🔍 [CorpNuvem] Parâmetros:', params);
+      
+      const data = await getClientesCorpNuvem(params);
+      
+      console.log('✅ [CorpNuvem] Dados recebidos:', data);
+      console.log('✅ [CorpNuvem] Total de clientes:', data?.length);
+      
       setResultCorpNuvem(data);
       
       toast({
@@ -293,14 +301,21 @@ export default function CentralDeDados() {
         description: `${data?.length || 0} cliente(s) encontrado(s)`,
       });
     } catch (error: any) {
-      console.error('Erro ao buscar clientes CorpNuvem:', error);
+      console.error('❌ [CorpNuvem] Erro detalhado:', {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status,
+        config: error?.config
+      });
+      
       toast({
         title: 'Erro ao carregar clientes',
-        description: error?.response?.data?.message || 'Não foi possível carregar os clientes da CorpNuvem.',
+        description: error?.response?.data?.message || error?.message || 'Não foi possível carregar os clientes da CorpNuvem.',
         variant: 'destructive',
       });
     } finally {
       setLoadingCorpNuvem(false);
+      console.log('🏁 [CorpNuvem] Busca finalizada');
     }
   };
 

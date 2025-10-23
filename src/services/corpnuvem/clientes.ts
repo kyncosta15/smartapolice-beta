@@ -7,6 +7,8 @@ interface BuscarClienteParams {
 }
 
 export async function getClientesCorpNuvem(params?: BuscarClienteParams) {
+  console.log('📡 [CorpNuvem Service] Iniciando requisição com params:', params);
+  
   const queryParams: Record<string, any> = {};
   
   // Se passou nome para buscar
@@ -28,13 +30,26 @@ export async function getClientesCorpNuvem(params?: BuscarClienteParams) {
     queryParams.codfil = 1; // Filial padrão
   }
   
-  const res = await corpClient.get("/cliente", { params: queryParams });
+  console.log('📡 [CorpNuvem Service] Query params finais:', queryParams);
   
-  // A API retorna um objeto com array de clientes ou um único cliente
-  // Normalizamos para sempre retornar um array
-  if (Array.isArray(res.data)) {
-    return res.data;
+  try {
+    const res = await corpClient.get("/cliente", { params: queryParams });
+    
+    console.log('📡 [CorpNuvem Service] Resposta recebida:', res.data);
+    
+    // A API retorna um objeto com array de clientes ou um único cliente
+    // Normalizamos para sempre retornar um array
+    if (Array.isArray(res.data)) {
+      return res.data;
+    }
+    
+    return [res.data];
+  } catch (error: any) {
+    console.error('📡 [CorpNuvem Service] Erro na requisição:', {
+      message: error?.message,
+      response: error?.response?.data,
+      status: error?.response?.status
+    });
+    throw error;
   }
-  
-  return [res.data];
 }
