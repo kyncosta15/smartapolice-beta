@@ -24,7 +24,6 @@ import { FrotasDashboard } from './frotas/FrotasDashboard';
 import { FrotasTable } from './frotas/FrotasTable';
 import { FrotasKPICards } from './frotas/FrotasKPICards';
 import { FrotasFipeNew } from './frotas/FrotasFipeNew';
-import { FrotasFipeDashboard } from './frotas/FrotasFipeDashboard';
 import { FrotasDocumentos } from './frotas/FrotasDocumentos';
 import { FrotasUpload } from './frotas/FrotasUpload';
 import { FipeSpreadsheetUpload } from './frotas/FipeSpreadsheetUpload';
@@ -247,17 +246,11 @@ export function GestaoFrotas() {
                 <FipeSpreadsheetUpload onSuccess={refetch} />
               </div>
               
-              {/* Dashboard FIPE */}
-              <FrotasFipeDashboard 
-                veiculos={veiculos.length === 0 ? allVeiculos : veiculos}
-                loading={loading}
-              />
-              
               <FrotasFipeNew 
                 veiculos={veiculos.length === 0 ? allVeiculos : veiculos} 
                 loading={loading}
                 hasActiveFilters={
-                  filters.search !== '' || 
+                  filters.search !== '' ||
                   filters.categoria.length > 0 || 
                   filters.status.length > 0 || 
                   filters.marcaModelo.length > 0

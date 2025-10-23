@@ -22,6 +22,7 @@ import { Fuel } from '@/services/fipeApiService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { FipePDFGenerator } from '@/utils/fipePdfGenerator';
+import { FrotasFipeDashboard } from './FrotasFipeDashboard';
 
 interface FrotasFipeProps {
   veiculos: FrotaVeiculo[];
@@ -48,6 +49,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
   const [filterModelo, setFilterModelo] = useState<string>('all');
   const [filterAno, setFilterAno] = useState<string>('all');
   const [filterCombustivel, setFilterCombustivel] = useState<string>('all');
+  const [filterProprietario, setFilterProprietario] = useState<string>('all');
   const [placaSortOrder, setPlacaSortOrder] = useState<'none' | 'asc' | 'desc'>('none');
 
   // Extract unique filter options
@@ -71,6 +73,11 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     return unique.sort();
   }, [veiculos]);
 
+  const proprietarios = useMemo(() => {
+    const unique = Array.from(new Set(veiculos.map(v => v.proprietario_nome).filter(Boolean)));
+    return unique.sort();
+  }, [veiculos]);
+
   // Apply filters
   const veiculosFiltrados = useMemo(() => {
     let filtered = veiculos.filter(v => {
@@ -88,6 +95,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
       if (filterModelo !== 'all' && v.modelo !== filterModelo) return false;
       if (filterAno !== 'all' && v.ano_modelo?.toString() !== filterAno) return false;
       if (filterCombustivel !== 'all' && v.combustivel !== filterCombustivel) return false;
+      if (filterProprietario !== 'all' && v.proprietario_nome !== filterProprietario) return false;
 
       return true;
     });
@@ -157,10 +165,11 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     setFilterModelo('all');
     setFilterAno('all');
     setFilterCombustivel('all');
+    setFilterProprietario('all');
   };
 
   const hasFilters = searchTerm || filterMarca !== 'all' || filterModelo !== 'all' || 
-                     filterAno !== 'all' || filterCombustivel !== 'all';
+                     filterAno !== 'all' || filterCombustivel !== 'all' || filterProprietario !== 'all';
 
   const handleVehicleUpdate = async (vehicleId: string, fipeValue: any) => {
     // Salvar posição do scroll atual IMEDIATAMENTE
@@ -429,7 +438,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -495,6 +504,20 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
                 ))}
               </SelectContent>
             </Select>
+
+            <Select value={filterProprietario} onValueChange={setFilterProprietario}>
+              <SelectTrigger>
+                <SelectValue placeholder="Proprietário" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {proprietarios.map((prop) => (
+                  <SelectItem key={prop} value={prop!}>
+                    {prop}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="text-sm text-muted-foreground">
@@ -502,6 +525,12 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
           </div>
         </div>
       </Card>
+
+      {/* Dashboard FIPE */}
+      <FrotasFipeDashboard 
+        veiculos={veiculosFiltrados}
+        loading={false}
+      />
 
       {/* Comparison Stats */}
       {veiculosComFipe.length > 0 && stats && (
