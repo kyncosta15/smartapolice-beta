@@ -162,8 +162,8 @@ export function CorpNuvemTabs() {
         codigo: cliente.codigo 
       });
       
-      if (data && data.length > 0) {
-        const clienteCompleto = data[0];
+      if (data && data.cliente && data.cliente.length > 0) {
+        const clienteCompleto = data.cliente[0];
         console.log('📋 [Modal Cliente] Dados completos:', clienteCompleto);
         setClienteSelecionado(clienteCompleto);
       }
@@ -471,58 +471,22 @@ export function CorpNuvemTabs() {
                       <p className="font-medium">{clienteSelecionado.codigo}</p>
                     </div>
                   )}
-                  {clienteSelecionado.codfil && (
-                    <div>
-                      <span className="text-muted-foreground">Código Filial:</span>
-                      <p className="font-medium">{clienteSelecionado.codfil}</p>
-                    </div>
-                  )}
                   {clienteSelecionado.cpf_cnpj && (
                     <div>
                       <span className="text-muted-foreground">CPF/CNPJ:</span>
                       <p className="font-medium">{clienteSelecionado.cpf_cnpj}</p>
                     </div>
                   )}
-                  {clienteSelecionado.tipo_pessoa && (
-                    <div>
-                      <span className="text-muted-foreground">Tipo Pessoa:</span>
-                      <p className="font-medium">{clienteSelecionado.tipo_pessoa}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.email && (
-                    <div className="col-span-2">
-                      <span className="text-muted-foreground">Email:</span>
-                      <p className="font-medium">{clienteSelecionado.email}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.ddd && clienteSelecionado.numero && (
-                    <div>
-                      <span className="text-muted-foreground">Telefone:</span>
-                      <p className="font-medium">({clienteSelecionado.ddd}) {clienteSelecionado.numero}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.celular && (
-                    <div>
-                      <span className="text-muted-foreground">Celular:</span>
-                      <p className="font-medium">{clienteSelecionado.celular}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.rg && (
-                    <div>
-                      <span className="text-muted-foreground">RG:</span>
-                      <p className="font-medium">{clienteSelecionado.rg}</p>
-                    </div>
-                  )}
-                  {clienteSelecionado.data_nascimento && (
+                  {clienteSelecionado.datanas && (
                     <div>
                       <span className="text-muted-foreground">Data Nascimento:</span>
-                      <p className="font-medium">{clienteSelecionado.data_nascimento}</p>
+                      <p className="font-medium">{clienteSelecionado.datanas}</p>
                     </div>
                   )}
                   {clienteSelecionado.sexo && (
                     <div>
                       <span className="text-muted-foreground">Sexo:</span>
-                      <p className="font-medium">{clienteSelecionado.sexo}</p>
+                      <p className="font-medium">{clienteSelecionado.sexo === 'M' ? 'Masculino' : clienteSelecionado.sexo === 'F' ? 'Feminino' : clienteSelecionado.sexo}</p>
                     </div>
                   )}
                   {clienteSelecionado.estado_civil && (
@@ -537,99 +501,125 @@ export function CorpNuvemTabs() {
                       <p className="font-medium">{clienteSelecionado.profissao}</p>
                     </div>
                   )}
+                  {clienteSelecionado.escolaridade && (
+                    <div>
+                      <span className="text-muted-foreground">Escolaridade:</span>
+                      <p className="font-medium">{clienteSelecionado.escolaridade}</p>
+                    </div>
+                  )}
+                  {clienteSelecionado.ativo && (
+                    <div>
+                      <span className="text-muted-foreground">Status:</span>
+                      <p className="font-medium">{clienteSelecionado.ativo === 'T' ? 'Ativo' : 'Inativo'}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Endereço */}
-              {(clienteSelecionado.endereco || clienteSelecionado.numero_endereco || clienteSelecionado.complemento || 
-                clienteSelecionado.bairro || clienteSelecionado.cidade || clienteSelecionado.uf || clienteSelecionado.cep) && (
+              {/* Contatos */}
+              {((clienteSelecionado.emails && clienteSelecionado.emails.length > 0) || 
+                (clienteSelecionado.telefones && clienteSelecionado.telefones.length > 0)) && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-lg">Endereço</h3>
+                    <Info className="h-5 w-5 text-primary" />
+                    <h3 className="font-semibold text-lg">Contatos</h3>
                   </div>
                   <Separator />
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    {clienteSelecionado.endereco && (
-                      <div className="col-span-2">
-                        <span className="text-muted-foreground">Logradouro:</span>
-                        <p className="font-medium">{clienteSelecionado.endereco}{clienteSelecionado.numero_endereco ? `, ${clienteSelecionado.numero_endereco}` : ''}</p>
-                      </div>
-                    )}
-                    {clienteSelecionado.complemento && (
-                      <div className="col-span-2">
-                        <span className="text-muted-foreground">Complemento:</span>
-                        <p className="font-medium">{clienteSelecionado.complemento}</p>
-                      </div>
-                    )}
-                    {clienteSelecionado.bairro && (
+                  <div className="space-y-4">
+                    {clienteSelecionado.emails && clienteSelecionado.emails.length > 0 && (
                       <div>
-                        <span className="text-muted-foreground">Bairro:</span>
-                        <p className="font-medium">{clienteSelecionado.bairro}</p>
+                        <span className="text-muted-foreground text-sm">Emails:</span>
+                        <div className="mt-1 space-y-1">
+                          {clienteSelecionado.emails.map((emailObj: any, idx: number) => (
+                            <p key={idx} className="font-medium text-sm">
+                              {emailObj.email} {emailObj.padrao === 'T' && <span className="text-xs text-primary">(Principal)</span>}
+                            </p>
+                          ))}
+                        </div>
                       </div>
                     )}
-                    {clienteSelecionado.cidade && (
+                    {clienteSelecionado.telefones && clienteSelecionado.telefones.length > 0 && (
                       <div>
-                        <span className="text-muted-foreground">Cidade:</span>
-                        <p className="font-medium">{clienteSelecionado.cidade}</p>
-                      </div>
-                    )}
-                    {clienteSelecionado.uf && (
-                      <div>
-                        <span className="text-muted-foreground">UF:</span>
-                        <p className="font-medium">{clienteSelecionado.uf}</p>
-                      </div>
-                    )}
-                    {clienteSelecionado.cep && (
-                      <div>
-                        <span className="text-muted-foreground">CEP:</span>
-                        <p className="font-medium">{clienteSelecionado.cep}</p>
+                        <span className="text-muted-foreground text-sm">Telefones:</span>
+                        <div className="mt-1 space-y-1">
+                          {clienteSelecionado.telefones.map((telObj: any, idx: number) => (
+                            <p key={idx} className="font-medium text-sm">
+                              ({telObj.ddd}) {telObj.numero}
+                              {telObj.tipo && <span className="text-xs text-muted-foreground"> - {telObj.tipo === 'R' ? 'Residencial' : telObj.tipo === 'C' ? 'Comercial' : telObj.tipo}</span>}
+                              {telObj.padrao === 'T' && <span className="text-xs text-primary"> (Principal)</span>}
+                            </p>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Informações Adicionais */}
-              {(clienteSelecionado.tipo || clienteSelecionado.situacao || clienteSelecionado.observacoes || 
-                clienteSelecionado.data_cadastro || clienteSelecionado.ativo) && (
+              {/* Endereço */}
+              {clienteSelecionado.enderecos && clienteSelecionado.enderecos.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <h3 className="font-semibold text-lg">Endereço</h3>
+                  </div>
+                  <Separator />
+                  {clienteSelecionado.enderecos.map((end: any, idx: number) => (
+                    <div key={idx} className="grid grid-cols-2 gap-4 text-sm">
+                      {end.logradouro && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">Logradouro:</span>
+                          <p className="font-medium">
+                            {end.logradouro}
+                            {end.numero ? `, ${end.numero}` : ''}
+                          </p>
+                        </div>
+                      )}
+                      {end.complemento && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">Complemento:</span>
+                          <p className="font-medium">{end.complemento}</p>
+                        </div>
+                      )}
+                      {end.bairro && (
+                        <div>
+                          <span className="text-muted-foreground">Bairro:</span>
+                          <p className="font-medium">{end.bairro}</p>
+                        </div>
+                      )}
+                      {end.cidade && (
+                        <div>
+                          <span className="text-muted-foreground">Cidade:</span>
+                          <p className="font-medium">{end.cidade} - {end.estado}</p>
+                        </div>
+                      )}
+                      {end.cep && (
+                        <div>
+                          <span className="text-muted-foreground">CEP:</span>
+                          <p className="font-medium">{end.cep}</p>
+                        </div>
+                      )}
+                      {end.tipo && (
+                        <div>
+                          <span className="text-muted-foreground">Tipo:</span>
+                          <p className="font-medium">{end.tipo === 'R' ? 'Residencial' : end.tipo === 'C' ? 'Comercial' : end.tipo}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Observações */}
+              {clienteSelecionado.observacoes && clienteSelecionado.observacoes.trim() && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Info className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-lg">Informações Adicionais</h3>
+                    <h3 className="font-semibold text-lg">Observações</h3>
                   </div>
                   <Separator />
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    {clienteSelecionado.tipo && (
-                      <div>
-                        <span className="text-muted-foreground">Tipo:</span>
-                        <p className="font-medium">{clienteSelecionado.tipo}</p>
-                      </div>
-                    )}
-                    {clienteSelecionado.situacao && (
-                      <div>
-                        <span className="text-muted-foreground">Situação:</span>
-                        <p className="font-medium">{clienteSelecionado.situacao}</p>
-                      </div>
-                    )}
-                    {clienteSelecionado.ativo !== undefined && (
-                      <div>
-                        <span className="text-muted-foreground">Status:</span>
-                        <p className="font-medium">{clienteSelecionado.ativo === 'T' ? 'Ativo' : 'Inativo'}</p>
-                      </div>
-                    )}
-                    {clienteSelecionado.data_cadastro && (
-                      <div>
-                        <span className="text-muted-foreground">Data Cadastro:</span>
-                        <p className="font-medium">{clienteSelecionado.data_cadastro}</p>
-                      </div>
-                    )}
-                    {clienteSelecionado.observacoes && (
-                      <div className="col-span-2">
-                        <span className="text-muted-foreground">Observações:</span>
-                        <p className="font-medium">{clienteSelecionado.observacoes}</p>
-                      </div>
-                    )}
+                  <div className="text-sm whitespace-pre-wrap bg-muted p-3 rounded">
+                    {clienteSelecionado.observacoes}
                   </div>
                 </div>
               )}
@@ -645,16 +635,6 @@ export function CorpNuvemTabs() {
                   Nenhum documento disponível
                 </div>
               </div>
-
-              {/* Debug - Campos não mapeados (remover em produção) */}
-              {Object.keys(clienteSelecionado).length > 0 && (
-                <details className="text-xs">
-                  <summary className="cursor-pointer text-muted-foreground">Ver todos os campos da API</summary>
-                  <pre className="mt-2 p-2 bg-muted rounded overflow-auto max-h-60">
-                    {JSON.stringify(clienteSelecionado, null, 2)}
-                  </pre>
-                </details>
-              )}
             </div>
           ) : null}
         </DialogContent>
