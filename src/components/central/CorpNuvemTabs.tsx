@@ -73,15 +73,21 @@ export function CorpNuvemTabs() {
       if (clientes.length === 0) {
         toast({
           title: 'Nenhum resultado',
-          description: 'Nenhum cliente encontrado com esse critério',
+          description: 'Nenhum cliente encontrado. Tente buscar por nome.',
           variant: 'default',
         });
       }
     } catch (error: any) {
       console.error('❌ [Busca Clientes] Erro:', error);
+      
+      // Mensagem de erro mais amigável
+      const errorMessage = error?.response?.data?.message || error.message;
+      
       toast({
-        title: 'Erro',
-        description: error?.response?.data?.message || error.message || 'Erro ao buscar clientes',
+        title: 'Erro na busca',
+        description: errorMessage?.includes('CPF') || errorMessage?.includes('CNPJ')
+          ? 'Documento não encontrado. Tente buscar pelo nome do cliente.'
+          : 'Erro ao buscar clientes. Tente novamente.',
         variant: 'destructive',
       });
       setResultClientes([]);

@@ -7,25 +7,24 @@ interface BuscarClienteParams {
 }
 
 // Função auxiliar para detectar tipo de busca
-function detectarTipoBusca(texto: string): 'cpf' | 'codigo' | 'nome' {
+function detectarTipoBusca(texto: string): 'cpf' | 'cnpj' | 'codigo' | 'nome' {
   // Remove caracteres especiais para análise
   const textoLimpo = texto.replace(/[^\d]/g, '');
   
   // Se é só números
-  if (textoLimpo === texto) {
+  if (textoLimpo === texto || textoLimpo.length > 0) {
     // Se tem 11 dígitos, é CPF
     if (textoLimpo.length === 11) {
       return 'cpf';
     }
-    // Se tem menos de 11 dígitos, é código
-    if (textoLimpo.length > 0 && textoLimpo.length < 11) {
+    // Se tem 14 dígitos, é CNPJ
+    if (textoLimpo.length === 14) {
+      return 'cnpj';
+    }
+    // Se tem menos de 11 dígitos e é só números, é código
+    if (textoLimpo === texto && textoLimpo.length > 0 && textoLimpo.length < 11) {
       return 'codigo';
     }
-  }
-  
-  // Se tem 11 dígitos depois de limpar (com pontuação), é CPF
-  if (textoLimpo.length === 11) {
-    return 'cpf';
   }
   
   // Caso contrário, é nome
@@ -64,9 +63,43 @@ export async function getClientesCorpNuvem(params?: BuscarClienteParams) {
         // Busca por CPF
         const cpfLimpo = params.texto.replace(/[^\d]/g, '');
         console.log('📋 [CorpNuvem Clientes] Buscando por CPF:', cpfLimpo);
-        res = await corpClient.get("/busca_cpf", { 
-          params: { cpf: cpfLimpo } 
-        });
+        
+        try {
+          res = await corpClient.get("/busca_cpf", { 
+            params: { cpf: cpfLimpo } 
+          });
+          
+          // Se retornou dados
+          if (res.data?.clientes || res.data?.cliente) {
+            return res.data?.clientes || res.data?.cliente || [];
+          }
+        } catch (cpfError: any) {
+          console.warn('⚠️ [CorpNuvem Clientes] CPF não encontrado, tentando busca por nome...');
+          // Se falhar, tenta buscar por nome como fallback
+          res = await corpClient.get("/lista_clientes", { 
+            params: { texto: params.texto } 
+          });
+        }
+      } else if (tipoBusca === 'cnpj') {
+        // Busca por CNPJ
+        const cnpjLimpo = params.texto.replace(/[^\d]/g, '');
+        console.log('🏢 [CorpNuvem Clientes] Buscando por CNPJ:', cnpjLimpo);
+        
+        try {
+          res = await corpClient.get("/busca_cnpj", { 
+            params: { cnpj: cnpjLimpo } 
+          });
+          
+          if (res.data?.clientes || res.data?.cliente) {
+            return res.data?.clientes || res.data?.cliente || [];
+          }
+        } catch (cnpjError: any) {
+          console.warn('⚠️ [CorpNuvem Clientes] CNPJ não encontrado, tentando busca por nome...');
+          // Se falhar, tenta buscar por nome como fallback
+          res = await corpClient.get("/lista_clientes", { 
+            params: { texto: params.texto } 
+          });
+        }
       } else if (tipoBusca === 'codigo') {
         // Busca por código
         const codigo = parseInt(params.texto);
