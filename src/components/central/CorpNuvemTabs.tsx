@@ -153,16 +153,19 @@ export function CorpNuvemTabs() {
   const handleVerDetalhesCliente = async (cliente: any) => {
     setModalClienteOpen(true);
     setLoadingClienteDetalhes(true);
+    setClienteSelecionado(null);
     
     try {
       // Busca detalhes completos do cliente usando codfil e codigo
       const data = await getClientesCorpNuvem({ 
-        codfil: 1, // Usar codfil padrão ou do cliente
+        codfil: 1,
         codigo: cliente.codigo 
       });
       
       if (data && data.length > 0) {
-        setClienteSelecionado(data[0]);
+        const clienteCompleto = data[0];
+        console.log('📋 [Modal Cliente] Dados completos:', clienteCompleto);
+        setClienteSelecionado(clienteCompleto);
       }
     } catch (error: any) {
       toast({
@@ -456,14 +459,22 @@ export function CorpNuvemTabs() {
                 </div>
                 <Separator />
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Nome:</span>
-                    <p className="font-medium">{clienteSelecionado.nome}</p>
-                  </div>
+                  {clienteSelecionado.nome && (
+                    <div className="col-span-2">
+                      <span className="text-muted-foreground">Nome:</span>
+                      <p className="font-medium">{clienteSelecionado.nome}</p>
+                    </div>
+                  )}
                   {clienteSelecionado.codigo && (
                     <div>
                       <span className="text-muted-foreground">Código:</span>
                       <p className="font-medium">{clienteSelecionado.codigo}</p>
+                    </div>
+                  )}
+                  {clienteSelecionado.codfil && (
+                    <div>
+                      <span className="text-muted-foreground">Código Filial:</span>
+                      <p className="font-medium">{clienteSelecionado.codfil}</p>
                     </div>
                   )}
                   {clienteSelecionado.cpf_cnpj && (
@@ -472,13 +483,19 @@ export function CorpNuvemTabs() {
                       <p className="font-medium">{clienteSelecionado.cpf_cnpj}</p>
                     </div>
                   )}
-                  {clienteSelecionado.email && (
+                  {clienteSelecionado.tipo_pessoa && (
                     <div>
+                      <span className="text-muted-foreground">Tipo Pessoa:</span>
+                      <p className="font-medium">{clienteSelecionado.tipo_pessoa}</p>
+                    </div>
+                  )}
+                  {clienteSelecionado.email && (
+                    <div className="col-span-2">
                       <span className="text-muted-foreground">Email:</span>
                       <p className="font-medium">{clienteSelecionado.email}</p>
                     </div>
                   )}
-                  {(clienteSelecionado.ddd || clienteSelecionado.numero) && (
+                  {clienteSelecionado.ddd && clienteSelecionado.numero && (
                     <div>
                       <span className="text-muted-foreground">Telefone:</span>
                       <p className="font-medium">({clienteSelecionado.ddd}) {clienteSelecionado.numero}</p>
@@ -490,11 +507,42 @@ export function CorpNuvemTabs() {
                       <p className="font-medium">{clienteSelecionado.celular}</p>
                     </div>
                   )}
+                  {clienteSelecionado.rg && (
+                    <div>
+                      <span className="text-muted-foreground">RG:</span>
+                      <p className="font-medium">{clienteSelecionado.rg}</p>
+                    </div>
+                  )}
+                  {clienteSelecionado.data_nascimento && (
+                    <div>
+                      <span className="text-muted-foreground">Data Nascimento:</span>
+                      <p className="font-medium">{clienteSelecionado.data_nascimento}</p>
+                    </div>
+                  )}
+                  {clienteSelecionado.sexo && (
+                    <div>
+                      <span className="text-muted-foreground">Sexo:</span>
+                      <p className="font-medium">{clienteSelecionado.sexo}</p>
+                    </div>
+                  )}
+                  {clienteSelecionado.estado_civil && (
+                    <div>
+                      <span className="text-muted-foreground">Estado Civil:</span>
+                      <p className="font-medium">{clienteSelecionado.estado_civil}</p>
+                    </div>
+                  )}
+                  {clienteSelecionado.profissao && (
+                    <div>
+                      <span className="text-muted-foreground">Profissão:</span>
+                      <p className="font-medium">{clienteSelecionado.profissao}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Endereço */}
-              {(clienteSelecionado.endereco || clienteSelecionado.bairro || clienteSelecionado.cidade || clienteSelecionado.uf || clienteSelecionado.cep) && (
+              {(clienteSelecionado.endereco || clienteSelecionado.numero_endereco || clienteSelecionado.complemento || 
+                clienteSelecionado.bairro || clienteSelecionado.cidade || clienteSelecionado.uf || clienteSelecionado.cep) && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-primary" />
@@ -505,7 +553,13 @@ export function CorpNuvemTabs() {
                     {clienteSelecionado.endereco && (
                       <div className="col-span-2">
                         <span className="text-muted-foreground">Logradouro:</span>
-                        <p className="font-medium">{clienteSelecionado.endereco}</p>
+                        <p className="font-medium">{clienteSelecionado.endereco}{clienteSelecionado.numero_endereco ? `, ${clienteSelecionado.numero_endereco}` : ''}</p>
+                      </div>
+                    )}
+                    {clienteSelecionado.complemento && (
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground">Complemento:</span>
+                        <p className="font-medium">{clienteSelecionado.complemento}</p>
                       </div>
                     )}
                     {clienteSelecionado.bairro && (
@@ -537,7 +591,8 @@ export function CorpNuvemTabs() {
               )}
 
               {/* Informações Adicionais */}
-              {(clienteSelecionado.tipo || clienteSelecionado.situacao) && (
+              {(clienteSelecionado.tipo || clienteSelecionado.situacao || clienteSelecionado.observacoes || 
+                clienteSelecionado.data_cadastro || clienteSelecionado.ativo) && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Info className="h-5 w-5 text-primary" />
@@ -557,6 +612,24 @@ export function CorpNuvemTabs() {
                         <p className="font-medium">{clienteSelecionado.situacao}</p>
                       </div>
                     )}
+                    {clienteSelecionado.ativo !== undefined && (
+                      <div>
+                        <span className="text-muted-foreground">Status:</span>
+                        <p className="font-medium">{clienteSelecionado.ativo === 'T' ? 'Ativo' : 'Inativo'}</p>
+                      </div>
+                    )}
+                    {clienteSelecionado.data_cadastro && (
+                      <div>
+                        <span className="text-muted-foreground">Data Cadastro:</span>
+                        <p className="font-medium">{clienteSelecionado.data_cadastro}</p>
+                      </div>
+                    )}
+                    {clienteSelecionado.observacoes && (
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground">Observações:</span>
+                        <p className="font-medium">{clienteSelecionado.observacoes}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -572,6 +645,16 @@ export function CorpNuvemTabs() {
                   Nenhum documento disponível
                 </div>
               </div>
+
+              {/* Debug - Campos não mapeados (remover em produção) */}
+              {Object.keys(clienteSelecionado).length > 0 && (
+                <details className="text-xs">
+                  <summary className="cursor-pointer text-muted-foreground">Ver todos os campos da API</summary>
+                  <pre className="mt-2 p-2 bg-muted rounded overflow-auto max-h-60">
+                    {JSON.stringify(clienteSelecionado, null, 2)}
+                  </pre>
+                </details>
+              )}
             </div>
           ) : null}
         </DialogContent>

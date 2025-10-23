@@ -32,7 +32,7 @@ export async function getClientesCorpNuvem(params?: BuscarClienteParams) {
           codigo: params.codigo 
         } 
       });
-      console.log('✅ [CorpNuvem Clientes] Cliente encontrado');
+      console.log('✅ [CorpNuvem Clientes] Cliente detalhado encontrado:', res.data);
       return [res.data];
     } catch (error: any) {
       console.error('❌ [CorpNuvem Clientes] Erro:', error?.response?.data);
