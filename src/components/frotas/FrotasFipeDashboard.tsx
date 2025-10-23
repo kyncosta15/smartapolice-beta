@@ -219,7 +219,22 @@ export function FrotasFipeDashboard({ veiculos, loading }: FrotasFipeDashboardPr
                   className="md:!ml-4"
                 >
                 <defs>
-...
+                  <linearGradient id="colorCarros" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.9}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.7}/>
+                  </linearGradient>
+                  <linearGradient id="colorCaminhoes" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.9}/>
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.7}/>
+                  </linearGradient>
+                  <linearGradient id="colorMotos" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.9}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.7}/>
+                  </linearGradient>
+                  <linearGradient id="colorOutros" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6b7280" stopOpacity={0.9}/>
+                    <stop offset="95%" stopColor="#6b7280" stopOpacity={0.7}/>
+                  </linearGradient>
                 </defs>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
