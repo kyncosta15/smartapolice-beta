@@ -376,7 +376,8 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
 
       const pdfData = {
         veiculos: veiculosFiltrados,
-        stats
+        stats,
+        proprietario: filterProprietario !== 'all' ? filterProprietario : undefined
       };
 
       const filename = `relatorio-fipe-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;

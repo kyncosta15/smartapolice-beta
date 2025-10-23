@@ -11,6 +11,7 @@ interface FipePDFData {
     motos: { valor: number; count: number };
     outros: { valor: number; count: number };
   };
+  proprietario?: string;
 }
 
 export class FipePDFGenerator {
@@ -34,9 +35,9 @@ export class FipePDFGenerator {
     return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
-  private addHeader() {
+  private addHeader(proprietario?: string) {
     this.doc.setFillColor(59, 130, 246);
-    this.doc.rect(0, 0, this.pageWidth, 25, 'F');
+    this.doc.rect(0, 0, this.pageWidth, proprietario ? 32 : 25, 'F');
     
     this.doc.setTextColor(255, 255, 255);
     this.doc.setFontSize(18);
@@ -47,7 +48,14 @@ export class FipePDFGenerator {
     this.doc.setFont('helvetica', 'normal');
     this.doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, this.pageWidth / 2, 19, { align: 'center' });
     
-    this.currentY = 35;
+    if (proprietario) {
+      this.doc.setFontSize(11);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(`Proprietário: ${proprietario}`, this.pageWidth / 2, 27, { align: 'center' });
+      this.currentY = 42;
+    } else {
+      this.currentY = 35;
+    }
   }
 
   private addDashboardKPIs(stats: FipePDFData['stats']) {
@@ -79,35 +87,40 @@ export class FipePDFGenerator {
     ];
 
     const cardWidth = (this.pageWidth - (this.margin * 2) - 15) / 4;
-    const cardHeight = 25;
+    const cardHeight = 30;
     let xPos = this.margin;
 
     kpiData.forEach((kpi) => {
-      // Card background
-      this.doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2], 0.1);
-      this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 2, 2, 'F');
+      // Card background with darker color for better visibility
+      this.doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2], 0.2);
+      this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 3, 3, 'F');
       
-      // Icon background
+      // Border
+      this.doc.setDrawColor(kpi.color[0], kpi.color[1], kpi.color[2]);
+      this.doc.setLineWidth(0.5);
+      this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 3, 3, 'S');
+      
+      // Icon background with solid color
       this.doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2]);
-      this.doc.roundedRect(xPos + 3, this.currentY + 3, 10, 10, 2, 2, 'F');
+      this.doc.roundedRect(xPos + 3, this.currentY + 3, 12, 12, 2, 2, 'F');
       
       // Label
-      this.doc.setTextColor(100, 100, 100);
-      this.doc.setFontSize(9);
-      this.doc.setFont('helvetica', 'normal');
-      this.doc.text(kpi.label, xPos + 15, this.currentY + 8);
-      
-      // Value
-      this.doc.setTextColor(0, 0, 0);
-      this.doc.setFontSize(12);
+      this.doc.setTextColor(60, 60, 60);
+      this.doc.setFontSize(10);
       this.doc.setFont('helvetica', 'bold');
-      this.doc.text(kpi.value, xPos + 15, this.currentY + 15);
+      this.doc.text(kpi.label, xPos + 18, this.currentY + 10);
+      
+      // Value with better contrast
+      this.doc.setTextColor(0, 0, 0);
+      this.doc.setFontSize(14);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(kpi.value, xPos + 18, this.currentY + 19);
       
       // Count
-      this.doc.setTextColor(100, 100, 100);
-      this.doc.setFontSize(8);
+      this.doc.setTextColor(80, 80, 80);
+      this.doc.setFontSize(9);
       this.doc.setFont('helvetica', 'normal');
-      this.doc.text(`${kpi.count} veículo${kpi.count !== 1 ? 's' : ''}`, xPos + 15, this.currentY + 20);
+      this.doc.text(`${kpi.count} veículo${kpi.count !== 1 ? 's' : ''}`, xPos + 18, this.currentY + 25);
       
       xPos += cardWidth + 5;
     });
@@ -186,7 +199,7 @@ export class FipePDFGenerator {
   }
 
   generate(data: FipePDFData): Uint8Array {
-    this.addHeader();
+    this.addHeader(data.proprietario);
     this.addDashboardKPIs(data.stats);
     this.addVehiclesTable(data.veiculos);
     this.addFooter();
@@ -196,7 +209,7 @@ export class FipePDFGenerator {
   }
 
   download(data: FipePDFData, filename: string = 'relatorio-fipe.pdf') {
-    this.addHeader();
+    this.addHeader(data.proprietario);
     this.addDashboardKPIs(data.stats);
     this.addVehiclesTable(data.veiculos);
     this.addFooter();
