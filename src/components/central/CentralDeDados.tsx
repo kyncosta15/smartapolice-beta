@@ -496,22 +496,22 @@ export default function CentralDeDados() {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="corpnuvem" className="gap-2">
+        <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsTrigger value="corpnuvem">
             <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">CorpNuvem</span>
+            <span className="hidden sm:inline">Dados Corp</span>
           </TabsTrigger>
-          <TabsTrigger value="negocios" className="gap-2">
+          <TabsTrigger value="negocios">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Negócios</span>
+            <span className="hidden sm:inline">Propostas</span>
           </TabsTrigger>
-          <TabsTrigger value="sinistros" className="gap-2">
+          <TabsTrigger value="sinistros">
             <AlertCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Sinistros</span>
+            <span className="hidden sm:inline">Ocorrências</span>
           </TabsTrigger>
-          <TabsTrigger value="bi" className="gap-2">
+          <TabsTrigger value="bi">
             <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">BI</span>
+            <span className="hidden sm:inline">Indicadores</span>
           </TabsTrigger>
         </TabsList>
 
