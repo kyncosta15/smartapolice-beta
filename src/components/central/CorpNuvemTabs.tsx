@@ -292,6 +292,18 @@ export function CorpNuvemTabs() {
                 <Button onClick={handleBuscarClientes} disabled={loadingClientes}>
                   {loadingClientes ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </Button>
+                {(searchTerm || resultClientes.length > 0) && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setSearchTerm('');
+                      setResultClientes([]);
+                      setPageClientes(1);
+                    }}
+                  >
+                    Limpar
+                  </Button>
+                )}
               </div>
 
               {!loadingClientes && resultClientes.length === 0 && searchTerm && (
