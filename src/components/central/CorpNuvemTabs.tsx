@@ -32,11 +32,18 @@ export function CorpNuvemTabs() {
   const [nosnum, setNosnum] = useState('');
 
   const handleBuscarClientes = async () => {
+    if (!searchTerm) {
+      toast({
+        title: 'Atenção',
+        description: 'Digite um nome para buscar',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoadingClientes(true);
     try {
-      const data = await getClientesCorpNuvem(
-        searchTerm ? { nome: searchTerm } : { codfil: 1 }
-      );
+      const data = await getClientesCorpNuvem({ texto: searchTerm });
       setResultClientes(data);
       
       toast({
@@ -46,7 +53,7 @@ export function CorpNuvemTabs() {
     } catch (error: any) {
       toast({
         title: 'Erro',
-        description: error?.response?.data?.message || 'Erro ao buscar clientes',
+        description: error?.response?.data?.message || error.message || 'Erro ao buscar clientes',
         variant: 'destructive',
       });
     } finally {
@@ -319,8 +326,62 @@ export function CorpNuvemTabs() {
               </div>
 
               {resultDocumento && (
-                <div className="bg-muted p-4 rounded-lg max-h-[500px] overflow-auto">
-                  <pre className="text-xs">{JSON.stringify(resultDocumento, null, 2)}</pre>
+                <div className="space-y-4 max-h-[500px] overflow-auto">
+                  {resultDocumento.documento?.map((doc: any, idx: number) => (
+                    <Card key={idx}>
+                      <CardContent className="p-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="font-semibold">Cliente:</span> {doc.cliente}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Apólice:</span> {doc.numapo}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Tipo:</span> {doc.tipdoc_txt}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Ramo:</span> {doc.ramo}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Seguradora:</span> {doc.seguradora}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Vigência:</span> {doc.inivig} a {doc.fimvig}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Prêmio Líquido:</span> R$ {doc.preliq?.toFixed(2)}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Prêmio Total:</span> R$ {doc.pretot?.toFixed(2)}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Forma Pagamento:</span> {doc.forma_pag}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Nº Parcelas:</span> {doc.numpar}
+                          </div>
+                          <div className="col-span-2">
+                            <span className="font-semibold">Situação:</span> {doc.sit_acompanhamento_txt}
+                          </div>
+                        </div>
+                        
+                        {doc.parcelas && doc.parcelas.length > 0 && (
+                          <div className="pt-3 border-t">
+                            <h4 className="font-semibold mb-2">Parcelas</h4>
+                            <div className="space-y-1 text-xs">
+                              {doc.parcelas.map((parc: any, i: number) => (
+                                <div key={i} className="flex justify-between">
+                                  <span>Parcela {parc.parc} - Venc: {parc.datvenc}</span>
+                                  <span className="font-medium">R$ {parc.vlvenc?.toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               )}
             </CardContent>
