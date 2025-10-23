@@ -87,24 +87,26 @@ export function ClienteDetalhadoModal({
                 </div>
                 <div>
                   <p className="text-muted-foreground">CPF/CNPJ</p>
-                  <p className="font-semibold">{cliente?.cpf || cliente?.cnpj || '-'}</p>
+                  <p className="font-semibold">{cliente?.cpf_cnpj || cliente?.cpf || cliente?.cnpj || '-'}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Data de Nascimento</p>
-                  <p className="font-semibold">{cliente?.data_nascimento || '-'}</p>
+                  <p className="font-semibold">{cliente?.datanas || cliente?.data_nascimento || '-'}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Sexo</p>
-                  <p className="font-semibold">{cliente?.sexo || '-'}</p>
+                  <p className="font-semibold">
+                    {cliente?.sexo === 'M' ? 'Masculino' : cliente?.sexo === 'F' ? 'Feminino' : cliente?.sexo || '-'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Estado Civil</p>
-                  <p className="font-semibold">{cliente?.estado_civil || '-'}</p>
+                  <p className="font-semibold">{cliente?.estado_civil || cliente?.cod_estado_civil || '-'}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Status</p>
-                  <Badge variant={cliente?.status === 'Ativo' ? 'default' : 'secondary'}>
-                    {cliente?.status || '-'}
+                  <Badge variant={(cliente?.ativo === 'T' || cliente?.status === 'Ativo') ? 'default' : 'secondary'}>
+                    {cliente?.ativo === 'T' ? 'Ativo' : cliente?.ativo === 'F' ? 'Inativo' : cliente?.status || '-'}
                   </Badge>
                 </div>
               </div>
@@ -130,7 +132,9 @@ export function ClienteDetalhadoModal({
                   <div className="space-y-1">
                     {contatos.emails.map((email: any, idx: number) => (
                       <div key={idx} className="flex items-center gap-2 text-sm">
-                        <Badge variant="outline">{email.tipo || 'Principal'}</Badge>
+                        <Badge variant={email.padrao === 'T' ? 'default' : 'outline'}>
+                          {email.padrao === 'T' ? 'Principal' : 'Secundário'}
+                        </Badge>
                         <span>{email.email || email}</span>
                       </div>
                     ))}
@@ -152,8 +156,12 @@ export function ClienteDetalhadoModal({
                   <div className="space-y-1">
                     {contatos.telefones.map((tel: any, idx: number) => (
                       <div key={idx} className="flex items-center gap-2 text-sm">
-                        <Badge variant="outline">{tel.tipo || 'Principal'}</Badge>
-                        <span>{tel.numero || tel}</span>
+                        <Badge variant={tel.padrao === 'T' ? 'default' : 'outline'}>
+                          {tel.tipo || (tel.padrao === 'T' ? 'Principal' : 'Secundário')}
+                        </Badge>
+                        <span>
+                          {tel.ddd && tel.numero ? `(${tel.ddd}) ${tel.numero}` : tel.numero || tel}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -180,7 +188,9 @@ export function ClienteDetalhadoModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">Tipo</p>
-                        <Badge variant="outline">{end.tipo || 'Principal'}</Badge>
+                        <Badge variant={end.padrao === 'T' ? 'default' : 'outline'}>
+                          {end.tipo === 'R' ? 'Residencial' : end.tipo === 'C' ? 'Comercial' : end.tipo || 'Principal'}
+                        </Badge>
                       </div>
                       <div>
                         <p className="text-muted-foreground">CEP</p>
@@ -221,30 +231,17 @@ export function ClienteDetalhadoModal({
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Órgão Expedidor</p>
-                  <p className="font-semibold">{cliente?.orgao_expedidor || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Indicado Por</p>
-                  <p className="font-semibold">{cliente?.indicado_por || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Recebe Mala Direta</p>
-                  <Badge variant={cliente?.recebe_mala_direta ? 'default' : 'secondary'}>
-                    {cliente?.recebe_mala_direta ? 'Sim' : 'Não'}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Avisar Vencimento</p>
-                  <Badge variant={cliente?.avisa_vencimento ? 'default' : 'secondary'}>
-                    {cliente?.avisa_vencimento ? 'Sim' : 'Não'}
-                  </Badge>
-                </div>
                 {cliente?.observacoes && (
                   <div className="md:col-span-2">
-                    <p className="text-muted-foreground">Observações Adicionais</p>
-                    <p className="font-semibold">{cliente.observacoes}</p>
+                    <p className="text-muted-foreground mb-2">Observações do Cliente</p>
+                    <div className="bg-muted/50 p-3 rounded-md">
+                      <p className="text-sm whitespace-pre-line">{cliente.observacoes}</p>
+                    </div>
+                  </div>
+                )}
+                {!cliente?.observacoes && (
+                  <div className="md:col-span-2 text-center py-4">
+                    <p className="text-sm text-muted-foreground">Nenhuma observação registrada</p>
                   </div>
                 )}
               </div>

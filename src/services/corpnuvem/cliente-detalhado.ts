@@ -146,36 +146,44 @@ export async function getClienteCompleto(codfil: number, codigo: number) {
   console.log('🔍 [CorpNuvem Cliente Completo] Iniciando busca completa:', { codfil, codigo });
   
   try {
-    // Buscar dados do cliente base
+    // Buscar dados do cliente base (já vem com tudo)
     const clienteRes = await corpClient.get("/cliente", { 
       params: { codfil, codigo } 
     });
-    const cliente = clienteRes.data;
+    
+    console.log('📦 [CorpNuvem Cliente Completo] Resposta da API:', clienteRes.data);
+    
+    const responseData = clienteRes.data;
+    const clienteData = responseData?.cliente?.[0] || responseData;
 
-    // Buscar todas as informações em paralelo
-    const [emails, telefones, enderecos, anexos, sinistros, renovacoes, negocios] = await Promise.all([
-      getClienteEmails(codfil, codigo),
-      getClienteTelefones(codfil, codigo),
-      getClienteEnderecos(codfil, codigo),
-      corpClient.get("/cliente_anexos", { params: { codfil, codigo } }).then(r => r.data?.anexos || []).catch(() => []),
-      getClienteSinistros(codfil, codigo),
-      getClienteRenovacoes(codfil, codigo),
-      getClienteNegocios(codfil, codigo),
-    ]);
+    // Buscar apenas os anexos (o resto já vem no /cliente)
+    const anexos = await corpClient.get("/cliente_anexos", { 
+      params: { codfil, codigo } 
+    })
+      .then(r => {
+        console.log('📎 [CorpNuvem Anexos] Resposta:', r.data);
+        return r.data?.anexos || [];
+      })
+      .catch(() => []);
 
-    console.log('✅ [CorpNuvem Cliente Completo] Dados consolidados com sucesso');
+    console.log('✅ [CorpNuvem Cliente Completo] Dados consolidados:', {
+      cliente: clienteData,
+      emails: clienteData?.emails,
+      telefones: clienteData?.telefones,
+      enderecos: clienteData?.enderecos
+    });
 
     return {
-      cliente,
+      cliente: clienteData,
       contatos: {
-        emails,
-        telefones,
+        emails: clienteData?.emails || [],
+        telefones: clienteData?.telefones || [],
       },
-      enderecos,
+      enderecos: clienteData?.enderecos || [],
       documentos: anexos,
-      sinistros,
-      renovacoes,
-      negocios,
+      sinistros: [],
+      renovacoes: [],
+      negocios: [],
     };
   } catch (error: any) {
     console.error('❌ [CorpNuvem Cliente Completo] Erro:', error?.response?.data);
