@@ -74,7 +74,14 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
   }, [veiculos]);
 
   const proprietarios = useMemo(() => {
-    const unique = Array.from(new Set(veiculos.map(v => v.proprietario_nome).filter(Boolean)));
+    const unique = Array.from(new Set(veiculos.map(v => {
+      const nome = v.proprietario_nome;
+      // Agrupar ESCAVE BAHIA e ESCAVE
+      if (nome === 'ESCAVE BAHIA' || nome === 'ESCAVE') {
+        return 'ESCAVE / ESCAVE BAHIA';
+      }
+      return nome;
+    }).filter(Boolean)));
     return unique.sort();
   }, [veiculos]);
 
@@ -95,7 +102,16 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
       if (filterModelo !== 'all' && v.modelo !== filterModelo) return false;
       if (filterAno !== 'all' && v.ano_modelo?.toString() !== filterAno) return false;
       if (filterCombustivel !== 'all' && v.combustivel !== filterCombustivel) return false;
-      if (filterProprietario !== 'all' && v.proprietario_nome !== filterProprietario) return false;
+      if (filterProprietario !== 'all') {
+        if (filterProprietario === 'ESCAVE / ESCAVE BAHIA') {
+          // Se filtrar por ESCAVE, incluir tanto ESCAVE quanto ESCAVE BAHIA
+          if (v.proprietario_nome !== 'ESCAVE' && v.proprietario_nome !== 'ESCAVE BAHIA') {
+            return false;
+          }
+        } else if (v.proprietario_nome !== filterProprietario) {
+          return false;
+        }
+      }
 
       return true;
     });
