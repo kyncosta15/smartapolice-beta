@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Pencil, Car } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Pencil, Car, FileDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FipeConsultaModal } from './FipeConsultaModal';
@@ -21,6 +21,7 @@ import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { Fuel } from '@/services/fipeApiService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { FipePDFGenerator } from '@/utils/fipePdfGenerator';
 
 interface FrotasFipeProps {
   veiculos: FrotaVeiculo[];
@@ -302,6 +303,63 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     }
   };
 
+  const handleGeneratePDF = () => {
+    try {
+      const pdfGenerator = new FipePDFGenerator();
+      
+      // Calcular estatísticas para o dashboard
+      const carros = veiculosFiltrados.filter(v => v.categoria?.toLowerCase().includes('carro') || v.categoria?.toLowerCase().includes('passeio'));
+      const caminhoes = veiculosFiltrados.filter(v => v.categoria?.toLowerCase().includes('caminh'));
+      const motos = veiculosFiltrados.filter(v => v.categoria?.toLowerCase().includes('moto'));
+      const outros = veiculosFiltrados.filter(v => 
+        !v.categoria?.toLowerCase().includes('carro') && 
+        !v.categoria?.toLowerCase().includes('passeio') &&
+        !v.categoria?.toLowerCase().includes('caminh') &&
+        !v.categoria?.toLowerCase().includes('moto')
+      );
+
+      const stats = {
+        totalFipeValue: veiculosFiltrados.reduce((acc, v) => acc + (v.preco_fipe || 0), 0),
+        carros: {
+          valor: carros.reduce((acc, v) => acc + (v.preco_fipe || 0), 0),
+          count: carros.length
+        },
+        caminhoes: {
+          valor: caminhoes.reduce((acc, v) => acc + (v.preco_fipe || 0), 0),
+          count: caminhoes.length
+        },
+        motos: {
+          valor: motos.reduce((acc, v) => acc + (v.preco_fipe || 0), 0),
+          count: motos.length
+        },
+        outros: {
+          valor: outros.reduce((acc, v) => acc + (v.preco_fipe || 0), 0),
+          count: outros.length
+        }
+      };
+
+      const pdfData = {
+        veiculos: veiculosFiltrados,
+        stats
+      };
+
+      const filename = `relatorio-fipe-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
+      pdfGenerator.download(pdfData, filename);
+
+      toast({
+        title: "PDF gerado com sucesso",
+        description: `Relatório salvo como ${filename}`,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Não foi possível gerar o relatório",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
   return (
     <div className="space-y-4 relative">
@@ -353,11 +411,22 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
               <Search className="w-4 h-4" />
               Filtros
             </h3>
-            {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={handleResetFilters}>
-                Limpar Filtros
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleGeneratePDF}
+                className="flex items-center gap-2"
+              >
+                <FileDown className="w-4 h-4" />
+                Gerar PDF
               </Button>
-            )}
+              {hasFilters && (
+                <Button variant="ghost" size="sm" onClick={handleResetFilters}>
+                  Limpar Filtros
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
