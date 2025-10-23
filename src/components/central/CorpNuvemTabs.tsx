@@ -78,6 +78,12 @@ export function CorpNuvemTabs() {
         dt_fim: dataFim,
         texto: searchTerm
       });
+      
+      // Log para debug - ver estrutura dos dados
+      if (data?.producao && data.producao.length > 0) {
+        console.log('📋 [Produção] Estrutura do primeiro item:', data.producao[0]);
+      }
+      
       setResultProducao(data);
       
       toast({
@@ -349,12 +355,16 @@ export function CorpNuvemTabs() {
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div className="col-span-2">
                             <span className="font-medium">Cliente:</span>{' '}
-                            <button
-                              onClick={() => handleVerDetalhesCliente({ codigo: prod.codcli })}
-                              className="text-primary hover:underline font-medium"
-                            >
-                              {prod.cliente}
-                            </button>
+                            {prod.codigo || prod.codigo_cliente ? (
+                              <button
+                                onClick={() => handleVerDetalhesCliente({ codigo: prod.codigo || prod.codigo_cliente || prod.codcli })}
+                                className="text-primary hover:underline font-medium"
+                              >
+                                {prod.cliente}
+                              </button>
+                            ) : (
+                              <span className="font-medium">{prod.cliente}</span>
+                            )}
                           </div>
                           {prod.numapo && (
                             <div>
