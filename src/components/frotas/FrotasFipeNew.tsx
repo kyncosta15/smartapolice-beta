@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import * as XLSX from 'xlsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
@@ -12,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Pencil, Car, FileDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Search, DollarSign, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Pencil, Car, FileDown, FileSpreadsheet } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FipeConsultaModal } from './FipeConsultaModal';
@@ -397,6 +398,89 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     }
   };
 
+  const handleGenerateExcel = () => {
+    try {
+      // Preparar dados para a planilha
+      const excelData = veiculosFiltrados.map(v => ({
+        'Placa': v.placa || 'N/A',
+        'Marca': v.marca || 'N/A',
+        'Modelo': v.modelo || 'N/A',
+        'Ano Modelo': v.ano_modelo || 'N/A',
+        'Combustível': v.combustivel || 'N/A',
+        'Categoria': v.categoria || 'N/A',
+        'Código FIPE': v.codigo_fipe || v.codigo || 'N/A',
+        'Proprietário': v.proprietario_nome || 'N/A',
+        'Tipo Proprietário': v.proprietario_tipo || 'N/A',
+        'Documento Proprietário': v.proprietario_doc || 'N/A',
+        'Valor Nota Fiscal': v.preco_nf ? `R$ ${v.preco_nf.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'N/A',
+        'Valor FIPE Atual': v.preco_fipe ? `R$ ${v.preco_fipe.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'N/A',
+        'Diferença (R$)': (v.preco_fipe && v.preco_nf) 
+          ? `R$ ${(v.preco_fipe - v.preco_nf).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` 
+          : 'N/A',
+        'Diferença (%)': (v.preco_fipe && v.preco_nf) 
+          ? `${(((v.preco_fipe - v.preco_nf) / v.preco_nf) * 100).toFixed(2)}%` 
+          : 'N/A',
+        'RENAVAM': v.renavam || 'N/A',
+        'Chassi': v.chassi || 'N/A',
+        'UF Emplacamento': v.uf_emplacamento || 'N/A',
+        'Status Seguro': v.status_seguro || 'N/A',
+        'Localização': v.localizacao || 'N/A',
+        'Observações': v.observacoes || 'N/A',
+      }));
+
+      // Criar workbook e worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Ajustar largura das colunas
+      const colWidths = [
+        { wch: 12 }, // Placa
+        { wch: 15 }, // Marca
+        { wch: 25 }, // Modelo
+        { wch: 12 }, // Ano
+        { wch: 12 }, // Combustível
+        { wch: 15 }, // Categoria
+        { wch: 15 }, // Código FIPE
+        { wch: 25 }, // Proprietário
+        { wch: 15 }, // Tipo Proprietário
+        { wch: 18 }, // Documento
+        { wch: 18 }, // Valor NF
+        { wch: 18 }, // Valor FIPE
+        { wch: 15 }, // Diferença R$
+        { wch: 12 }, // Diferença %
+        { wch: 15 }, // RENAVAM
+        { wch: 20 }, // Chassi
+        { wch: 12 }, // UF
+        { wch: 15 }, // Status
+        { wch: 20 }, // Localização
+        { wch: 30 }, // Observações
+      ];
+      ws['!cols'] = colWidths;
+
+      // Adicionar worksheet ao workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Tabela FIPE');
+
+      // Gerar nome do arquivo
+      const proprietarioText = filterProprietario !== 'all' ? `-${filterProprietario.replace(/[^a-zA-Z0-9]/g, '-')}` : '';
+      const filename = `tabela-fipe${proprietarioText}-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.xlsx`;
+
+      // Fazer download
+      XLSX.writeFile(wb, filename);
+
+      toast({
+        title: "Planilha gerada com sucesso",
+        description: `Arquivo salvo como ${filename}`,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar planilha:', error);
+      toast({
+        title: "Erro ao gerar planilha",
+        description: "Não foi possível gerar a planilha",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
   return (
     <div className="space-y-4 relative">
@@ -450,6 +534,15 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
                 Filtros
               </h3>
               <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleGenerateExcel}
+                  className="flex items-center gap-2"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Baixar Excel
+                </Button>
                 <Button 
                   variant="default" 
                   size="sm" 
