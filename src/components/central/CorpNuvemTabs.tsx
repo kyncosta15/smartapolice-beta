@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Search, Users, FileText, Calendar, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getClientesCorpNuvem, getProducao, getRenovacoes, getDocumento } from '@/services/corpnuvem';
@@ -30,6 +31,11 @@ export function CorpNuvemTabs() {
   const [resultDocumento, setResultDocumento] = useState<any>(null);
   const [codfil, setCodfil] = useState('1');
   const [nosnum, setNosnum] = useState('');
+  
+  // Estados Modal Cliente
+  const [modalClienteOpen, setModalClienteOpen] = useState(false);
+  const [clienteSelecionado, setClienteSelecionado] = useState<any>(null);
+  const [loadingClienteDetalhes, setLoadingClienteDetalhes] = useState(false);
 
   const handleBuscarClientes = async () => {
     if (!searchTerm) {
@@ -143,6 +149,32 @@ export function CorpNuvemTabs() {
     }
   };
 
+  const handleVerDetalhesCliente = async (cliente: any) => {
+    setModalClienteOpen(true);
+    setLoadingClienteDetalhes(true);
+    
+    try {
+      // Busca detalhes completos do cliente usando codfil e codigo
+      const data = await getClientesCorpNuvem({ 
+        codfil: 1, // Usar codfil padrão ou do cliente
+        codigo: cliente.codigo 
+      });
+      
+      if (data && data.length > 0) {
+        setClienteSelecionado(data[0]);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao buscar detalhes do cliente',
+        variant: 'destructive',
+      });
+      setModalClienteOpen(false);
+    } finally {
+      setLoadingClienteDetalhes(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -197,12 +229,22 @@ export function CorpNuvemTabs() {
                   {resultClientes.map((cliente: any, idx: number) => (
                     <Card key={idx}>
                       <CardContent className="p-4">
-                        <h4 className="font-semibold">{cliente.nome}</h4>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          {cliente.cpf_cnpj && <p>CPF/CNPJ: {cliente.cpf_cnpj}</p>}
-                          {cliente.email && <p>Email: {cliente.email}</p>}
-                          {cliente.telefone && <p>Tel: {cliente.telefone}</p>}
-                          {cliente.cidade && <p>Cidade: {cliente.cidade}</p>}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <h4 className="font-semibold">{cliente.nome}</h4>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              {cliente.codigo && <p>Código: {cliente.codigo}</p>}
+                              {cliente.ddd && cliente.numero && <p>Tel: ({cliente.ddd}) {cliente.numero}</p>}
+                            </div>
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleVerDetalhesCliente(cliente)}
+                            className="shrink-0"
+                          >
+                            <Search className="h-4 w-4" />
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -388,6 +430,96 @@ export function CorpNuvemTabs() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modal Detalhes do Cliente */}
+      <Dialog open={modalClienteOpen} onOpenChange={setModalClienteOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Cliente</DialogTitle>
+            <DialogDescription>
+              Informações completas do cliente
+            </DialogDescription>
+          </DialogHeader>
+          
+          {loadingClienteDetalhes ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : clienteSelecionado ? (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{clienteSelecionado.nome}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {clienteSelecionado.codigo && (
+                      <div>
+                        <span className="font-semibold">Código:</span> {clienteSelecionado.codigo}
+                      </div>
+                    )}
+                    {clienteSelecionado.cpf_cnpj && (
+                      <div>
+                        <span className="font-semibold">CPF/CNPJ:</span> {clienteSelecionado.cpf_cnpj}
+                      </div>
+                    )}
+                    {clienteSelecionado.email && (
+                      <div>
+                        <span className="font-semibold">Email:</span> {clienteSelecionado.email}
+                      </div>
+                    )}
+                    {(clienteSelecionado.ddd || clienteSelecionado.numero) && (
+                      <div>
+                        <span className="font-semibold">Telefone:</span> ({clienteSelecionado.ddd}) {clienteSelecionado.numero}
+                      </div>
+                    )}
+                    {clienteSelecionado.celular && (
+                      <div>
+                        <span className="font-semibold">Celular:</span> {clienteSelecionado.celular}
+                      </div>
+                    )}
+                    {clienteSelecionado.endereco && (
+                      <div className="col-span-2">
+                        <span className="font-semibold">Endereço:</span> {clienteSelecionado.endereco}
+                      </div>
+                    )}
+                    {clienteSelecionado.bairro && (
+                      <div>
+                        <span className="font-semibold">Bairro:</span> {clienteSelecionado.bairro}
+                      </div>
+                    )}
+                    {clienteSelecionado.cidade && (
+                      <div>
+                        <span className="font-semibold">Cidade:</span> {clienteSelecionado.cidade}
+                      </div>
+                    )}
+                    {clienteSelecionado.uf && (
+                      <div>
+                        <span className="font-semibold">UF:</span> {clienteSelecionado.uf}
+                      </div>
+                    )}
+                    {clienteSelecionado.cep && (
+                      <div>
+                        <span className="font-semibold">CEP:</span> {clienteSelecionado.cep}
+                      </div>
+                    )}
+                    {clienteSelecionado.tipo && (
+                      <div>
+                        <span className="font-semibold">Tipo:</span> {clienteSelecionado.tipo}
+                      </div>
+                    )}
+                    {clienteSelecionado.situacao && (
+                      <div>
+                        <span className="font-semibold">Situação:</span> {clienteSelecionado.situacao}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
