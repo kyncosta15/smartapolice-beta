@@ -27,6 +27,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   const { user } = useAuth();
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
   const [duplicateInfo, setDuplicateInfo] = useState<DuplicateInfo | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   // DEBUG: Log sempre que duplicateInfo mudar
   useEffect(() => {
@@ -40,7 +41,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
     }
   }, [duplicateInfo]);
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!acceptedFiles || acceptedFiles.length === 0) {
       console.warn("Nenhum arquivo foi selecionado.");
       return;
@@ -57,40 +58,61 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       return;
     }
 
-    console.log(`🚀 EnhancedPDFUpload.onDrop INICIADO!`);
-    console.log(`📤 Processando ${acceptedFiles.length} arquivo(s)`);
+    console.log(`📁 ${acceptedFiles.length} arquivo(s) selecionado(s)`);
+    setSelectedFiles(prev => [...prev, ...acceptedFiles]);
+    
+    toast({
+      title: "✅ Arquivos Adicionados",
+      description: `${acceptedFiles.length} arquivo(s) pronto(s) para envio`,
+    });
+  }, [toast, user?.id]);
+
+  const handleSendFiles = useCallback(async () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "⚠️ Nenhum Arquivo",
+        description: "Selecione pelo menos um arquivo antes de enviar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      console.error("❌ Usuário não autenticado:", { user });
+      toast({
+        title: "❌ Erro de Autenticação",
+        description: "Você precisa estar logado para fazer upload de arquivos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log(`🚀 Enviando ${selectedFiles.length} arquivo(s) para processamento`);
     console.log(`👤 User ID autenticado:`, user.id);
     console.log(`📧 User email:`, user.email);
     
     setIsProcessingBatch(true);
 
     try {
-      // Criar FileProcessor com userId válido e callback de duplicatas
       const fileProcessor = new FileProcessor(
         updateFileStatus,
         removeFileStatus,
-        user.id, // GARANTIR que userId seja passado
+        user.id,
         onPolicyExtracted,
         toast,
         (info) => {
-          // Callback quando duplicata é detectada
-          console.log('🔔 CALLBACK DE DUPLICATA CHAMADO NO ENHANCED PDF UPLOAD!');
+          console.log('🔔 CALLBACK DE DUPLICATA CHAMADO!');
           console.log('📋 Info recebida:', info);
-          console.log('📋 Setando duplicateInfo no state...');
           setDuplicateInfo(info);
-          console.log('✅ duplicateInfo setado!');
         }
       );
 
-      console.log(`🚀 Chamando fileProcessor.processMultipleFiles com userId: ${user.id}`);
-      console.log(`🎯 Callback onDuplicateDetected foi fornecido:`, !!fileProcessor);
+      console.log(`🚀 Processando ${selectedFiles.length} arquivos via webhook`);
       
-      // Processar arquivos em lote
-      const allResults = await fileProcessor.processMultipleFiles(acceptedFiles, user.email);
+      const allResults = await fileProcessor.processMultipleFiles(selectedFiles, user.email);
       
       console.log(`🎉 Processamento completo! ${allResults.length} apólices extraídas e salvas`);
       
-      // Sempre notificar o componente pai para recarregar os dados
       allResults.forEach(policy => {
         onPolicyExtracted(policy);
       });
@@ -100,18 +122,19 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           title: "🎉 Upload Concluído com Sucesso",
           description: `${allResults.length} apólice(s) foram processadas e salvas no seu perfil`,
         });
+        setSelectedFiles([]); // Limpar arquivos após sucesso
       } else {
         toast({
           title: "⚠️ Nenhuma Apólice Processada",
-          description: "Não foi possível extrair dados dos arquivos enviados. Verifique se são PDFs válidos de apólices.",
+          description: "Não foi possível extrair dados dos arquivos enviados.",
           variant: "destructive",
         });
       }
 
     } catch (error) {
-      console.error('❌ Erro DETALHADO no processamento em lote:', error);
+      console.error('❌ Erro no processamento:', error);
       
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no processamento';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       
       toast({
         title: "❌ Erro no Processamento",
@@ -122,8 +145,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       setIsProcessingBatch(false);
       console.log('🏁 Processamento finalizado');
     }
-
-  }, [toast, user?.id, updateFileStatus, removeFileStatus, onPolicyExtracted]);
+  }, [selectedFiles, toast, user?.id, user?.email, updateFileStatus, removeFileStatus, onPolicyExtracted]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -246,6 +268,44 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
               )}
             </div>
           </div>
+
+          {selectedFiles.length > 0 && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm font-medium text-blue-900 mb-2">
+                {selectedFiles.length} arquivo(s) selecionado(s):
+              </p>
+              <ul className="text-xs text-blue-700 space-y-1 mb-3">
+                {selectedFiles.map((file, idx) => (
+                  <li key={idx} className="flex items-center justify-between">
+                    <span>📄 {file.name}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
+                      }}
+                      className="text-red-500 hover:text-red-700 ml-2"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                onClick={handleSendFiles}
+                disabled={isProcessingBatch}
+                className="w-full"
+              >
+                {isProcessingBatch ? (
+                  <>
+                    <Clock className="mr-2 h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  `Enviar ${selectedFiles.length} Arquivo(s)`
+                )}
+              </Button>
+            </div>
+          )}
 
           <FileStatusList 
             fileStatuses={fileStatuses} 
