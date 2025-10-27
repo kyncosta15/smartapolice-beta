@@ -1,142 +1,29 @@
 export class DynamicPDFExtractor {
-  private static readonly WEBHOOK_URL = 'https://rcorpsolutions.app.n8n.cloud/webhook-test/upload-arquivo';
-  private static readonly TIMEOUT = 120000; // Aumentado para 2 minutos
-  private static readonly MAX_RETRIES = 2; // Reduzido para evitar loops longos
+  private static readonly WEBHOOK_URL = 'https://rcorpsolutions.app.n8n.cloud/webhook/upload-arquivo';
+  private static readonly TIMEOUT = 120000; // 2 minutos para múltiplos arquivos
+  private static readonly MAX_FILES = 10; // Limite de arquivos por requisição
 
   static async extractFromPDF(file: File, userId?: string): Promise<any> {
     console.log(`🔄 Enviando arquivo individual: ${file.name} (${file.size} bytes)`);
     console.log('📡 Webhook URL:', this.WEBHOOK_URL);
     console.log(`👤 userId: ${userId}`);
 
-    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
-      try {
-        const formData = new FormData();
-        formData.append('arquivo', file);
-        formData.append('fileName', file.name);
-        formData.append('timestamp', new Date().toISOString());
-        formData.append('fileSize', file.size.toString());
-        
-        if (userId) {
-          formData.append('userId', userId);
-          console.log(`✅ userId ${userId} adicionado ao FormData`);
-        }
-
-        console.log(`🔄 Tentativa ${attempt}/${this.MAX_RETRIES} para ${file.name}`);
-        console.log('📤 Enviando para:', this.WEBHOOK_URL);
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => {
-          console.log(`⏰ Timeout após ${this.TIMEOUT}ms para ${file.name}`);
-          controller.abort();
-        }, this.TIMEOUT);
-
-        const response = await fetch(this.WEBHOOK_URL, {
-          method: 'POST',
-          body: formData,
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json',
-          }
-        });
-
-        clearTimeout(timeoutId);
-
-        console.log(`📡 Resposta para ${file.name}: ${response.status} ${response.statusText}`);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('❌ Erro HTTP:', response.status, response.statusText, errorText);
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        // Verificar se há conteúdo na resposta
-        const contentLength = response.headers.get('content-length');
-        if (contentLength === '0') {
-          throw new Error('Resposta vazia do servidor');
-        }
-
-        // Tentar ler como texto primeiro para verificar o conteúdo
-        const responseText = await response.text();
-        console.log(`📝 Resposta texto (primeiros 200 chars): ${responseText.substring(0, 200)}...`);
-
-        if (!responseText.trim()) {
-          throw new Error('Resposta vazia do servidor');
-        }
-
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error(`❌ Erro ao parsear JSON:`, parseError);
-          console.error(`📝 Resposta completa: ${responseText}`);
-          throw new Error(`Resposta inválida do servidor`);
-        }
-
-        console.log(`✅ Dados extraídos de ${file.name}:`, data);
-        
-        // Verificar se é array ou objeto único
-        const isArray = Array.isArray(data);
-        const resultArray = isArray ? data : [data];
-        
-        console.log(`📊 Tipo de resposta do N8N: ${isArray ? 'ARRAY' : 'OBJETO ÚNICO'}`);
-        console.log(`📊 Total de apólices retornadas pelo N8N: ${resultArray.length}`);
-        
-        if (resultArray.length > 1) {
-          console.log(`🎉 MÚLTIPLAS APÓLICES DETECTADAS NO PDF "${file.name}"`);
-          resultArray.forEach((policy, idx) => {
-            console.log(`  ${idx + 1}. ${policy.segurado || 'Nome não identificado'} - ${policy.numero_apolice || 'Sem número'}`);
-          });
-        } else {
-          console.log(`ℹ️ Apenas UMA apólice detectada no PDF "${file.name}"`);
-        }
-        
-        if (!data || (Array.isArray(data) && data.length === 0)) {
-          throw new Error(`Dados vazios retornados para ${file.name}`);
-        }
-
-        return resultArray;
-
-      } catch (error) {
-        console.error(`❌ Tentativa ${attempt} falhou para ${file.name}:`, error);
-        
-        if (attempt === this.MAX_RETRIES) {
-          // No último erro, retornar dados simulados ao invés de falhar
-          console.log(`🔄 Criando dados simulados para ${file.name}`);
-          return this.createFallbackData(file, userId);
-        }
-        
-        const retryDelay = 2000 * attempt;
-        console.log(`⏳ Aguardando ${retryDelay}ms antes da próxima tentativa`);
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
-      }
-    }
-  }
-
-  static async extractFromMultiplePDFs(files: File[], userId?: string): Promise<any[]> {
-    console.log(`🔄 Enviando ${files.length} arquivos em uma única requisição`);
-    console.log(`👤 userId recebido:`, userId);
-    
     try {
       const formData = new FormData();
-      
-      // Adicionar todos os arquivos com o mesmo campo "data"
-      files.forEach((file) => {
-        formData.append('data', file);
-        console.log(`📎 Adicionado ao FormData: ${file.name} (${file.size} bytes)`);
-      });
-      
-      // Adicionar metadados
+      formData.append('file1', file);
       formData.append('timestamp', new Date().toISOString());
+      formData.append('totalFiles', '1');
+      
       if (userId) {
         formData.append('userId', userId);
         console.log(`✅ userId ${userId} adicionado ao FormData`);
       }
 
-      console.log(`📤 Enviando ${files.length} arquivos para: ${this.WEBHOOK_URL}`);
+      console.log(`📤 Enviando para: ${this.WEBHOOK_URL}`);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.log(`⏰ Timeout após ${this.TIMEOUT}ms`);
+        console.log(`⏰ Timeout após ${this.TIMEOUT}ms para ${file.name}`);
         controller.abort();
       }, this.TIMEOUT);
 
@@ -144,14 +31,11 @@ export class DynamicPDFExtractor {
         method: 'POST',
         body: formData,
         signal: controller.signal,
-        headers: {
-          'Accept': 'application/json',
-        }
       });
 
       clearTimeout(timeoutId);
 
-      console.log(`📡 Resposta: ${response.status} ${response.statusText}`);
+      console.log(`📡 Resposta para ${file.name}: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -159,8 +43,13 @@ export class DynamicPDFExtractor {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
+      const contentLength = response.headers.get('content-length');
+      if (contentLength === '0') {
+        throw new Error('Resposta vazia do servidor');
+      }
+
       const responseText = await response.text();
-      console.log(`📝 Resposta recebida (primeiros 500 chars): ${responseText.substring(0, 500)}...`);
+      console.log(`📝 Resposta texto (primeiros 200 chars): ${responseText.substring(0, 200)}...`);
 
       if (!responseText.trim()) {
         throw new Error('Resposta vazia do servidor');
@@ -171,33 +60,137 @@ export class DynamicPDFExtractor {
         data = JSON.parse(responseText);
       } catch (parseError) {
         console.error(`❌ Erro ao parsear JSON:`, parseError);
+        console.error(`📝 Resposta completa: ${responseText}`);
         throw new Error(`Resposta inválida do servidor`);
       }
 
-      console.log(`✅ Dados extraídos:`, data);
+      console.log(`✅ Dados extraídos de ${file.name}:`, data);
       
       const isArray = Array.isArray(data);
       const resultArray = isArray ? data : [data];
       
-      console.log(`📊 Total de apólices retornadas: ${resultArray.length}`);
+      console.log(`📊 Tipo de resposta do N8N: ${isArray ? 'ARRAY' : 'OBJETO ÚNICO'}`);
+      console.log(`📊 Total de apólices retornadas pelo N8N: ${resultArray.length}`);
       
-      if (!data || resultArray.length === 0) {
-        throw new Error(`Dados vazios retornados`);
+      if (resultArray.length > 1) {
+        console.log(`🎉 MÚLTIPLAS APÓLICES DETECTADAS NO PDF "${file.name}"`);
+        resultArray.forEach((policy, idx) => {
+          console.log(`  ${idx + 1}. ${policy.segurado || 'Nome não identificado'} - ${policy.numero_apolice || 'Sem número'}`);
+        });
+      } else {
+        console.log(`ℹ️ Apenas UMA apólice detectada no PDF "${file.name}"`);
+      }
+      
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        throw new Error(`Dados vazios retornados para ${file.name}`);
       }
 
       return resultArray;
 
     } catch (error) {
-      console.error(`❌ Erro ao processar lote de arquivos:`, error);
+      console.error(`❌ Erro ao processar ${file.name}:`, error);
+      throw error;
+    }
+  }
+
+  static async extractFromMultiplePDFs(files: File[], userId?: string): Promise<any[]> {
+    if (files.length > this.MAX_FILES) {
+      throw new Error(`Limite de ${this.MAX_FILES} arquivos por vez. Você selecionou ${files.length}.`);
+    }
+
+    console.log(`🔄 Enviando ${files.length} arquivos em uma única requisição`);
+    console.log(`👤 userId recebido:`, userId);
+    console.log(`📡 Endpoint: ${this.WEBHOOK_URL}`);
+    
+    try {
+      const formData = new FormData();
       
-      // Criar fallback para todos os arquivos
-      const results: any[] = [];
-      files.forEach(file => {
-        const fallbackData = this.createFallbackData(file, userId);
-        results.push(...fallbackData);
+      // Adicionar cada arquivo com um nome único (file1, file2, file3, etc)
+      files.forEach((file, index) => {
+        formData.append(`file${index + 1}`, file);
+        console.log(`📎 Arquivo ${index + 1}: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
       });
       
-      return results;
+      // Adicionar metadados
+      formData.append('timestamp', new Date().toISOString());
+      formData.append('totalFiles', files.length.toString());
+      
+      if (userId) {
+        formData.append('userId', userId);
+        console.log(`✅ userId ${userId} adicionado`);
+      }
+
+      console.log(`📤 Enviando requisição para o n8n...`);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.log(`⏰ Timeout após ${this.TIMEOUT / 1000} segundos`);
+        controller.abort();
+      }, this.TIMEOUT);
+
+      const response = await fetch(this.WEBHOOK_URL, {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log(`📡 Status da resposta: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Erro HTTP:', response.status, errorText);
+        throw new Error(`Erro no servidor n8n: ${response.status} - ${response.statusText}`);
+      }
+
+      const responseText = await response.text();
+      console.log(`📝 Resposta bruta (primeiros 1000 chars):\n${responseText.substring(0, 1000)}`);
+
+      if (!responseText.trim()) {
+        throw new Error('Resposta vazia do servidor n8n');
+      }
+
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`❌ Erro ao parsear JSON:`, parseError);
+        console.error(`Resposta completa:\n${responseText}`);
+        throw new Error('Resposta inválida do servidor n8n (não é JSON válido)');
+      }
+
+      console.log(`✅ Resposta parseada com sucesso:`, responseData);
+
+      // Extrair apólices da resposta
+      // O n8n retorna { apolices: [...] }
+      const apolices = responseData.apolices || responseData;
+      
+      if (!Array.isArray(apolices)) {
+        console.warn('⚠️ Resposta não é um array, tentando converter...');
+        return [apolices];
+      }
+
+      console.log(`🎉 ${apolices.length} apólice(s) extraída(s) com sucesso!`);
+      
+      // Logar resumo de cada apólice
+      apolices.forEach((apolice, idx) => {
+        console.log(`  ${idx + 1}. ${apolice.segurado || 'Nome não disponível'} - ${apolice.numero_apolice || 'Sem número'}`);
+      });
+
+      return apolices;
+
+    } catch (error) {
+      console.error(`❌ ERRO CRÍTICO ao processar arquivos:`, error);
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Tempo esgotado! O processamento demorou mais de 2 minutos. Tente com menos arquivos.');
+        }
+        throw error;
+      }
+      
+      throw new Error('Erro desconhecido ao processar os arquivos');
     }
   }
 
