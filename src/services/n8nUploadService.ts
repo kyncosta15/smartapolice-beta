@@ -1,12 +1,12 @@
 import { supabase } from '@/integrations/supabase/client';
 
 // Configuração de URLs do N8N
-const N8N_BASE_URL = 'https://rcorpoficial2025.app.n8n.cloud';
+const N8N_BASE_URL = 'https://rcorpsolutions.app.n8n.cloud';
 
 // URLs para diferentes ambientes
 export const N8N_URLS = {
-  test: `${N8N_BASE_URL}/webhook/upload-arquivo`,
-  production: `${N8N_BASE_URL}/webhook/upload-arquivo`
+  test: `${N8N_BASE_URL}/webhook-test/upload-arquivo`,
+  production: `${N8N_BASE_URL}/webhook-test/upload-arquivo`
 };
 
 export interface N8NUploadMetadata {
