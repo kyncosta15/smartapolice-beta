@@ -149,6 +149,9 @@ export class DynamicPDFExtractor {
   private static createFallbackData(file: File, userId?: string): any[] {
     console.log(`🔄 Criando dados de fallback para ${file.name}`);
     
+    const premioAnual = 1200 + Math.random() * 2000;
+    const premioMensal = premioAnual / 12;
+    
     const mockData = {
       informacoes_gerais: {
         nome_apolice: `Apólice ${file.name.replace('.pdf', '')}`,
@@ -163,8 +166,8 @@ export class DynamicPDFExtractor {
         entidade: "Corretora Simulada"
       },
       informacoes_financeiras: {
-        premio_anual: 1200 + Math.random() * 2000,
-        premio_mensal: 100 + Math.random() * 200
+        premio_anual: premioAnual,
+        premio_mensal: premioMensal
       },
       vigencia: {
         inicio: new Date().toISOString().split('T')[0],
@@ -176,7 +179,10 @@ export class DynamicPDFExtractor {
         documento: `${Math.floor(10000000000 + Math.random() * 90000000000)}`,
         tipo_pessoa: 'PF'
       },
-      user_id: userId, // Garantir que userId está presente
+      // Campos adicionais necessários para validação
+      premio: premioAnual,
+      premium: premioAnual,
+      user_id: userId,
       documento: `${Math.floor(10000000000 + Math.random() * 90000000000)}`,
       documento_tipo: 'CPF'
     };
