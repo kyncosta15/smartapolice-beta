@@ -115,21 +115,27 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
       </Dialog>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir esta apólice? Esta ação não pode ser desfeita. 
-              Todos os dados relacionados, incluindo o arquivo PDF, serão permanentemente removidos.
+            <AlertDialogTitle className="text-lg font-semibold text-foreground">
+              Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground space-y-3">
+              <p>
+                Tem certeza que deseja excluir esta apólice?
+              </p>
+              <p className="text-xs">
+                Esta ação não pode ser desfeita. Todos os dados relacionados, incluindo o arquivo PDF, serão permanentemente removidos.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-destructive hover:bg-destructive/90"
             >
-              Excluir Definitivamente
+              Excluir Apólice
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

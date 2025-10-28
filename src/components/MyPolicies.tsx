@@ -695,37 +695,37 @@ export function MyPolicies() {
       }}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-semibold text-red-600">
-              ⚠️ Confirmar Deleção
+            <AlertDialogTitle className="text-lg font-semibold text-foreground">
+              Confirmar Exclusão
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-gray-600">
-              Tem certeza que deseja deletar a apólice <strong>"{policyToDelete?.name}"</strong>?
-              <br /><br />
-              <span className="text-red-600 font-medium">
-                Esta ação não pode ser desfeita.
-              </span> Todos os dados relacionados a esta apólice, incluindo parcelas e coberturas, serão permanentemente removidos.
+            <AlertDialogDescription className="text-sm text-muted-foreground space-y-3">
+              <p>
+                Tem certeza que deseja excluir a apólice <strong className="text-foreground">"{policyToDelete?.name}"</strong>?
+              </p>
+              <p className="text-xs">
+                Esta ação não pode ser desfeita. Todos os dados relacionados a esta apólice, incluindo parcelas e coberturas, serão permanentemente removidos.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
             <AlertDialogCancel 
               onClick={handleCancelDelete} 
               disabled={isDeleting}
-              className="border-gray-300"
             >
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleConfirmDelete}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600 text-white"
+              className="bg-destructive hover:bg-destructive/90"
             >
               {isDeleting ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Deletando...
+                  Excluindo...
                 </div>
               ) : (
-                "🗑️ Deletar Apólice"
+                "Excluir Apólice"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
