@@ -1,6 +1,6 @@
 export class DynamicPDFExtractor {
   private static readonly WEBHOOK_URL = 'https://rcorpsolutions.app.n8n.cloud/webhook/upload-arquivo';
-  private static readonly TIMEOUT = 300000; // 5 minutos para múltiplos arquivos
+  private static readonly TIMEOUT = 600000; // 10 minutos para múltiplos arquivos
   private static readonly MAX_FILES = 10; // Limite de arquivos por requisição
 
   static async extractFromPDF(file: File, userId?: string): Promise<any> {
@@ -207,7 +207,7 @@ export class DynamicPDFExtractor {
       
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error('Tempo esgotado! O processamento demorou mais de 2 minutos. Tente com menos arquivos.');
+          throw new Error('Tempo esgotado! O processamento demorou mais de 10 minutos. Tente com menos arquivos.');
         }
         throw error;
       }

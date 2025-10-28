@@ -269,7 +269,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
                 
                 <div className="bg-blue-50 rounded-lg p-4 mb-6">
                   <p className="text-sm text-blue-800">
-                    ⏱️ Tempo estimado: <strong>{selectedFiles.length * 20}-{selectedFiles.length * 60} segundos</strong>
+                    ⏱️ Tempo estimado: <strong>até 10 minutos</strong>
                   </p>
                   <p className="text-xs text-blue-600 mt-1">
                     O tempo varia conforme a quantidade e complexidade dos arquivos
