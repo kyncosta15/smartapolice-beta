@@ -68,7 +68,12 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
   }, [toast, user?.id]);
 
   const handleSendFiles = useCallback(async () => {
+    console.log('🖱️🖱️🖱️ BOTÃO PROCESSAR CLICADO!');
+    console.log('📦 selectedFiles:', selectedFiles);
+    console.log('📊 Quantidade de arquivos:', selectedFiles.length);
+    
     if (selectedFiles.length === 0) {
+      console.warn('⚠️ Nenhum arquivo selecionado');
       toast({
         title: "⚠️ Nenhum Arquivo",
         description: "Selecione pelo menos um arquivo antes de enviar.",
@@ -87,7 +92,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       return;
     }
 
-    console.log(`🚀 Enviando ${selectedFiles.length} arquivo(s) para processamento`);
+    console.log(`🚀🚀🚀 INICIANDO PROCESSAMENTO DE ${selectedFiles.length} ARQUIVO(S)`);
     console.log(`👤 User ID autenticado:`, user.id);
     console.log(`📧 User email:`, user.email);
     
