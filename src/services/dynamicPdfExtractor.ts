@@ -94,6 +94,10 @@ export class DynamicPDFExtractor {
   }
 
   static async extractFromMultiplePDFs(files: File[], userId?: string): Promise<any[]> {
+    console.log('🚀🚀🚀 ==========================================');
+    console.log('🚀🚀🚀 INICIANDO extractFromMultiplePDFs');
+    console.log('🚀🚀🚀 ==========================================');
+    
     if (files.length > this.MAX_FILES) {
       throw new Error(`Limite de ${this.MAX_FILES} arquivos por vez. Você selecionou ${files.length}.`);
     }
@@ -105,38 +109,56 @@ export class DynamicPDFExtractor {
     try {
       const formData = new FormData();
       
+      console.log('📦 Construindo FormData...');
+      
       // Adicionar cada arquivo com um nome único (file1, file2, file3, etc)
       files.forEach((file, index) => {
-        formData.append(`file${index + 1}`, file);
-        console.log(`📎 Arquivo ${index + 1}: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
+        const fieldName = `file${index + 1}`;
+        formData.append(fieldName, file);
+        console.log(`📎 Adicionado campo "${fieldName}": ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
       });
       
       // Adicionar metadados
-      formData.append('timestamp', new Date().toISOString());
+      const timestamp = new Date().toISOString();
+      formData.append('timestamp', timestamp);
       formData.append('totalFiles', files.length.toString());
+      console.log(`⏰ Timestamp: ${timestamp}`);
+      console.log(`📊 Total de arquivos: ${files.length}`);
       
       if (userId) {
         formData.append('userId', userId);
-        console.log(`✅ userId ${userId} adicionado`);
+        console.log(`✅ userId ${userId} adicionado ao FormData`);
+      } else {
+        console.warn('⚠️ Nenhum userId fornecido');
       }
 
-      console.log(`📤 Enviando requisição para o n8n...`);
+      console.log('📤📤📤 ENVIANDO REQUISIÇÃO PARA O N8N...');
+      console.log(`📤 URL: ${this.WEBHOOK_URL}`);
+      console.log(`📤 Método: POST`);
+      console.log(`📤 Timeout: ${this.TIMEOUT / 1000} segundos`);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.log(`⏰ Timeout após ${this.TIMEOUT / 1000} segundos`);
+        console.error(`⏰❌ TIMEOUT! Requisição abortada após ${this.TIMEOUT / 1000} segundos`);
         controller.abort();
       }, this.TIMEOUT);
 
+      console.log('🌐 Executando fetch...');
+      const fetchStartTime = Date.now();
+      
       const response = await fetch(this.WEBHOOK_URL, {
         method: 'POST',
         body: formData,
         signal: controller.signal,
       });
 
+      const fetchDuration = Date.now() - fetchStartTime;
       clearTimeout(timeoutId);
 
-      console.log(`📡 Status da resposta: ${response.status} ${response.statusText}`);
+      console.log('✅✅✅ RESPOSTA RECEBIDA DO N8N!');
+      console.log(`📡 Status: ${response.status} ${response.statusText}`);
+      console.log(`⏱️ Duração: ${fetchDuration}ms`);
+      console.log(`📊 Headers:`, Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
