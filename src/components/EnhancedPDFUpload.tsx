@@ -248,128 +248,165 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div
-            {...getRootProps()} 
-            className={`relative border-2 border-dashed rounded-lg p-8 transition-all ${
-              selectedFiles.length > 0 
-                ? 'border-gray-200 bg-gray-50/50 cursor-default'
-                : isProcessingBatch 
-                  ? 'bg-gray-50 border-gray-300 cursor-not-allowed' 
-                  : 'hover:bg-blue-50/50 border-gray-300 cursor-pointer hover:border-blue-400'
-            } ${isDragActive ? 'border-blue-500 bg-blue-50' : ''}`}
-          >
-            <input {...getInputProps()} multiple />
-            <div className="text-center">
-              <FilePlus className={`h-10 w-10 mx-auto mb-4 ${
-                selectedFiles.length > 0 ? 'text-gray-400' : 
-                isProcessingBatch ? 'text-gray-400' : 'text-blue-500'
-              }`} />
-              <p className={`text-base font-medium mb-2 ${
-                selectedFiles.length > 0 ? 'text-gray-600' : 
-                isProcessingBatch ? 'text-gray-400' : 'text-gray-700'
-              }`}>
-                {selectedFiles.length > 0 
-                  ? `${selectedFiles.length} arquivo(s) selecionado(s)` 
-                  : isProcessingBatch 
-                    ? 'Processando via n8n...' 
-                    : isDragActive 
-                      ? 'Solte os arquivos aqui' 
-                      : 'Arraste PDFs aqui ou clique'
-                }
-              </p>
-              {!isProcessingBatch && selectedFiles.length === 0 && (
-                <p className="text-sm text-gray-500">
-                  Máximo de 10 arquivos • Apenas PDF
-                </p>
-              )}
-              {isProcessingBatch && (
-                <div className="mt-6">
-                  <div className="flex justify-center items-center space-x-2 mb-3">
-                    <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce"></div>
-                    <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+          {/* Loading Screen - Componente único durante processamento */}
+          {isProcessingBatch ? (
+            <div className="py-12">
+              <div className="max-w-md mx-auto text-center">
+                <div className="mb-6">
+                  <div className="relative w-20 h-20 mx-auto">
+                    <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
+                    <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
                   </div>
-                  <p className="text-sm text-blue-600 font-medium">
-                    Processando {selectedFiles.length} arquivo(s)
+                </div>
+                
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Processando Apólices
+                </h3>
+                
+                <p className="text-gray-600 mb-4">
+                  {selectedFiles.length} arquivo(s) sendo processado(s) via n8n
+                </p>
+                
+                <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-blue-800">
+                    ⏱️ Tempo estimado: <strong>{selectedFiles.length * 20}-{selectedFiles.length * 60} segundos</strong>
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Tempo varia conforme quantidade • Aguarde até 5 minutos
+                  <p className="text-xs text-blue-600 mt-1">
+                    O tempo varia conforme a quantidade e complexidade dos arquivos
                   </p>
                 </div>
-              )}
-            </div>
-          </div>
 
-          {selectedFiles.length > 0 && (
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <p className="text-sm font-medium text-gray-700">
-                  {selectedFiles.length} arquivo(s) pronto(s)
-                </p>
-                <button
-                  onClick={() => setSelectedFiles([])}
-                  className="text-xs text-gray-500 hover:text-red-600 underline"
-                  disabled={isProcessingBatch}
-                >
-                  Limpar
-                </button>
-              </div>
-              
-              <div className="max-h-40 overflow-y-auto space-y-2 bg-gray-50 rounded-lg p-3">
-                {selectedFiles.map((file, idx) => (
-                  <div 
-                    key={idx} 
-                    className="flex items-center justify-between p-2 bg-white rounded border border-gray-200"
-                  >
-                    <div className="flex items-center space-x-2 flex-1 min-w-0">
-                      <span className="text-blue-500 text-sm">📄</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">
-                          {file.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {(file.size / 1024).toFixed(1)} KB
-                        </p>
+                <div className="space-y-2">
+                  {selectedFiles.map((file, idx) => (
+                    <div 
+                      key={idx}
+                      className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 text-sm">📄</span>
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {(file.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 ml-3">
+                        <div className="flex space-x-1">
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
-                      }}
-                      disabled={isProcessingBatch}
-                      className="ml-2 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 text-lg"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Upload Area */}
+              <div
+                {...getRootProps()} 
+                className={`relative border-2 border-dashed rounded-lg p-8 transition-all ${
+                  selectedFiles.length > 0 
+                    ? 'border-gray-200 bg-gray-50/50 cursor-default'
+                    : 'hover:bg-blue-50/50 border-gray-300 cursor-pointer hover:border-blue-400'
+                } ${isDragActive ? 'border-blue-500 bg-blue-50' : ''}`}
+              >
+                <input {...getInputProps()} multiple />
+                <div className="text-center">
+                  <FilePlus className={`h-10 w-10 mx-auto mb-4 ${
+                    selectedFiles.length > 0 ? 'text-gray-400' : 'text-blue-500'
+                  }`} />
+                  <p className={`text-base font-medium mb-2 ${
+                    selectedFiles.length > 0 ? 'text-gray-600' : 'text-gray-700'
+                  }`}>
+                    {selectedFiles.length > 0 
+                      ? `${selectedFiles.length} arquivo(s) selecionado(s)` 
+                      : isDragActive 
+                        ? 'Solte os arquivos aqui' 
+                        : 'Arraste PDFs aqui ou clique'
+                    }
+                  </p>
+                  {selectedFiles.length === 0 && (
+                    <p className="text-sm text-gray-500">
+                      Máximo de 10 arquivos • Apenas PDF
+                    </p>
+                  )}
+                </div>
               </div>
 
-              <Button
-                onClick={handleSendFiles}
-                disabled={isProcessingBatch}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 shadow-md"
-              >
-                {isProcessingBatch ? (
-                  <>
-                    <Clock className="mr-2 h-5 w-5 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  <>
+              {/* Selected Files List */}
+              {selectedFiles.length > 0 && (
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <p className="text-sm font-medium text-gray-700">
+                      {selectedFiles.length} arquivo(s) pronto(s)
+                    </p>
+                    <button
+                      onClick={() => setSelectedFiles([])}
+                      className="text-xs text-gray-500 hover:text-red-600 underline"
+                    >
+                      Limpar
+                    </button>
+                  </div>
+                  
+                  <div className="max-h-40 overflow-y-auto space-y-2 bg-gray-50 rounded-lg p-3">
+                    {selectedFiles.map((file, idx) => (
+                      <div 
+                        key={idx} 
+                        className="flex items-center justify-between p-2 bg-white rounded border border-gray-200"
+                      >
+                        <div className="flex items-center space-x-2 flex-1 min-w-0">
+                          <span className="text-blue-500 text-sm">📄</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-800 truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                          className="ml-2 text-gray-400 hover:text-red-500 transition-colors text-lg"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    onClick={handleSendFiles}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 shadow-md"
+                  >
                     <Cloud className="mr-2 h-5 w-5" />
                     Processar {selectedFiles.length} Arquivo(s)
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+                  </Button>
+                </div>
+              )}
 
-          <FileStatusList 
-            fileStatuses={fileStatuses} 
-            activeFiles={activeFiles} 
-          />
+              {/* File Status List - apenas quando não está processando */}
+              {activeFiles.length > 0 && (
+                <FileStatusList 
+                  fileStatuses={fileStatuses} 
+                  activeFiles={activeFiles} 
+                />
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
