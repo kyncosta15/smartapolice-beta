@@ -250,48 +250,50 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         <CardContent>
           <div
             {...getRootProps()} 
-            className={`relative border-2 border-dashed rounded-md p-6 transition-colors ${
+            className={`relative border-2 border-dashed rounded-lg p-8 transition-all ${
               selectedFiles.length > 0 
-                ? 'border-gray-200 bg-gray-50 cursor-default'
+                ? 'border-gray-200 bg-gray-50/50 cursor-default'
                 : isProcessingBatch 
-                  ? 'bg-gray-100 border-gray-300 cursor-not-allowed' 
-                  : 'hover:bg-gray-50 border-gray-300 cursor-pointer'
+                  ? 'bg-gray-50 border-gray-300 cursor-not-allowed' 
+                  : 'hover:bg-blue-50/50 border-gray-300 cursor-pointer hover:border-blue-400'
             } ${isDragActive ? 'border-blue-500 bg-blue-50' : ''}`}
           >
             <input {...getInputProps()} multiple />
             <div className="text-center">
-              <FilePlus className={`h-8 w-8 mx-auto mb-3 ${
+              <FilePlus className={`h-10 w-10 mx-auto mb-4 ${
                 selectedFiles.length > 0 ? 'text-gray-400' : 
                 isProcessingBatch ? 'text-gray-400' : 'text-blue-500'
               }`} />
-              <p className={`text-sm font-medium mb-1 ${
-                selectedFiles.length > 0 ? 'text-gray-500' : 
+              <p className={`text-base font-medium mb-2 ${
+                selectedFiles.length > 0 ? 'text-gray-600' : 
                 isProcessingBatch ? 'text-gray-400' : 'text-gray-700'
               }`}>
                 {selectedFiles.length > 0 
                   ? `${selectedFiles.length} arquivo(s) selecionado(s)` 
                   : isProcessingBatch 
-                    ? 'Processamento via n8n em andamento...' 
+                    ? 'Processando via n8n...' 
                     : isDragActive 
-                      ? 'Solte os arquivos PDF aqui...' 
-                      : 'Arraste PDFs aqui ou clique para selecionar'
+                      ? 'Solte os arquivos aqui' 
+                      : 'Arraste PDFs aqui ou clique'
                 }
               </p>
-              <p className="text-xs text-gray-500">
-                {selectedFiles.length > 0 
-                  ? 'Clique em "Processar" abaixo para enviar' 
-                  : 'Máximo de 10 arquivos por vez'
-                }
-              </p>
+              {!isProcessingBatch && selectedFiles.length === 0 && (
+                <p className="text-sm text-gray-500">
+                  Máximo de 10 arquivos • Apenas PDF
+                </p>
+              )}
               {isProcessingBatch && (
-                <div className="mt-4">
-                  <div className="animate-pulse flex justify-center items-center space-x-2">
+                <div className="mt-6">
+                  <div className="flex justify-center items-center space-x-2 mb-3">
                     <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce"></div>
                     <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                   </div>
-                  <p className="text-xs text-blue-600 mt-3 font-medium">
-                    Processando {selectedFiles.length} arquivo(s)... Isso pode levar 30-60 segundos
+                  <p className="text-sm text-blue-600 font-medium">
+                    Processando {selectedFiles.length} arquivo(s)
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Tempo varia conforme quantidade • Aguarde até 5 minutos
                   </p>
                 </div>
               )}
@@ -299,34 +301,34 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           </div>
 
           {selectedFiles.length > 0 && (
-            <div className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg shadow-sm">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-blue-900">
-                  📋 {selectedFiles.length} arquivo(s) pronto(s) para processar
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <p className="text-sm font-medium text-gray-700">
+                  {selectedFiles.length} arquivo(s) pronto(s)
                 </p>
                 <button
                   onClick={() => setSelectedFiles([])}
-                  className="text-xs text-gray-600 hover:text-red-600 underline"
+                  className="text-xs text-gray-500 hover:text-red-600 underline"
                   disabled={isProcessingBatch}
                 >
-                  Limpar todos
+                  Limpar
                 </button>
               </div>
               
-              <div className="max-h-48 overflow-y-auto mb-3 space-y-2">
+              <div className="max-h-40 overflow-y-auto space-y-2 bg-gray-50 rounded-lg p-3">
                 {selectedFiles.map((file, idx) => (
                   <div 
                     key={idx} 
-                    className="flex items-center justify-between p-2 bg-white rounded border border-blue-100 hover:border-blue-300 transition-colors"
+                    className="flex items-center justify-between p-2 bg-white rounded border border-gray-200"
                   >
                     <div className="flex items-center space-x-2 flex-1 min-w-0">
-                      <span className="text-blue-500">📄</span>
+                      <span className="text-blue-500 text-sm">📄</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-800 truncate">
                           {file.name}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {(file.size / 1024).toFixed(2)} KB
+                          {(file.size / 1024).toFixed(1)} KB
                         </p>
                       </div>
                     </div>
@@ -334,15 +336,11 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
-                        toast({
-                          title: "Arquivo removido",
-                          description: `${file.name} foi removido da lista`,
-                        });
                       }}
                       disabled={isProcessingBatch}
-                      className="ml-2 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                      className="ml-2 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 text-lg"
                     >
-                      <span className="text-lg">×</span>
+                      ×
                     </button>
                   </div>
                 ))}
@@ -356,21 +354,15 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
                 {isProcessingBatch ? (
                   <>
                     <Clock className="mr-2 h-5 w-5 animate-spin" />
-                    Processando via n8n...
+                    Processando...
                   </>
                 ) : (
                   <>
                     <Cloud className="mr-2 h-5 w-5" />
-                    Processar {selectedFiles.length} Apólice(s)
+                    Processar {selectedFiles.length} Arquivo(s)
                   </>
                 )}
               </Button>
-              
-              {selectedFiles.length >= 10 && (
-                <p className="text-xs text-amber-600 mt-2 text-center">
-                  ⚠️ Limite máximo de 10 arquivos atingido
-                </p>
-              )}
             </div>
           )}
 
