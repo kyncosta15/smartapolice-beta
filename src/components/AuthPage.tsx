@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Shield, Mail, Lock, User, Building, Phone, FileText } from 'lucide-react';
-import { DocumentValidator } from '@/utils/documentValidator';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Spinner } from '@/components/ui/spinner';
@@ -105,26 +104,14 @@ export const AuthPage = () => {
       return;
     }
 
-    // Validar formato do documento
-    const documentInfo = DocumentValidator.detectDocument(registerData.document);
-    if (!documentInfo || documentInfo.type === 'INVALID') {
+    // Verificar se não são todos dígitos iguais
+    if (/^(\d)\1+$/.test(cleanDocument)) {
       toast({
         title: "Erro",
         description: personType === 'pf' ? "CPF inválido" : "CNPJ inválido",
         variant: "destructive"
       });
       return;
-    }
-
-    // Avisar se dígitos verificadores estão incorretos (mas permitir prosseguir)
-    if (!documentInfo.isValid) {
-      toast({
-        title: "Atenção",
-        description: personType === 'pf' 
-          ? "Os dígitos verificadores do CPF podem estar incorretos" 
-          : "Os dígitos verificadores do CNPJ podem estar incorretos",
-        variant: "default",
-      });
     }
 
     if (registerData.password.length < 6) {
