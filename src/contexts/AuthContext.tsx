@@ -432,6 +432,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string;
     password: string;
     name: string;
+    document?: string;
     company?: string;
     phone?: string;
     role: UserRole;
@@ -452,7 +453,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: userData.role,
             company: userData.company || '',
             phone: userData.phone || '',
-            classification: userData.classification || 'Corretora'
+            classification: userData.classification || 'Corretora',
+            document: userData.document || '' // NOVO: adicionar documento aos metadados
           }
         }
       });
