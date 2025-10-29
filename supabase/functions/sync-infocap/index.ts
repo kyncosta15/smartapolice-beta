@@ -53,16 +53,25 @@ Deno.serve(async (req) => {
       throw new Error('Token CorpNuvem não configurado');
     }
 
+    console.log(`🔑 Token disponível: ${corpToken ? 'SIM (primeiros 10 chars: ' + corpToken.substring(0, 10) + '...)' : 'NÃO'}`);
+
     // Buscar apólices por documento
-    const response = await fetch(`${CORPNUVEM_API_URL}/cliente_ligacoes?codigo=${cleanDocument.substring(0, 8)}`, {
+    const apiUrl = `${CORPNUVEM_API_URL}/cliente_ligacoes?codigo=${cleanDocument.substring(0, 8)}`;
+    console.log(`🌐 Chamando API: ${apiUrl}`);
+
+    const response = await fetch(apiUrl, {
       headers: {
         'Authorization': `Bearer ${corpToken}`,
         'Content-Type': 'application/json',
       },
     });
 
+    console.log(`📡 Status da resposta: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
-      throw new Error(`Erro na API CorpNuvem: ${response.statusText}`);
+      const errorBody = await response.text();
+      console.error(`❌ Erro da API - Body: ${errorBody}`);
+      throw new Error(`Erro na API CorpNuvem: ${response.statusText} - ${errorBody}`);
     }
 
     const data = await response.json();
