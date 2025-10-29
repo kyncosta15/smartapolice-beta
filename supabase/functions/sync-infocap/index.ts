@@ -172,6 +172,8 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json();
+    console.log(`📦 Resposta completa da API:`, JSON.stringify(data, null, 2));
+    
     const apolices = data?.documentos?.documentos || [];
 
     console.log(`📋 Encontradas ${apolices.length} apólices`);
