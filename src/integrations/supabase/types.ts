@@ -85,6 +85,87 @@ export type Database = {
           },
         ]
       }
+      apolices_corpnuvem: {
+        Row: {
+          cancelado: string | null
+          cliente_codigo: number | null
+          cliente_documento: string
+          cliente_nome: string | null
+          codfil: number | null
+          created_at: string | null
+          dados_completos: Json | null
+          dat_inc: string | null
+          fimvig: string | null
+          historico_imagem: number | null
+          id: string
+          inivig: string | null
+          nosnum: number
+          nosnum_ren: number | null
+          numapo: string | null
+          numend: string | null
+          ramo: string | null
+          renovacao_situacao: number | null
+          seguradora: string | null
+          sin_situacao: number | null
+          tipdoc: string | null
+          ultima_sincronizacao: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cancelado?: string | null
+          cliente_codigo?: number | null
+          cliente_documento: string
+          cliente_nome?: string | null
+          codfil?: number | null
+          created_at?: string | null
+          dados_completos?: Json | null
+          dat_inc?: string | null
+          fimvig?: string | null
+          historico_imagem?: number | null
+          id?: string
+          inivig?: string | null
+          nosnum: number
+          nosnum_ren?: number | null
+          numapo?: string | null
+          numend?: string | null
+          ramo?: string | null
+          renovacao_situacao?: number | null
+          seguradora?: string | null
+          sin_situacao?: number | null
+          tipdoc?: string | null
+          ultima_sincronizacao?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cancelado?: string | null
+          cliente_codigo?: number | null
+          cliente_documento?: string
+          cliente_nome?: string | null
+          codfil?: number | null
+          created_at?: string | null
+          dados_completos?: Json | null
+          dat_inc?: string | null
+          fimvig?: string | null
+          historico_imagem?: number | null
+          id?: string
+          inivig?: string | null
+          nosnum?: number
+          nosnum_ren?: number | null
+          numapo?: string | null
+          numend?: string | null
+          ramo?: string | null
+          renovacao_situacao?: number | null
+          seguradora?: string | null
+          sin_situacao?: number | null
+          tipdoc?: string | null
+          ultima_sincronizacao?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           address: string | null

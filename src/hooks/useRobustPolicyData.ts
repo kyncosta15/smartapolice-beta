@@ -3,6 +3,7 @@ import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { useAuth } from '@/contexts/AuthContext';
 import { RobustPolicyPersistence } from '@/services/robustPolicyPersistence';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * HOOK ROBUSTO PARA DADOS DE APÓLICES
@@ -42,18 +43,56 @@ export function useRobustPolicyData() {
     setError(null);
 
     try {
+      // Carregar apólices de PDFs
       const loadedPolicies = await RobustPolicyPersistence.loadUserPoliciesFromDatabase(user.id);
       
-      console.log(`✅ ${loadedPolicies.length} apólices carregadas do banco`);
+      // Carregar apólices da API CorpNuvem
+      const { data: corpnuvemData, error: corpnuvemError } = await supabase
+        .from('apolices_corpnuvem')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('fimvig', { ascending: false });
+
+      if (corpnuvemError) {
+        console.warn('⚠️ Erro ao carregar apólices CorpNuvem:', corpnuvemError);
+      }
+
+      // Converter apólices da API CorpNuvem para o formato do frontend
+      const corpnuvemPolicies: ParsedPolicyData[] = (corpnuvemData || []).map(apolice => ({
+        id: apolice.id,
+        name: `${apolice.seguradora || 'Seguradora'} - ${apolice.ramo || 'Ramo'}`,
+        type: apolice.ramo || 'Desconhecido',
+        insurer: apolice.seguradora || 'Desconhecida',
+        premium: 0,
+        monthlyAmount: 0,
+        startDate: apolice.inivig || '',
+        endDate: apolice.fimvig || '',
+        policyNumber: apolice.numapo || apolice.nosnum?.toString() || '',
+        paymentFrequency: 'mensal',
+        status: apolice.cancelado === 'S' ? 'vencida' : 'vigente',
+        extractedAt: apolice.created_at,
+        expirationDate: apolice.fimvig || '',
+        policyStatus: apolice.cancelado === 'S' ? 'vencida' : 'vigente',
+        installments: [],
+        insuredName: apolice.cliente_nome || undefined,
+        documento: apolice.cliente_documento || undefined,
+      } as ParsedPolicyData));
+
+      // Combinar ambas as fontes
+      const allPolicies = [...loadedPolicies, ...corpnuvemPolicies];
+      
+      console.log(`✅ ${allPolicies.length} apólices carregadas (${loadedPolicies.length} PDF + ${corpnuvemPolicies.length} API)`);
       console.log('🕒 Horário do carregamento:', new Date().toISOString());
       
-      setPolicies(loadedPolicies);
+      setPolicies(allPolicies);
       setLastLoadTime(new Date());
 
       // Log de auditoria
       console.log('📊 AUDITORIA - Dados carregados:', {
         userId: user.id,
-        count: loadedPolicies.length,
+        count: allPolicies.length,
+        pdfCount: loadedPolicies.length,
+        apiCount: corpnuvemPolicies.length,
         timestamp: new Date().toISOString(),
         source: 'database_direct'
       });
