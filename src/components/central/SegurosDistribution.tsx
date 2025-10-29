@@ -86,14 +86,13 @@ export function SegurosDistribution() {
         });
       });
 
-      // 4. Buscar documentos de cada cliente (limitando para não sobrecarregar)
-      const MAX_CLIENTES = Math.min(clientes.length, 100); // Limitar a 100 clientes
-      console.log(`🔄 Buscando documentos de ${MAX_CLIENTES} clientes...`);
+      // 4. Buscar documentos de cada cliente
+      console.log(`🔄 Buscando documentos de ${clientes.length} clientes...`);
 
       const hoje = new Date();
       let processados = 0;
 
-      for (let i = 0; i < MAX_CLIENTES; i++) {
+      for (let i = 0; i < clientes.length; i++) {
         const cliente = clientes[i];
         try {
           const ligacoes = await getClienteLigacoes(cliente.codigo);
@@ -141,7 +140,7 @@ export function SegurosDistribution() {
           
           processados++;
           if (processados % 10 === 0) {
-            console.log(`📊 Processados ${processados}/${MAX_CLIENTES} clientes...`);
+            console.log(`📊 Processados ${processados}/${clientes.length} clientes...`);
           }
         } catch (error) {
           console.error(`Erro ao buscar ligações do cliente ${cliente.codigo}:`, error);
