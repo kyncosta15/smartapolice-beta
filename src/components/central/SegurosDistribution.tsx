@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileText, Loader2, TrendingUp } from 'lucide-react';
+import { FileText, Loader2, TrendingUp, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { corpClient } from '@/lib/corpClient';
 import { getClienteLigacoes } from '@/services/corpnuvem';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Ramo {
   codigo: number;
@@ -23,7 +26,96 @@ export function SegurosDistribution() {
   const [loading, setLoading] = useState(false);
   const [ramosData, setRamosData] = useState<RamoCount[]>([]);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [loadingCache, setLoadingCache] = useState(true);
   const { toast } = useToast();
+
+  // Carregar dados do cache ao montar o componente
+  useEffect(() => {
+    loadFromCache();
+  }, []);
+
+  const loadFromCache = async () => {
+    setLoadingCache(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('seguros_distribution_cache')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Agrupar por nome_ramo e somar os valores
+        const ramosMap = new Map<string, RamoCount>();
+        
+        data.forEach(item => {
+          const existing = ramosMap.get(item.nome_ramo);
+          if (existing) {
+            existing.vigentes += item.clientes_vigentes;
+            existing.ativas += item.clientes_ativas;
+          } else {
+            ramosMap.set(item.nome_ramo, {
+              nome: item.nome_ramo,
+              vigentes: item.clientes_vigentes,
+              ativas: item.clientes_ativas
+            });
+          }
+        });
+
+        const ramosArray = Array.from(ramosMap.values())
+          .sort((a, b) => b.vigentes - a.vigentes);
+
+        setRamosData(ramosArray);
+        
+        // Pegar a data mais recente
+        const mostRecent = data[0];
+        setLastUpdate(new Date(mostRecent.updated_at));
+
+        console.log('✅ Dados carregados do cache');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar cache:', error);
+    } finally {
+      setLoadingCache(false);
+    }
+  };
+
+  const saveToCache = async (ramosArray: RamoCount[]) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Deletar cache antigo do usuário
+      await supabase
+        .from('seguros_distribution_cache')
+        .delete()
+        .eq('user_id', user.id);
+
+      // Inserir novos dados
+      const cacheData = ramosArray.map(ramo => ({
+        user_id: user.id,
+        nome_ramo: ramo.nome,
+        clientes_vigentes: ramo.vigentes,
+        clientes_ativas: ramo.ativas
+      }));
+
+      const { error } = await supabase
+        .from('seguros_distribution_cache')
+        .insert(cacheData);
+
+      if (error) throw error;
+
+      console.log('✅ Dados salvos no cache');
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Erro ao salvar cache:', error);
+    }
+  };
 
   const handleLoadData = async () => {
     setLoading(true);
@@ -184,6 +276,9 @@ export function SegurosDistribution() {
 
       setRamosData(ramosArray);
 
+      // Salvar no cache
+      await saveToCache(ramosArray);
+
       setProgress({ current: 0, total: 0 });
 
       toast({
@@ -227,19 +322,28 @@ export function SegurosDistribution() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Distribuição de Clientes por Tipo de Seguro
-          </CardTitle>
-          <CardDescription>
-            Quantidade de clientes com apólices vigentes e ativas por ramo
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Distribuição de Clientes por Tipo de Seguro
+              </CardTitle>
+              <CardDescription>
+                Quantidade de clientes com apólices vigentes e ativas por ramo
+                {lastUpdate && (
+                  <span className="block text-xs mt-1">
+                    Última atualização: {format(lastUpdate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  </span>
+                )}
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Button 
               onClick={handleLoadData} 
-              disabled={loading}
+              disabled={loading || loadingCache}
               className="w-full sm:w-auto"
             >
               {loading ? (
@@ -249,8 +353,8 @@ export function SegurosDistribution() {
                 </>
               ) : (
                 <>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Carregar Distribuição
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {ramosData.length > 0 ? 'Atualizar Dados' : 'Carregar Distribuição'}
                 </>
               )}
             </Button>
@@ -262,7 +366,9 @@ export function SegurosDistribution() {
             )}
           </div>
 
-          {loading ? (
+          {loadingCache ? (
+            renderSkeletons()
+          ) : loading ? (
             renderSkeletons()
           ) : ramosData.length > 0 ? (
             <div className="space-y-4">

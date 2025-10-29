@@ -2011,7 +2011,7 @@ export type Database = {
         Row: {
           employee_id: string | null
           id: string
-          ip: unknown | null
+          ip: unknown
           last_seen_at: string | null
           started_at: string | null
           user_agent: string | null
@@ -2019,7 +2019,7 @@ export type Database = {
         Insert: {
           employee_id?: string | null
           id?: string
-          ip?: unknown | null
+          ip?: unknown
           last_seen_at?: string | null
           started_at?: string | null
           user_agent?: string | null
@@ -2027,7 +2027,7 @@ export type Database = {
         Update: {
           employee_id?: string | null
           id?: string
-          ip?: unknown | null
+          ip?: unknown
           last_seen_at?: string | null
           started_at?: string | null
           user_agent?: string | null
@@ -2325,13 +2325,54 @@ export type Database = {
           },
         ]
       }
+      seguros_distribution_cache: {
+        Row: {
+          clientes_ativas: number
+          clientes_vigentes: number
+          created_at: string
+          empresa_id: string | null
+          id: string
+          nome_ramo: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          clientes_ativas?: number
+          clientes_vigentes?: number
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          nome_ramo: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          clientes_ativas?: number
+          clientes_vigentes?: number
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          nome_ramo?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seguros_distribution_cache_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_tokens: {
         Row: {
           created_at: string | null
           employee_id: string | null
           expires_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           session_id: string | null
           token: string
           used_at: string | null
@@ -2342,7 +2383,7 @@ export type Database = {
           employee_id?: string | null
           expires_at: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           session_id?: string | null
           token: string
           used_at?: string | null
@@ -2353,7 +2394,7 @@ export type Database = {
           employee_id?: string | null
           expires_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           session_id?: string | null
           token?: string
           used_at?: string | null
@@ -2809,14 +2850,8 @@ export type Database = {
       }
     }
     Functions: {
-      admin_companies_summary: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      admin_dashboard_metrics: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      admin_companies_summary: { Args: never; Returns: Json }
+      admin_dashboard_metrics: { Args: never; Returns: Json }
       admin_list_approval_requests: {
         Args: { p_status?: string }
         Returns: Json
@@ -2825,28 +2860,19 @@ export type Database = {
         Args: { p_decision_note?: string; p_request_id: string }
         Returns: undefined
       }
-      auto_fix_frota_status: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      can_access_requests: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      auto_fix_frota_status: { Args: never; Returns: Json }
+      can_access_requests: { Args: never; Returns: boolean }
       check_and_fix_policy_inconsistencies: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           fixed: boolean
           issue_type: string
           policy_id: string
         }[]
       }
-      current_empresa_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      current_empresa_id: { Args: never; Returns: string }
       debug_frota_auth: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           auth_user_id: string
           current_empresa_result: string
@@ -2857,10 +2883,7 @@ export type Database = {
           user_memberships: Json
         }[]
       }
-      debug_user_empresa_complete: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      debug_user_empresa_complete: { Args: never; Returns: Json }
       delete_policy_completely: {
         Args: { policy_id_param: string }
         Returns: boolean
@@ -2873,12 +2896,9 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
-      ensure_default_empresa: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      ensure_default_empresa: { Args: never; Returns: string }
       fix_categoria_outros_to_sem_seguro: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           error: string
           message: string
@@ -2888,20 +2908,14 @@ export type Database = {
         }[]
       }
       fix_frota_status_outros: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           placas_alteradas: string[]
           veiculos_atualizados: number
         }[]
       }
-      generate_file_hash: {
-        Args: { file_content: string }
-        Returns: string
-      }
-      generate_protocol_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_file_hash: { Args: { file_content: string }; Returns: string }
+      generate_protocol_code: { Args: never; Returns: string }
       generate_session_token: {
         Args: {
           p_employee_id: string
@@ -2914,42 +2928,15 @@ export type Database = {
           token: string
         }[]
       }
-      get_current_empresa: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_empresa_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_company_admin: {
-        Args: { check_empresa_id: string }
-        Returns: boolean
-      }
-      is_member_of: {
-        Args: { record_empresa_id: string }
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      limpar_dados_usuario_teste: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      limpar_dados_usuario_teste_v2: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_current_empresa: { Args: never; Returns: string }
+      get_current_user_role: { Args: never; Returns: string }
+      get_user_empresa_id: { Args: never; Returns: string }
+      is_admin: { Args: never; Returns: boolean }
+      is_company_admin: { Args: { check_empresa_id: string }; Returns: boolean }
+      is_member_of: { Args: { record_empresa_id: string }; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
+      limpar_dados_usuario_teste: { Args: never; Returns: Json }
+      limpar_dados_usuario_teste_v2: { Args: never; Returns: Json }
       reject_insurance_request: {
         Args: { p_decision_note?: string; p_request_id: string }
         Returns: undefined
@@ -2971,10 +2958,7 @@ export type Database = {
           user_id: string
         }[]
       }
-      test_get_user_empresa: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      test_get_user_empresa: { Args: never; Returns: Json }
       validate_session_token: {
         Args: { p_token: string }
         Returns: {
