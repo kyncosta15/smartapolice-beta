@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     const cleanDocument = documento.replace(/\D/g, '');
 
     // Buscar dados na API CorpNuvem
-    const corpToken = Deno.env.get('CORPNUVEM_TOKEN');
+    const corpToken = Deno.env.get('CORPNUVEM_API_TOKEN');
     if (!corpToken) {
       throw new Error('Token CorpNuvem não configurado');
     }
