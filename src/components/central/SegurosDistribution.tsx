@@ -49,7 +49,7 @@ export function SegurosDistribution() {
       const [policiesResponse, beneficiosResponse] = await Promise.all([
         supabase
           .from('policies')
-          .select('tipo_seguro, status, data_vencimento'),
+          .select('tipo_seguro, status, fim_vigencia, expiration_date'),
         supabase
           .from('apolices_beneficios')
           .select('tipo_beneficio, status, fim_vigencia')
@@ -94,9 +94,10 @@ export function SegurosDistribution() {
       }
 
       // Helper para verificar se está vigente
-      const isVigente = (dataVencimento: string | null) => {
-        if (!dataVencimento) return false;
-        const vencimento = new Date(dataVencimento);
+      const isVigente = (fimVigencia: string | null, expirationDate: string | null) => {
+        const dataFim = fimVigencia || expirationDate;
+        if (!dataFim) return false;
+        const vencimento = new Date(dataFim);
         const hoje = new Date();
         return vencimento >= hoje;
       };
@@ -120,7 +121,7 @@ export function SegurosDistribution() {
         const tipo = (policy.tipo_seguro || 'OUTROS').trim();
         if (!tipo) return;
 
-        const vigente = isVigente(policy.data_vencimento);
+        const vigente = isVigente(policy.fim_vigencia, policy.expiration_date);
         const ativa = policy.status === 'ativa' || policy.status === 'vigente';
 
         const count = getOrCreateRamo(tipo);
@@ -134,7 +135,7 @@ export function SegurosDistribution() {
         const tipo = (beneficio.tipo_beneficio || 'OUTROS').trim();
         if (!tipo) return;
 
-        const vigente = isVigente(beneficio.fim_vigencia);
+        const vigente = isVigente(beneficio.fim_vigencia, null);
         const ativa = beneficio.status === 'ativa' || beneficio.status === 'vigente';
 
         const count = getOrCreateRamo(tipo);
