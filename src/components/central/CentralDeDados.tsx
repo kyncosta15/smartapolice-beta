@@ -20,6 +20,7 @@ import {
   getDadosInCorp
 } from '@/services/rcorp';
 import { CorpNuvemTabs } from './CorpNuvemTabs';
+import { SegurosDistribution } from './SegurosDistribution';
 import {
   Collapsible,
   CollapsibleContent,
@@ -496,7 +497,7 @@ export default function CentralDeDados() {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 h-auto">
+        <TabsList className="grid w-full grid-cols-5 h-auto">
           <TabsTrigger value="corpnuvem">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Dados Corp</span>
@@ -508,6 +509,10 @@ export default function CentralDeDados() {
           <TabsTrigger value="sinistros">
             <AlertCircle className="h-4 w-4" />
             <span className="hidden sm:inline">Ocorrências</span>
+          </TabsTrigger>
+          <TabsTrigger value="seguros">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Seguros</span>
           </TabsTrigger>
           <TabsTrigger value="bi">
             <BarChart3 className="h-4 w-4" />
@@ -560,6 +565,11 @@ export default function CentralDeDados() {
               {loadingNegocios ? renderSkeletons() : renderNegociosResults()}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Seguros Distribution Tab */}
+        <TabsContent value="seguros" className="space-y-4">
+          <SegurosDistribution />
         </TabsContent>
 
         {/* Sinistros Tab */}
