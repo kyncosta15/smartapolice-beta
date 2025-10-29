@@ -3,6 +3,94 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const CORPNUVEM_API_URL = 'https://api.corpnuvem.com';
 
+// Cache do token de autenticação
+let cachedToken: string | null = null;
+let tokenExpiry: number = 0;
+
+// Função para obter token de autenticação
+async function getAuthToken(): Promise<string> {
+  const now = Date.now();
+  
+  // Se já temos um token válido no cache, retornar
+  if (cachedToken && tokenExpiry > now) {
+    console.log('✅ Usando token em cache');
+    return cachedToken;
+  }
+
+  console.log('🔄 Obtendo novo token de autenticação...');
+
+  const username = Deno.env.get('CORPNUVEM_USERNAME');
+  const password = Deno.env.get('CORPNUVEM_PASSWORD');
+
+  if (!username || !password) {
+    throw new Error('Credenciais CorpNuvem não configuradas');
+  }
+
+  const response = await fetch(`${CORPNUVEM_API_URL}/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: username,
+      senha: password,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ Erro no login:', errorText);
+    throw new Error(`Falha na autenticação: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  
+  if (!data.token) {
+    throw new Error('Token não retornado pela API');
+  }
+
+  // Cachear token por 50 minutos (3000000 ms)
+  cachedToken = data.token;
+  tokenExpiry = now + 3000000;
+  
+  console.log('✅ Novo token obtido com sucesso');
+  return cachedToken;
+}
+
+// Função auxiliar para fazer chamadas à API com retry automático
+async function corpNuvemFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = await getAuthToken();
+  
+  const headers = {
+    'Authorization': token,
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  let response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  // Se receber 401, limpar cache e tentar novamente com novo token
+  if (response.status === 401) {
+    console.log('⚠️ Token expirado, renovando...');
+    cachedToken = null;
+    tokenExpiry = 0;
+    
+    const newToken = await getAuthToken();
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        ...headers,
+        'Authorization': newToken,
+      },
+    });
+  }
+
+  return response;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -47,28 +135,11 @@ Deno.serve(async (req) => {
     // Limpar documento
     const cleanDocument = documento.replace(/\D/g, '');
 
-    // Buscar dados na API CorpNuvem
-    const corpToken = Deno.env.get('CORPNUVEM_API_TOKEN');
-    if (!corpToken) {
-      throw new Error('Token CorpNuvem não configurado');
-    }
-
-    console.log(`🔑 Token disponível: ${corpToken ? 'SIM (primeiros 10 chars: ' + corpToken.substring(0, 10) + '...)' : 'NÃO'}`);
-    console.log(`🔑 Comprimento do token: ${corpToken?.length}`);
-
     // Buscar apólices por documento
     const apiUrl = `${CORPNUVEM_API_URL}/cliente_ligacoes?codigo=${cleanDocument.substring(0, 8)}`;
     console.log(`🌐 Chamando API: ${apiUrl}`);
 
-    const headers = {
-      'Authorization': corpToken,
-      'Content-Type': 'application/json',
-    };
-    console.log(`📋 Headers sendo enviados:`, JSON.stringify(headers, null, 2));
-
-    const response = await fetch(apiUrl, {
-      headers: headers,
-    });
+    const response = await corpNuvemFetch(apiUrl);
 
     console.log(`📡 Status da resposta: ${response.status} ${response.statusText}`);
 
@@ -113,14 +184,8 @@ Deno.serve(async (req) => {
         // Buscar detalhes adicionais se disponível
         if (ap.codfil && ap.nosnum) {
           try {
-            const detailsResponse = await fetch(
-              `${CORPNUVEM_API_URL}/documento?codfil=${ap.codfil}&nosnum=${ap.nosnum}`,
-              {
-                headers: {
-                  'Authorization': corpToken,
-                  'Content-Type': 'application/json',
-                },
-              }
+            const detailsResponse = await corpNuvemFetch(
+              `${CORPNUVEM_API_URL}/documento?codfil=${ap.codfil}&nosnum=${ap.nosnum}`
             );
 
             if (detailsResponse.ok) {
