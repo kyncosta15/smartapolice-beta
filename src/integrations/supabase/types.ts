@@ -2768,6 +2768,7 @@ export type Database = {
           classification: string | null
           company: string | null
           created_at: string | null
+          documento: string | null
           email: string
           id: string
           name: string
@@ -2783,6 +2784,7 @@ export type Database = {
           classification?: string | null
           company?: string | null
           created_at?: string | null
+          documento?: string | null
           email: string
           id?: string
           name: string
@@ -2798,6 +2800,7 @@ export type Database = {
           classification?: string | null
           company?: string | null
           created_at?: string | null
+          documento?: string | null
           email?: string
           id?: string
           name?: string
