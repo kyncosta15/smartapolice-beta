@@ -22,6 +22,7 @@ interface RamoCount {
 export function SegurosDistribution() {
   const [loading, setLoading] = useState(false);
   const [ramosData, setRamosData] = useState<RamoCount[]>([]);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const { toast } = useToast();
 
   const handleLoadData = async () => {
@@ -86,25 +87,50 @@ export function SegurosDistribution() {
         });
       });
 
-      // 4. Buscar documentos de cada cliente
-      console.log(`🔄 Buscando documentos de ${clientes.length} clientes...`);
+      // 4. Buscar documentos de cada cliente em lotes
+      const BATCH_SIZE = 50; // Processar 50 clientes por vez
+      const totalClientes = clientes.length;
+      console.log(`🔄 Buscando documentos de ${totalClientes} clientes em lotes de ${BATCH_SIZE}...`);
+
+      setProgress({ current: 0, total: totalClientes });
 
       const hoje = new Date();
       let processados = 0;
 
-      for (let i = 0; i < clientes.length; i++) {
-        const cliente = clientes[i];
-        try {
-          const ligacoes = await getClienteLigacoes(cliente.codigo);
-          
-          if (ligacoes.documentos?.documentos) {
-            ligacoes.documentos.documentos.forEach(doc => {
+      // Processar em lotes
+      for (let batchStart = 0; batchStart < totalClientes; batchStart += BATCH_SIZE) {
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, totalClientes);
+        const batch = clientes.slice(batchStart, batchEnd);
+        
+        console.log(`📦 Processando lote ${Math.floor(batchStart / BATCH_SIZE) + 1}: clientes ${batchStart + 1} a ${batchEnd}`);
+
+        // Processar clientes do lote em paralelo
+        const batchPromises = batch.map(async (cliente) => {
+          try {
+            const ligacoes = await getClienteLigacoes(cliente.codigo);
+            
+            if (ligacoes.documentos?.documentos) {
+              return {
+                codigo: cliente.codigo,
+                documentos: ligacoes.documentos.documentos
+              };
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar ligações do cliente ${cliente.codigo}:`, error);
+          }
+          return null;
+        });
+
+        const batchResults = await Promise.all(batchPromises);
+
+        // Processar resultados do lote
+        batchResults.forEach(result => {
+          if (result && result.documentos) {
+            result.documentos.forEach(doc => {
               const ramoAbrev = doc.ramo.toUpperCase();
               
-              // Verificar se o ramo existe no mapa
               let ramoData = ramoClientesMap.get(ramoAbrev);
               
-              // Se não existe, criar novo (para ramos não cadastrados)
               if (!ramoData) {
                 const nomeRamo = abrevToNomeMap.get(ramoAbrev) || ramoAbrev;
                 ramoData = {
@@ -115,36 +141,34 @@ export function SegurosDistribution() {
                 ramoClientesMap.set(ramoAbrev, ramoData);
               }
 
-              // Verificar se é vigente (fimvig >= hoje)
               const fimVigencia = doc.fimvig;
               if (fimVigencia) {
                 try {
-                  // Converter formato DD/MM/YYYY para Date
                   const [dia, mes, ano] = fimVigencia.split('/');
                   const dataFim = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
                   
                   if (dataFim >= hoje) {
-                    ramoData.clientesVigentes.add(cliente.codigo);
+                    ramoData.clientesVigentes.add(result.codigo);
                   }
                 } catch (e) {
                   console.warn('Erro ao parsear data:', fimVigencia);
                 }
               }
 
-              // Verificar se é ativa (não cancelada)
               if (doc.cancelado === 'F') {
-                ramoData.clientesAtivas.add(cliente.codigo);
+                ramoData.clientesAtivas.add(result.codigo);
               }
             });
           }
-          
-          processados++;
-          if (processados % 10 === 0) {
-            console.log(`📊 Processados ${processados}/${clientes.length} clientes...`);
-          }
-        } catch (error) {
-          console.error(`Erro ao buscar ligações do cliente ${cliente.codigo}:`, error);
-          // Continuar com próximo cliente
+        });
+
+        processados = batchEnd;
+        setProgress({ current: processados, total: totalClientes });
+        console.log(`📊 Processados ${processados}/${totalClientes} clientes (${Math.round(processados / totalClientes * 100)}%)`);
+
+        // Pequeno delay entre lotes para não sobrecarregar a API
+        if (batchEnd < totalClientes) {
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
 
@@ -159,6 +183,8 @@ export function SegurosDistribution() {
         .sort((a, b) => b.vigentes - a.vigentes);
 
       setRamosData(ramosArray);
+
+      setProgress({ current: 0, total: 0 });
 
       toast({
         title: 'Dados carregados',
@@ -210,23 +236,31 @@ export function SegurosDistribution() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button 
-            onClick={handleLoadData} 
-            disabled={loading}
-            className="w-full sm:w-auto"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Carregando...
-              </>
-            ) : (
-              <>
-                <FileText className="h-4 w-4 mr-2" />
-                Carregar Distribuição
-              </>
+          <div className="space-y-2">
+            <Button 
+              onClick={handleLoadData} 
+              disabled={loading}
+              className="w-full sm:w-auto"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Carregando...
+                </>
+              ) : (
+                <>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Carregar Distribuição
+                </>
+              )}
+            </Button>
+            
+            {loading && progress.total > 0 && (
+              <div className="text-sm text-muted-foreground">
+                Processando: {progress.current} de {progress.total} clientes ({Math.round(progress.current / progress.total * 100)}%)
+              </div>
             )}
-          </Button>
+          </div>
 
           {loading ? (
             renderSkeletons()
