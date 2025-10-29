@@ -90,20 +90,10 @@ export const AuthPage = () => {
       return;
     }
 
-    // Validar CPF/CNPJ
-    const documentInfo = DocumentValidator.detectDocument(registerData.document);
-    if (!documentInfo || !documentInfo.isValid) {
-      toast({
-        title: "Erro",
-        description: personType === 'pf' ? "CPF inválido" : "CNPJ inválido",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Verificar se o tipo de documento está correto
+    // Validar quantidade de dígitos CPF/CNPJ
     const expectedLength = personType === 'pf' ? 11 : 14;
     const cleanDocument = registerData.document.replace(/\D/g, '');
+    
     if (cleanDocument.length !== expectedLength) {
       toast({
         title: "Erro",
@@ -113,6 +103,28 @@ export const AuthPage = () => {
         variant: "destructive"
       });
       return;
+    }
+
+    // Validar formato do documento
+    const documentInfo = DocumentValidator.detectDocument(registerData.document);
+    if (!documentInfo || documentInfo.type === 'INVALID') {
+      toast({
+        title: "Erro",
+        description: personType === 'pf' ? "CPF inválido" : "CNPJ inválido",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Avisar se dígitos verificadores estão incorretos (mas permitir prosseguir)
+    if (!documentInfo.isValid) {
+      toast({
+        title: "Atenção",
+        description: personType === 'pf' 
+          ? "Os dígitos verificadores do CPF podem estar incorretos" 
+          : "Os dígitos verificadores do CNPJ podem estar incorretos",
+        variant: "default",
+      });
     }
 
     if (registerData.password.length < 6) {
