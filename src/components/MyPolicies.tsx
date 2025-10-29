@@ -27,6 +27,7 @@ import { InfoModal } from '@/components/InfoModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { useToast } from '@/hooks/use-toast';
+import { useInfoCapSync } from '@/hooks/useInfoCapSync';
 import { renderValue, renderValueAsString, renderCurrency } from '@/utils/renderValue';
 import { toText, moedaBR } from '@/lib/policies';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -54,6 +55,7 @@ export function MyPolicies() {
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
   const { toast } = useToast();
+  const { isSyncing: isInfoCapSyncing } = useInfoCapSync();
   
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
     const finalStatus = policy.status as PolicyStatus;
