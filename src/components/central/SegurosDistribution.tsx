@@ -31,15 +31,16 @@ export function SegurosDistribution() {
       // 1. Buscar ramos do CorpNuvem
       console.log('🔄 Buscando ramos do CorpNuvem...');
       const ramosResponse = await corpClient.get('/ramos');
+      console.log('📦 Resposta ramos:', ramosResponse.data);
+      
       const ramos: Ramo[] = ramosResponse.data?.ramos || [];
       
       if (ramos.length === 0) {
+        console.warn('⚠️ Nenhum ramo encontrado na API');
         toast({
-          title: 'Nenhum ramo encontrado',
-          description: 'Não foram encontrados ramos no sistema.',
-          variant: 'destructive',
+          title: 'Aviso',
+          description: 'Nenhum ramo encontrado. Continuando com dados locais...',
         });
-        return;
       }
 
       // 2. Buscar todas as apólices locais (tanto de policies quanto apolices_beneficios)
@@ -55,10 +56,10 @@ export function SegurosDistribution() {
       ]);
 
       if (policiesResponse.error) {
-        console.error('Erro ao buscar policies:', policiesResponse.error);
+        console.error('❌ Erro ao buscar policies:', policiesResponse.error);
       }
       if (beneficiosResponse.error) {
-        console.error('Erro ao buscar apolices_beneficios:', beneficiosResponse.error);
+        console.error('❌ Erro ao buscar apolices_beneficios:', beneficiosResponse.error);
       }
 
       const policies = policiesResponse.data || [];
@@ -66,18 +67,31 @@ export function SegurosDistribution() {
 
       console.log(`📊 Apólices encontradas: ${policies.length} policies + ${beneficios.length} benefícios`);
 
+      // Se não há dados locais nem ramos, retornar
+      if (policies.length === 0 && beneficios.length === 0) {
+        toast({
+          title: 'Sem dados',
+          description: 'Nenhuma apólice encontrada no sistema.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
       // 3. Criar mapa de contagem por ramo
       const ramoCountMap = new Map<string, RamoCount>();
 
-      // Inicializar contadores para todos os ramos
-      ramos.forEach(ramo => {
-        ramoCountMap.set(ramo.nome.toUpperCase(), {
-          nome: ramo.nome,
-          vigentes: 0,
-          ativas: 0,
-          total: 0
+      // Se temos ramos da API, inicializar contadores
+      if (ramos.length > 0) {
+        ramos.forEach(ramo => {
+          ramoCountMap.set(ramo.nome.toUpperCase(), {
+            nome: ramo.nome,
+            vigentes: 0,
+            ativas: 0,
+            total: 0
+          });
         });
-      });
+      }
 
       // Helper para verificar se está vigente
       const isVigente = (dataVencimento: string | null) => {
@@ -87,84 +101,46 @@ export function SegurosDistribution() {
         return vencimento >= hoje;
       };
 
+      // Helper para encontrar ou criar ramo
+      const getOrCreateRamo = (nome: string): RamoCount => {
+        const nomeUpper = nome.toUpperCase();
+        if (!ramoCountMap.has(nomeUpper)) {
+          ramoCountMap.set(nomeUpper, {
+            nome: nome,
+            vigentes: 0,
+            ativas: 0,
+            total: 0
+          });
+        }
+        return ramoCountMap.get(nomeUpper)!;
+      };
+
       // Contar policies
       policies.forEach((policy: any) => {
-        const tipo = (policy.tipo_seguro || '').toUpperCase();
+        const tipo = (policy.tipo_seguro || 'OUTROS').trim();
+        if (!tipo) return;
+
         const vigente = isVigente(policy.data_vencimento);
         const ativa = policy.status === 'ativa' || policy.status === 'vigente';
 
-        // Tentar encontrar o ramo correspondente
-        let found = false;
-        ramoCountMap.forEach((value, key) => {
-          if (tipo.includes(key) || key.includes(tipo)) {
-            value.total++;
-            if (vigente) value.vigentes++;
-            if (ativa) value.ativas++;
-            found = true;
-          }
-        });
-
-        // Se não encontrou match exato, tentar por palavras-chave
-        if (!found && tipo) {
-          const keywords: Record<string, string[]> = {
-            'AUTOMOVEL': ['AUTO', 'VEÍCULO', 'VEICULO', 'CARRO'],
-            'RESIDENCIAL': ['RESIDENCIAL', 'CASA', 'RESIDENCIA'],
-            'VIDA INDIVIDUAL': ['VIDA', 'INDIVIDUAL'],
-            'EMPRESARIAL': ['EMPRESA', 'EMPRESARIAL', 'COMERCIAL'],
-            'SAÚDE': ['SAUDE', 'SAÚDE', 'PLANO DE SAÚDE'],
-          };
-
-          for (const [ramoKey, palavras] of Object.entries(keywords)) {
-            if (palavras.some(p => tipo.includes(p))) {
-              const count = ramoCountMap.get(ramoKey);
-              if (count) {
-                count.total++;
-                if (vigente) count.vigentes++;
-                if (ativa) count.ativas++;
-              }
-              break;
-            }
-          }
-        }
+        const count = getOrCreateRamo(tipo);
+        count.total++;
+        if (vigente) count.vigentes++;
+        if (ativa) count.ativas++;
       });
 
       // Contar benefícios
       beneficios.forEach((beneficio: any) => {
-        const tipo = (beneficio.tipo_beneficio || '').toUpperCase();
+        const tipo = (beneficio.tipo_beneficio || 'OUTROS').trim();
+        if (!tipo) return;
+
         const vigente = isVigente(beneficio.fim_vigencia);
         const ativa = beneficio.status === 'ativa' || beneficio.status === 'vigente';
 
-        // Tentar encontrar o ramo correspondente
-        let found = false;
-        ramoCountMap.forEach((value, key) => {
-          if (tipo.includes(key) || key.includes(tipo)) {
-            value.total++;
-            if (vigente) value.vigentes++;
-            if (ativa) value.ativas++;
-            found = true;
-          }
-        });
-
-        // Se não encontrou match exato, tentar por palavras-chave
-        if (!found && tipo) {
-          const keywords: Record<string, string[]> = {
-            'PLANO DE SAÚDE': ['SAUDE', 'SAÚDE', 'PLANO'],
-            'PLANO ODONTOLOGICO': ['ODONTO', 'DENTAL', 'DENTE'],
-            'VIDA GRUPO': ['VIDA', 'GRUPO'],
-          };
-
-          for (const [ramoKey, palavras] of Object.entries(keywords)) {
-            if (palavras.some(p => tipo.includes(p))) {
-              const count = ramoCountMap.get(ramoKey);
-              if (count) {
-                count.total++;
-                if (vigente) count.vigentes++;
-                if (ativa) count.ativas++;
-              }
-              break;
-            }
-          }
-        }
+        const count = getOrCreateRamo(tipo);
+        count.total++;
+        if (vigente) count.vigentes++;
+        if (ativa) count.ativas++;
       });
 
       // Converter para array e ordenar por total
