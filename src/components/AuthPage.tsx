@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Shield, Mail, Lock, User, Building, Phone } from 'lucide-react';
+import { Shield, Mail, Lock, User, Building, Phone, FileText } from 'lucide-react';
+import { DocumentValidator } from '@/utils/documentValidator';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Spinner } from '@/components/ui/spinner';
@@ -26,6 +27,7 @@ export const AuthPage = () => {
     password: '',
     confirmPassword: '',
     name: '',
+    document: '',
     company: '',
     phone: '',
     role: 'cliente' as UserRole,
@@ -79,10 +81,35 @@ export const AuthPage = () => {
       return;
     }
 
-    if (!registerData.email || !registerData.password || !registerData.name) {
+    if (!registerData.email || !registerData.password || !registerData.name || !registerData.document) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validar CPF/CNPJ
+    const documentInfo = DocumentValidator.detectDocument(registerData.document);
+    if (!documentInfo || !documentInfo.isValid) {
+      toast({
+        title: "Erro",
+        description: personType === 'pf' ? "CPF inválido" : "CNPJ inválido",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Verificar se o tipo de documento está correto
+    const expectedLength = personType === 'pf' ? 11 : 14;
+    const cleanDocument = registerData.document.replace(/\D/g, '');
+    if (cleanDocument.length !== expectedLength) {
+      toast({
+        title: "Erro",
+        description: personType === 'pf' 
+          ? "CPF deve ter 11 dígitos" 
+          : "CNPJ deve ter 14 dígitos",
         variant: "destructive"
       });
       return;
@@ -116,6 +143,7 @@ export const AuthPage = () => {
           password: '',
           confirmPassword: '',
           name: '',
+          document: '',
           company: '',
           phone: '',
           role: 'cliente' as UserRole,
@@ -238,8 +266,7 @@ export const AuthPage = () => {
                     </RadioGroup>
                   </div>
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
+                   <div className="space-y-3">
                       <Label htmlFor="register-name" className="text-sm font-semibold text-foreground">{personType === 'pf' ? 'Nome' : 'Razão Social'} *</Label>
                       <div className="relative">
                         <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
@@ -255,6 +282,48 @@ export const AuthPage = () => {
                       </div>
                     </div>
 
+                    <div className="space-y-3">
+                      <Label htmlFor="register-document" className="text-sm font-semibold text-foreground">{personType === 'pf' ? 'CPF' : 'CNPJ'} *</Label>
+                      <div className="relative">
+                        <FileText className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                        <Input
+                          id="register-document"
+                          type="text"
+                          placeholder={personType === 'pf' ? '000.000.000-00' : '00.000.000/0000-00'}
+                          value={registerData.document}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            const maxLength = personType === 'pf' ? 11 : 14;
+                            if (value.length <= maxLength) {
+                              // Aplicar máscara
+                              let formatted = value;
+                              if (personType === 'pf') {
+                                // Máscara CPF: 000.000.000-00
+                                formatted = value
+                                  .replace(/(\d{3})(\d)/, '$1.$2')
+                                  .replace(/(\d{3})(\d)/, '$1.$2')
+                                  .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                              } else {
+                                // Máscara CNPJ: 00.000.000/0000-00
+                                formatted = value
+                                  .replace(/(\d{2})(\d)/, '$1.$2')
+                                  .replace(/(\d{3})(\d)/, '$1.$2')
+                                  .replace(/(\d{3})(\d)/, '$1/$2')
+                                  .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+                              }
+                              setRegisterData(prev => ({ ...prev, document: formatted }));
+                            }
+                          }}
+                          className="pl-12 h-12 text-base bg-background border-border"
+                          required
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {personType === 'pf' ? '11 dígitos' : '14 dígitos'}
+                      </p>
+                    </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <Label htmlFor="register-role" className="text-sm font-semibold text-foreground">Tipo de Conta *</Label>
                       <Select
@@ -274,22 +343,22 @@ export const AuthPage = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
 
-                  <div className="space-y-3">
-                    <Label htmlFor="register-classification" className="text-sm font-semibold text-foreground">Classificação *</Label>
-                    <Select
-                      value={registerData.classification}
-                      onValueChange={(value: 'Corretora' | 'Gestão RH') => setRegisterData(prev => ({ ...prev, classification: value }))}
-                    >
-                      <SelectTrigger className="h-12 text-base bg-background border-border">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
-                        <SelectItem value="Corretora">Corretora</SelectItem>
-                        <SelectItem value="Gestão RH">Gestão RH</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-3">
+                      <Label htmlFor="register-classification" className="text-sm font-semibold text-foreground">Classificação *</Label>
+                      <Select
+                        value={registerData.classification}
+                        onValueChange={(value: 'Corretora' | 'Gestão RH') => setRegisterData(prev => ({ ...prev, classification: value }))}
+                      >
+                        <SelectTrigger className="h-12 text-base bg-background border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover border-border">
+                          <SelectItem value="Corretora">Corretora</SelectItem>
+                          <SelectItem value="Gestão RH">Gestão RH</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="space-y-3">
