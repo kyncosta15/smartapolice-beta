@@ -54,21 +54,35 @@ export function useInfoCapSync() {
   // Sincronizar automaticamente quando houver um usuário
   useEffect(() => {
     const checkAndSync = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        // Verificar se há uma sessão ativa
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.log('⚠️ Nenhuma sessão ativa - pulando sincronização');
+          return;
+        }
 
-      // Buscar documento do usuário na tabela users
-      const { data: userData } = await supabase
-        .from('users')
-        .select('documento')
-        .eq('id', user.id)
-        .maybeSingle();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.log('⚠️ Usuário não encontrado - pulando sincronização');
+          return;
+        }
 
-      if (userData?.documento) {
-        console.log('🔍 Documento encontrado:', userData.documento);
-        await syncPolicies(userData.documento);
-      } else {
-        console.log('⚠️ Usuário sem documento cadastrado - sincronização InfoCap não disponível');
+        // Buscar documento do usuário na tabela users
+        const { data: userData } = await supabase
+          .from('users')
+          .select('documento')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (userData?.documento) {
+          console.log('🔍 Documento encontrado:', userData.documento);
+          await syncPolicies(userData.documento);
+        } else {
+          console.log('⚠️ Usuário sem documento cadastrado - sincronização InfoCap não disponível');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao verificar sessão:', error);
       }
     };
 

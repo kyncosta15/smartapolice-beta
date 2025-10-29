@@ -98,12 +98,23 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
+    console.log('🔐 Authorization header presente:', !!authHeader);
+    
+    if (!authHeader) {
+      console.error('❌ Nenhum token de autorização fornecido');
+      return new Response(
+        JSON.stringify({ error: 'Token de autorização não fornecido' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+          headers: { Authorization: authHeader },
         },
       }
     );
@@ -114,12 +125,23 @@ Deno.serve(async (req) => {
       error: authError,
     } = await supabaseClient.auth.getUser();
 
-    if (authError || !user) {
+    if (authError) {
+      console.error('❌ Erro de autenticação:', authError.message);
       return new Response(
-        JSON.stringify({ error: 'Não autenticado' }),
+        JSON.stringify({ error: `Erro de autenticação: ${authError.message}` }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    if (!user) {
+      console.error('❌ Usuário não encontrado');
+      return new Response(
+        JSON.stringify({ error: 'Usuário não autenticado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('✅ Usuário autenticado:', user.id);
 
     const { documento } = await req.json();
 
