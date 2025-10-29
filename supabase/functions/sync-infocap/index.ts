@@ -54,16 +54,20 @@ Deno.serve(async (req) => {
     }
 
     console.log(`🔑 Token disponível: ${corpToken ? 'SIM (primeiros 10 chars: ' + corpToken.substring(0, 10) + '...)' : 'NÃO'}`);
+    console.log(`🔑 Comprimento do token: ${corpToken?.length}`);
 
     // Buscar apólices por documento
     const apiUrl = `${CORPNUVEM_API_URL}/cliente_ligacoes?codigo=${cleanDocument.substring(0, 8)}`;
     console.log(`🌐 Chamando API: ${apiUrl}`);
 
+    const headers = {
+      'Authorization': corpToken,
+      'Content-Type': 'application/json',
+    };
+    console.log(`📋 Headers sendo enviados:`, JSON.stringify(headers, null, 2));
+
     const response = await fetch(apiUrl, {
-      headers: {
-        'Authorization': corpToken,
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
     });
 
     console.log(`📡 Status da resposta: ${response.status} ${response.statusText}`);
