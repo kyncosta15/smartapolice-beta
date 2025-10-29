@@ -5,3 +5,4 @@ export * from './producao';
 export * from './renovacoes';
 export * from './anexos';
 export * from './cliente-detalhado';
+export * from './cliente-ligacoes';

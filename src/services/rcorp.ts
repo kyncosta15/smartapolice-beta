@@ -217,3 +217,25 @@ export async function getDadosInCorp(params: InCorpParams) {
     throw error;
   }
 }
+
+interface ClienteLigacoesParams {
+  codigo: number;
+}
+
+export async function getClienteLigacoes(params: ClienteLigacoesParams) {
+  try {
+    const queryParams = new URLSearchParams();
+    queryParams.append('codigo', params.codigo.toString());
+
+    const response = await fetch(`${RCORP_API_BASE}/cliente_ligacoes?${queryParams.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao buscar ligações do cliente:', error);
+    throw error;
+  }
+}

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, Loader2, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { corpClient } from '@/lib/corpClient';
+import { getClienteLigacoes } from '@/services/corpnuvem';
 
 interface Ramo {
   codigo: number;
@@ -17,7 +17,6 @@ interface RamoCount {
   nome: string;
   vigentes: number;
   ativas: number;
-  total: number;
 }
 
 export function SegurosDistribution() {
@@ -39,174 +38,132 @@ export function SegurosDistribution() {
         console.warn('⚠️ Nenhum ramo encontrado na API');
         toast({
           title: 'Aviso',
-          description: 'Nenhum ramo encontrado. Continuando com dados locais...',
-        });
-      }
-
-      // 2. Buscar todas as apólices locais (tanto de policies quanto apolices_beneficios)
-      console.log('🔄 Buscando apólices locais...');
-      
-      const [policiesResponse, beneficiosResponse] = await Promise.all([
-        supabase
-          .from('policies')
-          .select('tipo_seguro, status, fim_vigencia, expiration_date'),
-        supabase
-          .from('apolices_beneficios')
-          .select('tipo_beneficio, status, fim_vigencia')
-      ]);
-
-      if (policiesResponse.error) {
-        console.error('❌ Erro ao buscar policies:', policiesResponse.error);
-      }
-      if (beneficiosResponse.error) {
-        console.error('❌ Erro ao buscar apolices_beneficios:', beneficiosResponse.error);
-      }
-
-      const policies = policiesResponse.data || [];
-      const beneficios = beneficiosResponse.data || [];
-
-      console.log(`📊 Apólices encontradas: ${policies.length} policies + ${beneficios.length} benefícios`);
-
-      // Se não há dados locais nem ramos, retornar
-      if (policies.length === 0 && beneficios.length === 0) {
-        toast({
-          title: 'Sem dados',
-          description: 'Nenhuma apólice encontrada no sistema.',
+          description: 'Nenhum ramo encontrado na API.',
           variant: 'destructive',
         });
         setLoading(false);
         return;
       }
 
-      // 3. Criar mapeamento de tipos locais para ramos da API
-      const tipoToRamoMap: Record<string, string> = {
-        'auto': 'AUTOMOVEL',
-        'automovel': 'AUTOMOVEL',
-        'acidentes_pessoais': 'ACIDENTES PESSOAIS',
-        'residencial': 'RESIDENCIAL',
-        'empresarial': 'EMPRESARIAL',
-        'vida': 'VIDA INDIVIDUAL',
-        'vida_individual': 'VIDA INDIVIDUAL',
-        'vida_grupo': 'VIDA GRUPO',
-        'saude': 'PLANO DE SAÚDE',
-        'plano_saude': 'PLANO DE SAÚDE',
-        'dental': 'DENTAL',
-        'odonto': 'PLANO ODONTOLOGICO',
-        'viagem': 'VIAGEM',
-        'pet': 'SEGURO PET',
-        'condominio': 'CONDOMINIO',
-        'fianca': 'FIANCA LOCATICIA',
-        'rc_profissional': 'RC PROFISSIONAL',
-        'imobiliario': 'IMOBILIARIO',
-        'bike': 'BIKE',
-        'equipamentos': 'EQUIPAMENTOS',
-        'transporte': 'TRANSP NACIONAL',
-        'agricola': 'AGRÍCOLA',
-        'nautico': 'NÁUTICO',
-      };
+      // Criar mapa de abreviatura -> nome completo
+      const abrevToNomeMap = new Map<string, string>();
+      ramos.forEach(ramo => {
+        abrevToNomeMap.set(ramo.abreviatura.toUpperCase(), ramo.nome);
+      });
 
-      // 4. Criar mapa de contagem por ramo
-      const ramoCountMap = new Map<string, RamoCount>();
+      // 2. Buscar todos os clientes
+      console.log('🔄 Buscando lista de clientes...');
+      const clientesResponse = await corpClient.get('/lista_clientes', {
+        params: { texto: '' } // Busca todos os clientes
+      });
+      
+      const clientes = clientesResponse.data?.clientes || [];
+      console.log(`📊 Total de clientes encontrados: ${clientes.length}`);
 
-      // Inicializar contadores com os ramos da API
-      if (ramos.length > 0) {
-        ramos.forEach(ramo => {
-          ramoCountMap.set(ramo.nome.toUpperCase(), {
-            nome: ramo.nome,
-            vigentes: 0,
-            ativas: 0,
-            total: 0
-          });
+      if (clientes.length === 0) {
+        toast({
+          title: 'Sem dados',
+          description: 'Nenhum cliente encontrado no sistema.',
+          variant: 'destructive',
         });
+        setLoading(false);
+        return;
       }
 
-      // Helper para verificar se está vigente
-      const isVigente = (fimVigencia: string | null, expirationDate: string | null) => {
-        const dataFim = fimVigencia || expirationDate;
-        if (!dataFim) return false;
-        const vencimento = new Date(dataFim);
-        const hoje = new Date();
-        return vencimento >= hoje;
-      };
+      // 3. Para cada ramo, manter sets de clientes únicos
+      const ramoClientesMap = new Map<string, {
+        nome: string;
+        clientesVigentes: Set<number>;
+        clientesAtivas: Set<number>;
+      }>();
 
-      // Helper para mapear tipo local para ramo da API
-      const mapTipoToRamo = (tipoLocal: string): string => {
-        const tipoLower = tipoLocal.toLowerCase().trim();
-        
-        // Tentar mapeamento direto
-        if (tipoToRamoMap[tipoLower]) {
-          return tipoToRamoMap[tipoLower];
-        }
-        
-        // Buscar por similaridade nos ramos da API
-        for (const ramo of ramos) {
-          const ramoNome = ramo.nome.toUpperCase();
-          const tipoUpper = tipoLocal.toUpperCase();
+      // Inicializar todos os ramos
+      ramos.forEach(ramo => {
+        ramoClientesMap.set(ramo.abreviatura.toUpperCase(), {
+          nome: ramo.nome,
+          clientesVigentes: new Set(),
+          clientesAtivas: new Set(),
+        });
+      });
+
+      // 4. Buscar documentos de cada cliente (limitando para não sobrecarregar)
+      const MAX_CLIENTES = Math.min(clientes.length, 100); // Limitar a 100 clientes
+      console.log(`🔄 Buscando documentos de ${MAX_CLIENTES} clientes...`);
+
+      const hoje = new Date();
+      let processados = 0;
+
+      for (let i = 0; i < MAX_CLIENTES; i++) {
+        const cliente = clientes[i];
+        try {
+          const ligacoes = await getClienteLigacoes(cliente.codigo);
           
-          // Se o tipo contém parte do nome do ramo ou vice-versa
-          if (ramoNome.includes(tipoUpper) || tipoUpper.includes(ramoNome)) {
-            return ramo.nome;
+          if (ligacoes.documentos?.documentos) {
+            ligacoes.documentos.documentos.forEach(doc => {
+              const ramoAbrev = doc.ramo.toUpperCase();
+              
+              // Verificar se o ramo existe no mapa
+              let ramoData = ramoClientesMap.get(ramoAbrev);
+              
+              // Se não existe, criar novo (para ramos não cadastrados)
+              if (!ramoData) {
+                const nomeRamo = abrevToNomeMap.get(ramoAbrev) || ramoAbrev;
+                ramoData = {
+                  nome: nomeRamo,
+                  clientesVigentes: new Set(),
+                  clientesAtivas: new Set(),
+                };
+                ramoClientesMap.set(ramoAbrev, ramoData);
+              }
+
+              // Verificar se é vigente (fimvig >= hoje)
+              const fimVigencia = doc.fimvig;
+              if (fimVigencia) {
+                try {
+                  // Converter formato DD/MM/YYYY para Date
+                  const [dia, mes, ano] = fimVigencia.split('/');
+                  const dataFim = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+                  
+                  if (dataFim >= hoje) {
+                    ramoData.clientesVigentes.add(cliente.codigo);
+                  }
+                } catch (e) {
+                  console.warn('Erro ao parsear data:', fimVigencia);
+                }
+              }
+
+              // Verificar se é ativa (não cancelada)
+              if (doc.cancelado === 'F') {
+                ramoData.clientesAtivas.add(cliente.codigo);
+              }
+            });
           }
+          
+          processados++;
+          if (processados % 10 === 0) {
+            console.log(`📊 Processados ${processados}/${MAX_CLIENTES} clientes...`);
+          }
+        } catch (error) {
+          console.error(`Erro ao buscar ligações do cliente ${cliente.codigo}:`, error);
+          // Continuar com próximo cliente
         }
-        
-        // Se não encontrou, retornar o tipo original em maiúsculas
-        return tipoLocal.toUpperCase();
-      };
+      }
 
-      // Helper para encontrar ou criar ramo
-      const getOrCreateRamo = (tipoLocal: string): RamoCount => {
-        const ramoNome = mapTipoToRamo(tipoLocal);
-        const nomeUpper = ramoNome.toUpperCase();
-        
-        if (!ramoCountMap.has(nomeUpper)) {
-          ramoCountMap.set(nomeUpper, {
-            nome: ramoNome,
-            vigentes: 0,
-            ativas: 0,
-            total: 0
-          });
-        }
-        return ramoCountMap.get(nomeUpper)!;
-      };
-
-      // Contar policies
-      policies.forEach((policy: any) => {
-        const tipo = (policy.tipo_seguro || 'OUTROS').trim();
-        if (!tipo) return;
-
-        const vigente = isVigente(policy.fim_vigencia, policy.expiration_date);
-        const ativa = policy.status === 'ativa' || policy.status === 'vigente';
-
-        const count = getOrCreateRamo(tipo);
-        count.total++;
-        if (vigente) count.vigentes++;
-        if (ativa) count.ativas++;
-      });
-
-      // Contar benefícios
-      beneficios.forEach((beneficio: any) => {
-        const tipo = (beneficio.tipo_beneficio || 'OUTROS').trim();
-        if (!tipo) return;
-
-        const vigente = isVigente(beneficio.fim_vigencia, null);
-        const ativa = beneficio.status === 'ativa' || beneficio.status === 'vigente';
-
-        const count = getOrCreateRamo(tipo);
-        count.total++;
-        if (vigente) count.vigentes++;
-        if (ativa) count.ativas++;
-      });
-
-      // Converter para array e ordenar por total
-      const ramosArray = Array.from(ramoCountMap.values())
-        .filter(r => r.total > 0) // Mostrar apenas ramos com apólices
-        .sort((a, b) => b.total - a.total);
+      // 5. Converter para array e ordenar
+      const ramosArray: RamoCount[] = Array.from(ramoClientesMap.entries())
+        .map(([abrev, data]) => ({
+          nome: data.nome,
+          vigentes: data.clientesVigentes.size,
+          ativas: data.clientesAtivas.size,
+        }))
+        .filter(r => r.vigentes > 0 || r.ativas > 0) // Mostrar apenas ramos com clientes
+        .sort((a, b) => b.vigentes - a.vigentes);
 
       setRamosData(ramosArray);
 
       toast({
         title: 'Dados carregados',
-        description: `${ramosArray.length} tipos de seguro com apólices encontrados`,
+        description: `${ramosArray.length} tipos de seguro encontrados de ${processados} clientes`,
       });
 
     } catch (error) {
@@ -224,8 +181,7 @@ export function SegurosDistribution() {
   const renderSkeletons = () => (
     <div className="space-y-3">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="grid grid-cols-4 gap-4 p-4 border rounded-lg">
-          <Skeleton className="h-4" />
+        <div key={i} className="grid grid-cols-3 gap-4 p-4 border rounded-lg">
           <Skeleton className="h-4" />
           <Skeleton className="h-4" />
           <Skeleton className="h-4" />
@@ -238,9 +194,8 @@ export function SegurosDistribution() {
     (acc, ramo) => ({
       vigentes: acc.vigentes + ramo.vigentes,
       ativas: acc.ativas + ramo.ativas,
-      total: acc.total + ramo.total,
     }),
-    { vigentes: 0, ativas: 0, total: 0 }
+    { vigentes: 0, ativas: 0 }
   );
 
   return (
@@ -249,10 +204,10 @@ export function SegurosDistribution() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Distribuição de Seguros por Tipo
+            Distribuição de Clientes por Tipo de Seguro
           </CardTitle>
           <CardDescription>
-            Visualize a quantidade de apólices vigentes e ativas por tipo de seguro
+            Quantidade de clientes com apólices vigentes e ativas por ramo
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -279,11 +234,10 @@ export function SegurosDistribution() {
           ) : ramosData.length > 0 ? (
             <div className="space-y-4">
               {/* Header */}
-              <div className="grid grid-cols-4 gap-4 pb-2 border-b font-semibold text-sm">
+              <div className="grid grid-cols-3 gap-4 pb-2 border-b font-semibold text-sm">
                 <div>Ramo</div>
                 <div className="text-right">Vigentes</div>
                 <div className="text-right">Ativas</div>
-                <div className="text-right">Total</div>
               </div>
 
               {/* Data Rows */}
@@ -291,22 +245,20 @@ export function SegurosDistribution() {
                 {ramosData.map((ramo, idx) => (
                   <div 
                     key={idx}
-                    className="grid grid-cols-4 gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="grid grid-cols-3 gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="font-medium text-sm">{ramo.nome}</div>
                     <div className="text-right tabular-nums">{ramo.vigentes}</div>
                     <div className="text-right tabular-nums">{ramo.ativas}</div>
-                    <div className="text-right tabular-nums font-semibold">{ramo.total}</div>
                   </div>
                 ))}
               </div>
 
               {/* Footer with totals */}
-              <div className="grid grid-cols-4 gap-4 pt-2 border-t font-bold">
+              <div className="grid grid-cols-3 gap-4 pt-2 border-t font-bold">
                 <div>Total:</div>
                 <div className="text-right">{totals.vigentes}</div>
                 <div className="text-right">{totals.ativas}</div>
-                <div className="text-right">{totals.total}</div>
               </div>
             </div>
           ) : (
