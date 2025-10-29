@@ -57,20 +57,18 @@ export function useInfoCapSync() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar documento do usuário
+      // Buscar documento do usuário na tabela users
       const { data: userData } = await supabase
         .from('users')
-        .select('name, email')
+        .select('documento')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (userData) {
-        // Tentar extrair CPF/CNPJ do email ou outros campos
-        // TODO: Adicionar campo documento na tabela users
-        const documento = extractDocumentFromUser(userData);
-        if (documento) {
-          await syncPolicies(documento);
-        }
+      if (userData?.documento) {
+        console.log('🔍 Documento encontrado:', userData.documento);
+        await syncPolicies(userData.documento);
+      } else {
+        console.log('⚠️ Usuário sem documento cadastrado - sincronização InfoCap não disponível');
       }
     };
 
@@ -84,12 +82,3 @@ export function useInfoCapSync() {
   };
 }
 
-/**
- * Extrai CPF/CNPJ do usuário (temporário)
- * TODO: Adicionar campo documento na tabela users
- */
-function extractDocumentFromUser(userData: any): string | null {
-  // Por enquanto, retorna null
-  // Implementar lógica quando campo documento estiver disponível
-  return null;
-}
