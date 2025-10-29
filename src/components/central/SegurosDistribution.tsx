@@ -78,10 +78,37 @@ export function SegurosDistribution() {
         return;
       }
 
-      // 3. Criar mapa de contagem por ramo
+      // 3. Criar mapeamento de tipos locais para ramos da API
+      const tipoToRamoMap: Record<string, string> = {
+        'auto': 'AUTOMOVEL',
+        'automovel': 'AUTOMOVEL',
+        'acidentes_pessoais': 'ACIDENTES PESSOAIS',
+        'residencial': 'RESIDENCIAL',
+        'empresarial': 'EMPRESARIAL',
+        'vida': 'VIDA INDIVIDUAL',
+        'vida_individual': 'VIDA INDIVIDUAL',
+        'vida_grupo': 'VIDA GRUPO',
+        'saude': 'PLANO DE SAÚDE',
+        'plano_saude': 'PLANO DE SAÚDE',
+        'dental': 'DENTAL',
+        'odonto': 'PLANO ODONTOLOGICO',
+        'viagem': 'VIAGEM',
+        'pet': 'SEGURO PET',
+        'condominio': 'CONDOMINIO',
+        'fianca': 'FIANCA LOCATICIA',
+        'rc_profissional': 'RC PROFISSIONAL',
+        'imobiliario': 'IMOBILIARIO',
+        'bike': 'BIKE',
+        'equipamentos': 'EQUIPAMENTOS',
+        'transporte': 'TRANSP NACIONAL',
+        'agricola': 'AGRÍCOLA',
+        'nautico': 'NÁUTICO',
+      };
+
+      // 4. Criar mapa de contagem por ramo
       const ramoCountMap = new Map<string, RamoCount>();
 
-      // Se temos ramos da API, inicializar contadores
+      // Inicializar contadores com os ramos da API
       if (ramos.length > 0) {
         ramos.forEach(ramo => {
           ramoCountMap.set(ramo.nome.toUpperCase(), {
@@ -102,12 +129,38 @@ export function SegurosDistribution() {
         return vencimento >= hoje;
       };
 
+      // Helper para mapear tipo local para ramo da API
+      const mapTipoToRamo = (tipoLocal: string): string => {
+        const tipoLower = tipoLocal.toLowerCase().trim();
+        
+        // Tentar mapeamento direto
+        if (tipoToRamoMap[tipoLower]) {
+          return tipoToRamoMap[tipoLower];
+        }
+        
+        // Buscar por similaridade nos ramos da API
+        for (const ramo of ramos) {
+          const ramoNome = ramo.nome.toUpperCase();
+          const tipoUpper = tipoLocal.toUpperCase();
+          
+          // Se o tipo contém parte do nome do ramo ou vice-versa
+          if (ramoNome.includes(tipoUpper) || tipoUpper.includes(ramoNome)) {
+            return ramo.nome;
+          }
+        }
+        
+        // Se não encontrou, retornar o tipo original em maiúsculas
+        return tipoLocal.toUpperCase();
+      };
+
       // Helper para encontrar ou criar ramo
-      const getOrCreateRamo = (nome: string): RamoCount => {
-        const nomeUpper = nome.toUpperCase();
+      const getOrCreateRamo = (tipoLocal: string): RamoCount => {
+        const ramoNome = mapTipoToRamo(tipoLocal);
+        const nomeUpper = ramoNome.toUpperCase();
+        
         if (!ramoCountMap.has(nomeUpper)) {
           ramoCountMap.set(nomeUpper, {
-            nome: nome,
+            nome: ramoNome,
             vigentes: 0,
             ativas: 0,
             total: 0
