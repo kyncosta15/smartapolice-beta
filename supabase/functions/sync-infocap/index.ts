@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
 
     const response = await fetch(apiUrl, {
       headers: {
-        'Authorization': `Bearer ${corpToken}`,
+        'Authorization': corpToken,
         'Content-Type': 'application/json',
       },
     });
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
               `${CORPNUVEM_API_URL}/documento?codfil=${ap.codfil}&nosnum=${ap.nosnum}`,
               {
                 headers: {
-                  'Authorization': `Bearer ${corpToken}`,
+                  'Authorization': corpToken,
                   'Content-Type': 'application/json',
                 },
               }
