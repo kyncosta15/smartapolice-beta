@@ -56,17 +56,15 @@ export function useCorpNuvemSync() {
       // Buscar CPF/CNPJ do usuário na tabela users
       const { data: userData } = await supabase
         .from('users')
-        .select('name, email')
+        .select('documento')
         .eq('id', user.id)
         .single();
 
-      if (userData) {
-        // Tentar extrair CPF/CNPJ do nome ou email
-        // TODO: Adicionar campo document na tabela users
-        const document = extractDocumentFromUser(userData);
-        if (document) {
-          await syncPolicies(document);
-        }
+      if (userData?.documento) {
+        console.log('🔍 Documento encontrado, iniciando sincronização automática...');
+        await syncPolicies(userData.documento);
+      } else {
+        console.log('⚠️ Nenhum documento cadastrado para este usuário');
       }
     };
 
@@ -80,12 +78,3 @@ export function useCorpNuvemSync() {
   };
 }
 
-/**
- * Extrai CPF/CNPJ do usuário (temporário)
- * TODO: Adicionar campo document na tabela users
- */
-function extractDocumentFromUser(userData: any): string | null {
-  // Por enquanto, retorna null
-  // Depois que adicionar o campo document, retornar userData.document
-  return null;
-}
