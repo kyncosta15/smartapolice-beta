@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
     // PASSO 3: Para cada apólice ATIVA, buscar detalhes completos
     for (const ap of apolicesAtivas) {
       try {
-        console.log(`🔄 Processando apólice nosnum: ${ap.nosnum}, codfil: ${ap.codfil}`);
+        console.log(`🔄 Processando apólice nosnum: ${ap.nosnum}, codfil: ${ap.codfil}, renovacao_situacao: ${ap.renovacao_situacao}`);
 
         // Buscar detalhes completos da apólice
         let detalhesApolice = null;
@@ -330,6 +330,7 @@ Deno.serve(async (req) => {
         // Determinar se foi renovada
         // renovacao_situacao: 1 = Nova, 2 = Renovada, 3 = Não renovada
         const foiRenovada = ap.renovacao_situacao !== 3;
+        console.log(`🔄 Apólice ${ap.nosnum} - renovacao_situacao: ${ap.renovacao_situacao}, foiRenovada: ${foiRenovada}`);
         
         // Normalizar dados para tabela policies
         const policyData = {
