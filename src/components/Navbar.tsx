@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, ChevronDown, Menu, ChevronLeft, ChevronRight, Moon, Sun, Monitor } from 'lucide-react';
+import { LogOut, ChevronDown, Menu, ChevronLeft, ChevronRight, Moon, Sun, Monitor, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,9 +20,11 @@ import { useTheme } from '@/components/ThemeProvider';
 interface NavbarProps {
   onMobileMenuToggle: () => void;
   isMobileMenuOpen?: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
-export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarProps) {
+export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false, onRefresh, isRefreshing = false }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { logout, user } = useAuth();
   const { profile: userProfile, memberships, activeEmpresa } = useUserProfile();
@@ -115,8 +117,26 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false }: NavbarP
         {/* Spacer to push user menu to the right */}
         <div className="flex-1"></div>
 
-        {/* Right side - Dark Mode Toggle and User Menu */}
+        {/* Right side - Refresh, Dark Mode Toggle and User Menu */}
         <div className="flex items-center gap-3">
+          {/* Refresh button */}
+          {onRefresh && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="h-10 w-10 rounded-xl border-border hover:bg-accent"
+              title="Atualizar apólices"
+            >
+              <RefreshCw className={cn(
+                "h-5 w-5 text-muted-foreground",
+                isRefreshing && "animate-spin"
+              )} />
+              <span className="sr-only">Atualizar dados</span>
+            </Button>
+          )}
+          
           {/* Dark mode toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -51,6 +51,7 @@ export function DashboardContent() {
   const { toast } = useToast();
   const { progressToast } = useProgressToast();
   const [lastRefresh, setLastRefresh] = useState<number>(Date.now());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Hook para persistência de apólices
   const { 
@@ -117,6 +118,32 @@ export function DashboardContent() {
   ];
 
   const navigation = (['administrador', 'admin', 'corretora_admin'].includes(user?.role || '')) ? adminNavigation : clientNavigation;
+
+  const handleManualRefresh = async () => {
+    console.log('🔄 [handleManualRefresh] Refresh manual iniciado');
+    setIsRefreshing(true);
+    
+    try {
+      await refreshPolicies();
+      setLastRefresh(Date.now());
+      
+      toast({
+        title: "✅ Dados Atualizados",
+        description: "Suas apólices foram atualizadas com sucesso",
+      });
+      
+      console.log('✅ [handleManualRefresh] Refresh concluído');
+    } catch (error) {
+      console.error('❌ [handleManualRefresh] Erro no refresh:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Não foi possível atualizar os dados",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handlePolicyExtracted = async (policy: any) => {
     console.log('🚀 handlePolicyExtracted CHAMADO - Recarregando dados do banco!');
@@ -301,6 +328,8 @@ export function DashboardContent() {
           <Navbar 
             onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
             isMobileMenuOpen={isMobileMenuOpen}
+            onRefresh={handleManualRefresh}
+            isRefreshing={isRefreshing}
           />
 
         <div className="w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
