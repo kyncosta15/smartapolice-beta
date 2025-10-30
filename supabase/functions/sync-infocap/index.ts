@@ -347,7 +347,7 @@ Deno.serve(async (req) => {
           documento: cleanDocument,
           segurado: nomeCliente,
           seguradora: detalhesApolice?.seguradora || ap.seguradora || '',
-          numero_apolice: ap.numapo || detalhesApolice?.numapo || uniqueIdentifier,
+          numero_apolice: ap.numapo || detalhesApolice?.numapo || `${ap.codfil}-${ap.nosnum}`,
           tipo_seguro: detalhesApolice?.ramo || ap.ramo || 'Não especificado',
           inicio_vigencia: convertBRDateToISO(ap.inivig || detalhesApolice?.inivig),
           fim_vigencia: convertBRDateToISO(ap.fimvig || detalhesApolice?.fimvig),
