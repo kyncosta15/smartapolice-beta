@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -37,6 +37,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -206,6 +213,52 @@ export function MyPolicies() {
       toast({
         title: "⚠️ Exclusão parcial",
         description: `${successCount} apólice(s) excluída(s), ${errorCount} falhou(ram)`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkStatusChange = async (newStatus: PolicyStatus) => {
+    if (selectedPolicies.size === 0) return;
+
+    setIsDeleting(true);
+
+    toast({
+      title: "⏳ Atualizando status",
+      description: `Processando ${selectedPolicies.size} apólice(s)...`,
+    });
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const policyId of selectedPolicies) {
+      try {
+        const success = await updatePolicy(policyId, { status: newStatus });
+        if (success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      } catch (error) {
+        console.error(`Erro ao atualizar apólice ${policyId}:`, error);
+        errorCount++;
+      }
+    }
+
+    setIsDeleting(false);
+    setSelectedPolicies(new Set());
+    
+    await refreshPolicies();
+
+    if (errorCount === 0) {
+      toast({
+        title: "✅ Status atualizado",
+        description: `${successCount} apólice(s) atualizada(s) para: ${formatStatusText(newStatus)}`,
+      });
+    } else {
+      toast({
+        title: "⚠️ Atualização parcial",
+        description: `${successCount} apólice(s) atualizada(s), ${errorCount} falhou(ram)`,
         variant: "destructive",
       });
     }
@@ -492,16 +545,33 @@ export function MyPolicies() {
                   Limpar seleção
                 </Button>
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-                disabled={isDeleting}
-                className="gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Excluir selecionadas
-              </Button>
+              <div className="flex items-center gap-2">
+                <Select onValueChange={(value) => handleBulkStatusChange(value as PolicyStatus)}>
+                  <SelectTrigger className="w-[180px] h-9 bg-white dark:bg-gray-800">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Alterar status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vigente">Vigente</SelectItem>
+                    <SelectItem value="ativa">Ativa</SelectItem>
+                    <SelectItem value="vencendo">Vencendo</SelectItem>
+                    <SelectItem value="vencida">Vencida</SelectItem>
+                    <SelectItem value="pendente_analise">Em Análise</SelectItem>
+                    <SelectItem value="aguardando_emissao">Aguardando Emissão</SelectItem>
+                    <SelectItem value="nao_renovada">Não Renovada</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={isDeleting}
+                  className="gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Excluir selecionadas
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
