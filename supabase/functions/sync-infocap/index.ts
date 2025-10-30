@@ -328,9 +328,10 @@ Deno.serve(async (req) => {
         console.log(`✅ Dados financeiros finais - Prêmio Total: ${valorPremioTotal}, Parcelas: ${numParcelas}, Valor Parcela: ${valorParcela}`);
 
         // Determinar se foi renovada
-        // renovacao_situacao: 1 = Nova, 2 = Renovada, 3 = Não renovada
-        const foiRenovada = ap.renovacao_situacao !== 3;
-        console.log(`🔄 Apólice ${ap.nosnum} - renovacao_situacao: ${ap.renovacao_situacao}, foiRenovada: ${foiRenovada}`);
+        // sit_renovacao: 1 = Nova, 2 = Renovada, 3 = Não renovada
+        const sitRenovacao = detalhesApolice?.sit_renovacao || 1;
+        const foiRenovada = sitRenovacao !== 3;
+        console.log(`🔄 Apólice ${ap.nosnum} - sit_renovacao: ${sitRenovacao}, foiRenovada: ${foiRenovada}`);
         
         // Normalizar dados para tabela policies
         const policyData = {
