@@ -21,8 +21,6 @@ import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
 import { PolicyWithStatus, PolicyStatus } from '@/types/policyStatus';
 import { STATUS_COLORS, formatStatusText } from '@/utils/statusColors';
-import { useRenewalChecker } from '@/hooks/useRenewalChecker';
-import { RenewalModal } from '@/components/RenewalModal';
 import { InfoModal } from '@/components/InfoModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
@@ -75,27 +73,6 @@ export function MyPolicies() {
       status: finalStatus
     };
   });
-  
-  const renewalAlert = useRenewalChecker(policiesWithStatus);
-
-  const handleRenewalDecision = async (policy: PolicyWithStatus, newStatus: PolicyStatus) => {
-    console.log(`🔄 [handleRenewalDecision] Atualizando status: ${policy.id} -> ${newStatus}`);
-    
-    const updateSuccess = await updatePolicy(policy.id, { status: newStatus });
-    
-    if (updateSuccess) {
-      toast({
-        title: "✅ Status Atualizado",
-        description: `Status da apólice alterado para: ${formatStatusText(newStatus)}`,
-      });
-    }
-
-    if (newStatus === "aguardando_emissao") {
-      setShowInfoModal(true);
-    }
-
-    renewalAlert?.clear();
-  };
 
   const handleDeleteClick = (e: React.MouseEvent, policy: PolicyWithStatus) => {
     e.preventDefault();
@@ -642,15 +619,7 @@ export function MyPolicies() {
         </div>
       )}
 
-      {renewalAlert && (
-        <RenewalModal
-          policy={renewalAlert.toRenew}
-          onDecision={(newStatus) => handleRenewalDecision(renewalAlert.toRenew, newStatus)}
-          onClose={renewalAlert.clear}
-        />
-      )}
-
-      <InfoModal 
+      <InfoModal
         isOpen={showInfoModal}
         onClose={() => setShowInfoModal(false)}
       />
