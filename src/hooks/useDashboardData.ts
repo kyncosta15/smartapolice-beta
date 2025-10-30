@@ -177,7 +177,7 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
 
     // Distribuição por renovação (renovadas vs não renovadas)
     const renewalDistribution = normalizedPolicies.reduce((acc, policy: any) => {
-      if (policy.renovada === true || policy.renovada === undefined) {
+      if (policy.renovada === true) {
         acc.renovadas++;
       } else {
         acc.naoRenovadas++;
