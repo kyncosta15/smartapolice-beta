@@ -76,6 +76,8 @@ export function useRobustPolicyData() {
         installments: [],
         insuredName: apolice.cliente_nome || undefined,
         documento: apolice.cliente_documento || undefined,
+        nosnum: apolice.nosnum || undefined,
+        codfil: apolice.codfil || undefined,
       } as ParsedPolicyData));
 
       // Combinar ambas as fontes

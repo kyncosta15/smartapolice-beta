@@ -85,4 +85,8 @@ export interface ParsedPolicyData {
   
   // ADDED: Missing responsavel_nome property
   responsavel_nome?: string;
+  
+  // ADDED: nosnum from CorpNuvem API
+  nosnum?: number;
+  codfil?: number;
 }
