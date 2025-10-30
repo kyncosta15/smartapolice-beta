@@ -339,10 +339,13 @@ Deno.serve(async (req) => {
             .eq('id', existingPolicy.id);
 
           if (updateError) {
-            console.error(`❌ Erro ao atualizar apólice ${policyData.numero_apolice}:`, updateError);
+            console.error(`❌ FALHA AO ATUALIZAR - nosnum: ${ap.nosnum}, numero_apolice: ${policyData.numero_apolice}`);
+            console.error(`❌ Código do erro:`, updateError.code);
+            console.error(`❌ Mensagem:`, updateError.message);
+            console.error(`❌ Detalhes:`, updateError.details);
             errorCount++;
           } else {
-            console.log(`✅ Apólice ${policyData.numero_apolice} atualizada com sucesso`);
+            console.log(`✅ Apólice ${policyData.numero_apolice} (nosnum: ${ap.nosnum}) atualizada com sucesso`);
             syncedCount++;
           }
         } else {
@@ -352,15 +355,20 @@ Deno.serve(async (req) => {
             .insert(policyData);
 
           if (insertError) {
-            console.error(`❌ Erro ao inserir apólice ${policyData.numero_apolice}:`, insertError);
+            console.error(`❌ FALHA AO INSERIR - nosnum: ${ap.nosnum}, numero_apolice: ${policyData.numero_apolice}`);
+            console.error(`❌ Código do erro:`, insertError.code);
+            console.error(`❌ Mensagem:`, insertError.message);
+            console.error(`❌ Detalhes:`, insertError.details);
             errorCount++;
           } else {
-            console.log(`✅ Apólice ${policyData.numero_apolice} sincronizada com sucesso`);
+            console.log(`✅ Apólice ${policyData.numero_apolice} (nosnum: ${ap.nosnum}) sincronizada com sucesso`);
             syncedCount++;
           }
         }
       } catch (err) {
-        console.error(`❌ Erro ao processar apólice:`, err);
+        console.error(`❌ ERRO AO PROCESSAR - nosnum: ${ap.nosnum}, codfil: ${ap.codfil}`);
+        console.error(`❌ Erro completo:`, err);
+        console.error(`❌ Stack:`, err instanceof Error ? err.stack : 'N/A');
         errorCount++;
       }
     }
