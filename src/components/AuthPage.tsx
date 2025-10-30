@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,14 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Shield, Mail, Lock, User, Building, Phone, FileText } from 'lucide-react';
+import { Shield, Mail, Lock, User, Building, Phone, FileText, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Spinner } from '@/components/ui/spinner';
+import { useClienteLookup } from '@/hooks/useClienteLookup';
 
 export const AuthPage = () => {
   const { login, register, isLoading } = useAuth();
   const { toast } = useToast();
+  const { result: lookupResult, searchByDocument, reset: resetLookup } = useClienteLookup();
   
   const [loginData, setLoginData] = useState({
     email: '',
@@ -34,6 +36,13 @@ export const AuthPage = () => {
   });
 
   const [personType, setPersonType] = useState<'pf' | 'pj'>('pf');
+  
+  // Auto-preencher nome quando encontrar cliente
+  useEffect(() => {
+    if (lookupResult.found && lookupResult.name && !registerData.name) {
+      setRegisterData(prev => ({ ...prev, name: lookupResult.name || '' }));
+    }
+  }, [lookupResult.found, lookupResult.name]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -311,15 +320,41 @@ export const AuthPage = () => {
                                   .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
                               }
                               setRegisterData(prev => ({ ...prev, document: formatted }));
+                              
+                              // Buscar cliente quando completar o documento
+                              if (value.length === maxLength) {
+                                searchByDocument(formatted, personType);
+                              } else {
+                                resetLookup();
+                              }
                             }
                           }}
-                          className="pl-12 h-12 text-base bg-background border-border"
+                          className="pl-12 pr-12 h-12 text-base bg-background border-border"
                           required
                         />
+                        {/* Indicador de busca/status */}
+                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                          {lookupResult.loading && (
+                            <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+                          )}
+                          {!lookupResult.loading && lookupResult.found && (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          )}
+                          {!lookupResult.loading && registerData.document.replace(/\D/g, '').length === (personType === 'pf' ? 11 : 14) && !lookupResult.found && (
+                            <XCircle className="h-5 w-5 text-orange-500" />
+                          )}
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {personType === 'pf' ? '11 dígitos' : '14 dígitos'}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">
+                          {personType === 'pf' ? '11 dígitos' : '14 dígitos'}
+                        </p>
+                        {!lookupResult.loading && registerData.document.replace(/\D/g, '').length === (personType === 'pf' ? 11 : 14) && (
+                          <p className={`text-xs font-medium ${lookupResult.found ? 'text-green-600' : 'text-orange-600'}`}>
+                            {lookupResult.found ? '✓ Encontrado no sistema' : '⚠ Não encontrado no sistema'}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
