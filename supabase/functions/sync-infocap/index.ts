@@ -253,12 +253,12 @@ Deno.serve(async (req) => {
           return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
         };
 
-        // Determinar status válido
-        let statusPolicy = 'Vigente';
-        if (ap.cancelado === 'S' || detalhesApolice?.cancelado === 'F') {
-          statusPolicy = 'Cancelada';
+        // Determinar status válido (em minúsculas conforme constraint)
+        let statusPolicy = 'vigente';
+        if (ap.cancelado === 'S') {
+          statusPolicy = 'vencida';
         } else if (ap.sin_situacao === 1 || detalhesApolice?.sit_acompanhamento === 4) {
-          statusPolicy = 'Vigente';
+          statusPolicy = 'vigente';
         }
 
         // Normalizar dados para tabela policies
