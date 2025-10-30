@@ -79,6 +79,16 @@ export const AuthPage = () => {
     
     // Prevent multiple rapid submissions
     if (isSubmitting) return;
+
+    // Verificar se o documento já está cadastrado
+    if (lookupResult.alreadyRegistered) {
+      toast({
+        title: "Documento já cadastrado",
+        description: "Este CPF/CNPJ já possui uma conta no sistema.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (registerData.password !== registerData.confirmPassword) {
       toast({
@@ -321,10 +331,13 @@ export const AuthPage = () => {
                           {lookupResult.loading && (
                             <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
                           )}
-                          {!lookupResult.loading && lookupResult.found && (
+                          {!lookupResult.loading && lookupResult.alreadyRegistered && (
+                            <XCircle className="h-5 w-5 text-red-500" />
+                          )}
+                          {!lookupResult.loading && !lookupResult.alreadyRegistered && lookupResult.found && (
                             <CheckCircle className="h-5 w-5 text-green-500" />
                           )}
-                          {!lookupResult.loading && registerData.document.replace(/\D/g, '').length === (personType === 'pf' ? 11 : 14) && !lookupResult.found && (
+                          {!lookupResult.loading && !lookupResult.alreadyRegistered && registerData.document.replace(/\D/g, '').length === (personType === 'pf' ? 11 : 14) && !lookupResult.found && (
                             <XCircle className="h-5 w-5 text-orange-500" />
                           )}
                         </div>
@@ -334,8 +347,18 @@ export const AuthPage = () => {
                           {personType === 'pf' ? '11 dígitos' : '14 dígitos'}
                         </p>
                         {!lookupResult.loading && registerData.document.replace(/\D/g, '').length === (personType === 'pf' ? 11 : 14) && (
-                          <p className={`text-xs font-medium ${lookupResult.found ? 'text-green-600' : 'text-orange-600'}`}>
-                            {lookupResult.found ? '✓ Encontrado no sistema' : '⚠ Não encontrado no sistema'}
+                          <p className={`text-xs font-medium ${
+                            lookupResult.alreadyRegistered 
+                              ? 'text-red-600' 
+                              : lookupResult.found 
+                                ? 'text-green-600' 
+                                : 'text-orange-600'
+                          }`}>
+                            {lookupResult.alreadyRegistered 
+                              ? '✗ Já cadastrado no sistema' 
+                              : lookupResult.found 
+                                ? '✓ Encontrado na API' 
+                                : '⚠ Não encontrado'}
                           </p>
                         )}
                       </div>
