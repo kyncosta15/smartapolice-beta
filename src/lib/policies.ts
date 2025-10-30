@@ -90,7 +90,9 @@ export function normalizePolicy(raw: any) {
     name: safeString(raw.name ?? raw.segurado ?? "N/A"),
     policyNumber: safeString(raw.policyNumber ?? raw.numero_apolice ?? "N/A"),
     documento: safeString(raw.documento ?? ""),
-    documento_tipo: raw.documento_tipo
+    documento_tipo: raw.documento_tipo,
+    // CRÍTICO: Manter campo renovada do banco
+    renovada: raw.renovada
   };
 }
 
