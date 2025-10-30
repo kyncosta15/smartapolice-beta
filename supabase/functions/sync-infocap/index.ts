@@ -156,71 +156,107 @@ Deno.serve(async (req) => {
 
     // Limpar documento
     const cleanDocument = documento.replace(/\D/g, '');
+    const isCPF = cleanDocument.length === 11;
 
-    // Buscar apólices por documento
-    const apiUrl = `${CORPNUVEM_API_URL}/cliente_ligacoes?codigo=${cleanDocument.substring(0, 8)}`;
-    console.log(`🌐 Chamando API: ${apiUrl}`);
-
-    const response = await corpNuvemFetch(apiUrl);
-
-    console.log(`📡 Status da resposta: ${response.status} ${response.statusText}`);
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error(`❌ Erro da API - Body: ${errorBody}`);
-      throw new Error(`Erro na API CorpNuvem: ${response.statusText} - ${errorBody}`);
+    // PASSO 1: Buscar cliente pelo documento para obter o nome
+    const clienteEndpoint = isCPF 
+      ? `${CORPNUVEM_API_URL}/busca_cpf?cpf_cnpj=${cleanDocument}`
+      : `${CORPNUVEM_API_URL}/busca_cnpj?cpf_cnpj=${cleanDocument}`;
+    
+    console.log(`🔍 Buscando cliente: ${clienteEndpoint}`);
+    
+    const clienteResponse = await corpNuvemFetch(clienteEndpoint);
+    
+    if (!clienteResponse.ok) {
+      const errorBody = await clienteResponse.text();
+      console.error(`❌ Erro ao buscar cliente - Body: ${errorBody}`);
+      throw new Error(`Erro ao buscar cliente: ${clienteResponse.statusText}`);
     }
 
-    const data = await response.json();
-    console.log(`📦 Resposta completa da API:`, JSON.stringify(data, null, 2));
-    
-    const apolices = data?.documentos?.documentos || [];
+    const clienteData = await clienteResponse.json();
+    console.log(`📦 Dados do cliente:`, JSON.stringify(clienteData, null, 2));
 
-    console.log(`📋 Encontradas ${apolices.length} apólices`);
+    // Extrair nome do cliente
+    let nomeCliente = '';
+    if (Array.isArray(clienteData) && clienteData.length > 0) {
+      nomeCliente = clienteData[0].nome || clienteData[0].cliente || '';
+    } else if (clienteData?.nome || clienteData?.cliente) {
+      nomeCliente = clienteData.nome || clienteData.cliente;
+    }
+
+    if (!nomeCliente) {
+      console.error('❌ Nome do cliente não encontrado');
+      throw new Error('Cliente não encontrado na base CorpNuvem');
+    }
+
+    console.log(`✅ Cliente encontrado: ${nomeCliente}`);
+
+    // PASSO 2: Buscar documentos (apólices resumidas) usando o nome
+    const documentosUrl = `${CORPNUVEM_API_URL}/documentos?nome=${encodeURIComponent(nomeCliente)}`;
+    console.log(`📄 Buscando documentos: ${documentosUrl}`);
+
+    const documentosResponse = await corpNuvemFetch(documentosUrl);
+
+    if (!documentosResponse.ok) {
+      const errorBody = await documentosResponse.text();
+      console.error(`❌ Erro ao buscar documentos - Body: ${errorBody}`);
+      throw new Error(`Erro ao buscar documentos: ${documentosResponse.statusText}`);
+    }
+
+    const documentosData = await documentosResponse.json();
+    console.log(`📦 Documentos encontrados:`, JSON.stringify(documentosData, null, 2));
+
+    const apolices = documentosData?.documentos?.documentos || [];
+    console.log(`📋 Total de apólices: ${apolices.length}`);
 
     let syncedCount = 0;
     let errorCount = 0;
 
-    // Processar cada apólice
+    // PASSO 3: Para cada apólice, buscar detalhes completos
     for (const ap of apolices) {
       try {
+        console.log(`🔄 Processando apólice nosnum: ${ap.nosnum}, codfil: ${ap.codfil}`);
+
+        // Buscar detalhes completos da apólice
+        let detalhesApolice = null;
+        if (ap.codfil && ap.nosnum) {
+          const documentoUrl = `${CORPNUVEM_API_URL}/documento?codfil=${ap.codfil}&nosnum=${ap.nosnum}`;
+          console.log(`📄 Buscando detalhes: ${documentoUrl}`);
+          
+          try {
+            const detalhesResponse = await corpNuvemFetch(documentoUrl);
+            
+            if (detalhesResponse.ok) {
+              detalhesApolice = await detalhesResponse.json();
+              console.log(`✅ Detalhes da apólice ${ap.nosnum}:`, JSON.stringify(detalhesApolice, null, 2));
+            }
+          } catch (err) {
+            console.warn(`⚠️ Erro ao buscar detalhes da apólice ${ap.nosnum}:`, err);
+          }
+        }
+
         // Normalizar dados para tabela policies
         const policyData = {
           user_id: user.id,
           documento: cleanDocument,
-          segurado: ap.cliente || '',
-          seguradora: ap.seguradora || '',
-          numero_apolice: ap.numapo || ap.nosnum?.toString() || '',
-          tipo_seguro: ap.ramo || 'Não especificado',
-          inicio_vigencia: ap.inivig || null,
-          fim_vigencia: ap.fimvig || null,
-          valor_premio: 0, // InfoCap não retorna esse valor diretamente
-          valor_parcela: 0,
+          segurado: nomeCliente,
+          seguradora: ap.seguradora || detalhesApolice?.seguradora || '',
+          numero_apolice: ap.numapo || detalhesApolice?.numapo || ap.nosnum?.toString() || '',
+          tipo_seguro: ap.ramo || detalhesApolice?.ramo || 'Não especificado',
+          inicio_vigencia: ap.inivig || detalhesApolice?.inivig || null,
+          fim_vigencia: ap.fimvig || detalhesApolice?.fimvig || null,
+          valor_premio: detalhesApolice?.prtot ? parseFloat(detalhesApolice.prtot) : 0,
+          valor_parcela: detalhesApolice?.prliq ? parseFloat((detalhesApolice.prliq / 12).toFixed(2)) : 0,
           quantidade_parcelas: 12,
           status: ap.cancelado === 'S' ? 'Cancelada' : 
                   ap.sin_situacao === 1 ? 'Ativa' : 'Pendente',
           corretora: 'RCaldas Corretora de Seguros',
           extraction_timestamp: new Date().toISOString(),
           created_by_extraction: true,
-          responsavel_nome: ap.cliente || '',
+          responsavel_nome: nomeCliente,
         };
 
-        // Buscar detalhes adicionais se disponível
-        if (ap.codfil && ap.nosnum) {
-          try {
-            const detailsResponse = await corpNuvemFetch(
-              `${CORPNUVEM_API_URL}/documento?codfil=${ap.codfil}&nosnum=${ap.nosnum}`
-            );
-
-            if (detailsResponse.ok) {
-              const details = await detailsResponse.json();
-              if (details.prtot) policyData.valor_premio = parseFloat(details.prtot);
-              if (details.prliq) policyData.valor_parcela = parseFloat((details.prliq / 12).toFixed(2));
-            }
-          } catch (err) {
-            console.warn(`⚠️ Erro ao buscar detalhes da apólice ${ap.nosnum}:`, err);
-          }
-        }
+        console.log(`💾 Salvando apólice:`, policyData);
 
         // Upsert na tabela policies
         const { error: upsertError } = await supabaseClient
@@ -234,6 +270,7 @@ Deno.serve(async (req) => {
           console.error(`❌ Erro ao inserir apólice ${ap.nosnum}:`, upsertError);
           errorCount++;
         } else {
+          console.log(`✅ Apólice ${ap.nosnum} sincronizada com sucesso`);
           syncedCount++;
         }
       } catch (err) {
