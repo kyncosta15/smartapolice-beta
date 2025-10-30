@@ -22,5 +22,7 @@ export interface PolicyWithStatus {
   endDate: string;
   expirationDate: string;    // ISO date
   status: PolicyStatus;
+  nosnum?: number;
+  codfil?: number;
   // ... outros campos existentes
 }
