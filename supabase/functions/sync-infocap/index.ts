@@ -238,6 +238,29 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Função auxiliar para converter data BR (DD/MM/YYYY) para ISO (YYYY-MM-DD)
+        const convertBRDateToISO = (dateStr: string | null): string | null => {
+          if (!dateStr) return null;
+          
+          // Já está em formato ISO?
+          if (dateStr.includes('-')) return dateStr;
+          
+          // Formato DD/MM/YYYY
+          const parts = dateStr.split('/');
+          if (parts.length !== 3) return null;
+          
+          const [day, month, year] = parts;
+          return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        };
+
+        // Determinar status válido
+        let statusPolicy = 'Vigente';
+        if (ap.cancelado === 'S' || detalhesApolice?.cancelado === 'F') {
+          statusPolicy = 'Cancelada';
+        } else if (ap.sin_situacao === 1 || detalhesApolice?.sit_acompanhamento === 4) {
+          statusPolicy = 'Vigente';
+        }
+
         // Normalizar dados para tabela policies
         const policyData = {
           user_id: user.id,
@@ -246,13 +269,12 @@ Deno.serve(async (req) => {
           seguradora: ap.seguradora || detalhesApolice?.seguradora || '',
           numero_apolice: ap.numapo || detalhesApolice?.numapo || ap.nosnum?.toString() || '',
           tipo_seguro: ap.ramo || detalhesApolice?.ramo || 'Não especificado',
-          inicio_vigencia: ap.inivig || detalhesApolice?.inivig || null,
-          fim_vigencia: ap.fimvig || detalhesApolice?.fimvig || null,
-          valor_premio: detalhesApolice?.prtot ? parseFloat(detalhesApolice.prtot) : 0,
-          valor_parcela: detalhesApolice?.prliq ? parseFloat((detalhesApolice.prliq / 12).toFixed(2)) : 0,
-          quantidade_parcelas: 12,
-          status: ap.cancelado === 'S' ? 'Cancelada' : 
-                  ap.sin_situacao === 1 ? 'Ativa' : 'Pendente',
+          inicio_vigencia: convertBRDateToISO(ap.inivig || detalhesApolice?.inivig),
+          fim_vigencia: convertBRDateToISO(ap.fimvig || detalhesApolice?.fimvig),
+          valor_premio: detalhesApolice?.pretot ? parseFloat(detalhesApolice.pretot) : 0,
+          valor_parcela: detalhesApolice?.preliq ? parseFloat((detalhesApolice.preliq / 12).toFixed(2)) : 0,
+          quantidade_parcelas: detalhesApolice?.numpar || 12,
+          status: statusPolicy,
           corretora: 'RCaldas Corretora de Seguros',
           extraction_timestamp: new Date().toISOString(),
           created_by_extraction: true,
