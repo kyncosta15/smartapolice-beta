@@ -223,12 +223,13 @@ Deno.serve(async (req) => {
       .delete()
       .eq('user_id', user.id)
       .eq('documento', cleanDocument)
-      .eq('created_by_extraction', true);
+      .eq('created_by_extraction', true)
+      .not('nosnum', 'is', null); // Deletar apenas apólices que vieram da API
     
     if (deleteError) {
       console.warn(`⚠️ Erro ao limpar apólices antigas:`, deleteError);
     } else {
-      console.log(`✅ Apólices antigas removidas`);
+      console.log(`✅ Apólices antigas da API removidas`);
     }
 
     let syncedCount = 0;
