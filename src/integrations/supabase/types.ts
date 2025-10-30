@@ -1761,6 +1761,7 @@ export type Database = {
           ano_modelo: string | null
           arquivo_url: string | null
           cidade: string | null
+          codfil: number | null
           condutor_principal: string | null
           corretora: string | null
           created_at: string | null
@@ -1781,6 +1782,7 @@ export type Database = {
           inicio_vigencia: string | null
           last_audit_id: string | null
           modelo_veiculo: string | null
+          nosnum: number | null
           numero_apolice: string | null
           placa: string | null
           policy_status: Database["public"]["Enums"]["policy_status"] | null
@@ -1807,6 +1809,7 @@ export type Database = {
           ano_modelo?: string | null
           arquivo_url?: string | null
           cidade?: string | null
+          codfil?: number | null
           condutor_principal?: string | null
           corretora?: string | null
           created_at?: string | null
@@ -1827,6 +1830,7 @@ export type Database = {
           inicio_vigencia?: string | null
           last_audit_id?: string | null
           modelo_veiculo?: string | null
+          nosnum?: number | null
           numero_apolice?: string | null
           placa?: string | null
           policy_status?: Database["public"]["Enums"]["policy_status"] | null
@@ -1853,6 +1857,7 @@ export type Database = {
           ano_modelo?: string | null
           arquivo_url?: string | null
           cidade?: string | null
+          codfil?: number | null
           condutor_principal?: string | null
           corretora?: string | null
           created_at?: string | null
@@ -1873,6 +1878,7 @@ export type Database = {
           inicio_vigencia?: string | null
           last_audit_id?: string | null
           modelo_veiculo?: string | null
+          nosnum?: number | null
           numero_apolice?: string | null
           placa?: string | null
           policy_status?: Database["public"]["Enums"]["policy_status"] | null

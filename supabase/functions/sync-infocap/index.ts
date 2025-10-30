@@ -331,6 +331,8 @@ Deno.serve(async (req) => {
           extraction_timestamp: new Date().toISOString(),
           created_by_extraction: true,
           responsavel_nome: nomeCliente,
+          nosnum: ap.nosnum,
+          codfil: ap.codfil,
         };
 
         console.log(`💾 Salvando apólice:`, policyData);
