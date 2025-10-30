@@ -175,33 +175,44 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica
     });
 
-    // Distribuição por renovação (renovadas vs não renovadas)
-    console.log('🔄 Iniciando análise de renovação...');
+    // Distribuição por status (ativas vs vencidas) - MESMA LÓGICA DO GRÁFICO
+    console.log('🔄 Iniciando análise de status (ativas vs vencidas)...');
     
     const renewalDistribution = normalizedPolicies.reduce((acc, policy: any) => {
-      console.log(`📋 Apólice "${policy.name}":`, {
-        id: policy.id,
-        renovada: policy.renovada,
-        tipo_renovada: typeof policy.renovada,
-        renovada_raw: (policy as any).renovada
+      const expirationDate = policy.endDate || policy.expirationDate;
+      
+      if (!expirationDate) {
+        // Se não tem data, considerar como ativa
+        acc.renovadas++;
+        console.log(`📋 "${policy.name}": ATIVA (sem data de vencimento)`);
+        return acc;
+      }
+
+      const now = new Date();
+      const expDate = new Date(expirationDate);
+      const diffTime = expDate.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      console.log(`📋 "${policy.name}":`, {
+        expirationDate,
+        diffDays,
+        status: diffDays < 0 ? 'VENCIDA' : 'ATIVA'
       });
 
-      // Verificar explicitamente true/false
-      if (policy.renovada === true) {
-        acc.renovadas++;
-        console.log('✅ RENOVADA (true)');
-      } else if (policy.renovada === false) {
+      // Se já venceu (diffDays < 0) = Vencida
+      // Se não venceu (diffDays >= 0) = Ativa
+      if (diffDays < 0) {
         acc.naoRenovadas++;
-        console.log('❌ NÃO RENOVADA (false)');
+        console.log('❌ VENCIDA');
       } else {
-        console.log('⚠️ VALOR INDEFINIDO:', policy.renovada);
-        // Políticas sem informação não são contadas
+        acc.renovadas++;
+        console.log('✅ ATIVA');
       }
       
       return acc;
     }, { renovadas: 0, naoRenovadas: 0 });
 
-    console.log('🔄 Distribuição por renovação FINAL:', renewalDistribution);
+    console.log('🔄 Distribuição FINAL (Ativas/Vencidas):', renewalDistribution);
 
     // Evolução mensal - PROJEÇÃO DINÂMICA DE 12 MESES A PARTIR DO MÊS ATUAL
     const monthlyEvolution = generateMonthlyEvolution(normalizedPolicies);
