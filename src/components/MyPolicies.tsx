@@ -51,6 +51,7 @@ export function MyPolicies() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>('todas');
+  const [detailedStatusFilter, setDetailedStatusFilter] = useState<'todas' | 'ativa' | 'pendente_analise' | 'vencida'>('todas');
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
   const { toast } = useToast();
@@ -290,19 +291,26 @@ export function MyPolicies() {
   const currentYear = new Date().getFullYear();
   
   const filteredPolicies = policiesWithStatus.filter(policy => {
-    if (statusFilter === 'todas') return true;
-    
-    const endDate = new Date(policy.endDate);
-    const endYear = endDate.getFullYear();
-    
-    if (statusFilter === 'vigentes') {
-      // Vigentes: fim de vigência no ano atual ou futuro
-      return endYear >= currentYear;
+    // Filtro por período (vigentes/antigas)
+    if (statusFilter !== 'todas') {
+      const endDate = new Date(policy.endDate);
+      const endYear = endDate.getFullYear();
+      
+      if (statusFilter === 'vigentes' && endYear < currentYear) return false;
+      if (statusFilter === 'antigas' && endYear >= currentYear) return false;
     }
     
-    if (statusFilter === 'antigas') {
-      // Antigas: fim de vigência em anos anteriores
-      return endYear < currentYear;
+    // Filtro por status detalhado
+    if (detailedStatusFilter !== 'todas') {
+      if (detailedStatusFilter === 'ativa') {
+        return policy.status === 'vigente' || policy.status === 'ativa' || policy.status === 'vencendo';
+      }
+      if (detailedStatusFilter === 'pendente_analise') {
+        return policy.status === 'pendente_analise' || policy.status === 'aguardando_emissao';
+      }
+      if (detailedStatusFilter === 'vencida') {
+        return policy.status === 'vencida' || policy.status === 'nao_renovada';
+      }
     }
     
     return true;
@@ -407,6 +415,61 @@ export function MyPolicies() {
             const endYear = new Date(p.endDate).getFullYear();
             return endYear < currentYear;
           }).length})
+        </Button>
+      </div>
+
+      {/* Filtro de Status Detalhado */}
+      <div className="flex gap-2 flex-wrap">
+        <span className="text-sm text-muted-foreground self-center">Situação:</span>
+        <Button
+          variant={detailedStatusFilter === 'todas' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setDetailedStatusFilter('todas');
+            setCurrentPage(1);
+          }}
+          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+        >
+          Todas
+        </Button>
+        <Button
+          variant={detailedStatusFilter === 'ativa' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setDetailedStatusFilter('ativa');
+            setCurrentPage(1);
+          }}
+          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+        >
+          Ativas ({policiesWithStatus.filter(p => 
+            p.status === 'vigente' || p.status === 'ativa' || p.status === 'vencendo'
+          ).length})
+        </Button>
+        <Button
+          variant={detailedStatusFilter === 'pendente_analise' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setDetailedStatusFilter('pendente_analise');
+            setCurrentPage(1);
+          }}
+          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+        >
+          Em Análise ({policiesWithStatus.filter(p => 
+            p.status === 'pendente_analise' || p.status === 'aguardando_emissao'
+          ).length})
+        </Button>
+        <Button
+          variant={detailedStatusFilter === 'vencida' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setDetailedStatusFilter('vencida');
+            setCurrentPage(1);
+          }}
+          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+        >
+          Canceladas/Vencidas ({policiesWithStatus.filter(p => 
+            p.status === 'vencida' || p.status === 'nao_renovada'
+          ).length})
         </Button>
       </div>
 
