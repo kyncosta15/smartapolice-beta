@@ -176,16 +176,32 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     });
 
     // Distribuição por renovação (renovadas vs não renovadas)
+    console.log('🔄 Iniciando análise de renovação...');
+    
     const renewalDistribution = normalizedPolicies.reduce((acc, policy: any) => {
+      console.log(`📋 Apólice "${policy.name}":`, {
+        id: policy.id,
+        renovada: policy.renovada,
+        tipo_renovada: typeof policy.renovada,
+        renovada_raw: (policy as any).renovada
+      });
+
+      // Verificar explicitamente true/false
       if (policy.renovada === true) {
         acc.renovadas++;
-      } else {
+        console.log('✅ RENOVADA (true)');
+      } else if (policy.renovada === false) {
         acc.naoRenovadas++;
+        console.log('❌ NÃO RENOVADA (false)');
+      } else {
+        console.log('⚠️ VALOR INDEFINIDO:', policy.renovada);
+        // Políticas sem informação não são contadas
       }
+      
       return acc;
     }, { renovadas: 0, naoRenovadas: 0 });
 
-    console.log('🔄 Distribuição por renovação:', renewalDistribution);
+    console.log('🔄 Distribuição por renovação FINAL:', renewalDistribution);
 
     // Evolução mensal - PROJEÇÃO DINÂMICA DE 12 MESES A PARTIR DO MÊS ATUAL
     const monthlyEvolution = generateMonthlyEvolution(normalizedPolicies);
