@@ -216,22 +216,6 @@ Deno.serve(async (req) => {
     const apolices = producaoData?.producao || [];
     console.log(`📋 Total de apólices: ${apolices.length}`);
 
-    // Deletar apólices antigas deste usuário/documento que serão substituídas
-    console.log(`🗑️ Limpando apólices antigas do documento ${cleanDocument}...`);
-    const { error: deleteError } = await supabaseClient
-      .from('policies')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('documento', cleanDocument)
-      .eq('created_by_extraction', true)
-      .not('nosnum', 'is', null); // Deletar apenas apólices que vieram da API
-    
-    if (deleteError) {
-      console.warn(`⚠️ Erro ao limpar apólices antigas:`, deleteError);
-    } else {
-      console.log(`✅ Apólices antigas da API removidas`);
-    }
-
     let syncedCount = 0;
     let errorCount = 0;
 
@@ -338,17 +322,42 @@ Deno.serve(async (req) => {
 
         console.log(`💾 Salvando apólice:`, policyData);
 
-        // Inserir apólice (já limpamos as antigas antes)
-        const { error: insertError } = await supabaseClient
+        // Verificar se já existe uma apólice com este numero_apolice + documento
+        const { data: existingPolicy } = await supabaseClient
           .from('policies')
-          .insert(policyData);
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('documento', cleanDocument)
+          .eq('numero_apolice', policyData.numero_apolice)
+          .maybeSingle();
 
-        if (insertError) {
-          console.error(`❌ Erro ao inserir apólice ${policyData.numero_apolice}:`, insertError);
-          errorCount++;
+        if (existingPolicy) {
+          // Atualizar apólice existente
+          const { error: updateError } = await supabaseClient
+            .from('policies')
+            .update(policyData)
+            .eq('id', existingPolicy.id);
+
+          if (updateError) {
+            console.error(`❌ Erro ao atualizar apólice ${policyData.numero_apolice}:`, updateError);
+            errorCount++;
+          } else {
+            console.log(`✅ Apólice ${policyData.numero_apolice} atualizada com sucesso`);
+            syncedCount++;
+          }
         } else {
-          console.log(`✅ Apólice ${policyData.numero_apolice} sincronizada com sucesso`);
-          syncedCount++;
+          // Inserir nova apólice
+          const { error: insertError } = await supabaseClient
+            .from('policies')
+            .insert(policyData);
+
+          if (insertError) {
+            console.error(`❌ Erro ao inserir apólice ${policyData.numero_apolice}:`, insertError);
+            errorCount++;
+          } else {
+            console.log(`✅ Apólice ${policyData.numero_apolice} sincronizada com sucesso`);
+            syncedCount++;
+          }
         }
       } catch (err) {
         console.error(`❌ Erro ao processar apólice:`, err);
