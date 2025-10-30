@@ -286,17 +286,23 @@ export function MyPolicies() {
     }
   };
 
-  // Filtrar apólices por status
+  // Filtrar apólices por status baseado no ano atual
+  const currentYear = new Date().getFullYear();
+  
   const filteredPolicies = policiesWithStatus.filter(policy => {
     if (statusFilter === 'todas') return true;
     
+    const endDate = new Date(policy.endDate);
+    const endYear = endDate.getFullYear();
+    
     if (statusFilter === 'vigentes') {
-      return policy.status === 'vigente' || policy.status === 'ativa' || policy.status === 'vencendo';
+      // Vigentes: fim de vigência no ano atual ou futuro
+      return endYear >= currentYear;
     }
     
     if (statusFilter === 'antigas') {
-      return policy.status === 'vencida' || policy.status === 'nao_renovada' || 
-             policy.status === 'aguardando_emissao' || policy.status === 'pendente_analise';
+      // Antigas: fim de vigência em anos anteriores
+      return endYear < currentYear;
     }
     
     return true;
@@ -383,9 +389,10 @@ export function MyPolicies() {
           }}
           className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
         >
-          Vigentes ({policiesWithStatus.filter(p => 
-            p.status === 'vigente' || p.status === 'ativa' || p.status === 'vencendo'
-          ).length})
+          Vigentes ({policiesWithStatus.filter(p => {
+            const endYear = new Date(p.endDate).getFullYear();
+            return endYear >= currentYear;
+          }).length})
         </Button>
         <Button
           variant={statusFilter === 'antigas' ? 'default' : 'outline'}
@@ -396,10 +403,10 @@ export function MyPolicies() {
           }}
           className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
         >
-          Antigas ({policiesWithStatus.filter(p => 
-            p.status === 'vencida' || p.status === 'nao_renovada' || 
-            p.status === 'aguardando_emissao' || p.status === 'pendente_analise'
-          ).length})
+          Antigas ({policiesWithStatus.filter(p => {
+            const endYear = new Date(p.endDate).getFullYear();
+            return endYear < currentYear;
+          }).length})
         </Button>
       </div>
 
