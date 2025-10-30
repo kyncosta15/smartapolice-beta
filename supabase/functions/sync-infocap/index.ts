@@ -209,7 +209,7 @@ Deno.serve(async (req) => {
     const documentosData = await documentosResponse.json();
     console.log(`📦 Documentos encontrados:`, JSON.stringify(documentosData, null, 2));
 
-    const apolices = documentosData?.documentos?.documentos || [];
+    const apolices = documentosData?.documentos || [];
     console.log(`📋 Total de apólices: ${apolices.length}`);
 
     let syncedCount = 0;
