@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -429,8 +429,8 @@ export function MyPolicies() {
       </div>
 
       {/* Filtro de Período */}
-      <div className="flex gap-2 flex-wrap">
-        <span className="text-sm text-muted-foreground self-center font-medium">Período:</span>
+      <div className="flex gap-2 flex-wrap items-center">
+        <span className="text-sm text-muted-foreground font-medium">Período:</span>
         <Button
           variant={statusFilter === 'todas' ? 'default' : 'outline'}
           size="sm"
@@ -470,61 +470,37 @@ export function MyPolicies() {
             return endYear < currentYear;
           }).length})
         </Button>
-      </div>
 
-      {/* Filtro de Status da Apólice */}
-      <div className="flex gap-2 flex-wrap">
-        <span className="text-sm text-muted-foreground self-center font-medium">Status da Apólice:</span>
-        <Button
-          variant={detailedStatusFilter === 'todas' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            setDetailedStatusFilter('todas');
+        {/* Filtro de Status da Apólice como Dropdown */}
+        <div className="flex items-center gap-2 ml-auto">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={detailedStatusFilter} onValueChange={(value: any) => {
+            setDetailedStatusFilter(value);
             setCurrentPage(1);
-          }}
-          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
-        >
-          Todas
-        </Button>
-        <Button
-          variant={detailedStatusFilter === 'ativa' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            setDetailedStatusFilter('ativa');
-            setCurrentPage(1);
-          }}
-          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
-        >
-          Ativas ({policiesWithStatus.filter(p => 
-            p.status === 'vigente' || p.status === 'ativa' || p.status === 'vencendo'
-          ).length})
-        </Button>
-        <Button
-          variant={detailedStatusFilter === 'pendente_analise' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            setDetailedStatusFilter('pendente_analise');
-            setCurrentPage(1);
-          }}
-          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
-        >
-          Em Análise ({policiesWithStatus.filter(p => 
-            p.status === 'pendente_analise' || p.status === 'aguardando_emissao'
-          ).length})
-        </Button>
-        <Button
-          variant={detailedStatusFilter === 'vencida' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            setDetailedStatusFilter('vencida');
-            setCurrentPage(1);
-          }}
-          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
-        >
-          Canceladas ({policiesWithStatus.filter(p => 
-            p.status === 'vencida' || p.status === 'nao_renovada'
-          ).length})
-        </Button>
+          }}>
+            <SelectTrigger className="w-[180px] h-8 sm:h-9 text-xs sm:text-sm">
+              <SelectValue placeholder="Status da Apólice" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas</SelectItem>
+              <SelectItem value="ativa">
+                Ativas ({policiesWithStatus.filter(p => 
+                  p.status === 'vigente' || p.status === 'ativa' || p.status === 'vencendo'
+                ).length})
+              </SelectItem>
+              <SelectItem value="pendente_analise">
+                Em Análise ({policiesWithStatus.filter(p => 
+                  p.status === 'pendente_analise' || p.status === 'aguardando_emissao'
+                ).length})
+              </SelectItem>
+              <SelectItem value="vencida">
+                Canceladas ({policiesWithStatus.filter(p => 
+                  p.status === 'vencida' || p.status === 'nao_renovada'
+                ).length})
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Barra de ações em massa */}
