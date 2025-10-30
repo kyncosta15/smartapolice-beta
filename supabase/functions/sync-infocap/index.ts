@@ -214,13 +214,19 @@ Deno.serve(async (req) => {
     console.log(`📦 Produção encontrada:`, JSON.stringify(producaoData, null, 2));
 
     const apolices = producaoData?.producao || [];
-    console.log(`📋 Total de apólices: ${apolices.length}`);
+    console.log(`📋 Total de registros encontrados: ${apolices.length}`);
+    
+    // FILTRAR APENAS APÓLICES ATIVAS (tipo "A")
+    // Tipo "C" = Cancelamento/Endosso, "M" = Modificação não devem ser processados
+    const apolicesAtivas = apolices.filter((ap: any) => ap.tipdoc === 'A');
+    console.log(`📋 Apólices ativas (tipo A): ${apolicesAtivas.length}`);
+    console.log(`⏭️  Ignorando ${apolices.length - apolicesAtivas.length} endossos (tipo C/M)`);
 
     let syncedCount = 0;
     let errorCount = 0;
 
-    // PASSO 3: Para cada apólice, buscar detalhes completos
-    for (const ap of apolices) {
+    // PASSO 3: Para cada apólice ATIVA, buscar detalhes completos
+    for (const ap of apolicesAtivas) {
       try {
         console.log(`🔄 Processando apólice nosnum: ${ap.nosnum}, codfil: ${ap.codfil}`);
 
@@ -373,7 +379,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`✅ Sincronização concluída: ${syncedCount} apólices, ${errorCount} erros`);
+    console.log(`✅ Sincronização concluída: ${syncedCount} apólices ativas processadas, ${errorCount} erros`);
 
     return new Response(
       JSON.stringify({
