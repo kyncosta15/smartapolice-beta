@@ -357,7 +357,7 @@ export const AuthPage = () => {
                             {lookupResult.alreadyRegistered 
                               ? '✗ Já cadastrado no sistema' 
                               : lookupResult.found 
-                                ? '✓ Encontrado na API' 
+                                ? '✓ Encontrado no INFOCAP' 
                                 : '⚠ Não encontrado'}
                           </p>
                         )}
