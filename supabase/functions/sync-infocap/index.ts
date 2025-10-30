@@ -261,13 +261,30 @@ Deno.serve(async (req) => {
 
         console.log(`💾 Salvando apólice:`, policyData);
 
-        // Upsert na tabela policies
-        const { error: upsertError } = await supabaseClient
+        // Verificar se a apólice já existe
+        const { data: existingPolicy } = await supabaseClient
           .from('policies')
-          .upsert(policyData, {
-            onConflict: 'numero_apolice,user_id',
-            ignoreDuplicates: false,
-          });
+          .select('id')
+          .eq('numero_apolice', policyData.numero_apolice)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        let upsertError = null;
+        
+        if (existingPolicy) {
+          // Atualizar apólice existente
+          const { error } = await supabaseClient
+            .from('policies')
+            .update(policyData)
+            .eq('id', existingPolicy.id);
+          upsertError = error;
+        } else {
+          // Inserir nova apólice
+          const { error } = await supabaseClient
+            .from('policies')
+            .insert(policyData);
+          upsertError = error;
+        }
 
         if (upsertError) {
           console.error(`❌ Erro ao inserir apólice ${ap.nosnum}:`, upsertError);
