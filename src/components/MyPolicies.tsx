@@ -50,6 +50,7 @@ export function MyPolicies() {
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>('todas');
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
   const { toast } = useToast();
@@ -285,13 +286,29 @@ export function MyPolicies() {
     }
   };
 
+  // Filtrar apólices por status
+  const filteredPolicies = policiesWithStatus.filter(policy => {
+    if (statusFilter === 'todas') return true;
+    
+    if (statusFilter === 'vigentes') {
+      return policy.status === 'vigente' || policy.status === 'ativa' || policy.status === 'vencendo';
+    }
+    
+    if (statusFilter === 'antigas') {
+      return policy.status === 'vencida' || policy.status === 'nao_renovada' || 
+             policy.status === 'aguardando_emissao' || policy.status === 'pendente_analise';
+    }
+    
+    return true;
+  });
+
   // Paginação
-  const totalPages = Math.ceil(policiesWithStatus.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPolicies = viewMode === 'list' 
-    ? policiesWithStatus.slice(startIndex, endIndex)
-    : policiesWithStatus;
+    ? filteredPolicies.slice(startIndex, endIndex)
+    : filteredPolicies;
 
   return (
     <div className="space-y-4 md:space-y-6 p-3 sm:p-4 md:p-0">
@@ -300,7 +317,7 @@ export function MyPolicies() {
         <div className="flex items-center gap-2">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-foreground">Minhas Apólices</h2>
           <Badge variant="secondary" className="text-xs sm:text-sm shrink-0">
-            {policiesWithStatus.length}
+            {filteredPolicies.length}
           </Badge>
         </div>
         
@@ -342,6 +359,48 @@ export function MyPolicies() {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Filtro de Status */}
+      <div className="flex gap-2 flex-wrap">
+        <Button
+          variant={statusFilter === 'todas' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setStatusFilter('todas');
+            setCurrentPage(1);
+          }}
+          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+        >
+          Todas ({policiesWithStatus.length})
+        </Button>
+        <Button
+          variant={statusFilter === 'vigentes' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setStatusFilter('vigentes');
+            setCurrentPage(1);
+          }}
+          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+        >
+          Vigentes ({policiesWithStatus.filter(p => 
+            p.status === 'vigente' || p.status === 'ativa' || p.status === 'vencendo'
+          ).length})
+        </Button>
+        <Button
+          variant={statusFilter === 'antigas' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setStatusFilter('antigas');
+            setCurrentPage(1);
+          }}
+          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+        >
+          Antigas ({policiesWithStatus.filter(p => 
+            p.status === 'vencida' || p.status === 'nao_renovada' || 
+            p.status === 'aguardando_emissao' || p.status === 'pendente_analise'
+          ).length})
+        </Button>
       </div>
 
       {/* Barra de ações em massa */}
