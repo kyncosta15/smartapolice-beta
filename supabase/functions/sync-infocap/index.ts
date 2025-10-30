@@ -327,11 +327,19 @@ Deno.serve(async (req) => {
 
         console.log(`✅ Dados financeiros finais - Prêmio Total: ${valorPremioTotal}, Parcelas: ${numParcelas}, Valor Parcela: ${valorParcela}`);
 
+        // Log completo dos campos disponíveis
+        console.log(`📋 Campos disponíveis em detalhesApolice:`, Object.keys(detalhesApolice || {}));
+        console.log(`📋 Campos disponíveis em ap (produção):`, Object.keys(ap || {}));
+        
         // Determinar se foi renovada
+        // Testar múltiplos campos possíveis da API
+        const sitRenovacao = detalhesApolice?.sit_renovacao || detalhesApolice?.sitRenovacao || ap.renovacao_situacao || ap.sit_renovacao;
+        console.log(`🔄 Apólice ${ap.nosnum} - sit_renovacao: ${sitRenovacao}, tipo: ${typeof sitRenovacao}`);
+        
         // sit_renovacao: 1 = Nova, 2 = Renovada, 3 = Não renovada
-        const sitRenovacao = detalhesApolice?.sit_renovacao || 1;
-        const foiRenovada = sitRenovacao !== 3;
-        console.log(`🔄 Apólice ${ap.nosnum} - sit_renovacao: ${sitRenovacao}, foiRenovada: ${foiRenovada}`);
+        // Se não tiver o campo, assumir como renovada (true) para manter compatibilidade
+        const foiRenovada = sitRenovacao ? (parseInt(sitRenovacao) !== 3) : true;
+        console.log(`🔄 Resultado: foiRenovada = ${foiRenovada}`);
         
         // Normalizar dados para tabela policies
         const policyData = {
