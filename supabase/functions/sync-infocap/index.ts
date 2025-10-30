@@ -261,6 +261,18 @@ Deno.serve(async (req) => {
           statusPolicy = 'vigente';
         }
 
+        // Calcular valor da parcela
+        let valorParcela = 0;
+        const numParcelas = detalhesApolice?.numpar || 12;
+        
+        if (detalhesApolice?.parcelas && detalhesApolice.parcelas.length > 0) {
+          // Usar valor real da primeira parcela
+          valorParcela = parseFloat(detalhesApolice.parcelas[0].vlvenc || 0);
+        } else if (detalhesApolice?.preliq) {
+          // Fallback: dividir pelo número correto de parcelas
+          valorParcela = parseFloat((detalhesApolice.preliq / numParcelas).toFixed(2));
+        }
+
         // Normalizar dados para tabela policies
         const policyData = {
           user_id: user.id,
@@ -272,8 +284,8 @@ Deno.serve(async (req) => {
           inicio_vigencia: convertBRDateToISO(ap.inivig || detalhesApolice?.inivig),
           fim_vigencia: convertBRDateToISO(ap.fimvig || detalhesApolice?.fimvig),
           valor_premio: detalhesApolice?.pretot ? parseFloat(detalhesApolice.pretot) : 0,
-          valor_parcela: detalhesApolice?.preliq ? parseFloat((detalhesApolice.preliq / 12).toFixed(2)) : 0,
-          quantidade_parcelas: detalhesApolice?.numpar || 12,
+          valor_parcela: valorParcela,
+          quantidade_parcelas: numParcelas,
           status: statusPolicy,
           corretora: 'RCaldas Corretora de Seguros',
           extraction_timestamp: new Date().toISOString(),
