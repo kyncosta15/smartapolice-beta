@@ -375,8 +375,9 @@ export function MyPolicies() {
         </div>
       </div>
 
-      {/* Filtro de Status */}
+      {/* Filtro de Período */}
       <div className="flex gap-2 flex-wrap">
+        <span className="text-sm text-muted-foreground self-center font-medium">Período:</span>
         <Button
           variant={statusFilter === 'todas' ? 'default' : 'outline'}
           size="sm"
@@ -418,9 +419,9 @@ export function MyPolicies() {
         </Button>
       </div>
 
-      {/* Filtro de Status Detalhado */}
+      {/* Filtro de Status da Apólice */}
       <div className="flex gap-2 flex-wrap">
-        <span className="text-sm text-muted-foreground self-center">Situação:</span>
+        <span className="text-sm text-muted-foreground self-center font-medium">Status da Apólice:</span>
         <Button
           variant={detailedStatusFilter === 'todas' ? 'default' : 'outline'}
           size="sm"
@@ -467,7 +468,7 @@ export function MyPolicies() {
           }}
           className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
         >
-          Canceladas/Vencidas ({policiesWithStatus.filter(p => 
+          Canceladas ({policiesWithStatus.filter(p => 
             p.status === 'vencida' || p.status === 'nao_renovada'
           ).length})
         </Button>
