@@ -230,8 +230,16 @@ Deno.serve(async (req) => {
             const detalhesResponse = await corpNuvemFetch(documentoUrl);
             
             if (detalhesResponse.ok) {
-              detalhesApolice = await detalhesResponse.json();
-              console.log(`✅ Detalhes da apólice ${ap.nosnum}:`, JSON.stringify(detalhesApolice, null, 2));
+              const responseData = await detalhesResponse.json();
+              console.log(`✅ Resposta da API:`, JSON.stringify(responseData, null, 2));
+              
+              // Extrair o primeiro documento do array
+              if (responseData?.documento && Array.isArray(responseData.documento) && responseData.documento.length > 0) {
+                detalhesApolice = responseData.documento[0];
+                console.log(`✅ Detalhes da apólice ${ap.nosnum} extraídos com sucesso`);
+              } else {
+                console.warn(`⚠️ Estrutura inesperada na resposta da API para apólice ${ap.nosnum}`);
+              }
             }
           } catch (err) {
             console.warn(`⚠️ Erro ao buscar detalhes da apólice ${ap.nosnum}:`, err);
@@ -262,16 +270,26 @@ Deno.serve(async (req) => {
         }
 
         // Calcular valor da parcela
-        let valorParcela = 0;
-        const numParcelas = detalhesApolice?.numpar || 12;
+        const numParcelas = parseInt(detalhesApolice?.numpar) || 0;
+        const valorPremioTotal = parseFloat(detalhesApolice?.pretot) || 0;
+        const valorPremioLiquido = parseFloat(detalhesApolice?.preliq) || 0;
         
-        if (detalhesApolice?.parcelas && detalhesApolice.parcelas.length > 0) {
+        console.log(`📊 Dados brutos da API - numpar: ${detalhesApolice?.numpar}, pretot: ${detalhesApolice?.pretot}, preliq: ${detalhesApolice?.preliq}`);
+        console.log(`📦 Parcelas disponíveis:`, detalhesApolice?.parcelas?.length || 0);
+        
+        let valorParcela = 0;
+        if (detalhesApolice?.parcelas && Array.isArray(detalhesApolice.parcelas) && detalhesApolice.parcelas.length > 0) {
           // Usar valor real da primeira parcela
-          valorParcela = parseFloat(detalhesApolice.parcelas[0].vlvenc || 0);
-        } else if (detalhesApolice?.preliq) {
+          const vlvencParcela = detalhesApolice.parcelas[0].vlvenc;
+          console.log(`💵 Valor primeira parcela (vlvenc): ${vlvencParcela}`);
+          valorParcela = parseFloat(vlvencParcela) || 0;
+        } else if (valorPremioLiquido > 0 && numParcelas > 0) {
           // Fallback: dividir pelo número correto de parcelas
-          valorParcela = parseFloat((detalhesApolice.preliq / numParcelas).toFixed(2));
+          valorParcela = parseFloat((valorPremioLiquido / numParcelas).toFixed(2));
+          console.log(`⚠️ Usando cálculo fallback - valorParcela: ${valorParcela}`);
         }
+
+        console.log(`✅ Dados financeiros finais - Prêmio Total: ${valorPremioTotal}, Parcelas: ${numParcelas}, Valor Parcela: ${valorParcela}`);
 
         // Normalizar dados para tabela policies
         const policyData = {
@@ -283,7 +301,7 @@ Deno.serve(async (req) => {
           tipo_seguro: ap.ramo || detalhesApolice?.ramo || 'Não especificado',
           inicio_vigencia: convertBRDateToISO(ap.inivig || detalhesApolice?.inivig),
           fim_vigencia: convertBRDateToISO(ap.fimvig || detalhesApolice?.fimvig),
-          valor_premio: detalhesApolice?.pretot ? parseFloat(detalhesApolice.pretot) : 0,
+          valor_premio: valorPremioTotal,
           valor_parcela: valorParcela,
           quantidade_parcelas: numParcelas,
           status: statusPolicy,
