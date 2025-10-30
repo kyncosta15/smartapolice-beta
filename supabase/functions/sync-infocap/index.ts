@@ -271,12 +271,38 @@ Deno.serve(async (req) => {
           return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
         };
 
-        // Determinar status válido (em minúsculas conforme constraint)
+        // Determinar status baseado na data de vencimento
+        const determineStatusFromDate = (fimVigencia: string | null): string => {
+          if (!fimVigencia) return 'vigente';
+          
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          
+          const fimVigISO = convertBRDateToISO(fimVigencia);
+          if (!fimVigISO) return 'vigente';
+          
+          const expDate = new Date(fimVigISO);
+          expDate.setHours(0, 0, 0, 0);
+          
+          if (isNaN(expDate.getTime())) return 'vigente';
+          
+          const diffTime = expDate.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays < 0) return 'vencida';
+          if (diffDays <= 30) return 'vence_30_dias';
+          if (diffDays <= 60) return 'vence_60_dias';
+          if (diffDays <= 90) return 'vence_90_dias';
+          return 'vigente';
+        };
+
+        // Determinar status válido considerando cancelamento E data de vencimento
         let statusPolicy = 'vigente';
         if (ap.cancelado === 'S') {
           statusPolicy = 'vencida';
-        } else if (ap.sin_situacao === 1 || detalhesApolice?.sit_acompanhamento === 4) {
-          statusPolicy = 'vigente';
+        } else {
+          // Se não cancelada, determinar status pela data
+          statusPolicy = determineStatusFromDate(ap.fimvig);
         }
 
         // Calcular valor da parcela
