@@ -274,22 +274,6 @@ export const AuthPage = () => {
                     </RadioGroup>
                   </div>
 
-                   <div className="space-y-3">
-                      <Label htmlFor="register-name" className="text-sm font-semibold text-foreground">{personType === 'pf' ? 'Nome' : 'Razão Social'} *</Label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-                        <Input
-                          id="register-name"
-                          type="text"
-                          placeholder={personType === 'pf' ? 'Seu nome' : 'Nome da empresa'}
-                          value={registerData.name}
-                          onChange={(e) => setRegisterData(prev => ({ ...prev, name: e.target.value }))}
-                          className="pl-12 h-12 text-base bg-background border-border"
-                          required
-                        />
-                      </div>
-                    </div>
-
                     <div className="space-y-3">
                       <Label htmlFor="register-document" className="text-sm font-semibold text-foreground">{personType === 'pf' ? 'CPF' : 'CNPJ'} *</Label>
                       <div className="relative">
@@ -354,6 +338,22 @@ export const AuthPage = () => {
                             {lookupResult.found ? '✓ Encontrado no sistema' : '⚠ Não encontrado no sistema'}
                           </p>
                         )}
+                      </div>
+                    </div>
+
+                   <div className="space-y-3">
+                      <Label htmlFor="register-name" className="text-sm font-semibold text-foreground">{personType === 'pf' ? 'Nome' : 'Razão Social'} *</Label>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                        <Input
+                          id="register-name"
+                          type="text"
+                          placeholder={personType === 'pf' ? 'Seu nome' : 'Nome da empresa'}
+                          value={registerData.name}
+                          onChange={(e) => setRegisterData(prev => ({ ...prev, name: e.target.value }))}
+                          className="pl-12 h-12 text-base bg-background border-border"
+                          required
+                        />
                       </div>
                     </div>
 
