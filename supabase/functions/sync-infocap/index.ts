@@ -176,12 +176,15 @@ Deno.serve(async (req) => {
     const clienteData = await clienteResponse.json();
     console.log(`📦 Dados do cliente:`, JSON.stringify(clienteData, null, 2));
 
-    // Extrair nome do cliente
+    // Extrair nome do cliente - ajustado para estrutura correta da API
     let nomeCliente = '';
     if (Array.isArray(clienteData) && clienteData.length > 0) {
       nomeCliente = clienteData[0].nome || clienteData[0].cliente || '';
-    } else if (clienteData?.nome || clienteData?.cliente) {
-      nomeCliente = clienteData.nome || clienteData.cliente;
+    } else if (clienteData?.cliente?.nome) {
+      // API retorna { cliente: { nome: "..." } }
+      nomeCliente = clienteData.cliente.nome;
+    } else if (clienteData?.nome) {
+      nomeCliente = clienteData.nome;
     }
 
     if (!nomeCliente) {
