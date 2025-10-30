@@ -142,6 +142,7 @@ Deno.serve(async (req) => {
     }
 
     console.log('✅ Usuário autenticado:', user.id);
+    console.log('🚀 ===== FUNÇÃO SYNC-INFOCAP INICIADA - VERSÃO COM LOGS DETALHADOS =====');
 
     const { documento } = await req.json();
 
@@ -327,19 +328,28 @@ Deno.serve(async (req) => {
 
         console.log(`✅ Dados financeiros finais - Prêmio Total: ${valorPremioTotal}, Parcelas: ${numParcelas}, Valor Parcela: ${valorParcela}`);
 
-        // Log completo dos campos disponíveis
-        console.log(`📋 Campos disponíveis em detalhesApolice:`, Object.keys(detalhesApolice || {}));
-        console.log(`📋 Campos disponíveis em ap (produção):`, Object.keys(ap || {}));
+        // Log completo dos campos disponíveis e valores
+        console.log(`📋 ===== APÓLICE ${ap.nosnum} =====`);
+        console.log(`📋 Campos em detalhesApolice:`, Object.keys(detalhesApolice || {}));
+        console.log(`📋 Campos em ap (produção):`, Object.keys(ap || {}));
+        console.log(`📋 Todos os valores de ap:`, JSON.stringify(ap, null, 2));
+        if (detalhesApolice) {
+          console.log(`📋 Todos os valores de detalhesApolice:`, JSON.stringify(detalhesApolice, null, 2));
+        }
         
-        // Determinar se foi renovada
-        // Testar múltiplos campos possíveis da API
-        const sitRenovacao = detalhesApolice?.sit_renovacao || detalhesApolice?.sitRenovacao || ap.renovacao_situacao || ap.sit_renovacao;
-        console.log(`🔄 Apólice ${ap.nosnum} - sit_renovacao: ${sitRenovacao}, tipo: ${typeof sitRenovacao}`);
+        // Determinar se foi renovada - testar TODOS os campos possíveis
+        const sitRenovacao = detalhesApolice?.sit_renovacao 
+          || detalhesApolice?.sitRenovacao 
+          || detalhesApolice?.renovacao_situacao
+          || ap.renovacao_situacao 
+          || ap.sit_renovacao;
+          
+        console.log(`🔄 Apólice ${ap.nosnum} - sit_renovacao encontrado: ${sitRenovacao}, tipo: ${typeof sitRenovacao}`);
         
         // sit_renovacao: 1 = Nova, 2 = Renovada, 3 = Não renovada
         // Se não tiver o campo, assumir como renovada (true) para manter compatibilidade
         const foiRenovada = sitRenovacao ? (parseInt(sitRenovacao) !== 3) : true;
-        console.log(`🔄 Resultado: foiRenovada = ${foiRenovada}`);
+        console.log(`🔄 RESULTADO FINAL: foiRenovada = ${foiRenovada}`);
         
         // Normalizar dados para tabela policies
         const policyData = {
