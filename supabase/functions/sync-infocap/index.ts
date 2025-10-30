@@ -194,22 +194,26 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Cliente encontrado: ${nomeCliente}`);
 
-    // PASSO 2: Buscar documentos (apólices resumidas) usando o nome
-    const documentosUrl = `${CORPNUVEM_API_URL}/documentos?nome=${encodeURIComponent(nomeCliente)}`;
-    console.log(`📄 Buscando documentos: ${documentosUrl}`);
+    // PASSO 2: Buscar apólices usando o endpoint /producao
+    // Definir período amplo para pegar todas as apólices
+    const dataInicial = '01/01/2015';
+    const dataFinal = '01/01/2027';
+    
+    const producaoUrl = `${CORPNUVEM_API_URL}/producao?texto=${encodeURIComponent(nomeCliente)}&dt_ini=${dataInicial}&dt_fim=${dataFinal}&ordem=inivig&orientacao=asc&so_renovados=t&so_emitidos=x`;
+    console.log(`📄 Buscando produção: ${producaoUrl}`);
 
-    const documentosResponse = await corpNuvemFetch(documentosUrl);
+    const producaoResponse = await corpNuvemFetch(producaoUrl);
 
-    if (!documentosResponse.ok) {
-      const errorBody = await documentosResponse.text();
-      console.error(`❌ Erro ao buscar documentos - Body: ${errorBody}`);
-      throw new Error(`Erro ao buscar documentos: ${documentosResponse.statusText}`);
+    if (!producaoResponse.ok) {
+      const errorBody = await producaoResponse.text();
+      console.error(`❌ Erro ao buscar produção - Body: ${errorBody}`);
+      throw new Error(`Erro ao buscar produção: ${producaoResponse.statusText}`);
     }
 
-    const documentosData = await documentosResponse.json();
-    console.log(`📦 Documentos encontrados:`, JSON.stringify(documentosData, null, 2));
+    const producaoData = await producaoResponse.json();
+    console.log(`📦 Produção encontrada:`, JSON.stringify(producaoData, null, 2));
 
-    const apolices = documentosData?.documentos || [];
+    const apolices = producaoData?.producao || [];
     console.log(`📋 Total de apólices: ${apolices.length}`);
 
     let syncedCount = 0;
