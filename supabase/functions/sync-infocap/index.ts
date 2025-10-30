@@ -327,8 +327,9 @@ Deno.serve(async (req) => {
 
         console.log(`✅ Dados financeiros finais - Prêmio Total: ${valorPremioTotal}, Parcelas: ${numParcelas}, Valor Parcela: ${valorParcela}`);
 
-        // Usar codfil + nosnum como identificador único para evitar duplicatas
-        const uniqueIdentifier = `${ap.codfil}-${ap.nosnum}`;
+        // Determinar se foi renovada
+        // renovacao_situacao: 1 = Nova, 2 = Renovada, 3 = Não renovada
+        const foiRenovada = ap.renovacao_situacao !== 3;
         
         // Normalizar dados para tabela policies
         const policyData = {
@@ -344,6 +345,7 @@ Deno.serve(async (req) => {
           valor_parcela: valorParcela,
           quantidade_parcelas: numParcelas,
           status: statusPolicy,
+          renovada: foiRenovada,
           corretora: 'RCaldas Corretora de Seguros',
           extraction_timestamp: new Date().toISOString(),
           created_by_extraction: true,

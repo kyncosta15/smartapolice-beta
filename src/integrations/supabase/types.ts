@@ -1787,6 +1787,7 @@ export type Database = {
           placa: string | null
           policy_status: Database["public"]["Enums"]["policy_status"] | null
           quantidade_parcelas: number | null
+          renovada: boolean | null
           responsavel_nome: string | null
           responsavel_user_id: string | null
           segurado: string | null
@@ -1835,6 +1836,7 @@ export type Database = {
           placa?: string | null
           policy_status?: Database["public"]["Enums"]["policy_status"] | null
           quantidade_parcelas?: number | null
+          renovada?: boolean | null
           responsavel_nome?: string | null
           responsavel_user_id?: string | null
           segurado?: string | null
@@ -1883,6 +1885,7 @@ export type Database = {
           placa?: string | null
           policy_status?: Database["public"]["Enums"]["policy_status"] | null
           quantidade_parcelas?: number | null
+          renovada?: boolean | null
           responsavel_nome?: string | null
           responsavel_user_id?: string | null
           segurado?: string | null

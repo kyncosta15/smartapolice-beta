@@ -91,7 +91,9 @@ export function DashboardContent() {
   const enhancedDashboardStats = {
     ...dashboardData,
     overdueInstallments: overdueInstallments.length,
-    duingNext30Days: duingNext30Days
+    duingNext30Days: duingNext30Days,
+    renovadas: dashboardData.renewalDistribution?.renovadas ?? 0,
+    naoRenovadas: dashboardData.renewalDistribution?.naoRenovadas ?? 0
   };
 
   // Navigation items - role-based visibility per specifications
@@ -344,6 +346,8 @@ export function DashboardContent() {
                   duingNext30Days: enhancedDashboardStats.duingNext30Days,
                   totalMonthlyCost: enhancedDashboardStats.totalMonthlyCost || 0,
                   totalInsuredValue: enhancedDashboardStats.totalInsuredValue || 0,
+                  renovadas: enhancedDashboardStats.renovadas || 0,
+                  naoRenovadas: enhancedDashboardStats.naoRenovadas || 0,
                 }} 
                 isLoading={false}
                 onSectionChange={setActiveSection}

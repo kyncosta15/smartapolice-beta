@@ -17,6 +17,11 @@ interface DashboardMetrics {
     pessoaFisica: number;
     pessoaJuridica: number;
   };
+  // Nova métrica para renovadas vs não renovadas
+  renewalDistribution: {
+    renovadas: number;
+    naoRenovadas: number;
+  };
 }
 
 export function useDashboardData(policies: ParsedPolicyData[]) {
@@ -38,6 +43,10 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
         personTypeDistribution: {
           pessoaFisica: 0,
           pessoaJuridica: 0
+        },
+        renewalDistribution: {
+          renovadas: 0,
+          naoRenovadas: 0
         }
       };
     }
@@ -166,6 +175,18 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       total: personTypeDistribution.pessoaFisica + personTypeDistribution.pessoaJuridica
     });
 
+    // Distribuição por renovação (renovadas vs não renovadas)
+    const renewalDistribution = normalizedPolicies.reduce((acc, policy: any) => {
+      if (policy.renovada === true || policy.renovada === undefined) {
+        acc.renovadas++;
+      } else {
+        acc.naoRenovadas++;
+      }
+      return acc;
+    }, { renovadas: 0, naoRenovadas: 0 });
+
+    console.log('🔄 Distribuição por renovação:', renewalDistribution);
+
     // Evolução mensal - PROJEÇÃO DINÂMICA DE 12 MESES A PARTIR DO MÊS ATUAL
     const monthlyEvolution = generateMonthlyEvolution(normalizedPolicies);
 
@@ -182,7 +203,8 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       typeDistribution,
       monthlyEvolution,
       insights,
-      personTypeDistribution
+      personTypeDistribution,
+      renewalDistribution
     };
 
     console.log('📊 Dashboard data final:', result);

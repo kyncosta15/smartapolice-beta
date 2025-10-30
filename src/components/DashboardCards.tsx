@@ -16,6 +16,8 @@ interface DashboardCardsProps {
     duingNext30Days: number;
     totalMonthlyCost: number;
     totalInsuredValue: number;
+    renovadas?: number;
+    naoRenovadas?: number;
   };
   isLoading?: boolean;
   onSectionChange?: (section: string) => void;
@@ -82,21 +84,21 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
   // Second row cards - gradient background
   const secondRowCards = [
     {
-      id: 'active',
-      title: 'Apólices Ativas',
-      value: Math.max(0, dashboardStats.totalPolicies - dashboardStats.expiringPolicies).toString(),
-      subtitle: 'Em vigor atualmente',
+      id: 'renovadas',
+      title: 'Renovadas',
+      value: (dashboardStats.renovadas ?? 0).toString(),
+      subtitle: 'Apólices ativas renovadas',
       icon: CheckCircle,
-      gradient: 'bg-gradient-to-br from-blue-500 to-blue-600',
+      gradient: 'bg-gradient-to-br from-green-500 to-emerald-600',
       textColor: 'text-white'
     },
     {
-      id: 'expired',
-      title: 'Vencidas',
-      value: dashboardStats.expiringPolicies.toString(),
-      subtitle: 'Necessitam renovação',
+      id: 'nao_renovadas',
+      title: 'Não Renovadas',
+      value: (dashboardStats.naoRenovadas ?? 0).toString(),
+      subtitle: 'Apólices sem renovação',
       icon: AlertTriangle,
-      gradient: 'bg-gradient-to-br from-rose-500 to-rose-600',
+      gradient: 'bg-gradient-to-br from-red-500 to-rose-600',
       textColor: 'text-white'
     },
     {
