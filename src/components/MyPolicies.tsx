@@ -586,11 +586,6 @@ export function MyPolicies() {
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] sm:text-xs text-gray-500 dark:text-muted-foreground mb-0.5 sm:mb-1">Número</p>
                         <p className="font-medium text-xs sm:text-sm dark:text-foreground break-all leading-tight">{policy.policyNumber}</p>
-                        {policy.nosnum && (
-                          <p className="font-mono text-[10px] text-muted-foreground mt-0.5">
-                            NosNum: {policy.nosnum}
-                          </p>
-                        )}
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-[10px] sm:text-xs text-gray-500 dark:text-muted-foreground mb-0.5 sm:mb-1">Valor Mensal</p>
@@ -680,7 +675,6 @@ export function MyPolicies() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Seguradora</TableHead>
                   <TableHead>Número</TableHead>
-                  <TableHead>NosNum</TableHead>
                   <TableHead className="text-right">Valor Mensal</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Vencimento</TableHead>
@@ -704,9 +698,6 @@ export function MyPolicies() {
                     <TableCell className="font-medium">{toText(policy.name)}</TableCell>
                     <TableCell>{toText(policy.insurer)}</TableCell>
                     <TableCell className="font-mono text-sm">{policy.policyNumber}</TableCell>
-                    <TableCell className="font-mono text-sm text-muted-foreground">
-                      {policy.nosnum || '-'}
-                    </TableCell>
                     <TableCell className="text-right font-semibold text-green-600">
                       {moedaBR(policy.monthlyAmount)}
                     </TableCell>
