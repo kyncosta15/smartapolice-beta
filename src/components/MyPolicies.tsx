@@ -273,38 +273,50 @@ export function MyPolicies() {
   };
 
   const handleDownloadPolicy = async (policy: PolicyWithStatus) => {
+    // DEBUG: Verificar valores de nosnum e codfil
+    console.log('🔍 [Download Debug] PolicyWithStatus recebida:', { 
+      name: policy.name,
+      nosnum: policy.nosnum,
+      codfil: policy.codfil,
+      nosnum_type: typeof policy.nosnum,
+      codfil_type: typeof policy.codfil
+    });
+    
+    // Buscar a policy original para ter todos os dados
     const originalPolicy = policies.find(p => p.id === policy.id);
     
-    // DEBUG: Verificar valores de nosnum e codfil
-    console.log('🔍 [Download Debug] Valores encontrados:', { 
+    console.log('🔍 [Download Debug] Original Policy encontrada:', { 
+      found: !!originalPolicy,
       name: originalPolicy?.name,
       nosnum: originalPolicy?.nosnum,
       codfil: originalPolicy?.codfil,
-      nosnum_type: typeof originalPolicy?.nosnum,
-      codfil_type: typeof originalPolicy?.codfil,
       pdfPath: originalPolicy?.pdfPath
     });
     
-    // Se tem nosnum e codfil, tentar baixar da API do InfoCap primeiro
-    if (originalPolicy?.nosnum && originalPolicy?.codfil) {
+    // Usar nosnum e codfil do PolicyWithStatus que já estão mapeados corretamente
+    if (policy.nosnum && policy.codfil) {
       console.log('📥 Tentando baixar da API InfoCap:', { 
-        nosnum: originalPolicy.nosnum, 
-        codfil: originalPolicy.codfil 
+        nosnum: policy.nosnum, 
+        codfil: policy.codfil 
       });
       
       try {
         const { getDocumentoAnexos, downloadDocumentoAnexo } = await import('@/services/corpnuvem/anexos');
         
         const response = await getDocumentoAnexos({
-          codfil: originalPolicy.codfil,
-          nosnum: originalPolicy.nosnum
+          codfil: policy.codfil,
+          nosnum: policy.nosnum
         });
+        
+        console.log('📦 [Download Debug] Resposta da API:', response);
         
         if (response?.anexos && response.anexos.length > 0) {
           // Buscar o primeiro PDF disponível
           const pdfAnexo = response.anexos.find(anexo => 
             anexo.tipo?.toLowerCase().includes('pdf')
           );
+          
+          console.log('📄 [Download Debug] PDF encontrado:', pdfAnexo);
           
           if (pdfAnexo) {
             toast({
