@@ -274,6 +274,59 @@ export function MyPolicies() {
 
   const handleDownloadPolicy = async (policy: PolicyWithStatus) => {
     const originalPolicy = policies.find(p => p.id === policy.id);
+    
+    // Se tem nosnum e codfil, tentar baixar da API do InfoCap primeiro
+    if (originalPolicy?.nosnum && originalPolicy?.codfil) {
+      console.log('📥 Tentando baixar da API InfoCap:', { 
+        nosnum: originalPolicy.nosnum, 
+        codfil: originalPolicy.codfil 
+      });
+      
+      try {
+        const { getDocumentoAnexos, downloadDocumentoAnexo } = await import('@/services/corpnuvem/anexos');
+        
+        const response = await getDocumentoAnexos({
+          codfil: originalPolicy.codfil,
+          nosnum: originalPolicy.nosnum
+        });
+        
+        if (response?.anexos && response.anexos.length > 0) {
+          // Buscar o primeiro PDF disponível
+          const pdfAnexo = response.anexos.find(anexo => 
+            anexo.tipo?.toLowerCase().includes('pdf')
+          );
+          
+          if (pdfAnexo) {
+            toast({
+              title: "Baixando apólice",
+              description: "Download iniciado da API InfoCap",
+            });
+            
+            await downloadDocumentoAnexo(
+              pdfAnexo.url, 
+              `${policy.name}.pdf`
+            );
+            
+            toast({
+              title: "Download concluído",
+              description: "Apólice baixada com sucesso",
+            });
+            return;
+          }
+        }
+        
+        console.warn('⚠️ Nenhum PDF encontrado nos anexos da API InfoCap');
+      } catch (error) {
+        console.error('❌ Erro ao baixar da API InfoCap:', error);
+        toast({
+          title: "Aviso",
+          description: "Não foi possível baixar da API InfoCap, tentando método alternativo",
+          variant: "default",
+        });
+      }
+    }
+    
+    // Fallback: usar método tradicional se não conseguiu da API
     if (!originalPolicy?.pdfPath) {
       toast({
         title: "Arquivo não disponível",
