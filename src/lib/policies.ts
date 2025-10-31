@@ -92,7 +92,10 @@ export function normalizePolicy(raw: any) {
     documento: safeString(raw.documento ?? ""),
     documento_tipo: raw.documento_tipo,
     // CRÍTICO: Manter campo renovada do banco
-    renovada: raw.renovada
+    renovada: raw.renovada,
+    // Campos CorpNuvem/InfoCap
+    nosnum: raw.nosnum,
+    codfil: raw.codfil,
   };
 }
 
