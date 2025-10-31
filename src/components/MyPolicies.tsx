@@ -275,6 +275,16 @@ export function MyPolicies() {
   const handleDownloadPolicy = async (policy: PolicyWithStatus) => {
     const originalPolicy = policies.find(p => p.id === policy.id);
     
+    // DEBUG: Verificar valores de nosnum e codfil
+    console.log('🔍 [Download Debug] Valores encontrados:', { 
+      name: originalPolicy?.name,
+      nosnum: originalPolicy?.nosnum,
+      codfil: originalPolicy?.codfil,
+      nosnum_type: typeof originalPolicy?.nosnum,
+      codfil_type: typeof originalPolicy?.codfil,
+      pdfPath: originalPolicy?.pdfPath
+    });
+    
     // Se tem nosnum e codfil, tentar baixar da API do InfoCap primeiro
     if (originalPolicy?.nosnum && originalPolicy?.codfil) {
       console.log('📥 Tentando baixar da API InfoCap:', { 
