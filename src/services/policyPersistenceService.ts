@@ -491,7 +491,10 @@ export class PolicyPersistenceService {
           category: safeString(normalizedPolicy.category || 'Geral'),
           coverage: (policy.coberturas as any[])?.map(cob => safeString(cob.descricao)) || ['Cobertura Básica'],
           totalCoverage: Number(policy.valor_mensal_num || policy.custo_mensal) * 12 || 0,
-          limits: 'R$ 100.000 por sinistro'
+          limits: 'R$ 100.000 por sinistro',
+          // CRÍTICO: Campos CorpNuvem/InfoCap para download de PDFs
+          nosnum: policy.nosnum,
+          codfil: policy.codfil,
         };
 
         console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada e CONVERTIDA COM SEGURANÇA`, {
