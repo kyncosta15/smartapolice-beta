@@ -43,8 +43,15 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
 
     // Calcular métricas básicas
     const totalPolicies = policies.length;
-    const totalMonthlyCost = policies.reduce((sum, policy) => sum + (policy.monthlyAmount || 0), 0);
-    const totalInsuredValue = policies.reduce((sum, policy) => sum + (policy.totalCoverage || 0), 0);
+    
+    // Filtrar apenas apólices vigentes para cálculos financeiros
+    const activePoliciesForCalc = policies.filter(policy => {
+      const status = policy.status?.toLowerCase();
+      return status === 'vigente' || status === 'ativa' || status === 'vencendo';
+    });
+    
+    const totalMonthlyCost = activePoliciesForCalc.reduce((sum, policy) => sum + (policy.monthlyAmount || 0), 0);
+    const totalInsuredValue = activePoliciesForCalc.reduce((sum, policy) => sum + (policy.totalCoverage || 0), 0);
     
     // Calcular apólices por status
     const today = new Date();

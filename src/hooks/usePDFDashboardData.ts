@@ -121,12 +121,17 @@ export function usePDFDashboardData() {
         }
       });
 
-      // Calcular custos
-      const totalMonthlyCost = policies?.reduce((sum, p) => 
-        sum + (p.custo_mensal || p.valor_mensal_num || 0), 0) || 0;
+      // Calcular custos - APENAS apólices vigentes
+      const activePoliciesForCost = policies?.filter(p => {
+        const status = p.status?.toLowerCase();
+        return status === 'vigente' || status === 'ativa' || status === 'vencendo';
+      }) || [];
       
-      const totalInsuredValue = policies?.reduce((sum, p) => 
-        sum + (p.valor_premio || p.valor_parcela || 0), 0) || 0;
+      const totalMonthlyCost = activePoliciesForCost.reduce((sum, p) => 
+        sum + (p.custo_mensal || p.valor_mensal_num || 0), 0);
+      
+      const totalInsuredValue = activePoliciesForCost.reduce((sum, p) => 
+        sum + (p.valor_premio || p.valor_parcela || 0), 0);
 
       // Distribuição por seguradora
       const insurerCounts = new Map<string, { value: number; count: number }>();
