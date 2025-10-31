@@ -303,6 +303,11 @@ export function MyPolicies() {
       try {
         const { getDocumentoAnexos, downloadDocumentoAnexo } = await import('@/services/corpnuvem/anexos');
         
+        toast({
+          title: "Baixando apólice",
+          description: "Por favor, aguarde...",
+        });
+        
         const response = await getDocumentoAnexos({
           codfil: policy.codfil,
           nosnum: policy.nosnum
@@ -319,11 +324,6 @@ export function MyPolicies() {
           console.log('📄 [Download Debug] PDF encontrado:', pdfAnexo);
           
           if (pdfAnexo) {
-            toast({
-              title: "Baixando apólice",
-              description: "Download iniciado da API InfoCap",
-            });
-            
             await downloadDocumentoAnexo(
               pdfAnexo.url, 
               `${policy.name}.pdf`
@@ -341,10 +341,11 @@ export function MyPolicies() {
       } catch (error) {
         console.error('❌ Erro ao baixar da API InfoCap:', error);
         toast({
-          title: "Aviso",
-          description: "Não foi possível baixar da API InfoCap, tentando método alternativo",
-          variant: "default",
+          title: "Erro ao baixar",
+          description: "Não foi possível obter o arquivo",
+          variant: "destructive",
         });
+        return;
       }
     }
     
