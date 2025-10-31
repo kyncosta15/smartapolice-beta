@@ -114,37 +114,38 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       value
     }));
 
-    // Classificação por pessoa física/jurídica - VERSÃO SUPER SEGURA
-    console.log('🔍 Iniciando classificação de pessoa física/jurídica - MODO SUPER SEGURO...');
+    // Classificação por pessoa física/jurídica - DETECTA AUTOMATICAMENTE
+    console.log('🔍 Iniciando classificação de pessoa física/jurídica - DETECÇÃO AUTOMÁTICA...');
     const personTypeDistribution = policies.reduce((acc, policy) => {
       const safeName = safeString(policy.name);
-      const safeDocumentoTipo = safeString(policy.documento_tipo);
-      const safeDocumento = safeString(policy.documento);
+      const safeDocumento = safeString(extractFieldValue(policy.documento));
       
-      console.log('📋 Analisando política (SUPER SEGURO):', {
+      // Remover caracteres não numéricos do documento
+      const documentoNumeros = safeDocumento.replace(/[^\d]/g, '');
+      
+      console.log('📋 Analisando política:', {
         id: policy.id,
         name: safeName,
-        documento_tipo: safeDocumentoTipo,
-        documento: safeDocumento
+        documento: safeDocumento,
+        documentoNumeros,
+        tamanho: documentoNumeros.length
       });
       
-      // Usar safeString para garantir que não há objetos
-      const documentoTipo = safeString(extractFieldValue(policy.documento_tipo));
-      
-      if (!documentoTipo || documentoTipo === 'undefined' || documentoTipo === '' || documentoTipo === 'Não informado') {
-        console.log(`⚠️ Política "${safeName}": campo documento_tipo não encontrado, vazio ou undefined`);
-        console.log('⚠️ Valor do campo documento_tipo:', safeDocumentoTipo);
+      // Verificar se o documento tem conteúdo válido
+      if (!documentoNumeros || documentoNumeros === '' || documentoNumeros.length === 0) {
+        console.log(`⚠️ Política "${safeName}": documento vazio ou inválido`);
         return acc;
       }
       
-      if (documentoTipo === 'CPF') {
-        console.log(`✅ Política "${safeName}": classificada como Pessoa Física`);
+      // CPF tem 11 dígitos, CNPJ tem 14 dígitos
+      if (documentoNumeros.length === 11) {
+        console.log(`✅ Política "${safeName}": classificada como Pessoa Física (CPF com ${documentoNumeros.length} dígitos)`);
         acc.pessoaFisica++;
-      } else if (documentoTipo === 'CNPJ') {
-        console.log(`✅ Política "${safeName}": classificada como Pessoa Jurídica`);
+      } else if (documentoNumeros.length === 14) {
+        console.log(`✅ Política "${safeName}": classificada como Pessoa Jurídica (CNPJ com ${documentoNumeros.length} dígitos)`);
         acc.pessoaJuridica++;
       } else {
-        console.log(`⚠️ Política "${safeName}": tipo de documento desconhecido: ${documentoTipo}`);
+        console.log(`⚠️ Política "${safeName}": documento com tamanho inválido: ${documentoNumeros.length} dígitos`);
       }
       
       return acc;

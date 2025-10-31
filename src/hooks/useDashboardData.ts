@@ -131,17 +131,10 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       value: Math.round(Number(value) || 0)
     }));
 
-    // 🚨 LÓGICA CORRIGIDA - Distribuição pessoa física/jurídica
-    console.log('🔍 Iniciando classificação de pessoa física/jurídica...');
+    // 🚨 LÓGICA CORRIGIDA - Distribuição pessoa física/jurídica - DETECÇÃO AUTOMÁTICA
+    console.log('🔍 Iniciando classificação de pessoa física/jurídica - DETECÇÃO AUTOMÁTICA...');
     
     const personTypeDistribution = normalizedPolicies.reduce((acc, policy) => {
-      console.log('📋 Analisando política:', {
-        id: policy.id,
-        name: policy.name,
-        documento_tipo: policy.documento_tipo,
-        documento: policy.documento
-      });
-
       // Função para extrair valor do campo do N8N
       const extractValue = (field: any): string | null => {
         if (!field) return null;
@@ -150,28 +143,34 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
         return null;
       };
 
-      // Extrair o valor do documento_tipo
-      const documentoTipo = extractValue(policy.documento_tipo);
+      // Extrair o valor do documento
+      const documento = extractValue(policy.documento);
       
-      if (documentoTipo && documentoTipo !== 'undefined') {
-        const tipoDocumento = documentoTipo.toString().toUpperCase().trim();
-        console.log(`📄 Política "${policy.name}": documento_tipo = "${tipoDocumento}"`);
-        
-        // ✅ LÓGICA CORRIGIDA: CPF = Pessoa Física, CNPJ = Pessoa Jurídica
-        if (tipoDocumento === 'CPF') {
-          acc.pessoaFisica++;
-          console.log('✅ PESSOA FÍSICA incrementada (CPF detectado)');
-        } else if (tipoDocumento === 'CNPJ') {
-          acc.pessoaJuridica++;
-          console.log('✅ PESSOA JURÍDICA incrementada (CNPJ detectado)');
-        } else {
-          console.log('⚠️ Tipo de documento não reconhecido:', tipoDocumento);
-          console.log('⚠️ Valores aceitos: "CPF" ou "CNPJ"');
-        }
+      if (!documento) {
+        console.log(`⚠️ Política "${policy.name}": campo documento não encontrado`);
+        return acc;
+      }
+
+      // Remover caracteres não numéricos do documento
+      const documentoNumeros = documento.replace(/[^\d]/g, '');
+      
+      console.log('📋 Analisando política:', {
+        id: policy.id,
+        name: policy.name,
+        documento: documento,
+        documentoNumeros,
+        tamanho: documentoNumeros.length
+      });
+      
+      // CPF tem 11 dígitos, CNPJ tem 14 dígitos
+      if (documentoNumeros.length === 11) {
+        acc.pessoaFisica++;
+        console.log(`✅ PESSOA FÍSICA incrementada (CPF com ${documentoNumeros.length} dígitos)`);
+      } else if (documentoNumeros.length === 14) {
+        acc.pessoaJuridica++;
+        console.log(`✅ PESSOA JURÍDICA incrementada (CNPJ com ${documentoNumeros.length} dígitos)`);
       } else {
-        console.log(`⚠️ Política "${policy.name}": campo documento_tipo não encontrado, vazio ou undefined`);
-        console.log('⚠️ Dados disponíveis:', Object.keys(policy));
-        console.log('⚠️ Valor do campo documento_tipo:', policy.documento_tipo);
+        console.log(`⚠️ Documento com tamanho inválido: ${documentoNumeros.length} dígitos`);
       }
       
       return acc;
