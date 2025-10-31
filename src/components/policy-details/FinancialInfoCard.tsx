@@ -1,12 +1,17 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Hash } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { DollarSign, Hash, ChevronRight, Calendar } from 'lucide-react';
+import { useState } from 'react';
 
 interface FinancialInfoCardProps {
   policy: any;
 }
 
 export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
+  const [showInstallments, setShowInstallments] = useState(false);
+  
   // CRÍTICO: Priorizar campos do banco de dados
   const premiumValue = policy.valor_premio ?? policy.premium ?? 0;
   const monthlyValue = policy.custo_mensal ?? policy.valor_parcela ?? policy.monthlyAmount ?? 0;
@@ -61,6 +66,33 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
 
   const installmentsCount = getInstallmentsCount();
   const monthlyPremium = calculateMonthlyPremium();
+  
+  // Obter parcelas com datas e valores
+  const getInstallmentsDetails = () => {
+    if (policy.installments && Array.isArray(policy.installments) && policy.installments.length > 0) {
+      return policy.installments;
+    }
+    
+    // Se não houver parcelas detalhadas, gerar parcelas genéricas
+    const installments = [];
+    const startDate = policy.startDate ? new Date(policy.startDate) : new Date();
+    
+    for (let i = 0; i < installmentsCount; i++) {
+      const dueDate = new Date(startDate);
+      dueDate.setMonth(dueDate.getMonth() + i);
+      
+      installments.push({
+        numero: i + 1,
+        valor: monthlyPremium,
+        vencimento: dueDate.toISOString().split('T')[0],
+        status: 'pendente'
+      });
+    }
+    
+    return installments;
+  };
+  
+  const installmentsDetails = getInstallmentsDetails();
 
   return (
     <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 overflow-hidden">
@@ -90,18 +122,79 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
             <Hash className="h-4 w-4" />
             Parcelamento
           </label>
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center font-bold text-lg sm:text-xl shadow-md shrink-0">
-              {installmentsCount}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-600 text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center font-bold text-lg sm:text-xl shadow-md shrink-0">
+                {installmentsCount}
+              </div>
+              <div className="min-w-0">
+                <p className="text-base sm:text-lg font-bold text-gray-900 font-sf-pro">
+                  {installmentsCount}x parcelas
+                </p>
+                <p className="text-xs sm:text-sm text-blue-600 font-sf-pro">
+                  Pagamento facilitado
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-base sm:text-lg font-bold text-gray-900 font-sf-pro">
-                {installmentsCount}x parcelas
-              </p>
-              <p className="text-xs sm:text-sm text-blue-600 font-sf-pro">
-                Pagamento facilitado
-              </p>
-            </div>
+            
+            <Dialog open={showInstallments} onOpenChange={setShowInstallments}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-100 h-8 px-2"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-blue-900">
+                    <Calendar className="h-5 w-5" />
+                    Detalhes das Parcelas
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-2 mt-4">
+                  {installmentsDetails.map((installment, index) => {
+                    const valor = installment.valor || installment.value || monthlyPremium;
+                    const vencimento = installment.vencimento || installment.dueDate || installment.date;
+                    const numero = installment.numero || installment.number || index + 1;
+                    
+                    return (
+                      <div 
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0">
+                            {numero}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">
+                              R$ {Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </p>
+                            {vencimento && (
+                              <p className="text-xs text-blue-600 flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(vencimento).toLocaleDateString('pt-BR')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold text-gray-700">Total:</span>
+                    <span className="text-lg font-bold text-blue-900">
+                      R$ {(installmentsDetails.reduce((sum, inst) => sum + (inst.valor || inst.value || monthlyPremium), 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
