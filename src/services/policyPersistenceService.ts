@@ -463,7 +463,7 @@ export class PolicyPersistenceService {
           // Required fields
           expirationDate: safeString(policy.expiration_date || policy.fim_vigencia || new Date().toISOString().split('T')[0]),
           policyStatus: finalStatus as any,
-          quantidade_parcelas: 12,
+          quantidade_parcelas: policy.quantidade_parcelas || 1,
           
           // Installments - fix type
           installments: (policy.installments as any[])?.map(inst => ({

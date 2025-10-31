@@ -22,7 +22,7 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
     policies.forEach(policy => {
       // Usar os campos reais da política
       const valorTotal = policy.premium || 0;
-      const quantidadeParcelas = (policy as any).quantidade_parcelas || 12; // Fallback para 12 parcelas
+      const quantidadeParcelas = (policy as any).quantidade_parcelas || 1; // Fallback para 1 parcela (à vista)
       const dataInicio = new Date(policy.startDate);
       
       if (valorTotal > 0 && quantidadeParcelas > 0) {

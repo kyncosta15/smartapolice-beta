@@ -638,7 +638,7 @@ export function MyPolicies() {
             const originalPolicy = policies.find(p => p.id === policy.id);
             const installmentsCount = originalPolicy?.quantidade_parcelas || 
                                     originalPolicy?.installments?.length || 
-                                    12;
+                                    1;
             
             console.log(`🎯 [MyPolicies-Render] Renderizando ${policy.name} com status: ${policy.status}`);
             

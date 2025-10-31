@@ -352,9 +352,9 @@ export function usePersistedPolicies() {
       if (updates.endDate !== undefined) dbUpdates.fim_vigencia = updates.endDate;
       
       if ((updates as any).quantidade_parcelas !== undefined) {
-        dbUpdates.quantidade_parcelas = typeof (updates as any).quantidade_parcelas === 'number' ? (updates as any).quantidade_parcelas : parseInt((updates as any).quantidade_parcelas) || 12;
+        dbUpdates.quantidade_parcelas = typeof (updates as any).quantidade_parcelas === 'number' ? (updates as any).quantidade_parcelas : parseInt((updates as any).quantidade_parcelas) || 1;
       } else if (updates.installments !== undefined) {
-        dbUpdates.quantidade_parcelas = typeof updates.installments === 'number' ? updates.installments : parseInt(String(updates.installments)) || 12;
+        dbUpdates.quantidade_parcelas = typeof updates.installments === 'number' ? updates.installments : parseInt(String(updates.installments)) || 1;
       }
       
       if (updates.status !== undefined) {
