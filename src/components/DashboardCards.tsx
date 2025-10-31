@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   FileText, 
   Shield, 
@@ -25,6 +24,7 @@ interface DashboardCardsProps {
 }
 
 export function DashboardCards({ dashboardStats, isLoading = false, onSectionChange }: DashboardCardsProps) {
+  const [showFullValue, setShowFullValue] = useState(false);
   
   // Loading skeleton component
   const CardSkeleton = () => (
@@ -155,7 +155,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
         {firstRowCards.map((card) => {
           const IconComponent = card.icon;
           
-          // Para o card de "Custo anual", adicionar tooltip com valor completo
+          // Para o card de "Custo anual", mostrar valor completo ao hover
           if (card.id === 'coverage') {
             const fullValue = new Intl.NumberFormat('pt-BR', { 
               style: 'currency', 
@@ -165,35 +165,31 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
             }).format(dashboardStats.totalInsuredValue || 0);
             
             return (
-              <TooltipProvider key={card.id}>
-                <Tooltip delayDuration={200}>
-                  <TooltipTrigger asChild>
-                    <Card 
-                      className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-help"
-                    >
-                      <CardContent className="p-0">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor}`}>
-                            <IconComponent className="size-3" />
-                            {card.title}
-                          </span>
-                        </div>
-                        
-                        <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1">
-                          {card.value}
-                        </div>
-                        
-                        <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
-                          {card.subtitle}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="font-semibold">
-                    <p>{fullValue}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Card 
+                key={card.id}
+                className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200"
+                onMouseEnter={() => setShowFullValue(true)}
+                onMouseLeave={() => setShowFullValue(false)}
+                onTouchStart={() => setShowFullValue(true)}
+                onTouchEnd={() => setShowFullValue(false)}
+              >
+                <CardContent className="p-0">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor}`}>
+                      <IconComponent className="size-3" />
+                      {card.title}
+                    </span>
+                  </div>
+                  
+                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1 transition-all duration-200">
+                    {showFullValue ? fullValue : card.value}
+                  </div>
+                  
+                  <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
+                    {card.subtitle}
+                  </div>
+                </CardContent>
+              </Card>
             );
           }
           
