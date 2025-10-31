@@ -348,6 +348,10 @@ export class RobustPolicyPersistence {
         status: normalizedData.status,
         arquivo_url: pdfPath,
         
+        // Campos CorpNuvem
+        nosnum: normalizedData.nosnum,
+        codfil: normalizedData.codfil,
+        
         // Metadados
         created_by_extraction: true,
         extraction_timestamp: new Date().toISOString()
@@ -496,7 +500,9 @@ export class RobustPolicyPersistence {
       'inicio_vigencia': normalizedData.startDate,
       'fim_vigencia': normalizedData.endDate,
       'placa': normalizedData.vehicleDetails?.plate,
-      'modelo_veiculo': normalizedData.vehicleModel
+      'modelo_veiculo': normalizedData.vehicleModel,
+      'nosnum': normalizedData.nosnum,
+      'codfil': normalizedData.codfil
     };
 
     for (const [dbField, value] of Object.entries(fieldMappings)) {
