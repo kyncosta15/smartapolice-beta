@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, Heart, ArrowRight } from "lucide-react";
+import { Shield, Heart, ArrowRight, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const LandingPage = () => {
@@ -101,8 +101,8 @@ export const LandingPage = () => {
                 <Heart className="h-3 w-3 text-primary opacity-70" />
                 <span>Fácil de usar</span>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="font-medium text-primary"></span>
+              <div className="flex items-center gap-2">
+                <FileText className="h-3 w-3 text-primary opacity-70" />
                 <span>Gerencie suas apólices</span>
               </div>
             </div>
