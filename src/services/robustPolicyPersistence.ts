@@ -622,7 +622,11 @@ export class RobustPolicyPersistence {
         model: dbPolicy.modelo_veiculo,
         plate: dbPolicy.placa,
         year: parseInt(dbPolicy.ano_modelo) || undefined
-      }
+      },
+      
+      // Campos CorpNuvem
+      nosnum: dbPolicy.nosnum,
+      codfil: dbPolicy.codfil,
     };
   }
 }
