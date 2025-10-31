@@ -22,46 +22,64 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
     premium: policy.premium,
     custo_mensal: policy.custo_mensal,
     monthlyAmount: policy.monthlyAmount,
+    quantidade_parcelas: policy.quantidade_parcelas,
+    valor_parcela: policy.valor_parcela,
+    installments: policy.installments?.length,
+    parcelas: policy.parcelas?.length,
     premiumValue,
     monthlyValue
   });
   
   // Calcular número de parcelas dos dados da apólice
   const getInstallmentsCount = () => {
-    // Priorizar quantidade_parcelas do banco
-    if (policy.quantidade_parcelas && policy.quantidade_parcelas > 0) {
+    // 1. PRIORIDADE: quantidade_parcelas do banco (vem do numpar da API)
+    if (policy.quantidade_parcelas !== undefined && policy.quantidade_parcelas !== null) {
+      console.log('📊 Usando quantidade_parcelas do banco:', policy.quantidade_parcelas);
       return policy.quantidade_parcelas;
     }
     
-    // Fallback para installments array
+    // 2. Fallback: contar installments array
     if (policy.installments && Array.isArray(policy.installments) && policy.installments.length > 0) {
+      console.log('📊 Usando installments.length:', policy.installments.length);
       return policy.installments.length;
     }
     
-    // Fallback para parcelas array (legacy)
+    // 3. Fallback: contar parcelas array
     if (policy.parcelas && Array.isArray(policy.parcelas) && policy.parcelas.length > 0) {
+      console.log('📊 Usando parcelas.length:', policy.parcelas.length);
       return policy.parcelas.length;
     }
     
-    // Último fallback para 12 parcelas (padrão)
-    return 12;
+    // 4. Último fallback: 1 parcela à vista
+    console.warn('⚠️ Nenhuma informação de parcelas encontrada, usando 1 parcela');
+    return 1;
   };
 
   // CORREÇÃO: Calcular prêmio mensal corretamente usando valores já extraídos
   const calculateMonthlyPremium = () => {
-    // Se há valor mensal definido, usar ele
+    // 1. Priorizar valor_parcela do banco (valor real da parcela da API)
+    if (policy.valor_parcela && policy.valor_parcela > 0) {
+      console.log('💵 Usando valor_parcela do banco:', policy.valor_parcela);
+      return policy.valor_parcela;
+    }
+    
+    // 2. Se há valor mensal definido, usar ele
     if (monthlyValue && monthlyValue > 0) {
+      console.log('💵 Usando monthlyValue calculado:', monthlyValue);
       return monthlyValue;
     }
     
-    // Calcular baseado no número de parcelas
+    // 3. Calcular baseado no número de parcelas
     const installmentsCount = getInstallmentsCount();
     if (installmentsCount > 0 && premiumValue > 0) {
-      return premiumValue / installmentsCount;
+      const calculated = premiumValue / installmentsCount;
+      console.log('💵 Calculando prêmio mensal:', premiumValue, '/', installmentsCount, '=', calculated);
+      return calculated;
     }
     
-    // Fallback: dividir por 12
-    return premiumValue / 12;
+    // 4. Fallback: usar o prêmio total (pagamento à vista)
+    console.warn('⚠️ Usando prêmio total como valor da parcela:', premiumValue);
+    return premiumValue;
   };
 
   const installmentsCount = getInstallmentsCount();
@@ -69,13 +87,25 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
   
   // Obter parcelas com datas e valores
   const getInstallmentsDetails = () => {
+    // Se houver installments detalhados, usar
     if (policy.installments && Array.isArray(policy.installments) && policy.installments.length > 0) {
+      console.log('📋 Usando installments array:', policy.installments.length);
       return policy.installments;
     }
     
-    // Se não houver parcelas detalhadas, gerar parcelas genéricas
+    // Se houver parcelas array, usar
+    if (policy.parcelas && Array.isArray(policy.parcelas) && policy.parcelas.length > 0) {
+      console.log('📋 Usando parcelas array:', policy.parcelas.length);
+      return policy.parcelas;
+    }
+    
+    // Se não houver parcelas detalhadas, gerar parcelas baseadas em quantidade_parcelas
     const installments = [];
-    const startDate = policy.startDate ? new Date(policy.startDate) : new Date();
+    const startDate = policy.startDate || policy.inicio_vigencia 
+      ? new Date(policy.startDate || policy.inicio_vigencia) 
+      : new Date();
+    
+    console.log('📋 Gerando parcelas genéricas:', installmentsCount);
     
     for (let i = 0; i < installmentsCount; i++) {
       const dueDate = new Date(startDate);
