@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CompanySidePanel } from '@/components/admin/CompanySidePanel';
 import { AdminCharts } from '@/components/admin/AdminCharts';
+import { PoliciesModal } from '@/components/admin/PoliciesModal';
 import { useAdminMetrics } from '@/hooks/useAdminMetrics';
 import { useCorpNuvemPolicies, type PoliciesPeriod } from '@/hooks/useCorpNuvemPolicies';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,6 +41,7 @@ export default function AdminDashboardPage() {
   const [selectedCompanies, setSelectedCompanies] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<string | null>(null);
+  const [showPoliciesModal, setShowPoliciesModal] = useState(false);
 
   // Filtrar empresas e veículos por termo de busca - antes dos early returns
   const filteredCompanies = useMemo(() => {
@@ -161,7 +163,10 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setShowPoliciesModal(true)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
               <CardTitle className="text-xs md:text-sm font-medium">Total de Apólices</CardTitle>
               <Shield className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
@@ -174,12 +179,14 @@ export default function AdminDashboardPage() {
                   <div className="text-xl md:text-2xl font-bold">{totalPolicies}</div>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Disponíveis na API CorpNuvem
+                  Clique para ver detalhes
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2" onClick={(e) => e.stopPropagation()}>
                   <Select 
                     value={policiesYear?.toString() || 'all'} 
-                    onValueChange={(value) => setPoliciesYear(value === 'all' ? undefined : parseInt(value))}
+                    onValueChange={(value) => {
+                      value === 'all' ? setPoliciesYear(undefined) : setPoliciesYear(parseInt(value));
+                    }}
                   >
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
@@ -191,7 +198,10 @@ export default function AdminDashboardPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select value={policiesPeriod} onValueChange={(value) => setPoliciesPeriod(value as PoliciesPeriod)}>
+                  <Select 
+                    value={policiesPeriod} 
+                    onValueChange={(value) => setPoliciesPeriod(value as PoliciesPeriod)}
+                  >
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
                     </SelectTrigger>
@@ -205,6 +215,14 @@ export default function AdminDashboardPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Modal de Apólices */}
+          <PoliciesModal
+            open={showPoliciesModal}
+            onOpenChange={setShowPoliciesModal}
+            periodo={policiesPeriod}
+            ano={policiesYear}
+          />
 
           <Card className="col-span-2 md:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
