@@ -291,9 +291,7 @@ Deno.serve(async (req) => {
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           
           if (diffDays < 0) return 'vencida';
-          if (diffDays <= 30) return 'vence_30_dias';
-          if (diffDays <= 60) return 'vence_60_dias';
-          if (diffDays <= 90) return 'vence_90_dias';
+          if (diffDays <= 90) return 'vencendo'; // Qualquer apólice vencendo em até 90 dias
           return 'vigente';
         };
 
