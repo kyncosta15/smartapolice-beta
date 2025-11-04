@@ -217,6 +217,19 @@ Deno.serve(async (req) => {
     const apolices = producaoData?.producao || [];
     console.log(`📋 Total de registros encontrados: ${apolices.length}`);
     
+    // 🔍 LOG DETALHADO: Mostrar JSON completo de cada apólice
+    console.log('');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('🔍 JSON COMPLETO DA API - TODAS AS APÓLICES');
+    console.log('═══════════════════════════════════════════════════');
+    apolices.forEach((ap: any, index: number) => {
+      console.log(`\n📄 APÓLICE ${index + 1}/${apolices.length}:`);
+      console.log(JSON.stringify(ap, null, 2));
+      console.log(`   Key: codfil=${ap.codfil}, nosnum=${ap.nosnum}, numapo=${ap.numapo}`);
+    });
+    console.log('═══════════════════════════════════════════════════');
+    console.log('');
+    
     // FILTRAR APENAS APÓLICES ATIVAS (tipo "A")
     // Tipo "C" = Cancelamento/Endosso, "M" = Modificação não devem ser processados
     const apolicesAtivas = apolices.filter((ap: any) => ap.tipdoc === 'A');
