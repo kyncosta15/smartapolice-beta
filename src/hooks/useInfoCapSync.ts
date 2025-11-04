@@ -26,10 +26,16 @@ export function useInfoCapSync() {
 
       setLastSyncDate(new Date());
 
+      // Contar apólices do usuário no banco após sincronização
+      const { count: userPoliciesCount } = await supabase
+        .from('policies')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
       if (data?.synced > 0) {
         toast({
           title: "Apólices Sincronizadas",
-          description: `${data.synced} apólice(s) do InfoCap foram importadas.`,
+          description: `${userPoliciesCount || data.synced} apólice(s) suas foram encontradas e sincronizadas.`,
           duration: 5000,
         });
       } else {
