@@ -4,7 +4,6 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CompanySidePanel } from '@/components/admin/CompanySidePanel';
 import { AdminCharts } from '@/components/admin/AdminCharts';
 import { useAdminMetrics } from '@/hooks/useAdminMetrics';
-import { useCorpNuvemPolicies, type PoliciesPeriod } from '@/hooks/useCorpNuvemPolicies';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,9 +30,6 @@ type Period = '30' | '60';
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { metrics, companies, loading, deleting, deleteCompanies } = useAdminMetrics();
-  const [policiesPeriod, setPoliciesPeriod] = useState<PoliciesPeriod>('datinc');
-  const [policiesYear, setPoliciesYear] = useState<number | undefined>(new Date().getFullYear());
-  const { totalPolicies, loading: loadingPolicies } = useCorpNuvemPolicies(policiesPeriod, policiesYear);
   const [period, setPeriod] = useState<Period>('30');
   const [selectedCompany, setSelectedCompany] = useState<CompanySummary | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -167,39 +163,14 @@ export default function AdminDashboardPage() {
               <Shield className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
             </CardHeader>
             <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-              <div className="space-y-2">
-                {loadingPolicies ? (
-                  <Skeleton className="h-8 w-16" />
-                ) : (
-                  <div className="text-xl md:text-2xl font-bold">{totalPolicies}</div>
-                )}
-                <div className="grid grid-cols-2 gap-2">
-                  <Select 
-                    value={policiesYear?.toString() || 'all'} 
-                    onValueChange={(value) => setPoliciesYear(value === 'all' ? undefined : parseInt(value))}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os anos</SelectItem>
-                      {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => (
-                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={policiesPeriod} onValueChange={(value) => setPoliciesPeriod(value as PoliciesPeriod)}>
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="datinc">Inclusão</SelectItem>
-                      <SelectItem value="inivig">Início</SelectItem>
-                      <SelectItem value="fimvig">Fim</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-xl md:text-2xl font-bold">{metrics?.apolices_total || 0}</div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Sincronizadas no sistema
+              </p>
             </CardContent>
           </Card>
 
