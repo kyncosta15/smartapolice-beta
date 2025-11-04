@@ -102,7 +102,12 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
             />
 
             <FinancialInfoCard policy={policy} />
-            <CoveragesCard coverages={coverages} policyId={policy.id} />
+            <CoveragesCard 
+              coverages={coverages} 
+              policyId={policy.id}
+              nosnum={policy.nosnum}
+              codfil={policy.codfil}
+            />
 
             <ValidityInfoCard policy={policy} />
             {renderValue(policy.vehicleModel) !== '-' && <VehicleInfoCard policy={policy} />}

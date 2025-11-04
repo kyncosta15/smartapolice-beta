@@ -20,9 +20,11 @@ interface CoveragesCardProps {
   coverages: Coverage[] | string[];
   policyId: string;
   readOnly?: boolean;
+  nosnum?: number;
+  codfil?: number;
 }
 
-export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly = false }: CoveragesCardProps) => {
+export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly = false, nosnum, codfil }: CoveragesCardProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newCoverage, setNewCoverage] = useState<Coverage>({ descricao: '', lmi: 0 });
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -42,7 +44,7 @@ export const CoveragesCard = ({ coverages: initialCoverages, policyId, readOnly 
     loadCoveragesFromDB,
     saveCoverage,
     deleteCoverage
-  } = useCoveragesData(initialCoverages, policyId);
+  } = useCoveragesData(initialCoverages, policyId, nosnum, codfil);
 
   console.log('📊 CoveragesCard: Estado atual das coberturas:', {
     coverageCount: coverages.length,
