@@ -110,8 +110,20 @@ export function useAdminDashboardData() {
       console.log('🔍 Executando consultas paralelas...');
       
       // 1. Métricas básicas - com logs individuais
+      console.log('🔍 ========================================');
+      console.log('🔍 INICIANDO CONSULTA DE POLÍTICAS');
+      console.log('🔍 ========================================');
+      
       const policiesResult = await supabase.from('policies').select('*', { count: 'exact', head: true });
-      console.log('📊 Resultado consulta policies:', policiesResult);
+      
+      console.log('📊 ========================================');
+      console.log('📊 RESULTADO BRUTO DA CONSULTA POLICIES:');
+      console.log('📊 count:', policiesResult.count);
+      console.log('📊 error:', policiesResult.error);
+      console.log('📊 status:', policiesResult.status);
+      console.log('📊 statusText:', policiesResult.statusText);
+      console.log('📊 JSON completo:', JSON.stringify(policiesResult, null, 2));
+      console.log('📊 ========================================');
       
       const usersResult = await supabase.from('users').select('*', { count: 'exact', head: true });
       console.log('👥 Resultado consulta users:', usersResult);
