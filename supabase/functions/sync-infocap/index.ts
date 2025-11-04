@@ -374,13 +374,12 @@ Deno.serve(async (req) => {
 
         console.log(`💾 Salvando apólice:`, policyData);
 
-        // Verificar se já existe uma apólice com este numero_apolice + documento
+        // Verificar se já existe uma apólice com este nosnum (identificador único da CorpNuvem)
         const { data: existingPolicy } = await supabaseClient
           .from('policies')
           .select('id')
           .eq('user_id', user.id)
-          .eq('documento', cleanDocument)
-          .eq('numero_apolice', policyData.numero_apolice)
+          .eq('nosnum', ap.nosnum)
           .maybeSingle();
 
         if (existingPolicy) {
