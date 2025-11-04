@@ -200,7 +200,7 @@ Deno.serve(async (req) => {
     const dataInicial = '01/01/2015';
     const dataFinal = '01/01/2027';
     
-    const producaoUrl = `${CORPNUVEM_API_URL}/producao?texto=${encodeURIComponent(nomeCliente)}&dt_ini=${dataInicial}&dt_fim=${dataFinal}&ordem=inivig&orientacao=asc&so_renovados=t&so_emitidos=x`;
+    const producaoUrl = `${CORPNUVEM_API_URL}/producao?texto=${encodeURIComponent(nomeCliente)}&dt_ini=${dataInicial}&dt_fim=${dataFinal}&ordem=inivig&orientacao=asc&so_renovados=x&so_emitidos=x`;
     console.log(`📄 Buscando produção: ${producaoUrl}`);
 
     const producaoResponse = await corpNuvemFetch(producaoUrl);
