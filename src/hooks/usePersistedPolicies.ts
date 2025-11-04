@@ -104,16 +104,6 @@ export function usePersistedPolicies() {
       }
 
       console.log('✅ Sessão válida encontrada, prosseguindo com carregamento');
-
-      // Primeiro, limpar duplicatas se existirem
-      const cleanedCount = await PolicyPersistenceService.cleanupDuplicatePolicies(user.id);
-      if (cleanedCount > 0) {
-        console.log(`🧹 ${cleanedCount} apólices duplicadas removidas`);
-        toast({
-          title: "🧹 Limpeza Realizada",
-          description: `${cleanedCount} apólices duplicadas foram removidas`,
-        });
-      }
       
       console.log('📖 Chamando PolicyPersistenceService.loadUserPolicies...');
       const loadedPolicies = await PolicyPersistenceService.loadUserPolicies(user.id);

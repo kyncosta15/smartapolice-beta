@@ -350,12 +350,17 @@ Deno.serve(async (req) => {
         console.log(`🔄 RESULTADO FINAL: foiRenovada = ${foiRenovada}`);
         
         // Normalizar dados para tabela policies
+        // SEMPRE usar codfil-nosnum como numero_apolice para garantir unicidade
+        const numeroApolice = (ap.numapo && ap.numapo !== '0' && ap.numapo !== 0) 
+          ? ap.numapo 
+          : `${ap.codfil}-${ap.nosnum}`;
+          
         const policyData = {
           user_id: user.id,
           documento: cleanDocument,
           segurado: nomeCliente,
           seguradora: detalhesApolice?.seguradora || ap.seguradora || '',
-          numero_apolice: ap.numapo || detalhesApolice?.numapo || `${ap.codfil}-${ap.nosnum}`,
+          numero_apolice: numeroApolice,
           tipo_seguro: detalhesApolice?.ramo || ap.ramo || 'Não especificado',
           inicio_vigencia: convertBRDateToISO(ap.inivig || detalhesApolice?.inivig),
           fim_vigencia: convertBRDateToISO(ap.fimvig || detalhesApolice?.fimvig),
