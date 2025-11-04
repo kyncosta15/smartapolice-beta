@@ -4,6 +4,7 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CompanySidePanel } from '@/components/admin/CompanySidePanel';
 import { AdminCharts } from '@/components/admin/AdminCharts';
 import { useAdminMetrics } from '@/hooks/useAdminMetrics';
+import { useCorpNuvemPolicies } from '@/hooks/useCorpNuvemPolicies';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,6 +30,7 @@ type Period = '30' | '60';
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { metrics, companies, loading, deleting, deleteCompanies } = useAdminMetrics();
+  const { totalPolicies, loading: loadingPolicies } = useCorpNuvemPolicies();
   const [period, setPeriod] = useState<Period>('30');
   const [selectedCompany, setSelectedCompany] = useState<CompanySummary | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -162,7 +164,11 @@ export default function AdminDashboardPage() {
               <Shield className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
             </CardHeader>
             <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-              <div className="text-xl md:text-2xl font-bold">{metrics.apolices_total}</div>
+              {loadingPolicies ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-xl md:text-2xl font-bold">{totalPolicies}</div>
+              )}
               <p className="text-xs text-muted-foreground">
                 No sistema
               </p>
