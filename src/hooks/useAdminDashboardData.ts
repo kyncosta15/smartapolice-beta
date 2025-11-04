@@ -109,21 +109,48 @@ export function useAdminDashboardData() {
     try {
       console.log('🔍 Executando consultas paralelas...');
       
-      // 1. Métricas básicas - com logs individuais
+      // 1. Métricas básicas - TESTE: Fazer duas queries diferentes
       console.log('🔍 ========================================');
       console.log('🔍 INICIANDO CONSULTA DE POLÍTICAS');
       console.log('🔍 ========================================');
       
-      const policiesResult = await supabase.from('policies').select('*', { count: 'exact', head: true });
+      // TESTE 1: Count com head:true (o método atual que retorna 1919)
+      const policiesCountOnly = await supabase.from('policies').select('*', { count: 'exact', head: true });
+      console.log('📊 TESTE 1 - Count com head:true:', {
+        count: policiesCountOnly.count,
+        error: policiesCountOnly.error,
+        status: policiesCountOnly.status
+      });
+      
+      // TESTE 2: Select all e contar no JS
+      const policiesFullData = await supabase.from('policies').select('id');
+      console.log('📊 TESTE 2 - Select all e contar no JS:', {
+        data_length: policiesFullData.data?.length || 0,
+        error: policiesFullData.error,
+        status: policiesFullData.status
+      });
+      
+      // TESTE 3: Count sem head
+      const policiesCountNoHead = await supabase.from('policies').select('id', { count: 'exact' });
+      console.log('📊 TESTE 3 - Count sem head:', {
+        count: policiesCountNoHead.count,
+        data_length: policiesCountNoHead.data?.length || 0,
+        error: policiesCountNoHead.error,
+        status: policiesCountNoHead.status
+      });
       
       console.log('📊 ========================================');
-      console.log('📊 RESULTADO BRUTO DA CONSULTA POLICIES:');
-      console.log('📊 count:', policiesResult.count);
-      console.log('📊 error:', policiesResult.error);
-      console.log('📊 status:', policiesResult.status);
-      console.log('📊 statusText:', policiesResult.statusText);
-      console.log('📊 JSON completo:', JSON.stringify(policiesResult, null, 2));
+      console.log('📊 COMPARAÇÃO FINAL:');
+      console.log('📊 Método 1 (head:true):', policiesCountOnly.count);
+      console.log('📊 Método 2 (JS count):', policiesFullData.data?.length || 0);
+      console.log('📊 Método 3 (count no head):', policiesCountNoHead.count);
       console.log('📊 ========================================');
+      
+      // Usar o método 2 (JS count) que é mais confiável
+      const policiesResult = policiesFullData;
+      const totalPolicies = policiesFullData.data?.length || 0;
+      
+      console.log('✅ Usando contagem real (JS):', totalPolicies);
       
       const usersResult = await supabase.from('users').select('*', { count: 'exact', head: true });
       console.log('👥 Resultado consulta users:', usersResult);
@@ -165,10 +192,9 @@ export function useAdminDashboardData() {
         supabase.from('policies').select('created_at').order('created_at', { ascending: false }),
       ]);
       
-      // Extrair valores das consultas individuais
-      const totalPolicies = policiesResult.count;
-      const totalUsers = usersResult.count;
-      const activeUsers = activeUsersResult.count;
+      // Extrair valores das consultas - USANDO CONTAGEM REAL
+      const totalUsers = usersResult.count || 0;
+      const activeUsers = activeUsersResult.count || 0;
       const insurersData = insurersResult.data;
 
       // Processar seguradoras únicas
