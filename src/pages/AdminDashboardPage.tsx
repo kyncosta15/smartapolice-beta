@@ -4,13 +4,14 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CompanySidePanel } from '@/components/admin/CompanySidePanel';
 import { AdminCharts } from '@/components/admin/AdminCharts';
 import { useAdminMetrics } from '@/hooks/useAdminMetrics';
-import { useCorpNuvemPolicies } from '@/hooks/useCorpNuvemPolicies';
+import { useCorpNuvemPolicies, type PoliciesPeriod } from '@/hooks/useCorpNuvemPolicies';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield, AlertTriangle, Car, Building, Search, Mail, LifeBuoy, Trash2, Plus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { CompanySummary } from '@/types/admin';
@@ -30,7 +31,8 @@ type Period = '30' | '60';
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { metrics, companies, loading, deleting, deleteCompanies } = useAdminMetrics();
-  const { totalPolicies, loading: loadingPolicies } = useCorpNuvemPolicies();
+  const [policiesPeriod, setPoliciesPeriod] = useState<PoliciesPeriod>('datinc');
+  const { totalPolicies, loading: loadingPolicies } = useCorpNuvemPolicies(policiesPeriod);
   const [period, setPeriod] = useState<Period>('30');
   const [selectedCompany, setSelectedCompany] = useState<CompanySummary | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -164,14 +166,23 @@ export default function AdminDashboardPage() {
               <Shield className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
             </CardHeader>
             <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-              {loadingPolicies ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-xl md:text-2xl font-bold">{totalPolicies}</div>
-              )}
-              <p className="text-xs text-muted-foreground">
-                No sistema
-              </p>
+              <div className="space-y-2">
+                {loadingPolicies ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <div className="text-xl md:text-2xl font-bold">{totalPolicies}</div>
+                )}
+                <Select value={policiesPeriod} onValueChange={(value) => setPoliciesPeriod(value as PoliciesPeriod)}>
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="datinc">Por Data de Inclusão</SelectItem>
+                    <SelectItem value="inivig">Por Início de Vigência</SelectItem>
+                    <SelectItem value="fimvig">Por Fim de Vigência</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardContent>
           </Card>
 

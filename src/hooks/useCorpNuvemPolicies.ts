@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { getDocumentos } from '@/services/corpnuvem/documentos';
 
-export function useCorpNuvemPolicies() {
+export type PoliciesPeriod = 'datinc' | 'inivig' | 'fimvig';
+
+export function useCorpNuvemPolicies(periodo: PoliciesPeriod = 'datinc') {
   const [totalPolicies, setTotalPolicies] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -13,7 +15,7 @@ export function useCorpNuvemPolicies() {
         const data = await getDocumentos({
           qtd_pag: 20,
           pag: 1,
-          periodo: 'datinc',
+          periodo,
           codfil: 1
         });
         
@@ -28,7 +30,7 @@ export function useCorpNuvemPolicies() {
     }
 
     fetchPolicies();
-  }, []);
+  }, [periodo]);
 
   return { totalPolicies, loading, error };
 }
