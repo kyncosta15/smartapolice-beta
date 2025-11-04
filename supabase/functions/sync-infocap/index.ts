@@ -374,47 +374,23 @@ Deno.serve(async (req) => {
 
         console.log(`💾 Salvando apólice:`, policyData);
 
-        // Verificar se já existe uma apólice com este nosnum (identificador único da CorpNuvem)
-        const { data: existingPolicy } = await supabaseClient
+        // Usar upsert para inserir ou atualizar baseado em user_id + nosnum + codfil
+        const { error: upsertError } = await supabaseClient
           .from('policies')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('nosnum', ap.nosnum)
-          .maybeSingle();
+          .upsert(policyData, {
+            onConflict: 'user_id,nosnum,codfil',
+            ignoreDuplicates: false
+          });
 
-        if (existingPolicy) {
-          // Atualizar apólice existente
-          const { error: updateError } = await supabaseClient
-            .from('policies')
-            .update(policyData)
-            .eq('id', existingPolicy.id);
-
-          if (updateError) {
-            console.error(`❌ FALHA AO ATUALIZAR - nosnum: ${ap.nosnum}, numero_apolice: ${policyData.numero_apolice}`);
-            console.error(`❌ Código do erro:`, updateError.code);
-            console.error(`❌ Mensagem:`, updateError.message);
-            console.error(`❌ Detalhes:`, updateError.details);
-            errorCount++;
-          } else {
-            console.log(`✅ Apólice ${policyData.numero_apolice} (nosnum: ${ap.nosnum}) atualizada com sucesso`);
-            syncedCount++;
-          }
+        if (upsertError) {
+          console.error(`❌ FALHA AO SALVAR - nosnum: ${ap.nosnum}, numero_apolice: ${policyData.numero_apolice}`);
+          console.error(`❌ Código do erro:`, upsertError.code);
+          console.error(`❌ Mensagem:`, upsertError.message);
+          console.error(`❌ Detalhes:`, upsertError.details);
+          errorCount++;
         } else {
-          // Inserir nova apólice
-          const { error: insertError } = await supabaseClient
-            .from('policies')
-            .insert(policyData);
-
-          if (insertError) {
-            console.error(`❌ FALHA AO INSERIR - nosnum: ${ap.nosnum}, numero_apolice: ${policyData.numero_apolice}`);
-            console.error(`❌ Código do erro:`, insertError.code);
-            console.error(`❌ Mensagem:`, insertError.message);
-            console.error(`❌ Detalhes:`, insertError.details);
-            errorCount++;
-          } else {
-            console.log(`✅ Apólice ${policyData.numero_apolice} (nosnum: ${ap.nosnum}) sincronizada com sucesso`);
-            syncedCount++;
-          }
+          console.log(`✅ Apólice ${policyData.numero_apolice} (nosnum: ${ap.nosnum}) sincronizada com sucesso`);
+          syncedCount++;
         }
       } catch (err) {
         console.error(`❌ ERRO AO PROCESSAR - nosnum: ${ap.nosnum}, codfil: ${ap.codfil}`);

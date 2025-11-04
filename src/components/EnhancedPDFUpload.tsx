@@ -192,49 +192,6 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
 
   return (
     <>
-      {/* DEBUG VISUAL - Indicador permanente quando duplicata é detectada */}
-      {duplicateInfo && (
-        <div className="fixed top-4 right-4 z-[9999] bg-amber-500 text-white p-4 rounded-lg shadow-2xl border-4 border-white animate-pulse">
-          <div className="font-bold text-lg">🔔 DUPLICATA DETECTADA!</div>
-          <div className="text-sm">{duplicateInfo.policyNumber}</div>
-          <button 
-            onClick={() => setDuplicateInfo(null)}
-            className="mt-2 bg-white text-amber-500 px-3 py-1 rounded font-semibold hover:bg-amber-100"
-          >
-            Fechar
-          </button>
-        </div>
-      )}
-
-      {/* Modal de Duplicata com backdrop */}
-      {duplicateInfo && (
-        <>
-          <div 
-            className="fixed inset-0 z-[998] bg-black/70 backdrop-blur-sm" 
-            onClick={() => {
-              console.log('🖱️ Backdrop clicado');
-              setDuplicateInfo(null);
-            }} 
-          />
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
-            <DuplicatePolicyNotification
-              duplicateInfo={duplicateInfo}
-              onView={() => {
-                console.log('👁️ Botão OK clicado no modal de duplicata');
-                toast({
-                  title: "📋 Apólice Atualizada",
-                  description: `A apólice ${duplicateInfo?.policyNumber} está disponível na sua lista de apólices.`,
-                });
-                setDuplicateInfo(null);
-              }}
-              onDismiss={() => {
-                console.log('❌ Modal de duplicata fechado');
-                setDuplicateInfo(null);
-              }}
-            />
-          </div>
-        </>
-      )}
 
       <div className="w-full">
       <Card className="w-full">
