@@ -322,8 +322,13 @@ export class BatchFileProcessor {
     }
     
     // Verificar formato dos dados e converter adequadamente
-    if (data.numero_apolice && data.segurado && data.seguradora) {
+    // CORREÇÃO: Aceitar apólices mesmo sem número_apolice (string vazia é válida)
+    if (data.segurado && data.seguradora) {
       console.log('📋 Convertendo dados diretos do N8N com validação');
+      if (!data.numero_apolice || data.numero_apolice.trim() === '') {
+        console.warn(`⚠️ Apólice sem número: ${data.segurado} - gerando ID temporário`);
+        data.numero_apolice = `TEMP-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      }
       return N8NDataConverter.convertN8NDirectData(data, fileName, file, userId);
     } else if (data.informacoes_gerais && data.seguradora && data.vigencia) {
       console.log('📋 Convertendo dados estruturados com validação');
