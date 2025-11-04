@@ -32,7 +32,8 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { metrics, companies, loading, deleting, deleteCompanies } = useAdminMetrics();
   const [policiesPeriod, setPoliciesPeriod] = useState<PoliciesPeriod>('datinc');
-  const { totalPolicies, loading: loadingPolicies } = useCorpNuvemPolicies(policiesPeriod);
+  const [policiesYear, setPoliciesYear] = useState<number | undefined>(new Date().getFullYear());
+  const { totalPolicies, loading: loadingPolicies } = useCorpNuvemPolicies(policiesPeriod, policiesYear);
   const [period, setPeriod] = useState<Period>('30');
   const [selectedCompany, setSelectedCompany] = useState<CompanySummary | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -172,16 +173,32 @@ export default function AdminDashboardPage() {
                 ) : (
                   <div className="text-xl md:text-2xl font-bold">{totalPolicies}</div>
                 )}
-                <Select value={policiesPeriod} onValueChange={(value) => setPoliciesPeriod(value as PoliciesPeriod)}>
-                  <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="datinc">Por Data de Inclusão</SelectItem>
-                    <SelectItem value="inivig">Por Início de Vigência</SelectItem>
-                    <SelectItem value="fimvig">Por Fim de Vigência</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select 
+                    value={policiesYear?.toString() || 'all'} 
+                    onValueChange={(value) => setPoliciesYear(value === 'all' ? undefined : parseInt(value))}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os anos</SelectItem>
+                      {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => (
+                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={policiesPeriod} onValueChange={(value) => setPoliciesPeriod(value as PoliciesPeriod)}>
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="datinc">Inclusão</SelectItem>
+                      <SelectItem value="inivig">Início</SelectItem>
+                      <SelectItem value="fimvig">Fim</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>

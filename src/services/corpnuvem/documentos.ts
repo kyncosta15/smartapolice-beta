@@ -10,6 +10,7 @@ interface BuscarDocumentosParams {
   pag: number;
   periodo: string;
   codfil: number;
+  ano?: number;
 }
 
 export async function getDocumento(params: BuscarDocumentoParams) {
