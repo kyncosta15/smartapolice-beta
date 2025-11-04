@@ -57,20 +57,20 @@ export function useInfoCapSync() {
     }
   };
 
-  // Sincronizar automaticamente quando houver um usuário
+  // Sincronizar automaticamente quando houver um usuário (desativado para permitir sincronização manual)
   useEffect(() => {
     const checkAndSync = async () => {
       try {
         // Verificar se há uma sessão ativa
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          console.log('⚠️ Nenhuma sessão ativa - pulando sincronização');
+          console.log('⚠️ Nenhuma sessão ativa - pulando sincronização automática');
           return;
         }
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          console.log('⚠️ Usuário não encontrado - pulando sincronização');
+          console.log('⚠️ Usuário não encontrado - pulando sincronização automática');
           return;
         }
 
@@ -83,6 +83,8 @@ export function useInfoCapSync() {
 
         if (userData?.documento) {
           console.log('🔍 Documento encontrado:', userData.documento);
+          console.log('ℹ️ Sincronização automática no login - execute manualmente se necessário');
+          // Sincronizar automaticamente no primeiro login
           await syncPolicies(userData.documento);
         } else {
           console.log('⚠️ Usuário sem documento cadastrado - sincronização InfoCap não disponível');

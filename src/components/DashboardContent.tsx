@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useInfoCapSync } from '@/hooks/useInfoCapSync';
 import { AppSidebar } from '@/components/AppSidebar';
 import { MobileDrawer } from '@/components/MobileDrawer';
 import { Navbar } from '@/components/Navbar';
@@ -16,6 +17,7 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { usePersistedUsers } from '@/hooks/usePersistedUsers';
+import { supabase } from '@/integrations/supabase/client';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { extractFieldValue } from '@/utils/extractFieldValue';
 import { 
@@ -74,6 +76,9 @@ export function DashboardContent() {
     isLoading: usersLoading
   } = usePersistedUsers();
 
+  // Hook para sincronização InfoCap
+  const { syncPolicies: syncInfoCapPolicies, isSyncing } = useInfoCapSync();
+
   // Combinar apólices extraídas e persistidas, evitando duplicatas
   const allPolicies = [...extractedPolicies, ...persistedPolicies.filter(
     pp => !extractedPolicies.some(ep => ep.id === pp.id)
@@ -126,6 +131,24 @@ export function DashboardContent() {
     setIsRefreshing(true);
     
     try {
+      // 1. Sincronizar do InfoCap (se aplicável)
+      try {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('documento')
+          .eq('id', user?.id)
+          .maybeSingle();
+
+        if (userData?.documento) {
+          console.log('📡 Sincronizando apólices do InfoCap...');
+          await syncInfoCapPolicies(userData.documento);
+        }
+      } catch (syncError) {
+        console.warn('⚠️ Erro na sincronização InfoCap:', syncError);
+        // Continuar mesmo com erro na sincronização
+      }
+
+      // 2. Atualizar apólices do banco local
       await refreshPolicies();
       setLastRefresh(Date.now());
       
