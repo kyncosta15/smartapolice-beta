@@ -1,9 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { AdminMetrics } from '@/types/admin';
+import type { PoliciesPeriod } from '@/hooks/useCorpNuvemPolicies';
+import { useCorpNuvemMetrics } from '@/hooks/useCorpNuvemMetrics';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AdminChartsProps {
   metrics: AdminMetrics | null;
+  policiesPeriod?: PoliciesPeriod;
+  policiesYear?: number;
 }
 
 // Cores distintas e vibrantes para melhor visualização
@@ -37,16 +42,21 @@ const CustomLegend = ({ payload }: any) => {
   );
 };
 
-export function AdminCharts({ metrics }: AdminChartsProps) {
+export function AdminCharts({ metrics, policiesPeriod = 'datinc', policiesYear }: AdminChartsProps) {
+  // Buscar métricas da API CorpNuvem
+  const { metrics: corpMetrics, loading: corpLoading } = useCorpNuvemMetrics(policiesPeriod, policiesYear);
+  
   if (!metrics) return null;
 
-  // Preparar dados para o gráfico de seguradoras
-  const seguradoras = metrics.apolices_por_seguradora
-    .slice(0, 8)
-    .map(item => ({
-      name: item.seguradora || 'Sem seguradora',
-      value: item.total
-    }));
+  // Preparar dados para o gráfico de seguradoras - USAR DADOS DA API CORPNUVEM
+  const seguradoras = corpLoading 
+    ? []
+    : (corpMetrics?.apolices_por_seguradora || [])
+        .slice(0, 8)
+        .map(item => ({
+          name: item.seguradora || 'Sem seguradora',
+          value: item.total
+        }));
 
   // Preparar dados para o gráfico de veículos por empresa
   const veiculosEmpresas = metrics.veiculos_por_empresa
@@ -80,43 +90,56 @@ export function AdminCharts({ metrics }: AdminChartsProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-6">
-      {/* Distribuição por Seguradora */}
+      {/* Distribuição por Seguradora - DADOS DA API CORPNUVEM */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base md:text-lg">Apólices por Seguradora</CardTitle>
+          <CardTitle className="text-base md:text-lg">
+            Apólices por Seguradora
+            <span className="text-xs font-normal text-muted-foreground ml-2">(API CorpNuvem)</span>
+          </CardTitle>
         </CardHeader>
         <CardContent className="pb-2">
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie
-                data={seguradoras}
-                cx="50%"
-                cy="45%"
-                labelLine={false}
-                label={false}
-                outerRadius={window.innerWidth < 768 ? 60 : 80}
-                fill="hsl(var(--primary))"
-                dataKey="value"
-              >
-                {seguradoras.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  padding: '8px'
-                }}
-              />
-              <Legend 
-                content={<CustomLegend />}
-                formatter={(value) => value.length > 15 ? value.substring(0, 15) + '...' : value}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          {corpLoading ? (
+            <div className="h-[280px] flex items-center justify-center">
+              <Skeleton className="h-40 w-40 rounded-full" />
+            </div>
+          ) : seguradoras.length === 0 ? (
+            <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+              Nenhum dado disponível
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie
+                  data={seguradoras}
+                  cx="50%"
+                  cy="45%"
+                  labelLine={false}
+                  label={false}
+                  outerRadius={window.innerWidth < 768 ? 60 : 80}
+                  fill="hsl(var(--primary))"
+                  dataKey="value"
+                >
+                  {seguradoras.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    padding: '8px'
+                  }}
+                />
+                <Legend 
+                  content={<CustomLegend />}
+                  formatter={(value) => value.length > 15 ? value.substring(0, 15) + '...' : value}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
 

@@ -267,7 +267,11 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Gráficos */}
-        <AdminCharts metrics={metrics} />
+        <AdminCharts 
+          metrics={metrics} 
+          policiesPeriod={policiesPeriod}
+          policiesYear={policiesYear}
+        />
 
         {/* Tabela de Todas as Contas */}
         <Card>
