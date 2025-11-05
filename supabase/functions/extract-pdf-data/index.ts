@@ -144,7 +144,7 @@ serve(async (req) => {
     }
 
     console.log(`✅ Texto extraído: ${text.length} caracteres`);
-    console.log('📄 Primeiros 500 chars:', text.substring(0, 500));
+    console.log('📄 Primeiros 1000 chars:', text.substring(0, 1000));
 
     // Aplicar regex patterns para extrair dados
     const extractedData = extractPolicyData(text);
@@ -152,6 +152,15 @@ serve(async (req) => {
     console.log('📊 ===== DADOS EXTRAÍDOS DO PDF =====');
     console.log(JSON.stringify(extractedData, null, 2));
     console.log('====================================');
+    
+    if (extractedData.coverages && extractedData.coverages.length > 0) {
+      console.log('🔍 COBERTURAS EXTRAÍDAS:');
+      extractedData.coverages.forEach((cov, idx) => {
+        console.log(`  ${idx + 1}. ${cov.descricao} - LMI: R$ ${cov.lmi.toLocaleString('pt-BR')}`);
+      });
+    } else {
+      console.log('⚠️ NENHUMA COBERTURA FOI EXTRAÍDA DO PDF');
+    }
 
     // Determinar user_id
     let userId = clientData?.created_by;
