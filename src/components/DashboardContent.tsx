@@ -131,22 +131,9 @@ export function DashboardContent() {
     setIsRefreshing(true);
     
     try {
-      // 1. Sincronizar do InfoCap (se aplicável)
-      try {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('documento')
-          .eq('id', user?.id)
-          .maybeSingle();
-
-        if (userData?.documento) {
-          console.log('📡 Sincronizando apólices do InfoCap...');
-          await syncInfoCapPolicies(userData.documento);
-        }
-      } catch (syncError) {
-        console.warn('⚠️ Erro na sincronização InfoCap:', syncError);
-        // Continuar mesmo com erro na sincronização
-      }
+      // Sincronização automática do InfoCap DESABILITADA
+      // O sistema agora apenas busca a URL do documento_anexo no cadastro de clientes
+      console.log('ℹ️ Sincronização automática de apólices desabilitada');
 
       // 2. Atualizar apólices do banco local
       await refreshPolicies();
