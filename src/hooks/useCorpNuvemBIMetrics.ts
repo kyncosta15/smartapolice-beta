@@ -30,7 +30,7 @@ export function useCorpNuvemBIMetrics({ datini, datfim, tipoData }: UseCorpNuvem
         
         console.log('🔍 [BI Hook] Buscando métricas com parâmetros:', { datini, datfim, tipoData });
         
-        // Buscar todos os tipos de documentos com tratamento individual de erro
+        // Buscar apenas todos os documentos (tipo 'a')
         const fetchWithFallback = async (tipo: string) => {
           try {
             return await getDocumentosBI({ datini, datfim, data: tipoData, tipo_doc: tipo as any });
@@ -40,23 +40,29 @@ export function useCorpNuvemBIMetrics({ datini, datfim, tipoData }: UseCorpNuvem
           }
         };
 
-        const [todos, novos, renovacoes, faturas, endossos] = await Promise.all([
-          fetchWithFallback('a'),
-          fetchWithFallback('n'),
-          fetchWithFallback('r'),
-          fetchWithFallback('f'),
-          fetchWithFallback('e'),
-        ]);
+        // Buscar todos os documentos
+        const todos = await fetchWithFallback('a');
 
-        console.log('✅ [BI Hook] Dados recebidos:', {
-          todos: todos.header.count,
-          novos: novos.header.count,
-          renovacoes: renovacoes.header.count,
-          faturas: faturas.header.count,
-          endossos: endossos.header.count
+        console.log('✅ [BI Hook] Produção total recebida:', {
+          total: todos.header.count,
+          documentos: todos.documentos.length
         });
 
         const todosDocumentos = todos.documentos;
+
+        // Calcular novos, renovações, faturas e endossos a partir dos documentos
+        const novosCount = todosDocumentos.filter(doc => doc.nosnum_ren === null || doc.nosnum_ren === 0).length;
+        const renovacoesCount = todosDocumentos.filter(doc => doc.nosnum_ren !== null && doc.nosnum_ren > 0).length;
+        const faturasCount = todosDocumentos.filter(doc => parseInt(doc.numpar?.toString() || '0') > 1).length;
+        const endossosCount = todosDocumentos.filter(doc => doc.numend && doc.numend !== '0').length;
+
+        console.log('✅ [BI Hook] Métricas calculadas:', {
+          producao_total: todos.header.count,
+          novos: novosCount,
+          renovacoes: renovacoesCount,
+          faturas: faturasCount,
+          endossos: endossosCount
+        });
 
         // Processar seguradoras
         const seguradoras = new Map<string, number>();
@@ -89,32 +95,27 @@ export function useCorpNuvemBIMetrics({ datini, datfim, tipoData }: UseCorpNuvem
           }))
           .sort((a, b) => b.value - a.value);
 
-        // Processar produtores (por cliente)
+        // Processar produtores (por cliente) - usar apenas documentos que são novos ou renovações
         const produtores = new Map<string, { novos: number; renovacoes: number; faturas: number; endossos: number }>();
         
-        novos.documentos.forEach((doc: DocumentoBI) => {
+        todosDocumentos.forEach((doc: DocumentoBI) => {
           const cliente = doc.cliente || 'Sem Cliente';
           const current = produtores.get(cliente) || { novos: 0, renovacoes: 0, faturas: 0, endossos: 0 };
-          produtores.set(cliente, { ...current, novos: current.novos + 1 });
+          
+          // Classificar o documento
+          const isNovo = doc.nosnum_ren === null || doc.nosnum_ren === 0;
+          const isRenovacao = doc.nosnum_ren !== null && doc.nosnum_ren > 0;
+          const isFatura = parseInt(doc.numpar?.toString() || '0') > 1;
+          const isEndosso = doc.numend && doc.numend !== '0';
+          
+          if (isNovo) current.novos++;
+          if (isRenovacao) current.renovacoes++;
+          if (isFatura) current.faturas++;
+          if (isEndosso) current.endossos++;
+          
+          produtores.set(cliente, current);
         });
 
-        renovacoes.documentos.forEach((doc: DocumentoBI) => {
-          const cliente = doc.cliente || 'Sem Cliente';
-          const current = produtores.get(cliente) || { novos: 0, renovacoes: 0, faturas: 0, endossos: 0 };
-          produtores.set(cliente, { ...current, renovacoes: current.renovacoes + 1 });
-        });
-
-        faturas.documentos.forEach((doc: DocumentoBI) => {
-          const cliente = doc.cliente || 'Sem Cliente';
-          const current = produtores.get(cliente) || { novos: 0, renovacoes: 0, faturas: 0, endossos: 0 };
-          produtores.set(cliente, { ...current, faturas: current.faturas + 1 });
-        });
-
-        endossos.documentos.forEach((doc: DocumentoBI) => {
-          const cliente = doc.cliente || 'Sem Cliente';
-          const current = produtores.get(cliente) || { novos: 0, renovacoes: 0, faturas: 0, endossos: 0 };
-          produtores.set(cliente, { ...current, endossos: current.endossos + 1 });
-        });
 
         const produtoresArray = Array.from(produtores.entries())
           .map(([name, counts]) => ({ name, ...counts }))
@@ -127,10 +128,10 @@ export function useCorpNuvemBIMetrics({ datini, datfim, tipoData }: UseCorpNuvem
 
         setMetrics({
           producao_total: todos.header.count,
-          novos: novos.header.count,
-          renovacoes: renovacoes.header.count,
-          faturas: faturas.header.count,
-          endossos: endossos.header.count,
+          novos: novosCount,
+          renovacoes: renovacoesCount,
+          faturas: faturasCount,
+          endossos: endossosCount,
           seguradoras: seguradoresArray,
           ramos: ramosArray,
           produtores: produtoresArray
