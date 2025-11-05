@@ -25,7 +25,7 @@ import { InfoModal } from '@/components/InfoModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { useToast } from '@/hooks/use-toast';
-import { useInfoCapSync } from '@/hooks/useInfoCapSync';
+// DESABILITADO: import { useInfoCapSync } from '@/hooks/useInfoCapSync';
 import { usePdfExtraction } from '@/hooks/usePdfExtraction';
 import { renderValue, renderValueAsString, renderCurrency } from '@/utils/renderValue';
 import { toText, moedaBR } from '@/lib/policies';
@@ -63,7 +63,7 @@ export function MyPolicies() {
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
   const { toast } = useToast();
-  const { isSyncing: isInfoCapSyncing } = useInfoCapSync();
+  // DESABILITADO: const { isSyncing: isInfoCapSyncing } = useInfoCapSync();
   const { isProcessing: isPdfProcessing, extractFromPolicy } = usePdfExtraction();
   
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
@@ -303,7 +303,9 @@ export function MyPolicies() {
       pdfPath: originalPolicy?.pdfPath
     });
     
-    // Usar nosnum e codfil do PolicyWithStatus que já estão mapeados corretamente
+    // DESABILITADO: Download via API CorpNuvem/InfoCap
+    // Agora usa apenas o arquivo PDF armazenado localmente no Supabase
+    /*
     if (policy.nosnum && policy.codfil) {
       console.log('📥 Tentando baixar da API InfoCap:', { 
         nosnum: policy.nosnum, 
@@ -326,7 +328,6 @@ export function MyPolicies() {
         console.log('📦 [Download Debug] Resposta da API:', response);
         
         if (response?.anexos && response.anexos.length > 0) {
-          // Buscar o primeiro PDF disponível
           const pdfAnexo = response.anexos.find(anexo => 
             anexo.tipo?.toLowerCase().includes('pdf')
           );
@@ -358,8 +359,9 @@ export function MyPolicies() {
         return;
       }
     }
+    */
     
-    // Fallback: usar método tradicional se não conseguiu da API
+    // Usar arquivo PDF armazenado localmente no Supabase
     if (!originalPolicy?.pdfPath) {
       toast({
         title: "Arquivo não disponível",

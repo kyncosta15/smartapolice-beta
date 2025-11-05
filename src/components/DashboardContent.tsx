@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useInfoCapSync } from '@/hooks/useInfoCapSync';
+// DESABILITADO: import { useInfoCapSync } from '@/hooks/useInfoCapSync';
 import { AppSidebar } from '@/components/AppSidebar';
 import { MobileDrawer } from '@/components/MobileDrawer';
 import { Navbar } from '@/components/Navbar';
@@ -76,8 +76,8 @@ export function DashboardContent() {
     isLoading: usersLoading
   } = usePersistedUsers();
 
-  // Hook para sincronização InfoCap
-  const { syncPolicies: syncInfoCapPolicies, isSyncing } = useInfoCapSync();
+  // DESABILITADO: Hook para sincronização InfoCap
+  // const { syncPolicies: syncInfoCapPolicies, isSyncing } = useInfoCapSync();
 
   // Combinar apólices extraídas e persistidas, evitando duplicatas
   const allPolicies = [...extractedPolicies, ...persistedPolicies.filter(
