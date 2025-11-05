@@ -50,6 +50,13 @@ export default function AdminDashboardPage() {
 
   // Estados para BI Dashboard
   const [activeTab, setActiveTab] = useState<DashboardTab>('producao');
+  
+  // Estados temporários para inputs (antes de aplicar)
+  const [tempDataInicio, setTempDataInicio] = useState<string>('01/01/2025');
+  const [tempDataFim, setTempDataFim] = useState<string>('31/12/2025');
+  const [tempTipoData, setTempTipoData] = useState<TipoData>('inivig');
+  
+  // Estados aplicados (usados no hook)
   const [biDataInicio, setBiDataInicio] = useState<string>('01/01/2025');
   const [biDataFim, setBiDataFim] = useState<string>('31/12/2025');
   const [biTipoData, setBiTipoData] = useState<TipoData>('inivig');
@@ -60,6 +67,13 @@ export default function AdminDashboardPage() {
     datfim: biDataFim,
     tipoData: biTipoData
   });
+
+  // Função para aplicar filtros
+  const handleApplyFilters = () => {
+    setBiDataInicio(tempDataInicio);
+    setBiDataFim(tempDataFim);
+    setBiTipoData(tempTipoData);
+  };
 
   // Filtrar empresas e veículos por termo de busca - antes dos early returns
   const filteredCompanies = useMemo(() => {
@@ -295,15 +309,15 @@ export default function AdminDashboardPage() {
 
               {/* Filtros BI */}
               {activeTab === 'producao' && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-end">
                   <div className="flex flex-col gap-1">
                     <label className="text-xs text-muted-foreground">Data Inicial</label>
                     <Input
                       type="date"
-                      value={biDataInicio.split('/').reverse().join('-')}
+                      value={tempDataInicio.split('/').reverse().join('-')}
                       onChange={(e) => {
                         const date = e.target.value.split('-').reverse().join('/');
-                        setBiDataInicio(date);
+                        setTempDataInicio(date);
                       }}
                       className="w-[140px] h-9"
                     />
@@ -313,10 +327,10 @@ export default function AdminDashboardPage() {
                     <label className="text-xs text-muted-foreground">Data Final</label>
                     <Input
                       type="date"
-                      value={biDataFim.split('/').reverse().join('-')}
+                      value={tempDataFim.split('/').reverse().join('-')}
                       onChange={(e) => {
                         const date = e.target.value.split('-').reverse().join('/');
-                        setBiDataFim(date);
+                        setTempDataFim(date);
                       }}
                       className="w-[140px] h-9"
                     />
@@ -325,8 +339,8 @@ export default function AdminDashboardPage() {
                   <div className="flex flex-col gap-1">
                     <label className="text-xs text-muted-foreground">Tipo de Data</label>
                     <Select 
-                      value={biTipoData} 
-                      onValueChange={(value) => setBiTipoData(value as TipoData)}
+                      value={tempTipoData} 
+                      onValueChange={(value) => setTempTipoData(value as TipoData)}
                     >
                       <SelectTrigger className="w-[160px] h-9">
                         <SelectValue />
@@ -339,6 +353,13 @@ export default function AdminDashboardPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <Button 
+                    onClick={handleApplyFilters}
+                    className="h-9"
+                  >
+                    Filtrar
+                  </Button>
                 </div>
               )}
             </div>
