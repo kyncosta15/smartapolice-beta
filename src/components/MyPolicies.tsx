@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, FileDown } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -26,6 +26,7 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { useToast } from '@/hooks/use-toast';
 import { useInfoCapSync } from '@/hooks/useInfoCapSync';
+import { usePdfExtraction } from '@/hooks/usePdfExtraction';
 import { renderValue, renderValueAsString, renderCurrency } from '@/utils/renderValue';
 import { toText, moedaBR } from '@/lib/policies';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -63,6 +64,7 @@ export function MyPolicies() {
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
   const { toast } = useToast();
   const { isSyncing: isInfoCapSyncing } = useInfoCapSync();
+  const { isProcessing: isPdfProcessing, extractFromPolicy } = usePdfExtraction();
   
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
     const finalStatus = policy.status as PolicyStatus;
@@ -119,26 +121,34 @@ export function MyPolicies() {
         setTimeout(() => {
           refreshPolicies();
         }, 500);
-        
-      } else {
-        console.log(`❌ [handleConfirmDelete] Falha ao deletar apólice ${policyToDelete.id}`);
-        
-        toast({
-          title: "❌ Erro na Deleção",
-          description: "Não foi possível deletar a apólice. Tente novamente.",
-          variant: "destructive",
-        });
       }
     } catch (error) {
-      console.error('❌ [handleConfirmDelete] Erro na deleção:', error);
-      
+      console.error('❌ [handleConfirmDelete] Erro:', error);
       toast({
-        title: "❌ Erro Inesperado",
+        title: "❌ Erro ao Deletar",
         description: "Ocorreu um erro ao deletar a apólice",
         variant: "destructive",
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleTestExtraction = async (policy: PolicyWithStatus) => {
+    if (!policy.nosnum || !policy.codfil) {
+      toast({
+        title: "Dados insuficientes",
+        description: "Esta apólice não possui nosnum/codfil para buscar o PDF",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const result = await extractFromPolicy(policy.id, policy.nosnum, policy.codfil);
+    
+    if (result.success) {
+      // Recarregar apólices após extração bem-sucedida
+      setTimeout(() => refreshPolicies(), 1000);
     }
   };
 
@@ -690,6 +700,18 @@ export function MyPolicies() {
                   </div>
 
                   <div className="flex gap-1 sm:gap-1.5 pt-2 sm:pt-3 border-t dark:border-border justify-end">
+                    {policy.nosnum && policy.codfil && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleTestExtraction(policy)}
+                        className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-green-50 dark:hover:bg-green-950/30 hover:text-green-600 dark:hover:text-green-400"
+                        title="Testar extração de PDF"
+                        disabled={isPdfProcessing}
+                      >
+                        <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
