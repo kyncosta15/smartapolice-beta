@@ -404,8 +404,8 @@ function extractWithPatterns(text: string, patterns: RegExp[], defaultValue: str
   return defaultValue;
 }
 
-function convertToISODate(dateStr: string): string {
-  if (!dateStr) return '';
+function convertToISODate(dateStr: string): string | null {
+  if (!dateStr || dateStr.trim() === '') return null;
   
   const match = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
   if (match) {
@@ -413,7 +413,7 @@ function convertToISODate(dateStr: string): string {
     return `${year}-${month}-${day}`;
   }
   
-  return dateStr;
+  return null;
 }
 
 function extractInstallments(text: string) {
@@ -470,7 +470,7 @@ function extractCoverages(text: string) {
   return coverages;
 }
 
-function determineStatus(startDate: string, endDate: string): string {
+function determineStatus(startDate: string | null, endDate: string | null): string {
   if (!endDate) return 'ativa';
   
   const now = new Date();
