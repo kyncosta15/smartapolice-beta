@@ -76,7 +76,7 @@ export function BICharts({ metrics, loading }: BIChartsProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-6">
-        {[...Array(3)].map((_, i) => (
+        {[...Array(2)].map((_, i) => (
           <Card key={i}>
             <CardHeader className="pb-3">
               <Skeleton className="h-5 w-32" />
@@ -186,57 +186,6 @@ export function BICharts({ metrics, loading }: BIChartsProps) {
         </CardContent>
       </Card>
 
-      {/* Gráfico de Produtores - ocupa 2 colunas */}
-      <Card className="lg:col-span-2">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base md:text-lg">Produtores</CardTitle>
-        </CardHeader>
-        <CardContent className="pb-4">
-          {metrics.produtores.length === 0 ? (
-            <div className="h-[450px] flex items-center justify-center text-muted-foreground">
-              Nenhum dado disponível
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={450}>
-              <BarChart 
-                data={metrics.produtores} 
-                layout="horizontal"
-                margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis type="number" fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis 
-                  type="category" 
-                  dataKey="name" 
-                  width={180}
-                  fontSize={11}
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  tickFormatter={(value) => value.length > 25 ? value.substring(0, 25) + '...' : value}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    padding: '10px'
-                  }}
-                  cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
-                />
-                <Legend 
-                  content={<CustomLegend />}
-                  iconType="circle"
-                  wrapperStyle={{ paddingTop: '15px' }}
-                />
-                <Bar dataKey="novos" name="Novos" fill={PRODUCER_COLORS.novos} stackId="a" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="renovacoes" name="Renovações" fill={PRODUCER_COLORS.renovacoes} stackId="a" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="faturas" name="Faturas" fill={PRODUCER_COLORS.faturas} stackId="a" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="endossos" name="Endossos" fill={PRODUCER_COLORS.endossos} stackId="a" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
