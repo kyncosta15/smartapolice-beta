@@ -79,12 +79,17 @@ serve(async (req) => {
       // Importar pdfjs-dist via esm.sh
       const pdfjsLib = await import('https://esm.sh/pdfjs-dist@4.0.379/build/pdf.mjs');
       
-      // Configurar worker path
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@4.0.379/build/pdf.worker.mjs';
+      // Desabilitar worker para funcionar no Deno
+      pdfjsLib.GlobalWorkerOptions.workerSrc = '';
       
-      // Carregar o PDF
+      // Carregar o PDF sem worker
       const uint8Array = new Uint8Array(pdfBuffer);
-      const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+      const loadingTask = pdfjsLib.getDocument({ 
+        data: uint8Array,
+        useWorkerFetch: false,
+        isEvalSupported: false,
+        useSystemFonts: true
+      });
       const pdfDoc = await loadingTask.promise;
       
       console.log(`📄 PDF carregado: ${pdfDoc.numPages} páginas`);
