@@ -72,40 +72,45 @@ serve(async (req) => {
 
     console.log('🔍 Extraindo texto do PDF...');
 
-    // Tentar múltiplas abordagens de extração
+    // Usar pdfjs-dist (Mozilla PDF.js) - funciona perfeitamente no Deno
     let text = '';
     
     try {
-      // Primeira tentativa: usar pdf-parse com Uint8Array
-      // Usar esm.sh com bundle para incluir todas as dependências
-      const pdfParse = (await import('https://esm.sh/pdf-parse@1.1.1?bundle')).default;
+      // Importar pdfjs-dist via esm.sh
+      const pdfjsLib = await import('https://esm.sh/pdfjs-dist@4.0.379/build/pdf.mjs');
+      
+      // Configurar worker path
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@4.0.379/build/pdf.worker.mjs';
+      
+      // Carregar o PDF
       const uint8Array = new Uint8Array(pdfBuffer);
-      const data = await pdfParse(uint8Array);
-      text = data.text || '';
-      console.log('✅ Extração via pdf-parse bem-sucedida');
+      const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+      const pdfDoc = await loadingTask.promise;
+      
+      console.log(`📄 PDF carregado: ${pdfDoc.numPages} páginas`);
+      
+      // Extrair texto de todas as páginas
+      const textPages: string[] = [];
+      
+      for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+        const page = await pdfDoc.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        
+        // Concatenar todo o texto da página
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        
+        textPages.push(pageText);
+        console.log(`  ✅ Página ${pageNum}/${pdfDoc.numPages}: ${pageText.length} caracteres`);
+      }
+      
+      text = textPages.join('\n\n');
+      console.log('✅ Extração via pdfjs-dist bem-sucedida');
+      
     } catch (parseError) {
-      console.warn('⚠️ pdf-parse falhou, tentando extração básica:', parseError.message);
-      
-      // Fallback: tentar extrair texto básico do buffer
-      // Converter ArrayBuffer para string e procurar por padrões de texto
-      const decoder = new TextDecoder('utf-8', { fatal: false });
-      const rawText = decoder.decode(pdfBuffer);
-      
-      // Procurar por texto entre streams do PDF
-      const textMatches = rawText.match(/\(([^)]+)\)/g) || [];
-      const extractedTexts = textMatches.map(match => 
-        match.slice(1, -1)
-          .replace(/\\n/g, '\n')
-          .replace(/\\r/g, '\r')
-          .replace(/\\t/g, '\t')
-      );
-      
-      text = extractedTexts.join(' ')
-        .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      
-      console.log('✅ Extração básica realizada');
+      console.error('❌ pdfjs-dist falhou:', parseError.message);
+      throw new Error(`Erro ao extrair texto do PDF: ${parseError.message}`);
     }
 
     if (!text || text.length < 50) {
