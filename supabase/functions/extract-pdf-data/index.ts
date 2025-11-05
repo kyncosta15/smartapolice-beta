@@ -72,49 +72,60 @@ serve(async (req) => {
 
     console.log('🔍 Extraindo texto do PDF...');
 
-    // Usar pdfjs-dist (Mozilla PDF.js) - funciona perfeitamente no Deno
     let text = '';
     
     try {
-      // Importar pdfjs-dist via esm.sh
-      const pdfjsLib = await import('https://esm.sh/pdfjs-dist@4.0.379/build/pdf.mjs');
+      // Usar pdf-lib que é mais compatível com Deno
+      const { PDFDocument } = await import('https://cdn.skypack.dev/pdf-lib@1.17.1');
       
-      // Desabilitar worker para funcionar no Deno
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+      const pdfDoc = await PDFDocument.load(pdfBuffer);
+      const pages = pdfDoc.getPages();
       
-      // Carregar o PDF sem worker
-      const uint8Array = new Uint8Array(pdfBuffer);
-      const loadingTask = pdfjsLib.getDocument({ 
-        data: uint8Array,
-        useWorkerFetch: false,
-        isEvalSupported: false,
-        useSystemFonts: true
-      });
-      const pdfDoc = await loadingTask.promise;
+      console.log(`📄 PDF carregado: ${pages.length} páginas`);
       
-      console.log(`📄 PDF carregado: ${pdfDoc.numPages} páginas`);
+      // Extrair texto usando regex patterns no buffer
+      const decoder = new TextDecoder('utf-8', { fatal: false });
+      const rawText = decoder.decode(pdfBuffer);
       
-      // Extrair texto de todas as páginas
-      const textPages: string[] = [];
+      // Extrair texto entre parênteses e colchetes (formato comum em PDFs)
+      const textMatches = rawText.match(/\(([^)]+)\)|\[([^\]]+)\]/g) || [];
+      const extractedTexts = textMatches
+        .map(match => {
+          // Remover parênteses/colchetes
+          let content = match.slice(1, -1);
+          
+          // Decodificar escape sequences comuns em PDFs
+          content = content
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\r')
+            .replace(/\\t/g, '\t')
+            .replace(/\\\\/g, '\\')
+            .replace(/\\(/g, '(')
+            .replace(/\\)/g, ')')
+            .replace(/\\'/g, "'")
+            .replace(/\\"/g, '"');
+          
+          return content;
+        })
+        .filter(t => t.trim().length > 0);
       
-      for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-        const page = await pdfDoc.getPage(pageNum);
-        const textContent = await page.getTextContent();
-        
-        // Concatenar todo o texto da página
-        const pageText = textContent.items
-          .map((item: any) => item.str)
-          .join(' ');
-        
-        textPages.push(pageText);
-        console.log(`  ✅ Página ${pageNum}/${pdfDoc.numPages}: ${pageText.length} caracteres`);
-      }
+      // Também extrair texto literal (palavras visíveis)
+      const literalText = rawText.match(/[A-Za-zÀ-ÿ0-9\s\-,.:;!?()]+/g) || [];
+      const cleanLiteral = literalText
+        .filter(t => t.trim().length > 3)
+        .join(' ');
       
-      text = textPages.join('\n\n');
-      console.log('✅ Extração via pdfjs-dist bem-sucedida');
+      // Combinar ambas as extrações
+      text = [...extractedTexts, cleanLiteral].join(' ')
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      console.log(`✅ Extração concluída: ${text.length} caracteres`);
+      console.log(`📄 Primeiros 500 chars: ${text.substring(0, 500)}`);
       
     } catch (parseError) {
-      console.error('❌ pdfjs-dist falhou:', parseError.message);
+      console.error('❌ Erro na extração:', parseError.message);
       throw new Error(`Erro ao extrair texto do PDF: ${parseError.message}`);
     }
 
