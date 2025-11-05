@@ -136,12 +136,30 @@ serve(async (req) => {
       }
     }
 
-    // Verificar se já existe apólice com mesmo número
-    const { data: existingPolicy } = await supabase
-      .from('policies')
-      .select('id')
-      .eq('numero_apolice', extractedData.policyNumber)
-      .maybeSingle();
+    // Verificar se já existe apólice para este cliente
+    let existingPolicy = null;
+    
+    if (client_id) {
+      // Se tem client_id, buscar apólice vinculada a este cliente
+      const { data } = await supabase
+        .from('policies')
+        .select('id')
+        .eq('client_id', client_id)
+        .maybeSingle();
+      existingPolicy = data;
+      
+      console.log(`🔍 Buscando apólice por client_id ${client_id}:`, existingPolicy ? 'ENCONTRADA' : 'NÃO ENCONTRADA');
+    } else {
+      // Senão, buscar por número da apólice
+      const { data } = await supabase
+        .from('policies')
+        .select('id')
+        .eq('numero_apolice', extractedData.policyNumber)
+        .maybeSingle();
+      existingPolicy = data;
+      
+      console.log(`🔍 Buscando apólice por numero ${extractedData.policyNumber}:`, existingPolicy ? 'ENCONTRADA' : 'NÃO ENCONTRADA');
+    }
 
     let policyId: string;
 
@@ -184,6 +202,7 @@ serve(async (req) => {
         .from('policies')
         .insert({
           user_id: userId,
+          client_id: client_id || null,
           segurado: extractedData.insuredName || null,
           documento: extractedData.document || null,
           documento_tipo: extractedData.documentType || null,
