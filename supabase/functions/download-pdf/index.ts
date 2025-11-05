@@ -15,11 +15,14 @@ Deno.serve(async (req) => {
     
     console.log('📥 Requisição de download recebida para:', pdfPath)
     
-    if (!pdfPath) {
-      console.error('❌ pdfPath não fornecido')
+    if (!pdfPath || pdfPath === 'Não informado' || pdfPath.trim() === '') {
+      console.error('❌ PDF não disponível para download:', pdfPath)
       return new Response(
-        JSON.stringify({ error: 'pdfPath é obrigatório' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: 'PDF não disponível', 
+          message: 'Esta apólice não possui PDF armazenado. Por favor, reprocesse o PDF para salvá-lo no sistema.' 
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
