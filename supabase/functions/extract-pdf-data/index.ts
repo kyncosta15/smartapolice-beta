@@ -150,7 +150,7 @@ serve(async (req) => {
           modelo_veiculo: extractedData.vehicleModel,
           placa: extractedData.plate,
           status: extractedData.status,
-          updated_at: new Date().toISOString()
+          extraction_timestamp: new Date().toISOString()
         })
         .eq('id', existingPolicy.id)
         .select()
@@ -183,8 +183,8 @@ serve(async (req) => {
           modelo_veiculo: extractedData.vehicleModel,
           placa: extractedData.plate,
           status: extractedData.status,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_by_extraction: true,
+          extraction_timestamp: new Date().toISOString()
         })
         .select()
         .single();
