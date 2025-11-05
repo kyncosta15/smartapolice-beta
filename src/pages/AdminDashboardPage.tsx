@@ -350,20 +350,19 @@ export default function AdminDashboardPage() {
               {/* Filtros BI */}
               {activeTab === 'producao' && (
                 <div className="flex flex-col gap-3">
-                  <div className="space-y-2">
-                    <DateNavigator
-                      value={tempDataInicio}
-                      onChange={handleDateChange}
-                      mode={tempAnaliseMode}
-                      onModeChange={handleAnalysisMode}
-                    />
+                  <DateNavigator
+                    value={tempDataInicio}
+                    onChange={handleDateChange}
+                    mode={tempAnaliseMode}
+                    onModeChange={handleAnalysisMode}
+                  />
+                  
+                  <div className="flex flex-wrap items-center gap-3">
                     <p className="text-xs text-muted-foreground">
                       Período: {tempDataInicio} até {tempDataFim}
                     </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <div className="flex flex-col gap-1">
+                    
+                    <div className="flex items-center gap-2">
                       <label className="text-xs text-muted-foreground">Tipo de Data</label>
                       <Select 
                         value={tempTipoData} 
@@ -383,7 +382,7 @@ export default function AdminDashboardPage() {
 
                     <Button 
                       onClick={handleApplyFilters}
-                      className="h-9 mt-auto"
+                      className="h-9"
                     >
                       Filtrar
                     </Button>
