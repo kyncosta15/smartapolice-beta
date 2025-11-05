@@ -69,6 +69,24 @@ export default function AdminDashboardPage() {
     tipoData: biTipoData
   });
 
+  // Função para atualizar data e calcular período do mês
+  const handleDateChange = (date: string) => {
+    // Parse da data (DD/MM/YYYY)
+    const [dia, mes, ano] = date.split('/').map(Number);
+    
+    // Calcular o último dia do mês
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+    
+    // Definir data inicial como primeiro dia do mês
+    const dataInicial = `01/${mes.toString().padStart(2, '0')}/${ano}`;
+    
+    // Definir data final como último dia do mês
+    const dataFinal = `${ultimoDia.toString().padStart(2, '0')}/${mes.toString().padStart(2, '0')}/${ano}`;
+    
+    setTempDataInicio(dataInicial);
+    setTempDataFim(dataFinal);
+  };
+
   // Função para aplicar filtros
   const handleApplyFilters = () => {
     setBiDataInicio(tempDataInicio);
@@ -314,8 +332,11 @@ export default function AdminDashboardPage() {
                   <div className="space-y-2 max-w-md">
                     <DateNavigator
                       value={tempDataInicio}
-                      onChange={setTempDataInicio}
+                      onChange={handleDateChange}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Período: {tempDataInicio} até {tempDataFim}
+                    </p>
                   </div>
 
                   <div className="flex flex-wrap gap-2 items-center">
