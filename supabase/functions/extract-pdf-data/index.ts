@@ -53,11 +53,22 @@ serve(async (req) => {
 
     // Baixar o PDF
     const pdfResponse = await fetch(pdfUrlToProcess);
+    
+    console.log(`📡 Status da resposta: ${pdfResponse.status} ${pdfResponse.statusText}`);
+    
     if (!pdfResponse.ok) {
-      throw new Error(`Erro ao baixar PDF: ${pdfResponse.statusText}`);
+      const errorText = await pdfResponse.text().catch(() => 'Sem detalhes');
+      console.error(`❌ Erro HTTP ${pdfResponse.status}: ${errorText}`);
+      throw new Error(`Erro ao baixar PDF (${pdfResponse.status}): ${pdfResponse.statusText}. URL: ${pdfUrlToProcess}`);
     }
 
     const pdfBuffer = await pdfResponse.arrayBuffer();
+    
+    if (!pdfBuffer || pdfBuffer.byteLength === 0) {
+      throw new Error('PDF baixado está vazio');
+    }
+    
+    console.log(`✅ PDF baixado com sucesso: ${pdfBuffer.byteLength} bytes`);
 
     console.log('🔍 Extraindo texto do PDF...');
 
