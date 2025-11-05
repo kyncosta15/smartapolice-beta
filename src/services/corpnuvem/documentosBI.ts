@@ -4,12 +4,10 @@ export type TipoData = 'inivig' | 'datinc' | 'datalt' | 'datpro';
 export type TipoDocumento = 'a' | 'n' | 'r' | 'f' | 'e'; // a=todos, n=novos, r=renovações, f=faturas, e=endossos
 
 interface DocumentoBIParams {
-  dt_ini: string; // formato DD/MM/YYYY
-  dt_fim: string; // formato DD/MM/YYYY
+  datini: string; // formato DD/MM/YYYY
+  datfim: string; // formato DD/MM/YYYY
   data: TipoData;
   tipo_doc: TipoDocumento;
-  qtd_pag?: number; // quantidade por página
-  pag?: number; // número da página
 }
 
 export interface DocumentoBI {

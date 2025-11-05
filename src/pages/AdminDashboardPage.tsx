@@ -56,8 +56,8 @@ export default function AdminDashboardPage() {
   
   // Hook para métricas BI
   const { metrics: biMetrics, loading: biLoading } = useCorpNuvemBIMetrics({
-    dt_ini: biDataInicio,
-    dt_fim: biDataFim,
+    datini: biDataInicio,
+    datfim: biDataFim,
     tipoData: biTipoData
   });
 
