@@ -28,14 +28,33 @@ export function useCorpNuvemBIMetrics({ datini, datfim, tipoData }: UseCorpNuvem
       try {
         setLoading(true);
         
-        // Buscar todos os tipos de documentos
+        console.log('🔍 [BI Hook] Buscando métricas com parâmetros:', { datini, datfim, tipoData });
+        
+        // Buscar todos os tipos de documentos com tratamento individual de erro
+        const fetchWithFallback = async (tipo: string) => {
+          try {
+            return await getDocumentosBI({ datini, datfim, data: tipoData, tipo_doc: tipo as any });
+          } catch (error) {
+            console.error(`❌ [BI Hook] Erro ao buscar tipo ${tipo}:`, error);
+            return { header: { count: 0 }, documentos: [] };
+          }
+        };
+
         const [todos, novos, renovacoes, faturas, endossos] = await Promise.all([
-          getDocumentosBI({ datini, datfim, data: tipoData, tipo_doc: 'a' }),
-          getDocumentosBI({ datini, datfim, data: tipoData, tipo_doc: 'n' }),
-          getDocumentosBI({ datini, datfim, data: tipoData, tipo_doc: 'r' }),
-          getDocumentosBI({ datini, datfim, data: tipoData, tipo_doc: 'f' }),
-          getDocumentosBI({ datini, datfim, data: tipoData, tipo_doc: 'e' }),
+          fetchWithFallback('a'),
+          fetchWithFallback('n'),
+          fetchWithFallback('r'),
+          fetchWithFallback('f'),
+          fetchWithFallback('e'),
         ]);
+
+        console.log('✅ [BI Hook] Dados recebidos:', {
+          todos: todos.header.count,
+          novos: novos.header.count,
+          renovacoes: renovacoes.header.count,
+          faturas: faturas.header.count,
+          endossos: endossos.header.count
+        });
 
         const todosDocumentos = todos.documentos;
 
