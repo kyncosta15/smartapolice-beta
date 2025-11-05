@@ -60,17 +60,15 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
   return (
     <div className="space-y-3">
       {/* Navegação de Ano */}
-      <div className="flex items-center justify-center gap-1 border rounded-lg p-2 bg-card">
-        <Button
-          variant="ghost"
-          size="icon"
+      <div className="flex items-center justify-center gap-3">
+        <button
           onClick={() => changeYear(-1)}
-          className="h-8 w-8 hover:bg-accent"
+          className="text-muted-foreground hover:text-foreground transition-colors p-1"
         >
           <ChevronLeft className="h-4 w-4" />
-        </Button>
+        </button>
         
-        <div className="flex gap-1 min-w-[180px] justify-center">
+        <div className="flex gap-2">
           {[ano - 1, ano, ano + 1].map((y) => (
             <button
               key={y}
@@ -79,10 +77,10 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
                   onChange(`${dia.toString().padStart(2, '0')}/${mes.toString().padStart(2, '0')}/${y}`);
                 }
               }}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
                 y === ano
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {y}
@@ -90,35 +88,31 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
           ))}
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
+        <button
           onClick={() => changeYear(1)}
-          className="h-8 w-8 hover:bg-accent"
+          className="text-muted-foreground hover:text-foreground transition-colors p-1"
         >
           <ChevronRight className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
 
       {/* Navegação de Mês */}
-      <div className="flex items-start gap-1 border rounded-lg p-2 bg-card">
-        <Button
-          variant="ghost"
-          size="icon"
+      <div className="flex items-center justify-center gap-2">
+        <button
           onClick={() => changeMonth(-1)}
-          className="h-8 w-8 hover:bg-accent flex-shrink-0 mt-0.5"
+          className="text-muted-foreground hover:text-foreground transition-colors p-1"
         >
           <ChevronLeft className="h-4 w-4" />
-        </Button>
+        </button>
         
-        <div className="grid grid-cols-6 gap-1 flex-1">
+        <div className="flex gap-1.5">
           {MESES.map((m) => (
             <button
               key={m.numero}
               onClick={() => selectMonth(m.numero)}
-              className={`px-2 py-1.5 text-xs font-medium rounded-md transition-all ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
                 m.numero === mes
-                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
@@ -127,14 +121,12 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
           ))}
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
+        <button
           onClick={() => changeMonth(1)}
-          className="h-8 w-8 hover:bg-accent flex-shrink-0 mt-0.5"
+          className="text-muted-foreground hover:text-foreground transition-colors p-1"
         >
           <ChevronRight className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
     </div>
   );
