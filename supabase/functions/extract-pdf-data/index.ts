@@ -264,6 +264,31 @@ ${text}`;
 
     console.log(`👤 user_id determinado: ${userId}`);
 
+    // Salvar PDF no storage para download posterior
+    let storagePdfPath = null;
+    try {
+      const fileName = `policy_${Date.now()}_${normalizedData.policyNumber}.pdf`;
+      const filePath = `${userId}/${fileName}`;
+      
+      console.log(`💾 Salvando PDF no storage: ${filePath}`);
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('pdfs')
+        .upload(filePath, new Blob([pdfBuffer], { type: 'application/pdf' }), {
+          contentType: 'application/pdf',
+          upsert: false
+        });
+      
+      if (uploadError) {
+        console.error('⚠️ Erro ao salvar PDF no storage:', uploadError.message);
+      } else {
+        storagePdfPath = filePath;
+        console.log(`✅ PDF salvo no storage: ${filePath}`);
+      }
+    } catch (storageError) {
+      console.error('⚠️ Falha ao salvar PDF:', storageError);
+    }
+
     // Buscar apólice existente
     let existingPolicy = null;
     
@@ -310,6 +335,7 @@ ${text}`;
           modelo_veiculo: normalizedData.vehicleModel || null,
           placa: normalizedData.plate || null,
           status: normalizedData.status || null,
+          arquivo_url: storagePdfPath || null,
           extraction_timestamp: new Date().toISOString()
         })
         .eq('id', existingPolicy.id)
@@ -344,6 +370,7 @@ ${text}`;
           modelo_veiculo: normalizedData.vehicleModel || null,
           placa: normalizedData.plate || null,
           status: normalizedData.status || null,
+          arquivo_url: storagePdfPath || null,
           created_by_extraction: true,
           extraction_timestamp: new Date().toISOString()
         })
