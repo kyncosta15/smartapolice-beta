@@ -56,6 +56,7 @@ export default function AdminDashboardPage() {
   const [tempDataInicio, setTempDataInicio] = useState<string>('01/01/2025');
   const [tempDataFim, setTempDataFim] = useState<string>('31/12/2025');
   const [tempTipoData, setTempTipoData] = useState<TipoData>('inivig');
+  const [tempAnaliseMode, setTempAnaliseMode] = useState<'mensal' | 'anual'>('mensal');
   
   // Estados aplicados (usados no hook)
   const [biDataInicio, setBiDataInicio] = useState<string>('01/01/2025');
@@ -69,22 +70,42 @@ export default function AdminDashboardPage() {
     tipoData: biTipoData
   });
 
-  // Função para atualizar data e calcular período do mês
+  // Função para atualizar data e calcular período
   const handleDateChange = (date: string) => {
     // Parse da data (DD/MM/YYYY)
     const [dia, mes, ano] = date.split('/').map(Number);
     
-    // Calcular o último dia do mês
-    const ultimoDia = new Date(ano, mes, 0).getDate();
+    if (tempAnaliseMode === 'anual') {
+      // Modo anual: 01/01/YYYY até 31/12/YYYY
+      setTempDataInicio(`01/01/${ano}`);
+      setTempDataFim(`31/12/${ano}`);
+    } else {
+      // Modo mensal: calcular o último dia do mês
+      const ultimoDia = new Date(ano, mes, 0).getDate();
+      const dataInicial = `01/${mes.toString().padStart(2, '0')}/${ano}`;
+      const dataFinal = `${ultimoDia.toString().padStart(2, '0')}/${mes.toString().padStart(2, '0')}/${ano}`;
+      
+      setTempDataInicio(dataInicial);
+      setTempDataFim(dataFinal);
+    }
+  };
+
+  // Função para mudar o modo de análise
+  const handleAnalysisMode = (mode: 'mensal' | 'anual') => {
+    setTempAnaliseMode(mode);
     
-    // Definir data inicial como primeiro dia do mês
-    const dataInicial = `01/${mes.toString().padStart(2, '0')}/${ano}`;
+    // Atualizar datas baseado no novo modo
+    const [dia, mes, ano] = tempDataInicio.split('/').map(Number);
     
-    // Definir data final como último dia do mês
-    const dataFinal = `${ultimoDia.toString().padStart(2, '0')}/${mes.toString().padStart(2, '0')}/${ano}`;
-    
-    setTempDataInicio(dataInicial);
-    setTempDataFim(dataFinal);
+    if (mode === 'anual') {
+      setTempDataInicio(`01/01/${ano}`);
+      setTempDataFim(`31/12/${ano}`);
+    } else {
+      // Voltar para o mês atual
+      const ultimoDia = new Date(ano, mes, 0).getDate();
+      setTempDataInicio(`01/${mes.toString().padStart(2, '0')}/${ano}`);
+      setTempDataFim(`${ultimoDia.toString().padStart(2, '0')}/${mes.toString().padStart(2, '0')}/${ano}`);
+    }
   };
 
   // Função para aplicar filtros
@@ -329,10 +350,12 @@ export default function AdminDashboardPage() {
               {/* Filtros BI */}
               {activeTab === 'producao' && (
                 <div className="flex flex-col gap-3">
-                  <div className="space-y-2 max-w-md">
+                  <div className="space-y-2">
                     <DateNavigator
                       value={tempDataInicio}
                       onChange={handleDateChange}
+                      mode={tempAnaliseMode}
+                      onModeChange={handleAnalysisMode}
                     />
                     <p className="text-xs text-muted-foreground">
                       Período: {tempDataInicio} até {tempDataFim}

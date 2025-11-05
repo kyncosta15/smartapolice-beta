@@ -1,9 +1,10 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface DateNavigatorProps {
   value: string; // formato DD/MM/YYYY
   onChange: (date: string) => void;
+  mode: 'mensal' | 'anual';
+  onModeChange: (mode: 'mensal' | 'anual') => void;
 }
 
 const MESES = [
@@ -21,7 +22,7 @@ const MESES = [
   { label: 'Dez', numero: 12 },
 ];
 
-export function DateNavigator({ value, onChange }: DateNavigatorProps) {
+export function DateNavigator({ value, onChange, mode, onModeChange }: DateNavigatorProps) {
   // Parse da data atual
   const [dia, mes, ano] = value.split('/').map(Number);
   
@@ -58,9 +59,33 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-wrap items-center gap-4">
+      {/* Seletor de Modo */}
+      <div className="flex gap-1 border rounded-md p-1">
+        <button
+          onClick={() => onModeChange('mensal')}
+          className={`px-3 py-1.5 text-xs font-medium rounded transition-all ${
+            mode === 'mensal'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Análise Mensal
+        </button>
+        <button
+          onClick={() => onModeChange('anual')}
+          className={`px-3 py-1.5 text-xs font-medium rounded transition-all ${
+            mode === 'anual'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Análise Anual
+        </button>
+      </div>
+
       {/* Navegação de Ano */}
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center gap-2">
         <button
           onClick={() => changeYear(-1)}
           className="text-muted-foreground hover:text-foreground transition-colors p-1"
@@ -68,7 +93,7 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
           <ChevronLeft className="h-4 w-4" />
         </button>
         
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {[ano - 1, ano, ano + 1].map((y) => (
             <button
               key={y}
@@ -77,7 +102,7 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
                   onChange(`${dia.toString().padStart(2, '0')}/${mes.toString().padStart(2, '0')}/${y}`);
                 }
               }}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+              className={`px-3 py-1 text-sm font-medium rounded transition-all ${
                 y === ano
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -96,38 +121,40 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
         </button>
       </div>
 
-      {/* Navegação de Mês */}
-      <div className="flex items-center justify-center gap-2">
-        <button
-          onClick={() => changeMonth(-1)}
-          className="text-muted-foreground hover:text-foreground transition-colors p-1"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        
-        <div className="flex gap-1.5">
-          {MESES.map((m) => (
-            <button
-              key={m.numero}
-              onClick={() => selectMonth(m.numero)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                m.numero === mes
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
+      {/* Navegação de Mês - Apenas em modo mensal */}
+      {mode === 'mensal' && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => changeMonth(-1)}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          
+          <div className="flex gap-1">
+            {MESES.map((m) => (
+              <button
+                key={m.numero}
+                onClick={() => selectMonth(m.numero)}
+                className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
+                  m.numero === mes
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
 
-        <button
-          onClick={() => changeMonth(1)}
-          className="text-muted-foreground hover:text-foreground transition-colors p-1"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
+          <button
+            onClick={() => changeMonth(1)}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
