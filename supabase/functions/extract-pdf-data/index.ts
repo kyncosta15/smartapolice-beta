@@ -75,53 +75,18 @@ serve(async (req) => {
     let text = '';
     
     try {
-      // Usar pdf-lib que é mais compatível com Deno
-      const { PDFDocument } = await import('https://cdn.skypack.dev/pdf-lib@1.17.1');
+      // Usar unpdf - biblioteca feita para Deno sem dependência de workers
+      const { extractText } = await import('https://esm.sh/unpdf@0.11.0');
       
-      const pdfDoc = await PDFDocument.load(pdfBuffer);
-      const pages = pdfDoc.getPages();
+      // Extrair texto do PDF
+      const { text: extractedText } = await extractText(new Uint8Array(pdfBuffer));
       
-      console.log(`📄 PDF carregado: ${pages.length} páginas`);
-      
-      // Extrair texto usando regex patterns no buffer
-      const decoder = new TextDecoder('utf-8', { fatal: false });
-      const rawText = decoder.decode(pdfBuffer);
-      
-      // Extrair texto entre parênteses e colchetes (formato comum em PDFs)
-      const textMatches = rawText.match(/\(([^)]+)\)|\[([^\]]+)\]/g) || [];
-      const extractedTexts = textMatches
-        .map(match => {
-          // Remover parênteses/colchetes
-          let content = match.slice(1, -1);
-          
-          // Decodificar escape sequences comuns em PDFs
-          content = content
-            .replace(/\\n/g, '\n')
-            .replace(/\\r/g, '\r')
-            .replace(/\\t/g, '\t')
-            .replace(/\\\\/g, '\\')
-            .replace(/\\(/g, '(')
-            .replace(/\\)/g, ')')
-            .replace(/\\'/g, "'")
-            .replace(/\\"/g, '"');
-          
-          return content;
-        })
-        .filter(t => t.trim().length > 0);
-      
-      // Também extrair texto literal (palavras visíveis)
-      const literalText = rawText.match(/[A-Za-zÀ-ÿ0-9\s\-,.:;!?()]+/g) || [];
-      const cleanLiteral = literalText
-        .filter(t => t.trim().length > 3)
-        .join(' ');
-      
-      // Combinar ambas as extrações
-      text = [...extractedTexts, cleanLiteral].join(' ')
+      text = extractedText
         .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
       
-      console.log(`✅ Extração concluída: ${text.length} caracteres`);
+      console.log(`✅ Texto extraído com sucesso: ${text.length} caracteres`);
       console.log(`📄 Primeiros 500 chars: ${text.substring(0, 500)}`);
       
     } catch (parseError) {
