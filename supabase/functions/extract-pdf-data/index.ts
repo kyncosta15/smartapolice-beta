@@ -220,7 +220,7 @@ ${text}`;
       insuranceType: extractedData.tipoSeguro || 'Auto',
       vehicleModel: extractedData.modeloVeiculo || '',
       plate: extractedData.placa || '',
-      status: extractedData.status || 'ativa',
+      status: (extractedData.status || 'ativa').toLowerCase(),
       coverages: (extractedData.coberturas || []).map((c: any) => ({
         descricao: c.descricao,
         lmi: parseFloat(c.lmi) || 0
