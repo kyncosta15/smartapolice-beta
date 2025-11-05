@@ -6,9 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Importar biblioteca de PDF parsing para Deno
-import { readPdf } from "https://deno.land/x/pdfparser@v2.0.0/mod.ts";
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -61,16 +58,48 @@ serve(async (req) => {
     }
 
     const pdfBuffer = await pdfResponse.arrayBuffer();
-    const pdfUint8Array = new Uint8Array(pdfBuffer);
 
     console.log('🔍 Extraindo texto do PDF...');
 
-    // Extrair texto do PDF
-    const pdfData = await readPdf(pdfUint8Array);
-    const text = pdfData.text || '';
+    // Tentar múltiplas abordagens de extração
+    let text = '';
+    
+    try {
+      // Primeira tentativa: usar pdf-parse com Uint8Array
+      // Usar esm.sh com bundle para incluir todas as dependências
+      const pdfParse = (await import('https://esm.sh/pdf-parse@1.1.1?bundle')).default;
+      const uint8Array = new Uint8Array(pdfBuffer);
+      const data = await pdfParse(uint8Array);
+      text = data.text || '';
+      console.log('✅ Extração via pdf-parse bem-sucedida');
+    } catch (parseError) {
+      console.warn('⚠️ pdf-parse falhou, tentando extração básica:', parseError.message);
+      
+      // Fallback: tentar extrair texto básico do buffer
+      // Converter ArrayBuffer para string e procurar por padrões de texto
+      const decoder = new TextDecoder('utf-8', { fatal: false });
+      const rawText = decoder.decode(pdfBuffer);
+      
+      // Procurar por texto entre streams do PDF
+      const textMatches = rawText.match(/\(([^)]+)\)/g) || [];
+      const extractedTexts = textMatches.map(match => 
+        match.slice(1, -1)
+          .replace(/\\n/g, '\n')
+          .replace(/\\r/g, '\r')
+          .replace(/\\t/g, '\t')
+      );
+      
+      text = extractedTexts.join(' ')
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      console.log('✅ Extração básica realizada');
+    }
 
     if (!text || text.length < 50) {
-      throw new Error('PDF não contém texto suficiente para extração');
+      console.error('❌ Texto extraído muito curto:', text.length);
+      throw new Error('PDF não contém texto suficiente para extração. O PDF pode estar como imagem ou protegido.');
     }
 
     console.log(`✅ Texto extraído: ${text.length} caracteres`);
