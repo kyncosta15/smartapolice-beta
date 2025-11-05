@@ -310,25 +310,12 @@ export default function AdminDashboardPage() {
 
               {/* Filtros BI */}
               {activeTab === 'producao' && (
-                <div className="flex flex-col gap-3 w-full">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Data Inicial */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Data Inicial</label>
-                      <DateNavigator
-                        value={tempDataInicio}
-                        onChange={setTempDataInicio}
-                      />
-                    </div>
-
-                    {/* Data Final */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Data Final</label>
-                      <DateNavigator
-                        value={tempDataFim}
-                        onChange={setTempDataFim}
-                      />
-                    </div>
+                <div className="flex flex-col gap-3">
+                  <div className="space-y-2 max-w-md">
+                    <DateNavigator
+                      value={tempDataInicio}
+                      onChange={setTempDataInicio}
+                    />
                   </div>
 
                   <div className="flex flex-wrap gap-2 items-center">
