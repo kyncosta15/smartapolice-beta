@@ -51,6 +51,8 @@ export function usePdfExtraction() {
       if (error) throw error;
 
       console.log('✅ Processamento concluído:', data);
+      console.log('📊 JSON DOS DADOS EXTRAÍDOS:', JSON.stringify(data.extracted_data, null, 2));
+      console.log('🔍 DEBUG INFO:', JSON.stringify(data.debug_info, null, 2));
 
       toast({
         title: "✅ Extração concluída!",

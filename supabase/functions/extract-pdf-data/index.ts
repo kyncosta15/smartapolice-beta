@@ -118,7 +118,9 @@ serve(async (req) => {
     // Aplicar regex patterns para extrair dados
     const extractedData = extractPolicyData(text);
 
-    console.log('📊 Dados extraídos:', JSON.stringify(extractedData, null, 2));
+    console.log('📊 ===== DADOS EXTRAÍDOS DO PDF =====');
+    console.log(JSON.stringify(extractedData, null, 2));
+    console.log('====================================');
 
     // Determinar user_id
     let userId = clientData?.created_by;
@@ -143,7 +145,18 @@ serve(async (req) => {
     let policyId: string;
 
     if (existingPolicy) {
-      console.log('🔄 Atualizando apólice existente...');
+      console.log('🔄 Atualizando apólice existente:', existingPolicy.id);
+      console.log('📝 Dados que serão salvos:');
+      console.log({
+        segurado: extractedData.insuredName || null,
+        documento: extractedData.document || null,
+        seguradora: extractedData.insurer || null,
+        numero_apolice: extractedData.policyNumber,
+        inicio_vigencia: extractedData.startDate || null,
+        fim_vigencia: extractedData.endDate || null,
+        valor_premio: extractedData.totalPremium || null,
+        custo_mensal: extractedData.monthlyAmount || null,
+      });
       
       // Atualizar apólice existente
       const { data: updated, error: updateError } = await supabase
@@ -175,6 +188,18 @@ serve(async (req) => {
       
     } else {
       console.log('➕ Criando nova apólice...');
+      console.log('📝 Dados que serão salvos:');
+      console.log({
+        user_id: userId,
+        segurado: extractedData.insuredName || null,
+        documento: extractedData.document || null,
+        seguradora: extractedData.insurer || null,
+        numero_apolice: extractedData.policyNumber,
+        inicio_vigencia: extractedData.startDate || null,
+        fim_vigencia: extractedData.endDate || null,
+        valor_premio: extractedData.totalPremium || null,
+        custo_mensal: extractedData.monthlyAmount || null,
+      });
       
       // Criar nova apólice
       const { data: created, error: createError } = await supabase
@@ -251,6 +276,20 @@ serve(async (req) => {
         success: true,
         policy_id: policyId,
         extracted_data: extractedData,
+        debug_info: {
+          text_length: text.length,
+          insurer_found: extractedData.insurer,
+          dates_found: {
+            start: extractedData.startDate,
+            end: extractedData.endDate
+          },
+          values_found: {
+            premium: extractedData.totalPremium,
+            monthly: extractedData.monthlyAmount
+          },
+          coverages_count: extractedData.coverages?.length || 0,
+          installments_count: extractedData.installments?.length || 0
+        },
         message: existingPolicy ? 'Apólice atualizada com sucesso' : 'Apólice criada com sucesso'
       }),
       { 
