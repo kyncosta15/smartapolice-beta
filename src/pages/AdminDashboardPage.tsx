@@ -6,6 +6,7 @@ import { AdminCharts } from '@/components/admin/AdminCharts';
 import { PoliciesModal } from '@/components/admin/PoliciesModal';
 import { BIMetricsCards } from '@/components/admin/BIMetricsCards';
 import { BICharts } from '@/components/admin/BICharts';
+import { DateNavigator } from '@/components/admin/DateNavigator';
 import { useAdminMetrics } from '@/hooks/useAdminMetrics';
 import { useCorpNuvemPolicies, type PoliciesPeriod } from '@/hooks/useCorpNuvemPolicies';
 import { useCorpNuvemBIMetrics } from '@/hooks/useCorpNuvemBIMetrics';
@@ -309,57 +310,53 @@ export default function AdminDashboardPage() {
 
               {/* Filtros BI */}
               {activeTab === 'producao' && (
-                <div className="flex flex-wrap gap-2 items-end">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-muted-foreground">Data Inicial</label>
-                    <Input
-                      type="date"
-                      value={tempDataInicio.split('/').reverse().join('-')}
-                      onChange={(e) => {
-                        const date = e.target.value.split('-').reverse().join('/');
-                        setTempDataInicio(date);
-                      }}
-                      className="w-[140px] h-9"
-                    />
+                <div className="flex flex-col gap-3 w-full">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Data Inicial */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Data Inicial</label>
+                      <DateNavigator
+                        value={tempDataInicio}
+                        onChange={setTempDataInicio}
+                      />
+                    </div>
+
+                    {/* Data Final */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Data Final</label>
+                      <DateNavigator
+                        value={tempDataFim}
+                        onChange={setTempDataFim}
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-muted-foreground">Data Final</label>
-                    <Input
-                      type="date"
-                      value={tempDataFim.split('/').reverse().join('-')}
-                      onChange={(e) => {
-                        const date = e.target.value.split('-').reverse().join('/');
-                        setTempDataFim(date);
-                      }}
-                      className="w-[140px] h-9"
-                    />
-                  </div>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-muted-foreground">Tipo de Data</label>
+                      <Select 
+                        value={tempTipoData} 
+                        onValueChange={(value) => setTempTipoData(value as TipoData)}
+                      >
+                        <SelectTrigger className="w-[160px] h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="inivig">Início de Vigência</SelectItem>
+                          <SelectItem value="datinc">Data de Inclusão</SelectItem>
+                          <SelectItem value="datalt">Data de Alteração</SelectItem>
+                          <SelectItem value="datpro">Data de Proposta</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-muted-foreground">Tipo de Data</label>
-                    <Select 
-                      value={tempTipoData} 
-                      onValueChange={(value) => setTempTipoData(value as TipoData)}
+                    <Button 
+                      onClick={handleApplyFilters}
+                      className="h-9 mt-auto"
                     >
-                      <SelectTrigger className="w-[160px] h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="inivig">Início de Vigência</SelectItem>
-                        <SelectItem value="datinc">Data de Inclusão</SelectItem>
-                        <SelectItem value="datalt">Data de Alteração</SelectItem>
-                        <SelectItem value="datpro">Data de Proposta</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      Filtrar
+                    </Button>
                   </div>
-
-                  <Button 
-                    onClick={handleApplyFilters}
-                    className="h-9"
-                  >
-                    Filtrar
-                  </Button>
                 </div>
               )}
             </div>
