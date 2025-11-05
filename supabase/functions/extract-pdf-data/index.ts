@@ -114,14 +114,7 @@ serve(async (req) => {
     }
 
     console.log(`✅ Texto extraído: ${text.length} caracteres`);
-
-    // 📝 MOSTRAR AMOSTRA DO TEXTO EXTRAÍDO PARA DEBUG
-    console.log('📄 ===== AMOSTRA DO TEXTO DO PDF (primeiros 2000 caracteres) =====');
-    console.log(text.substring(0, 2000));
-    console.log('===================================================================');
-    console.log('📄 ===== AMOSTRA DO TEXTO DO PDF (caracteres 10000-12000) =====');
-    console.log(text.substring(10000, 12000));
-    console.log('================================================================');
+    console.log('📄 Primeiros 500 chars:', text.substring(0, 500));
 
     // Aplicar regex patterns para extrair dados
     const extractedData = extractPolicyData(text);
@@ -153,18 +146,7 @@ serve(async (req) => {
     let policyId: string;
 
     if (existingPolicy) {
-      console.log('🔄 Atualizando apólice existente:', existingPolicy.id);
-      console.log('📝 Dados que serão salvos:');
-      console.log({
-        segurado: extractedData.insuredName || null,
-        documento: extractedData.document || null,
-        seguradora: extractedData.insurer || null,
-        numero_apolice: extractedData.policyNumber,
-        inicio_vigencia: extractedData.startDate || null,
-        fim_vigencia: extractedData.endDate || null,
-        valor_premio: extractedData.totalPremium || null,
-        custo_mensal: extractedData.monthlyAmount || null,
-      });
+      console.log('🔄 Atualizando apólice:', existingPolicy.id);
       
       // Atualizar apólice existente
       const { data: updated, error: updateError } = await supabase
@@ -196,18 +178,6 @@ serve(async (req) => {
       
     } else {
       console.log('➕ Criando nova apólice...');
-      console.log('📝 Dados que serão salvos:');
-      console.log({
-        user_id: userId,
-        segurado: extractedData.insuredName || null,
-        documento: extractedData.document || null,
-        seguradora: extractedData.insurer || null,
-        numero_apolice: extractedData.policyNumber,
-        inicio_vigencia: extractedData.startDate || null,
-        fim_vigencia: extractedData.endDate || null,
-        valor_premio: extractedData.totalPremium || null,
-        custo_mensal: extractedData.monthlyAmount || null,
-      });
       
       // Criar nova apólice
       const { data: created, error: createError } = await supabase
