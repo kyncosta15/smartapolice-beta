@@ -50,13 +50,14 @@ export default function AdminDashboardPage() {
 
   // Estados para BI Dashboard
   const [activeTab, setActiveTab] = useState<DashboardTab>('producao');
-  const [biYear, setBiYear] = useState<number>(new Date().getFullYear());
+  const [biDataInicio, setBiDataInicio] = useState<string>('01/01/2025');
+  const [biDataFim, setBiDataFim] = useState<string>('31/12/2025');
   const [biTipoData, setBiTipoData] = useState<TipoData>('inivig');
   
   // Hook para métricas BI
   const { metrics: biMetrics, loading: biLoading } = useCorpNuvemBIMetrics({
-    datini: `01/01/${biYear}`,
-    datfim: `31/12/${biYear}`,
+    dt_ini: biDataInicio,
+    dt_fim: biDataFim,
     tipoData: biTipoData
   });
 
@@ -294,35 +295,50 @@ export default function AdminDashboardPage() {
 
               {/* Filtros BI */}
               {activeTab === 'producao' && (
-                <div className="flex gap-2">
-                  <Select 
-                    value={biYear.toString()} 
-                    onValueChange={(value) => setBiYear(parseInt(value))}
-                  >
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 3 + i).map(year => (
-                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-muted-foreground">Data Inicial</label>
+                    <Input
+                      type="date"
+                      value={biDataInicio.split('/').reverse().join('-')}
+                      onChange={(e) => {
+                        const date = e.target.value.split('-').reverse().join('/');
+                        setBiDataInicio(date);
+                      }}
+                      className="w-[140px] h-9"
+                    />
+                  </div>
 
-                  <Select 
-                    value={biTipoData} 
-                    onValueChange={(value) => setBiTipoData(value as TipoData)}
-                  >
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="inivig">Início de Vigência</SelectItem>
-                      <SelectItem value="datinc">Data de Inclusão</SelectItem>
-                      <SelectItem value="datalt">Data de Alteração</SelectItem>
-                      <SelectItem value="datpro">Data de Proposta</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-muted-foreground">Data Final</label>
+                    <Input
+                      type="date"
+                      value={biDataFim.split('/').reverse().join('-')}
+                      onChange={(e) => {
+                        const date = e.target.value.split('-').reverse().join('/');
+                        setBiDataFim(date);
+                      }}
+                      className="w-[140px] h-9"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-muted-foreground">Tipo de Data</label>
+                    <Select 
+                      value={biTipoData} 
+                      onValueChange={(value) => setBiTipoData(value as TipoData)}
+                    >
+                      <SelectTrigger className="w-[160px] h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="inivig">Início de Vigência</SelectItem>
+                        <SelectItem value="datinc">Data de Inclusão</SelectItem>
+                        <SelectItem value="datalt">Data de Alteração</SelectItem>
+                        <SelectItem value="datpro">Data de Proposta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
             </div>
@@ -331,7 +347,7 @@ export default function AdminDashboardPage() {
           {/* Conteúdo das Abas */}
           {activeTab === 'producao' && (
             <>
-              <BIMetricsCards metrics={biMetrics} loading={biLoading} year={biYear} />
+              <BIMetricsCards metrics={biMetrics} loading={biLoading} year={parseInt(biDataInicio.split('/')[2])} />
               <BICharts metrics={biMetrics} loading={biLoading} />
             </>
           )}

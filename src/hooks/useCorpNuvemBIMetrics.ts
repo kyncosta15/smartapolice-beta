@@ -13,12 +13,12 @@ export interface BIMetrics {
 }
 
 interface UseCorpNuvemBIMetricsParams {
-  datini: string; // DD/MM/YYYY
-  datfim: string; // DD/MM/YYYY
+  dt_ini: string; // DD/MM/YYYY
+  dt_fim: string; // DD/MM/YYYY
   tipoData: TipoData;
 }
 
-export function useCorpNuvemBIMetrics({ datini, datfim, tipoData }: UseCorpNuvemBIMetricsParams) {
+export function useCorpNuvemBIMetrics({ dt_ini, dt_fim, tipoData }: UseCorpNuvemBIMetricsParams) {
   const [metrics, setMetrics] = useState<BIMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -28,12 +28,12 @@ export function useCorpNuvemBIMetrics({ datini, datfim, tipoData }: UseCorpNuvem
       try {
         setLoading(true);
         
-        console.log('🔍 [BI Hook] Buscando métricas com parâmetros:', { datini, datfim, tipoData });
+        console.log('🔍 [BI Hook] Buscando métricas com parâmetros:', { dt_ini, dt_fim, tipoData });
         
         // Buscar todos os tipos de documentos com tratamento individual de erro
         const fetchWithFallback = async (tipo: string) => {
           try {
-            return await getDocumentosBI({ datini, datfim, data: tipoData, tipo_doc: tipo as any });
+            return await getDocumentosBI({ dt_ini, dt_fim, data: tipoData, tipo_doc: tipo as any, qtd_pag: 20, pag: 1 });
           } catch (error) {
             console.error(`❌ [BI Hook] Erro ao buscar tipo ${tipo}:`, error);
             return { header: { count: 0 }, documentos: [] };
@@ -147,7 +147,7 @@ export function useCorpNuvemBIMetrics({ datini, datfim, tipoData }: UseCorpNuvem
     }
 
     fetchMetrics();
-  }, [datini, datfim, tipoData]);
+  }, [dt_ini, dt_fim, tipoData]);
 
   return { metrics, loading, error };
 }
