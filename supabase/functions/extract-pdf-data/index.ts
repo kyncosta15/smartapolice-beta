@@ -138,18 +138,18 @@ serve(async (req) => {
       const { data: updated, error: updateError } = await supabase
         .from('policies')
         .update({
-          segurado: extractedData.insuredName,
-          documento: extractedData.document,
-          documento_tipo: extractedData.documentType,
-          seguradora: extractedData.insurer,
-          inicio_vigencia: extractedData.startDate,
-          fim_vigencia: extractedData.endDate,
-          valor_premio: extractedData.totalPremium,
-          custo_mensal: extractedData.monthlyAmount,
-          tipo_seguro: extractedData.insuranceType,
-          modelo_veiculo: extractedData.vehicleModel,
-          placa: extractedData.plate,
-          status: extractedData.status,
+          segurado: extractedData.insuredName || null,
+          documento: extractedData.document || null,
+          documento_tipo: extractedData.documentType || null,
+          seguradora: extractedData.insurer || null,
+          inicio_vigencia: extractedData.startDate || null,
+          fim_vigencia: extractedData.endDate || null,
+          valor_premio: extractedData.totalPremium || null,
+          custo_mensal: extractedData.monthlyAmount || null,
+          tipo_seguro: extractedData.insuranceType || null,
+          modelo_veiculo: extractedData.vehicleModel || null,
+          placa: extractedData.plate || null,
+          status: extractedData.status || null,
           extraction_timestamp: new Date().toISOString()
         })
         .eq('id', existingPolicy.id)
@@ -170,19 +170,19 @@ serve(async (req) => {
         .from('policies')
         .insert({
           user_id: userId,
-          segurado: extractedData.insuredName,
-          documento: extractedData.document,
-          documento_tipo: extractedData.documentType,
+          segurado: extractedData.insuredName || null,
+          documento: extractedData.document || null,
+          documento_tipo: extractedData.documentType || null,
           numero_apolice: extractedData.policyNumber,
-          seguradora: extractedData.insurer,
-          inicio_vigencia: extractedData.startDate,
-          fim_vigencia: extractedData.endDate,
-          valor_premio: extractedData.totalPremium,
-          custo_mensal: extractedData.monthlyAmount,
-          tipo_seguro: extractedData.insuranceType,
-          modelo_veiculo: extractedData.vehicleModel,
-          placa: extractedData.plate,
-          status: extractedData.status,
+          seguradora: extractedData.insurer || null,
+          inicio_vigencia: extractedData.startDate || null,
+          fim_vigencia: extractedData.endDate || null,
+          valor_premio: extractedData.totalPremium || null,
+          custo_mensal: extractedData.monthlyAmount || null,
+          tipo_seguro: extractedData.insuranceType || null,
+          modelo_veiculo: extractedData.vehicleModel || null,
+          placa: extractedData.plate || null,
+          status: extractedData.status || null,
           created_by_extraction: true,
           extraction_timestamp: new Date().toISOString()
         })
