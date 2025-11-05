@@ -32,14 +32,14 @@ const PRODUCER_COLORS = {
 
 const CustomLegend = ({ payload }: any) => {
   return (
-    <div className="flex flex-wrap justify-center gap-2 mt-3 px-2">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-4 px-2">
       {payload.map((entry: any, index: number) => (
         <div key={`legend-${index}`} className="flex items-center gap-1.5">
           <div 
-            className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
+            className="w-3 h-3 rounded-full flex-shrink-0" 
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-xs text-foreground font-medium truncate" title={entry.value}>
             {entry.value}
           </span>
         </div>
@@ -78,11 +78,11 @@ export function BICharts({ metrics, loading }: BIChartsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-6">
         {[...Array(3)].map((_, i) => (
           <Card key={i}>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-3">
               <Skeleton className="h-5 w-32" />
             </CardHeader>
-            <CardContent className="pb-2">
-              <Skeleton className="h-[280px]" />
+            <CardContent className="pb-4">
+              <Skeleton className="h-[400px]" />
             </CardContent>
           </Card>
         ))}
@@ -96,24 +96,24 @@ export function BICharts({ metrics, loading }: BIChartsProps) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-6">
       {/* Gráfico de Seguradoras */}
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-3">
           <CardTitle className="text-base md:text-lg">Seguradoras</CardTitle>
         </CardHeader>
-        <CardContent className="pb-2">
+        <CardContent className="pb-4">
           {metrics.seguradoras.length === 0 ? (
-            <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
               Nenhum dado disponível
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={280}>
+            <ResponsiveContainer width="100%" height={400}>
               <PieChart>
                 <Pie
                   data={metrics.seguradoras.slice(0, 10)}
                   cx="50%"
-                  cy="45%"
+                  cy="40%"
                   labelLine={false}
                   label={(props) => <CustomLabel {...props} />}
-                  outerRadius={window.innerWidth < 768 ? 60 : 80}
+                  outerRadius={window.innerWidth < 768 ? 80 : 110}
                   fill="hsl(var(--primary))"
                   dataKey="value"
                 >
@@ -132,7 +132,7 @@ export function BICharts({ metrics, loading }: BIChartsProps) {
                 />
                 <Legend 
                   content={<CustomLegend />}
-                  formatter={(value) => value.length > 12 ? value.substring(0, 12) + '...' : value}
+                  wrapperStyle={{ paddingTop: '10px' }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -142,24 +142,24 @@ export function BICharts({ metrics, loading }: BIChartsProps) {
 
       {/* Gráfico de Ramos */}
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-3">
           <CardTitle className="text-base md:text-lg">Ramos</CardTitle>
         </CardHeader>
-        <CardContent className="pb-2">
+        <CardContent className="pb-4">
           {metrics.ramos.length === 0 ? (
-            <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
               Nenhum dado disponível
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={280}>
+            <ResponsiveContainer width="100%" height={400}>
               <PieChart>
                 <Pie
                   data={metrics.ramos.slice(0, 10)}
                   cx="50%"
-                  cy="45%"
+                  cy="40%"
                   labelLine={false}
                   label={(props) => <CustomLabel {...props} />}
-                  outerRadius={window.innerWidth < 768 ? 60 : 80}
+                  outerRadius={window.innerWidth < 768 ? 80 : 110}
                   fill="hsl(var(--primary))"
                   dataKey="value"
                 >
@@ -178,7 +178,7 @@ export function BICharts({ metrics, loading }: BIChartsProps) {
                 />
                 <Legend 
                   content={<CustomLegend />}
-                  formatter={(value) => value.length > 12 ? value.substring(0, 12) + '...' : value}
+                  wrapperStyle={{ paddingTop: '10px' }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -188,44 +188,45 @@ export function BICharts({ metrics, loading }: BIChartsProps) {
 
       {/* Gráfico de Produtores - ocupa 2 colunas */}
       <Card className="lg:col-span-2">
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-3">
           <CardTitle className="text-base md:text-lg">Produtores</CardTitle>
         </CardHeader>
-        <CardContent className="pb-2">
+        <CardContent className="pb-4">
           {metrics.produtores.length === 0 ? (
-            <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+            <div className="h-[450px] flex items-center justify-center text-muted-foreground">
               Nenhum dado disponível
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={350}>
+            <ResponsiveContainer width="100%" height={450}>
               <BarChart 
                 data={metrics.produtores} 
                 layout="horizontal"
                 margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis type="number" fontSize={10} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <XAxis type="number" fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis 
                   type="category" 
                   dataKey="name" 
-                  width={150}
-                  fontSize={9}
+                  width={180}
+                  fontSize={11}
                   tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  tickFormatter={(value) => value.length > 20 ? value.substring(0, 20) + '...' : value}
+                  tickFormatter={(value) => value.length > 25 ? value.substring(0, 25) + '...' : value}
                 />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
-                    fontSize: '11px',
-                    padding: '8px'
+                    fontSize: '12px',
+                    padding: '10px'
                   }}
                   cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
                 />
                 <Legend 
                   content={<CustomLegend />}
                   iconType="circle"
+                  wrapperStyle={{ paddingTop: '15px' }}
                 />
                 <Bar dataKey="novos" name="Novos" fill={PRODUCER_COLORS.novos} stackId="a" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="renovacoes" name="Renovações" fill={PRODUCER_COLORS.renovacoes} stackId="a" radius={[0, 0, 0, 0]} />
