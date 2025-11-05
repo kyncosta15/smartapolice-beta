@@ -104,3 +104,6 @@ verify_jwt = false
 
 [functions.tickets-webhook-ack]
 verify_jwt = false
+
+[functions.extract-pdf-data]
+verify_jwt = true

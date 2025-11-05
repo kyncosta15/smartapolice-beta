@@ -30,18 +30,24 @@ import {
   Building,
   MapPin,
   Calendar,
-  FileText
+  FileText,
+  FileDown,
+  Loader2
 } from 'lucide-react';
 import { useClients, Client } from '@/hooks/useClients';
 import { ClientRegistration } from './ClientRegistration';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const ClientsList = () => {
   const { clients, isLoading, deleteClient } = useClients();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showNewClientModal, setShowNewClientModal] = useState(false);
+  const [processingClients, setProcessingClients] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -52,6 +58,51 @@ export const ClientsList = () => {
   const handleDeleteClient = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
       await deleteClient(id);
+    }
+  };
+
+  const handleProcessPDF = async (client: Client) => {
+    if (!client.pdf_url) {
+      toast({
+        title: "PDF não disponível",
+        description: "Este cliente não possui URL de PDF cadastrada",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setProcessingClients(prev => new Set(prev).add(client.id));
+
+    try {
+      console.log('🚀 Iniciando processamento de PDF para cliente:', client.name);
+      
+      const { data, error } = await supabase.functions.invoke('extract-pdf-data', {
+        body: { client_id: client.id }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "✅ PDF Processado!",
+        description: data.message || "Apólice extraída e salva com sucesso",
+      });
+
+      console.log('✅ Resultado do processamento:', data);
+
+    } catch (error) {
+      console.error('❌ Erro ao processar PDF:', error);
+      
+      toast({
+        title: "Erro no processamento",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive"
+      });
+    } finally {
+      setProcessingClients(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(client.id);
+        return newSet;
+      });
     }
   };
 
@@ -228,6 +279,7 @@ export const ClientsList = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Empresa</TableHead>
                     <TableHead>Telefone</TableHead>
+                    <TableHead>PDF</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Cadastrado</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -241,6 +293,18 @@ export const ClientsList = () => {
                       <TableCell>{client.company || '-'}</TableCell>
                       <TableCell>{client.phone || '-'}</TableCell>
                       <TableCell>
+                        {client.pdf_url ? (
+                          <Badge variant="default" className="bg-green-500">
+                            <FileText className="h-3 w-3 mr-1" />
+                            Disponível
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            Não disponível
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <Badge variant={client.status === 'active' ? 'default' : 'secondary'}>
                           {client.status === 'active' ? 'Ativo' : 'Inativo'}
                         </Badge>
@@ -250,6 +314,22 @@ export const ClientsList = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {client.pdf_url && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleProcessPDF(client)}
+                              disabled={processingClients.has(client.id)}
+                              title="Extrair dados do PDF"
+                            >
+                              {processingClients.has(client.id) ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <FileDown className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
+                          
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button 
