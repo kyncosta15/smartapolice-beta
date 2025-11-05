@@ -307,72 +307,74 @@ function extractPolicyData(text: string) {
   
   // Extrair nome do segurado
   const insuredNamePatterns = [
-    /Nome\s+do\(?a?\)?\s+Segurado\(?a?\)?\s*[:\s]*([A-ZÁÊÔÃÇÀÉÍÓÚÜ\s\.]{3,})/i,
-    /Segurado\(?a?\)?\s*[:\s]*([A-ZÁÊÔÃÇÀÉÍÓÚÜ\s\.]{3,})/i,
-    /Nome\s*[:\s]*([A-ZÁÊÔÃÇÀÉÍÓÚÜ\s\.]{3,})/i
+    /Nome\s+do\s*\(?a?\)?\s*Proponente\s*\/\s*Segurado\s*\(?a?\)?\s+CPF\s*\/\s*CNPJ\s+([A-ZÁÊÔÃÇÀÉÍÓÚÜ\s]+)/i,
+    /Segurado\s*\(?a?\)?\s+Corretor\s+([A-ZÁÊÔÃÇÀÉÍÓÚÜ\s]+)/i,
+    /Nome\s+do\s*\(?a?\)?\s+Segurado\s*\(?a?\)?\s*[:\s]*([A-ZÁÊÔÃÇÀÉÍÓÚÜ\s\.]{3,})/i,
   ];
   const insuredName = extractWithPatterns(normalizedText, insuredNamePatterns, 'Não identificado');
 
   // Extrair CPF/CNPJ
   const documentPatterns = [
-    /CPF\/CNPJ\s*[:\s]*([\d\.\-\/]{11,18})/i,
+    /[A-ZÁÊÔÃÇÀÉÍÓÚÜ\s]+\s+([\d]{3}\.[\d]{3}\.[\d]{3}\-[\d]{2})/i,
+    /CPF\s*\/\s*CNPJ\s+([\d\.\/\-]{11,18})/i,
     /CPF\s*[:\s]*([\d\.\-]{11,14})/i,
     /CNPJ\s*[:\s]*([\d\.\-\/]{14,18})/i,
-    /(\d{2,3}[\.\s]?\d{3}[\.\s]?\d{3}[\.\s\/]?\d{4}[\-\s]?\d{2})/
   ];
-  const document = extractWithPatterns(normalizedText, documentPatterns, '');
-  const documentType = document && document.replace(/\D/g, '').length === 14 ? 'CNPJ' : 'CPF';
+  const document = extractWithPatterns(normalizedText, documentPatterns, '').replace(/\D/g, '');
+  const documentType = document && document.length === 14 ? 'CNPJ' : 'CPF';
 
   // Extrair número da apólice
   const policyPatterns = [
-    /Apólice\s*[:\s]*([\d\.\-\/]{5,})/i,
-    /Apolice\s*[:\s]*([\d\.\-\/]{5,})/i,
-    /Número\s+da\s+Apólice\s*[:\s]*([\d\.\-\/]{5,})/i,
-    /Proposta\s*[:\s]*([\d\.\-\/]{5,})/i
+    /Proposta\s+N[oº°]\s+Vigencia\s+Filial\s+([\d]+)/i,
+    /Proposta\s*N[oº°]?\s*[:\s]*([\d\.\-\/]{5,})/i,
+    /Apólice\s*N[oº°]?\s*[:\s]*([\d\.\-\/]{5,})/i,
   ];
   const policyNumber = extractWithPatterns(normalizedText, policyPatterns, `AUTO-${Date.now()}`);
 
   // Extrair datas de vigência
   const startDatePatterns = [
+    /(\d{2}\/\d{2}\/\d{4})\s+a\s+\d{2}\/\d{2}\/\d{4}/i,
+    /Vigencia\s+Filial\s+[\d]+\s+(\d{2}\/\d{2}\/\d{4})/i,
     /Início\s+(?:de\s+)?Vigência\s*[:\s]*(\d{2}\/\d{2}\/\d{4})/i,
-    /Data\s+de\s+Início\s*[:\s]*(\d{2}\/\d{2}\/\d{4})/i,
-    /Vigência\s*[:\s]*de\s+(\d{2}\/\d{2}\/\d{4})/i,
-    /De\s+(\d{2}\/\d{2}\/\d{4})\s+até/i
   ];
   const startDate = convertToISODate(extractWithPatterns(normalizedText, startDatePatterns, ''));
 
   const endDatePatterns = [
+    /\d{2}\/\d{2}\/\d{4}\s+a\s+(\d{2}\/\d{2}\/\d{4})/i,
     /(?:Fim|Final|Término)\s+(?:de\s+)?Vigência\s*[:\s]*(\d{2}\/\d{2}\/\d{4})/i,
-    /até\s+(\d{2}\/\d{2}\/\d{4})/i,
-    /Vence\s+em\s+(\d{2}\/\d{2}\/\d{4})/i
   ];
   const endDate = convertToISODate(extractWithPatterns(normalizedText, endDatePatterns, ''));
 
   // Extrair valores
   const premiumPatterns = [
+    /Premio\s+Total\s+\(R\$\)\s+Juros\s*\(%\)\s+[\d\.,]+\s+[\d\.,]+\s+[\d\.,]+\s+[\d\.,]+\s+([\d\.,]+)/i,
     /Prêmio\s+Total\s*\(R\$?\)\s*[:\s]*([0-9\.,]+)/i,
-    /Valor\s+Total\s*\(R\$?\)\s*[:\s]*([0-9\.,]+)/i,
-    /Total\s+a\s+Pagar\s*[:\s]*R?\$?\s*([0-9\.,]+)/i
   ];
   const totalPremiumStr = extractWithPatterns(normalizedText, premiumPatterns, '0');
   const totalPremium = parseFloat(totalPremiumStr.replace(/\./g, '').replace(',', '.')) || 0;
 
-  // Extrair parcelas
+  // Extrair parcelas e valor mensal
   const installments = extractInstallments(normalizedText);
-  const monthlyAmount = installments.length > 0 
-    ? installments[0].valor 
-    : totalPremium / 12;
+  
+  // Tentar extrair valor da parcela diretamente
+  const monthlyPatterns = [
+    /Tipo\s+de\s+Cobranca\s+Banco\s+N[oº°]?\s+Agencia\s+N[oº°]?\s+Conta[\-\s]Corrente\s+Valor\s+\(R\$\)\s+[^\d]+([\d\.,]+)/i,
+    /Valor\s+\(R\$\)\s+([\d\.,]+)/i,
+  ];
+  const monthlyStr = extractWithPatterns(normalizedText, monthlyPatterns, '0');
+  const monthlyAmount = parseFloat(monthlyStr.replace(/\./g, '').replace(',', '.')) || (installments.length > 0 ? installments[0].valor : totalPremium / 12);
 
   // Extrair veículo
   const vehiclePatterns = [
+    /Marca\s*\/\s*Tipo\s+do\s+Veiculo\s+Ano\s+Fabricacao\s*\/\s*Modelo\s+([A-ZÁÊÔÃÇÀÉÍÓÚÜ0-9\s\/\-\.]+\d{4}\/\d{4})/i,
     /Veículo\s*[:\s]*([A-ZÁÊÔÃÇÀÉÍÓÚÜ0-9\s\/\-\.]+)/i,
-    /Modelo\s*[:\s]*([A-ZÁÊÔÃÇÀÉÍÓÚÜ0-9\s\/\-\.]+)/i
   ];
   const vehicleModel = extractWithPatterns(normalizedText, vehiclePatterns, '');
 
   // Extrair placa
   const platePatterns = [
-    /Placa\s*[:\s]*([A-Z]{3}[0-9]{4}|[A-Z]{3}[0-9][A-Z][0-9]{2})/i
+    /Placa\s+Capacidade\s+Categoria\s+([A-Z0-9]{7})/i,
+    /Placa\s*[:\s]*([A-Z]{3}[0-9]{4}|[A-Z]{3}[0-9][A-Z][0-9]{2}|[A-Z0-9]{7})/i
   ];
   const plate = extractWithPatterns(normalizedText, platePatterns, '');
 
@@ -403,12 +405,12 @@ function extractPolicyData(text: string) {
 
 function detectInsurer(text: string): string {
   const insurers = [
-    'Porto Seguro', 'Liberty Seguros', 'Tokio Marine', 'Bradesco Seguros',
+    'Liberty Seguros', 'Porto Seguro', 'Tokio Marine', 'Bradesco Seguros',
     'Itaú Seguros', 'Allianz', 'Mapfre', 'Sompo', 'HDI Seguros',
     'SulAmérica', 'Zurich', 'AXA', 'Chubb', 'Azul Seguros'
   ];
 
-  const textLower = text.toLowerCase().substring(0, 1000);
+  const textLower = text.toLowerCase().substring(0, 2000);
   
   for (const insurer of insurers) {
     if (textLower.includes(insurer.toLowerCase())) {
@@ -473,25 +475,19 @@ function extractInstallments(text: string) {
 function extractCoverages(text: string) {
   const coverages: Array<{ descricao: string; lmi: number }> = [];
   
-  // Pattern simplificado para coberturas
-  const pattern = /([A-ZÁÊÔÃÇÀÉÍÓÚÜ\s]{10,})\s+R?\$?\s*([0-9\.,]+)/gi;
+  // Pattern para Liberty: "DESCRIÇÃO DA COBERTURA LMI PRÊMIO FRANQUIA"
+  const libertyPattern = /([A-ZÁÊÔÃÇÀÉÍÓÚÜ\s\-]{15,}?)\s+([\d\.]+,\d{2})\s+([\d\.]+,\d{2})\s+([\d\.]+,\d{2})/g;
   
-  const lines = text.split('\n');
-  for (const line of lines) {
-    if (line.toLowerCase().includes('cobertura') || 
-        line.toLowerCase().includes('dano') ||
-        line.toLowerCase().includes('colisao')) {
-      
-      const match = line.match(pattern);
-      if (match) {
-        const lmi = parseFloat(match[0].replace(/[^\d,]/g, '').replace(',', '.'));
-        if (lmi > 1000) {
-          coverages.push({
-            descricao: line.trim().substring(0, 100),
-            lmi
-          });
-        }
-      }
+  let match;
+  while ((match = libertyPattern.exec(text)) !== null) {
+    const descricao = match[1].trim();
+    const lmi = parseFloat(match[2].replace(/\./g, '').replace(',', '.'));
+    
+    if (lmi > 0 && descricao.length > 5) {
+      coverages.push({
+        descricao: descricao.substring(0, 100),
+        lmi
+      });
     }
   }
   
