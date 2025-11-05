@@ -75,23 +75,67 @@ serve(async (req) => {
     let text = '';
     
     try {
-      // Usar unpdf - biblioteca feita para Deno sem dependência de workers
+      // Usar unpdf - biblioteca feita para Deno
       const { extractText } = await import('https://esm.sh/unpdf@0.11.0');
       
       // Extrair texto do PDF
-      const { text: extractedText } = await extractText(new Uint8Array(pdfBuffer));
+      const result = await extractText(new Uint8Array(pdfBuffer));
       
-      text = extractedText
+      // O resultado pode vir em diferentes formatos, vamos normalizar
+      let extractedText = '';
+      
+      if (typeof result === 'string') {
+        extractedText = result;
+      } else if (result && typeof result.text === 'string') {
+        extractedText = result.text;
+      } else if (result && Array.isArray(result.pages)) {
+        // Se vier como páginas, juntar tudo
+        extractedText = result.pages.map((p: any) => p.text || '').join('\n');
+      } else if (result && typeof result === 'object') {
+        // Tentar extrair de qualquer estrutura
+        extractedText = JSON.stringify(result);
+      }
+      
+      console.log(`📊 Tipo de resultado: ${typeof result}`);
+      console.log(`📊 Estrutura: ${Object.keys(result || {}).join(', ')}`);
+      
+      text = String(extractedText)
         .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
       
-      console.log(`✅ Texto extraído com sucesso: ${text.length} caracteres`);
+      console.log(`✅ Texto extraído: ${text.length} caracteres`);
       console.log(`📄 Primeiros 500 chars: ${text.substring(0, 500)}`);
       
     } catch (parseError) {
-      console.error('❌ Erro na extração:', parseError.message);
-      throw new Error(`Erro ao extrair texto do PDF: ${parseError.message}`);
+      console.error('❌ unpdf falhou:', parseError.message);
+      
+      // Fallback: extração manual do buffer PDF
+      console.log('⚙️ Tentando extração manual...');
+      
+      try {
+        const decoder = new TextDecoder('utf-8', { fatal: false });
+        const rawText = decoder.decode(pdfBuffer);
+        
+        // Extrair texto visível entre parênteses do PDF
+        const matches = rawText.match(/\(([^)]{2,})\)/g) || [];
+        const extractedParts = matches
+          .map(m => m.slice(1, -1))
+          .map(s => s.replace(/\\n/g, ' ').replace(/\\r/g, ' '))
+          .filter(s => s.length > 2);
+        
+        text = extractedParts.join(' ')
+          .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        console.log(`✅ Extração manual: ${text.length} caracteres`);
+        console.log(`📄 Primeiros 500 chars: ${text.substring(0, 500)}`);
+        
+      } catch (fallbackError) {
+        console.error('❌ Extração manual também falhou:', fallbackError.message);
+        throw new Error(`Não foi possível extrair texto do PDF`);
+      }
     }
 
     if (!text || text.length < 50) {
