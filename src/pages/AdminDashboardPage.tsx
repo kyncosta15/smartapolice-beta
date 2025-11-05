@@ -7,6 +7,7 @@ import { PoliciesModal } from '@/components/admin/PoliciesModal';
 import { BIMetricsCards } from '@/components/admin/BIMetricsCards';
 import { BICharts } from '@/components/admin/BICharts';
 import { DateNavigator } from '@/components/admin/DateNavigator';
+import { CompanyFormModal, type CompanyFormData } from '@/components/admin/CompanyFormModal';
 import { useAdminMetrics } from '@/hooks/useAdminMetrics';
 import { useCorpNuvemPolicies, type PoliciesPeriod } from '@/hooks/useCorpNuvemPolicies';
 import { useCorpNuvemBIMetrics } from '@/hooks/useCorpNuvemBIMetrics';
@@ -18,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, AlertTriangle, Car, Building, Search, Mail, LifeBuoy, Trash2, Plus } from 'lucide-react';
+import { Shield, AlertTriangle, Car, Building, Search, Mail, LifeBuoy, Trash2, Plus, Pencil } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { CompanySummary } from '@/types/admin';
 import {
@@ -37,7 +38,15 @@ type DashboardTab = 'producao' | 'ranking';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const { metrics, companies, loading, deleting, deleteCompanies } = useAdminMetrics();
+  const { 
+    metrics, 
+    companies, 
+    loading, 
+    deleting, 
+    createCompany,
+    updateCompany,
+    deleteCompanies 
+  } = useAdminMetrics();
   const [policiesPeriod, setPoliciesPeriod] = useState<PoliciesPeriod>('datinc');
   const [policiesYear, setPoliciesYear] = useState<number | undefined>(new Date().getFullYear());
   const { totalPolicies, loading: loadingPolicies } = useCorpNuvemPolicies(policiesPeriod, policiesYear);
@@ -48,6 +57,8 @@ export default function AdminDashboardPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<string | null>(null);
   const [showPoliciesModal, setShowPoliciesModal] = useState(false);
+  const [showCompanyForm, setShowCompanyForm] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<CompanyFormData | null>(null);
 
   // Estados para BI Dashboard
   const [activeTab, setActiveTab] = useState<DashboardTab>('producao');
@@ -184,6 +195,51 @@ export default function AdminDashboardPage() {
     const success = await deleteCompanies([companyToDelete]);
     if (success) {
       setCompanyToDelete(null);
+    }
+  };
+
+  const handleCreateCompany = () => {
+    setEditingCompany(null);
+    setShowCompanyForm(true);
+  };
+
+  const handleEditCompany = (company: CompanySummary) => {
+    setEditingCompany({
+      id: company.empresa_id,
+      nome: company.empresa_nome,
+      cnpj: '', // CNPJ não está disponível no CompanySummary
+      contato_rh_nome: company.conta_nome || '',
+      contato_rh_email: company.conta_email || '',
+    });
+    setShowCompanyForm(true);
+  };
+
+  const handleCompanyFormSubmit = async (data: CompanyFormData) => {
+    let success = false;
+    
+    if (data.id) {
+      // Atualizar empresa existente
+      success = await updateCompany(data.id, {
+        nome: data.nome,
+        cnpj: data.cnpj,
+        contato_rh_nome: data.contato_rh_nome,
+        contato_rh_email: data.contato_rh_email,
+        contato_rh_telefone: data.contato_rh_telefone,
+      });
+    } else {
+      // Criar nova empresa
+      success = await createCompany({
+        nome: data.nome,
+        cnpj: data.cnpj,
+        contato_rh_nome: data.contato_rh_nome,
+        contato_rh_email: data.contato_rh_email,
+        contato_rh_telefone: data.contato_rh_telefone,
+      });
+    }
+    
+    if (success) {
+      setShowCompanyForm(false);
+      setEditingCompany(null);
     }
   };
 
@@ -422,18 +478,31 @@ export default function AdminDashboardPage() {
                 )}
               </CardTitle>
               
-              {selectedCompanies.size > 0 && (
+              <div className="flex items-center gap-2">
                 <Button
-                  variant="destructive"
+                  variant="default"
                   size="sm"
-                  onClick={() => setShowDeleteDialog(true)}
+                  onClick={handleCreateCompany}
                   disabled={deleting}
                   className="gap-2"
                 >
-                  <Trash2 className="h-4 w-4" />
-                  Deletar {selectedCompanies.size} selecionada(s)
+                  <Plus className="h-4 w-4" />
+                  Nova Empresa
                 </Button>
-              )}
+                
+                {selectedCompanies.size > 0 && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setShowDeleteDialog(true)}
+                    disabled={deleting}
+                    className="gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Deletar {selectedCompanies.size} selecionada(s)
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0 md:p-6 max-h-[600px] overflow-y-auto">
@@ -527,13 +596,13 @@ export default function AdminDashboardPage() {
                       <th className="p-4 text-center text-sm font-semibold text-foreground">Sinistros</th>
                       <th className="p-4 text-center text-sm font-semibold text-foreground">Assistências</th>
                       <th className="p-4 text-center text-sm font-semibold text-foreground">Última Atividade</th>
-                      <th className="p-4 w-12"></th>
+                      <th className="p-4 w-24"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredCompanies.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="p-12 text-center text-muted-foreground">
+                        <td colSpan={10} className="p-12 text-center text-muted-foreground">
                           <div className="flex flex-col items-center gap-2">
                             <Building className="h-12 w-12 text-muted-foreground/50" />
                             <p className="font-medium">Nenhuma empresa encontrada</p>
@@ -615,15 +684,26 @@ export default function AdminDashboardPage() {
                             </span>
                           </td>
                           <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => setCompanyToDelete(company.empresa_id)}
-                              disabled={deleting}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                onClick={() => handleEditCompany(company)}
+                                disabled={deleting}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => setCompanyToDelete(company.empresa_id)}
+                                disabled={deleting}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -707,6 +787,15 @@ export default function AdminDashboardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Company Form Modal */}
+      <CompanyFormModal
+        open={showCompanyForm}
+        onOpenChange={setShowCompanyForm}
+        onSubmit={handleCompanyFormSubmit}
+        initialData={editingCompany}
+        loading={deleting}
+      />
     </AdminLayout>
   );
 }

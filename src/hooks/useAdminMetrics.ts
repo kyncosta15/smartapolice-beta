@@ -40,6 +40,82 @@ export function useAdminMetrics() {
     }
   };
 
+  const createCompany = async (companyData: {
+    nome: string;
+    cnpj: string;
+    contato_rh_nome?: string;
+    contato_rh_email?: string;
+    contato_rh_telefone?: string;
+  }) => {
+    try {
+      setDeleting(true);
+
+      const { error } = await supabase.from('empresas').insert([companyData]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Empresa criada',
+        description: 'Empresa cadastrada com sucesso.',
+      });
+
+      await loadMetrics();
+      await loadCompanies();
+      return true;
+    } catch (error) {
+      console.error('Erro ao criar empresa:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível criar a empresa.',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const updateCompany = async (
+    companyId: string,
+    companyData: {
+      nome?: string;
+      cnpj?: string;
+      contato_rh_nome?: string;
+      contato_rh_email?: string;
+      contato_rh_telefone?: string;
+    }
+  ) => {
+    try {
+      setDeleting(true);
+
+      const { error } = await supabase
+        .from('empresas')
+        .update(companyData)
+        .eq('id', companyId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Empresa atualizada',
+        description: 'Dados da empresa atualizados com sucesso.',
+      });
+
+      await loadMetrics();
+      await loadCompanies();
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar empresa:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar a empresa.',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const deleteCompanies = async (companyIds: string[]) => {
     try {
       setDeleting(true);
@@ -114,6 +190,8 @@ export function useAdminMetrics() {
     deleting,
     refreshMetrics: loadMetrics,
     refreshCompanies: loadCompanies,
+    createCompany,
+    updateCompany,
     deleteCompanies,
     deleteUser,
   };
