@@ -115,6 +115,14 @@ serve(async (req) => {
 
     console.log(`✅ Texto extraído: ${text.length} caracteres`);
 
+    // 📝 MOSTRAR AMOSTRA DO TEXTO EXTRAÍDO PARA DEBUG
+    console.log('📄 ===== AMOSTRA DO TEXTO DO PDF (primeiros 2000 caracteres) =====');
+    console.log(text.substring(0, 2000));
+    console.log('===================================================================');
+    console.log('📄 ===== AMOSTRA DO TEXTO DO PDF (caracteres 10000-12000) =====');
+    console.log(text.substring(10000, 12000));
+    console.log('================================================================');
+
     // Aplicar regex patterns para extrair dados
     const extractedData = extractPolicyData(text);
 
