@@ -4,8 +4,12 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CompanySidePanel } from '@/components/admin/CompanySidePanel';
 import { AdminCharts } from '@/components/admin/AdminCharts';
 import { PoliciesModal } from '@/components/admin/PoliciesModal';
+import { BIMetricsCards } from '@/components/admin/BIMetricsCards';
+import { BICharts } from '@/components/admin/BICharts';
 import { useAdminMetrics } from '@/hooks/useAdminMetrics';
 import { useCorpNuvemPolicies, type PoliciesPeriod } from '@/hooks/useCorpNuvemPolicies';
+import { useCorpNuvemBIMetrics } from '@/hooks/useCorpNuvemBIMetrics';
+import type { TipoData } from '@/services/corpnuvem/documentosBI';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,6 +32,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 type Period = '30' | '60';
+type DashboardTab = 'producao' | 'ranking';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -42,6 +47,18 @@ export default function AdminDashboardPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<string | null>(null);
   const [showPoliciesModal, setShowPoliciesModal] = useState(false);
+
+  // Estados para BI Dashboard
+  const [activeTab, setActiveTab] = useState<DashboardTab>('producao');
+  const [biYear, setBiYear] = useState<number>(new Date().getFullYear());
+  const [biTipoData, setBiTipoData] = useState<TipoData>('inivig');
+  
+  // Hook para métricas BI
+  const { metrics: biMetrics, loading: biLoading } = useCorpNuvemBIMetrics({
+    datini: `01/01/${biYear}`,
+    datfim: `31/12/${biYear}`,
+    tipoData: biTipoData
+  });
 
   // Filtrar empresas e veículos por termo de busca - antes dos early returns
   const filteredCompanies = useMemo(() => {
@@ -266,12 +283,67 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-        {/* Gráficos */}
-        <AdminCharts 
-          metrics={metrics} 
-          policiesPeriod={policiesPeriod}
-          policiesYear={policiesYear}
-        />
+        {/* Abas de Dashboard BI */}
+        <div className="space-y-4">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as DashboardTab)}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <TabsList>
+                <TabsTrigger value="producao">Produção Total</TabsTrigger>
+                <TabsTrigger value="ranking">Ranking</TabsTrigger>
+              </TabsList>
+
+              {/* Filtros BI */}
+              {activeTab === 'producao' && (
+                <div className="flex gap-2">
+                  <Select 
+                    value={biYear.toString()} 
+                    onValueChange={(value) => setBiYear(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 3 + i).map(year => (
+                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select 
+                    value={biTipoData} 
+                    onValueChange={(value) => setBiTipoData(value as TipoData)}
+                  >
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inivig">Início de Vigência</SelectItem>
+                      <SelectItem value="datinc">Data de Inclusão</SelectItem>
+                      <SelectItem value="datalt">Data de Alteração</SelectItem>
+                      <SelectItem value="datpro">Data de Proposta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          </Tabs>
+
+          {/* Conteúdo das Abas */}
+          {activeTab === 'producao' && (
+            <>
+              <BIMetricsCards metrics={biMetrics} loading={biLoading} year={biYear} />
+              <BICharts metrics={biMetrics} loading={biLoading} />
+            </>
+          )}
+
+          {activeTab === 'ranking' && (
+            <AdminCharts 
+              metrics={metrics} 
+              policiesPeriod={policiesPeriod}
+              policiesYear={policiesYear}
+            />
+          )}
+        </div>
 
         {/* Tabela de Todas as Contas */}
         <Card>
