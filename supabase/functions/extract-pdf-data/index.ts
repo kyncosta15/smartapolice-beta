@@ -138,13 +138,13 @@ serve(async (req) => {
       const { data: updated, error: updateError } = await supabase
         .from('policies')
         .update({
-          nome_segurado: extractedData.insuredName,
+          segurado: extractedData.insuredName,
           documento: extractedData.document,
           documento_tipo: extractedData.documentType,
           seguradora: extractedData.insurer,
           inicio_vigencia: extractedData.startDate,
           fim_vigencia: extractedData.endDate,
-          premio_total: extractedData.totalPremium,
+          valor_premio: extractedData.totalPremium,
           custo_mensal: extractedData.monthlyAmount,
           tipo_seguro: extractedData.insuranceType,
           modelo_veiculo: extractedData.vehicleModel,
@@ -170,14 +170,14 @@ serve(async (req) => {
         .from('policies')
         .insert({
           user_id: userId,
-          nome_segurado: extractedData.insuredName,
+          segurado: extractedData.insuredName,
           documento: extractedData.document,
           documento_tipo: extractedData.documentType,
           numero_apolice: extractedData.policyNumber,
           seguradora: extractedData.insurer,
           inicio_vigencia: extractedData.startDate,
           fim_vigencia: extractedData.endDate,
-          premio_total: extractedData.totalPremium,
+          valor_premio: extractedData.totalPremium,
           custo_mensal: extractedData.monthlyAmount,
           tipo_seguro: extractedData.insuranceType,
           modelo_veiculo: extractedData.vehicleModel,
