@@ -393,6 +393,7 @@ Deno.serve(async (req) => {
         const policyData = {
           user_id: user.id,
           documento: cleanDocument,
+          vinculo_cpf: doc !== documento ? doc : null, // Marcar se veio de um CPF vinculado
           segurado: nomeCliente,
           seguradora: detalhesApolice?.seguradora || ap.seguradora || '',
           numero_apolice: numeroApolice,
