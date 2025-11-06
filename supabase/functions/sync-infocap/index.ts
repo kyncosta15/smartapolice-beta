@@ -155,9 +155,31 @@ Deno.serve(async (req) => {
 
     console.log(`🔄 Iniciando sincronização para documento: ${documento}`);
 
-    // Limpar documento
-    const cleanDocument = documento.replace(/\D/g, '');
-    const isCPF = cleanDocument.length === 11;
+    // Buscar CPFs vinculados do usuário
+    const { data: cpfsVinculados } = await supabaseClient
+      .from('user_cpf_vinculos')
+      .select('cpf, nome, tipo')
+      .eq('user_id', user.id)
+      .eq('ativo', true);
+
+    const documentosParaBuscar = [documento];
+    if (cpfsVinculados && cpfsVinculados.length > 0) {
+      console.log(`📋 Encontrados ${cpfsVinculados.length} CPFs vinculados`);
+      cpfsVinculados.forEach(v => documentosParaBuscar.push(v.cpf));
+    } else {
+      console.log('ℹ️ Nenhum CPF vinculado encontrado');
+    }
+
+    let totalApolicesSincronizadas = 0;
+
+    // Sincronizar apólices de todos os documentos
+    for (const doc of documentosParaBuscar) {
+      try {
+        console.log(`\n🔄 ===== Sincronizando documento: ${doc} =====\n`);
+
+        // Limpar documento
+        const cleanDocument = doc.replace(/\D/g, '');
+        const isCPF = cleanDocument.length === 11;
 
     // PASSO 1: Buscar cliente pelo documento para obter o nome
     const clienteEndpoint = isCPF 
@@ -437,7 +459,7 @@ Deno.serve(async (req) => {
             errorCount++;
           } else {
             console.log(`✅ Apólice ${policyData.numero_apolice} (nosnum: ${ap.nosnum}) inserida com sucesso`);
-            syncedCount++;
+        syncedCount++;
           }
         }
       } catch (err) {
@@ -448,15 +470,22 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`✅ Sincronização concluída: ${syncedCount} apólices ativas processadas, ${errorCount} erros`);
+    totalApolicesSincronizadas += syncedCount;
+    console.log(`✅ Sincronização do documento ${doc} concluída: ${syncedCount} apólices ativas processadas, ${errorCount} erros`);
+
+      } catch (docError) {
+        console.error(`❌ Erro ao processar documento ${doc}:`, docError);
+      }
+    }
+
+    console.log(`\n🎉 SINCRONIZAÇÃO TOTAL CONCLUÍDA: ${totalApolicesSincronizadas} apólices processadas`);
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Sincronização concluída',
-        synced: syncedCount,
-        errors: errorCount,
-        total: apolices.length,
+        synced: totalApolicesSincronizadas,
+        documentos: documentosParaBuscar.length,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

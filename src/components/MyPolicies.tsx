@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, Users } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -44,6 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ManageCPFVinculosModal } from './ManageCPFVinculosModal';
 
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -59,6 +60,7 @@ export function MyPolicies() {
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>('vigentes');
   const [detailedStatusFilter, setDetailedStatusFilter] = useState<'todas' | 'ativa' | 'pendente_analise' | 'vencida'>('todas');
+  const [showManageCPFModal, setShowManageCPFModal] = useState(false);
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
   const { toast } = useToast();
@@ -472,8 +474,18 @@ export function MyPolicies() {
           </Badge>
         </div>
         
-        {/* Toggle de visualização + Botão Nova Apólice */}
+        {/* Toggle de visualização + Botão Nova Apólice + Gerenciar CPFs */}
         <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setShowManageCPFModal(true)}
+            variant="outline"
+            className="order-0 gap-1.5 sm:gap-2 h-8 sm:h-10 px-3 sm:px-4 whitespace-nowrap"
+            title="Gerenciar CPFs vinculados"
+          >
+            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">CPFs Vinculados</span>
+          </Button>
+          
           <Button
             onClick={() => setShowNewPolicyModal(true)}
             className="order-1 sm:order-2 gap-1.5 sm:gap-2 h-8 sm:h-10 px-3 sm:px-4 whitespace-nowrap bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg active:shadow-sm active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 transition-all duration-200 rounded-md font-medium text-xs sm:text-sm"
@@ -962,6 +974,12 @@ export function MyPolicies() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ManageCPFVinculosModal
+        open={showManageCPFModal}
+        onOpenChange={setShowManageCPFModal}
+        onCPFsUpdated={refreshPolicies}
+      />
     </div>
   );
 }
