@@ -439,8 +439,20 @@ export function MyPolicies() {
       const endDate = new Date(policy.endDate);
       const endYear = endDate.getFullYear();
       
-      if (statusFilter === 'vigentes' && endYear < currentYear) return false;
-      if (statusFilter === 'antigas' && endYear >= currentYear) return false;
+      if (statusFilter === 'vigentes') {
+        // Vigentes: ano >= atual E status ativo (excluindo não renovadas e vencidas)
+        const isActiveStatus = policy.status === 'vigente' || 
+                              policy.status === 'ativa' || 
+                              policy.status === 'vencendo';
+        if (endYear < currentYear || !isActiveStatus) return false;
+      }
+      
+      if (statusFilter === 'antigas') {
+        // Antigas: ano < atual OU status inativo (não renovada, vencida)
+        const isInactiveStatus = policy.status === 'nao_renovada' || 
+                                policy.status === 'vencida';
+        if (endYear >= currentYear && !isInactiveStatus) return false;
+      }
     }
     
     // Filtro por status detalhado
@@ -532,7 +544,10 @@ export function MyPolicies() {
         >
           Vigentes ({policiesWithStatus.filter(p => {
             const endYear = new Date(p.endDate).getFullYear();
-            return endYear >= currentYear;
+            const isActiveStatus = p.status === 'vigente' || 
+                                  p.status === 'ativa' || 
+                                  p.status === 'vencendo';
+            return endYear >= currentYear && isActiveStatus;
           }).length})
         </Button>
         <Button
@@ -546,7 +561,8 @@ export function MyPolicies() {
         >
           Antigas ({policiesWithStatus.filter(p => {
             const endYear = new Date(p.endDate).getFullYear();
-            return endYear < currentYear;
+            const isInactiveStatus = p.status === 'nao_renovada' || p.status === 'vencida';
+            return endYear < currentYear || isInactiveStatus;
           }).length})
         </Button>
         <Button
