@@ -182,17 +182,20 @@ export function DashboardContent() {
       setLastRefresh(Date.now());
       
       toast({
-        title: "✅ Dados Atualizados",
+        title: "Dados Atualizados",
         description: "Suas apólices foram atualizadas com sucesso",
+        variant: "success",
+        duration: 8000,
       });
       
       console.log('✅ [handleManualRefresh] Refresh concluído');
     } catch (error) {
       console.error('❌ [handleManualRefresh] Erro no refresh:', error);
       toast({
-        title: "❌ Erro",
+        title: "Erro",
         description: "Não foi possível atualizar os dados",
         variant: "destructive",
+        duration: 8000,
       });
     } finally {
       setIsRefreshing(false);
@@ -212,8 +215,10 @@ export function DashboardContent() {
     console.log('✅ Apólices recarregadas do banco');
     
     toast({
-      title: "✅ Dados Atualizados",
+      title: "Dados Atualizados",
       description: `Suas apólices foram atualizadas com sucesso`,
+      variant: "success",
+      duration: 8000,
     });
   };
 
