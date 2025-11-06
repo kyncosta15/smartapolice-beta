@@ -218,8 +218,9 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
       }
 
       toast({
-        title: "Documento vinculado",
-        description: "O documento foi vinculado com sucesso!",
+        title: "Documento vinculado com sucesso!",
+        description: "⚠️ IMPORTANTE: Clique no botão 'Sincronizar Apólices' para buscar as apólices deste documento.",
+        duration: 8000,
       });
 
       setFormData({ cpf: '', nome: '', tipo: 'dependente', observacoes: '' });
