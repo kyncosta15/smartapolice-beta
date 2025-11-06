@@ -10,7 +10,7 @@ export function useInfoCapSync() {
   const [lastSyncDate, setLastSyncDate] = useState<Date | null>(null);
   const { toast } = useToast();
 
-  const syncPolicies = async (documento: string) => {
+  const syncPolicies = async (documento: string, showToast: boolean = true) => {
     if (!documento || isSyncing) return;
 
     try {
@@ -32,7 +32,7 @@ export function useInfoCapSync() {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
-      if (data?.synced > 0) {
+      if (data?.synced > 0 && showToast) {
         toast({
           title: "Apólices Sincronizadas",
           description: `${userPoliciesCount || data.synced} apólice(s) suas foram encontradas e sincronizadas.`,
@@ -46,12 +46,14 @@ export function useInfoCapSync() {
       return data;
     } catch (error) {
       console.error('❌ Erro na sincronização InfoCap:', error);
-      toast({
-        title: "Erro na Sincronização",
-        description: "Não foi possível sincronizar as apólices do InfoCap.",
-        variant: "destructive",
-        duration: 8000,
-      });
+      if (showToast) {
+        toast({
+          title: "Erro na Sincronização",
+          description: "Não foi possível sincronizar as apólices do InfoCap.",
+          variant: "destructive",
+          duration: 8000,
+        });
+      }
       throw error;
     } finally {
       setIsSyncing(false);
@@ -84,9 +86,9 @@ export function useInfoCapSync() {
 
         if (userData?.documento) {
           console.log('🔍 Documento encontrado:', userData.documento);
-          console.log('ℹ️ Sincronização automática no login - execute manualmente se necessário');
-          // Sincronizar automaticamente no primeiro login
-          await syncPolicies(userData.documento);
+          console.log('ℹ️ Sincronização automática no login - sem toast');
+          // Sincronizar automaticamente sem mostrar toast
+          await syncPolicies(userData.documento, false);
         } else {
           console.log('⚠️ Usuário sem documento cadastrado - sincronização InfoCap não disponível');
         }

@@ -12,7 +12,7 @@ export function useCorpNuvemSync() {
   const [lastSyncDate, setLastSyncDate] = useState<Date | null>(null);
   const { toast } = useToast();
 
-  const syncPolicies = async (userDocument: string) => {
+  const syncPolicies = async (userDocument: string, showToast: boolean = true) => {
     if (!userDocument || isSyncing) return;
 
     try {
@@ -32,7 +32,7 @@ export function useCorpNuvemSync() {
       
       setLastSyncDate(new Date());
 
-      if (count > 0) {
+      if (count > 0 && showToast) {
         toast({
           title: "Apólices Sincronizadas",
           description: `${count} apólice(s) da API foram vinculadas à sua conta.`,
@@ -62,8 +62,8 @@ export function useCorpNuvemSync() {
         .single();
 
       if (userData?.documento) {
-        console.log('🔍 Documento encontrado, iniciando sincronização automática...');
-        await syncPolicies(userData.documento);
+        console.log('🔍 Documento encontrado, iniciando sincronização automática sem toast...');
+        await syncPolicies(userData.documento, false);
       } else {
         console.log('⚠️ Nenhum documento cadastrado para este usuário');
       }
