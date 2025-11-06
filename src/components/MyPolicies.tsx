@@ -725,21 +725,11 @@ export function MyPolicies() {
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6 space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between items-start gap-2 sm:gap-3">
                     <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                      {originalPolicy?.vinculo_cpf && (
-                        <div className="shrink-0" title={
-                          isDependentCPF(originalPolicy.vinculo_cpf)
-                            ? `Apólice de dependente: ${originalPolicy.vinculo_cpf}`
-                            : `Apólice vinculada ao CPF/CNPJ: ${originalPolicy.vinculo_cpf}`
-                        }>
-                          {isDependentCPF(originalPolicy.vinculo_cpf) ? (
-                            <Users 
-                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" 
-                            />
-                          ) : (
-                            <Link2 
-                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" 
-                            />
-                          )}
+                      {originalPolicy?.documento && isDependentCPF(originalPolicy.documento) && (
+                        <div className="shrink-0" title={`Apólice de dependente`}>
+                          <Users 
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" 
+                          />
                         </div>
                       )}
                       <CardTitle className="text-sm sm:text-base md:text-lg leading-tight break-words flex-1 min-w-0 dark:text-foreground">
@@ -872,21 +862,13 @@ export function MyPolicies() {
                       <div className="flex items-center gap-1.5">
                         {(() => {
                           const originalPolicy = policies.find(p => p.id === policy.id);
-                          if (originalPolicy?.vinculo_cpf) {
+                          if (originalPolicy?.documento && isDependentCPF(originalPolicy.documento)) {
                             return (
                               <div 
                                 className="shrink-0" 
-                                title={
-                                  isDependentCPF(originalPolicy.vinculo_cpf)
-                                    ? `Apólice de dependente: ${originalPolicy.vinculo_cpf}`
-                                    : `Apólice vinculada ao CPF/CNPJ: ${originalPolicy.vinculo_cpf}`
-                                }
+                                title="Apólice de dependente"
                               >
-                                {isDependentCPF(originalPolicy.vinculo_cpf) ? (
-                                  <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                ) : (
-                                  <Link2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                )}
+                                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                               </div>
                             );
                           }
