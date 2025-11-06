@@ -40,6 +40,7 @@ export function UserProfile() {
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [profileData, setProfileData] = useState<ProfileData>({});
   const [isSavingPhone, setIsSavingPhone] = useState(false);
+  const [isSavingBirthDate, setIsSavingBirthDate] = useState(false);
   const [isLoadingFromAPI, setIsLoadingFromAPI] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -341,6 +342,34 @@ export function UserProfile() {
     }
   };
 
+  const handleSaveBirthDate = async () => {
+    if (!user?.id) return;
+
+    setIsSavingBirthDate(true);
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ birth_date: profileData.birth_date || null })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Data de nascimento atualizada",
+        description: "Sua data de nascimento foi atualizada com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar data de nascimento:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar a data de nascimento.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingBirthDate(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -565,13 +594,23 @@ export function UserProfile() {
 
             <div>
               <Label htmlFor="birth_date">Data de Nascimento</Label>
-              <Input
-                id="birth_date"
-                type="date"
-                value={profileData.birth_date || ''}
-                disabled
-                className="bg-muted"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="birth_date"
+                  type="date"
+                  value={profileData.birth_date || ''}
+                  onChange={(e) => setProfileData({ ...profileData, birth_date: e.target.value })}
+                />
+                <Button
+                  onClick={handleSaveBirthDate}
+                  disabled={isSavingBirthDate}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSavingBirthDate ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </div>
             </div>
 
             <div>
@@ -637,7 +676,7 @@ export function UserProfile() {
 
           <div className="pt-4 border-t">
             <p className="text-sm text-muted-foreground">
-              💡 Os dados são sincronizados automaticamente da API CorpNuvem. Apenas o telefone pode ser editado manualmente. 
+              💡 Os dados são sincronizados automaticamente da API CorpNuvem. Apenas o telefone e a data de nascimento podem ser editados manualmente. 
               Use o botão "Re-sincronizar" acima para atualizar com os dados mais recentes da API.
             </p>
           </div>
