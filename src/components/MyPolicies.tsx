@@ -522,17 +522,6 @@ export function MyPolicies() {
       <div className="flex gap-2 flex-wrap items-center">
         <span className="text-sm text-muted-foreground font-medium">Período:</span>
         <Button
-          variant={statusFilter === 'todas' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            setStatusFilter('todas');
-            setCurrentPage(1);
-          }}
-          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
-        >
-          Todas ({policiesWithStatus.length})
-        </Button>
-        <Button
           variant={statusFilter === 'vigentes' ? 'default' : 'outline'}
           size="sm"
           onClick={() => {
@@ -559,6 +548,17 @@ export function MyPolicies() {
             const endYear = new Date(p.endDate).getFullYear();
             return endYear < currentYear;
           }).length})
+        </Button>
+        <Button
+          variant={statusFilter === 'todas' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setStatusFilter('todas');
+            setCurrentPage(1);
+          }}
+          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+        >
+          Todas ({policiesWithStatus.length})
         </Button>
 
         {/* Filtro de Status da Apólice como Dropdown */}
