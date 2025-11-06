@@ -49,13 +49,36 @@ export function calculateStatusChartData(policies: PolicyWithStatus[]) {
   }));
 }
 
-// Cálculo para gráfico de distribuição por seguradora com cores
+// Cálculo para gráfico de distribuição por seguradora com cores (APENAS VIGENTES)
 export function calculateInsurerChartData(policies: any[]) {
-  const insurerCounts = policies.reduce<Record<string, number>>((acc, policy) => {
-    const insurer = policy.insurer || policy.seguradora || 'Não informado';
-    acc[insurer] = (acc[insurer] || 0) + 1;
+  // Filtrar apenas apólices vigentes
+  const activePolicies = policies.filter(policy => {
+    const status = policy.status?.toLowerCase();
+    return status === 'vigente' || status === 'ativa' || status === 'vencendo';
+  });
+  
+  console.log('📊 [calculateInsurerChartData] Total de apólices vigentes:', activePolicies.length);
+  
+  const insurerCounts = activePolicies.reduce<Record<string, number>>((acc, policy) => {
+    let insurer = policy.insurer || policy.seguradora || policy.seguradoraEmpresa || 'Não informado';
+    
+    // Normalizar nomes de seguradoras
+    insurer = insurer
+      .replace(/CIA DE SEGUROS GERAIS/gi, '')
+      .replace(/COMPANHIA DE SEGUROS/gi, '')
+      .replace(/SEGUROS S\.?A\.?/gi, 'Seguros')
+      .replace(/SEGURADORA/gi, '')
+      .trim();
+    
+    const monthlyValue = policy.monthlyAmount || policy.custo_mensal || policy.valor_parcela || 0;
+    
+    console.log(`  💰 ${insurer}: +R$ ${monthlyValue.toFixed(2)}`);
+    
+    acc[insurer] = (acc[insurer] || 0) + monthlyValue;
     return acc;
   }, {});
+
+  console.log('📊 [calculateInsurerChartData] RESULTADO FINAL:', insurerCounts);
 
   // Cores específicas para seguradoras
   const insurerColors = {
@@ -73,15 +96,18 @@ export function calculateInsurerChartData(policies: any[]) {
     'Liberty': '#F97316',
     'AXA': '#14B8A6',
     'Generali': '#8B5CF6',
+    'Essor Seguros': '#3B82F6',
+    'Itau Seguros': '#10B981',
+    'Prudential': '#8B5CF6',
     'Outros': '#6B7280',
     'Não informado': '#9CA3AF'
   };
 
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16'];
   
-  return Object.entries(insurerCounts).map(([insurer, count], index) => ({
+  return Object.entries(insurerCounts).map(([insurer, value], index) => ({
     insurer,
-    count,
+    count: Math.round(value), // Valor monetário mensal
     color: insurerColors[insurer as keyof typeof insurerColors] || colors[index % colors.length],
     name: insurer
   }));

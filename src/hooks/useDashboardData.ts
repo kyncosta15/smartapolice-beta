@@ -106,10 +106,18 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
 
     // Distribuição por seguradora (APENAS VIGENTES)
     console.log('🏢 [Distribuição Seguradoras] Usando APENAS apólices vigentes:', activePolicies.length);
+    console.log('🏢 [Distribuição Seguradoras] Lista de apólices vigentes:', activePolicies.map(p => ({
+      nome: p.name,
+      seguradora: p.seguradoraEmpresa || p.seguradora,
+      valor: p.monthlyAmount,
+      status: p.status
+    })));
     
     const insurerCounts = activePolicies.reduce((acc, policy: any) => {
       // Use normalized data which has safe string values
       let insurerName = policy.seguradoraEmpresa || policy.seguradora || 'Não informado';
+      
+      console.log(`🔍 [Seguradora] Processando: "${insurerName}" - Valor: R$ ${policy.monthlyAmount}`);
       
       // Normalizar nomes de seguradoras para melhor exibição
       insurerName = insurerName
@@ -119,17 +127,21 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
         .replace(/SEGURADORA/gi, '')
         .trim();
       
+      console.log(`✅ [Seguradora] Nome normalizado: "${insurerName}"`);
+      
       acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
     
-    console.log('🏢 [Distribuição Seguradoras] Seguradoras encontradas:', Object.keys(insurerCounts));
+    console.log('🏢 [Distribuição Seguradoras] RESULTADO FINAL:', insurerCounts);
 
     const insurerDistribution = Object.entries(insurerCounts).map(([name, value]) => ({
       name,
       value: Math.round(Number(value) || 0),
       percentage: totalMonthlyCost > 0 ? Math.round((Number(value) / totalMonthlyCost) * 100) : 0
     }));
+    
+    console.log('📊 [Distribuição Seguradoras] Array final para gráfico:', insurerDistribution);
 
     // Distribuição por tipo (APENAS VIGENTES)
     console.log('📊 [Distribuição Tipos] Usando APENAS apólices vigentes:', activePolicies.length);
