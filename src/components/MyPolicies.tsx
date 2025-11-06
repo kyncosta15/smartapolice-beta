@@ -712,6 +712,13 @@ export function MyPolicies() {
                                     1;
             
             console.log(`🎯 [MyPolicies-Render] Renderizando ${policy.name} com status: ${policy.status}`);
+            console.log('🔍 [MyPolicies-Render] Original Policy campos:', {
+              id: originalPolicy?.id,
+              name: originalPolicy?.name,
+              vinculo_cpf: originalPolicy?.vinculo_cpf,
+              documento: originalPolicy?.documento,
+              allKeys: originalPolicy ? Object.keys(originalPolicy) : []
+            });
             
             return (
               <Card key={policy.id} className="hover:shadow-lg transition-shadow overflow-hidden dark:bg-card dark:border-border">
