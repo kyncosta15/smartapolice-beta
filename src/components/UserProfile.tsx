@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, User, Save, Trash2, Upload, MapPin, Building2, Phone, RefreshCw } from 'lucide-react';
+import { Camera, User, Save, Trash2, Upload, MapPin, Building2, Phone, RefreshCw, Check, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -558,25 +558,30 @@ export function UserProfile() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="phone" className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
+              <Label htmlFor="phone" className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Phone className="w-3.5 h-3.5" />
                 Telefone
               </Label>
-              <div className="flex gap-2">
+              <div className="relative group">
                 <Input
                   id="phone"
                   value={profileData.phone || ''}
                   onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                   placeholder="(00) 00000-0000"
+                  className="pr-10"
                 />
                 <Button
                   onClick={handleSavePhone}
                   disabled={isSavingPhone}
-                  size="sm"
-                  className="flex items-center gap-2"
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
                 >
-                  <Save className="w-4 h-4" />
-                  {isSavingPhone ? 'Salvando...' : 'Salvar'}
+                  {isSavingPhone ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
                 </Button>
               </div>
             </div>
@@ -593,22 +598,27 @@ export function UserProfile() {
             </div>
 
             <div>
-              <Label htmlFor="birth_date">Data de Nascimento</Label>
-              <div className="flex gap-2">
+              <Label htmlFor="birth_date" className="text-sm text-muted-foreground">Data de Nascimento</Label>
+              <div className="relative group">
                 <Input
                   id="birth_date"
                   type="date"
                   value={profileData.birth_date || ''}
                   onChange={(e) => setProfileData({ ...profileData, birth_date: e.target.value })}
+                  className="pr-10"
                 />
                 <Button
                   onClick={handleSaveBirthDate}
                   disabled={isSavingBirthDate}
-                  size="sm"
-                  className="flex items-center gap-2"
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
                 >
-                  <Save className="w-4 h-4" />
-                  {isSavingBirthDate ? 'Salvando...' : 'Salvar'}
+                  {isSavingBirthDate ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
                 </Button>
               </div>
             </div>
