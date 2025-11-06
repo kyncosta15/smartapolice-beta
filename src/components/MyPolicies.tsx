@@ -72,7 +72,10 @@ export function MyPolicies() {
   const loadCPFVinculos = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('🔍 [CPF Vínculos] Usuário não autenticado');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('user_cpf_vinculos')
@@ -81,9 +84,11 @@ export function MyPolicies() {
         .eq('ativo', true);
 
       if (error) throw error;
+      
+      console.log('🔍 [CPF Vínculos] Vínculos carregados:', data);
       setCpfVinculos(data || []);
     } catch (error) {
-      console.error('Erro ao carregar vínculos de CPF:', error);
+      console.error('❌ [CPF Vínculos] Erro ao carregar vínculos de CPF:', error);
     }
   };
 
@@ -96,7 +101,16 @@ export function MyPolicies() {
   const isDependentCPF = (vinculoCpf: string | undefined): boolean => {
     if (!vinculoCpf) return false;
     const cleanCpf = vinculoCpf.replace(/\D/g, '');
-    return cpfVinculos.some(v => v.cpf === cleanCpf && v.tipo === 'dependente');
+    const isDependent = cpfVinculos.some(v => v.cpf === cleanCpf && v.tipo === 'dependente');
+    
+    console.log('🔍 [isDependentCPF] Verificando CPF:', {
+      vinculoCpf,
+      cleanCpf,
+      cpfVinculos,
+      isDependent
+    });
+    
+    return isDependent;
   };
   
   // Handler para quando CPFs são atualizados
