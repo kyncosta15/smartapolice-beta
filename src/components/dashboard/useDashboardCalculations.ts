@@ -94,21 +94,10 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
     }));
 
     // Distribuição por tipo (APENAS VIGENTES) - CONVERSÃO TOTAL PARA STRINGS
-    const getTypeLabel = (type: string) => {
-      const types = {
-        auto: 'Seguro Auto',
-        vida: 'Seguro de Vida',
-        saude: 'Seguro Saúde',
-        patrimonial: 'Seguro Patrimonial',
-        empresarial: 'Seguro Empresarial',
-        acidentes_pessoais: 'Acidentes Pessoais'
-      };
-      return types[type] || 'Seguro Auto';
-    };
-
     const typeCounts = activePoliciesForCalc.reduce((acc, policy) => {
-      const typeLabel = safeString(getTypeLabel(policy.type));
-      acc[typeLabel] = (acc[typeLabel] || 0) + (policy.monthlyAmount || 0);
+      // Usar type direto (já normalizado por normalizePolicy com tipo_seguro)
+      const typeName = safeString(policy.type || 'Outros');
+      acc[typeName] = (acc[typeName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
 

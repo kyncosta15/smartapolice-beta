@@ -119,13 +119,9 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     }));
 
     // Distribuição por tipo (APENAS VIGENTES)
-    const typeCounts = activePolicies.reduce((acc, policy) => {
-      const typeName = policy.tipoCategoria || (policy.type === 'auto' ? 'Seguro Auto' :
-                       policy.type === 'vida' ? 'Seguro de Vida' :
-                       policy.type === 'saude' ? 'Seguro Saúde' :
-                       policy.type === 'patrimonial' ? 'Patrimonial' :
-                       policy.type === 'empresarial' ? 'Empresarial' : 
-                       policy.type) || 'Outros';
+    const typeCounts = activePolicies.reduce((acc, policy: any) => {
+      // Usar tipo_seguro direto do banco (já normalizado por normalizePolicy)
+      const typeName = policy.tipoCategoria || policy.tipo_seguro || policy.type || 'Outros';
       acc[typeName] = (acc[typeName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
