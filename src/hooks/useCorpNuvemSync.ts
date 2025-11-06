@@ -36,7 +36,8 @@ export function useCorpNuvemSync() {
         toast({
           title: "Apólices Sincronizadas",
           description: `${count} apólice(s) da API foram vinculadas à sua conta.`,
-          duration: 5000,
+          duration: 8000,
+          variant: "success",
         });
       }
     } catch (error) {

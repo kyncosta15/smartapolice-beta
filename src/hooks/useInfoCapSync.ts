@@ -36,7 +36,8 @@ export function useInfoCapSync() {
         toast({
           title: "Apólices Sincronizadas",
           description: `${userPoliciesCount || data.synced} apólice(s) suas foram encontradas e sincronizadas.`,
-          duration: 5000,
+          duration: 8000,
+          variant: "success",
         });
       } else {
         console.log('ℹ️ Nenhuma apólice nova encontrada');
@@ -49,7 +50,7 @@ export function useInfoCapSync() {
         title: "Erro na Sincronização",
         description: "Não foi possível sincronizar as apólices do InfoCap.",
         variant: "destructive",
-        duration: 5000,
+        duration: 8000,
       });
       throw error;
     } finally {
