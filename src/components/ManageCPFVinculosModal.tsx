@@ -234,7 +234,7 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
     try {
       const { error } = await supabase
         .from('user_cpf_vinculos')
-        .update({ ativo: false })
+        .delete()
         .eq('id', id);
 
       if (error) throw error;
