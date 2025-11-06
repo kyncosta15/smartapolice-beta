@@ -114,9 +114,9 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       value
     }));
 
-    // Classificação por pessoa física/jurídica - DETECTA AUTOMATICAMENTE
+    // Classificação por pessoa física/jurídica - DETECTA AUTOMATICAMENTE - APENAS VIGENTES
     console.log('🔍 Iniciando classificação de pessoa física/jurídica - DETECÇÃO AUTOMÁTICA...');
-    const personTypeDistribution = policies.reduce((acc, policy) => {
+    const personTypeDistribution = activePoliciesForCalc.reduce((acc, policy) => {
       const safeName = safeString(policy.name);
       const safeDocumento = safeString(extractFieldValue(policy.documento));
       

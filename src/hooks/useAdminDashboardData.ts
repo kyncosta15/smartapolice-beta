@@ -176,8 +176,11 @@ export function useAdminDashboardData() {
         // Dados de UF
         supabase.from('policies').select('uf').not('uf', 'is', null),
         
-        // Dados de tipo de pessoa
-        supabase.from('policies').select('documento_tipo').not('documento_tipo', 'is', null),
+        // Dados de tipo de pessoa (apenas vigentes)
+        supabase.from('policies')
+          .select('documento_tipo')
+          .not('documento_tipo', 'is', null)
+          .in('status', ['vigente', 'ativa', 'vencendo']),
         
         // Dados financeiros
         supabase.from('policies').select('custo_mensal').not('custo_mensal', 'is', null),

@@ -132,10 +132,10 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       value: Math.round(Number(value) || 0)
     }));
 
-    // 🚨 LÓGICA CORRIGIDA - Distribuição pessoa física/jurídica - DETECÇÃO AUTOMÁTICA
+    // 🚨 LÓGICA CORRIGIDA - Distribuição pessoa física/jurídica - DETECÇÃO AUTOMÁTICA - APENAS VIGENTES
     console.log('🔍 Iniciando classificação de pessoa física/jurídica - DETECÇÃO AUTOMÁTICA...');
     
-    const personTypeDistribution = normalizedPolicies.reduce((acc, policy) => {
+    const personTypeDistribution = activePolicies.reduce((acc, policy) => {
       // Função para extrair valor do campo do N8N
       const extractValue = (field: any): string | null => {
         if (!field) return null;
