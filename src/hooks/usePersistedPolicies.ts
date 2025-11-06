@@ -427,84 +427,97 @@ export function usePersistedPolicies() {
     }
   };
 
-  // Obter URL de download para um PDF
-  const getPDFDownloadUrl = async (policyId: string): Promise<string | null> => {
+  // Baixar PDF de uma apólice usando CorpNuvem API
+  const downloadPDF = async (policyId: string, policyName: string) => {
     const policy = policies.find(p => p.id === policyId);
     
-    if (!policy?.pdfPath || policy.pdfPath === 'Não informado' || policy.pdfPath.trim() === '') {
+    if (!policy) {
       toast({
-        title: "❌ PDF não disponível",
-        description: "Esta apólice não possui PDF armazenado. Por favor, reprocesse o PDF para salvá-lo no sistema.",
+        title: "❌ Apólice não encontrada",
+        description: "Não foi possível localizar a apólice",
         variant: "destructive",
       });
-      return null;
+      return;
     }
 
-    try {
-      const downloadUrl = await PolicyPersistenceService.getPDFDownloadUrl(policy.pdfPath);
-      
-      if (!downloadUrl) {
-        toast({
-          title: "❌ Erro no Download",
-          description: "Não foi possível gerar o link de download",
-          variant: "destructive",
-        });
-        return null;
-      }
-
-      return downloadUrl;
-    } catch (error) {
+    // Verificar se temos os dados necessários do CorpNuvem
+    if (!policy.codfil || !policy.nosnum) {
       toast({
-        title: "❌ Erro no Download",
-        description: "Falha ao acessar o arquivo PDF",
+        title: "❌ Dados incompletos",
+        description: "Esta apólice não possui informações de documento (codfil/nosnum). Certifique-se de que ela foi sincronizada corretamente.",
         variant: "destructive",
       });
-      return null;
+      return;
     }
-  };
 
-  // Baixar PDF de uma apólice
-  const downloadPDF = async (policyId: string, policyName: string) => {
-    console.log('📥 Iniciando download do PDF:', policyId, policyName);
+    console.log('📥 Iniciando download do PDF via CorpNuvem:', {
+      policyId,
+      policyName,
+      codfil: policy.codfil,
+      nosnum: policy.nosnum
+    });
     
     toast({
-      title: "⏳ Download iniciado",
-      description: `Baixando ${policyName}`,
+      title: "⏳ Buscando PDF",
+      description: `Procurando anexos de ${policyName}...`,
     });
 
-    const downloadUrl = await getPDFDownloadUrl(policyId);
-    
-    if (downloadUrl) {
-      console.log('✅ URL do PDF obtida, iniciando download');
+    try {
+      // Importar dinamicamente o serviço de anexos
+      const { getDocumentoAnexos, downloadDocumentoAnexo } = await import('@/services/corpnuvem/anexos');
       
-      // Criar link temporário para download
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `${policyName}.pdf`;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      
-      // Aguardar 1 segundo antes de limpar
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      document.body.removeChild(link);
-      
-      // Limpar blob URL após delay maior
-      setTimeout(() => {
-        console.log('🧹 Limpando blob URL');
-        URL.revokeObjectURL(downloadUrl);
-      }, 3000);
-      
+      // Buscar anexos do documento
+      const resultado = await getDocumentoAnexos({
+        codfil: policy.codfil,
+        nosnum: policy.nosnum
+      });
+
+      console.log('📎 Anexos encontrados:', resultado);
+
+      if (!resultado.anexos || resultado.anexos.length === 0) {
+        toast({
+          title: "❌ PDF não encontrado",
+          description: "Não há anexos disponíveis para esta apólice",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Procurar pelo PDF nos anexos
+      const pdfAnexo = resultado.anexos.find(anexo => 
+        anexo.tipo?.toLowerCase() === 'pdf' || 
+        anexo.nome?.toLowerCase().endsWith('.pdf')
+      );
+
+      if (!pdfAnexo) {
+        toast({
+          title: "❌ PDF não encontrado",
+          description: `Encontrados ${resultado.anexos.length} anexo(s), mas nenhum é PDF`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('✅ PDF encontrado:', pdfAnexo);
+
+      toast({
+        title: "⏳ Download iniciado",
+        description: `Baixando ${pdfAnexo.nome}...`,
+      });
+
+      // Baixar o PDF
+      await downloadDocumentoAnexo(pdfAnexo.url, pdfAnexo.nome || `${policyName}.pdf`);
+
       toast({
         title: "✅ Download Concluído",
-        description: `${policyName} foi baixado com sucesso`,
+        description: `${pdfAnexo.nome} foi baixado com sucesso`,
       });
-    } else {
-      console.error('❌ Falha ao obter URL do PDF');
+
+    } catch (error: any) {
+      console.error('❌ Erro ao baixar PDF:', error);
       toast({
         title: "❌ Erro no Download",
-        description: "Não foi possível obter o arquivo PDF",
+        description: error?.message || "Não foi possível baixar o PDF",
         variant: "destructive",
       });
     }
