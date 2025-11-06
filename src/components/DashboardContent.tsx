@@ -23,7 +23,8 @@ import { extractFieldValue } from '@/utils/extractFieldValue';
 import { 
   createExtendedInstallments,
   filterOverdueInstallments,
-  calculateDuingNext30Days
+  calculateDuingNext30Days,
+  calculateDuingNext60Days
 } from '@/utils/installmentUtils';
 import { 
   Home,
@@ -91,12 +92,14 @@ export function DashboardContent() {
   const allInstallments = createExtendedInstallments(allPolicies);
   const overdueInstallments = filterOverdueInstallments(allInstallments);
   const duingNext30Days = calculateDuingNext30Days(allInstallments);
+  const duingNext60Days = calculateDuingNext60Days(allInstallments);
 
   // Criar estatísticas atualizadas para o dashboard
   const enhancedDashboardStats = {
     ...dashboardData,
     overdueInstallments: overdueInstallments.length,
     duingNext30Days: duingNext30Days,
+    duingNext60Days: duingNext60Days,
     renovadas: dashboardData.renewalDistribution?.renovadas ?? 0,
     naoRenovadas: dashboardData.renewalDistribution?.naoRenovadas ?? 0
   };
@@ -367,6 +370,7 @@ export function DashboardContent() {
                   totalPolicies: enhancedDashboardStats.totalPolicies,
                   expiringPolicies: enhancedDashboardStats.expiringPolicies || 0,
                   duingNext30Days: enhancedDashboardStats.duingNext30Days,
+                  duingNext60Days: enhancedDashboardStats.duingNext60Days,
                   totalMonthlyCost: enhancedDashboardStats.totalMonthlyCost || 0,
                   totalInsuredValue: enhancedDashboardStats.totalInsuredValue || 0,
                   renovadas: enhancedDashboardStats.renovadas || 0,

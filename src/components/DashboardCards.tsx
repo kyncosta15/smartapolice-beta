@@ -14,6 +14,7 @@ interface DashboardCardsProps {
     totalPolicies: number;
     expiringPolicies: number;
     duingNext30Days: number;
+    duingNext60Days: number;
     totalMonthlyCost: number;
     totalInsuredValue: number;
     renovadas?: number;
@@ -25,6 +26,7 @@ interface DashboardCardsProps {
 
 export function DashboardCards({ dashboardStats, isLoading = false, onSectionChange }: DashboardCardsProps) {
   const [showFullValue, setShowFullValue] = useState(false);
+  const [expiringPeriod, setExpiringPeriod] = useState<30 | 60>(30);
   
   // Loading skeleton component
   const CardSkeleton = () => (
@@ -100,15 +102,6 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       subtitle: 'Apólices vencidas',
       icon: AlertTriangle,
       gradient: 'bg-gradient-to-br from-red-500 to-rose-600',
-      textColor: 'text-white'
-    },
-    {
-      id: 'expiring',
-      title: 'Vencendo 30d',
-      value: dashboardStats.duingNext30Days.toString(),
-      subtitle: 'Próximos 30 dias',
-      icon: Clock,
-      gradient: 'bg-gradient-to-br from-amber-500 to-orange-500',
       textColor: 'text-white'
     }
   ];
@@ -251,6 +244,54 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
             </Card>
           );
         })}
+        
+        {/* Card Vencendo com seletor 30/60 dias */}
+        <Card 
+          className="bg-gradient-to-br from-amber-500 to-orange-500 dark:opacity-90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200 border-0"
+        >
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between mb-3">
+              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs bg-white/20 text-white">
+                <Clock className="size-3" />
+                Vencendo {expiringPeriod}d
+              </span>
+              
+              {/* Seletor 30/60 dias */}
+              <div className="flex gap-1 bg-white/10 rounded-full p-0.5">
+                <button
+                  onClick={() => setExpiringPeriod(30)}
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium transition-all ${
+                    expiringPeriod === 30 
+                      ? 'bg-white text-orange-600' 
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  30d
+                </button>
+                <button
+                  onClick={() => setExpiringPeriod(60)}
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium transition-all ${
+                    expiringPeriod === 60 
+                      ? 'bg-white text-orange-600' 
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  60d
+                </button>
+              </div>
+            </div>
+            
+            <div className="text-2xl md:text-3xl font-bold tracking-tight mb-1 text-white">
+              {expiringPeriod === 30 
+                ? dashboardStats.duingNext30Days 
+                : dashboardStats.duingNext60Days}
+            </div>
+            
+            <div className="text-[12px] text-white opacity-80">
+              Próximos {expiringPeriod} dias
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

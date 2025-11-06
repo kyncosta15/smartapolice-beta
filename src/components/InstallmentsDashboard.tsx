@@ -10,7 +10,8 @@ import {
   createExtendedInstallments,
   filterUpcomingInstallments,
   filterOverdueInstallments,
-  calculateDuingNext30Days
+  calculateDuingNext30Days,
+  calculateDuingNext60Days
 } from '@/utils/installmentUtils';
 
 interface InstallmentsDashboardProps {

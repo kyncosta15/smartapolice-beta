@@ -131,3 +131,26 @@ export function calculateDuingNext30Days(allInstallments: ExtendedInstallment[])
   
   return vencendoProximos30Dias;
 }
+
+export function calculateDuingNext60Days(allInstallments: ExtendedInstallment[]): number {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  
+  const daqui60 = new Date();
+  daqui60.setDate(hoje.getDate() + 60);
+  daqui60.setHours(0, 0, 0, 0);
+
+  let vencendoProximos60Dias = 0;
+
+  for (const installment of allInstallments) {
+    const venc = new Date(installment.data + "T00:00:00");
+
+    if (venc >= hoje && venc <= daqui60) {
+      vencendoProximos60Dias++;
+    }
+  }
+
+  console.log(`📅 Parcelas vencendo nos próximos 60 dias: ${vencendoProximos60Dias}`);
+  
+  return vencendoProximos60Dias;
+}
