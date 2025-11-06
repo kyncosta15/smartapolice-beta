@@ -82,7 +82,16 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
 
     // Distribuição por seguradora (APENAS VIGENTES) - CONVERSÃO TOTAL PARA STRINGS
     const insurerCounts = activePoliciesForCalc.reduce((acc, policy) => {
-      const insurerName = safeString(getInsurerName(policy.insurer));
+      let insurerName = safeString(getInsurerName(policy.insurer));
+      
+      // Normalizar nomes de seguradoras para melhor exibição
+      insurerName = insurerName
+        .replace(/CIA DE SEGUROS GERAIS/gi, '')
+        .replace(/COMPANHIA DE SEGUROS/gi, '')
+        .replace(/SEGUROS S\.?A\.?/gi, 'Seguros')
+        .replace(/SEGURADORA/gi, '')
+        .trim();
+      
       acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);

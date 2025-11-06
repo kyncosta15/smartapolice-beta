@@ -208,7 +208,7 @@ export function ClassificationCharts({
                 <BarChart 
                   data={insurerDistributionWithColors} 
                   layout="vertical"
-                  margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
+                  margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
                   barSize={isMobile ? 20 : 28}
                 >
                   <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -217,7 +217,7 @@ export function ClassificationCharts({
                     dataKey="name" 
                     type="category"
                     tick={{ fontSize: isMobile ? 10 : 12 }}
-                    width={isMobile ? 80 : 120}
+                    width={isMobile ? 100 : 140}
                     hide
                   />
                   <Tooltip content={<CustomTooltip />} />
@@ -228,15 +228,27 @@ export function ClassificationCharts({
                     <LabelList
                       dataKey="name"
                       position="insideLeft"
-                      offset={8}
-                      style={{ fill: 'white', fontSize: isMobile ? 10 : 12, fontWeight: 500 }}
+                      offset={10}
+                      style={{ fill: 'white', fontSize: isMobile ? 9 : 11, fontWeight: 600 }}
+                      formatter={(value: string) => {
+                        // Truncar nomes muito longos para melhor visualização
+                        if (value.length > 20) {
+                          return value.substring(0, 18) + '...';
+                        }
+                        return value;
+                      }}
                     />
                     <LabelList
                       dataKey="value"
                       position="right"
                       offset={8}
-                      style={{ fontSize: isMobile ? 10 : 12, fontWeight: 500 }}
-                      formatter={(value: number) => value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      style={{ fontSize: isMobile ? 10 : 12, fontWeight: 600, fill: '#374151' }}
+                      formatter={(value: number) => value.toLocaleString('pt-BR', { 
+                        style: 'currency', 
+                        currency: 'BRL',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0 
+                      })}
                     />
                     {insurerDistributionWithColors.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />

@@ -105,9 +105,18 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     }, 0);
 
     // Distribuição por seguradora (APENAS VIGENTES)
-    const insurerCounts = activePolicies.reduce((acc, policy) => {
+    const insurerCounts = activePolicies.reduce((acc, policy: any) => {
       // Use normalized data which has safe string values
-      const insurerName = policy.seguradoraEmpresa || 'Não informado';
+      let insurerName = policy.seguradoraEmpresa || policy.seguradora || 'Não informado';
+      
+      // Normalizar nomes de seguradoras para melhor exibição
+      insurerName = insurerName
+        .replace(/CIA DE SEGUROS GERAIS/gi, '')
+        .replace(/COMPANHIA DE SEGUROS/gi, '')
+        .replace(/SEGUROS S\.?A\.?/gi, 'Seguros')
+        .replace(/SEGURADORA/gi, '')
+        .trim();
+      
       acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
