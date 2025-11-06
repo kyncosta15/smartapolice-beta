@@ -86,7 +86,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
   const secondRowCards = [
     {
       id: 'renovadas',
-      title: 'Renovada/Vigente',
+      title: 'Vigentes',
       value: (dashboardStats.renovadas ?? 0).toString(),
       subtitle: 'Apólices ativas renovadas',
       icon: CheckCircle,
