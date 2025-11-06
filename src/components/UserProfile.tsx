@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, User, Save, Trash2, Upload, MapPin, Building2, Phone } from 'lucide-react';
+import { Camera, User, Save, Trash2, Upload, MapPin, Building2, Phone, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getClientesCorpNuvem } from '@/services/corpnuvem/clientes';
 
 interface ProfileData {
   phone?: string;
@@ -39,12 +40,100 @@ export function UserProfile() {
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [profileData, setProfileData] = useState<ProfileData>({});
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isLoadingFromAPI, setIsLoadingFromAPI] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Carregar dados do perfil da API
+  // Carregar dados do perfil da API CorpNuvem
+  const loadFromCorpNuvemAPI = async () => {
+    if (!user?.id) return;
+
+    setIsLoadingFromAPI(true);
+    try {
+      // Buscar documento do usuário
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('documento')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (userError) {
+        console.error('Erro ao buscar documento do usuário:', userError);
+        throw userError;
+      }
+
+      if (!userData?.documento) {
+        toast({
+          title: "Documento não encontrado",
+          description: "É necessário ter um CPF/CNPJ cadastrado para buscar dados da API.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('🔍 Buscando cliente na API com documento:', userData.documento);
+
+      // Buscar dados na API CorpNuvem
+      const clienteData = await getClientesCorpNuvem({ texto: userData.documento });
+      
+      console.log('📦 Dados recebidos da API:', clienteData);
+
+      // Extrair dados do cliente (pode vir como array ou objeto)
+      const cliente = Array.isArray(clienteData) ? clienteData[0] : clienteData;
+
+      if (!cliente) {
+        toast({
+          title: "Cliente não encontrado",
+          description: "Não foram encontrados dados para este documento na API.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Extrair endereço (pegar o primeiro endereço disponível)
+      const endereco = cliente.enderecos?.[0] || {};
+      const telefone = cliente.telefones?.[0]?.numero || '';
+
+      // Mapear dados da API para o formato do perfil
+      const dadosAPI: ProfileData = {
+        phone: telefone,
+        document: userData.documento,
+        birth_date: cliente.data_nascimento || '',
+        address: endereco.logradouro ? `${endereco.logradouro}${endereco.numero ? ', ' + endereco.numero : ''}${endereco.complemento ? ' - ' + endereco.complemento : ''}` : '',
+        city: endereco.cidade || '',
+        state: endereco.estado || '',
+        zip_code: endereco.cep || '',
+        company_name: cliente.nome || '',
+      };
+
+      setProfileData(dadosAPI);
+
+      // Salvar automaticamente no user_profiles
+      await supabase
+        .from('user_profiles')
+        .update(dadosAPI)
+        .eq('id', user.id);
+
+      toast({
+        title: "Dados carregados da API",
+        description: "Seus dados foram atualizados com sucesso!",
+      });
+
+    } catch (error: any) {
+      console.error('❌ Erro ao buscar dados da API:', error);
+      toast({
+        title: "Erro ao buscar dados",
+        description: error?.message || "Não foi possível carregar os dados da API.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingFromAPI(false);
+    }
+  };
+
+  // Carregar dados salvos do user_profiles
   useEffect(() => {
     const loadProfileData = async () => {
       if (!user?.id) return;
@@ -426,10 +515,22 @@ export function UserProfile() {
       {/* Additional Profile Data Card */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5" />
-            Dados Cadastrais
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              Dados Cadastrais
+            </CardTitle>
+            <Button
+              onClick={loadFromCorpNuvemAPI}
+              disabled={isLoadingFromAPI}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoadingFromAPI ? 'animate-spin' : ''}`} />
+              {isLoadingFromAPI ? 'Carregando...' : 'Buscar da API'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
