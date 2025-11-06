@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { getClientesCorpNuvem } from '@/services/corpnuvem/clientes';
-import { getClienteAnexos } from '@/services/corpnuvem/anexos';
 
 export interface Client {
   id: string;
@@ -21,7 +19,6 @@ export interface Client {
   created_at: string;
   updated_at: string;
   created_by?: string;
-  pdf_url?: string;
 }
 
 export interface CreateClientData {
@@ -36,7 +33,6 @@ export interface CreateClientData {
   state?: string;
   zip_code?: string;
   notes?: string;
-  pdf_url?: string;
 }
 
 export const useClients = () => {
@@ -71,50 +67,9 @@ export const useClients = () => {
       setIsLoading(true);
       setError(null);
 
-      let pdfUrl: string | undefined = undefined;
-
-      // Buscar URL do documento_anexo se tiver documento
-      if (clientData.document) {
-        try {
-          console.log('🔍 Buscando documento_anexo para:', clientData.document);
-          
-          // Buscar cliente na CorpNuvem
-          const clientes = await getClientesCorpNuvem({ texto: clientData.document });
-          
-          if (clientes && clientes.length > 0) {
-            const cliente = Array.isArray(clientes) ? clientes[0] : clientes;
-            const clienteCodigo = cliente.codigo;
-            
-            console.log('✅ Cliente encontrado:', clienteCodigo);
-            
-            // Buscar anexos do cliente
-            const anexosData = await getClienteAnexos({
-              codfil: 1,
-              codigo: clienteCodigo
-            });
-            
-            // Procurar primeiro PDF
-            if (anexosData?.anexos && anexosData.anexos.length > 0) {
-              const pdfAnexo = anexosData.anexos.find((anexo: any) => 
-                anexo.tipo?.toLowerCase().includes('pdf') || 
-                anexo.nome?.toLowerCase().includes('pdf')
-              );
-              
-              if (pdfAnexo) {
-                pdfUrl = pdfAnexo.url;
-                console.log('📄 PDF encontrado:', pdfUrl);
-              }
-            }
-          }
-        } catch (anexoError) {
-          console.warn('⚠️ Não foi possível buscar documento_anexo:', anexoError);
-          // Continua o cadastro mesmo se falhar a busca do anexo
-        }
-      }
-
       const { data, error } = await supabase
         .from('clients')
-        .insert([{ ...clientData, pdf_url: pdfUrl }])
+        .insert([clientData])
         .select()
         .single();
 
@@ -124,9 +79,7 @@ export const useClients = () => {
       
       toast({
         title: "Cliente cadastrado",
-        description: pdfUrl 
-          ? `${clientData.name} foi cadastrado com sucesso (PDF encontrado)`
-          : `${clientData.name} foi cadastrado com sucesso`,
+        description: `${clientData.name} foi cadastrado com sucesso`,
       });
 
       return { success: true, data };

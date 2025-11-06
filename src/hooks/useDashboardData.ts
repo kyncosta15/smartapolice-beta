@@ -55,17 +55,16 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
 
     // Normalize all policies first to ensure safe data handling
     const normalizedPolicies = policies.map(normalizePolicy);
+
+    const totalPolicies = normalizedPolicies.length;
     
     // Filtrar apenas apólices vigentes para cálculos financeiros
     const activePolicies = normalizedPolicies.filter(p => {
       const status = p.status?.toLowerCase();
       return status === 'vigente' || status === 'ativa' || status === 'vencendo';
     });
-
-    // Contar apenas apólices vigentes
-    const totalPolicies = activePolicies.length;
     
-    console.log(`📊 [useDashboardData] Total de apólices no sistema: ${normalizedPolicies.length}, Vigentes: ${totalPolicies} apólices`);
+    console.log(`📊 [useDashboardData] Total: ${totalPolicies} apólices, Vigentes: ${activePolicies.length} apólices`);
     
     // LOG DETALHADO: Mostrar cada apólice vigente e seu valor mensal
     console.log('💰 [useDashboardData] Calculando totalMonthlyCost APENAS com apólices vigentes:');
@@ -132,10 +131,10 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       value: Math.round(Number(value) || 0)
     }));
 
-    // 🚨 LÓGICA CORRIGIDA - Distribuição pessoa física/jurídica - DETECÇÃO AUTOMÁTICA - APENAS VIGENTES
+    // 🚨 LÓGICA CORRIGIDA - Distribuição pessoa física/jurídica - DETECÇÃO AUTOMÁTICA
     console.log('🔍 Iniciando classificação de pessoa física/jurídica - DETECÇÃO AUTOMÁTICA...');
     
-    const personTypeDistribution = activePolicies.reduce((acc, policy) => {
+    const personTypeDistribution = normalizedPolicies.reduce((acc, policy) => {
       // Função para extrair valor do campo do N8N
       const extractValue = (field: any): string | null => {
         if (!field) return null;

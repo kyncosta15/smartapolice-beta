@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-// DESABILITADO: import { useInfoCapSync } from '@/hooks/useInfoCapSync';
+import { useInfoCapSync } from '@/hooks/useInfoCapSync';
 import { AppSidebar } from '@/components/AppSidebar';
 import { MobileDrawer } from '@/components/MobileDrawer';
 import { Navbar } from '@/components/Navbar';
@@ -76,8 +76,8 @@ export function DashboardContent() {
     isLoading: usersLoading
   } = usePersistedUsers();
 
-  // DESABILITADO: Hook para sincronização InfoCap
-  // const { syncPolicies: syncInfoCapPolicies, isSyncing } = useInfoCapSync();
+  // Hook para sincronização InfoCap
+  const { syncPolicies: syncInfoCapPolicies, isSyncing } = useInfoCapSync();
 
   // Combinar apólices extraídas e persistidas, evitando duplicatas
   const allPolicies = [...extractedPolicies, ...persistedPolicies.filter(
@@ -131,9 +131,22 @@ export function DashboardContent() {
     setIsRefreshing(true);
     
     try {
-      // Sincronização automática do InfoCap DESABILITADA
-      // O sistema agora apenas busca a URL do documento_anexo no cadastro de clientes
-      console.log('ℹ️ Sincronização automática de apólices desabilitada');
+      // 1. Sincronizar do InfoCap (se aplicável)
+      try {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('documento')
+          .eq('id', user?.id)
+          .maybeSingle();
+
+        if (userData?.documento) {
+          console.log('📡 Sincronizando apólices do InfoCap...');
+          await syncInfoCapPolicies(userData.documento);
+        }
+      } catch (syncError) {
+        console.warn('⚠️ Erro na sincronização InfoCap:', syncError);
+        // Continuar mesmo com erro na sincronização
+      }
 
       // 2. Atualizar apólices do banco local
       await refreshPolicies();

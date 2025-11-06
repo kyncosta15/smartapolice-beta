@@ -46,9 +46,9 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
   const firstRowCards = [
     {
       id: 'total',
-      title: 'Total de Apólices Vigentes',
+      title: 'Total de Apólices',
       value: dashboardStats.totalPolicies.toString(),
-      subtitle: 'Apólices ativas gerenciadas',
+      subtitle: 'Apólices gerenciadas',
       icon: FileText,
       badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
       iconColor: 'text-blue-600',
@@ -86,7 +86,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
   const secondRowCards = [
     {
       id: 'renovadas',
-      title: 'Vigentes',
+      title: 'Renovada/Vigente',
       value: (dashboardStats.renovadas ?? 0).toString(),
       subtitle: 'Apólices ativas renovadas',
       icon: CheckCircle,
@@ -95,7 +95,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
     },
     {
       id: 'nao_renovadas',
-      title: 'Antigas',
+      title: 'Não Renovadas',
       value: (dashboardStats.naoRenovadas ?? 0).toString(),
       subtitle: 'Apólices sem renovação',
       icon: AlertTriangle,

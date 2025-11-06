@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, FileDown } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -25,8 +25,7 @@ import { InfoModal } from '@/components/InfoModal';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { useToast } from '@/hooks/use-toast';
-// DESABILITADO: import { useInfoCapSync } from '@/hooks/useInfoCapSync';
-import { usePdfExtraction } from '@/hooks/usePdfExtraction';
+import { useInfoCapSync } from '@/hooks/useInfoCapSync';
 import { renderValue, renderValueAsString, renderCurrency } from '@/utils/renderValue';
 import { toText, moedaBR } from '@/lib/policies';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -58,13 +57,12 @@ export function MyPolicies() {
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
-  const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>('vigentes');
+  const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>('todas');
   const [detailedStatusFilter, setDetailedStatusFilter] = useState<'todas' | 'ativa' | 'pendente_analise' | 'vencida'>('todas');
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
   const { toast } = useToast();
-  // DESABILITADO: const { isSyncing: isInfoCapSyncing } = useInfoCapSync();
-  const { isProcessing: isPdfProcessing, extractFromPolicy } = usePdfExtraction();
+  const { isSyncing: isInfoCapSyncing } = useInfoCapSync();
   
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
     const finalStatus = policy.status as PolicyStatus;
@@ -121,34 +119,26 @@ export function MyPolicies() {
         setTimeout(() => {
           refreshPolicies();
         }, 500);
+        
+      } else {
+        console.log(`❌ [handleConfirmDelete] Falha ao deletar apólice ${policyToDelete.id}`);
+        
+        toast({
+          title: "❌ Erro na Deleção",
+          description: "Não foi possível deletar a apólice. Tente novamente.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('❌ [handleConfirmDelete] Erro:', error);
+      console.error('❌ [handleConfirmDelete] Erro na deleção:', error);
+      
       toast({
-        title: "❌ Erro ao Deletar",
+        title: "❌ Erro Inesperado",
         description: "Ocorreu um erro ao deletar a apólice",
         variant: "destructive",
       });
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  const handleTestExtraction = async (policy: PolicyWithStatus) => {
-    if (!policy.nosnum || !policy.codfil) {
-      toast({
-        title: "Dados insuficientes",
-        description: "Esta apólice não possui nosnum/codfil para buscar o PDF",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const result = await extractFromPolicy(policy.id, policy.nosnum, policy.codfil);
-    
-    if (result.success) {
-      // Recarregar apólices após extração bem-sucedida
-      setTimeout(() => refreshPolicies(), 1000);
     }
   };
 
@@ -303,9 +293,7 @@ export function MyPolicies() {
       pdfPath: originalPolicy?.pdfPath
     });
     
-    // DESABILITADO: Download via API CorpNuvem/InfoCap
-    // Agora usa apenas o arquivo PDF armazenado localmente no Supabase
-    /*
+    // Usar nosnum e codfil do PolicyWithStatus que já estão mapeados corretamente
     if (policy.nosnum && policy.codfil) {
       console.log('📥 Tentando baixar da API InfoCap:', { 
         nosnum: policy.nosnum, 
@@ -328,6 +316,7 @@ export function MyPolicies() {
         console.log('📦 [Download Debug] Resposta da API:', response);
         
         if (response?.anexos && response.anexos.length > 0) {
+          // Buscar o primeiro PDF disponível
           const pdfAnexo = response.anexos.find(anexo => 
             anexo.tipo?.toLowerCase().includes('pdf')
           );
@@ -359,9 +348,8 @@ export function MyPolicies() {
         return;
       }
     }
-    */
     
-    // Usar arquivo PDF armazenado localmente no Supabase
+    // Fallback: usar método tradicional se não conseguiu da API
     if (!originalPolicy?.pdfPath) {
       toast({
         title: "Arquivo não disponível",
@@ -439,20 +427,8 @@ export function MyPolicies() {
       const endDate = new Date(policy.endDate);
       const endYear = endDate.getFullYear();
       
-      if (statusFilter === 'vigentes') {
-        // Vigentes: ano >= atual E status ativo (excluindo não renovadas e vencidas)
-        const isActiveStatus = policy.status === 'vigente' || 
-                              policy.status === 'ativa' || 
-                              policy.status === 'vencendo';
-        if (endYear < currentYear || !isActiveStatus) return false;
-      }
-      
-      if (statusFilter === 'antigas') {
-        // Antigas: ano < atual OU status inativo (não renovada, vencida)
-        const isInactiveStatus = policy.status === 'nao_renovada' || 
-                                policy.status === 'vencida';
-        if (endYear >= currentYear && !isInactiveStatus) return false;
-      }
+      if (statusFilter === 'vigentes' && endYear < currentYear) return false;
+      if (statusFilter === 'antigas' && endYear >= currentYear) return false;
     }
     
     // Filtro por status detalhado
@@ -534,6 +510,17 @@ export function MyPolicies() {
       <div className="flex gap-2 flex-wrap items-center">
         <span className="text-sm text-muted-foreground font-medium">Período:</span>
         <Button
+          variant={statusFilter === 'todas' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setStatusFilter('todas');
+            setCurrentPage(1);
+          }}
+          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+        >
+          Todas ({policiesWithStatus.length})
+        </Button>
+        <Button
           variant={statusFilter === 'vigentes' ? 'default' : 'outline'}
           size="sm"
           onClick={() => {
@@ -544,10 +531,7 @@ export function MyPolicies() {
         >
           Vigentes ({policiesWithStatus.filter(p => {
             const endYear = new Date(p.endDate).getFullYear();
-            const isActiveStatus = p.status === 'vigente' || 
-                                  p.status === 'ativa' || 
-                                  p.status === 'vencendo';
-            return endYear >= currentYear && isActiveStatus;
+            return endYear >= currentYear;
           }).length})
         </Button>
         <Button
@@ -561,20 +545,8 @@ export function MyPolicies() {
         >
           Antigas ({policiesWithStatus.filter(p => {
             const endYear = new Date(p.endDate).getFullYear();
-            const isInactiveStatus = p.status === 'nao_renovada' || p.status === 'vencida';
-            return endYear < currentYear || isInactiveStatus;
+            return endYear < currentYear;
           }).length})
-        </Button>
-        <Button
-          variant={statusFilter === 'todas' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            setStatusFilter('todas');
-            setCurrentPage(1);
-          }}
-          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
-        >
-          Todas ({policiesWithStatus.length})
         </Button>
 
         {/* Filtro de Status da Apólice como Dropdown */}
@@ -718,18 +690,6 @@ export function MyPolicies() {
                   </div>
 
                   <div className="flex gap-1 sm:gap-1.5 pt-2 sm:pt-3 border-t dark:border-border justify-end">
-                    {policy.nosnum && policy.codfil && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleTestExtraction(policy)}
-                        className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-green-50 dark:hover:bg-green-950/30 hover:text-green-600 dark:hover:text-green-400"
-                        title="Testar extração de PDF"
-                        disabled={isPdfProcessing}
-                      >
-                        <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      </Button>
-                    )}
                     <Button
                       variant="ghost"
                       size="sm"

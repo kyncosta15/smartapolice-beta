@@ -179,7 +179,6 @@ export type Database = {
           id: string
           name: string
           notes: string | null
-          pdf_url: string | null
           phone: string | null
           state: string | null
           status: string | null
@@ -198,7 +197,6 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
-          pdf_url?: string | null
           phone?: string | null
           state?: string | null
           status?: string | null
@@ -217,7 +215,6 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
-          pdf_url?: string | null
           phone?: string | null
           state?: string | null
           status?: string | null
@@ -1764,7 +1761,6 @@ export type Database = {
           ano_modelo: string | null
           arquivo_url: string | null
           cidade: string | null
-          client_id: string | null
           codfil: number | null
           condutor_principal: string | null
           corretora: string | null
@@ -1814,7 +1810,6 @@ export type Database = {
           ano_modelo?: string | null
           arquivo_url?: string | null
           cidade?: string | null
-          client_id?: string | null
           codfil?: number | null
           condutor_principal?: string | null
           corretora?: string | null
@@ -1864,7 +1859,6 @@ export type Database = {
           ano_modelo?: string | null
           arquivo_url?: string | null
           cidade?: string | null
-          client_id?: string | null
           codfil?: number | null
           condutor_principal?: string | null
           corretora?: string | null
@@ -1911,13 +1905,6 @@ export type Database = {
           version_number?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "policies_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "policies_responsavel_user_id_fkey"
             columns: ["responsavel_user_id"]
