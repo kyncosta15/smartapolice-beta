@@ -1809,6 +1809,7 @@ export type Database = {
           valor_parcela: number | null
           valor_premio: number | null
           version_number: number | null
+          vinculo_cpf: string | null
         }
         Insert: {
           ano_modelo?: string | null
@@ -1859,6 +1860,7 @@ export type Database = {
           valor_parcela?: number | null
           valor_premio?: number | null
           version_number?: number | null
+          vinculo_cpf?: string | null
         }
         Update: {
           ano_modelo?: string | null
@@ -1909,6 +1911,7 @@ export type Database = {
           valor_parcela?: number | null
           valor_premio?: number | null
           version_number?: number | null
+          vinculo_cpf?: string | null
         }
         Relationships: [
           {
