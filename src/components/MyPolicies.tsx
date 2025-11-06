@@ -424,11 +424,17 @@ export function MyPolicies() {
   const filteredPolicies = policiesWithStatus.filter(policy => {
     // Filtro por período (vigentes/antigas)
     if (statusFilter !== 'todas') {
-      const endDate = new Date(policy.endDate);
-      const endYear = endDate.getFullYear();
+      if (statusFilter === 'vigentes') {
+        // Vigentes: mostrar APENAS as ativas (status vigente, ativa ou vencendo)
+        const status = policy.status?.toLowerCase();
+        if (status !== 'vigente' && status !== 'ativa' && status !== 'vencendo') return false;
+      }
       
-      if (statusFilter === 'vigentes' && endYear < currentYear) return false;
-      if (statusFilter === 'antigas' && endYear >= currentYear) return false;
+      if (statusFilter === 'antigas') {
+        const endDate = new Date(policy.endDate);
+        const endYear = endDate.getFullYear();
+        if (endYear >= currentYear) return false;
+      }
     }
     
     // Filtro por status detalhado
@@ -510,17 +516,6 @@ export function MyPolicies() {
       <div className="flex gap-2 flex-wrap items-center">
         <span className="text-sm text-muted-foreground font-medium">Período:</span>
         <Button
-          variant={statusFilter === 'todas' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            setStatusFilter('todas');
-            setCurrentPage(1);
-          }}
-          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
-        >
-          Todas ({policiesWithStatus.length})
-        </Button>
-        <Button
           variant={statusFilter === 'vigentes' ? 'default' : 'outline'}
           size="sm"
           onClick={() => {
@@ -530,8 +525,8 @@ export function MyPolicies() {
           className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
         >
           Vigentes ({policiesWithStatus.filter(p => {
-            const endYear = new Date(p.endDate).getFullYear();
-            return endYear >= currentYear;
+            const status = p.status?.toLowerCase();
+            return status === 'vigente' || status === 'ativa' || status === 'vencendo';
           }).length})
         </Button>
         <Button
@@ -547,6 +542,17 @@ export function MyPolicies() {
             const endYear = new Date(p.endDate).getFullYear();
             return endYear < currentYear;
           }).length})
+        </Button>
+        <Button
+          variant={statusFilter === 'todas' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setStatusFilter('todas');
+            setCurrentPage(1);
+          }}
+          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+        >
+          Todas ({policiesWithStatus.length})
         </Button>
 
         {/* Filtro de Status da Apólice como Dropdown */}
