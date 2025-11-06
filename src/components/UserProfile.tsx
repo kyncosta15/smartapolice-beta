@@ -528,9 +528,12 @@ export function UserProfile() {
               className="flex items-center gap-2"
             >
               <RefreshCw className={`w-4 h-4 ${isLoadingFromAPI ? 'animate-spin' : ''}`} />
-              {isLoadingFromAPI ? 'Carregando...' : 'Buscar da API'}
+              {isLoadingFromAPI ? 'Atualizando...' : 'Re-sincronizar'}
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Os dados são sincronizados automaticamente com a API no primeiro login. Use o botão acima para atualizar manualmente.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
