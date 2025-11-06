@@ -208,7 +208,7 @@ export function ClassificationCharts({
                 <BarChart 
                   data={insurerDistributionWithColors} 
                   layout="vertical"
-                  margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
+                  margin={{ top: 5, right: 80, left: 10, bottom: 5 }}
                   barSize={isMobile ? 20 : 28}
                 >
                   <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -241,14 +241,21 @@ export function ClassificationCharts({
                     <LabelList
                       dataKey="value"
                       position="right"
-                      offset={8}
-                      style={{ fontSize: isMobile ? 10 : 12, fontWeight: 600, fill: '#374151' }}
-                      formatter={(value: number) => value.toLocaleString('pt-BR', { 
-                        style: 'currency', 
-                        currency: 'BRL',
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0 
-                      })}
+                      offset={12}
+                      style={{ 
+                        fontSize: isMobile ? 11 : 14, 
+                        fontWeight: 700, 
+                        fill: '#1f2937',
+                        letterSpacing: '0.02em'
+                      }}
+                      formatter={(value: number) => {
+                        return value.toLocaleString('pt-BR', { 
+                          style: 'currency', 
+                          currency: 'BRL',
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2 
+                        });
+                      }}
                     />
                     {insurerDistributionWithColors.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
