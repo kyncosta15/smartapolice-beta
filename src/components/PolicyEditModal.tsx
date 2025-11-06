@@ -184,7 +184,7 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
                 value={formData.premium}
                 onChange={(e) => {
                   const annualValue = e.target.value;
-                  const installments = parseInt(formData.installments) || 12;
+                  const installments = parseInt(formData.installments) || 1;
                   const monthlyValue = annualValue ? (parseFloat(annualValue) / installments).toFixed(2) : '';
                   
                   setFormData({
@@ -195,7 +195,42 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
                 }}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {formData.installments && formData.premium && `${formData.installments}x de R$ ${(parseFloat(formData.premium) / parseInt(formData.installments)).toFixed(2)}`}
+                {formData.installments && formData.premium && `1x de R$ ${parseFloat(formData.premium).toFixed(2)}`}
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="installments">Número de Parcelas</Label>
+              <Select 
+                value={formData.installments} 
+                onValueChange={(value) => {
+                  const newInstallments = value;
+                  const annualValue = parseFloat(formData.premium) || 0;
+                  const monthlyValue = annualValue > 0 ? (annualValue / parseInt(newInstallments)).toFixed(2) : '';
+                  
+                  setFormData({
+                    ...formData,
+                    installments: newInstallments,
+                    monthlyAmount: monthlyValue
+                  });
+                }}
+              >
+                <SelectTrigger className="h-12 text-base font-semibold bg-white border-2">
+                  <SelectValue placeholder="Selecione as parcelas" />
+                </SelectTrigger>
+                <SelectContent className="bg-white z-50">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => {
+                    const monthlyValue = formData.premium ? (parseFloat(formData.premium) / num).toFixed(2) : '0,00';
+                    return (
+                      <SelectItem key={num} value={num.toString()} className="cursor-pointer hover:bg-accent">
+                        {num}x de R$ {parseFloat(monthlyValue).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Valor anual calculado: R$ {formData.premium ? parseFloat(formData.premium).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}
               </p>
             </div>
 
@@ -206,20 +241,11 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
                 type="number"
                 step="0.01"
                 value={formData.monthlyAmount}
-                onChange={(e) => {
-                  const monthlyValue = e.target.value;
-                  const installments = parseInt(formData.installments) || 12;
-                  const annualValue = monthlyValue ? (parseFloat(monthlyValue) * installments).toFixed(2) : '';
-                  
-                  setFormData({
-                    ...formData, 
-                    monthlyAmount: monthlyValue,
-                    premium: annualValue
-                  });
-                }}
+                disabled
+                className="bg-muted cursor-not-allowed"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Valor anual calculado: R$ {formData.monthlyAmount && formData.installments ? (parseFloat(formData.monthlyAmount) * parseInt(formData.installments)).toFixed(2) : '0.00'}
+              <p className="text-xs text-amber-600 mt-1">
+                Calculado automaticamente com base no número de parcelas
               </p>
             </div>
 

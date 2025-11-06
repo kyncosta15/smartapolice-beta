@@ -2,7 +2,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DollarSign, Hash, ChevronRight, Calendar } from 'lucide-react';
 import { useState } from 'react';
 
@@ -16,13 +15,6 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
   // CRÍTICO: Priorizar campos do banco de dados
   const premiumValue = policy.valor_premio ?? policy.premium ?? 0;
   const monthlyValue = policy.custo_mensal ?? policy.valor_parcela ?? policy.monthlyAmount ?? 0;
-  
-  // State para número de parcelas selecionado
-  const defaultInstallments = policy.quantidade_parcelas || 
-    (policy.installments?.length) || 
-    (policy.parcelas?.length) || 
-    1;
-  const [selectedInstallments, setSelectedInstallments] = useState<number>(defaultInstallments);
   
   console.log('💰 [FinancialInfoCard] Valores recebidos:', {
     id: policy.id,
@@ -91,13 +83,7 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
   };
 
   const installmentsCount = getInstallmentsCount();
-  
-  // Calcular valor mensal baseado na seleção do usuário
-  const calculatedMonthlyValue = premiumValue > 0 && selectedInstallments > 0 
-    ? premiumValue / selectedInstallments 
-    : calculateMonthlyPremium();
-  
-  const monthlyPremium = calculatedMonthlyValue;
+  const monthlyPremium = calculateMonthlyPremium();
   
   // Obter parcelas com datas e valores
   const getInstallmentsDetails = () => {
@@ -155,29 +141,7 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
         </div>
         
         <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-amber-100">
-          <label className="text-xs sm:text-sm font-medium text-amber-700 font-sf-pro block mb-2">Número de Parcelas</label>
-          <Select 
-            value={selectedInstallments.toString()} 
-            onValueChange={(value) => setSelectedInstallments(Number(value))}
-          >
-            <SelectTrigger className="w-full h-12 text-base font-semibold bg-white border-2 border-amber-200 hover:border-amber-300 focus:border-amber-400">
-              <SelectValue placeholder="Selecione as parcelas" />
-            </SelectTrigger>
-            <SelectContent className="bg-white z-50">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => (
-                <SelectItem key={num} value={num.toString()} className="cursor-pointer hover:bg-amber-50">
-                  {num}x de R$ {(premiumValue / num).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-amber-600 mt-2 font-sf-pro">
-            Valor anual calculado: R$ {premiumValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-          </p>
-        </div>
-        
-        <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-amber-100">
-          <label className="text-xs sm:text-sm font-medium text-amber-700 font-sf-pro block mb-1">Valor Mensal</label>
+          <label className="text-xs sm:text-sm font-medium text-amber-700 font-sf-pro block mb-1">Prêmio Mensal</label>
           <p className="text-xl sm:text-2xl font-bold text-gray-900 font-sf-pro break-all">
             R$ {monthlyPremium.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
