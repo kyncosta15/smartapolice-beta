@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Camera, User, Save, Trash2, Upload } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, User, Save, Trash2, Upload, MapPin, Building2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+
+interface ProfileData {
+  phone?: string;
+  document?: string;
+  birth_date?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  company_name?: string;
+}
 
 export function UserProfile() {
   const { user } = useAuth();
@@ -25,12 +37,47 @@ export function UserProfile() {
   } = useUserProfile();
   
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
+  const [profileData, setProfileData] = useState<ProfileData>({});
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  React.useEffect(() => {
+  // Carregar dados do perfil da API
+  useEffect(() => {
+    const loadProfileData = async () => {
+      if (!user?.id) return;
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('phone, document, birth_date, address, city, state, zip_code, company_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Erro ao carregar dados do perfil:', error);
+        return;
+      }
+
+      if (data) {
+        setProfileData({
+          phone: data.phone || '',
+          document: data.document || '',
+          birth_date: data.birth_date || '',
+          address: data.address || '',
+          city: data.city || '',
+          state: data.state || '',
+          zip_code: data.zip_code || '',
+          company_name: data.company_name || '',
+        });
+      }
+    };
+
+    loadProfileData();
+  }, [user?.id]);
+
+  useEffect(() => {
     if (profile?.display_name) {
       setDisplayName(profile.display_name);
     }
@@ -174,6 +221,43 @@ export function UserProfile() {
         description: "Ocorreu um erro inesperado.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleSaveProfileData = async () => {
+    if (!user?.id) return;
+
+    setIsSavingProfile(true);
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          phone: profileData.phone || null,
+          document: profileData.document || null,
+          birth_date: profileData.birth_date || null,
+          address: profileData.address || null,
+          city: profileData.city || null,
+          state: profileData.state || null,
+          zip_code: profileData.zip_code || null,
+          company_name: profileData.company_name || null,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Dados salvos",
+        description: "Seus dados cadastrais foram atualizados com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar dados:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar seus dados.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -336,6 +420,125 @@ export function UserProfile() {
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Additional Profile Data Card */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="w-5 h-5" />
+            Dados Cadastrais
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="phone" className="flex items-center gap-2">
+                <Phone className="w-4 h-4" />
+                Telefone
+              </Label>
+              <Input
+                id="phone"
+                value={profileData.phone || ''}
+                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="document">CPF/CNPJ</Label>
+              <Input
+                id="document"
+                value={profileData.document || ''}
+                onChange={(e) => setProfileData({ ...profileData, document: e.target.value })}
+                placeholder="000.000.000-00"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="birth_date">Data de Nascimento</Label>
+              <Input
+                id="birth_date"
+                type="date"
+                value={profileData.birth_date || ''}
+                onChange={(e) => setProfileData({ ...profileData, birth_date: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="company_name">Nome da Empresa</Label>
+              <Input
+                id="company_name"
+                value={profileData.company_name || ''}
+                onChange={(e) => setProfileData({ ...profileData, company_name: e.target.value })}
+                placeholder="Nome da sua empresa"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="address" className="flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              Endereço
+            </Label>
+            <Input
+              id="address"
+              value={profileData.address || ''}
+              onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
+              placeholder="Rua, número, complemento"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="city">Cidade</Label>
+              <Input
+                id="city"
+                value={profileData.city || ''}
+                onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
+                placeholder="Cidade"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="state">Estado</Label>
+              <Select
+                value={profileData.state || ''}
+                onValueChange={(value) => setProfileData({ ...profileData, state: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'].map((state) => (
+                    <SelectItem key={state} value={state}>
+                      {state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="zip_code">CEP</Label>
+              <Input
+                id="zip_code"
+                value={profileData.zip_code || ''}
+                onChange={(e) => setProfileData({ ...profileData, zip_code: e.target.value })}
+                placeholder="00000-000"
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={handleSaveProfileData}
+            disabled={isSavingProfile}
+            className="w-full flex items-center gap-2"
+          >
+            <Save className="w-4 h-4" />
+            {isSavingProfile ? 'Salvando...' : 'Salvar Dados Cadastrais'}
+          </Button>
         </CardContent>
       </Card>
     </div>

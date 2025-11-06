@@ -179,6 +179,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          pdf_url: string | null
           phone: string | null
           state: string | null
           status: string | null
@@ -197,6 +198,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          pdf_url?: string | null
           phone?: string | null
           state?: string | null
           status?: string | null
@@ -215,6 +217,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          pdf_url?: string | null
           phone?: string | null
           state?: string | null
           status?: string | null
@@ -1761,6 +1764,7 @@ export type Database = {
           ano_modelo: string | null
           arquivo_url: string | null
           cidade: string | null
+          client_id: string | null
           codfil: number | null
           condutor_principal: string | null
           corretora: string | null
@@ -1810,6 +1814,7 @@ export type Database = {
           ano_modelo?: string | null
           arquivo_url?: string | null
           cidade?: string | null
+          client_id?: string | null
           codfil?: number | null
           condutor_principal?: string | null
           corretora?: string | null
@@ -1859,6 +1864,7 @@ export type Database = {
           ano_modelo?: string | null
           arquivo_url?: string | null
           cidade?: string | null
+          client_id?: string | null
           codfil?: number | null
           condutor_principal?: string | null
           corretora?: string | null
@@ -1905,6 +1911,13 @@ export type Database = {
           version_number?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "policies_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "policies_responsavel_user_id_fkey"
             columns: ["responsavel_user_id"]
@@ -2725,40 +2738,64 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
+          birth_date: string | null
+          city: string | null
+          company_name: string | null
           created_at: string
           default_empresa_id: string | null
           display_name: string
+          document: string | null
           id: string
           is_admin: boolean
+          phone: string | null
           photo_path: string | null
           photo_url: string | null
           settings: Json | null
+          state: string | null
           updated_at: string
+          zip_code: string | null
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          city?: string | null
+          company_name?: string | null
           created_at?: string
           default_empresa_id?: string | null
           display_name?: string
+          document?: string | null
           id: string
           is_admin?: boolean
+          phone?: string | null
           photo_path?: string | null
           photo_url?: string | null
           settings?: Json | null
+          state?: string | null
           updated_at?: string
+          zip_code?: string | null
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          city?: string | null
+          company_name?: string | null
           created_at?: string
           default_empresa_id?: string | null
           display_name?: string
+          document?: string | null
           id?: string
           is_admin?: boolean
+          phone?: string | null
           photo_path?: string | null
           photo_url?: string | null
           settings?: Json | null
+          state?: string | null
           updated_at?: string
+          zip_code?: string | null
         }
         Relationships: [
           {
