@@ -38,6 +38,7 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
     tipo: 'dependente' as 'dependente' | 'subestipulante' | 'empresa',
     observacoes: ''
   });
+  const [selectedDocType, setSelectedDocType] = useState<'CPF' | 'CNPJ'>('CPF');
   const [documentInfo, setDocumentInfo] = useState<{ type: string; personType: string; isValid: boolean } | null>(null);
   const { toast } = useToast();
   const { result: lookupResult, searchByDocument } = useClienteLookup();
@@ -75,42 +76,85 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
     }
   };
 
-  const handleDocumentChange = (value: string) => {
-    // Permitir apenas números e alguns caracteres de formatação
-    const cleanValue = value.replace(/[^\d.\-\/]/g, '');
-    setFormData({ ...formData, cpf: cleanValue });
+  const formatDocumentByType = (value: string, type: 'CPF' | 'CNPJ'): string => {
+    const numbers = value.replace(/\D/g, '');
     
-    // Tentar detectar o documento
-    const docInfo = DocumentValidator.detectDocument(cleanValue);
+    if (type === 'CPF') {
+      return numbers
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+        .slice(0, 14);
+    } else {
+      return numbers
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+        .slice(0, 18);
+    }
+  };
+
+  const validateDocumentByType = (value: string, type: 'CPF' | 'CNPJ'): boolean => {
+    const cleanValue = value.replace(/\D/g, '');
+    
+    if (type === 'CPF') {
+      return cleanValue.length === 11;
+    } else {
+      return cleanValue.length === 14;
+    }
+  };
+
+  const handleDocumentChange = (value: string) => {
+    const formatted = formatDocumentByType(value, selectedDocType);
+    setFormData({ ...formData, cpf: formatted });
+    
+    // Validar o documento
+    const isValid = validateDocumentByType(formatted, selectedDocType);
+    const docInfo = DocumentValidator.detectDocument(formatted);
+    
     if (docInfo && docInfo.type !== 'INVALID') {
       setDocumentInfo({
         type: docInfo.type,
         personType: docInfo.personType,
         isValid: docInfo.isValid
       });
-      // Atualizar com documento formatado
-      setFormData({ ...formData, cpf: docInfo.formatted });
       
       // Ajustar tipo automaticamente
       if (docInfo.type === 'CNPJ') {
-        setFormData({ ...formData, cpf: docInfo.formatted, tipo: 'empresa' });
+        setFormData({ ...formData, cpf: formatted, tipo: 'empresa' });
       }
+    } else if (isValid) {
+      setDocumentInfo({
+        type: selectedDocType,
+        personType: selectedDocType === 'CPF' ? 'PF' : 'PJ',
+        isValid: true
+      });
     } else {
       setDocumentInfo(null);
     }
   };
 
+  const handleDocTypeChange = (type: 'CPF' | 'CNPJ') => {
+    setSelectedDocType(type);
+    setFormData({ ...formData, cpf: '', tipo: type === 'CNPJ' ? 'empresa' : 'dependente' });
+    setDocumentInfo(null);
+  };
+
   const handleSearchDocument = async () => {
-    if (!documentInfo || !documentInfo.isValid) {
+    const cleanValue = formData.cpf.replace(/\D/g, '');
+    const minLength = selectedDocType === 'CPF' ? 11 : 14;
+    
+    if (cleanValue.length < minLength) {
       toast({
-        title: "Documento inválido",
-        description: "Por favor, insira um CPF ou CNPJ válido antes de buscar.",
+        title: "Documento incompleto",
+        description: `Por favor, insira um ${selectedDocType} completo antes de buscar.`,
         variant: "destructive",
       });
       return;
     }
 
-    const personType = documentInfo.personType === 'PF' ? 'pf' : 'pj';
+    const personType = selectedDocType === 'CPF' ? 'pf' : 'pj';
     const nome = await searchByDocument(formData.cpf, personType);
     
     if (nome) {
@@ -285,6 +329,7 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
                   onClick={() => {
                     setShowAddForm(false);
                     setFormData({ cpf: '', nome: '', tipo: 'dependente', observacoes: '' });
+                    setSelectedDocType('CPF');
                     setDocumentInfo(null);
                   }}
                 >
@@ -294,15 +339,28 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
 
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="cpf">CPF ou CNPJ *</Label>
+                  <Label htmlFor="docType">Tipo de Documento *</Label>
+                  <Select value={selectedDocType} onValueChange={handleDocTypeChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CPF">CPF</SelectItem>
+                      <SelectItem value="CNPJ">CNPJ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="cpf">{selectedDocType} *</Label>
                   <div className="flex gap-2">
                     <div className="flex-1 relative">
                       <Input
                         id="cpf"
                         value={formData.cpf}
                         onChange={(e) => handleDocumentChange(e.target.value)}
-                        placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                        maxLength={18}
+                        placeholder={selectedDocType === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
+                        maxLength={selectedDocType === 'CPF' ? 14 : 18}
                       />
                       {documentInfo && (
                         <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -319,7 +377,7 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
                       variant="outline"
                       size="icon"
                       onClick={handleSearchDocument}
-                      disabled={!documentInfo || !documentInfo.isValid || lookupResult.loading}
+                      disabled={lookupResult.loading || !formData.cpf}
                       title="Buscar na base de dados"
                     >
                       <Search className="w-4 h-4" />
@@ -328,7 +386,7 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
                   {documentInfo && (
                     <p className={`text-xs mt-1 ${documentInfo.isValid ? 'text-green-600' : 'text-red-600'}`}>
                       {documentInfo.isValid 
-                        ? `✓ ${documentInfo.type} válido detectado (${documentInfo.personType})`
+                        ? `✓ ${documentInfo.type} válido`
                         : `✗ ${documentInfo.type} inválido`
                       }
                     </p>
