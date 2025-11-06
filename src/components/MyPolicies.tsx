@@ -666,9 +666,11 @@ export function MyPolicies() {
                   <div className="flex justify-between items-start gap-2 sm:gap-3">
                     <div className="flex items-center gap-1.5 flex-1 min-w-0">
                       {originalPolicy?.vinculo_cpf && (
-                        <Link2 
-                          className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400 shrink-0" 
-                        />
+                        <div className="shrink-0" title={`Apólice vinculada ao CPF/CNPJ: ${originalPolicy.vinculo_cpf}`}>
+                          <Link2 
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" 
+                          />
+                        </div>
                       )}
                       <CardTitle className="text-sm sm:text-base md:text-lg leading-tight break-words flex-1 min-w-0 dark:text-foreground">
                         {toText(policy.name)}
