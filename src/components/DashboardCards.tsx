@@ -95,7 +95,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
     },
     {
       id: 'nao_renovadas',
-      title: 'Não inativa',
+      title: 'Antigas',
       value: (dashboardStats.naoRenovadas ?? 0).toString(),
       subtitle: 'Apólices sem renovação',
       icon: AlertTriangle,
