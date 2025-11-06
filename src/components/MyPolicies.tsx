@@ -58,7 +58,7 @@ export function MyPolicies() {
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
-  const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>('todas');
+  const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>('vigentes');
   const [detailedStatusFilter, setDetailedStatusFilter] = useState<'todas' | 'ativa' | 'pendente_analise' | 'vencida'>('todas');
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
