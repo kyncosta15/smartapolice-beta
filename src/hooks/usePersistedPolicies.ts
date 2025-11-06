@@ -431,10 +431,10 @@ export function usePersistedPolicies() {
   const getPDFDownloadUrl = async (policyId: string): Promise<string | null> => {
     const policy = policies.find(p => p.id === policyId);
     
-    if (!policy?.pdfPath) {
+    if (!policy?.pdfPath || policy.pdfPath === 'Não informado' || policy.pdfPath.trim() === '') {
       toast({
-        title: "❌ Arquivo não encontrado",
-        description: "PDF não está disponível para download",
+        title: "❌ PDF não disponível",
+        description: "Esta apólice não possui PDF armazenado. Por favor, reprocesse o PDF para salvá-lo no sistema.",
         variant: "destructive",
       });
       return null;
