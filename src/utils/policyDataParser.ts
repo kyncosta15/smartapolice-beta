@@ -89,4 +89,7 @@ export interface ParsedPolicyData {
   // ADDED: nosnum from CorpNuvem API
   nosnum?: number;
   codfil?: number;
+  
+  // ADDED: vinculo_cpf for linked policies
+  vinculo_cpf?: string;
 }
