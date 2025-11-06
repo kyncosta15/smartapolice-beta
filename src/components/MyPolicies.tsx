@@ -57,7 +57,7 @@ export function MyPolicies() {
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
-  const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas' | 'vence30' | 'vence60'>('vigentes');
+  const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>('vigentes');
   const [detailedStatusFilter, setDetailedStatusFilter] = useState<'todas' | 'ativa' | 'pendente_analise' | 'vencida'>('todas');
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
@@ -421,30 +421,8 @@ export function MyPolicies() {
   // Filtrar apólices por status baseado no ano atual
   const currentYear = new Date().getFullYear();
   
-  // Calcular apólices que vencem em 30 e 60 dias
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const in30Days = new Date(today);
-  in30Days.setDate(in30Days.getDate() + 30);
-  
-  const in60Days = new Date(today);
-  in60Days.setDate(in60Days.getDate() + 60);
-  
-  const vence30Count = policiesWithStatus.filter(policy => {
-    const expirationDate = new Date(policy.expirationDate || policy.endDate);
-    expirationDate.setHours(0, 0, 0, 0);
-    return expirationDate >= today && expirationDate <= in30Days;
-  }).length;
-  
-  const vence60Count = policiesWithStatus.filter(policy => {
-    const expirationDate = new Date(policy.expirationDate || policy.endDate);
-    expirationDate.setHours(0, 0, 0, 0);
-    return expirationDate >= today && expirationDate <= in60Days;
-  }).length;
-  
   const filteredPolicies = policiesWithStatus.filter(policy => {
-    // Filtro por período (vigentes/antigas/30/60 dias)
+    // Filtro por período (vigentes/antigas)
     if (statusFilter !== 'todas') {
       if (statusFilter === 'vigentes') {
         // Vigentes: mostrar APENAS as ativas (status vigente, ativa ou vencendo)
@@ -456,20 +434,6 @@ export function MyPolicies() {
         // Antigas: mostrar APENAS as não vigentes (status diferente de vigente, ativa ou vencendo)
         const status = policy.status?.toLowerCase();
         if (status === 'vigente' || status === 'ativa' || status === 'vencendo') return false;
-      }
-      
-      if (statusFilter === 'vence30') {
-        // Vence em 30 dias
-        const expirationDate = new Date(policy.expirationDate || policy.endDate);
-        expirationDate.setHours(0, 0, 0, 0);
-        if (expirationDate < today || expirationDate > in30Days) return false;
-      }
-      
-      if (statusFilter === 'vence60') {
-        // Vence em 60 dias
-        const expirationDate = new Date(policy.expirationDate || policy.endDate);
-        expirationDate.setHours(0, 0, 0, 0);
-        if (expirationDate < today || expirationDate > in60Days) return false;
       }
     }
     
@@ -499,40 +463,6 @@ export function MyPolicies() {
 
   return (
     <div className="space-y-4 md:space-y-6 p-3 sm:p-4 md:p-0">
-      {/* Card de alertas de vencimento */}
-      {(vence30Count > 0 || vence60Count > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {vence30Count > 0 && (
-            <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-0 text-white shadow-lg">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                    <span className="text-xs">⏰</span>
-                  </div>
-                  <p className="text-sm font-medium opacity-90">Vencendo 30d</p>
-                </div>
-                <div className="text-3xl font-bold">{vence30Count}</div>
-                <p className="text-xs opacity-80 mt-1">Próximos 30 dias</p>
-              </CardContent>
-            </Card>
-          )}
-          {vence60Count > 0 && (
-            <Card className="bg-gradient-to-br from-amber-500 to-amber-600 border-0 text-white shadow-lg">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                    <span className="text-xs">📅</span>
-                  </div>
-                  <p className="text-sm font-medium opacity-90">Vencendo 60d</p>
-                </div>
-                <div className="text-3xl font-bold">{vence60Count}</div>
-                <p className="text-xs opacity-80 mt-1">Próximos 60 dias</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-
       <div className="flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
         {/* Título + Badge */}
         <div className="flex items-center gap-2">
@@ -598,30 +528,6 @@ export function MyPolicies() {
             const status = p.status?.toLowerCase();
             return status === 'vigente' || status === 'ativa' || status === 'vencendo';
           }).length})
-        </Button>
-        <Button
-          variant={statusFilter === 'vence30' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            setStatusFilter('vence30');
-            setCurrentPage(1);
-          }}
-          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-950/30 data-[state=active]:bg-orange-500 data-[state=active]:text-white"
-          data-state={statusFilter === 'vence30' ? 'active' : 'inactive'}
-        >
-          Vence 30d ({vence30Count})
-        </Button>
-        <Button
-          variant={statusFilter === 'vence60' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            setStatusFilter('vence60');
-            setCurrentPage(1);
-          }}
-          className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-950/30 data-[state=active]:bg-amber-500 data-[state=active]:text-white"
-          data-state={statusFilter === 'vence60' ? 'active' : 'inactive'}
-        >
-          Vence 60d ({vence60Count})
         </Button>
         <Button
           variant={statusFilter === 'antigas' ? 'default' : 'outline'}
