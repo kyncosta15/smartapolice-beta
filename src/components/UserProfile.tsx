@@ -39,6 +39,7 @@ export function UserProfile() {
   
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [profileData, setProfileData] = useState<ProfileData>({});
+  const [isSavingPhone, setIsSavingPhone] = useState(false);
   const [isLoadingFromAPI, setIsLoadingFromAPI] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -312,6 +313,34 @@ export function UserProfile() {
     }
   };
 
+  const handleSavePhone = async () => {
+    if (!user?.id) return;
+
+    setIsSavingPhone(true);
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ phone: profileData.phone || null })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Telefone atualizado",
+        description: "Seu telefone foi atualizado com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar telefone:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar o telefone.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingPhone(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -504,13 +533,23 @@ export function UserProfile() {
                 <Phone className="w-4 h-4" />
                 Telefone
               </Label>
-              <Input
-                id="phone"
-                value={profileData.phone || ''}
-                disabled
-                className="bg-muted"
-                placeholder="(00) 00000-0000"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="phone"
+                  value={profileData.phone || ''}
+                  onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                  placeholder="(00) 00000-0000"
+                />
+                <Button
+                  onClick={handleSavePhone}
+                  disabled={isSavingPhone}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSavingPhone ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </div>
             </div>
 
             <div>
@@ -598,8 +637,8 @@ export function UserProfile() {
 
           <div className="pt-4 border-t">
             <p className="text-sm text-muted-foreground">
-              💡 Estes dados são sincronizados automaticamente da API CorpNuvem e não podem ser editados manualmente. 
-              Use o botão "Re-sincronizar" acima para atualizar com os dados mais recentes.
+              💡 Os dados são sincronizados automaticamente da API CorpNuvem. Apenas o telefone pode ser editado manualmente. 
+              Use o botão "Re-sincronizar" acima para atualizar com os dados mais recentes da API.
             </p>
           </div>
         </CardContent>
