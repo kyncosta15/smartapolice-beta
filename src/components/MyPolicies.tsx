@@ -1,6 +1,6 @@
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ManageCPFVinculosModal } from './ManageCPFVinculosModal';
+import { supabase } from '@/integrations/supabase/client';
 
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -61,10 +62,48 @@ export function MyPolicies() {
   const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>('vigentes');
   const [detailedStatusFilter, setDetailedStatusFilter] = useState<'todas' | 'ativa' | 'pendente_analise' | 'vencida'>('todas');
   const [showManageCPFModal, setShowManageCPFModal] = useState(false);
+  const [cpfVinculos, setCpfVinculos] = useState<Array<{ cpf: string; tipo: string }>>([]);
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
   const { toast } = useToast();
   const { isSyncing: isInfoCapSyncing } = useInfoCapSync();
+  
+  // Função para carregar vínculos de CPF
+  const loadCPFVinculos = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('user_cpf_vinculos')
+        .select('cpf, tipo')
+        .eq('user_id', user.id)
+        .eq('ativo', true);
+
+      if (error) throw error;
+      setCpfVinculos(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar vínculos de CPF:', error);
+    }
+  };
+
+  // Carregar vínculos na montagem do componente
+  useEffect(() => {
+    loadCPFVinculos();
+  }, []);
+
+  // Função helper para verificar se um CPF vinculado é de dependente
+  const isDependentCPF = (vinculoCpf: string | undefined): boolean => {
+    if (!vinculoCpf) return false;
+    const cleanCpf = vinculoCpf.replace(/\D/g, '');
+    return cpfVinculos.some(v => v.cpf === cleanCpf && v.tipo === 'dependente');
+  };
+  
+  // Handler para quando CPFs são atualizados
+  const handleCPFsUpdated = () => {
+    loadCPFVinculos();
+    refreshPolicies();
+  };
   
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
     const finalStatus = policy.status as PolicyStatus;
@@ -666,10 +705,20 @@ export function MyPolicies() {
                   <div className="flex justify-between items-start gap-2 sm:gap-3">
                     <div className="flex items-center gap-1.5 flex-1 min-w-0">
                       {originalPolicy?.vinculo_cpf && (
-                        <div className="shrink-0" title={`Apólice vinculada ao CPF/CNPJ: ${originalPolicy.vinculo_cpf}`}>
-                          <Link2 
-                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" 
-                          />
+                        <div className="shrink-0" title={
+                          isDependentCPF(originalPolicy.vinculo_cpf)
+                            ? `Apólice de dependente: ${originalPolicy.vinculo_cpf}`
+                            : `Apólice vinculada ao CPF/CNPJ: ${originalPolicy.vinculo_cpf}`
+                        }>
+                          {isDependentCPF(originalPolicy.vinculo_cpf) ? (
+                            <Users 
+                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" 
+                            />
+                          ) : (
+                            <Link2 
+                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" 
+                            />
+                          )}
                         </div>
                       )}
                       <CardTitle className="text-sm sm:text-base md:text-lg leading-tight break-words flex-1 min-w-0 dark:text-foreground">
@@ -798,7 +847,33 @@ export function MyPolicies() {
                         onCheckedChange={() => togglePolicySelection(policy.id)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{toText(policy.name)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        {(() => {
+                          const originalPolicy = policies.find(p => p.id === policy.id);
+                          if (originalPolicy?.vinculo_cpf) {
+                            return (
+                              <div 
+                                className="shrink-0" 
+                                title={
+                                  isDependentCPF(originalPolicy.vinculo_cpf)
+                                    ? `Apólice de dependente: ${originalPolicy.vinculo_cpf}`
+                                    : `Apólice vinculada ao CPF/CNPJ: ${originalPolicy.vinculo_cpf}`
+                                }
+                              >
+                                {isDependentCPF(originalPolicy.vinculo_cpf) ? (
+                                  <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                ) : (
+                                  <Link2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                )}
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                        <span className="font-medium">{toText(policy.name)}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>{toText(policy.insurer)}</TableCell>
                     <TableCell className="font-mono text-sm">{policy.policyNumber}</TableCell>
                     <TableCell className="text-right font-semibold text-green-600">
@@ -987,7 +1062,7 @@ export function MyPolicies() {
       <ManageCPFVinculosModal
         open={showManageCPFModal}
         onOpenChange={setShowManageCPFModal}
-        onCPFsUpdated={refreshPolicies}
+        onCPFsUpdated={handleCPFsUpdated}
       />
     </div>
   );
