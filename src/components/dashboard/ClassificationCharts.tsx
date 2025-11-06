@@ -208,7 +208,7 @@ export function ClassificationCharts({
                 <BarChart 
                   data={insurerDistributionWithColors} 
                   layout="vertical"
-                  margin={{ top: 5, right: 80, left: 10, bottom: 5 }}
+                  margin={{ top: 5, right: isMobile ? 70 : 100, left: 10, bottom: 5 }}
                   barSize={isMobile ? 20 : 28}
                 >
                   <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#f0f0f0" />
