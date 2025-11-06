@@ -181,11 +181,31 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const cpfLimpo = formData.cpf.replace(/\D/g, '');
+
+      // Verificar se já existe
+      const { data: existing } = await supabase
+        .from('user_cpf_vinculos')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('cpf', cpfLimpo)
+        .maybeSingle();
+
+      if (existing) {
+        toast({
+          title: "Documento já vinculado",
+          description: "Este documento já está vinculado à sua conta.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('user_cpf_vinculos')
         .insert({
           user_id: user.id,
-          cpf: formData.cpf.replace(/\D/g, ''),
+          cpf: cpfLimpo,
           nome: formData.nome || null,
           tipo: formData.tipo,
           observacoes: formData.observacoes || null,
@@ -193,16 +213,8 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
         });
 
       if (error) {
-        if (error.code === '23505') {
-          toast({
-            title: "Documento já vinculado",
-            description: "Este documento já está vinculado à sua conta.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-        return;
+        console.error('Erro ao inserir:', error);
+        throw error;
       }
 
       toast({
