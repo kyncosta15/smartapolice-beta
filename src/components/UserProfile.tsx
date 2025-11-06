@@ -39,7 +39,6 @@ export function UserProfile() {
   
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [profileData, setProfileData] = useState<ProfileData>({});
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isLoadingFromAPI, setIsLoadingFromAPI] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -313,43 +312,6 @@ export function UserProfile() {
     }
   };
 
-  const handleSaveProfileData = async () => {
-    if (!user?.id) return;
-
-    setIsSavingProfile(true);
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({
-          phone: profileData.phone || null,
-          document: profileData.document || null,
-          birth_date: profileData.birth_date || null,
-          address: profileData.address || null,
-          city: profileData.city || null,
-          state: profileData.state || null,
-          zip_code: profileData.zip_code || null,
-          company_name: profileData.company_name || null,
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Dados salvos",
-        description: "Seus dados cadastrais foram atualizados com sucesso!",
-      });
-    } catch (error) {
-      console.error('Erro ao salvar dados:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Ocorreu um erro ao salvar seus dados.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSavingProfile(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -545,7 +507,8 @@ export function UserProfile() {
               <Input
                 id="phone"
                 value={profileData.phone || ''}
-                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                disabled
+                className="bg-muted"
                 placeholder="(00) 00000-0000"
               />
             </div>
@@ -555,7 +518,8 @@ export function UserProfile() {
               <Input
                 id="document"
                 value={profileData.document || ''}
-                onChange={(e) => setProfileData({ ...profileData, document: e.target.value })}
+                disabled
+                className="bg-muted"
                 placeholder="000.000.000-00"
               />
             </div>
@@ -566,7 +530,8 @@ export function UserProfile() {
                 id="birth_date"
                 type="date"
                 value={profileData.birth_date || ''}
-                onChange={(e) => setProfileData({ ...profileData, birth_date: e.target.value })}
+                disabled
+                className="bg-muted"
               />
             </div>
 
@@ -575,7 +540,8 @@ export function UserProfile() {
               <Input
                 id="company_name"
                 value={profileData.company_name || ''}
-                onChange={(e) => setProfileData({ ...profileData, company_name: e.target.value })}
+                disabled
+                className="bg-muted"
                 placeholder="Nome da sua empresa"
               />
             </div>
@@ -589,7 +555,8 @@ export function UserProfile() {
             <Input
               id="address"
               value={profileData.address || ''}
-              onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
+              disabled
+              className="bg-muted"
               placeholder="Rua, número, complemento"
             />
           </div>
@@ -600,28 +567,21 @@ export function UserProfile() {
               <Input
                 id="city"
                 value={profileData.city || ''}
-                onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
+                disabled
+                className="bg-muted"
                 placeholder="Cidade"
               />
             </div>
 
             <div>
               <Label htmlFor="state">Estado</Label>
-              <Select
+              <Input
+                id="state"
                 value={profileData.state || ''}
-                onValueChange={(value) => setProfileData({ ...profileData, state: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'].map((state) => (
-                    <SelectItem key={state} value={state}>
-                      {state}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                disabled
+                className="bg-muted"
+                placeholder="UF"
+              />
             </div>
 
             <div>
@@ -629,20 +589,19 @@ export function UserProfile() {
               <Input
                 id="zip_code"
                 value={profileData.zip_code || ''}
-                onChange={(e) => setProfileData({ ...profileData, zip_code: e.target.value })}
+                disabled
+                className="bg-muted"
                 placeholder="00000-000"
               />
             </div>
           </div>
 
-          <Button
-            onClick={handleSaveProfileData}
-            disabled={isSavingProfile}
-            className="w-full flex items-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {isSavingProfile ? 'Salvando...' : 'Salvar Dados Cadastrais'}
-          </Button>
+          <div className="pt-4 border-t">
+            <p className="text-sm text-muted-foreground">
+              💡 Estes dados são sincronizados automaticamente da API CorpNuvem e não podem ser editados manualmente. 
+              Use o botão "Re-sincronizar" acima para atualizar com os dados mais recentes.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
