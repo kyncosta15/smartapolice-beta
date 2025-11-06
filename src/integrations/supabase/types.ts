@@ -2707,6 +2707,42 @@ export type Database = {
           },
         ]
       }
+      user_cpf_vinculos: {
+        Row: {
+          ativo: boolean | null
+          cpf: string
+          created_at: string | null
+          id: string
+          nome: string | null
+          observacoes: string | null
+          tipo: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          cpf: string
+          created_at?: string | null
+          id?: string
+          nome?: string | null
+          observacoes?: string | null
+          tipo?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean | null
+          cpf?: string
+          created_at?: string | null
+          id?: string
+          nome?: string | null
+          observacoes?: string | null
+          tipo?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_memberships: {
         Row: {
           created_at: string | null
