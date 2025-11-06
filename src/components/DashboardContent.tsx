@@ -22,9 +22,7 @@ import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { extractFieldValue } from '@/utils/extractFieldValue';
 import { 
   createExtendedInstallments,
-  filterOverdueInstallments,
-  calculateDuingNext30Days,
-  calculateDuingNext60Days
+  filterOverdueInstallments
 } from '@/utils/installmentUtils';
 import { 
   Home,
@@ -91,15 +89,43 @@ export function DashboardContent() {
   // Calcular estatísticas de parcelas com TODAS as apólices (incluindo persistidas)
   const allInstallments = createExtendedInstallments(allPolicies);
   const overdueInstallments = filterOverdueInstallments(allInstallments);
-  const duingNext30Days = calculateDuingNext30Days(allInstallments);
-  const duingNext60Days = calculateDuingNext60Days(allInstallments);
+  
+  // Calcular apólices vigentes que vencem em 30/60 dias
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const in30Days = new Date(today);
+  in30Days.setDate(in30Days.getDate() + 30);
+  
+  const in60Days = new Date(today);
+  in60Days.setDate(in60Days.getDate() + 60);
+  
+  const policiesExpiring30Days = allPolicies.filter(policy => {
+    // Apenas apólices vigentes
+    const status = policy.status?.toLowerCase();
+    if (status !== 'vigente' && status !== 'ativa' && status !== 'vencendo') return false;
+    
+    const expirationDate = new Date(policy.expirationDate || policy.endDate);
+    expirationDate.setHours(0, 0, 0, 0);
+    return expirationDate >= today && expirationDate <= in30Days;
+  }).length;
+  
+  const policiesExpiring60Days = allPolicies.filter(policy => {
+    // Apenas apólices vigentes
+    const status = policy.status?.toLowerCase();
+    if (status !== 'vigente' && status !== 'ativa' && status !== 'vencendo') return false;
+    
+    const expirationDate = new Date(policy.expirationDate || policy.endDate);
+    expirationDate.setHours(0, 0, 0, 0);
+    return expirationDate >= today && expirationDate <= in60Days;
+  }).length;
 
   // Criar estatísticas atualizadas para o dashboard
   const enhancedDashboardStats = {
     ...dashboardData,
     overdueInstallments: overdueInstallments.length,
-    duingNext30Days: duingNext30Days,
-    duingNext60Days: duingNext60Days,
+    duingNext30Days: policiesExpiring30Days,
+    duingNext60Days: policiesExpiring60Days,
     renovadas: dashboardData.renewalDistribution?.renovadas ?? 0,
     naoRenovadas: dashboardData.renewalDistribution?.naoRenovadas ?? 0
   };
