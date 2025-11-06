@@ -163,11 +163,49 @@ Deno.serve(async (req) => {
       .eq('ativo', true);
 
     const documentosParaBuscar = [documento];
+    const cpfsAtivos = cpfsVinculados?.map(v => v.cpf.replace(/\D/g, '')) || [];
+    
     if (cpfsVinculados && cpfsVinculados.length > 0) {
       console.log(`📋 Encontrados ${cpfsVinculados.length} CPFs vinculados`);
       cpfsVinculados.forEach(v => documentosParaBuscar.push(v.cpf));
     } else {
       console.log('ℹ️ Nenhum CPF vinculado encontrado');
+    }
+
+    // LIMPAR APÓLICES DE CPFs DESVINCULADOS
+    console.log('🧹 Verificando apólices de CPFs desvinculados...');
+    const { data: apolicesVinculadas, error: fetchError } = await supabaseClient
+      .from('policies')
+      .select('id, vinculo_cpf, numero_apolice')
+      .eq('user_id', user.id)
+      .not('vinculo_cpf', 'is', null);
+
+    if (apolicesVinculadas && apolicesVinculadas.length > 0) {
+      const apolicesParaRemover = apolicesVinculadas.filter(ap => {
+        const vinculoLimpo = ap.vinculo_cpf?.replace(/\D/g, '');
+        return vinculoLimpo && !cpfsAtivos.includes(vinculoLimpo);
+      });
+
+      if (apolicesParaRemover.length > 0) {
+        console.log(`🗑️ Removendo ${apolicesParaRemover.length} apólices de CPFs desvinculados...`);
+        const idsParaRemover = apolicesParaRemover.map(ap => ap.id);
+        
+        const { error: deleteError } = await supabaseClient
+          .from('policies')
+          .delete()
+          .in('id', idsParaRemover);
+
+        if (deleteError) {
+          console.error('❌ Erro ao remover apólices antigas:', deleteError);
+        } else {
+          console.log(`✅ ${apolicesParaRemover.length} apólices removidas com sucesso`);
+          apolicesParaRemover.forEach(ap => {
+            console.log(`   - ${ap.numero_apolice} (CPF: ${ap.vinculo_cpf})`);
+          });
+        }
+      } else {
+        console.log('✅ Nenhuma apólice de CPF desvinculado encontrada');
+      }
     }
 
     let totalApolicesSincronizadas = 0;
