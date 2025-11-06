@@ -104,8 +104,8 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       return sum + installmentCount;
     }, 0);
 
-    // Distribuição por seguradora
-    const insurerCounts = normalizedPolicies.reduce((acc, policy) => {
+    // Distribuição por seguradora (APENAS VIGENTES)
+    const insurerCounts = activePolicies.reduce((acc, policy) => {
       // Use normalized data which has safe string values
       const insurerName = policy.seguradoraEmpresa || 'Não informado';
       acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
@@ -118,8 +118,8 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       percentage: totalMonthlyCost > 0 ? Math.round((Number(value) / totalMonthlyCost) * 100) : 0
     }));
 
-    // Distribuição por tipo
-    const typeCounts = normalizedPolicies.reduce((acc, policy) => {
+    // Distribuição por tipo (APENAS VIGENTES)
+    const typeCounts = activePolicies.reduce((acc, policy) => {
       const typeName = policy.tipoCategoria || (policy.type === 'auto' ? 'Seguro Auto' :
                        policy.type === 'vida' ? 'Seguro de Vida' :
                        policy.type === 'saude' ? 'Seguro Saúde' :

@@ -80,8 +80,8 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       return sum + (policy.installments?.length || 0);
     }, 0);
 
-    // Distribuição por seguradora - CONVERSÃO TOTAL PARA STRINGS
-    const insurerCounts = policies.reduce((acc, policy) => {
+    // Distribuição por seguradora (APENAS VIGENTES) - CONVERSÃO TOTAL PARA STRINGS
+    const insurerCounts = activePoliciesForCalc.reduce((acc, policy) => {
       const insurerName = safeString(getInsurerName(policy.insurer));
       acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
       return acc;
@@ -93,7 +93,7 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       percentage: totalMonthlyCost > 0 ? (value / totalMonthlyCost) * 100 : 0
     }));
 
-    // Distribuição por tipo - CONVERSÃO TOTAL PARA STRINGS
+    // Distribuição por tipo (APENAS VIGENTES) - CONVERSÃO TOTAL PARA STRINGS
     const getTypeLabel = (type: string) => {
       const types = {
         auto: 'Seguro Auto',
@@ -106,7 +106,7 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       return types[type] || 'Seguro Auto';
     };
 
-    const typeCounts = policies.reduce((acc, policy) => {
+    const typeCounts = activePoliciesForCalc.reduce((acc, policy) => {
       const typeLabel = safeString(getTypeLabel(policy.type));
       acc[typeLabel] = (acc[typeLabel] || 0) + (policy.monthlyAmount || 0);
       return acc;

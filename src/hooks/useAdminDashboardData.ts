@@ -160,14 +160,14 @@ export function useAdminDashboardData() {
       const activeUsersResult = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('status', 'active');
       console.log('✅ Resultado consulta active users:', activeUsersResult);
       
-      // Dados de seguradoras
+      // Dados de seguradoras (APENAS VIGENTES)
       const insurersResult = await supabase.from('policies')
         .select('seguradora')
+        .in('status', ['vigente', 'ativa', 'vencendo'])
         .not('seguradora', 'is', null)
         .neq('seguradora', '');
-      console.log('🏢 Resultado consulta seguradoras:', insurersResult);
+      console.log('🏢 Resultado consulta seguradoras (VIGENTES):', insurersResult);
       
-      // Resto das consultas
       const [
         { data: ufData },
         { data: personTypeData },
@@ -175,8 +175,11 @@ export function useAdminDashboardData() {
         { data: recentPoliciesData },
         { data: monthlyData },
       ] = await Promise.all([
-        // Dados de UF
-        supabase.from('policies').select('uf').not('uf', 'is', null),
+        // Dados de UF (APENAS VIGENTES)
+        supabase.from('policies')
+          .select('uf')
+          .in('status', ['vigente', 'ativa', 'vencendo'])
+          .not('uf', 'is', null),
         
         // Dados de tipo de pessoa (APENAS ATIVAS)
         supabase.from('policies')
