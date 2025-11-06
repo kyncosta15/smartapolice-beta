@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, Users } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, Users, Link } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -727,7 +727,7 @@ export function MyPolicies() {
                     <div className="flex items-center gap-1.5 flex-1 min-w-0">
                       {originalPolicy?.documento && isDependentCPF(originalPolicy.documento) && (
                         <div className="shrink-0" title={`Apólice de dependente`}>
-                          <Users 
+                          <Link 
                             className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" 
                           />
                         </div>
@@ -868,7 +868,7 @@ export function MyPolicies() {
                                 className="shrink-0" 
                                 title="Apólice de dependente"
                               >
-                                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                <Link className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                               </div>
                             );
                           }
