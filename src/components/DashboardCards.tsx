@@ -46,9 +46,9 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
   const firstRowCards = [
     {
       id: 'total',
-      title: 'Total de Apólices',
+      title: 'Total de Apólices Vigentes',
       value: dashboardStats.totalPolicies.toString(),
-      subtitle: 'Apólices gerenciadas',
+      subtitle: 'Apólices ativas gerenciadas',
       icon: FileText,
       badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
       iconColor: 'text-blue-600',

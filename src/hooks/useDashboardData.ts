@@ -55,16 +55,17 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
 
     // Normalize all policies first to ensure safe data handling
     const normalizedPolicies = policies.map(normalizePolicy);
-
-    const totalPolicies = normalizedPolicies.length;
     
     // Filtrar apenas apólices vigentes para cálculos financeiros
     const activePolicies = normalizedPolicies.filter(p => {
       const status = p.status?.toLowerCase();
       return status === 'vigente' || status === 'ativa' || status === 'vencendo';
     });
+
+    // Contar apenas apólices vigentes
+    const totalPolicies = activePolicies.length;
     
-    console.log(`📊 [useDashboardData] Total: ${totalPolicies} apólices, Vigentes: ${activePolicies.length} apólices`);
+    console.log(`📊 [useDashboardData] Total de apólices no sistema: ${normalizedPolicies.length}, Vigentes: ${totalPolicies} apólices`);
     
     // LOG DETALHADO: Mostrar cada apólice vigente e seu valor mensal
     console.log('💰 [useDashboardData] Calculando totalMonthlyCost APENAS com apólices vigentes:');
