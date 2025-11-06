@@ -56,8 +56,11 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     // Normalize all policies first to ensure safe data handling
     const normalizedPolicies = policies.map(normalizePolicy);
 
-    // Contar TODAS as apólices no total (vigentes + antigas)
-    const totalPolicies = normalizedPolicies.length;
+    // Contar apenas apólices vigentes no total
+    const totalPolicies = normalizedPolicies.filter(p => {
+      const status = p.status?.toLowerCase();
+      return status === 'vigente' || status === 'ativa' || status === 'vencendo';
+    }).length;
     
     // Filtrar apenas apólices vigentes para cálculos financeiros
     const activePolicies = normalizedPolicies.filter(p => {

@@ -431,9 +431,9 @@ export function MyPolicies() {
       }
       
       if (statusFilter === 'antigas') {
-        const endDate = new Date(policy.endDate);
-        const endYear = endDate.getFullYear();
-        if (endYear >= currentYear) return false;
+        // Antigas: mostrar APENAS as não vigentes (status diferente de vigente, ativa ou vencendo)
+        const status = policy.status?.toLowerCase();
+        if (status === 'vigente' || status === 'ativa' || status === 'vencendo') return false;
       }
     }
     
@@ -539,8 +539,8 @@ export function MyPolicies() {
           className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
         >
           Antigas ({policiesWithStatus.filter(p => {
-            const endYear = new Date(p.endDate).getFullYear();
-            return endYear < currentYear;
+            const status = p.status?.toLowerCase();
+            return status !== 'vigente' && status !== 'ativa' && status !== 'vencendo';
           }).length})
         </Button>
         <Button
