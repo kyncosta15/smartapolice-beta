@@ -41,8 +41,11 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       return 'Seguradora Desconhecida';
     };
 
-    // Calcular métricas básicas
-    const totalPolicies = policies.length;
+    // Calcular métricas básicas - APENAS VIGENTES
+    const totalPolicies = policies.filter(policy => {
+      const status = policy.status?.toLowerCase();
+      return status === 'vigente' || status === 'ativa' || status === 'vencendo';
+    }).length;
     
     // Filtrar apenas apólices vigentes para cálculos financeiros
     const activePoliciesForCalc = policies.filter(policy => {
@@ -114,9 +117,9 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
       value
     }));
 
-    // Classificação por pessoa física/jurídica - DETECTA AUTOMATICAMENTE
-    console.log('🔍 Iniciando classificação de pessoa física/jurídica - DETECÇÃO AUTOMÁTICA...');
-    const personTypeDistribution = policies.reduce((acc, policy) => {
+    // Classificação por pessoa física/jurídica - DETECTA AUTOMATICAMENTE (APENAS ATIVAS)
+    console.log('🔍 Iniciando classificação de pessoa física/jurídica - DETECÇÃO AUTOMÁTICA (APENAS ATIVAS)...');
+    const personTypeDistribution = activePoliciesForCalc.reduce((acc, policy) => {
       const safeName = safeString(policy.name);
       const safeDocumento = safeString(extractFieldValue(policy.documento));
       

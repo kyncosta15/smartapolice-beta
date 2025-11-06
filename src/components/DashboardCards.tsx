@@ -86,18 +86,18 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
   const secondRowCards = [
     {
       id: 'renovadas',
-      title: 'Renovada/Vigente',
+      title: 'Vigente',
       value: (dashboardStats.renovadas ?? 0).toString(),
-      subtitle: 'Apólices ativas renovadas',
+      subtitle: 'Apólices ativas',
       icon: CheckCircle,
       gradient: 'bg-gradient-to-br from-green-500 to-emerald-600',
       textColor: 'text-white'
     },
     {
       id: 'nao_renovadas',
-      title: 'Não Renovadas',
+      title: 'Antigas',
       value: (dashboardStats.naoRenovadas ?? 0).toString(),
-      subtitle: 'Apólices sem renovação',
+      subtitle: 'Apólices vencidas',
       icon: AlertTriangle,
       gradient: 'bg-gradient-to-br from-red-500 to-rose-600',
       textColor: 'text-white'

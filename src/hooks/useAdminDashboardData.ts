@@ -122,9 +122,11 @@ export function useAdminDashboardData() {
         status: policiesCountOnly.status
       });
       
-      // TESTE 2: Select all e contar no JS
-      const policiesFullData = await supabase.from('policies').select('id');
-      console.log('📊 TESTE 2 - Select all e contar no JS:', {
+      // TESTE 2: Select all e contar no JS (APENAS VIGENTES)
+      const policiesFullData = await supabase.from('policies')
+        .select('id, status')
+        .in('status', ['vigente', 'ativa', 'vencendo']);
+      console.log('📊 TESTE 2 - Select all e contar no JS (APENAS VIGENTES):', {
         data_length: policiesFullData.data?.length || 0,
         error: policiesFullData.error,
         status: policiesFullData.status
@@ -140,17 +142,17 @@ export function useAdminDashboardData() {
       });
       
       console.log('📊 ========================================');
-      console.log('📊 COMPARAÇÃO FINAL:');
+      console.log('📊 COMPARAÇÃO FINAL (VIGENTES):');
       console.log('📊 Método 1 (head:true):', policiesCountOnly.count);
-      console.log('📊 Método 2 (JS count):', policiesFullData.data?.length || 0);
+      console.log('📊 Método 2 (JS count - VIGENTES):', policiesFullData.data?.length || 0);
       console.log('📊 Método 3 (count no head):', policiesCountNoHead.count);
       console.log('📊 ========================================');
       
-      // Usar o método 2 (JS count) que é mais confiável
+      // Usar o método 2 (JS count) que é mais confiável - APENAS VIGENTES
       const policiesResult = policiesFullData;
       const totalPolicies = policiesFullData.data?.length || 0;
       
-      console.log('✅ Usando contagem real (JS):', totalPolicies);
+      console.log('✅ Usando contagem real (JS) - APENAS VIGENTES:', totalPolicies);
       
       const usersResult = await supabase.from('users').select('*', { count: 'exact', head: true });
       console.log('👥 Resultado consulta users:', usersResult);
@@ -176,8 +178,11 @@ export function useAdminDashboardData() {
         // Dados de UF
         supabase.from('policies').select('uf').not('uf', 'is', null),
         
-        // Dados de tipo de pessoa
-        supabase.from('policies').select('documento_tipo').not('documento_tipo', 'is', null),
+        // Dados de tipo de pessoa (APENAS ATIVAS)
+        supabase.from('policies')
+          .select('documento_tipo')
+          .in('status', ['vigente', 'ativa', 'vencendo'])
+          .not('documento_tipo', 'is', null),
         
         // Dados financeiros
         supabase.from('policies').select('custo_mensal').not('custo_mensal', 'is', null),

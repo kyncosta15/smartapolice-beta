@@ -56,7 +56,11 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     // Normalize all policies first to ensure safe data handling
     const normalizedPolicies = policies.map(normalizePolicy);
 
-    const totalPolicies = normalizedPolicies.length;
+    // Contar apenas apólices vigentes no total
+    const totalPolicies = normalizedPolicies.filter(p => {
+      const status = p.status?.toLowerCase();
+      return status === 'vigente' || status === 'ativa' || status === 'vencendo';
+    }).length;
     
     // Filtrar apenas apólices vigentes para cálculos financeiros
     const activePolicies = normalizedPolicies.filter(p => {
@@ -131,10 +135,10 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       value: Math.round(Number(value) || 0)
     }));
 
-    // 🚨 LÓGICA CORRIGIDA - Distribuição pessoa física/jurídica - DETECÇÃO AUTOMÁTICA
-    console.log('🔍 Iniciando classificação de pessoa física/jurídica - DETECÇÃO AUTOMÁTICA...');
+    // 🚨 LÓGICA CORRIGIDA - Distribuição pessoa física/jurídica - DETECÇÃO AUTOMÁTICA (APENAS ATIVAS)
+    console.log('🔍 Iniciando classificação de pessoa física/jurídica - DETECÇÃO AUTOMÁTICA (APENAS ATIVAS)...');
     
-    const personTypeDistribution = normalizedPolicies.reduce((acc, policy) => {
+    const personTypeDistribution = activePolicies.reduce((acc, policy) => {
       // Função para extrair valor do campo do N8N
       const extractValue = (field: any): string | null => {
         if (!field) return null;
