@@ -8,13 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Trash2, Users, UserPlus, X } from 'lucide-react';
+import { Plus, Trash2, Users, UserPlus, X, Search, CheckCircle2, XCircle } from 'lucide-react';
+import { DocumentValidator } from '@/utils/documentValidator';
+import { useClienteLookup } from '@/hooks/useClienteLookup';
 
 interface CPFVinculo {
   id: string;
   cpf: string;
   nome?: string;
-  tipo: 'dependente' | 'subestipulante';
+  tipo: 'dependente' | 'subestipulante' | 'empresa';
   observacoes?: string;
   ativo: boolean;
   created_at: string;
@@ -33,10 +35,12 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
   const [formData, setFormData] = useState({
     cpf: '',
     nome: '',
-    tipo: 'dependente' as 'dependente' | 'subestipulante',
+    tipo: 'dependente' as 'dependente' | 'subestipulante' | 'empresa',
     observacoes: ''
   });
+  const [documentInfo, setDocumentInfo] = useState<{ type: string; personType: string; isValid: boolean } | null>(null);
   const { toast } = useToast();
+  const { result: lookupResult, searchByDocument } = useClienteLookup();
 
   useEffect(() => {
     if (open) {
@@ -71,20 +75,58 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
     }
   };
 
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    return numbers
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-      .slice(0, 14);
+  const handleDocumentChange = (value: string) => {
+    // Permitir apenas números e alguns caracteres de formatação
+    const cleanValue = value.replace(/[^\d.\-\/]/g, '');
+    setFormData({ ...formData, cpf: cleanValue });
+    
+    // Tentar detectar o documento
+    const docInfo = DocumentValidator.detectDocument(cleanValue);
+    if (docInfo && docInfo.type !== 'INVALID') {
+      setDocumentInfo({
+        type: docInfo.type,
+        personType: docInfo.personType,
+        isValid: docInfo.isValid
+      });
+      // Atualizar com documento formatado
+      setFormData({ ...formData, cpf: docInfo.formatted });
+      
+      // Ajustar tipo automaticamente
+      if (docInfo.type === 'CNPJ') {
+        setFormData({ ...formData, cpf: docInfo.formatted, tipo: 'empresa' });
+      }
+    } else {
+      setDocumentInfo(null);
+    }
+  };
+
+  const handleSearchDocument = async () => {
+    if (!documentInfo || !documentInfo.isValid) {
+      toast({
+        title: "Documento inválido",
+        description: "Por favor, insira um CPF ou CNPJ válido antes de buscar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const personType = documentInfo.personType === 'PF' ? 'pf' : 'pj';
+    const nome = await searchByDocument(formData.cpf, personType);
+    
+    if (nome) {
+      setFormData({ ...formData, nome });
+      toast({
+        title: "Cliente encontrado!",
+        description: `Nome: ${nome}`,
+      });
+    }
   };
 
   const handleAddVinculo = async () => {
-    if (!formData.cpf || formData.cpf.replace(/\D/g, '').length !== 11) {
+    if (!documentInfo || !documentInfo.isValid) {
       toast({
-        title: "CPF inválido",
-        description: "Por favor, insira um CPF válido com 11 dígitos.",
+        title: "Documento inválido",
+        description: "Por favor, insira um CPF ou CNPJ válido.",
         variant: "destructive",
       });
       return;
@@ -109,8 +151,8 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
       if (error) {
         if (error.code === '23505') {
           toast({
-            title: "CPF já vinculado",
-            description: "Este CPF já está vinculado à sua conta.",
+            title: "Documento já vinculado",
+            description: "Este documento já está vinculado à sua conta.",
             variant: "destructive",
           });
         } else {
@@ -120,11 +162,12 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
       }
 
       toast({
-        title: "CPF vinculado",
-        description: "O CPF foi vinculado com sucesso!",
+        title: "Documento vinculado",
+        description: "O documento foi vinculado com sucesso!",
       });
 
       setFormData({ cpf: '', nome: '', tipo: 'dependente', observacoes: '' });
+      setDocumentInfo(null);
       setShowAddForm(false);
       loadVinculos();
       onCPFsUpdated?.();
@@ -177,10 +220,10 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Gerenciar CPFs Vinculados
+            Gerenciar CPFs/CNPJs Vinculados
           </DialogTitle>
           <DialogDescription>
-            Vincule CPFs de dependentes ou subestipulantes para buscar suas apólices automaticamente.
+            Vincule CPFs de dependentes/subestipulantes ou CNPJs de empresas para buscar suas apólices automaticamente.
           </DialogDescription>
         </DialogHeader>
 
@@ -190,19 +233,22 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
             {vinculos.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Nenhum CPF vinculado ainda.</p>
-                <p className="text-sm">Adicione CPFs para visualizar as apólices deles.</p>
+                <p>Nenhum documento vinculado ainda.</p>
+                <p className="text-sm">Adicione CPFs ou CNPJs para visualizar as apólices.</p>
               </div>
             ) : (
-              vinculos.map((vinculo) => (
-                <div key={vinculo.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">{formatCPF(vinculo.cpf)}</span>
-                      <Badge variant={vinculo.tipo === 'dependente' ? 'default' : 'secondary'} className="text-xs">
-                        {vinculo.tipo === 'dependente' ? 'Dependente' : 'Subestipulante'}
-                      </Badge>
-                    </div>
+              vinculos.map((vinculo) => {
+                const docInfo = DocumentValidator.detectDocument(vinculo.cpf);
+                const formatted = docInfo?.formatted || vinculo.cpf;
+                return (
+                  <div key={vinculo.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">{formatted}</span>
+                        <Badge variant={vinculo.tipo === 'empresa' ? 'outline' : vinculo.tipo === 'dependente' ? 'default' : 'secondary'} className="text-xs">
+                          {vinculo.tipo === 'dependente' ? 'Dependente' : vinculo.tipo === 'subestipulante' ? 'Subestipulante' : 'Empresa'}
+                        </Badge>
+                      </div>
                     {vinculo.nome && (
                       <p className="text-sm text-muted-foreground">{vinculo.nome}</p>
                     )}
@@ -220,7 +266,8 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-              ))
+              );
+              })
             )}
           </div>
 
@@ -230,7 +277,7 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-medium flex items-center gap-2">
                   <UserPlus className="w-4 h-4" />
-                  Adicionar Novo CPF
+                  Adicionar Novo CPF/CNPJ
                 </h3>
                 <Button
                   variant="ghost"
@@ -238,6 +285,7 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
                   onClick={() => {
                     setShowAddForm(false);
                     setFormData({ cpf: '', nome: '', tipo: 'dependente', observacoes: '' });
+                    setDocumentInfo(null);
                   }}
                 >
                   <X className="w-4 h-4" />
@@ -246,14 +294,50 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
 
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="cpf">CPF *</Label>
-                  <Input
-                    id="cpf"
-                    value={formData.cpf}
-                    onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
-                    placeholder="000.000.000-00"
-                    maxLength={14}
-                  />
+                  <Label htmlFor="cpf">CPF ou CNPJ *</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Input
+                        id="cpf"
+                        value={formData.cpf}
+                        onChange={(e) => handleDocumentChange(e.target.value)}
+                        placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                        maxLength={18}
+                      />
+                      {documentInfo && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          {documentInfo.isValid ? (
+                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-red-600" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleSearchDocument}
+                      disabled={!documentInfo || !documentInfo.isValid || lookupResult.loading}
+                      title="Buscar na base de dados"
+                    >
+                      <Search className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  {documentInfo && (
+                    <p className={`text-xs mt-1 ${documentInfo.isValid ? 'text-green-600' : 'text-red-600'}`}>
+                      {documentInfo.isValid 
+                        ? `✓ ${documentInfo.type} válido detectado (${documentInfo.personType})`
+                        : `✗ ${documentInfo.type} inválido`
+                      }
+                    </p>
+                  )}
+                  {lookupResult.found && lookupResult.name && (
+                    <p className="text-xs mt-1 text-blue-600">
+                      ✓ Encontrado: {lookupResult.name}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -270,7 +354,7 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
                   <Label htmlFor="tipo">Tipo</Label>
                   <Select
                     value={formData.tipo}
-                    onValueChange={(value: 'dependente' | 'subestipulante') => 
+                    onValueChange={(value: 'dependente' | 'subestipulante' | 'empresa') => 
                       setFormData({ ...formData, tipo: value })
                     }
                   >
@@ -280,6 +364,7 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
                     <SelectContent>
                       <SelectItem value="dependente">Dependente</SelectItem>
                       <SelectItem value="subestipulante">Subestipulante</SelectItem>
+                      <SelectItem value="empresa">Empresa</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -297,11 +382,11 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
 
                 <Button
                   onClick={handleAddVinculo}
-                  disabled={loading || !formData.cpf}
+                  disabled={loading || !formData.cpf || !documentInfo?.isValid}
                   className="w-full"
                 >
                   <UserPlus className="w-4 h-4 mr-2" />
-                  {loading ? 'Adicionando...' : 'Adicionar CPF'}
+                  {loading ? 'Adicionando...' : 'Adicionar Documento'}
                 </Button>
               </div>
             </div>
@@ -312,7 +397,7 @@ export function ManageCPFVinculosModal({ open, onOpenChange, onCPFsUpdated }: Ma
               className="w-full"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Adicionar Novo CPF
+              Adicionar Novo CPF/CNPJ
             </Button>
           )}
         </div>
