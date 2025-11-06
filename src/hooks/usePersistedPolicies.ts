@@ -472,7 +472,8 @@ export function usePersistedPolicies() {
         nosnum: policy.nosnum
       });
 
-      console.log('📎 Anexos encontrados:', resultado);
+      console.log('📎 Anexos retornados pela API:', JSON.stringify(resultado, null, 2));
+      console.log('📎 Total de anexos:', resultado.anexos?.length || 0);
 
       if (!resultado.anexos || resultado.anexos.length === 0) {
         toast({
@@ -483,16 +484,36 @@ export function usePersistedPolicies() {
         return;
       }
 
-      // Procurar pelo PDF nos anexos
-      const pdfAnexo = resultado.anexos.find(anexo => 
-        anexo.tipo?.toLowerCase() === 'pdf' || 
-        anexo.nome?.toLowerCase().endsWith('.pdf')
-      );
+      // Log detalhado de cada anexo para debug
+      resultado.anexos.forEach((anexo, index) => {
+        console.log(`📎 Anexo ${index + 1}:`, {
+          nome: anexo.nome,
+          tipo: anexo.tipo,
+          descricao: anexo.descricao,
+          url: anexo.url
+        });
+      });
+
+      // Procurar pelo PDF nos anexos com lógica mais robusta
+      const pdfAnexo = resultado.anexos.find(anexo => {
+        const nomeMinusculo = anexo.nome?.toLowerCase() || '';
+        const tipoMinusculo = anexo.tipo?.toLowerCase() || '';
+        const urlMinuscula = anexo.url?.toLowerCase() || '';
+        
+        // Verificar extensão no nome, tipo ou URL
+        return nomeMinusculo.endsWith('.pdf') ||
+               tipoMinusculo.includes('pdf') ||
+               urlMinuscula.includes('.pdf');
+      });
 
       if (!pdfAnexo) {
+        // Mostrar os tipos encontrados para debug
+        const tiposEncontrados = resultado.anexos.map(a => a.tipo || 'sem tipo').join(', ');
+        console.error('❌ Nenhum PDF encontrado. Tipos disponíveis:', tiposEncontrados);
+        
         toast({
           title: "❌ PDF não encontrado",
-          description: `Encontrados ${resultado.anexos.length} anexo(s), mas nenhum é PDF`,
+          description: `Encontrados ${resultado.anexos.length} anexo(s): ${tiposEncontrados}`,
           variant: "destructive",
         });
         return;
