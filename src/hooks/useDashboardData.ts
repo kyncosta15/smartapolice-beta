@@ -105,6 +105,8 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     }, 0);
 
     // Distribuição por seguradora (APENAS VIGENTES)
+    console.log('🏢 [Distribuição Seguradoras] Usando APENAS apólices vigentes:', activePolicies.length);
+    
     const insurerCounts = activePolicies.reduce((acc, policy: any) => {
       // Use normalized data which has safe string values
       let insurerName = policy.seguradoraEmpresa || policy.seguradora || 'Não informado';
@@ -120,6 +122,8 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
       acc[insurerName] = (acc[insurerName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
+    
+    console.log('🏢 [Distribuição Seguradoras] Seguradoras encontradas:', Object.keys(insurerCounts));
 
     const insurerDistribution = Object.entries(insurerCounts).map(([name, value]) => ({
       name,
@@ -128,12 +132,16 @@ export function useDashboardData(policies: ParsedPolicyData[]) {
     }));
 
     // Distribuição por tipo (APENAS VIGENTES)
+    console.log('📊 [Distribuição Tipos] Usando APENAS apólices vigentes:', activePolicies.length);
+    
     const typeCounts = activePolicies.reduce((acc, policy: any) => {
       // Usar tipo_seguro direto do banco (já normalizado por normalizePolicy)
       const typeName = policy.tipoCategoria || policy.tipo_seguro || policy.type || 'Outros';
       acc[typeName] = (acc[typeName] || 0) + (policy.monthlyAmount || 0);
       return acc;
     }, {} as Record<string, number>);
+    
+    console.log('📊 [Distribuição Tipos] Tipos encontrados:', Object.keys(typeCounts));
 
     const typeDistribution = Object.entries(typeCounts).map(([name, value]) => ({
       name,
