@@ -99,7 +99,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       id: 'nao_renovadas',
       title: 'Antigas',
       value: (dashboardStats.naoRenovadas ?? 0).toString(),
-      subtitle: 'Apólices vencidas',
+      subtitle: 'Apólices antigas',
       icon: AlertTriangle,
       gradient: 'bg-gradient-to-br from-red-500 to-rose-600',
       textColor: 'text-white'
