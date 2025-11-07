@@ -463,7 +463,7 @@ export function usePersistedPolicies() {
     }
   };
 
-  // Baixar PDF de uma apólice
+  // Baixar PDF de uma apólice - OTIMIZADO PARA MOBILE/IPHONE
   const downloadPDF = async (policyId: string, policyName: string) => {
     console.log('📥 Iniciando download do PDF:', policyId, policyName);
     
@@ -475,31 +475,81 @@ export function usePersistedPolicies() {
     const downloadUrl = await getPDFDownloadUrl(policyId);
     
     if (downloadUrl) {
-      console.log('✅ URL do PDF obtida, iniciando download');
+      console.log('✅ URL do PDF obtida, iniciando download otimizado para mobile');
       
-      // Criar link temporário para download
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `${policyName}.pdf`;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      
-      // Aguardar 1 segundo antes de limpar
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      document.body.removeChild(link);
-      
-      // Limpar blob URL após delay maior
-      setTimeout(() => {
-        console.log('🧹 Limpando blob URL');
-        URL.revokeObjectURL(downloadUrl);
-      }, 3000);
-      
-      toast({
-        title: "✅ Download Concluído",
-        description: `${policyName} foi baixado com sucesso`,
-      });
+      try {
+        // Fazer fetch do PDF para obter como blob
+        const response = await fetch(downloadUrl);
+        const blob = await response.blob();
+        
+        // Criar blob com MIME type explícito
+        const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+        const filename = `${policyName}.pdf`;
+        
+        // Verificar se Web Share API está disponível (iOS/Safari)
+        if (navigator.share && navigator.canShare) {
+          try {
+            const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+            
+            // Verificar se pode compartilhar arquivos
+            if (navigator.canShare({ files: [file] })) {
+              console.log('📱 Usando Web Share API (iOS nativo)');
+              await navigator.share({
+                title: policyName,
+                text: `Apólice ${policyName}`,
+                files: [file]
+              });
+              
+              toast({
+                title: "✅ Download Concluído",
+                description: `${policyName} foi salvo com sucesso`,
+              });
+              return;
+            }
+          } catch (shareError: any) {
+            // Usuário cancelou ou erro - continuar com fallback
+            if (shareError.name !== 'AbortError') {
+              console.log('⚠️ Web Share não disponível, usando fallback:', shareError);
+            } else {
+              // Usuário cancelou
+              console.log('ℹ️ Usuário cancelou o compartilhamento');
+              return;
+            }
+          }
+        }
+        
+        // Fallback: Download tradicional otimizado para mobile
+        console.log('📥 Usando método de download tradicional otimizado');
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        link.setAttribute('download', filename); // Força download
+        link.style.display = 'none';
+        link.target = '_self'; // Evita abrir em nova aba
+        
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+        
+        toast({
+          title: "✅ Download Concluído",
+          description: `${policyName} foi baixado com sucesso`,
+        });
+        
+      } catch (error) {
+        console.error('❌ Erro ao processar download:', error);
+        toast({
+          title: "❌ Erro no Download",
+          description: "Falha ao baixar o arquivo. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     } else {
       console.error('❌ Falha ao obter URL do PDF');
       toast({
