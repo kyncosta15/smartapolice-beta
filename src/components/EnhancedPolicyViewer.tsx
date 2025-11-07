@@ -77,18 +77,39 @@ export function EnhancedPolicyViewer({
   const uniqueInsurers = [...new Set(policies.map(p => p.insurer))];
 
   const handleDownload = async (policy: ParsedPolicyData) => {
+    // Helper function para forçar download em mobile
+    const forceDownload = (blob: Blob, filename: string) => {
+      // Criar blob com MIME type explícito para PDF
+      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      
+      // Criar link com atributos específicos para mobile
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      link.setAttribute('download', filename); // Força download mesmo em mobile
+      link.style.display = 'none';
+      link.target = '_self'; // Evita abrir em nova aba
+      
+      document.body.appendChild(link);
+      
+      // Trigger click com timeout para garantir que funcione em mobile
+      setTimeout(() => {
+        link.click();
+        
+        // Cleanup após delay
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+      }, 0);
+    };
+
     if (policy.file) {
       // Para arquivos locais (recém extraídos)
-      const url = URL.createObjectURL(policy.file);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${policy.name}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      forceDownload(policy.file, `${policy.name}.pdf`);
     } else if (policy.pdfPath) {
-      // Para apólices persistidas - usar múltiplas estratégias para contornar bloqueio do Opera
+      // Para apólices persistidas - usar múltiplas estratégias
       console.log('🔄 Iniciando download para apólice persistida:', policy.pdfPath);
       
       try {
@@ -107,17 +128,7 @@ export function EnhancedPolicyViewer({
         
         if (fileBlob) {
           console.log('✅ Arquivo obtido via download direto');
-          const blobUrl = URL.createObjectURL(fileBlob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = `${policy.name || 'apolice'}.pdf`;
-          link.style.display = 'none';
-          
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
-          
+          forceDownload(fileBlob, `${policy.name || 'apolice'}.pdf`);
           console.log('✅ Download concluído com sucesso (método direto)');
           return;
         }
@@ -143,18 +154,7 @@ export function EnhancedPolicyViewer({
         
         const blob = await response.blob();
         console.log('✅ Arquivo obtido via Edge Function proxy');
-        
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `${policy.name || 'apolice'}.pdf`;
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-        
+        forceDownload(blob, `${policy.name || 'apolice'}.pdf`);
         console.log('✅ Download concluído via proxy');
         return;
         
@@ -169,21 +169,11 @@ export function EnhancedPolicyViewer({
         const downloadUrl = await PolicyPersistenceService.getPDFDownloadUrl(policy.pdfPath);
         
         if (downloadUrl) {
-          // Fetch o arquivo e criar blob para forçar download (não abrir em nova aba)
+          // Fetch o arquivo e forçar download
           const response = await fetch(downloadUrl);
           const blob = await response.blob();
           
-          const blobUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = `${policy.name || 'apolice'}.pdf`;
-          link.style.display = 'none';
-          
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
-          
+          forceDownload(blob, `${policy.name || 'apolice'}.pdf`);
           console.log('✅ Download concluído via URL assinada');
           return;
         }
@@ -193,18 +183,19 @@ export function EnhancedPolicyViewer({
       
       // Se todas as estratégias falharam
       console.error('❌ Todas as estratégias de download falharam');
-      alert(`Download bloqueado pelo navegador Opera.
-
-Soluções recomendadas:
-1. Use Chrome, Firefox ou Edge para downloads
-2. Desative o bloqueador de anúncios do Opera temporariamente
-3. Adicione *.supabase.co às exceções do Opera
-
-O arquivo está salvo e disponível - o problema é apenas o bloqueio do navegador.`);
+      toast({
+        title: "❌ Erro no download",
+        description: "Não foi possível fazer o download do arquivo. Tente novamente.",
+        variant: "destructive",
+      });
       
     } else {
       console.warn('Arquivo não disponível para download:', policy.name);
-      alert('Arquivo não disponível para download');
+      toast({
+        title: "⚠️ Arquivo não disponível",
+        description: "O arquivo não está disponível para download.",
+        variant: "destructive",
+      });
     }
   };
 
