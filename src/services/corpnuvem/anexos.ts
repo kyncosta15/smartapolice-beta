@@ -68,16 +68,54 @@ export async function downloadDocumentoAnexo(url: string, fileName: string) {
     if (!response.ok) throw new Error('Erro ao baixar arquivo');
     
     const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
     
+    // Criar blob com MIME type explícito para PDF
+    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+    
+    // Verificar se Web Share API está disponível (iOS/Safari)
+    if (navigator.share && navigator.canShare) {
+      try {
+        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+        
+        // Verificar se pode compartilhar arquivos
+        if (navigator.canShare({ files: [file] })) {
+          console.log('📱 Usando Web Share API (iOS nativo)');
+          await navigator.share({
+            title: fileName.replace('.pdf', ''),
+            text: `Documento ${fileName}`,
+            files: [file]
+          });
+          
+          console.log('✅ [CorpNuvem Anexos] Compartilhado via Web Share API');
+          return;
+        }
+      } catch (shareError: any) {
+        // Usuário cancelou ou erro - continuar com fallback
+        if (shareError.name === 'AbortError') {
+          console.log('ℹ️ Usuário cancelou o compartilhamento');
+          return;
+        }
+        console.log('⚠️ Web Share não disponível, usando fallback:', shareError);
+      }
+    }
+    
+    // Fallback: Download tradicional otimizado para mobile
+    const blobUrl = URL.createObjectURL(pdfBlob);
     const link = document.createElement('a');
     link.href = blobUrl;
     link.download = fileName;
+    link.setAttribute('download', fileName); // Força download
+    link.style.display = 'none';
+    link.target = '_self'; // Evita abrir em nova aba
+    
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
     
-    window.URL.revokeObjectURL(blobUrl);
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    }, 100);
     
     console.log('✅ [CorpNuvem Anexos] Download realizado com sucesso');
   } catch (error: any) {

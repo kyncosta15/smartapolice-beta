@@ -165,8 +165,39 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
 
   const handleViewDocument = async (documento: any) => {
     try {
-      // Abrir documento em nova aba
-      window.open(documento.url, '_blank', 'noopener,noreferrer');
+      // Fazer download e usar Web Share API em mobile
+      const response = await fetch(documento.url);
+      if (!response.ok) throw new Error('Falha ao carregar documento');
+      
+      const blob = await response.blob();
+      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+      const filename = documento.nome_arquivo;
+      
+      // Verificar se Web Share API está disponível (iOS/Safari)
+      if (navigator.share && navigator.canShare) {
+        try {
+          const file = new window.File([pdfBlob], filename, { type: 'application/pdf' });
+          
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: filename.replace('.pdf', ''),
+              text: `Documento ${filename}`,
+              files: [file]
+            });
+            return;
+          }
+        } catch (shareError: any) {
+          if (shareError.name === 'AbortError') return;
+          console.log('Web Share não disponível, usando fallback');
+        }
+      }
+      
+      // Fallback: abrir em nova aba
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      
+      // Cleanup após delay
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
     } catch (error) {
       console.error('Erro ao visualizar documento:', error);
       progressToast({
@@ -209,17 +240,51 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
         }
       }
 
-      // Criar blob URL para download
-      const url = URL.createObjectURL(downloadData);
+      // Criar blob com MIME type explícito
+      const pdfBlob = new Blob([downloadData], { type: 'application/pdf' });
+      const filename = documento.nome_arquivo;
+      
+      // Verificar se Web Share API está disponível (iOS/Safari)
+      if (navigator.share && navigator.canShare) {
+        try {
+          const file = new window.File([pdfBlob], filename, { type: 'application/pdf' });
+          
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: filename.replace('.pdf', ''),
+              text: `Documento ${filename}`,
+              files: [file]
+            });
+            
+            progressToast({
+              title: 'Download concluído com sucesso',
+              variant: 'success'
+            });
+            return;
+          }
+        } catch (shareError: any) {
+          if (shareError.name === 'AbortError') return;
+          console.log('Web Share não disponível, usando fallback');
+        }
+      }
+
+      // Fallback: Download tradicional otimizado
+      const blobUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
-      link.href = url;
-      link.download = documento.nome_arquivo;
+      link.href = blobUrl;
+      link.download = filename;
+      link.setAttribute('download', filename);
+      link.style.display = 'none';
+      link.target = '_self';
+      
       document.body.appendChild(link);
       link.click();
       
       // Limpar recursos
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
 
       progressToast({
         title: 'Download concluído com sucesso',

@@ -119,32 +119,61 @@ export function DocumentsSection({ colaboradorId }: DocumentsSectionProps) {
 
       console.log('✅ File downloaded successfully');
 
-      // Create blob URL and trigger download
-      const blob = new Blob([data], { type: document.tipo_mime || 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
+      // Criar blob com MIME type explícito para PDF
+      const pdfBlob = new Blob([data], { type: 'application/pdf' });
+      const filename = document.nome_arquivo;
       
-      // Check if it's mobile
-      const isMobile = window.innerWidth <= 768;
-      
-      if (isMobile) {
-        // On mobile, open in new tab
-        window.open(url, '_blank');
-      } else {
-        // On desktop, trigger download
-        const link = window.document.createElement('a');
-        link.href = url;
-        link.download = document.nome_arquivo;
-        window.document.body.appendChild(link);
-        link.click();
-        window.document.body.removeChild(link);
+      // Verificar se Web Share API está disponível (iOS/Safari)
+      if (navigator.share && navigator.canShare) {
+        try {
+          const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+          
+          // Verificar se pode compartilhar arquivos
+          if (navigator.canShare({ files: [file] })) {
+            console.log('📱 Usando Web Share API (iOS nativo)');
+            await navigator.share({
+              title: filename.replace('.pdf', ''),
+              text: `Documento ${filename}`,
+              files: [file]
+            });
+            
+            toast({
+              title: 'Download concluído',
+              description: `${filename} foi salvo com sucesso`
+            });
+            
+            return;
+          }
+        } catch (shareError: any) {
+          // Usuário cancelou
+          if (shareError.name === 'AbortError') {
+            console.log('ℹ️ Usuário cancelou o compartilhamento');
+            return;
+          }
+          console.log('⚠️ Web Share não disponível, usando fallback');
+        }
       }
       
-      // Clean up blob URL
-      setTimeout(() => URL.revokeObjectURL(url), 100);
+      // Fallback: Download tradicional otimizado para mobile
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      const link = window.document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      link.setAttribute('download', filename);
+      link.style.display = 'none';
+      link.target = '_self'; // Evita abrir em nova aba
+      
+      window.document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        window.document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
       
       toast({
         title: 'Download iniciado',
-        description: `${document.nome_arquivo} ${isMobile ? 'foi aberto em nova aba' : 'está sendo baixado'}`
+        description: `${filename} está sendo baixado`
       });
     } catch (err) {
       console.error('❌ Error downloading file:', err);
