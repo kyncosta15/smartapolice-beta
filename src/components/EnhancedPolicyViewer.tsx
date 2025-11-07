@@ -77,37 +77,65 @@ export function EnhancedPolicyViewer({
   const uniqueInsurers = [...new Set(policies.map(p => p.insurer))];
 
   const handleDownload = async (policy: ParsedPolicyData) => {
-    // Helper function para forçar download em mobile
-    const forceDownload = (blob: Blob, filename: string) => {
+    // Helper function para usar Web Share API (iOS/Safari nativo)
+    const shareOrDownload = async (blob: Blob, filename: string) => {
       // Criar blob com MIME type explícito para PDF
       const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-      const blobUrl = URL.createObjectURL(pdfBlob);
       
-      // Criar link com atributos específicos para mobile
+      // Verificar se Web Share API está disponível e suporta files (iOS)
+      if (navigator.share && navigator.canShare) {
+        try {
+          const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+          
+          // Verificar se pode compartilhar arquivos
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: policy.name || 'Apólice',
+              text: `Apólice ${policy.policyNumber || ''}`,
+              files: [file]
+            });
+            
+            toast({
+              title: "✅ Download iniciado",
+              description: "O arquivo foi salvo com sucesso!",
+            });
+            
+            console.log('✅ Compartilhado via Web Share API (iOS)');
+            return true;
+          }
+        } catch (shareError) {
+          // Usuário cancelou ou erro - continuar com método fallback
+          console.log('⚠️ Web Share cancelado ou não disponível:', shareError);
+        }
+      }
+      
+      // Fallback: método tradicional de download
+      const blobUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = filename;
-      link.setAttribute('download', filename); // Força download mesmo em mobile
+      link.setAttribute('download', filename);
       link.style.display = 'none';
-      link.target = '_self'; // Evita abrir em nova aba
+      link.target = '_self';
       
+      // Adicionar temporariamente ao DOM
       document.body.appendChild(link);
       
-      // Trigger click com timeout para garantir que funcione em mobile
+      // Trigger click imediato (importante para iOS)
+      link.click();
+      
+      // Cleanup após delay
       setTimeout(() => {
-        link.click();
-        
-        // Cleanup após delay
-        setTimeout(() => {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
-        }, 100);
-      }, 0);
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
+      
+      return false;
     };
 
     if (policy.file) {
       // Para arquivos locais (recém extraídos)
-      forceDownload(policy.file, `${policy.name}.pdf`);
+      await shareOrDownload(policy.file, `${policy.name}.pdf`);
     } else if (policy.pdfPath) {
       // Para apólices persistidas - usar múltiplas estratégias
       console.log('🔄 Iniciando download para apólice persistida:', policy.pdfPath);
@@ -128,7 +156,7 @@ export function EnhancedPolicyViewer({
         
         if (fileBlob) {
           console.log('✅ Arquivo obtido via download direto');
-          forceDownload(fileBlob, `${policy.name || 'apolice'}.pdf`);
+          await shareOrDownload(fileBlob, `${policy.name || 'apolice'}.pdf`);
           console.log('✅ Download concluído com sucesso (método direto)');
           return;
         }
@@ -154,7 +182,7 @@ export function EnhancedPolicyViewer({
         
         const blob = await response.blob();
         console.log('✅ Arquivo obtido via Edge Function proxy');
-        forceDownload(blob, `${policy.name || 'apolice'}.pdf`);
+        await shareOrDownload(blob, `${policy.name || 'apolice'}.pdf`);
         console.log('✅ Download concluído via proxy');
         return;
         
@@ -173,7 +201,7 @@ export function EnhancedPolicyViewer({
           const response = await fetch(downloadUrl);
           const blob = await response.blob();
           
-          forceDownload(blob, `${policy.name || 'apolice'}.pdf`);
+          await shareOrDownload(blob, `${policy.name || 'apolice'}.pdf`);
           console.log('✅ Download concluído via URL assinada');
           return;
         }
