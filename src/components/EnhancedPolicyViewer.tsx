@@ -163,14 +163,28 @@ export function EnhancedPolicyViewer({
       }
       
       try {
-        // Estratégia 3: URL assinada como último recurso
-        console.log('📥 Tentativa 3: URL assinada');
+        // Estratégia 3: URL assinada + fetch para forçar download em mobile
+        console.log('📥 Tentativa 3: URL assinada com download forçado');
         const { PolicyPersistenceService } = await import('@/services/policyPersistenceService');
         const downloadUrl = await PolicyPersistenceService.getPDFDownloadUrl(policy.pdfPath);
         
         if (downloadUrl) {
-          console.log('✅ Abrindo em nova aba');
-          window.open(downloadUrl, '_blank');
+          // Fetch o arquivo e criar blob para forçar download (não abrir em nova aba)
+          const response = await fetch(downloadUrl);
+          const blob = await response.blob();
+          
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `${policy.name || 'apolice'}.pdf`;
+          link.style.display = 'none';
+          
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+          
+          console.log('✅ Download concluído via URL assinada');
           return;
         }
       } catch (urlError) {
