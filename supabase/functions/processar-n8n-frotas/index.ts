@@ -22,12 +22,14 @@ interface VeiculoN8N {
 }
 
 interface N8NData {
-  empresa: any;
-  apolice: {
+  empresa?: any;
+  apolice?: {
     tipo_beneficio: string;
     status: string;
   };
   veiculos: VeiculoN8N[];
+  empresaId?: string; // ID direto da empresa
+  userEmail?: string; // Email do usuário
 }
 
 serve(async (req) => {
@@ -56,33 +58,37 @@ serve(async (req) => {
       )
     }
 
-    // Primeiro, precisamos determinar a empresa (pode vir do usuário autenticado ou dos dados)
-    let empresaId: string | null = null;
+    // Primeiro, verificar se empresaId foi fornecido diretamente
+    let empresaId: string | null = n8nData.empresaId || null;
     
-    // Tentar obter empresa do usuário autenticado (se houver token)
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      const { data: { user } } = await (supabase.auth as any).getUser(authHeader.replace('Bearer ', ''));
-      if (user) {
-        console.log('Usuário autenticado encontrado:', user.id);
-        
-        // Buscar empresa do usuário
-        const { data: userData } = await supabase
-          .from('users')
-          .select('company')
-          .eq('id', user.id)
-          .single();
+    if (empresaId) {
+      console.log('EmpresaId fornecido diretamente:', empresaId);
+    } else {
+      // Tentar obter empresa do usuário autenticado (se houver token)
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        const { data: { user } } = await (supabase.auth as any).getUser(authHeader.replace('Bearer ', ''));
+        if (user) {
+          console.log('Usuário autenticado encontrado:', user.id);
           
-        if (userData?.company) {
-          const { data: empresa } = await supabase
-            .from('empresas')
-            .select('id')
-            .eq('nome', userData.company)
+          // Buscar empresa do usuário
+          const { data: userData } = await supabase
+            .from('users')
+            .select('company')
+            .eq('id', user.id)
             .single();
             
-          if (empresa) {
-            empresaId = empresa.id;
-            console.log('Empresa encontrada:', empresaId);
+          if (userData?.company) {
+            const { data: empresa } = await supabase
+              .from('empresas')
+              .select('id')
+              .eq('nome', userData.company)
+              .single();
+              
+            if (empresa) {
+              empresaId = empresa.id;
+              console.log('Empresa encontrada:', empresaId);
+            }
           }
         }
       }
