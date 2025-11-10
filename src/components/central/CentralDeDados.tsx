@@ -296,10 +296,12 @@ export default function CentralDeDados() {
 
     if (!resultNegocios.negocios || resultNegocios.negocios.length === 0) {
       return (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-            <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Nenhum negócio encontrado</p>
+        <Card className="border-dashed border-border/50">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="rounded-full bg-primary/10 p-4 mb-4">
+              <AlertCircle className="h-8 w-8 text-primary" />
+            </div>
+            <p className="text-sm font-medium">Nenhum negócio encontrado</p>
           </CardContent>
         </Card>
       );
@@ -308,8 +310,8 @@ export default function CentralDeDados() {
     return (
       <div className="space-y-3">
         {resultNegocios.negocios.map((item: any) => (
-          <Card key={item.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
+          <Card key={item.id} className="border-border/40 hover:shadow-lg hover:border-primary/30 transition-all duration-200">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
@@ -337,10 +339,12 @@ export default function CentralDeDados() {
   const renderClientesResults = () => {
     if (!resultClientes || resultClientes.length === 0) {
       return (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-            <Users className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Nenhum cliente encontrado</p>
+        <Card className="border-dashed border-border/50">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="rounded-full bg-primary/10 p-4 mb-4">
+              <Users className="h-8 w-8 text-primary" />
+            </div>
+            <p className="text-sm font-medium">Nenhum cliente encontrado</p>
           </CardContent>
         </Card>
       );
@@ -354,9 +358,9 @@ export default function CentralDeDados() {
           const isLoadingThis = loadingDetalhes === cliente.id;
 
           return (
-            <Card key={cliente.id} className="overflow-hidden">
+            <Card key={cliente.id} className="overflow-hidden border-border/40 hover:shadow-lg transition-all duration-200">
               <Collapsible open={isExpanded}>
-                <CardContent className="p-4">
+                <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <h4 className="font-semibold text-base mb-1">{cliente.nome}</h4>
@@ -486,39 +490,61 @@ export default function CentralDeDados() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Central de Dados</h1>
-        <p className="text-muted-foreground mt-2">
-          Importação e gerenciamento de dados externos da RCORP
-        </p>
+    <div className="space-y-8">
+      {/* Header with gradient background */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-border/50 p-8 shadow-lg">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+        <div className="relative">
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">
+            Central de Dados
+          </h1>
+          <p className="text-muted-foreground mt-3 text-lg max-w-2xl">
+            Importação e gerenciamento de dados externos da RCORP
+          </p>
+        </div>
       </div>
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 h-auto">
-          <TabsTrigger value="corpnuvem">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Dados Corp</span>
-          </TabsTrigger>
-          <TabsTrigger value="negocios">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Propostas</span>
-          </TabsTrigger>
-          <TabsTrigger value="sinistros">
-            <AlertCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Ocorrências</span>
-          </TabsTrigger>
-          <TabsTrigger value="seguros">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Seguros</span>
-          </TabsTrigger>
-          <TabsTrigger value="bi">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Indicadores</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="bg-background/50 backdrop-blur-sm rounded-xl border border-border/50 p-1.5 shadow-sm">
+          <TabsList className="grid w-full grid-cols-5 h-auto bg-transparent gap-1">
+            <TabsTrigger 
+              value="corpnuvem"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 rounded-lg py-3"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline font-medium">Dados Corp</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="negocios"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 rounded-lg py-3"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline font-medium">Propostas</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="sinistros"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 rounded-lg py-3"
+            >
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline font-medium">Ocorrências</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="seguros"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 rounded-lg py-3"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline font-medium">Seguros</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="bi"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 rounded-lg py-3"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline font-medium">Indicadores</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* CorpNuvem Tab */}
         <TabsContent value="corpnuvem">
@@ -527,14 +553,17 @@ export default function CentralDeDados() {
 
         {/* Negócios Tab */}
         <TabsContent value="negocios" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Importar Negócios em Cálculo</CardTitle>
+          <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Importar Negócios em Cálculo
+              </CardTitle>
               <CardDescription>
                 Busque e importe negócios da RCORP que estão em fase de cálculo
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -542,12 +571,12 @@ export default function CentralDeDados() {
                     placeholder="Buscar por nome, CNPJ, protocolo..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 border-border/60 focus:border-primary transition-colors"
                     onKeyDown={(e) => e.key === 'Enter' && handleImportNegocios()}
                     disabled={loadingNegocios}
                   />
                 </div>
-                <Button onClick={handleImportNegocios} disabled={loadingNegocios}>
+                <Button onClick={handleImportNegocios} disabled={loadingNegocios} className="shadow-sm">
                   {loadingNegocios ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -574,14 +603,17 @@ export default function CentralDeDados() {
 
         {/* Sinistros Tab */}
         <TabsContent value="sinistros" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Buscar Sinistros</CardTitle>
+          <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="bg-gradient-to-r from-destructive/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                Buscar Sinistros
+              </CardTitle>
               <CardDescription>
                 Consulte sinistros por número da apólice, número do sinistro ou cliente
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -589,12 +621,12 @@ export default function CentralDeDados() {
                     placeholder="Número da apólice, sinistro ou cliente..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 border-border/60 focus:border-primary transition-colors"
                     onKeyDown={(e) => e.key === 'Enter' && handleBuscarSinistros()}
                     disabled={loadingSinistros}
                   />
                 </div>
-                <Button onClick={handleBuscarSinistros} disabled={loadingSinistros}>
+                <Button onClick={handleBuscarSinistros} disabled={loadingSinistros} className="shadow-sm">
                   {loadingSinistros ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -614,8 +646,8 @@ export default function CentralDeDados() {
               ) : resultSinistros && resultSinistros.length > 0 ? (
                 <div className="space-y-3">
                   {resultSinistros.map((sinistro: any, idx: number) => (
-                    <Card key={idx} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
+                    <Card key={idx} className="border-border/40 hover:shadow-lg hover:border-primary/30 transition-all duration-200">
+                      <CardContent className="p-5">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
@@ -674,14 +706,17 @@ export default function CentralDeDados() {
         {/* BI Tab */}
         <TabsContent value="bi" className="space-y-4">
           {/* Produtores Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Buscar Produtores</CardTitle>
+          <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="bg-gradient-to-r from-blue-500/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-500" />
+                Buscar Produtores
+              </CardTitle>
               <CardDescription>
                 Consulte produtores cadastrados na RCORP por nome ou código
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -689,12 +724,12 @@ export default function CentralDeDados() {
                     placeholder="Buscar por nome ou código do produtor..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 border-border/60 focus:border-primary transition-colors"
                     onKeyDown={(e) => e.key === 'Enter' && handleBuscarProdutores()}
                     disabled={loadingProdutores}
                   />
                 </div>
-                <Button onClick={handleBuscarProdutores} disabled={loadingProdutores}>
+                <Button onClick={handleBuscarProdutores} disabled={loadingProdutores} className="shadow-sm">
                   {loadingProdutores ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -714,8 +749,8 @@ export default function CentralDeDados() {
               ) : resultProdutores && resultProdutores.length > 0 ? (
                 <div className="space-y-3">
                   {resultProdutores.map((produtor: any, idx: number) => (
-                    <Card key={idx} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
+                    <Card key={idx} className="border-border/40 hover:shadow-lg hover:border-primary/30 transition-all duration-200">
+                      <CardContent className="p-5">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
@@ -760,18 +795,21 @@ export default function CentralDeDados() {
           </Card>
 
           {/* Visualizações BI */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Ramos de Seguro</CardTitle>
+          <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="bg-gradient-to-r from-green-500/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-green-500" />
+                Ramos de Seguro
+              </CardTitle>
               <CardDescription>
                 Liste todos os ramos de seguro disponíveis no sistema
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <Button 
                 onClick={handleListarRamos} 
                 disabled={loadingRamos}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto shadow-sm"
               >
                 {loadingRamos ? (
                   <>
@@ -791,7 +829,7 @@ export default function CentralDeDados() {
               ) : resultRamos && resultRamos.length > 0 ? (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {resultRamos.map((ramo: any, idx: number) => (
-                    <Card key={idx} className="hover:shadow-md transition-shadow">
+                    <Card key={idx} className="border-border/40 hover:shadow-lg hover:border-primary/30 transition-all duration-200">
                       <CardContent className="p-4">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
@@ -815,14 +853,17 @@ export default function CentralDeDados() {
           </Card>
 
           {/* Dashboards e Gráficos */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Indicadores BI</CardTitle>
+          <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="bg-gradient-to-r from-purple-500/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-purple-500" />
+                Indicadores BI
+              </CardTitle>
               <CardDescription>
                 Consulte indicadores de produção, sinistros e outros dados consolidados
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <div className="grid gap-2 sm:grid-cols-3">
                 <Input
                   placeholder="Ano (ex: 2023)"
@@ -839,7 +880,7 @@ export default function CentralDeDados() {
                 <Button 
                   onClick={handleBuscarBI} 
                   disabled={loadingBI}
-                  className="w-full"
+                  className="w-full shadow-sm"
                 >
                   {loadingBI ? (
                     <>
@@ -882,14 +923,17 @@ export default function CentralDeDados() {
           </Card>
 
           {/* Visualizações e Gráficos */}
-          <Card>
-            <CardHeader>
-              <CardTitle>InCorp - Dados Corporativos</CardTitle>
+          <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="bg-gradient-to-r from-orange-500/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-orange-500" />
+                InCorp - Dados Corporativos
+              </CardTitle>
               <CardDescription>
                 Consulte dados corporativos de empresas e grupos
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <div className="grid gap-2 sm:grid-cols-3">
                 <Input
                   placeholder="ID da Empresa"
@@ -908,7 +952,7 @@ export default function CentralDeDados() {
                 <Button 
                   onClick={handleBuscarInCorp} 
                   disabled={loadingIncorp}
-                  className="w-full"
+                  className="w-full shadow-sm"
                 >
                   {loadingIncorp ? (
                     <>
@@ -951,25 +995,32 @@ export default function CentralDeDados() {
           </Card>
 
           {/* Dashboards e Gráficos */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Dashboards e Gráficos</CardTitle>
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-cyan-500/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-cyan-500" />
+                Dashboards e Gráficos
+              </CardTitle>
               <CardDescription>
                 Visualizações avançadas em desenvolvimento
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <div className="grid gap-4 md:grid-cols-2">
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                    <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-sm text-muted-foreground">Gráficos interativos em desenvolvimento</p>
+                <Card className="border-dashed border-border/50 hover:border-primary/30 transition-colors">
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="rounded-full bg-primary/10 p-4 mb-4">
+                      <BarChart3 className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-sm font-medium">Gráficos interativos em desenvolvimento</p>
                   </CardContent>
                 </Card>
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                    <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-sm text-muted-foreground">Relatórios personalizados em desenvolvimento</p>
+                <Card className="border-dashed border-border/50 hover:border-primary/30 transition-colors">
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="rounded-full bg-primary/10 p-4 mb-4">
+                      <FileText className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-sm font-medium">Relatórios personalizados em desenvolvimento</p>
                   </CardContent>
                 </Card>
               </div>

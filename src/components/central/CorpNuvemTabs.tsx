@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Search, Users, FileText, Calendar, Loader2, User, MapPin, Info, Download, Eye } from 'lucide-react';
+import { Search, Download, Users, FileText, Calendar, Loader2, User, MapPin, Info, Eye, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getClientesCorpNuvem, getProducao, getRenovacoes, getDocumento, getClienteAnexos } from '@/services/corpnuvem';
 import { getClienteCompleto } from '@/services/corpnuvem/cliente-detalhado';
@@ -233,51 +233,59 @@ export function CorpNuvemTabs() {
 
   return (
     <>
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl">API CorpNuvem</CardTitle>
-        <CardDescription>
+    <Card className="border-border/50 shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-border/50">
+        <CardTitle className="text-2xl flex items-center gap-2">
+          <BarChart3 className="h-6 w-6 text-primary" />
+          API CorpNuvem
+        </CardTitle>
+        <CardDescription className="text-base">
           Consultas e buscas na base de dados corporativa
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <Tabs defaultValue="clientes" className="space-y-6">
-          <TabsList className="w-full justify-start bg-transparent border-b rounded-none h-auto p-0 gap-1">
-            <TabsTrigger 
-              value="clientes" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Clientes
-            </TabsTrigger>
-            <TabsTrigger 
-              value="producao"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Produção
-            </TabsTrigger>
-            <TabsTrigger 
-              value="renovacoes"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Renovações
-            </TabsTrigger>
-            <TabsTrigger 
-              value="documentos"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Documentos
-            </TabsTrigger>
-          </TabsList>
+          <div className="bg-muted/30 rounded-lg p-1 border border-border/40">
+            <TabsList className="w-full justify-start bg-transparent border-none rounded-none h-auto p-0 gap-1">
+              <TabsTrigger 
+                value="clientes" 
+                className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-200 px-4 py-3"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                <span className="font-medium">Clientes</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="producao"
+                className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-200 px-4 py-3"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                <span className="font-medium">Produção</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="renovacoes"
+                className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-200 px-4 py-3"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                <span className="font-medium">Renovações</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="documentos"
+                className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-200 px-4 py-3"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                <span className="font-medium">Documentos</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
             {/* Tab Clientes */}
             <TabsContent value="clientes" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Buscar Clientes</CardTitle>
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-blue-500/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-500" />
+                Buscar Clientes
+              </CardTitle>
               <CardDescription>
                 Busque clientes por nome, CPF/CNPJ ou código
                 {resultClientes.length > 0 && (
@@ -287,15 +295,16 @@ export function CorpNuvemTabs() {
                 )}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <div className="flex gap-2">
                 <Input
                   placeholder="Nome, CPF/CNPJ ou código..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleBuscarClientes()}
+                  className="border-border/60 focus:border-primary transition-colors"
                 />
-                <Button onClick={handleBuscarClientes} disabled={loadingClientes}>
+                <Button onClick={handleBuscarClientes} disabled={loadingClientes} className="shadow-sm">
                   {loadingClientes ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </Button>
                 {(searchTerm || resultClientes.length > 0) && (
@@ -306,6 +315,7 @@ export function CorpNuvemTabs() {
                       setResultClientes([]);
                       setPageClientes(1);
                     }}
+                    className="shadow-sm"
                   >
                     Limpar
                   </Button>
@@ -328,8 +338,8 @@ export function CorpNuvemTabs() {
                     {resultClientes
                       .slice((pageClientes - 1) * ITEMS_PER_PAGE, pageClientes * ITEMS_PER_PAGE)
                       .map((cliente: any, idx: number) => (
-                        <Card key={idx}>
-                          <CardContent className="p-4">
+                        <Card key={idx} className="border-border/40 hover:shadow-lg hover:border-primary/30 transition-all duration-200">
+                          <CardContent className="p-5">
                              <div className="flex items-start justify-between gap-3">
                               <div className="flex-1">
                                 <h4 className="font-semibold">{cliente.nome}</h4>
@@ -393,9 +403,12 @@ export function CorpNuvemTabs() {
 
         {/* Tab Produção */}
         <TabsContent value="producao" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Consultar Produção</CardTitle>
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-green-500/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-green-500" />
+                Consultar Produção
+              </CardTitle>
               <CardDescription>
                 Busque produção por período
                 {resultProducao?.producao && resultProducao.producao.length > 0 && (
@@ -405,21 +418,23 @@ export function CorpNuvemTabs() {
                 )}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <div className="grid gap-2 sm:grid-cols-3">
                 <Input
                   type="text"
                   placeholder="Data Início (DD/MM/AAAA)"
                   value={dataInicio}
                   onChange={(e) => setDataInicio(e.target.value)}
+                  className="border-border/60 focus:border-primary transition-colors"
                 />
                 <Input
                   type="text"
                   placeholder="Data Fim (DD/MM/AAAA)"
                   value={dataFim}
                   onChange={(e) => setDataFim(e.target.value)}
+                  className="border-border/60 focus:border-primary transition-colors"
                 />
-                <Button onClick={handleBuscarProducao} disabled={loadingProducao}>
+                <Button onClick={handleBuscarProducao} disabled={loadingProducao} className="shadow-sm">
                   {loadingProducao ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
                   Buscar
                 </Button>
