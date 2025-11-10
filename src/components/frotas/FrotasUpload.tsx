@@ -88,24 +88,33 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     setFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  const sendToPDFWebhook = async (file: File, metadata: N8NUploadMetadata) => {
+  const sendToWebhook = async (file: File, metadata: N8NUploadMetadata) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('metadata', JSON.stringify(metadata));
 
+    // Detectar tipo de arquivo e escolher webhook apropriado
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    const isPDF = fileExtension === 'pdf';
+    const webhookUrl = isPDF 
+      ? 'https://rcorpsolutions.app.n8n.cloud/webhook/pdf-frota'
+      : 'https://rcorpsolutions.app.n8n.cloud/webhook-test/upload-arquivo';
+
+    console.log(`📤 Enviando ${file.name} (${fileExtension?.toUpperCase()}) para webhook: ${isPDF ? 'PDF' : 'PLANILHA'}`);
+
     try {
-      const response = await fetch('https://rcorpsolutions.app.n8n.cloud/webhook/pdf-frota', {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        console.warn('Erro ao enviar para webhook PDF:', response.statusText);
+        console.warn(`Erro ao enviar ${file.name} para webhook ${isPDF ? 'PDF' : 'PLANILHA'}:`, response.statusText);
       } else {
-        console.log('Arquivo enviado com sucesso para webhook PDF');
+        console.log(`✅ ${file.name} enviado com sucesso para webhook ${isPDF ? 'PDF' : 'PLANILHA'}`);
       }
     } catch (error) {
-      console.warn('Erro ao enviar para webhook PDF:', error);
+      console.warn(`Erro ao enviar ${file.name} para webhook:`, error);
     }
   };
 
@@ -153,9 +162,9 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
 
       console.log('Metadata recebida:', metadata);
 
-      // Enviar todos os arquivos para o webhook PDF em paralelo
+      // Enviar todos os arquivos para o webhook apropriado em paralelo
       await Promise.all(
-        files.map(fileItem => sendToPDFWebhook(fileItem.file, metadata))
+        files.map(fileItem => sendToWebhook(fileItem.file, metadata))
       );
 
       // Processar cada arquivo individualmente
