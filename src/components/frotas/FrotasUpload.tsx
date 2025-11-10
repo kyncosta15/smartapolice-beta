@@ -150,30 +150,41 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
         ));
 
         // Processar cada apólice/frota do resultado
-        const dadosVeiculos = result[0].veiculos || [];
+        const apolice = result[0];
+        const dadosVeiculos = apolice.veiculos || [];
         console.log(`📊 Processando ${dadosVeiculos.length} veículos do PDF`);
 
-        // Enviar para o webhook de inserção
-        const insertResponse = await fetch('https://rcorpsolutions.app.n8n.cloud/webhook-test/upload-arquivo', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            veiculos: dadosVeiculos,
-            empresa_id: metadata.empresa_id,
-            empresa_nome: metadata.empresa_nome,
-            user_id: metadata.user_id,
-            user_email: metadata.user_email,
-            razao_social: metadata.razao_social,
-            source: 'pdf_extraction'
-          }),
+        // Mapear dados do PDF para o formato esperado pelo webhook de planilhas
+        const veiculosMapeados = dadosVeiculos.map((veiculo: any) => ({
+          codigo: veiculo.item,
+          placa: veiculo.placa,
+          chassi: veiculo.chassi,
+          modelo: veiculo.modelo,
+          marca: veiculo.marca,
+          ano_modelo: veiculo.ano_modelo,
+          familia: veiculo.categoria,
+          localizacao: `${veiculo.cidade} - ${veiculo.uf}`,
+          status: 'Ativo',
+          // Dados adicionais da apólice
+          seguradora: apolice.seguradora,
+          numero_apolice: apolice.numero_cotacao,
+          valor_seguro: veiculo.coberturas?.['RCF-V'] || 0,
+          franquia: veiculo.franquia || 0
+        }));
+
+        console.log('📦 Veículos mapeados:', veiculosMapeados);
+
+        // Enviar para o webhook de inserção usando supabase edge function
+        const { data: insertResult, error: insertError } = await supabase.functions.invoke('processar-n8n-frotas', {
+          body: {
+            veiculos: veiculosMapeados,
+            empresaId: metadata.empresa_id
+          }
         });
 
-        if (!insertResponse.ok) {
-          console.warn('Erro ao inserir dados extraídos:', insertResponse.statusText);
+        if (insertError) {
+          console.error('❌ Erro ao inserir dados extraídos:', insertError);
         } else {
-          const insertResult = await insertResponse.json();
           console.log('✅ Dados inseridos com sucesso:', insertResult);
         }
       }
