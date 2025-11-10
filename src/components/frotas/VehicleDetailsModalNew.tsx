@@ -537,8 +537,8 @@ export function VehicleDetailsModalNew({
                           <SelectValue placeholder="Selecione o tipo" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Pessoa Física">Pessoa Física</SelectItem>
-                          <SelectItem value="Pessoa Jurídica">Pessoa Jurídica</SelectItem>
+                          <SelectItem value="pf">Pessoa Física</SelectItem>
+                          <SelectItem value="pj">Pessoa Jurídica</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
