@@ -88,12 +88,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     setFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  const sendToWebhook = async (file: File, metadata: N8NUploadMetadata) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('metadata', JSON.stringify(metadata));
-
-    // Detectar tipo de arquivo e escolher webhook apropriado
+  const sendToWebhook = async (file: File, metadata: N8NUploadMetadata, fileId: string) => {
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     const isPDF = fileExtension === 'pdf';
     const webhookUrl = isPDF 
@@ -102,19 +97,71 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
 
     console.log(`📤 Enviando ${file.name} (${fileExtension?.toUpperCase()}) para webhook: ${isPDF ? 'PDF' : 'PLANILHA'}`);
 
+    // Status: Uploading
+    setFiles(prev => prev.map(f => 
+      f.id === fileId 
+        ? { ...f, status: 'uploading', progress: 20 }
+        : f
+    ));
+
     try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Para webhook de planilhas, enviar campos separados
+      if (!isPDF) {
+        Object.entries(metadata).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            formData.append(key, String(value));
+          }
+        });
+      } else {
+        // Para webhook de PDF, enviar metadata como JSON
+        formData.append('metadata', JSON.stringify(metadata));
+      }
+
+      // Status: Processing
+      setFiles(prev => prev.map(f => 
+        f.id === fileId 
+          ? { ...f, status: 'processing', progress: 60 }
+          : f
+      ));
+
       const response = await fetch(webhookUrl, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        console.warn(`Erro ao enviar ${file.name} para webhook ${isPDF ? 'PDF' : 'PLANILHA'}:`, response.statusText);
-      } else {
-        console.log(`✅ ${file.name} enviado com sucesso para webhook ${isPDF ? 'PDF' : 'PLANILHA'}`);
+        throw new Error(`Erro ao enviar para webhook ${isPDF ? 'PDF' : 'PLANILHA'}: ${response.statusText}`);
       }
-    } catch (error) {
-      console.warn(`Erro ao enviar ${file.name} para webhook:`, error);
+
+      const result = await response.json();
+      console.log(`✅ ${file.name} processado com sucesso:`, result);
+
+      // Status: Completed
+      setFiles(prev => prev.map(f => 
+        f.id === fileId 
+          ? { 
+              ...f, 
+              status: 'completed', 
+              progress: 100, 
+              result 
+            }
+          : f
+      ));
+
+      return result;
+    } catch (error: any) {
+      console.error(`Erro ao processar ${file.name}:`, error);
+      
+      setFiles(prev => prev.map(f => 
+        f.id === fileId 
+          ? { ...f, status: 'error', progress: 0, error: error.message }
+          : f
+      ));
+
+      throw error;
     }
   };
 
@@ -162,75 +209,23 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
 
       console.log('Metadata recebida:', metadata);
 
-      // Enviar todos os arquivos para o webhook apropriado em paralelo
-      await Promise.all(
-        files.map(fileItem => sendToWebhook(fileItem.file, metadata))
-      );
-
-      // Processar cada arquivo individualmente
+      // Processar cada arquivo com o webhook apropriado
       for (const fileItem of files) {
         if (fileItem.status !== 'pending') continue;
 
         try {
-          // Status: Uploading
-          setFiles(prev => prev.map(f => 
-            f.id === fileItem.id 
-              ? { ...f, status: 'uploading', progress: 20 }
-              : f
-          ));
-
-          await new Promise(resolve => setTimeout(resolve, 800));
-
-          // Status: Processing
-          setFiles(prev => prev.map(f => 
-            f.id === fileItem.id 
-              ? { ...f, status: 'processing', progress: 60 }
-              : f
-          ));
-
-          const result = await N8NUploadService.uploadToN8N(
-            fileItem.file,
-            metadata,
-            'production'
-          );
-
-          console.log('Resultado do upload:', result);
+          const result = await sendToWebhook(fileItem.file, metadata, fileItem.id);
 
           // Verificar se há duplicatas detectadas
           if (result.duplicates && result.duplicates.length > 0) {
             console.log(`⚠️ ${result.duplicates.length} duplicatas detectadas:`, result.duplicates);
             
-            // Marcar arquivo como "aguardando confirmação"
-            setFiles(prev => prev.map(f => 
-              f.id === fileItem.id 
-                ? { 
-                    ...f, 
-                    status: 'processing', 
-                    progress: 80,
-                    result 
-                  }
-                : f
-            ));
-            
-            // Pausar processamento e mostrar modal
             setDetectedDuplicates(result.duplicates);
             setPendingUploadData({ fileItem, metadata });
             setDuplicatesModalOpen(true);
             setIsProcessing(false);
             return;
           }
-
-          // Status: Completed
-          setFiles(prev => prev.map(f => 
-            f.id === fileItem.id 
-              ? { 
-                  ...f, 
-                  status: 'completed', 
-                  progress: 100, 
-                  result 
-                }
-              : f
-          ));
 
           // Chamar função para preencher dados vazios após o processamento
           try {
@@ -250,7 +245,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
 
           toast({
             title: "✅ Arquivo processado",
-            description: `${result.metrics?.totalVeiculos || 0} veículos processados${result.detalhes?.dados_preenchidos ? ` e ${result.detalhes.dados_preenchidos} campos vazios preenchidos automaticamente` : ''}`,
+            description: `${result.metrics?.totalVeiculos || result.detalhes?.total_recebidos || 0} veículos processados`,
           });
 
           // Forçar atualização do dashboard de frotas
@@ -259,14 +254,6 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
           }, 1500);
 
         } catch (error: any) {
-          console.error(`Erro ao processar ${fileItem.file.name}:`, error);
-          
-          setFiles(prev => prev.map(f => 
-            f.id === fileItem.id 
-              ? { ...f, status: 'error', progress: 0, error: error.message }
-              : f
-          ));
-
           toast({
             title: "❌ Erro no processamento",
             description: `${fileItem.file.name}: ${error.message}`,
