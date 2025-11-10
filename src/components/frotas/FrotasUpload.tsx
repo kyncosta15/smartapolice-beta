@@ -138,54 +138,74 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
 
       const result = await response.json();
       console.log(`✅ ${file.name} dados extraídos:`, result);
+      console.log('📋 Tipo do resultado:', typeof result, 'É array?', Array.isArray(result));
 
       // Se for PDF, enviar os dados extraídos para o webhook de planilhas
-      if (isPDF && result && Array.isArray(result) && result.length > 0) {
-        console.log('📤 Enviando dados extraídos do PDF para webhook de inserção...');
+      if (isPDF && result) {
+        console.log('📤 PDF detectado, preparando para inserir dados...');
         
-        setFiles(prev => prev.map(f => 
-          f.id === fileId 
-            ? { ...f, status: 'processing', progress: 70 }
-            : f
-        ));
+        // Verificar se result é um array ou objeto único
+        const resultArray = Array.isArray(result) ? result : [result];
+        console.log('📦 Resultado como array:', resultArray);
+        
+        if (resultArray.length > 0 && resultArray[0].veiculos) {
+          setFiles(prev => prev.map(f => 
+            f.id === fileId 
+              ? { ...f, status: 'processing', progress: 70 }
+              : f
+          ));
 
-        // Processar cada apólice/frota do resultado
-        const apolice = result[0];
-        const dadosVeiculos = apolice.veiculos || [];
-        console.log(`📊 Processando ${dadosVeiculos.length} veículos do PDF`);
+          // Processar cada apólice/frota do resultado
+          const apolice = resultArray[0];
+          const dadosVeiculos = apolice.veiculos || [];
+          console.log(`📊 Processando ${dadosVeiculos.length} veículos do PDF`);
+          console.log('🔍 Primeiro veículo:', dadosVeiculos[0]);
 
-        // Mapear dados do PDF para o formato esperado pelo webhook de planilhas
-        const veiculosMapeados = dadosVeiculos.map((veiculo: any) => ({
-          codigo: veiculo.item,
-          placa: veiculo.placa,
-          chassi: veiculo.chassi,
-          modelo: veiculo.modelo,
-          marca: veiculo.marca,
-          ano_modelo: veiculo.ano_modelo,
-          familia: veiculo.categoria,
-          localizacao: `${veiculo.cidade} - ${veiculo.uf}`,
-          status: 'Ativo',
-          // Dados adicionais da apólice
-          seguradora: apolice.seguradora,
-          numero_apolice: apolice.numero_cotacao,
-          valor_seguro: veiculo.coberturas?.['RCF-V'] || 0,
-          franquia: veiculo.franquia || 0
-        }));
+          // Mapear dados do PDF para o formato esperado pelo webhook de planilhas
+          const veiculosMapeados = dadosVeiculos.map((veiculo: any) => ({
+            codigo: veiculo.item || veiculo.codigo,
+            placa: veiculo.placa,
+            chassi: veiculo.chassi,
+            modelo: veiculo.modelo,
+            marca: veiculo.marca,
+            ano_modelo: veiculo.ano_modelo,
+            familia: veiculo.categoria || veiculo.familia,
+            localizacao: veiculo.localizacao || `${veiculo.cidade} - ${veiculo.uf}`,
+            status: 'Ativo',
+            // Dados adicionais da apólice
+            seguradora: apolice.seguradora,
+            numero_apolice: apolice.numero_cotacao || apolice.numero_apolice,
+            valor_seguro: veiculo.coberturas?.['RCF-V'] || veiculo.valor_seguro || 0,
+            franquia: veiculo.franquia || 0
+          }));
 
-        console.log('📦 Veículos mapeados:', veiculosMapeados);
+          console.log('📦 Veículos mapeados para inserção:', veiculosMapeados);
+          console.log('🏢 Empresa ID:', metadata.empresa_id);
 
-        // Enviar para o webhook de inserção usando supabase edge function
-        const { data: insertResult, error: insertError } = await supabase.functions.invoke('processar-n8n-frotas', {
-          body: {
-            veiculos: veiculosMapeados,
-            empresaId: metadata.empresa_id
+          // Enviar para o webhook de inserção usando supabase edge function
+          try {
+            console.log('🚀 Invocando edge function processar-n8n-frotas...');
+            
+            const { data: insertResult, error: insertError } = await supabase.functions.invoke('processar-n8n-frotas', {
+              body: {
+                veiculos: veiculosMapeados,
+                empresaId: metadata.empresa_id,
+                userEmail: metadata.user_email
+              }
+            });
+
+            if (insertError) {
+              console.error('❌ Erro ao inserir dados extraídos:', insertError);
+              throw insertError;
+            } else {
+              console.log('✅ Dados inseridos com sucesso:', insertResult);
+            }
+          } catch (funcError) {
+            console.error('❌ Erro na chamada da edge function:', funcError);
+            throw funcError;
           }
-        });
-
-        if (insertError) {
-          console.error('❌ Erro ao inserir dados extraídos:', insertError);
         } else {
-          console.log('✅ Dados inseridos com sucesso:', insertResult);
+          console.warn('⚠️ Nenhum veículo encontrado no resultado do PDF');
         }
       }
 
