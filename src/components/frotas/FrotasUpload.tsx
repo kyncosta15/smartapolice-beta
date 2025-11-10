@@ -123,7 +123,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
       // Status: Processing
       setFiles(prev => prev.map(f => 
         f.id === fileId 
-          ? { ...f, status: 'processing', progress: 60 }
+          ? { ...f, status: 'processing', progress: 40 }
           : f
       ));
 
@@ -137,7 +137,46 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
       }
 
       const result = await response.json();
-      console.log(`✅ ${file.name} processado com sucesso:`, result);
+      console.log(`✅ ${file.name} dados extraídos:`, result);
+
+      // Se for PDF, enviar os dados extraídos para o webhook de planilhas
+      if (isPDF && result && Array.isArray(result) && result.length > 0) {
+        console.log('📤 Enviando dados extraídos do PDF para webhook de inserção...');
+        
+        setFiles(prev => prev.map(f => 
+          f.id === fileId 
+            ? { ...f, status: 'processing', progress: 70 }
+            : f
+        ));
+
+        // Processar cada apólice/frota do resultado
+        const dadosVeiculos = result[0].veiculos || [];
+        console.log(`📊 Processando ${dadosVeiculos.length} veículos do PDF`);
+
+        // Enviar para o webhook de inserção
+        const insertResponse = await fetch('https://rcorpsolutions.app.n8n.cloud/webhook-test/upload-arquivo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            veiculos: dadosVeiculos,
+            empresa_id: metadata.empresa_id,
+            empresa_nome: metadata.empresa_nome,
+            user_id: metadata.user_id,
+            user_email: metadata.user_email,
+            razao_social: metadata.razao_social,
+            source: 'pdf_extraction'
+          }),
+        });
+
+        if (!insertResponse.ok) {
+          console.warn('Erro ao inserir dados extraídos:', insertResponse.statusText);
+        } else {
+          const insertResult = await insertResponse.json();
+          console.log('✅ Dados inseridos com sucesso:', insertResult);
+        }
+      }
 
       // Status: Completed
       setFiles(prev => prev.map(f => 
