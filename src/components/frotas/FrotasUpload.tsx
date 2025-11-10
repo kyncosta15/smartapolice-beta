@@ -88,6 +88,27 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     setFiles(prev => prev.filter(f => f.id !== id));
   };
 
+  const sendToPDFWebhook = async (file: File, metadata: N8NUploadMetadata) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('metadata', JSON.stringify(metadata));
+
+    try {
+      const response = await fetch('https://rcorpsolutions.app.n8n.cloud/webhook/pdf-frota', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        console.warn('Erro ao enviar para webhook PDF:', response.statusText);
+      } else {
+        console.log('Arquivo enviado com sucesso para webhook PDF');
+      }
+    } catch (error) {
+      console.warn('Erro ao enviar para webhook PDF:', error);
+    }
+  };
+
   const processFiles = async (overwriteDuplicates: boolean = false) => {
     if (files.length === 0) {
       toast({
@@ -131,6 +152,11 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
       };
 
       console.log('Metadata recebida:', metadata);
+
+      // Enviar todos os arquivos para o webhook PDF em paralelo
+      await Promise.all(
+        files.map(fileItem => sendToPDFWebhook(fileItem.file, metadata))
+      );
 
       // Processar cada arquivo individualmente
       for (const fileItem of files) {
