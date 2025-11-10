@@ -133,6 +133,25 @@ serve(async (req) => {
 
     console.log(`Processando ${n8nData.veiculos.length} veículos...`);
     
+    // Função para normalizar categoria
+    const normalizarCategoria = (categoria: string): string => {
+      const cat = (categoria || '').toLowerCase().trim();
+      
+      // Mapeamento de categorias
+      if (cat.includes('moto') || cat.includes('motocicleta') || cat.includes('bicicleta motor')) {
+        return 'Moto';
+      }
+      
+      if (cat.includes('caminhão') || cat.includes('caminhao') || cat.includes('rebocador') ||
+          cat.includes('reboque') || cat.includes('semi-reboque') || cat.includes('truck') ||
+          cat.includes('trator')) {
+        return 'Caminhão';
+      }
+      
+      // Carros (passeio, utilitário, picape, van, etc.)
+      return 'Carros';
+    };
+    
     // Mapear e normalizar dados dos veículos
     const veiculosProcessados = n8nData.veiculos.map((veiculo, index) => {
       console.log(`Processando veículo ${index + 1}: ${veiculo.placa}`);
@@ -143,7 +162,8 @@ serve(async (req) => {
         placa: veiculo.placa || 'SEM_PLACA',
         marca: veiculo.marca || null,
         modelo: veiculo.modelo || null,
-        categoria: veiculo.familia || 'outros', // familia → categoria
+        categoria: normalizarCategoria(veiculo.familia || 'Carros'), // Normalizar categoria
+        funcao: veiculo.familia || null, // Guardar categoria original em funcao
         ano_modelo: veiculo.ano || null, // ano → ano_modelo
         chassi: veiculo.chassi || null,
         renavam: veiculo.renavam || null,
