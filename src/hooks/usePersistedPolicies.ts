@@ -406,7 +406,16 @@ export function usePersistedPolicies() {
               quantidade_parcelas: dbRecord?.quantidade_parcelas || (p as any).quantidade_parcelas,
               startDate: dbRecord?.inicio_vigencia || p.startDate,
               endDate: dbRecord?.fim_vigencia || p.endDate,
-              status: dbRecord?.status ? mapLegacyStatus(dbRecord.status) : p.status
+              status: dbRecord?.status ? mapLegacyStatus(dbRecord.status) : p.status,
+              // Campos de veículo/embarcação
+              vehicleModel: dbRecord?.modelo_veiculo || p.vehicleModel,
+              modelo_veiculo: dbRecord?.modelo_veiculo || (p as any).modelo_veiculo,
+              marca: dbRecord?.marca || (p as any).marca,
+              placa: dbRecord?.placa || (p as any).placa,
+              nome_embarcacao: dbRecord?.nome_embarcacao || (p as any).nome_embarcacao,
+              ano_modelo: dbRecord?.ano_modelo || (p as any).ano_modelo,
+              deductible: dbRecord?.franquia || p.deductible,
+              franquia: dbRecord?.franquia || (p as any).franquia
             };
             
             return updated;

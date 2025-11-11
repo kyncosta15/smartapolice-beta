@@ -118,8 +118,6 @@ export function MyPolicies() {
     const iconClass = 'h-4 w-4';
     const normalizedType = type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
     
-    console.log('🎨 [getTypeIcon] type:', type, 'normalizedType:', normalizedType);
-    
     switch (normalizedType) {
       case 'auto':
       case 'automovel':
