@@ -350,9 +350,42 @@ export function MyPolicies() {
     }
   };
 
-  const handleViewPolicy = (policy: PolicyWithStatus) => {
-    const originalPolicy = policies.find(p => p.id === policy.id);
-    setSelectedPolicy(originalPolicy || policy);
+  const handleViewPolicy = async (policy: PolicyWithStatus) => {
+    console.log('👁️ [handleViewPolicy] Abrindo modal para policy:', policy.id);
+    
+    // Buscar dados atualizados DIRETO DO BANCO sempre que abrir o modal
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: freshData, error } = await supabase
+        .from('policies')
+        .select('*')
+        .eq('id', policy.id)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!error && freshData) {
+        console.log('✅ [handleViewPolicy] Dados frescos do banco:', {
+          marca: freshData.marca,
+          modelo_veiculo: freshData.modelo_veiculo,
+          nome_embarcacao: freshData.nome_embarcacao,
+          ano_modelo: freshData.ano_modelo,
+          franquia: freshData.franquia
+        });
+        
+        // Normalizar e usar dados do banco
+        const normalized = normalizePolicy(freshData);
+        setSelectedPolicy(normalized);
+      } else {
+        // Fallback para dados do estado
+        const originalPolicy = policies.find(p => p.id === policy.id);
+        setSelectedPolicy(originalPolicy || policy);
+      }
+    } else {
+      // Fallback para dados do estado
+      const originalPolicy = policies.find(p => p.id === policy.id);
+      setSelectedPolicy(originalPolicy || policy);
+    }
+    
     setShowDetailsModal(true);
   };
 

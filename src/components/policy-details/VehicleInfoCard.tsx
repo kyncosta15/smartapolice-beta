@@ -8,6 +8,19 @@ interface VehicleInfoCardProps {
 }
 
 export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
+  console.log('🚗 [VehicleInfoCard] Policy recebida:', {
+    id: policy?.id,
+    type: policy?.type,
+    marca: policy?.marca,
+    vehicleModel: policy?.vehicleModel,
+    modelo_veiculo: policy?.modelo_veiculo,
+    nome_embarcacao: policy?.nome_embarcacao,
+    ano_modelo: policy?.ano_modelo,
+    franquia: policy?.franquia,
+    deductible: policy?.deductible,
+    allKeys: Object.keys(policy || {})
+  });
+  
   const normalizedType = policy?.type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
   const isVehicleType = normalizedType === 'auto' || normalizedType === 'nautico';
   
@@ -17,6 +30,15 @@ export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
   const nomeEmbarcacao = renderValue(policy?.nome_embarcacao);
   const anoModelo = renderValue(policy?.ano_modelo);
   const deductible = policy?.deductible ?? policy?.franquia ?? 0;
+  
+  console.log('🚗 [VehicleInfoCard] Valores renderizados:', {
+    vehicleModel,
+    marca,
+    placa,
+    nomeEmbarcacao,
+    anoModelo,
+    deductible
+  });
   
   if (!isVehicleType) {
     return null;
