@@ -78,8 +78,10 @@ export class BatchFileProcessor {
       if (!extractedDataArray || extractedDataArray.length === 0) {
         console.warn('⚠️ Nenhum dado extraído - Array vazio ou null');
         console.warn('⚠️ Valor exato do array:', extractedDataArray);
+        console.warn('⚠️ Tipo:', typeof extractedDataArray);
+        console.warn('⚠️ É array?:', Array.isArray(extractedDataArray));
         throw new Error('Nenhum dado foi extraído dos arquivos');
-      } 
+      }
       
       console.log('✅ Dados extraídos com sucesso, iniciando processamento individual');
       
@@ -327,8 +329,15 @@ export class BatchFileProcessor {
     const segurado = data.segurado || data.num_segurado || data.nome_segurado;
     const seguradora = data.seguradora || data.num_seguradora || data.nome_seguradora;
     
+    console.log(`🔍 Verificando formato dos dados:`, {
+      segurado,
+      seguradora,
+      temInformacoesGerais: !!data.informacoes_gerais,
+      todasAsChaves: Object.keys(data)
+    });
+    
     if (segurado && seguradora) {
-      console.log('📋 Convertendo dados diretos do N8N com validação');
+      console.log('✅ Detectado formato N8N direto com segurado e seguradora');
       const numeroApolice = data.numero_apolice || data.num_apolice || data.apolice;
       if (!numeroApolice || numeroApolice.trim() === '') {
         console.warn(`⚠️ Apólice sem número: ${segurado} - gerando ID temporário`);
@@ -336,11 +345,12 @@ export class BatchFileProcessor {
       }
       return N8NDataConverter.convertN8NDirectData(data, fileName, file, userId);
     } else if (data.informacoes_gerais && data.seguradora && data.vigencia) {
-      console.log('📋 Convertendo dados estruturados com validação');
+      console.log('✅ Detectado formato estruturado');
       return StructuredDataConverter.convertStructuredData(data, fileName, file);
     } else {
-      console.warn('📋 Dados em formato não reconhecido, criando fallback validado');
-      console.warn('📋 Dados recebidos:', JSON.stringify(data, null, 2));
+      console.error('❌ Dados em formato não reconhecido!');
+      console.error('❌ Dados completos:', JSON.stringify(data, null, 2));
+      console.error('❌ Criando fallback...');
       return this.createFallbackPolicy(file, userId, validationResult.normalizedData);
     }
   }

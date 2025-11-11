@@ -183,6 +183,9 @@ export class DynamicPDFExtractor {
       }
 
       console.log(`✅ Resposta parseada com sucesso:`, responseData);
+      console.log(`📊 Tipo da resposta:`, typeof responseData);
+      console.log(`📊 É array?`, Array.isArray(responseData));
+      console.log(`📊 Chaves do objeto:`, Object.keys(responseData));
 
       // CORREÇÃO: Extrair apólices da resposta com verificação robusta
       // O n8n pode retornar: { apolices: [...] } ou [...] diretamente
@@ -199,18 +202,30 @@ export class DynamicPDFExtractor {
         apolices = [responseData];
       }
       
+      console.log(`📊 Apólices extraídas:`, apolices);
+      console.log(`📊 Número de apólices:`, apolices.length);
+      
       // Validar se tem dados
       if (!apolices || apolices.length === 0) {
         console.error('❌ Nenhuma apólice encontrada na resposta!');
-        console.error('Resposta completa:', responseData);
+        console.error('❌ Resposta completa:', JSON.stringify(responseData, null, 2));
         throw new Error('Nenhuma apólice foi retornada pelo N8N');
       }
 
       console.log(`🎉 ${apolices.length} apólice(s) extraída(s) com sucesso!`);
       
-      // Logar resumo de cada apólice
+      // Logar resumo de cada apólice COM TODOS OS CAMPOS POSSÍVEIS
       apolices.forEach((apolice, idx) => {
-        console.log(`  ${idx + 1}. ${apolice.segurado || apolice.num_segurado || 'Nome não disponível'} - ${apolice.numero_apolice || apolice.num_apolice || 'Sem número'}`);
+        console.log(`\n📋 APÓLICE ${idx + 1}:`, {
+          segurado: apolice.segurado,
+          num_segurado: apolice.num_segurado,
+          nome_segurado: apolice.nome_segurado,
+          seguradora: apolice.seguradora,
+          num_seguradora: apolice.num_seguradora,
+          numero_apolice: apolice.numero_apolice,
+          num_apolice: apolice.num_apolice,
+          todasChaves: Object.keys(apolice)
+        });
       });
 
       return apolices;
