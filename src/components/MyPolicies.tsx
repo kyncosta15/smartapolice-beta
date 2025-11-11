@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, Users, Link, Car, Heart, Activity, Home, Building2, ShieldAlert, Ship, Shield } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, Users, Link, Car, Heart, Activity, Home, Building2, ShieldAlert, Ship, Shield, Anchor } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -134,12 +134,7 @@ export function MyPolicies() {
       case 'acidentes_pessoais':
         return <ShieldAlert className={`${iconClass} text-yellow-600 dark:text-yellow-400`} />;
       case 'nautico':
-        return (
-          <svg className={`${iconClass} text-cyan-600 dark:text-cyan-400`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v6m0 0c-2.5 0-4.5 1-6 2.5m6-2.5c2.5 0 4.5 1 6 2.5M6 10.5v9c0 1 1 2 2 2h8c1 0 2-1 2-2v-9" />
-            <circle cx="12" cy="4" r="1.5" fill="currentColor" />
-          </svg>
-        );
+        return <Anchor className={`${iconClass} text-cyan-600 dark:text-cyan-400`} />;
       default:
         return <Shield className={`${iconClass} text-gray-600 dark:text-gray-400`} />;
     }
