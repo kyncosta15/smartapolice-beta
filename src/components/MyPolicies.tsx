@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, Users, Link } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, Users, Link, Car, Heart, Activity, Home, Building2, ShieldAlert, Ship, Shield } from 'lucide-react';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -111,6 +111,33 @@ export function MyPolicies() {
     });
     
     return isDependent;
+  };
+
+  // Função para obter o ícone do tipo de seguro
+  const getTypeIcon = (type: string) => {
+    const iconClass = 'h-4 w-4';
+    const normalizedType = type?.toLowerCase() || '';
+    
+    switch (normalizedType) {
+      case 'auto':
+      case 'automovel':
+        return <Car className={`${iconClass} text-blue-600 dark:text-blue-400`} />;
+      case 'vida':
+        return <Heart className={`${iconClass} text-red-600 dark:text-red-400`} />;
+      case 'saude':
+        return <Activity className={`${iconClass} text-green-600 dark:text-green-400`} />;
+      case 'residencial':
+      case 'patrimonial':
+        return <Home className={`${iconClass} text-orange-600 dark:text-orange-400`} />;
+      case 'empresarial':
+        return <Building2 className={`${iconClass} text-purple-600 dark:text-purple-400`} />;
+      case 'acidentes_pessoais':
+        return <ShieldAlert className={`${iconClass} text-yellow-600 dark:text-yellow-400`} />;
+      case 'nautico':
+        return <Ship className={`${iconClass} text-cyan-600 dark:text-cyan-400`} />;
+      default:
+        return <Shield className={`${iconClass} text-gray-600 dark:text-gray-400`} />;
+    }
   };
   
   // Handler para quando CPFs são atualizados
@@ -740,7 +767,10 @@ export function MyPolicies() {
                       {formatStatusText(policy.status)}
                     </Badge>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground truncate">{toText(policy.insurer)}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground truncate flex items-center gap-1.5">
+                    {getTypeIcon(policy.type)}
+                    {toText(policy.insurer)}
+                  </p>
                 </CardHeader>
                 
                 <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-6 pb-3 sm:pb-6">
