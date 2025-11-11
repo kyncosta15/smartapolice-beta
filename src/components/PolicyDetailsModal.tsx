@@ -110,7 +110,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
             />
 
             <ValidityInfoCard policy={policy} />
-            {renderValue(policy.vehicleModel) !== '-' && <VehicleInfoCard policy={policy} />}
+            <VehicleInfoCard policy={policy} />
 
             {(policy.insuredName || policy.documento) && (
               <ResponsiblePersonCard policy={policy} />
