@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, User } from 'lucide-react';
+import { FileText, User, Car, Heart, Activity, Home, Building2, ShieldAlert, Ship, Shield } from 'lucide-react';
 import { DocumentValidator } from '@/utils/documentValidator';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -96,13 +96,42 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
   const getTypeLabel = (type: string) => {
     const types = {
       auto: 'Seguro Auto',
+      automovel: 'Seguro Auto',
       vida: 'Seguro de Vida',
       saude: 'Seguro Saúde',
       patrimonial: 'Seguro Patrimonial',
+      residencial: 'Seguro Residencial',
       empresarial: 'Seguro Empresarial',
-      acidentes_pessoais: 'Acidentes Pessoais'
+      acidentes_pessoais: 'Acidentes Pessoais',
+      nautico: 'Seguro Náutico'
     };
-    return types[type] || 'Seguro Auto';
+    return types[type.toLowerCase()] || type;
+  };
+
+  const getTypeIcon = (type: string) => {
+    const iconClass = isMobile ? 'h-5 w-5' : 'h-6 w-6';
+    const normalizedType = type.toLowerCase();
+    
+    switch (normalizedType) {
+      case 'auto':
+      case 'automovel':
+        return <Car className={`${iconClass} text-blue-600`} />;
+      case 'vida':
+        return <Heart className={`${iconClass} text-red-600`} />;
+      case 'saude':
+        return <Activity className={`${iconClass} text-green-600`} />;
+      case 'residencial':
+      case 'patrimonial':
+        return <Home className={`${iconClass} text-orange-600`} />;
+      case 'empresarial':
+        return <Building2 className={`${iconClass} text-purple-600`} />;
+      case 'acidentes_pessoais':
+        return <ShieldAlert className={`${iconClass} text-yellow-600`} />;
+      case 'nautico':
+        return <Ship className={`${iconClass} text-cyan-600`} />;
+      default:
+        return <Shield className={`${iconClass} text-gray-600`} />;
+    }
   };
 
   const getPersonTypeBadge = () => {
@@ -144,7 +173,10 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
         <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
           <div>
             <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium font-sans`}>Tipo</p>
-            <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 font-sans`}>{getTypeLabel(policy.type)}</p>
+            <div className="flex items-center gap-2">
+              {getTypeIcon(policy.type)}
+              <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 font-sans`}>{getTypeLabel(policy.type)}</p>
+            </div>
           </div>
 
           <div>
