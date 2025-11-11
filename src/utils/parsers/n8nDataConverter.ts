@@ -188,40 +188,48 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File, us
   const finalUserId = userId || data.user_id;
   console.log(`✅ convertN8NDirectData: Usando userId: ${finalUserId}`);
   
+  // CORREÇÃO: Mapear campos com diferentes nomes possíveis do N8N
+  const segurado = data.segurado || data.num_segurado || data.nome_segurado || fileName.replace('.pdf', '');
+  const seguradora = data.seguradora || data.num_seguradora || data.nome_seguradora || 'Seguradora não informada';
+  const numeroApolice = data.numero_apolice || data.num_apolice || data.apolice || 'N/A';
+  const tipoSeguro = data.tipo_seguro || data.tipo || 'auto';
+  const inicio = data.inicio || data.inicio_vigencia || data.data_inicio || new Date().toISOString().split('T')[0];
+  const fim = data.fim || data.fim_vigencia || data.data_fim || new Date().toISOString().split('T')[0];
+  const premio = Number(data.premio) || Number(data.valor_premio) || Number(data.premio_total) || 0;
+  const parcelas = Number(data.parcelas) || Number(data.num_parcelas) || 1;
+  
   // CORREÇÃO: Usar PolicyTypeNormalizer para normalizar tipo corretamente
-  const normalizedType = PolicyTypeNormalizer.normalizeType(data.tipo_seguro || data.tipo);
+  const normalizedType = PolicyTypeNormalizer.normalizeType(tipoSeguro);
   
   // CORREÇÃO: Calcular valores financeiros corretamente
-  const totalParcelas = Number(data.parcelas) || 1;
-  const valorPremio = Number(data.premio) || 0;
-  const valorParcela = Number(data.valor_parcela) || (totalParcelas > 0 ? valorPremio / totalParcelas : valorPremio);
+  const valorParcela = Number(data.valor_parcela) || (parcelas > 0 ? premio / parcelas : premio);
   const custoMensal = Number(data.custo_mensal) || valorParcela;
   
   const convertedPolicy: ParsedPolicyData = {
     id: window.crypto.randomUUID(),
-    name: data.segurado || fileName.replace('.pdf', ''),
+    name: segurado,
     type: normalizedType,
-    insurer: data.seguradora || 'Seguradora não informada',
-    premium: valorPremio,
+    insurer: seguradora,
+    premium: premio,
     monthlyAmount: custoMensal,
-    startDate: data.inicio || new Date().toISOString().split('T')[0],
-    endDate: data.fim || new Date().toISOString().split('T')[0],
-    policyNumber: data.numero_apolice || 'N/A',
-    paymentFrequency: data.pagamento || 'mensal',
+    startDate: inicio,
+    endDate: fim,
+    policyNumber: numeroApolice,
+    paymentFrequency: data.pagamento || data.forma_pagamento || 'mensal',
     status: mapStatus(data.status),
     file,
     extractedAt: new Date().toISOString(),
     
     // NOVOS CAMPOS OBRIGATÓRIOS
-    expirationDate: data.fim || new Date().toISOString().split('T')[0],
+    expirationDate: fim,
     policyStatus: 'vigente',
     
     // Campos específicos do N8N
-    insuredName: data.segurado,
-    documento: data.documento,
+    insuredName: segurado,
+    documento: data.documento || data.cpf || data.cnpj,
     documento_tipo: data.documento_tipo as 'CPF' | 'CNPJ',
-    vehicleModel: data.modelo_veiculo,
-    uf: data.uf,
+    vehicleModel: data.modelo_veiculo || data.modelo,
+    uf: data.uf || data.estado,
     deductible: Number(data.franquia) || undefined,
 
     // CORREÇÃO PRINCIPAL: Parcelas com tratamento robusto para diferentes formatos
@@ -229,16 +237,16 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File, us
 
     // CORREÇÃO PRINCIPAL: Coberturas com LMI - garantir formato correto
     coberturas: data.coberturas?.map((cobertura: any) => ({
-      descricao: cobertura.descricao || cobertura.tipo,
-      lmi: Number(cobertura.lmi) || undefined
+      descricao: cobertura.descricao || cobertura.tipo || cobertura.nome,
+      lmi: Number(cobertura.lmi) || Number(cobertura.valor) || undefined
     })) || [],
 
     // Campos de compatibilidade
-    entity: data.corretora || 'Não informado',
+    entity: data.corretora || data.corretor || 'Não informado',
     category: normalizedType === 'auto' ? 'Veicular' : 
              normalizedType === 'empresarial' ? 'Empresarial' : 'Outros',
-    coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo) || [],
-    totalCoverage: valorPremio
+    coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo || c.nome) || [],
+    totalCoverage: premio
   };
 
   console.log('✅ Política convertida:', convertedPolicy);

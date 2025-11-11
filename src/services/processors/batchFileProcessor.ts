@@ -323,10 +323,15 @@ export class BatchFileProcessor {
     
     // Verificar formato dos dados e converter adequadamente
     // CORREÇÃO: Aceitar apólices mesmo sem número_apolice (string vazia é válida)
-    if (data.segurado && data.seguradora) {
+    // CORREÇÃO: Aceitar campos com nomes variados do N8N
+    const segurado = data.segurado || data.num_segurado || data.nome_segurado;
+    const seguradora = data.seguradora || data.num_seguradora || data.nome_seguradora;
+    
+    if (segurado && seguradora) {
       console.log('📋 Convertendo dados diretos do N8N com validação');
-      if (!data.numero_apolice || data.numero_apolice.trim() === '') {
-        console.warn(`⚠️ Apólice sem número: ${data.segurado} - gerando ID temporário`);
+      const numeroApolice = data.numero_apolice || data.num_apolice || data.apolice;
+      if (!numeroApolice || numeroApolice.trim() === '') {
+        console.warn(`⚠️ Apólice sem número: ${segurado} - gerando ID temporário`);
         data.numero_apolice = `TEMP-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
       }
       return N8NDataConverter.convertN8NDirectData(data, fileName, file, userId);
@@ -335,6 +340,7 @@ export class BatchFileProcessor {
       return StructuredDataConverter.convertStructuredData(data, fileName, file);
     } else {
       console.warn('📋 Dados em formato não reconhecido, criando fallback validado');
+      console.warn('📋 Dados recebidos:', JSON.stringify(data, null, 2));
       return this.createFallbackPolicy(file, userId, validationResult.normalizedData);
     }
   }

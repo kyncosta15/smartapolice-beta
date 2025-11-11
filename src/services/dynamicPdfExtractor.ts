@@ -184,20 +184,33 @@ export class DynamicPDFExtractor {
 
       console.log(`✅ Resposta parseada com sucesso:`, responseData);
 
-      // Extrair apólices da resposta
-      // O n8n retorna { apolices: [...] }
-      const apolices = responseData.apolices || responseData;
+      // CORREÇÃO: Extrair apólices da resposta com verificação robusta
+      // O n8n pode retornar: { apolices: [...] } ou [...] diretamente
+      let apolices;
       
-      if (!Array.isArray(apolices)) {
-        console.warn('⚠️ Resposta não é um array, tentando converter...');
-        return [apolices];
+      if (responseData.apolices && Array.isArray(responseData.apolices)) {
+        console.log('✅ Encontrado campo "apolices" na resposta');
+        apolices = responseData.apolices;
+      } else if (Array.isArray(responseData)) {
+        console.log('✅ Resposta é um array direto');
+        apolices = responseData;
+      } else {
+        console.log('⚠️ Resposta não é array, convertendo para array único');
+        apolices = [responseData];
+      }
+      
+      // Validar se tem dados
+      if (!apolices || apolices.length === 0) {
+        console.error('❌ Nenhuma apólice encontrada na resposta!');
+        console.error('Resposta completa:', responseData);
+        throw new Error('Nenhuma apólice foi retornada pelo N8N');
       }
 
       console.log(`🎉 ${apolices.length} apólice(s) extraída(s) com sucesso!`);
       
       // Logar resumo de cada apólice
       apolices.forEach((apolice, idx) => {
-        console.log(`  ${idx + 1}. ${apolice.segurado || 'Nome não disponível'} - ${apolice.numero_apolice || 'Sem número'}`);
+        console.log(`  ${idx + 1}. ${apolice.segurado || apolice.num_segurado || 'Nome não disponível'} - ${apolice.numero_apolice || apolice.num_apolice || 'Sem número'}`);
       });
 
       return apolices;
