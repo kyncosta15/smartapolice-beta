@@ -472,13 +472,26 @@ export function MyPolicies() {
       if (success) {
         console.log('✅ Update bem-sucedido, recarregando dados...');
         
-        // Aguardar um pouco para garantir que o banco foi atualizado
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
         // Recarregar dados do banco para garantir valores atualizados
         await refreshPolicies();
         
+        // Aguardar para garantir que o estado foi atualizado
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         console.log('✅ [handleSaveEdit] Dados recarregados, verificando política atualizada...');
+        
+        // Atualizar o selectedPolicy com os dados mais recentes do banco
+        const updatedFromDb = policies.find(p => p.id === updatedPolicy.id);
+        if (updatedFromDb) {
+          console.log('✅ [handleSaveEdit] Atualizando selectedPolicy com dados do banco:', {
+            marca: (updatedFromDb as any).marca,
+            placa: (updatedFromDb as any).placa,
+            modelo_veiculo: (updatedFromDb as any).modelo_veiculo,
+            nome_embarcacao: (updatedFromDb as any).nome_embarcacao,
+            ano_modelo: (updatedFromDb as any).ano_modelo
+          });
+          setSelectedPolicy(updatedFromDb);
+        }
         
         toast({
           title: "✅ Alterações Salvas",
@@ -500,7 +513,6 @@ export function MyPolicies() {
       });
     } finally {
       setShowEditModal(false);
-      setSelectedPolicy(null);
     }
   };
 
