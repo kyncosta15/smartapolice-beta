@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, Edit, Trash2, Search, Filter, Download, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Eye, Edit, Trash2, Search, Filter, Download, TrendingUp, AlertTriangle, Car, Heart, Activity, Home, Building2, ShieldAlert, Ship, Shield } from 'lucide-react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { formatCurrency } from '@/utils/currencyFormatter';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -618,7 +618,10 @@ export function EnhancedPolicyViewer({
                 </div>
                 <div>
                   <p className="text-gray-500">Tipo</p>
-                  <p className="font-medium">{getTypeLabel(policy.type)}</p>
+                  <div className="flex items-center gap-2">
+                    {getTypeIcon(policy.type)}
+                    <p className="font-medium">{getTypeLabel(policy.type)}</p>
+                  </div>
                 </div>
               </div>
 
@@ -723,13 +726,42 @@ export function EnhancedPolicyViewer({
 function getTypeLabel(type: string) {
   const types = {
     auto: 'Auto',
+    automovel: 'Auto',
     vida: 'Vida', 
     saude: 'Saúde',
     patrimonial: 'Patrimonial',
+    residencial: 'Residencial',
     empresarial: 'Empresarial',
-    acidentes_pessoais: 'Acidentes Pessoais'
+    acidentes_pessoais: 'Acidentes Pessoais',
+    nautico: 'Náutico'
   };
-  return types[type] || type;
+  return types[type.toLowerCase()] || type;
+}
+
+function getTypeIcon(type: string) {
+  const iconClass = 'h-4 w-4';
+  const normalizedType = type.toLowerCase();
+  
+  switch (normalizedType) {
+    case 'auto':
+    case 'automovel':
+      return <Car className={`${iconClass} text-blue-600`} />;
+    case 'vida':
+      return <Heart className={`${iconClass} text-red-600`} />;
+    case 'saude':
+      return <Activity className={`${iconClass} text-green-600`} />;
+    case 'residencial':
+    case 'patrimonial':
+      return <Home className={`${iconClass} text-orange-600`} />;
+    case 'empresarial':
+      return <Building2 className={`${iconClass} text-purple-600`} />;
+    case 'acidentes_pessoais':
+      return <ShieldAlert className={`${iconClass} text-yellow-600`} />;
+    case 'nautico':
+      return <Ship className={`${iconClass} text-cyan-600`} />;
+    default:
+      return <Shield className={`${iconClass} text-gray-600`} />;
+  }
 }
 
 function generateOptimizationData(policies: ParsedPolicyData[]) {
