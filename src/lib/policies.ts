@@ -96,6 +96,15 @@ export function normalizePolicy(raw: any) {
     // Campos CorpNuvem/InfoCap
     nosnum: raw.nosnum,
     codfil: raw.codfil,
+    // Campos de veículo/embarcação - CRÍTICO: preservar do banco
+    vehicleModel: safeString(raw.vehicleModel ?? raw.modelo_veiculo ?? ""),
+    modelo_veiculo: safeString(raw.modelo_veiculo ?? raw.vehicleModel ?? ""),
+    marca: safeString(raw.marca ?? ""),
+    placa: safeString(raw.placa ?? ""),
+    nome_embarcacao: safeString(raw.nome_embarcacao ?? ""),
+    ano_modelo: safeString(raw.ano_modelo ?? ""),
+    deductible: toNumberSafe(raw.deductible ?? raw.franquia) ?? 0,
+    franquia: toNumberSafe(raw.franquia ?? raw.deductible) ?? 0,
   };
 }
 
