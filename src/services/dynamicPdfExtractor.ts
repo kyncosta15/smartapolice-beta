@@ -186,6 +186,7 @@ export class DynamicPDFExtractor {
       console.log(`📊 Tipo da resposta:`, typeof responseData);
       console.log(`📊 É array?`, Array.isArray(responseData));
       console.log(`📊 Chaves do objeto:`, Object.keys(responseData));
+      console.log(`📊 RESPOSTA COMPLETA DO N8N (JSON):`, JSON.stringify(responseData, null, 2));
 
       // CORREÇÃO: Extrair apólices da resposta com verificação robusta
       // O n8n pode retornar: { apolices: [...] } ou [...] diretamente
