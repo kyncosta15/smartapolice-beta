@@ -18,6 +18,22 @@ export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
   const anoModelo = renderValue(policy?.ano_modelo);
   const deductible = policy?.deductible ?? policy?.franquia ?? 0;
   
+  console.log('🚗 [VehicleInfoCard] Dados recebidos:', {
+    id: policy?.id,
+    type: policy?.type,
+    marca_raw: policy?.marca,
+    marca_rendered: marca,
+    modelo_raw: policy?.vehicleModel,
+    modelo_rendered: vehicleModel,
+    ano_raw: policy?.ano_modelo,
+    ano_rendered: anoModelo,
+    nome_embarcacao_raw: policy?.nome_embarcacao,
+    nome_embarcacao_rendered: nomeEmbarcacao,
+    placa_raw: policy?.placa,
+    placa_rendered: placa,
+    franquia: deductible
+  });
+  
   if (!isVehicleType) {
     return null;
   }
@@ -33,57 +49,56 @@ export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-5">
-        {marca && marca !== '-' && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
-            <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
-              Marca
-            </label>
-            <p className="text-xl font-bold text-gray-900 font-sf-pro">
-              {marca}
-            </p>
-          </div>
-        )}
+        {/* Marca - sempre visível */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
+          <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
+            Marca
+          </label>
+          <p className="text-xl font-bold text-gray-900 font-sf-pro">
+            {marca && marca !== '-' ? marca : <span className="text-gray-400 text-base">Não informado</span>}
+          </p>
+        </div>
 
-        {vehicleModel && vehicleModel !== '-' && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
-            <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
-              Modelo
-            </label>
-            <p className="text-xl font-bold text-gray-900 font-sf-pro">
-              {vehicleModel}
-            </p>
-          </div>
-        )}
+        {/* Modelo - sempre visível */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
+          <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
+            Modelo
+          </label>
+          <p className="text-xl font-bold text-gray-900 font-sf-pro">
+            {vehicleModel && vehicleModel !== '-' ? vehicleModel : <span className="text-gray-400 text-base">Não informado</span>}
+          </p>
+        </div>
 
-        {anoModelo && anoModelo !== '-' && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
-            <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
-              Ano do Modelo
-            </label>
-            <p className="text-xl font-bold text-gray-900 font-sf-pro">
-              {anoModelo}
-            </p>
-          </div>
-        )}
+        {/* Ano do Modelo - sempre visível */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
+          <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
+            Ano do Modelo
+          </label>
+          <p className="text-xl font-bold text-gray-900 font-sf-pro">
+            {anoModelo && anoModelo !== '-' ? anoModelo : <span className="text-gray-400 text-base">Não informado</span>}
+          </p>
+        </div>
 
-        {placa && placa !== '-' && !isNautico && (
+        {/* Placa - apenas para Auto */}
+        {!isNautico && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
             <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
               Placa
             </label>
             <p className="text-xl font-bold text-gray-900 font-sf-pro">
-              {placa}
+              {placa && placa !== '-' ? placa : <span className="text-gray-400 text-base">Não informado</span>}
             </p>
           </div>
         )}
 
-        {nomeEmbarcacao && nomeEmbarcacao !== '-' && isNautico && (
+        {/* Nome da Embarcação - apenas para Náutico */}
+        {isNautico && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
             <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
               Nome da Embarcação
             </label>
             <p className="text-xl font-bold text-gray-900 font-sf-pro">
-              {nomeEmbarcacao}
+              {nomeEmbarcacao && nomeEmbarcacao !== '-' ? nomeEmbarcacao : <span className="text-gray-400 text-base">Não informado</span>}
             </p>
           </div>
         )}
