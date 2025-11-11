@@ -457,9 +457,8 @@ export function MyPolicies() {
 
   const handleSaveEdit = async (updatedPolicy: any) => {
     try {
-      console.log('💾 [handleSaveEdit] Salvando apólice com dados:', {
+      console.log('💾 [handleSaveEdit] INÍCIO - Salvando apólice com dados:', {
         id: updatedPolicy.id,
-        name: updatedPolicy.name,
         marca: updatedPolicy.marca,
         placa: updatedPolicy.placa,
         modelo: updatedPolicy.vehicleModel,
@@ -471,14 +470,13 @@ export function MyPolicies() {
       const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
       
       if (success) {
-        console.log('✅ Update bem-sucedido, recarregando dados...');
+        console.log('✅ [handleSaveEdit] Update bem-sucedido!');
         
-        // Recarregar dados do banco
-        await refreshPolicies();
-        
-        // Buscar dados atualizados DIRETO DO BANCO para o selectedPolicy
+        // Buscar dados atualizados DIRETO DO BANCO
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          console.log('🔍 [handleSaveEdit] Buscando dados atualizados do banco...');
+          
           const { data: updatedData, error } = await supabase
             .from('policies')
             .select('*')
@@ -487,7 +485,7 @@ export function MyPolicies() {
             .single();
           
           if (!error && updatedData) {
-            console.log('✅ [handleSaveEdit] Dados atualizados do banco:', {
+            console.log('✅ [handleSaveEdit] Dados RAW do banco:', {
               marca: updatedData.marca,
               placa: updatedData.placa,
               modelo_veiculo: updatedData.modelo_veiculo,
@@ -496,17 +494,38 @@ export function MyPolicies() {
               franquia: updatedData.franquia
             });
             
-            // Normalizar e atualizar selectedPolicy
+            // Normalizar dados
             const normalized = normalizePolicy(updatedData);
+            
+            console.log('🔄 [handleSaveEdit] Dados NORMALIZADOS:', {
+              marca: normalized.marca,
+              placa: normalized.placa,
+              vehicleModel: normalized.vehicleModel,
+              modelo_veiculo: normalized.modelo_veiculo,
+              nome_embarcacao: normalized.nome_embarcacao,
+              ano_modelo: normalized.ano_modelo,
+              franquia: normalized.franquia,
+              deductible: normalized.deductible
+            });
+            
+            // Atualizar selectedPolicy
             setSelectedPolicy(normalized);
+            console.log('✅ [handleSaveEdit] selectedPolicy ATUALIZADO!');
+          } else {
+            console.error('❌ [handleSaveEdit] Erro ao buscar dados do banco:', error);
           }
         }
+        
+        // Recarregar lista de apólices
+        await refreshPolicies();
+        console.log('✅ [handleSaveEdit] Lista de apólices recarregada');
         
         toast({
           title: "✅ Alterações Salvas",
           description: "A apólice foi atualizada com sucesso",
         });
       } else {
+        console.error('❌ [handleSaveEdit] Update retornou false');
         toast({
           title: "❌ Erro ao Salvar",
           description: "Não foi possível atualizar a apólice",
@@ -514,7 +533,7 @@ export function MyPolicies() {
         });
       }
     } catch (error) {
-      console.error('❌ Erro ao salvar edição:', error);
+      console.error('❌ [handleSaveEdit] ERRO:', error);
       toast({
         title: "❌ Erro",
         description: "Ocorreu um erro ao salvar as alterações",
@@ -522,6 +541,7 @@ export function MyPolicies() {
       });
     } finally {
       setShowEditModal(false);
+      console.log('🏁 [handleSaveEdit] Modal de edição fechado');
     }
   };
 
