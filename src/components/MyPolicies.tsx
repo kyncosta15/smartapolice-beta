@@ -118,6 +118,8 @@ export function MyPolicies() {
     const iconClass = 'h-4 w-4';
     const normalizedType = type?.toLowerCase() || '';
     
+    console.log('🎨 [getTypeIcon] type:', type, 'normalizedType:', normalizedType);
+    
     switch (normalizedType) {
       case 'auto':
       case 'automovel':
@@ -134,8 +136,10 @@ export function MyPolicies() {
       case 'acidentes_pessoais':
         return <ShieldAlert className={`${iconClass} text-yellow-600 dark:text-yellow-400`} />;
       case 'nautico':
+        console.log('⚓ [getTypeIcon] Renderizando Anchor icon para nautico');
         return <Anchor className={`${iconClass} text-cyan-600 dark:text-cyan-400`} />;
       default:
+        console.log('🛡️ [getTypeIcon] Usando Shield icon (default) para:', type);
         return <Shield className={`${iconClass} text-gray-600 dark:text-gray-400`} />;
     }
   };
