@@ -44,7 +44,8 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
     // Campos específicos para veículos/embarcações
     marca: '',
     placa: '',
-    nome_embarcacao: ''
+    nome_embarcacao: '',
+    ano_modelo: ''
   });
 
   useEffect(() => {
@@ -83,7 +84,8 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
         // Campos específicos para veículos/embarcações
         marca: policy.marca || '',
         placa: policy.placa || '',
-        nome_embarcacao: policy.nome_embarcacao || ''
+        nome_embarcacao: policy.nome_embarcacao || '',
+        ano_modelo: policy.ano_modelo || ''
       });
     }
   }, [policy]);
@@ -128,7 +130,8 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       responsavel_nome: formData.responsavel_nome,
       marca: formData.marca,
       placa: formData.placa,
-      nome_embarcacao: formData.nome_embarcacao
+      nome_embarcacao: formData.nome_embarcacao,
+      ano_modelo: formData.ano_modelo
     };
 
     try {
@@ -388,6 +391,17 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
                     placeholder={formData.type === 'auto' ? 'Ex: Corolla, Gol' : 'Ex: Phantom 300, Intermarine'}
                     value={formData.vehicleModel}
                     onChange={(e) => setFormData({...formData, vehicleModel: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="ano_modelo">Ano do Modelo</Label>
+                  <Input
+                    id="ano_modelo"
+                    type="number"
+                    placeholder="Ex: 2023"
+                    value={formData.ano_modelo}
+                    onChange={(e) => setFormData({...formData, ano_modelo: e.target.value})}
                   />
                 </div>
 

@@ -15,9 +15,20 @@ export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
   const marca = renderValue(policy?.marca);
   const placa = renderValue(policy?.placa);
   const nomeEmbarcacao = renderValue(policy?.nome_embarcacao);
+  const anoModelo = renderValue(policy?.ano_modelo);
   const deductible = policy?.deductible || policy?.franquia;
   
-  if (!isVehicleType || (!vehicleModel && !deductible && !marca && !placa && !nomeEmbarcacao)) {
+  console.log('🚗 [VehicleInfoCard] Dados do veículo:', {
+    marca,
+    modelo: vehicleModel,
+    placa,
+    nomeEmbarcacao,
+    anoModelo,
+    franquia: deductible,
+    policyKeys: Object.keys(policy || {})
+  });
+  
+  if (!isVehicleType || (!vehicleModel && !deductible && !marca && !placa && !nomeEmbarcacao && !anoModelo)) {
     return null;
   }
 
@@ -50,6 +61,17 @@ export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
             </label>
             <p className="text-xl font-bold text-gray-900 font-sf-pro">
               {vehicleModel}
+            </p>
+          </div>
+        )}
+
+        {anoModelo && anoModelo !== '-' && (
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
+            <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
+              Ano do Modelo
+            </label>
+            <p className="text-xl font-bold text-gray-900 font-sf-pro">
+              {anoModelo}
             </p>
           </div>
         )}
