@@ -136,8 +136,8 @@ export function EnhancedPolicyViewer({
     if (policy.file) {
       // Para arquivos locais (recém extraídos)
       await shareOrDownload(policy.file, `${policy.name}.pdf`);
-    } else if (policy.pdfPath) {
-      // Para apólices persistidas - usar múltiplas estratégias
+    } else if (policy.pdfPath && policy.pdfPath !== 'Não informado' && policy.pdfPath.trim() !== '') {
+      // Para apólices persistidas com pdfPath válido - usar múltiplas estratégias
       console.log('🔄 Iniciando download para apólice persistida:', policy.pdfPath);
       
       try {
@@ -217,11 +217,64 @@ export function EnhancedPolicyViewer({
         variant: "destructive",
       });
       
+    } else if (policy.nosnum && policy.codfil) {
+      // Fallback: Tentar baixar da API CorpNuvem usando nosnum e codfil
+      console.log('📥 Tentando baixar da API CorpNuvem:', { 
+        nosnum: policy.nosnum, 
+        codfil: policy.codfil 
+      });
+      
+      try {
+        const { getDocumentoAnexos, downloadDocumentoAnexo } = await import('@/services/corpnuvem/anexos');
+        
+        toast({
+          title: "Baixando apólice",
+          description: "Por favor, aguarde...",
+        });
+        
+        const response = await getDocumentoAnexos({
+          codfil: policy.codfil,
+          nosnum: policy.nosnum
+        });
+        
+        if (response?.anexos && response.anexos.length > 0) {
+          // Buscar o primeiro PDF disponível
+          const pdfAnexo = response.anexos.find(anexo => 
+            anexo.tipo?.toLowerCase().includes('pdf')
+          );
+          
+          console.log('📄 PDF encontrado na API:', pdfAnexo);
+          
+          if (pdfAnexo) {
+            await downloadDocumentoAnexo(
+              pdfAnexo.url, 
+              `${policy.name}.pdf`
+            );
+            
+            toast({
+              title: "Download concluído",
+              description: "Apólice baixada com sucesso",
+            });
+            return;
+          } else {
+            throw new Error('Nenhum PDF encontrado nos anexos');
+          }
+        } else {
+          throw new Error('Nenhum anexo encontrado');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao baixar da API CorpNuvem:', error);
+        toast({
+          title: "❌ Erro no download",
+          description: "Não foi possível baixar a apólice da API.",
+          variant: "destructive",
+        });
+      }
     } else {
       console.warn('Arquivo não disponível para download:', policy.name);
       toast({
         title: "⚠️ Arquivo não disponível",
-        description: "O arquivo não está disponível para download.",
+        description: "O arquivo não está disponível para download. Entre em contato com o suporte.",
         variant: "destructive",
       });
     }
