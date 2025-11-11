@@ -303,6 +303,7 @@ export class BatchFileProcessor {
   private async convertToParsedPolicy(data: any, fileName: string, file: File, userId: string): Promise<ParsedPolicyData> {
     console.log('🔄 Convertendo dados para ParsedPolicy com validação robusta:', data);
     console.log('👤 userId para conversão:', userId);
+    console.log('📋 DADOS BRUTOS COMPLETOS ANTES DA VALIDAÇÃO:', JSON.stringify(data, null, 2));
     
     // CORREÇÃO CRÍTICA: Garantir que userId esteja sempre presente
     if (!userId) {
@@ -313,6 +314,13 @@ export class BatchFileProcessor {
     // Usar validador robusto sem alucinação
     const { RobustDataValidator } = await import('@/utils/robustDataValidator');
     const validationResult = RobustDataValidator.validateWithoutHallucination(data);
+    
+    console.log('✅ RESULTADO DA VALIDAÇÃO:', {
+      isValid: validationResult.isValid,
+      errors: validationResult.errors,
+      warnings: validationResult.warnings,
+      normalizedData: validationResult.normalizedData
+    });
     
     if (!validationResult.isValid) {
       console.error('❌ Dados inválidos:', validationResult.errors);
