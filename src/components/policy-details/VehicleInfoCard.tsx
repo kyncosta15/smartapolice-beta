@@ -18,7 +18,24 @@ export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
   const anoModelo = renderValue(policy?.ano_modelo);
   const deductible = policy?.deductible || policy?.franquia;
   
+  console.log('🚗 [VehicleInfoCard] DEBUG completo:', {
+    policyId: policy?.id,
+    type: policy?.type,
+    normalizedType,
+    isVehicleType,
+    campos: {
+      marca: { raw: policy?.marca, rendered: marca },
+      modelo: { raw: policy?.vehicleModel, raw2: policy?.modelo_veiculo, rendered: vehicleModel },
+      placa: { raw: policy?.placa, rendered: placa },
+      nomeEmbarcacao: { raw: policy?.nome_embarcacao, rendered: nomeEmbarcacao },
+      anoModelo: { raw: policy?.ano_modelo, rendered: anoModelo },
+      franquia: { raw: policy?.franquia, deductible: policy?.deductible, rendered: deductible }
+    },
+    todasChaves: Object.keys(policy || {})
+  });
+  
   if (!isVehicleType || (!vehicleModel && !deductible && !marca && !placa && !nomeEmbarcacao && !anoModelo)) {
+    console.log('🚗 [VehicleInfoCard] Não renderizando porque:', { isVehicleType, temDados: !!(vehicleModel || deductible || marca || placa || nomeEmbarcacao || anoModelo) });
     return null;
   }
 

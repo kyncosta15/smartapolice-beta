@@ -366,6 +366,12 @@ export function usePersistedPolicies() {
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
       if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
 
+      console.log('💾 [updatePolicy] Atualizando apólice no banco:', {
+        policyId,
+        dbUpdates,
+        todasChaves: Object.keys(dbUpdates)
+      });
+
       const { data, error } = await supabase
         .from('policies')
         .update(dbUpdates)
@@ -374,6 +380,7 @@ export function usePersistedPolicies() {
         .select();
 
       if (error) {
+        console.error('❌ [updatePolicy] Erro do Supabase:', error);
         toast({
           title: "❌ Erro ao Atualizar",
           description: `${error.message}${error.hint ? ` - ${error.hint}` : ''}`,
@@ -383,6 +390,15 @@ export function usePersistedPolicies() {
       }
 
       const dbRecord = data && data.length > 0 ? data[0] : null;
+      
+      console.log('✅ [updatePolicy] Dados retornados do banco:', {
+        id: dbRecord?.id,
+        marca: dbRecord?.marca,
+        placa: dbRecord?.placa,
+        modelo_veiculo: dbRecord?.modelo_veiculo,
+        nome_embarcacao: dbRecord?.nome_embarcacao,
+        ano_modelo: dbRecord?.ano_modelo
+      });
       
       // Atualizar estado local com os dados REAIS do banco
       setPolicies(prev => 

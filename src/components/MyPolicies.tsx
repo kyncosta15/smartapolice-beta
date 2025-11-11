@@ -457,12 +457,14 @@ export function MyPolicies() {
 
   const handleSaveEdit = async (updatedPolicy: any) => {
     try {
-      console.log('💾 Salvando apólice editada:', {
+      console.log('💾 [handleSaveEdit] Salvando apólice com dados:', {
         id: updatedPolicy.id,
         name: updatedPolicy.name,
-        monthlyAmount: updatedPolicy.monthlyAmount,
-        custo_mensal: updatedPolicy.custo_mensal,
-        premium: updatedPolicy.premium
+        marca: updatedPolicy.marca,
+        placa: updatedPolicy.placa,
+        modelo: updatedPolicy.vehicleModel,
+        nomeEmbarcacao: updatedPolicy.nome_embarcacao,
+        anoModelo: updatedPolicy.ano_modelo
       });
       
       const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
@@ -476,7 +478,7 @@ export function MyPolicies() {
         // Recarregar dados do banco para garantir valores atualizados
         await refreshPolicies();
         
-        console.log('✅ Dados recarregados do banco');
+        console.log('✅ [handleSaveEdit] Dados recarregados, verificando política atualizada...');
         
         toast({
           title: "✅ Alterações Salvas",
