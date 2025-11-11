@@ -40,7 +40,11 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
     documento_tipo: '',
     vehicleModel: '',
     uf: '',
-    responsavel_nome: ''
+    responsavel_nome: '',
+    // Campos específicos para veículos/embarcações
+    marca: '',
+    placa: '',
+    nome_embarcacao: ''
   });
 
   useEffect(() => {
@@ -75,7 +79,11 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
         // CORREÇÃO: Priorizar modelo_veiculo do banco
         vehicleModel: policy.modelo_veiculo || policy.vehicleModel || '',
         uf: policy.uf || '',
-        responsavel_nome: policy.responsavel_nome || ''
+        responsavel_nome: policy.responsavel_nome || '',
+        // Campos específicos para veículos/embarcações
+        marca: policy.marca || '',
+        placa: policy.placa || '',
+        nome_embarcacao: policy.nome_embarcacao || ''
       });
     }
   }, [policy]);
@@ -117,7 +125,10 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       vehicleModel: formData.vehicleModel,
       modelo_veiculo: formData.vehicleModel,
       uf: formData.uf,
-      responsavel_nome: formData.responsavel_nome
+      responsavel_nome: formData.responsavel_nome,
+      marca: formData.marca,
+      placa: formData.placa,
+      nome_embarcacao: formData.nome_embarcacao
     };
 
     try {
@@ -157,6 +168,7 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="auto">Auto</SelectItem>
+                  <SelectItem value="nautico">Náutico</SelectItem>
                   <SelectItem value="vida">Vida</SelectItem>
                   <SelectItem value="saude">Saúde</SelectItem>
                   <SelectItem value="empresarial">Empresarial</SelectItem>
@@ -356,17 +368,52 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
               </div>
             </div>
 
-            {/* Campos específicos para Auto */}
-            {formData.type === 'auto' && (
+            {/* Campos específicos para Auto e Náutico */}
+            {(formData.type === 'auto' || formData.type.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'nautico') && (
               <>
                 <div>
-                  <Label htmlFor="vehicleModel">Modelo do Veículo</Label>
+                  <Label htmlFor="marca">Marca</Label>
+                  <Input
+                    id="marca"
+                    placeholder={formData.type === 'auto' ? 'Ex: Toyota, Volkswagen' : 'Ex: Lancha, Jet Ski'}
+                    value={formData.marca}
+                    onChange={(e) => setFormData({...formData, marca: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="vehicleModel">Modelo</Label>
                   <Input
                     id="vehicleModel"
+                    placeholder={formData.type === 'auto' ? 'Ex: Corolla, Gol' : 'Ex: Phantom 300, Intermarine'}
                     value={formData.vehicleModel}
                     onChange={(e) => setFormData({...formData, vehicleModel: e.target.value})}
                   />
                 </div>
+
+                {formData.type === 'auto' && (
+                  <div>
+                    <Label htmlFor="placa">Placa</Label>
+                    <Input
+                      id="placa"
+                      placeholder="Ex: ABC-1234"
+                      value={formData.placa}
+                      onChange={(e) => setFormData({...formData, placa: e.target.value.toUpperCase()})}
+                    />
+                  </div>
+                )}
+
+                {formData.type.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'nautico' && (
+                  <div>
+                    <Label htmlFor="nome_embarcacao">Nome da Embarcação</Label>
+                    <Input
+                      id="nome_embarcacao"
+                      placeholder="Ex: Vento Sul, Mar Azul"
+                      value={formData.nome_embarcacao}
+                      onChange={(e) => setFormData({...formData, nome_embarcacao: e.target.value})}
+                    />
+                  </div>
+                )}
                 
                 <div>
                   <Label htmlFor="deductible">Franquia (R$)</Label>
