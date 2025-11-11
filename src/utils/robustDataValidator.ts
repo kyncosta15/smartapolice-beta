@@ -309,11 +309,11 @@ export class RobustDataValidator {
   private static extractFieldValue(data: any, fieldName: string): any {
     if (!data || typeof data !== 'object') return null;
 
-    // Mapeamentos para diferentes formatos de dados
+    // Mapeamentos para diferentes formatos de dados (incluindo N8N)
     const fieldMappings: { [key: string]: string[] } = {
-      'insurer': ['seguradora', 'seguradora_empresa', 'empresa', 'insurer'],
-      'policyNumber': ['numero_apolice', 'apolice', 'policy_number', 'policyNumber'],
-      'name': ['segurado', 'nome', 'name', 'insuredName'],
+      'insurer': ['seguradora', 'num_seguradora', 'nome_seguradora', 'seguradora_empresa', 'empresa', 'insurer'],
+      'policyNumber': ['numero_apolice', 'num_apolice', 'apolice', 'policy_number', 'policyNumber'],
+      'name': ['segurado', 'num_segurado', 'nome_segurado', 'nome', 'name', 'insuredName'],
       'premium': ['premio', 'valor_premio', 'premium', 'valor_total'],
       'monthlyAmount': ['custo_mensal', 'valor_mensal', 'monthlyAmount', 'valor_parcela'],
       'startDate': ['inicio', 'inicio_vigencia', 'startDate', 'data_inicio'],
