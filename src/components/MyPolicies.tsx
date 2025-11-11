@@ -751,16 +751,25 @@ export function MyPolicies() {
               <Card key={policy.id} className="hover:shadow-lg transition-shadow overflow-hidden dark:bg-card dark:border-border">
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6 space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between items-start gap-2 sm:gap-3">
-                    <div className="flex items-start gap-2 flex-1 min-w-0">
-                      <div className="shrink-0 mt-0.5">
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-1.5">
                         {getTypeIcon(policy.type)}
+                        <span className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                          {policy.type === 'auto' || policy.type === 'automovel' ? 'AUTOMÓVEL' : 
+                           policy.type === 'vida' ? 'VIDA' :
+                           policy.type === 'saude' ? 'SAÚDE' :
+                           policy.type === 'residencial' ? 'RESIDENCIAL' :
+                           policy.type === 'patrimonial' ? 'PATRIMONIAL' :
+                           policy.type === 'empresarial' ? 'EMPRESARIAL' :
+                           policy.type === 'acidentes_pessoais' ? 'ACIDENTES PESSOAIS' :
+                           policy.type === 'nautico' ? 'NÁUTICO' :
+                           policy.type.toUpperCase()}
+                        </span>
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-1.5">
                         {originalPolicy?.documento && isDependentCPF(originalPolicy.documento) && (
-                          <div className="inline-block mr-1.5" title={`Apólice de dependente`}>
-                            <Link 
-                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" 
-                            />
+                          <div title="Apólice de dependente" className="shrink-0 mt-0.5">
+                            <Link className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
                           </div>
                         )}
                         <CardTitle className="text-sm sm:text-base md:text-lg leading-tight break-words dark:text-foreground">
@@ -772,7 +781,7 @@ export function MyPolicies() {
                       {formatStatusText(policy.status)}
                     </Badge>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground truncate pl-6">
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground truncate">
                     {toText(policy.insurer)}
                   </p>
                 </CardHeader>
