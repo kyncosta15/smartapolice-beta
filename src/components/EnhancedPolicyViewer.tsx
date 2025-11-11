@@ -740,7 +740,7 @@ function getTypeLabel(type: string) {
 
 function getTypeIcon(type: string) {
   const iconClass = 'h-4 w-4';
-  const normalizedType = type.toLowerCase();
+  const normalizedType = type.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   
   switch (normalizedType) {
     case 'auto':

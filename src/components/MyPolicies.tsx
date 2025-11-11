@@ -116,7 +116,7 @@ export function MyPolicies() {
   // Função para obter o ícone do tipo de seguro
   const getTypeIcon = (type: string) => {
     const iconClass = 'h-4 w-4';
-    const normalizedType = type?.toLowerCase() || '';
+    const normalizedType = type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
     
     console.log('🎨 [getTypeIcon] type:', type, 'normalizedType:', normalizedType);
     

@@ -110,7 +110,7 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
 
   const getTypeIcon = (type: string) => {
     const iconClass = isMobile ? 'h-5 w-5' : 'h-6 w-6';
-    const normalizedType = type.toLowerCase();
+    const normalizedType = type.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     
     switch (normalizedType) {
       case 'auto':
