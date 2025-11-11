@@ -92,7 +92,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     const isPDF = fileExtension === 'pdf';
     const webhookUrl = isPDF 
-      ? 'https://rcorpsolutions.app.n8n.cloud/webhook/pdf-frota'
+      ? 'https://rcorpcaldas.app.n8n.cloud/webhook/pdf-frota'
       : 'https://rcorpsolutions.app.n8n.cloud/webhook-test/upload-arquivo';
 
     console.log(`📤 Enviando ${file.name} (${fileExtension?.toUpperCase()}) para webhook: ${isPDF ? 'PDF' : 'PLANILHA'}`);
