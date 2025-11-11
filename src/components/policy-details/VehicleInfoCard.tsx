@@ -16,26 +16,9 @@ export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
   const placa = renderValue(policy?.placa);
   const nomeEmbarcacao = renderValue(policy?.nome_embarcacao);
   const anoModelo = renderValue(policy?.ano_modelo);
-  const deductible = policy?.deductible || policy?.franquia;
+  const deductible = policy?.deductible ?? policy?.franquia ?? 0;
   
-  console.log('🚗 [VehicleInfoCard] DEBUG completo:', {
-    policyId: policy?.id,
-    type: policy?.type,
-    normalizedType,
-    isVehicleType,
-    campos: {
-      marca: { raw: policy?.marca, rendered: marca },
-      modelo: { raw: policy?.vehicleModel, raw2: policy?.modelo_veiculo, rendered: vehicleModel },
-      placa: { raw: policy?.placa, rendered: placa },
-      nomeEmbarcacao: { raw: policy?.nome_embarcacao, rendered: nomeEmbarcacao },
-      anoModelo: { raw: policy?.ano_modelo, rendered: anoModelo },
-      franquia: { raw: policy?.franquia, deductible: policy?.deductible, rendered: deductible }
-    },
-    todasChaves: Object.keys(policy || {})
-  });
-  
-  if (!isVehicleType || (!vehicleModel && !deductible && !marca && !placa && !nomeEmbarcacao && !anoModelo)) {
-    console.log('🚗 [VehicleInfoCard] Não renderizando porque:', { isVehicleType, temDados: !!(vehicleModel || deductible || marca || placa || nomeEmbarcacao || anoModelo) });
+  if (!isVehicleType) {
     return null;
   }
 
@@ -105,16 +88,15 @@ export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
           </div>
         )}
 
-        {deductible && deductible > 0 && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
-            <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
-              Franquia
-            </label>
-            <p className="text-xl font-bold text-gray-900 font-sf-pro">
-              {renderCurrency(deductible)}
-            </p>
-          </div>
-        )}
+        {/* Campo Franquia - sempre visível para auto e náutico */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
+          <label className="text-sm font-medium text-purple-700 font-sf-pro block mb-1">
+            Franquia
+          </label>
+          <p className="text-xl font-bold text-gray-900 font-sf-pro">
+            {renderCurrency(deductible)}
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
