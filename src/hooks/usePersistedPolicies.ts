@@ -357,18 +357,39 @@ export function usePersistedPolicies() {
       // REMOVIDO: if (updates.insuredName !== undefined) - usar apenas updates.name como fonte
       if (updates.documento !== undefined) dbUpdates.documento = String(updates.documento).substring(0, 20);
       if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = String(updates.documento_tipo).substring(0, 10);
-      if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = updates.vehicleModel;
-      if ((updates as any).marca !== undefined) dbUpdates.marca = (updates as any).marca;
-      if ((updates as any).placa !== undefined) dbUpdates.placa = String((updates as any).placa).substring(0, 10);
-      if ((updates as any).nome_embarcacao !== undefined) dbUpdates.nome_embarcacao = (updates as any).nome_embarcacao;
-      if ((updates as any).ano_modelo !== undefined) dbUpdates.ano_modelo = (updates as any).ano_modelo;
+      if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = updates.vehicleModel || null;
+      if ((updates as any).marca !== undefined) {
+        const marcaValue = (updates as any).marca;
+        dbUpdates.marca = marcaValue && marcaValue.trim() ? marcaValue.trim() : null;
+      }
+      if ((updates as any).placa !== undefined) {
+        const placaValue = String((updates as any).placa || '').trim().toUpperCase();
+        dbUpdates.placa = placaValue ? placaValue.substring(0, 10) : null;
+      }
+      if ((updates as any).nome_embarcacao !== undefined) {
+        const nomeValue = (updates as any).nome_embarcacao;
+        dbUpdates.nome_embarcacao = nomeValue && nomeValue.trim() ? nomeValue.trim() : null;
+      }
+      if ((updates as any).ano_modelo !== undefined) {
+        const anoValue = (updates as any).ano_modelo;
+        dbUpdates.ano_modelo = anoValue && anoValue.toString().trim() ? anoValue.toString().trim() : null;
+      }
       if (updates.uf !== undefined) dbUpdates.uf = String(updates.uf).toUpperCase().substring(0, 2);
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
+      if ((updates as any).franquia !== undefined) dbUpdates.franquia = (updates as any).franquia;
       if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
 
       console.log('💾 [updatePolicy] Atualizando apólice no banco:', {
         policyId,
         dbUpdates,
+        campos_veiculo: {
+          marca: dbUpdates.marca,
+          placa: dbUpdates.placa,
+          modelo_veiculo: dbUpdates.modelo_veiculo,
+          nome_embarcacao: dbUpdates.nome_embarcacao,
+          ano_modelo: dbUpdates.ano_modelo,
+          franquia: dbUpdates.franquia
+        },
         todasChaves: Object.keys(dbUpdates)
       });
 
@@ -397,7 +418,9 @@ export function usePersistedPolicies() {
         placa: dbRecord?.placa,
         modelo_veiculo: dbRecord?.modelo_veiculo,
         nome_embarcacao: dbRecord?.nome_embarcacao,
-        ano_modelo: dbRecord?.ano_modelo
+        ano_modelo: dbRecord?.ano_modelo,
+        franquia: dbRecord?.franquia,
+        segurado: dbRecord?.segurado
       });
       
       // Atualizar estado local com os dados REAIS do banco
@@ -423,15 +446,15 @@ export function usePersistedPolicies() {
               startDate: dbRecord?.inicio_vigencia || p.startDate,
               endDate: dbRecord?.fim_vigencia || p.endDate,
               status: dbRecord?.status ? mapLegacyStatus(dbRecord.status) : p.status,
-              // Campos de veículo/embarcação
-              vehicleModel: dbRecord?.modelo_veiculo || p.vehicleModel,
-              modelo_veiculo: dbRecord?.modelo_veiculo || (p as any).modelo_veiculo,
-              marca: dbRecord?.marca || (p as any).marca,
-              placa: dbRecord?.placa || (p as any).placa,
-              nome_embarcacao: dbRecord?.nome_embarcacao || (p as any).nome_embarcacao,
-              ano_modelo: dbRecord?.ano_modelo || (p as any).ano_modelo,
-              deductible: dbRecord?.franquia || p.deductible,
-              franquia: dbRecord?.franquia || (p as any).franquia
+              // Campos de veículo/embarcação - usar valor do banco sempre que disponível
+              vehicleModel: dbRecord ? (dbRecord.modelo_veiculo ?? null) : p.vehicleModel,
+              modelo_veiculo: dbRecord ? (dbRecord.modelo_veiculo ?? null) : (p as any).modelo_veiculo,
+              marca: dbRecord ? (dbRecord.marca ?? null) : (p as any).marca,
+              placa: dbRecord ? (dbRecord.placa ?? null) : (p as any).placa,
+              nome_embarcacao: dbRecord ? (dbRecord.nome_embarcacao ?? null) : (p as any).nome_embarcacao,
+              ano_modelo: dbRecord ? (dbRecord.ano_modelo ?? null) : (p as any).ano_modelo,
+              deductible: dbRecord ? (dbRecord.franquia ?? 0) : p.deductible,
+              franquia: dbRecord ? (dbRecord.franquia ?? 0) : (p as any).franquia
             };
             
             return updated;

@@ -18,22 +18,6 @@ export const VehicleInfoCard = ({ policy }: VehicleInfoCardProps) => {
   const anoModelo = renderValue(policy?.ano_modelo);
   const deductible = policy?.deductible ?? policy?.franquia ?? 0;
   
-  console.log('🚗 [VehicleInfoCard] Dados recebidos:', {
-    id: policy?.id,
-    type: policy?.type,
-    marca_raw: policy?.marca,
-    marca_rendered: marca,
-    modelo_raw: policy?.vehicleModel,
-    modelo_rendered: vehicleModel,
-    ano_raw: policy?.ano_modelo,
-    ano_rendered: anoModelo,
-    nome_embarcacao_raw: policy?.nome_embarcacao,
-    nome_embarcacao_rendered: nomeEmbarcacao,
-    placa_raw: policy?.placa,
-    placa_rendered: placa,
-    franquia: deductible
-  });
-  
   if (!isVehicleType) {
     return null;
   }
