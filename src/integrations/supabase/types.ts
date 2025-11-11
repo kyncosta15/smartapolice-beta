@@ -1785,7 +1785,9 @@ export type Database = {
           id: string
           inicio_vigencia: string | null
           last_audit_id: string | null
+          marca: string | null
           modelo_veiculo: string | null
+          nome_embarcacao: string | null
           nosnum: number | null
           numero_apolice: string | null
           placa: string | null
@@ -1836,7 +1838,9 @@ export type Database = {
           id?: string
           inicio_vigencia?: string | null
           last_audit_id?: string | null
+          marca?: string | null
           modelo_veiculo?: string | null
+          nome_embarcacao?: string | null
           nosnum?: number | null
           numero_apolice?: string | null
           placa?: string | null
@@ -1887,7 +1891,9 @@ export type Database = {
           id?: string
           inicio_vigencia?: string | null
           last_audit_id?: string | null
+          marca?: string | null
           modelo_veiculo?: string | null
+          nome_embarcacao?: string | null
           nosnum?: number | null
           numero_apolice?: string | null
           placa?: string | null
