@@ -1,5 +1,5 @@
 export class DynamicPDFExtractor {
-  private static readonly WEBHOOK_URL = 'https://rcorpsolutions.app.n8n.cloud/webhook/upload-arquivo';
+  private static readonly WEBHOOK_URL = 'https://rcorpcaldas.app.n8n.cloud/webhook/upload-arquivo';
   private static readonly TIMEOUT = 600000; // 10 minutos para múltiplos arquivos
   private static readonly MAX_FILES = 10; // Limite de arquivos por requisição
 
