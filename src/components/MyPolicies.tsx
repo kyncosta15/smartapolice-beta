@@ -27,7 +27,7 @@ import { usePersistedPolicies } from '@/hooks/usePersistedPolicies';
 import { useToast } from '@/hooks/use-toast';
 import { useInfoCapSync } from '@/hooks/useInfoCapSync';
 import { renderValue, renderValueAsString, renderCurrency } from '@/utils/renderValue';
-import { toText, moedaBR } from '@/lib/policies';
+import { toText, moedaBR, normalizePolicy } from '@/lib/policies';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Pagination,
@@ -464,7 +464,8 @@ export function MyPolicies() {
         placa: updatedPolicy.placa,
         modelo: updatedPolicy.vehicleModel,
         nomeEmbarcacao: updatedPolicy.nome_embarcacao,
-        anoModelo: updatedPolicy.ano_modelo
+        anoModelo: updatedPolicy.ano_modelo,
+        franquia: updatedPolicy.franquia
       });
       
       const success = await updatePolicy(updatedPolicy.id, updatedPolicy);
@@ -472,30 +473,38 @@ export function MyPolicies() {
       if (success) {
         console.log('✅ Update bem-sucedido, recarregando dados...');
         
-        // Recarregar dados do banco para garantir valores atualizados
+        // Recarregar dados do banco
         await refreshPolicies();
         
-        // Aguardar para garantir que o estado foi atualizado
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        console.log('✅ [handleSaveEdit] Dados recarregados, verificando política atualizada...');
-        
-        // Atualizar o selectedPolicy com os dados mais recentes do banco
-        const updatedFromDb = policies.find(p => p.id === updatedPolicy.id);
-        if (updatedFromDb) {
-          console.log('✅ [handleSaveEdit] Atualizando selectedPolicy com dados do banco:', {
-            marca: (updatedFromDb as any).marca,
-            placa: (updatedFromDb as any).placa,
-            modelo_veiculo: (updatedFromDb as any).modelo_veiculo,
-            nome_embarcacao: (updatedFromDb as any).nome_embarcacao,
-            ano_modelo: (updatedFromDb as any).ano_modelo
-          });
-          setSelectedPolicy(updatedFromDb);
+        // Buscar dados atualizados DIRETO DO BANCO para o selectedPolicy
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: updatedData, error } = await supabase
+            .from('policies')
+            .select('*')
+            .eq('id', updatedPolicy.id)
+            .eq('user_id', user.id)
+            .single();
+          
+          if (!error && updatedData) {
+            console.log('✅ [handleSaveEdit] Dados atualizados do banco:', {
+              marca: updatedData.marca,
+              placa: updatedData.placa,
+              modelo_veiculo: updatedData.modelo_veiculo,
+              nome_embarcacao: updatedData.nome_embarcacao,
+              ano_modelo: updatedData.ano_modelo,
+              franquia: updatedData.franquia
+            });
+            
+            // Normalizar e atualizar selectedPolicy
+            const normalized = normalizePolicy(updatedData);
+            setSelectedPolicy(normalized);
+          }
         }
         
         toast({
           title: "✅ Alterações Salvas",
-          description: "A apólice foi atualizada e os valores foram sincronizados",
+          description: "A apólice foi atualizada com sucesso",
         });
       } else {
         toast({
