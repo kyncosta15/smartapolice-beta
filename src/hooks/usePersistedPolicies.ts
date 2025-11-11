@@ -358,6 +358,9 @@ export function usePersistedPolicies() {
       if (updates.documento !== undefined) dbUpdates.documento = String(updates.documento).substring(0, 20);
       if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = String(updates.documento_tipo).substring(0, 10);
       if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = updates.vehicleModel;
+      if ((updates as any).marca !== undefined) dbUpdates.marca = (updates as any).marca;
+      if ((updates as any).placa !== undefined) dbUpdates.placa = String((updates as any).placa).substring(0, 10);
+      if ((updates as any).nome_embarcacao !== undefined) dbUpdates.nome_embarcacao = (updates as any).nome_embarcacao;
       if (updates.uf !== undefined) dbUpdates.uf = String(updates.uf).toUpperCase().substring(0, 2);
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
       if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
