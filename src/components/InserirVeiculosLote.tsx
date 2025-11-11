@@ -135,7 +135,7 @@ export default function InserirVeiculosLote() {
               empresa_id: empresaId,
               status_seguro: 'sem_seguro',
               categoria: 'Carros',
-              proprietario_tipo: 'Pessoa Jurídica',
+              proprietario_tipo: 'pj',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
