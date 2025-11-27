@@ -43,6 +43,7 @@ export function UserProfile() {
   const [isSavingPhone, setIsSavingPhone] = useState(false);
   const [isSavingBirthDate, setIsSavingBirthDate] = useState(false);
   const [isSavingDocument, setIsSavingDocument] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isLoadingFromAPI, setIsLoadingFromAPI] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -406,10 +407,12 @@ export function UserProfile() {
 
     setIsSavingDocument(true);
     try {
+      const cleanDocument = profileData.document.trim();
+
       // Salvar na tabela users
       const { error: usersError } = await supabase
         .from('users')
-        .update({ documento: profileData.document.trim() })
+        .update({ documento: cleanDocument })
         .eq('id', user.id);
 
       if (usersError) throw usersError;
@@ -417,7 +420,7 @@ export function UserProfile() {
       // Salvar na tabela user_profiles
       const { error: profilesError } = await supabase
         .from('user_profiles')
-        .update({ document: profileData.document.trim() })
+        .update({ document: cleanDocument })
         .eq('id', user.id);
 
       if (profilesError) throw profilesError;
@@ -427,8 +430,8 @@ export function UserProfile() {
         description: "Sincronizando apólices...",
       });
 
-      // Sincronizar apólices da API CorpNuvem
-      await syncPolicies(profileData.document.trim(), true);
+      // Sincronizar apólices da API CorpNuvem (respeitando janela de 24h)
+      await syncPolicies(cleanDocument, true);
 
     } catch (error) {
       console.error('Erro ao salvar documento:', error);
@@ -439,6 +442,63 @@ export function UserProfile() {
       });
     } finally {
       setIsSavingDocument(false);
+    }
+  };
+
+  const handleSaveProfileData = async () => {
+    if (!user?.id) return;
+
+    const cleanDocument = profileData.document?.trim();
+
+    setIsSavingProfile(true);
+    try {
+      // Atualizar tabela user_profiles com todos os dados cadastrados
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .update({
+          phone: profileData.phone || null,
+          document: cleanDocument || null,
+          birth_date: profileData.birth_date || null,
+          address: profileData.address || null,
+          city: profileData.city || null,
+          state: profileData.state || null,
+          zip_code: profileData.zip_code || null,
+          company_name: profileData.company_name || null,
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Atualizar documento também na tabela users, se existir
+      if (cleanDocument) {
+        const { error: userError } = await supabase
+          .from('users')
+          .update({ documento: cleanDocument })
+          .eq('id', user.id);
+
+        if (userError) throw userError;
+      }
+
+      toast({
+        title: "Dados salvos",
+        description: cleanDocument
+          ? "Dados cadastrados salvos. Sincronizando apólices para este CPF/CNPJ..."
+          : "Dados cadastrados salvos com sucesso.",
+      });
+
+      // Forçar sincronização de apólices quando houver documento informado
+      if (cleanDocument) {
+        await syncPolicies(cleanDocument, true, true);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar dados cadastrais:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar seus dados cadastrais.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -771,11 +831,23 @@ export function UserProfile() {
             </div>
           </div>
 
-          <div className="pt-4 border-t">
+          <div className="pt-4 border-t flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <p className="text-sm text-muted-foreground">
-              💡 Os dados são sincronizados automaticamente da API CorpNuvem. Apenas o telefone e a data de nascimento podem ser editados manualmente. 
+              💡 Os dados são sincronizados automaticamente da API CorpNuvem. Apenas o telefone e a data de nascimento podem ser editados manualmente.
               Use o botão "Re-sincronizar" acima para atualizar com os dados mais recentes da API.
             </p>
+            <Button
+              onClick={handleSaveProfileData}
+              disabled={isSavingProfile}
+              className="flex items-center gap-2"
+            >
+              {isSavingProfile ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {isSavingProfile ? 'Salvando...' : 'Salvar dados e sincronizar apólices'}
+            </Button>
           </div>
         </CardContent>
       </Card>
