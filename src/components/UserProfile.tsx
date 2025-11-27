@@ -12,6 +12,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { getClientesCorpNuvem } from '@/services/corpnuvem/clientes';
+import { useCorpNuvemSync } from '@/hooks/useCorpNuvemSync';
 
 interface ProfileData {
   phone?: string;
@@ -41,11 +42,13 @@ export function UserProfile() {
   const [profileData, setProfileData] = useState<ProfileData>({});
   const [isSavingPhone, setIsSavingPhone] = useState(false);
   const [isSavingBirthDate, setIsSavingBirthDate] = useState(false);
+  const [isSavingDocument, setIsSavingDocument] = useState(false);
   const [isLoadingFromAPI, setIsLoadingFromAPI] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { syncPolicies } = useCorpNuvemSync();
 
   // Carregar dados do perfil da API CorpNuvem
   const loadFromCorpNuvemAPI = async () => {
@@ -370,6 +373,54 @@ export function UserProfile() {
     }
   };
 
+  const handleSaveDocument = async () => {
+    if (!user?.id || !profileData.document?.trim()) {
+      toast({
+        title: "Documento inválido",
+        description: "Por favor, insira um CPF/CNPJ válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingDocument(true);
+    try {
+      // Salvar na tabela users
+      const { error: usersError } = await supabase
+        .from('users')
+        .update({ documento: profileData.document.trim() })
+        .eq('id', user.id);
+
+      if (usersError) throw usersError;
+
+      // Salvar na tabela user_profiles
+      const { error: profilesError } = await supabase
+        .from('user_profiles')
+        .update({ document: profileData.document.trim() })
+        .eq('id', user.id);
+
+      if (profilesError) throw profilesError;
+
+      toast({
+        title: "CPF/CNPJ atualizado",
+        description: "Sincronizando apólices...",
+      });
+
+      // Sincronizar apólices da API CorpNuvem
+      await syncPolicies(profileData.document.trim(), true);
+
+    } catch (error) {
+      console.error('Erro ao salvar documento:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar o CPF/CNPJ.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingDocument(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -588,13 +639,28 @@ export function UserProfile() {
 
             <div>
               <Label htmlFor="document">CPF/CNPJ</Label>
-              <Input
-                id="document"
-                value={profileData.document || ''}
-                disabled
-                className="bg-muted"
-                placeholder="000.000.000-00"
-              />
+              <div className="relative group">
+                <Input
+                  id="document"
+                  value={profileData.document || ''}
+                  onChange={(e) => setProfileData({ ...profileData, document: e.target.value })}
+                  placeholder="000.000.000-00"
+                  className="pr-10"
+                />
+                <Button
+                  onClick={handleSaveDocument}
+                  disabled={isSavingDocument}
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                >
+                  {isSavingDocument ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </Button>
+              </div>
             </div>
 
             <div>
