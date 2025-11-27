@@ -56,19 +56,30 @@ export function UserProfile() {
 
     setIsLoadingFromAPI(true);
     try {
-      // Buscar documento do usuário
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('documento')
+      // Buscar documento do usuário - primeiro tentar user_profiles, depois users
+      let documento: string | null = null;
+      
+      // Tentar buscar de user_profiles primeiro
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('document')
         .eq('id', user.id)
         .maybeSingle();
-
-      if (userError) {
-        console.error('Erro ao buscar documento do usuário:', userError);
-        throw userError;
+      
+      documento = profileData?.document;
+      
+      // Se não encontrou, buscar da tabela users
+      if (!documento) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('documento')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        documento = userData?.documento;
       }
 
-      if (!userData?.documento) {
+      if (!documento) {
         toast({
           title: "Documento não encontrado",
           description: "É necessário ter um CPF/CNPJ cadastrado para buscar dados da API.",
@@ -77,17 +88,17 @@ export function UserProfile() {
         return;
       }
 
-      console.log('🔍 Buscando cliente na API com documento:', userData.documento);
+      console.log('🔍 Buscando cliente na API com documento:', documento);
 
       // Buscar dados na API CorpNuvem
-      const clienteData = await getClientesCorpNuvem({ texto: userData.documento });
+      const clienteData = await getClientesCorpNuvem({ texto: documento });
       
       console.log('📦 Dados recebidos da API:', clienteData);
 
       // Extrair dados do cliente (pode vir como array ou objeto)
       const cliente = Array.isArray(clienteData) ? clienteData[0] : clienteData;
 
-      if (!cliente) {
+      if (!cliente || Object.keys(cliente).length === 0) {
         toast({
           title: "Cliente não encontrado",
           description: "Não foram encontrados dados para este documento na API.",
@@ -103,7 +114,7 @@ export function UserProfile() {
       // Mapear dados da API para o formato do perfil
       const dadosAPI: ProfileData = {
         phone: telefone,
-        document: userData.documento,
+        document: documento,
         birth_date: cliente.data_nascimento || '',
         address: endereco.logradouro ? `${endereco.logradouro}${endereco.numero ? ', ' + endereco.numero : ''}${endereco.complemento ? ' - ' + endereco.complemento : ''}` : '',
         city: endereco.cidade || '',
@@ -127,9 +138,14 @@ export function UserProfile() {
 
     } catch (error: any) {
       console.error('❌ Erro ao buscar dados da API:', error);
+      
+      const errorMessage = error?.message === 'Network Error' 
+        ? "Erro de conexão com a API. Verifique sua internet ou tente novamente mais tarde."
+        : error?.response?.data?.message || error?.message || "Não foi possível carregar os dados da API.";
+      
       toast({
-        title: "Erro ao buscar dados",
-        description: error?.message || "Não foi possível carregar os dados da API.",
+        title: "Erro ao sincronizar",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -85,13 +85,15 @@ export async function getClientesCorpNuvem(params?: BuscarClienteParams) {
         return [];
         
       } else if (tipoBusca === 'cnpj') {
-        // Busca por CNPJ usando endpoint específico
+        // Busca por CNPJ - usar endpoint de CPF pois ambos funcionam com o mesmo endpoint
         const cnpjLimpo = params.texto.replace(/[^\d]/g, '');
         console.log('🏢 [CorpNuvem Clientes] Buscando por CNPJ:', cnpjLimpo);
-        res = await corpClient.get("/busca_cnpj", { 
+        
+        // Tentar primeiro com busca_cpf que aceita tanto CPF quanto CNPJ
+        res = await corpClient.get("/busca_cpf", { 
           params: { cpf_cnpj: cnpjLimpo } 
         });
-        console.log('✅ [CorpNuvem Clientes] Resposta busca_cnpj:', res.data);
+        console.log('✅ [CorpNuvem Clientes] Resposta busca_cpf (CNPJ):', res.data);
         
         // Tratar diferentes formatos de resposta
         if (Array.isArray(res.data)) {
