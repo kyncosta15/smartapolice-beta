@@ -132,9 +132,13 @@ export function UserProfile() {
         .eq('id', user.id);
 
       toast({
-        title: "Dados carregados da API",
-        description: "Seus dados foram atualizados com sucesso!",
+        title: "Dados atualizados",
+        description: "Sincronizando apólices...",
       });
+
+      // Sincronizar apólices após atualizar dados cadastrais
+      console.log('🔄 Iniciando sincronização de apólices...');
+      await syncPolicies(documento, true);
 
     } catch (error: any) {
       console.error('❌ Erro ao buscar dados da API:', error);
@@ -170,7 +174,7 @@ export function UserProfile() {
       }
 
       if (data) {
-        setProfileData({
+        const loadedData = {
           phone: data.phone || '',
           document: data.document || '',
           birth_date: data.birth_date || '',
@@ -179,7 +183,8 @@ export function UserProfile() {
           state: data.state || '',
           zip_code: data.zip_code || '',
           company_name: data.company_name || '',
-        });
+        };
+        setProfileData(loadedData);
       }
     };
 
