@@ -12,14 +12,17 @@ export function useCorpNuvemSync() {
   const [lastSyncDate, setLastSyncDate] = useState<Date | null>(null);
   const { toast } = useToast();
 
-  const syncPolicies = async (userDocument: string, showToast: boolean = true) => {
+  const syncPolicies = async (userDocument: string, showToast: boolean = true, force: boolean = false) => {
     if (!userDocument || isSyncing) return;
 
     try {
       setIsSyncing(true);
 
-      // Verificar se precisa sincronizar
-      const needsSync = await CorpNuvemSyncService.needsSync(userDocument);
+      // Verificar se precisa sincronizar (a menos que seja forçado)
+      let needsSync = true;
+      if (!force) {
+        needsSync = await CorpNuvemSyncService.needsSync(userDocument);
+      }
       
       if (!needsSync) {
         console.log('⏭️ Sincronização não necessária (última sync < 24h)');
