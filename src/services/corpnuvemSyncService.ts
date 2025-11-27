@@ -121,7 +121,7 @@ export class CorpNuvemSyncService {
         .eq('cliente_documento', userDocument.replace(/\D/g, ''))
         .order('ultima_sincronizacao', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (!data) return true;
 
