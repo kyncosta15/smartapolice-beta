@@ -220,14 +220,19 @@ Deno.serve(async (req) => {
         const isCPF = cleanDocument.length === 11;
 
     // PASSO 1: Buscar cliente pelo documento para obter o nome
-    const clienteEndpoint = isCPF 
-      ? `${CORPNUVEM_API_URL}/busca_cpf?cpf_cnpj=${cleanDocument}`
-      : `${CORPNUVEM_API_URL}/busca_cnpj?cpf_cnpj=${cleanDocument}`;
-    
-    console.log(`🔍 Buscando cliente: ${clienteEndpoint}`);
-    
-    const clienteResponse = await corpNuvemFetch(clienteEndpoint);
-    
+    const cpfEndpoint = `${CORPNUVEM_API_URL}/busca_cpf?cpf_cnpj=${cleanDocument}`;
+    const cnpjEndpoint = `${CORPNUVEM_API_URL}/busca_cnpj?cpf_cnpj=${cleanDocument}`;
+
+    // A API /busca_cpf aceita tanto CPF quanto CNPJ. Usamos ela primeiro e
+    // deixamos /busca_cnpj apenas como fallback para manter compatibilidade.
+    console.log(`🔍 Buscando cliente (endpoint principal /busca_cpf): ${cpfEndpoint}`);
+    let clienteResponse = await corpNuvemFetch(cpfEndpoint);
+
+    if (!clienteResponse.ok && !isCPF) {
+      console.warn(`⚠️ /busca_cpf retornou status ${clienteResponse.status} para CNPJ. Tentando /busca_cnpj como fallback: ${cnpjEndpoint}`);
+      clienteResponse = await corpNuvemFetch(cnpjEndpoint);
+    }
+
     if (!clienteResponse.ok) {
       const errorBody = await clienteResponse.text();
       console.error(`❌ Erro ao buscar cliente - Body: ${errorBody}`);
