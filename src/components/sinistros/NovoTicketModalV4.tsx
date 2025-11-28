@@ -213,7 +213,8 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
       const ticketData = {
         tipo: tipoTicket, // 'sinistro' ou 'assistencia'
         subtipo: currentSubtipo, // tipo específico (colisao, guincho, etc)
-        vehicle_id: selectedVehicle.id,
+        vehicle_id: selectedVehicle?.id || undefined,
+        segurado_id: selectedSegurado?.id || undefined,
         apolice_id: relatedPolicy?.id,
         data_evento: dataEvento.toString(),
         valor_estimado: valorEstimado ? parseFloat(valorEstimado.replace(/[^\d,]/g, '').replace(',', '.')) : undefined,
