@@ -41,6 +41,7 @@ export type Claim = {
   data_evento?: string;
   localizacao?: string;
   subtipo?: string;
+  segurado_nome?: string;
   attachments?: Array<{ id: string; tipo: string; nome_arquivo: string; }>;
   created_at: string;
   updated_at: string;
@@ -66,6 +67,7 @@ export type Assistance = {
   veiculo: Vehicle;
   status: 'aberto' | 'finalizado';
   localizacao?: string;
+  segurado_nome?: string;
   attachments?: Array<{ id: string; tipo: string; nome_arquivo: string; }>;
   created_at: string;
 };

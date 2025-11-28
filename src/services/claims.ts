@@ -46,6 +46,9 @@ export class ClaimsService {
             modelo,
             proprietario_nome
           ),
+          segurado:colaboradores!tickets_segurado_id_fkey (
+            nome
+          ),
           ticket_attachments!ticket_attachments_ticket_id_fkey (
             id,
             tipo,
@@ -92,6 +95,7 @@ export class ClaimsService {
           status: mappedStatus as 'aberto' | 'em_regulacao' | 'finalizado',
           valor_estimado: ticket.valor_estimado ? Number(ticket.valor_estimado) : undefined,
           localizacao: ticket.localizacao || undefined,
+          segurado_nome: ticket.segurado?.nome || undefined,
           attachments: Array.isArray(ticket.ticket_attachments) ? ticket.ticket_attachments : [],
           created_at: ticket.created_at,
           updated_at: ticket.updated_at
@@ -364,6 +368,9 @@ export class ClaimsService {
             modelo,
             proprietario_nome
           ),
+          segurado:colaboradores!tickets_segurado_id_fkey (
+            nome
+          ),
           ticket_attachments!ticket_attachments_ticket_id_fkey (
             id,
             tipo,
@@ -411,6 +418,7 @@ export class ClaimsService {
           },
           status: ticket.status === 'aberto' || ticket.status === 'finalizado' ? ticket.status : 'aberto',
           localizacao: ticket.localizacao || undefined,
+          segurado_nome: ticket.segurado?.nome || undefined,
           attachments: Array.isArray(ticket.ticket_attachments) ? ticket.ticket_attachments : [],
           created_at: ticket.created_at
         };
