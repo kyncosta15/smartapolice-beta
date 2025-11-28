@@ -296,36 +296,68 @@ export function TicketsListV2({
     try {
       const idsToDelete = itemToDelete ? [itemToDelete] : Array.from(selectedIds);
       
-      for (const id of idsToDelete) {
-        const item = allItems.find(i => i.id === id);
-        if (!item) continue;
-
-        if (onDeleteClaim) {
-          await onDeleteClaim(id);
-        } else {
-          if (item.type === 'sinistro') {
-            await ClaimsService.deleteClaim(id);
-          } else {
-            await ClaimsService.deleteAssistance(id);
+      console.log('🗑️ Iniciando exclusão de', idsToDelete.length, 'registros');
+      
+      // Deletar todos em paralelo ao invés de sequencial para melhor performance
+      const deletePromises = idsToDelete.map(async (id) => {
+        try {
+          const item = allItems.find(i => i.id === id);
+          if (!item) {
+            console.warn('⚠️ Item não encontrado:', id);
+            return { success: false, id, error: 'Item não encontrado' };
           }
+
+          if (onDeleteClaim) {
+            await onDeleteClaim(id);
+          } else {
+            if (item.type === 'sinistro') {
+              await ClaimsService.deleteClaim(id);
+            } else {
+              await ClaimsService.deleteAssistance(id);
+            }
+          }
+          
+          console.log('✅ Registro deletado:', id);
+          return { success: true, id };
+        } catch (error) {
+          console.error('❌ Erro ao deletar registro:', id, error);
+          return { success: false, id, error };
         }
-      }
+      });
+
+      const results = await Promise.all(deletePromises);
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
 
       // Invalidar queries para recarregar dados
       queryClient.invalidateQueries({ queryKey: ['claims'] });
 
-      toast({
-        title: 'Sucesso',
-        description: `${idsToDelete.length} registro(s) deletado(s) com sucesso.`,
-      });
+      if (failCount === 0) {
+        toast({
+          title: 'Sucesso',
+          description: `${successCount} registro(s) deletado(s) com sucesso.`,
+        });
+      } else if (successCount > 0) {
+        toast({
+          title: 'Parcialmente concluído',
+          description: `${successCount} registro(s) deletado(s). ${failCount} falharam.`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível deletar nenhum registro.',
+          variant: 'destructive',
+        });
+      }
 
       setSelectedIds(new Set());
       setItemToDelete(null);
     } catch (error) {
-      console.error('Erro ao deletar:', error);
+      console.error('❌ Erro crítico ao deletar:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível deletar os registros.',
+        description: 'Erro crítico ao processar a exclusão.',
         variant: 'destructive',
       });
     } finally {
