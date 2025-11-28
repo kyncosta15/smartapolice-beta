@@ -103,7 +103,9 @@ export function SinistrosDetailsModal({
             filter={filter}
             onViewClaim={handleViewClaim}
             onEditClaim={(id) => console.log('Edit claim:', id)}
-            onDeleteClaim={onDeleteClaim}
+            // Exclusões são tratadas internamente pelo TicketsListV2;
+            // usamos onItemsDeleted para pedir recarga dos dados no dashboard
+            onItemsDeleted={onRefresh}
           />
         </div>
       </DialogContent>

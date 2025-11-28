@@ -12,7 +12,10 @@ interface SinistrosFilterProps {
   filter?: 'sinistro' | 'assistencia' | 'todos';
   onViewClaim?: (id: string) => void;
   onEditClaim?: (id: string) => void;
+  // Mantido para compatibilidade, mas a exclusão agora é controlada internamente pelo TicketsListV2
   onDeleteClaim?: (id: string) => void | Promise<void>;
+  // Chamado após uma ou mais exclusões serem concluídas
+  onItemsDeleted?: () => void;
 }
 
 export function SinistrosFilter({ 
@@ -22,20 +25,14 @@ export function SinistrosFilter({
   filter = 'todos',
   onViewClaim,
   onEditClaim,
-  onDeleteClaim 
+  onDeleteClaim,
+  onItemsDeleted,
 }: SinistrosFilterProps) {
   const uiVersion = useUIVersion('sinistros');
 
   // Filtrar dados RIGOROSAMENTE baseado no tipo selecionado
   const filteredClaims = filter === 'assistencia' ? [] : claims;
   const filteredAssistances = filter === 'sinistro' ? [] : assistances;
-
-  // Wrapper para garantir que sempre retorna Promise
-  const handleDelete = async (id: string) => {
-    if (onDeleteClaim) {
-      await Promise.resolve(onDeleteClaim(id));
-    }
-  };
 
   const getFilterDescription = () => {
     switch (filter) {
@@ -77,7 +74,7 @@ export function SinistrosFilter({
             loading={loading}
             onViewClaim={onViewClaim}
             onEditClaim={onEditClaim}
-            onDeleteClaim={handleDelete}
+            onItemsDeleted={onItemsDeleted}
           />
         </>
       ) : (
@@ -89,7 +86,7 @@ export function SinistrosFilter({
             loading={loading}
             onViewClaim={onViewClaim}
             onEditClaim={onEditClaim}
-            onDeleteClaim={handleDelete}
+            onItemsDeleted={onItemsDeleted}
           />
         </>
       )}
