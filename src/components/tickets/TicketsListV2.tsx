@@ -35,6 +35,7 @@ type TicketItem = (Claim | Assistance) & {
   displayStatus: string;
   statusVariant: 'default' | 'secondary' | 'destructive' | 'outline';
   ticketNumber: string; // Generated ticket number for display
+  segurado_nome?: string;
 };
 
 // Função para formatar status removendo underscores e capitalizando
@@ -138,6 +139,7 @@ export function TicketsListV2({
       displayStatus: statusConfig[claim.status]?.label || formatStatusLabel(claim.status),
       statusVariant: statusConfig[claim.status]?.variant || 'outline',
       ticketNumber: `SIN-${String(index + 1).padStart(4, '0')}`,
+      segurado_nome: claim.segurado_nome,
     }));
 
     const assistanceItems: TicketItem[] = assistances.map((assistance, index) => ({
@@ -146,6 +148,7 @@ export function TicketsListV2({
       displayStatus: statusConfig[assistance.status]?.label || formatStatusLabel(assistance.status),
       statusVariant: statusConfig[assistance.status]?.variant || 'outline',
       ticketNumber: `ASS-${String(index + 1).padStart(4, '0')}`,
+      segurado_nome: assistance.segurado_nome,
     }));
 
     const result = [...claimItems, ...assistanceItems];
@@ -164,7 +167,8 @@ export function TicketsListV2({
           item.veiculo.placa.toLowerCase().includes(query) ||
           item.veiculo.marca?.toLowerCase().includes(query) ||
           item.veiculo.modelo?.toLowerCase().includes(query) ||
-          item.veiculo.proprietario_nome?.toLowerCase().includes(query);
+          item.veiculo.proprietario_nome?.toLowerCase().includes(query) ||
+          item.segurado_nome?.toLowerCase().includes(query);
         
         if (!matchesSearch) return false;
       }
@@ -404,9 +408,9 @@ export function TicketsListV2({
                 {item.ticketNumber}
               </span>
             </div>
-            {item.veiculo.proprietario_nome && (
+            {(item.segurado_nome || item.veiculo.proprietario_nome) && (
               <div className="text-xs text-muted-foreground truncate pl-4">
-                <span className="font-semibold">Segurado:</span> {item.veiculo.proprietario_nome}
+                <span className="font-semibold">Segurado:</span> {item.segurado_nome || item.veiculo.proprietario_nome}
               </div>
             )}
             <div className="flex items-center gap-1.5 pl-4">
@@ -567,7 +571,7 @@ export function TicketsListV2({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por ticket, placa ou proprietário..."
+            placeholder="Buscar por ticket, placa, proprietário ou segurado..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-background/50 backdrop-blur-sm border-border/50 focus:border-primary transition-colors"
