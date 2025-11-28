@@ -367,7 +367,33 @@ export function TicketDetailsDrawer({
                         </div>
                       </div>
                     )}
+
+                    {/* Gravidade */}
+                    {ticket.gravidade && (
+                      <div className="bg-card border rounded-lg p-5 space-y-2">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                          <AlertTriangle className="h-4 w-4" />
+                          Gravidade
+                        </div>
+                        <Badge variant="outline" className="text-base font-semibold capitalize">
+                          {ticket.gravidade}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Descrição do sinistro */}
+                  {ticket.descricao && (
+                    <div className="bg-card border rounded-lg p-5 space-y-3 mt-4">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold flex items-center gap-1">
+                        <FileText className="h-4 w-4" />
+                        Descrição do Sinistro
+                      </div>
+                      <div className="text-sm leading-relaxed whitespace-pre-wrap bg-muted/30 p-4 rounded-md border">
+                        {ticket.descricao}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -399,7 +425,33 @@ export function TicketDetailsDrawer({
                         })}
                       </div>
                     </div>
+
+                    {/* Localização da assistência */}
+                    {ticket.localizacao && (
+                      <div className="bg-card border rounded-lg p-5 space-y-2 md:col-span-2">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          Localização
+                        </div>
+                        <div className="font-medium text-base">
+                          {ticket.localizacao}
+                        </div>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Descrição da assistência */}
+                  {ticket.descricao && (
+                    <div className="bg-card border rounded-lg p-5 space-y-3 mt-4">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold flex items-center gap-1">
+                        <FileText className="h-4 w-4" />
+                        Descrição da Assistência
+                      </div>
+                      <div className="text-sm leading-relaxed whitespace-pre-wrap bg-muted/30 p-4 rounded-md border">
+                        {ticket.descricao}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
