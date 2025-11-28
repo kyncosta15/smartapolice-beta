@@ -10,7 +10,7 @@ import { useUserProfile } from '@/hooks/useUserProfile'
 import { DialogRCorp } from '@/components/ui-v2/dialog-rcorp'
 import { ComboboxRCorp, type ComboboxItem } from '@/components/ui-v2/combobox-rcorp'
 import { DatePickerRCorp } from '@/components/ui-v2/datepicker-rcorp'
-import { CheckCircle, AlertTriangle, Car, Wrench, Search } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Car, Wrench, Search, UserPlus } from 'lucide-react'
 import { today, getLocalTimeZone } from '@internationalized/date'
 import { cn } from '@/lib/utils'
 import { Vehicle, Policy } from '@/types/claims'
@@ -66,6 +66,8 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
   const [seguradoResults, setSeguradoResults] = useState<Segurado[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [isCreatingNewSegurado, setIsCreatingNewSegurado] = useState(false)
+  const [newSegurado, setNewSegurado] = useState({ nome: '', cpf: '' })
   
   // Form state
   const [tipoTicket, setTipoTicket] = useState<'sinistro' | 'assistencia'>(initialTipo)
@@ -153,6 +155,49 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
     setStep('dados')
   }
 
+  const handleCreateNewSegurado = async () => {
+    if (!newSegurado.nome.trim() || !newSegurado.cpf.trim()) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha nome e CPF do segurado",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('colaboradores')
+        .insert({
+          nome: newSegurado.nome.trim(),
+          cpf: newSegurado.cpf.trim(),
+          empresa_id: activeEmpresa,
+          status: 'ativo'
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      toast({
+        title: "Segurado criado com sucesso!",
+        description: "O segurado foi cadastrado e selecionado",
+      })
+
+      setSelectedSegurado(data)
+      setIsCreatingNewSegurado(false)
+      setNewSegurado({ nome: '', cpf: '' })
+      setStep('dados')
+    } catch (error) {
+      console.error('Erro ao criar segurado:', error)
+      toast({
+        title: "Erro ao criar segurado",
+        description: "Não foi possível criar o segurado. Tente novamente.",
+        variant: "destructive"
+      })
+    }
+  }
+
   const handleSubmit = async () => {
     const currentSubtipo = tipoTicket === 'sinistro' ? tipoSinistro : tipoAssistencia
     if (!currentSubtipo || !dataEvento || !activeEmpresa) return
@@ -235,6 +280,8 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
     setGravidade('')
     setDescricao('')
     setSubmitting(false)
+    setIsCreatingNewSegurado(false)
+    setNewSegurado({ nome: '', cpf: '' })
   }
 
   const modalContent = (
@@ -292,89 +339,151 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
 
       {step === 'segurado' && (
         <div className="space-y-4">
-          <div>
-            <Label>Buscar Segurado *</Label>
-            <div className="flex gap-2 mt-2">
-              <Input
-                placeholder="Digite nome, CPF ou cargo do segurado..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearch()
-                  }
-                }}
-                className="flex-1"
-              />
-              <Button
-                onClick={handleSearch}
-                disabled={isSearching || searchQuery.length < 2}
-                className="min-w-[100px]"
-              >
-                {isSearching ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    Buscando...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4 mr-2" />
-                    Buscar
-                  </>
-                )}
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Digite pelo menos 2 caracteres e clique em "Buscar"
-            </p>
-          </div>
-
-          {hasSearched && seguradoResults.length > 0 && (
-            <div className="border rounded-lg p-4 max-h-[400px] overflow-y-auto">
-              <h3 className="font-medium mb-3">Resultados da Busca ({seguradoResults.length})</h3>
-              <div className="space-y-2">
-                {seguradoResults.map((segurado) => (
-                  <button
-                    key={segurado.id}
-                    onClick={() => handleSeguradoSelect(segurado)}
-                    className="w-full text-left p-3 border rounded-lg hover:bg-accent hover:border-primary transition-colors"
+          {!isCreatingNewSegurado ? (
+            <>
+              <div>
+                <Label>Buscar Segurado *</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Digite nome, CPF ou cargo do segurado..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSearch()
+                      }
+                    }}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleSearch}
+                    disabled={isSearching || searchQuery.length < 2}
+                    className="min-w-[100px]"
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="font-medium text-lg">{segurado.nome}</div>
-                      {segurado.status && (
-                        <Badge variant="default" className="text-xs">
-                          {segurado.status}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground space-y-0.5">
-                      <div>CPF: {segurado.cpf}</div>
-                      {segurado.cargo && (
-                        <div>Cargo: {segurado.cargo}</div>
-                      )}
-                      {segurado.email && (
-                        <div>Email: {segurado.email}</div>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                    {isSearching ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                        Buscando...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-4 w-4 mr-2" />
+                        Buscar
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Digite pelo menos 2 caracteres e clique em "Buscar"
+                </p>
+              </div>
+
+              {hasSearched && seguradoResults.length > 0 && (
+                <div className="border rounded-lg p-4 max-h-[400px] overflow-y-auto">
+                  <h3 className="font-medium mb-3">Resultados da Busca ({seguradoResults.length})</h3>
+                  <div className="space-y-2">
+                    {seguradoResults.map((segurado) => (
+                      <button
+                        key={segurado.id}
+                        onClick={() => handleSeguradoSelect(segurado)}
+                        className="w-full text-left p-3 border rounded-lg hover:bg-accent hover:border-primary transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="font-medium text-lg">{segurado.nome}</div>
+                          {segurado.status && (
+                            <Badge variant="default" className="text-xs">
+                              {segurado.status}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-muted-foreground space-y-0.5">
+                          <div>CPF: {segurado.cpf}</div>
+                          {segurado.cargo && (
+                            <div>Cargo: {segurado.cargo}</div>
+                          )}
+                          {segurado.email && (
+                            <div>Email: {segurado.email}</div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {hasSearched && seguradoResults.length === 0 && !isSearching && (
+                <div className="space-y-4">
+                  <div className="text-center py-8 border rounded-lg bg-muted/30">
+                    <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                    <div className="text-lg font-medium mb-2">Nenhum segurado encontrado</div>
+                    <div className="text-sm text-muted-foreground mb-4">Tente buscar por nome, CPF ou cargo</div>
+                    <Button
+                      onClick={() => setIsCreatingNewSegurado(true)}
+                      variant="default"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Criar Novo Segurado
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-start">
+                <Button variant="ghost" onClick={() => setStep('tipo')}>
+                  Voltar
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Criar Novo Segurado</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setIsCreatingNewSegurado(false)
+                    setNewSegurado({ nome: '', cpf: '' })
+                  }}
+                >
+                  Cancelar
+                </Button>
+              </div>
+
+              <div>
+                <Label htmlFor="nome">Nome Completo *</Label>
+                <Input
+                  id="nome"
+                  value={newSegurado.nome}
+                  onChange={(e) => setNewSegurado({ ...newSegurado, nome: e.target.value })}
+                  placeholder="Digite o nome completo"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="cpf">CPF *</Label>
+                <Input
+                  id="cpf"
+                  value={newSegurado.cpf}
+                  onChange={(e) => setNewSegurado({ ...newSegurado, cpf: e.target.value })}
+                  placeholder="000.000.000-00"
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={handleCreateNewSegurado}
+                  className="flex-1"
+                  disabled={!newSegurado.nome.trim() || !newSegurado.cpf.trim()}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Criar e Selecionar
+                </Button>
               </div>
             </div>
           )}
-
-          {hasSearched && seguradoResults.length === 0 && !isSearching && (
-            <div className="text-center py-8 border rounded-lg bg-muted/30">
-              <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <div className="text-lg font-medium mb-2">Nenhum segurado encontrado</div>
-              <div className="text-sm text-muted-foreground">Tente buscar por nome, CPF ou cargo</div>
-            </div>
-          )}
-          
-          <div className="flex justify-start">
-            <Button variant="ghost" onClick={() => setStep('tipo')}>
-              Voltar
-            </Button>
-          </div>
         </div>
       )}
 
