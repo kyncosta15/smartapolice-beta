@@ -25,6 +25,8 @@ interface TicketsListV2Props {
   onViewClaim?: (id: string) => void;
   onEditClaim?: (id: string) => void;
   onDeleteClaim?: (id: string) => Promise<void>;
+  // Chamado após uma ou mais exclusões concluídas com sucesso
+  onItemsDeleted?: () => void;
   className?: string;
 }
 
@@ -93,6 +95,7 @@ export function TicketsListV2({
   onViewClaim,
   onEditClaim,
   onDeleteClaim,
+  onItemsDeleted,
   className,
 }: TicketsListV2Props) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -331,6 +334,9 @@ export function TicketsListV2({
 
       // Invalidar queries para recarregar dados
       queryClient.invalidateQueries({ queryKey: ['claims'] });
+
+      // Notificar o container para recarregar dados/estatísticas, se necessário
+      onItemsDeleted?.();
 
       if (failCount === 0) {
         toast({
