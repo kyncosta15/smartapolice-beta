@@ -15,6 +15,7 @@ import { today, getLocalTimeZone } from '@internationalized/date'
 import { cn } from '@/lib/utils'
 import { Vehicle, Policy } from '@/types/claims'
 import { VehiclesService } from '@/services/vehicles'
+import { SeguradosService, type Segurado } from '@/services/segurados'
 import { supabase } from '@/integrations/supabase/client'
 
 // Tipos de sinistro e assistência como dados constantes
@@ -52,14 +53,17 @@ type NovoTicketModalV4Props = {
 
 export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sinistro' }: NovoTicketModalV4Props) {
   const [open, setOpen] = useState(false)
-  const [step, setStep] = useState<'veiculo' | 'dados'>('veiculo')
+  const [step, setStep] = useState<'tipo' | 'veiculo' | 'segurado' | 'dados'>('tipo')
+  const [vinculoTipo, setVinculoTipo] = useState<'veiculo' | 'segurado'>('veiculo')
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
+  const [selectedSegurado, setSelectedSegurado] = useState<Segurado | null>(null)
   const [relatedPolicy, setRelatedPolicy] = useState<Policy | null | undefined>(undefined)
   const [loadingPolicy, setLoadingPolicy] = useState(false)
   
   // Search state
   const [searchQuery, setSearchQuery] = useState('')
   const [vehicleResults, setVehicleResults] = useState<Vehicle[]>([])
+  const [seguradoResults, setSeguradoResults] = useState<Segurado[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   
@@ -80,7 +84,9 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
     if (!searchQuery || searchQuery.length < 2) {
       toast({
         title: "Digite pelo menos 2 caracteres",
-        description: "Digite placa, chassi ou nome do proprietário",
+        description: vinculoTipo === 'veiculo' 
+          ? "Digite placa, chassi ou nome do proprietário"
+          : "Digite nome, CPF ou cargo do segurado",
         variant: "destructive"
       })
       return
@@ -90,18 +96,31 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
     setHasSearched(true)
     
     try {
-      const results = await VehiclesService.searchVehicles(searchQuery, activeEmpresa || undefined)
-      setVehicleResults(results)
-      
-      if (results.length === 0) {
-        toast({
-          title: "Nenhum veículo encontrado",
-          description: "Tente buscar por placa, chassi ou proprietário",
-          variant: "destructive"
-        })
+      if (vinculoTipo === 'veiculo') {
+        const results = await VehiclesService.searchVehicles(searchQuery, activeEmpresa || undefined)
+        setVehicleResults(results)
+        
+        if (results.length === 0) {
+          toast({
+            title: "Nenhum veículo encontrado",
+            description: "Tente buscar por placa, chassi ou proprietário",
+            variant: "destructive"
+          })
+        }
+      } else {
+        const results = await SeguradosService.searchSegurados(searchQuery, activeEmpresa || undefined)
+        setSeguradoResults(results)
+        
+        if (results.length === 0) {
+          toast({
+            title: "Nenhum segurado encontrado",
+            description: "Tente buscar por nome, CPF ou cargo",
+            variant: "destructive"
+          })
+        }
       }
     } catch (error) {
-      console.error('Erro ao buscar veículos:', error)
+      console.error('Erro ao buscar:', error)
       toast({
         title: "Erro ao buscar",
         description: "Não foi possível realizar a busca",
@@ -129,9 +148,15 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
     setStep('dados')
   }
 
+  const handleSeguradoSelect = (segurado: Segurado) => {
+    setSelectedSegurado(segurado)
+    setStep('dados')
+  }
+
   const handleSubmit = async () => {
     const currentSubtipo = tipoTicket === 'sinistro' ? tipoSinistro : tipoAssistencia
-    if (!selectedVehicle || !currentSubtipo || !dataEvento || !activeEmpresa) return
+    if (!currentSubtipo || !dataEvento || !activeEmpresa) return
+    if (!selectedVehicle && !selectedSegurado) return
 
     try {
       setSubmitting(true)
@@ -189,15 +214,18 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
 
   const isFormValid = () => {
     const currentSubtipo = tipoTicket === 'sinistro' ? tipoSinistro : tipoAssistencia
-    return selectedVehicle && currentSubtipo && dataEvento
+    return (selectedVehicle || selectedSegurado) && currentSubtipo && dataEvento
   }
 
   const handleClose = () => {
-    setStep('veiculo')
+    setStep('tipo')
+    setVinculoTipo('veiculo')
     setSearchQuery('')
     setVehicleResults([])
+    setSeguradoResults([])
     setHasSearched(false)
     setSelectedVehicle(null)
+    setSelectedSegurado(null)
     setRelatedPolicy(undefined)
     setTipoTicket(initialTipo)
     setTipoSinistro('')
@@ -211,6 +239,145 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
 
   const modalContent = (
     <div className="space-y-6">
+      {step === 'tipo' && (
+        <div className="space-y-4">
+          <div>
+            <Label className="text-base">Tipo de Vínculo *</Label>
+            <p className="text-sm text-muted-foreground mt-1 mb-4">
+              Escolha se deseja vincular o sinistro a um veículo ou a um segurado da empresa
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => {
+                setVinculoTipo('veiculo')
+                setStep('veiculo')
+              }}
+              className={cn(
+                "p-6 border-2 rounded-lg transition-all hover:border-primary hover:bg-accent",
+                "flex flex-col items-center gap-3 text-center"
+              )}
+            >
+              <Car className="h-12 w-12 text-primary" />
+              <div>
+                <div className="font-medium text-lg">Veículo</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Vincular a um veículo da frota
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setVinculoTipo('segurado')
+                setStep('segurado')
+              }}
+              className={cn(
+                "p-6 border-2 rounded-lg transition-all hover:border-primary hover:bg-accent",
+                "flex flex-col items-center gap-3 text-center"
+              )}
+            >
+              <CheckCircle className="h-12 w-12 text-primary" />
+              <div>
+                <div className="font-medium text-lg">Segurado</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Vincular a um segurado/colaborador
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 'segurado' && (
+        <div className="space-y-4">
+          <div>
+            <Label>Buscar Segurado *</Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                placeholder="Digite nome, CPF ou cargo do segurado..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch()
+                  }
+                }}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSearch}
+                disabled={isSearching || searchQuery.length < 2}
+                className="min-w-[100px]"
+              >
+                {isSearching ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    Buscando...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4 mr-2" />
+                    Buscar
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Digite pelo menos 2 caracteres e clique em "Buscar"
+            </p>
+          </div>
+
+          {hasSearched && seguradoResults.length > 0 && (
+            <div className="border rounded-lg p-4 max-h-[400px] overflow-y-auto">
+              <h3 className="font-medium mb-3">Resultados da Busca ({seguradoResults.length})</h3>
+              <div className="space-y-2">
+                {seguradoResults.map((segurado) => (
+                  <button
+                    key={segurado.id}
+                    onClick={() => handleSeguradoSelect(segurado)}
+                    className="w-full text-left p-3 border rounded-lg hover:bg-accent hover:border-primary transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="font-medium text-lg">{segurado.nome}</div>
+                      {segurado.status && (
+                        <Badge variant="default" className="text-xs">
+                          {segurado.status}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-0.5">
+                      <div>CPF: {segurado.cpf}</div>
+                      {segurado.cargo && (
+                        <div>Cargo: {segurado.cargo}</div>
+                      )}
+                      {segurado.email && (
+                        <div>Email: {segurado.email}</div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasSearched && seguradoResults.length === 0 && !isSearching && (
+            <div className="text-center py-8 border rounded-lg bg-muted/30">
+              <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <div className="text-lg font-medium mb-2">Nenhum segurado encontrado</div>
+              <div className="text-sm text-muted-foreground">Tente buscar por nome, CPF ou cargo</div>
+            </div>
+          )}
+          
+          <div className="flex justify-start">
+            <Button variant="ghost" onClick={() => setStep('tipo')}>
+              Voltar
+            </Button>
+          </div>
+        </div>
+      )}
+
       {step === 'veiculo' && (
         <div className="space-y-4">
           <div>
@@ -290,96 +457,164 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
               <div className="text-sm text-muted-foreground">Tente buscar por placa, chassi ou proprietário</div>
             </div>
           )}
+          
+          <div className="flex justify-start">
+            <Button variant="ghost" onClick={() => setStep('tipo')}>
+              Voltar
+            </Button>
+          </div>
         </div>
       )}
 
-      {step === 'dados' && selectedVehicle && (
+      {step === 'dados' && (selectedVehicle || selectedSegurado) && (
         <div className="space-y-6">
-          {/* Veículo selecionado */}
-          <div className="p-4 border rounded-lg bg-muted/30">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium">Veículo Selecionado</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setStep('veiculo')}
-                className="text-primary"
-              >
-                Alterar
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-muted-foreground">Placa:</span>
-                <span className="ml-2 font-medium">{selectedVehicle.placa}</span>
+          {/* Veículo ou Segurado selecionado */}
+          {selectedVehicle && (
+            <div className="p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium">Veículo Selecionado</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStep('veiculo')
+                    setSelectedVehicle(null)
+                  }}
+                  className="text-primary"
+                >
+                  Alterar
+                </Button>
               </div>
-              <div>
-                <span className="text-muted-foreground">Marca/Modelo:</span>
-                <span className="ml-2 font-medium">{selectedVehicle.marca} {selectedVehicle.modelo}</span>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Placa:</span>
+                  <span className="ml-2 font-medium">{selectedVehicle.placa}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Marca/Modelo:</span>
+                  <span className="ml-2 font-medium">{selectedVehicle.marca} {selectedVehicle.modelo}</span>
+                </div>
+                {selectedVehicle.ano_modelo && (
+                  <div>
+                    <span className="text-muted-foreground">Ano:</span>
+                    <span className="ml-2 font-medium">{selectedVehicle.ano_modelo}</span>
+                  </div>
+                )}
+                {selectedVehicle.combustivel && (
+                  <div>
+                    <span className="text-muted-foreground">Combustível:</span>
+                    <span className="ml-2 font-medium">{selectedVehicle.combustivel}</span>
+                  </div>
+                )}
+                {selectedVehicle.chassi && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Chassi:</span>
+                    <span className="ml-2 font-medium font-mono text-xs">{selectedVehicle.chassi}</span>
+                  </div>
+                )}
+                {selectedVehicle.proprietario_nome && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Proprietário:</span>
+                    <span className="ml-2 font-medium">{selectedVehicle.proprietario_nome}</span>
+                  </div>
+                )}
+                {selectedVehicle.status_seguro && (
+                  <div>
+                    <span className="text-muted-foreground">Status Seguro:</span>
+                    <Badge variant={selectedVehicle.status_seguro === 'ativa' ? 'default' : 'secondary'} className="ml-2">
+                      {selectedVehicle.status_seguro}
+                    </Badge>
+                  </div>
+                )}
               </div>
-              {selectedVehicle.ano_modelo && (
-                <div>
-                  <span className="text-muted-foreground">Ano:</span>
-                  <span className="ml-2 font-medium">{selectedVehicle.ano_modelo}</span>
-                </div>
-              )}
-              {selectedVehicle.combustivel && (
-                <div>
-                  <span className="text-muted-foreground">Combustível:</span>
-                  <span className="ml-2 font-medium">{selectedVehicle.combustivel}</span>
-                </div>
-              )}
-              {selectedVehicle.chassi && (
-                <div className="col-span-2">
-                  <span className="text-muted-foreground">Chassi:</span>
-                  <span className="ml-2 font-medium font-mono text-xs">{selectedVehicle.chassi}</span>
-                </div>
-              )}
-              {selectedVehicle.proprietario_nome && (
-                <div className="col-span-2">
-                  <span className="text-muted-foreground">Proprietário:</span>
-                  <span className="ml-2 font-medium">{selectedVehicle.proprietario_nome}</span>
-                </div>
-              )}
-              {selectedVehicle.status_seguro && (
-                <div>
-                  <span className="text-muted-foreground">Status Seguro:</span>
-                  <Badge variant={selectedVehicle.status_seguro === 'ativa' ? 'default' : 'secondary'} className="ml-2">
-                    {selectedVehicle.status_seguro}
-                  </Badge>
-                </div>
-              )}
             </div>
-          </div>
+          )}
 
-          {/* Apólice relacionada */}
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-medium mb-3">Apólice Relacionada</h3>
-            {loadingPolicy ? (
-              <div className="text-sm text-muted-foreground">Buscando apólice...</div>
-            ) : relatedPolicy ? (
-              <div className="space-y-2">
+          {selectedSegurado && (
+            <div className="p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium">Segurado Selecionado</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStep('segurado')
+                    setSelectedSegurado(null)
+                  }}
+                  className="text-primary"
+                >
+                  Alterar
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Nome:</span>
+                  <span className="ml-2 font-medium">{selectedSegurado.nome}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">CPF:</span>
+                  <span className="ml-2 font-medium">{selectedSegurado.cpf}</span>
+                </div>
+                {selectedSegurado.cargo && (
+                  <div>
+                    <span className="text-muted-foreground">Cargo:</span>
+                    <span className="ml-2 font-medium">{selectedSegurado.cargo}</span>
+                  </div>
+                )}
+                {selectedSegurado.email && (
+                  <div>
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="ml-2 font-medium">{selectedSegurado.email}</span>
+                  </div>
+                )}
+                {selectedSegurado.telefone && (
+                  <div>
+                    <span className="text-muted-foreground">Telefone:</span>
+                    <span className="ml-2 font-medium">{selectedSegurado.telefone}</span>
+                  </div>
+                )}
+                {selectedSegurado.status && (
+                  <div>
+                    <span className="text-muted-foreground">Status:</span>
+                    <Badge variant="default" className="ml-2">
+                      {selectedSegurado.status}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Apólice relacionada - apenas para veículos */}
+          {selectedVehicle && (
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-medium mb-3">Apólice Relacionada</h3>
+              {loadingPolicy ? (
+                <div className="text-sm text-muted-foreground">Buscando apólice...</div>
+              ) : relatedPolicy ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">
+                      Apólice encontrada
+                    </Badge>
+                  </div>
+                  <div className="text-sm space-y-1">
+                    <div><strong>Número:</strong> {relatedPolicy.numero}</div>
+                    <div><strong>Seguradora:</strong> {relatedPolicy.seguradora}</div>
+                    <div><strong>Vigência:</strong> {relatedPolicy.vigencia_inicio} - {relatedPolicy.vigencia_fim}</div>
+                  </div>
+                </div>
+              ) : (
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">
-                    Apólice encontrada
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <Badge variant="outline" className="border-amber-300 text-amber-700">
+                    Não encontrada
                   </Badge>
                 </div>
-                <div className="text-sm space-y-1">
-                  <div><strong>Número:</strong> {relatedPolicy.numero}</div>
-                  <div><strong>Seguradora:</strong> {relatedPolicy.seguradora}</div>
-                  <div><strong>Vigência:</strong> {relatedPolicy.vigencia_inicio} - {relatedPolicy.vigencia_fim}</div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
-                <Badge variant="outline" className="border-amber-300 text-amber-700">
-                  Não encontrada
-                </Badge>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Seleção do tipo de ticket */}
           <div>
