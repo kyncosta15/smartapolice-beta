@@ -370,6 +370,7 @@ export function NovoTicketModal({ trigger, onTicketCreated, initialTipo = 'sinis
                           <SelectItem value="avaria">Avaria</SelectItem>
                           <SelectItem value="incendio">Incêndio</SelectItem>
                           <SelectItem value="danos_terceiros">Danos a Terceiros</SelectItem>
+                          <SelectItem value="invalidez_acidente">Invalidez por Acidente</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (

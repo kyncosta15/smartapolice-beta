@@ -26,6 +26,7 @@ const TIPOS_SINISTRO: ComboboxItem[] = [
   { id: 'avaria', label: 'Avaria' },
   { id: 'incendio', label: 'Incêndio' },
   { id: 'danos_terceiros', label: 'Danos a Terceiros' },
+  { id: 'invalidez_acidente', label: 'Invalidez por Acidente' },
 ]
 
 const TIPOS_ASSISTENCIA: ComboboxItem[] = [
