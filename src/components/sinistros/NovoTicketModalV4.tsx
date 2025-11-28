@@ -414,20 +414,23 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
                 </div>
               )}
 
+              {/* Botão sempre visível para criar novo segurado */}
+              <div className="border-t pt-4">
+                <Button
+                  onClick={() => setIsCreatingNewSegurado(true)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Criar Novo Segurado
+                </Button>
+              </div>
+
               {hasSearched && seguradoResults.length === 0 && !isSearching && (
-                <div className="space-y-4">
-                  <div className="text-center py-8 border rounded-lg bg-muted/30">
-                    <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                    <div className="text-lg font-medium mb-2">Nenhum segurado encontrado</div>
-                    <div className="text-sm text-muted-foreground mb-4">Tente buscar por nome, CPF ou cargo</div>
-                    <Button
-                      onClick={() => setIsCreatingNewSegurado(true)}
-                      variant="default"
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Criar Novo Segurado
-                    </Button>
-                  </div>
+                <div className="text-center py-8 border rounded-lg bg-muted/30">
+                  <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <div className="text-lg font-medium mb-2">Nenhum segurado encontrado</div>
+                  <div className="text-sm text-muted-foreground">Tente buscar por nome, CPF ou cargo</div>
                 </div>
               )}
               
