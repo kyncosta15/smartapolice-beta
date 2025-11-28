@@ -21,6 +21,7 @@ export interface Ticket {
   tipo: TicketTipo;
   subtipo?: TicketSubtipo;
   vehicle_id?: string;
+  segurado_id?: string; // ID do segurado/colaborador quando não vinculado a veículo
   apolice_id?: string;
   status: TicketStatus;
   data_evento?: string;
@@ -44,6 +45,12 @@ export interface Ticket {
     marca?: string;
     modelo?: string;
     status_seguro?: string;
+  };
+  segurado?: {
+    id: string;
+    nome: string;
+    cpf: string;
+    cargo?: string;
   };
   movements?: TicketMovement[];
   attachments?: TicketAttachment[];

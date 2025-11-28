@@ -2643,6 +2643,7 @@ export type Database = {
           protocol_code: string | null
           request_id: string | null
           rh_note: string | null
+          segurado_id: string | null
           status: string
           subtipo: string | null
           tipo: string | null
@@ -2664,6 +2665,7 @@ export type Database = {
           protocol_code?: string | null
           request_id?: string | null
           rh_note?: string | null
+          segurado_id?: string | null
           status?: string
           subtipo?: string | null
           tipo?: string | null
@@ -2685,6 +2687,7 @@ export type Database = {
           protocol_code?: string | null
           request_id?: string | null
           rh_note?: string | null
+          segurado_id?: string | null
           status?: string
           subtipo?: string | null
           tipo?: string | null
@@ -2705,6 +2708,13 @@ export type Database = {
             columns: ["request_id"]
             isOneToOne: true
             referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_segurado_id_fkey"
+            columns: ["segurado_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
             referencedColumns: ["id"]
           },
           {
