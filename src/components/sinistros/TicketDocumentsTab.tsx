@@ -217,6 +217,48 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const handleDownload = async (attachment: TicketAttachment) => {
+    try {
+      toast({
+        title: 'Download iniciado',
+        description: 'Preparando arquivo para download...',
+      });
+
+      // Fazer fetch do arquivo
+      const response = await fetch(attachment.file_url || '');
+      if (!response.ok) throw new Error('Erro ao baixar arquivo');
+      
+      const blob = await response.blob();
+      
+      // Criar URL do blob
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = attachment.nome_arquivo;
+      link.style.display = 'none';
+      
+      // Adicionar ao DOM, clicar e remover
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Limpar URL do blob após um delay
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+      
+      toast({
+        title: 'Download concluído',
+        description: 'Arquivo baixado com sucesso!',
+      });
+    } catch (error) {
+      console.error('Erro ao fazer download:', error);
+      toast({
+        title: 'Erro no download',
+        description: 'Não foi possível baixar o arquivo. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Upload Section */}
@@ -333,16 +375,16 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
                   <Button
                     variant="ghost"
                     size="icon"
-                    asChild
+                    onClick={() => handleDownload(attachment)}
+                    title="Baixar arquivo"
                   >
-                    <a href={attachment.file_url || '#'} target="_blank" rel="noopener noreferrer">
-                      <Download className="h-4 w-4" />
-                    </a>
+                    <Download className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDelete(attachment.id, attachment.file_path)}
+                    title="Excluir documento"
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
