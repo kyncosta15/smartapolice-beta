@@ -79,10 +79,19 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !documentType) {
+    if (!selectedFile) {
       toast({
         title: 'Atenção',
-        description: 'Selecione um arquivo e informe o tipo do documento',
+        description: 'Selecione um arquivo',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!documentType.trim()) {
+      toast({
+        title: 'Atenção',
+        description: 'Informe o tipo do documento',
         variant: 'destructive',
       });
       return;
@@ -99,27 +108,40 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
         .from('documents')
         .upload(filePath, selectedFile);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        throw uploadError;
+      }
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
         .from('documents')
         .getPublicUrl(filePath);
 
+      console.log('🔍 DEBUG - Upload realizado:', {
+        filePath,
+        documentType: documentType.trim(),
+        fileSize: selectedFile.size,
+        fileName: selectedFile.name
+      });
+
       // Salvar registro no banco
       const { error: dbError } = await supabase
         .from('ticket_attachments')
         .insert({
           ticket_id: ticketId,
-          tipo: documentType,
+          tipo: documentType.trim(),
           nome_arquivo: selectedFile.name,
           file_path: filePath,
           file_url: urlData.publicUrl,
           tamanho_arquivo: selectedFile.size,
-          tipo_mime: selectedFile.type,
+          tipo_mime: selectedFile.type || 'application/octet-stream',
         });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Erro ao salvar no banco:', dbError);
+        throw dbError;
+      }
 
       toast({
         title: 'Sucesso',
@@ -129,12 +151,15 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
       // Limpar form e recarregar
       setSelectedFile(null);
       setDocumentType('');
-      loadAttachments();
+      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+      
+      await loadAttachments();
     } catch (error: any) {
       console.error('Erro ao fazer upload:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível enviar o documento',
+        description: error.message || 'Não foi possível enviar o documento',
         variant: 'destructive',
       });
     } finally {
