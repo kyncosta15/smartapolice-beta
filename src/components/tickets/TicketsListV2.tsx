@@ -484,13 +484,26 @@ export function TicketsListV2({
         return <span className="text-muted-foreground text-xs">—</span>;
         
       case 'observacoes':
-        const descricao = (item as any).descricao || '';
         const localizacao = (item as any).localizacao || '';
-        const observacoes = descricao || localizacao;
+        const attachments = (item as any).attachments || [];
+        const docCount = attachments.length;
         
         return (
-          <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={observacoes}>
-            {observacoes || '—'}
+          <div className="space-y-1">
+            {localizacao && (
+              <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={localizacao}>
+                {localizacao}
+              </div>
+            )}
+            {docCount > 0 && (
+              <div className="text-xs font-medium text-primary flex items-center gap-1">
+                <FileText className="h-3 w-3" />
+                {docCount} doc{docCount > 1 ? 's' : ''}
+              </div>
+            )}
+            {!localizacao && docCount === 0 && (
+              <span className="text-xs text-muted-foreground">—</span>
+            )}
           </div>
         );
         
