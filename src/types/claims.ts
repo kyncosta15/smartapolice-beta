@@ -41,6 +41,7 @@ export type Claim = {
   data_evento?: string;
   localizacao?: string;
   subtipo?: string;
+  attachments?: Array<{ id: string; tipo: string; nome_arquivo: string; }>;
   created_at: string;
   updated_at: string;
   ultima_movimentacao?: string; // ISO date
@@ -64,6 +65,8 @@ export type Assistance = {
   tipo: AssistanceType;
   veiculo: Vehicle;
   status: 'aberto' | 'finalizado';
+  localizacao?: string;
+  attachments?: Array<{ id: string; tipo: string; nome_arquivo: string; }>;
   created_at: string;
 };
 

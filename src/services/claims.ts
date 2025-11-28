@@ -45,6 +45,11 @@ export class ClaimsService {
             marca,
             modelo,
             proprietario_nome
+          ),
+          attachments:ticket_attachments (
+            id,
+            tipo,
+            nome_arquivo
           )
         `)
         .eq('tipo', 'sinistro')
@@ -86,6 +91,8 @@ export class ClaimsService {
           },
           status: mappedStatus as 'aberto' | 'em_regulacao' | 'finalizado',
           valor_estimado: ticket.valor_estimado ? Number(ticket.valor_estimado) : undefined,
+          localizacao: ticket.localizacao || undefined,
+          attachments: ticket.attachments || [],
           created_at: ticket.created_at,
           updated_at: ticket.updated_at
         };
@@ -348,12 +355,19 @@ export class ClaimsService {
           subtipo,
           status,
           data_evento,
+          localizacao,
           created_at,
           vehicle:frota_veiculos!tickets_vehicle_id_fkey (
             id,
             placa,
             marca,
-            modelo
+            modelo,
+            proprietario_nome
+          ),
+          attachments:ticket_attachments (
+            id,
+            tipo,
+            nome_arquivo
           )
         `)
         .eq('tipo', 'assistencia')
@@ -389,12 +403,15 @@ export class ClaimsService {
             id: ticket.vehicle.id,
             placa: ticket.vehicle.placa,
             marca: ticket.vehicle.marca || undefined,
-            modelo: ticket.vehicle.modelo || undefined
+            modelo: ticket.vehicle.modelo || undefined,
+            proprietario_nome: ticket.vehicle.proprietario_nome || undefined
           } : {
             id: '',
             placa: 'N/A'
           },
           status: ticket.status === 'aberto' || ticket.status === 'finalizado' ? ticket.status : 'aberto',
+          localizacao: ticket.localizacao || undefined,
+          attachments: ticket.attachments || [],
           created_at: ticket.created_at
         };
       });
