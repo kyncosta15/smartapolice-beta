@@ -83,7 +83,7 @@ const columns: TableColumn[] = [
   },
   {
     key: 'observacoes',
-    name: 'Observações',
+    name: 'Anexos',
     width: 200,
   },
   {
@@ -488,25 +488,18 @@ export function TicketsListV2({
         return <span className="text-muted-foreground text-xs">—</span>;
         
       case 'observacoes':
-        const localizacao = (item as any).localizacao || '';
         const attachments = (item as any).attachments || [];
-        const docCount = attachments.length;
+        const docCount = Array.isArray(attachments) ? attachments.length : 0;
         
         return (
           <div className="space-y-1">
-            {localizacao && (
-              <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={localizacao}>
-                {localizacao}
+            {docCount > 0 ? (
+              <div className="flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-blue-500" />
+                <span className="text-sm font-medium text-blue-600">{docCount} doc{docCount > 1 ? 's' : ''}</span>
               </div>
-            )}
-            {docCount > 0 && (
-              <div className="text-xs font-medium text-primary flex items-center gap-1">
-                <FileText className="h-3 w-3" />
-                {docCount} doc{docCount > 1 ? 's' : ''}
-              </div>
-            )}
-            {!localizacao && docCount === 0 && (
-              <span className="text-xs text-muted-foreground">—</span>
+            ) : (
+              <span className="text-muted-foreground text-xs">Sem anexos</span>
             )}
           </div>
         );
