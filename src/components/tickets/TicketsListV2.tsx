@@ -62,7 +62,7 @@ const columns: TableColumn[] = [
   {
     key: 'ticket',
     name: 'Ticket',
-    width: 200,
+    width: 250,
     isRowHeader: true,
   },
   {
@@ -79,6 +79,11 @@ const columns: TableColumn[] = [
     key: 'valor_estimado',
     name: 'Valor',
     width: 150,
+  },
+  {
+    key: 'observacoes',
+    name: 'Observações',
+    width: 200,
   },
   {
     key: 'created_at',
@@ -399,6 +404,11 @@ export function TicketsListV2({
                 {item.ticketNumber}
               </span>
             </div>
+            {item.veiculo.proprietario_nome && (
+              <div className="text-xs text-muted-foreground truncate pl-4">
+                <span className="font-semibold">Segurado:</span> {item.veiculo.proprietario_nome}
+              </div>
+            )}
             <div className="flex items-center gap-1.5 pl-4">
               {item.type === 'sinistro' ? (
                 <AlertTriangle className="h-3.5 w-3.5 text-red-600 flex-shrink-0" />
@@ -472,6 +482,17 @@ export function TicketsListV2({
           );
         }
         return <span className="text-muted-foreground text-xs">—</span>;
+        
+      case 'observacoes':
+        const descricao = (item as any).descricao || '';
+        const localizacao = (item as any).localizacao || '';
+        const observacoes = descricao || localizacao;
+        
+        return (
+          <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={observacoes}>
+            {observacoes || '—'}
+          </div>
+        );
         
       case 'created_at':
         return (
