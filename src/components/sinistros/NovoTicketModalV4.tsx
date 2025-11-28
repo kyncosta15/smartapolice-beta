@@ -106,7 +106,8 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
           toast({
             title: "Nenhum veículo encontrado",
             description: "Tente buscar por placa, chassi ou proprietário",
-            variant: "destructive"
+            variant: "destructive",
+            duration: 3000
           })
         }
       } else {
@@ -117,7 +118,8 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
           toast({
             title: "Nenhum segurado encontrado",
             description: "Tente buscar por nome, CPF ou cargo",
-            variant: "destructive"
+            variant: "destructive",
+            duration: 3000
           })
         }
       }
