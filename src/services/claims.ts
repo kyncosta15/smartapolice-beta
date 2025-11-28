@@ -37,6 +37,7 @@ export class ClaimsService {
           data_evento,
           valor_estimado,
           localizacao,
+          payload,
           created_at,
           updated_at,
           vehicle:frota_veiculos!tickets_vehicle_id_fkey (
@@ -78,6 +79,7 @@ export class ClaimsService {
       const claims: Claim[] = (data || []).map(ticket => {
         // Map database status to ClaimStatus type
         const mappedStatus = ticket.status === 'em_analise' ? 'em_regulacao' : ticket.status;
+        const payload = ticket.payload as any;
         
         return {
           id: ticket.id,
@@ -95,6 +97,8 @@ export class ClaimsService {
           status: mappedStatus as 'aberto' | 'em_regulacao' | 'finalizado',
           valor_estimado: ticket.valor_estimado ? Number(ticket.valor_estimado) : undefined,
           localizacao: ticket.localizacao || undefined,
+          descricao: payload?.descricao || undefined,
+          gravidade: payload?.gravidade || undefined,
           segurado_nome: ticket.segurado?.nome || undefined,
           attachments: Array.isArray(ticket.ticket_attachments) ? ticket.ticket_attachments : [],
           created_at: ticket.created_at,
@@ -222,6 +226,7 @@ export class ClaimsService {
           data_evento,
           valor_estimado,
           localizacao,
+          payload,
           created_at,
           updated_at,
           vehicle:frota_veiculos!tickets_vehicle_id_fkey (
@@ -230,6 +235,9 @@ export class ClaimsService {
             marca,
             modelo,
             proprietario_nome
+          ),
+          segurado:colaboradores!tickets_segurado_id_fkey (
+            nome
           )
         `)
         .eq('id', id)
@@ -239,6 +247,7 @@ export class ClaimsService {
       if (!ticket) throw new Error('Sinistro não encontrado');
 
       const mappedStatus = ticket.status === 'em_analise' ? 'em_regulacao' : ticket.status;
+      const payload = ticket.payload as any;
       
       return {
         id: ticket.id,
@@ -258,6 +267,9 @@ export class ClaimsService {
         data_evento: ticket.data_evento,
         localizacao: ticket.localizacao,
         subtipo: ticket.subtipo,
+        descricao: payload?.descricao || undefined,
+        gravidade: payload?.gravidade || undefined,
+        segurado_nome: ticket.segurado?.nome || undefined,
         created_at: ticket.created_at,
         updated_at: ticket.updated_at
       } as Claim;
@@ -360,6 +372,7 @@ export class ClaimsService {
           status,
           data_evento,
           localizacao,
+          payload,
           created_at,
           vehicle:frota_veiculos!tickets_vehicle_id_fkey (
             id,
@@ -403,6 +416,8 @@ export class ClaimsService {
           tipo = ticket.subtipo;
         }
         
+        const payload = ticket.payload as any;
+        
         return {
           id: ticket.id,
           tipo,
@@ -418,6 +433,7 @@ export class ClaimsService {
           },
           status: ticket.status === 'aberto' || ticket.status === 'finalizado' ? ticket.status : 'aberto',
           localizacao: ticket.localizacao || undefined,
+          descricao: payload?.descricao || undefined,
           segurado_nome: ticket.segurado?.nome || undefined,
           attachments: Array.isArray(ticket.ticket_attachments) ? ticket.ticket_attachments : [],
           created_at: ticket.created_at
