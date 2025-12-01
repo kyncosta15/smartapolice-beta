@@ -29,6 +29,7 @@ import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminCompanyDetailsPage from './pages/AdminCompanyDetailsPage';
 import AdminProfilePage from './pages/AdminProfilePage';
 import AdminEmailSettingsPage from './pages/AdminEmailSettingsPage';
+import AdminWebhooksPage from './pages/AdminWebhooksPage';
 import CentralDeDadosPage from './pages/CentralDeDadosPage';
 import InserirVeiculosLotePage from './pages/InserirVeiculosLotePage';
 
@@ -115,6 +116,14 @@ const App = () => {
                 element={
                   <ProtectedRoute requiredRoles={['admin', 'administrador']}>
                     <AdminEmailSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/webhooks"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                    <AdminWebhooksPage />
                   </ProtectedRoute>
                 }
               />

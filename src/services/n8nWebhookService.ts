@@ -1,4 +1,5 @@
 import { DynamicPDFData } from '@/types/pdfUpload';
+import { getWebhookUrl } from '@/lib/webhookConfig';
 
 interface N8NDirectResponse {
   segurado?: string;
@@ -33,11 +34,14 @@ interface N8NWebhookResponse {
 }
 
 export class N8NWebhookService {
-  private static readonly WEBHOOK_URL = 'https://rcorpcaldas.app.n8n.cloud/webhook/upload-arquivo';
+  private static async getWebhookUrl(): Promise<string> {
+    return getWebhookUrl('apolices_pdf');
+  }
   
   static async processarPdfComN8n(file: File, userId?: string): Promise<N8NWebhookResponse> {
+    const webhookUrl = await this.getWebhookUrl();
     console.log(`🌐 Enviando PDF para processamento N8N: ${file.name}`);
-    console.log('📡 Webhook URL:', this.WEBHOOK_URL);
+    console.log('📡 Webhook URL:', webhookUrl);
     console.log('👤 User ID enviado para N8N:', userId);
     
     try {
@@ -57,7 +61,7 @@ export class N8NWebhookService {
 
       console.log('📤 Enviando arquivo para webhook N8N...');
       
-      const response = await fetch(this.WEBHOOK_URL, {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         body: formData,
         headers: {
@@ -295,10 +299,11 @@ export class N8NWebhookService {
   // Método para teste de conectividade
   static async testarConexaoN8n(): Promise<boolean> {
     try {
+      const webhookUrl = await this.getWebhookUrl();
       const testData = new FormData();
       testData.append('test', 'true');
       
-      const response = await fetch(this.WEBHOOK_URL, {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         body: testData
       });
