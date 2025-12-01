@@ -11,6 +11,13 @@ export const ValidityInfoCard = ({ policy }: ValidityInfoCardProps) => {
   const formatDate = (date: any) => {
     if (!date) return '-';
     try {
+      // Handle DD/MM/YYYY format
+      if (typeof date === 'string' && date.includes('/')) {
+        const parts = date.split('/');
+        if (parts.length === 3) {
+          return date; // Already in DD/MM/YYYY format
+        }
+      }
       return new Date(date).toLocaleDateString('pt-BR');
     } catch {
       return renderValue(date);
@@ -26,6 +33,14 @@ export const ValidityInfoCard = ({ policy }: ValidityInfoCardProps) => {
       return renderValue(date);
     }
   };
+
+  // Check multiple possible field names for start date
+  const startDate = policy?.startDate || policy?.inicio_vigencia || policy?.inicio || 
+                    policy?.inicioVigencia || policy?.data_inicio || policy?.inivig;
+  
+  // Check multiple possible field names for end date
+  const endDate = policy?.endDate || policy?.fim_vigencia || policy?.fim || 
+                  policy?.fimVigencia || policy?.data_fim || policy?.fimvig;
 
   const fileName = renderValue(policy?.fileName || policy?.file?.name || policy?.arquivo);
 
@@ -44,7 +59,7 @@ export const ValidityInfoCard = ({ policy }: ValidityInfoCardProps) => {
               Data de Início
             </label>
             <p className="text-base font-bold text-gray-900 font-sf-pro">
-              {formatDate(policy?.startDate)}
+              {formatDate(startDate)}
             </p>
           </div>
 
@@ -53,7 +68,7 @@ export const ValidityInfoCard = ({ policy }: ValidityInfoCardProps) => {
               Data de Fim
             </label>
             <p className="text-base font-bold text-gray-900 font-sf-pro">
-              {formatDate(policy?.endDate)}
+              {formatDate(endDate)}
             </p>
           </div>
         </div>
