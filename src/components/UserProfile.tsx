@@ -48,7 +48,7 @@ export function UserProfile() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { syncPolicies } = useCorpNuvemSync();
+  const { syncPolicies, syncAllLinkedDocuments } = useCorpNuvemSync();
 
   // Carregar dados do perfil da API CorpNuvem
   const loadFromCorpNuvemAPI = async () => {
@@ -133,12 +133,12 @@ export function UserProfile() {
 
       toast({
         title: "Dados atualizados",
-        description: "Sincronizando apólices...",
+        description: "Sincronizando todas as apólices vinculadas...",
       });
 
-      // Sincronizar apólices após atualizar dados cadastrais (forçando nova sincronização)
-      console.log('🔄 Iniciando sincronização de apólices...');
-      await syncPolicies(documento, true, true);
+      // Sincronizar apólices de TODOS os documentos vinculados (principal + dependentes/empresas)
+      console.log('🔄 Iniciando sincronização de apólices de todos os documentos vinculados...');
+      await syncAllLinkedDocuments(true);
 
     } catch (error: any) {
       console.error('❌ Erro ao buscar dados da API:', error);
