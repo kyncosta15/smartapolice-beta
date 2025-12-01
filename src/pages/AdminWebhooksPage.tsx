@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Webhook, Save, RefreshCw, ExternalLink, CheckCircle2, XCircle } from 'lucide-react';
+import { clearWebhookCache } from '@/lib/webhookConfig';
 
 interface WebhookConfig {
   id: string;
@@ -69,7 +70,10 @@ export default function AdminWebhooksPage() {
 
       if (error) throw error;
       
-      toast.success(`URL do webhook "${webhook.nome}" atualizada`);
+      // Limpar cache para forçar recarregamento das URLs em toda a aplicação
+      clearWebhookCache();
+      
+      toast.success(`URL do webhook "${webhook.nome}" atualizada! Cache limpo.`);
       fetchWebhooks();
     } catch (error) {
       console.error('Error saving webhook:', error);
@@ -87,6 +91,9 @@ export default function AdminWebhooksPage() {
         .eq('id', webhook.id);
 
       if (error) throw error;
+      
+      // Limpar cache para forçar recarregamento
+      clearWebhookCache();
       
       toast.success(`Webhook "${webhook.nome}" ${!webhook.ativo ? 'ativado' : 'desativado'}`);
       fetchWebhooks();
