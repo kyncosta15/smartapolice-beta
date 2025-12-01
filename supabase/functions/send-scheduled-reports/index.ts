@@ -21,32 +21,62 @@ serve(async (req) => {
 
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-    // Verificar se é um teste forçado
-    const { force = false } = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    // Verificar parâmetros do request
+    const { force = false, empresaId = null, emailOverride = null } = req.method === "POST" ? await req.json().catch(() => ({})) : {};
 
-    // Buscar agendamentos ativos
-    let query = supabaseAdmin
-      .from("report_schedules")
-      .select(`
-        *,
-        empresas:empresa_id (
-          id,
-          nome,
-          cnpj
-        )
-      `)
-      .eq("ativo", true);
+    console.log("Parâmetros recebidos:", { force, empresaId, emailOverride });
 
-    // Se não for forçado, verificar data de envio
-    if (!force) {
-      query = query.or(`proximo_envio.is.null,proximo_envio.lte.${new Date().toISOString()}`);
-    }
+    let schedules = [];
 
-    const { data: schedules, error: schedulesError } = await query;
+    // Se for envio direto para uma empresa específica
+    if (empresaId && emailOverride) {
+      console.log(`Envio direto para empresa ${empresaId} no email ${emailOverride}`);
+      
+      // Buscar dados da empresa
+      const { data: empresa } = await supabaseAdmin
+        .from("empresas")
+        .select("id, nome, cnpj")
+        .eq("id", empresaId)
+        .single();
 
-    if (schedulesError) {
-      console.error("Erro ao buscar agendamentos:", schedulesError);
-      throw schedulesError;
+      if (empresa) {
+        schedules = [{
+          id: 'direct-send',
+          empresa_id: empresaId,
+          email: emailOverride,
+          nome_destinatario: emailOverride.split('@')[0],
+          empresas: empresa,
+          frequencia_dias: 30,
+          ativo: true
+        }];
+      }
+    } else {
+      // Buscar agendamentos ativos normalmente
+      let query = supabaseAdmin
+        .from("report_schedules")
+        .select(`
+          *,
+          empresas:empresa_id (
+            id,
+            nome,
+            cnpj
+          )
+        `)
+        .eq("ativo", true);
+
+      // Se não for forçado, verificar data de envio
+      if (!force) {
+        query = query.or(`proximo_envio.is.null,proximo_envio.lte.${new Date().toISOString()}`);
+      }
+
+      const { data: schedulesData, error: schedulesError } = await query;
+
+      if (schedulesError) {
+        console.error("Erro ao buscar agendamentos:", schedulesError);
+        throw schedulesError;
+      }
+
+      schedules = schedulesData || [];
     }
 
     console.log(`Encontrados ${schedules?.length || 0} agendamentos para processar`);
