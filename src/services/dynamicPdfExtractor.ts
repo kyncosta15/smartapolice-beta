@@ -57,7 +57,8 @@ export class DynamicPDFExtractor {
       console.log(`📝 Resposta texto (primeiros 200 chars): ${responseText.substring(0, 200)}...`);
 
       if (!responseText.trim()) {
-        throw new Error('Resposta vazia do servidor');
+        console.error('❌ N8N retornou resposta vazia - verifique se o workflow está ATIVO no painel N8N');
+        throw new Error('Resposta vazia do servidor N8N. Verifique se o workflow está ativo no painel do N8N.');
       }
 
       let data;
@@ -176,7 +177,8 @@ export class DynamicPDFExtractor {
       console.log(`📝 Resposta bruta (primeiros 1000 chars):\n${responseText.substring(0, 1000)}`);
 
       if (!responseText.trim()) {
-        throw new Error('Resposta vazia do servidor n8n');
+        console.error('❌ N8N retornou resposta vazia - verifique se o workflow está ATIVO no painel N8N');
+        throw new Error('Resposta vazia do servidor N8N. Verifique se o workflow está ativo no painel do N8N.');
       }
 
       let responseData;
