@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { TermsModal } from '@/components/auth/TermsModal';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,6 +18,51 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, profile, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsChecked, setTermsChecked] = useState(false);
+
+  // Verificar se precisa mostrar modal de termos
+  useEffect(() => {
+    const checkTermsAcceptance = async () => {
+      if (!user || !profile) {
+        setTermsChecked(true);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('termos_aceitos, termos_versao')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Erro ao verificar termos:', error);
+          setShowTermsModal(true);
+          setTermsChecked(true);
+          return;
+        }
+
+        const currentVersion = '1.0';
+        const needsAcceptance = !data?.termos_aceitos || data?.termos_versao !== currentVersion;
+        
+        setShowTermsModal(needsAcceptance);
+        setTermsChecked(true);
+      } catch (error) {
+        console.error('Erro ao verificar termos:', error);
+        setTermsChecked(true);
+      }
+    };
+
+    if (user && profile && !loading) {
+      checkTermsAcceptance();
+    }
+  }, [user, profile, loading]);
+
+  const handleTermsAccept = () => {
+    setShowTermsModal(false);
+  };
 
   if (loading) {
     return (
@@ -91,6 +138,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           </Button>
         </div>
       </div>
+    );
+  }
+
+  // Mostrar modal de termos se necessário
+  if (showTermsModal && termsChecked) {
+    return (
+      <>
+        {children}
+        <TermsModal 
+          open={showTermsModal} 
+          onAccept={handleTermsAccept}
+          userId={user.id}
+        />
+      </>
     );
   }
 
