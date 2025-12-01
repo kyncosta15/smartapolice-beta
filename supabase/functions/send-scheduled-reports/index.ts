@@ -663,7 +663,7 @@ serve(async (req) => {
 
         // Enviar email via Resend com PDF anexado
         const { data: emailData, error: emailError } = await resend.emails.send({
-          from: "RCORP Relatórios <relatorios@resend.dev>",
+          from: "RCORP Seguros <rcaldas@rcaldas.com.br>",
           to: [schedule.email],
           subject: `📊 Relatório ${schedule.frequencia_dias} dias - ${schedule.empresas?.nome || "Sua Empresa"}`,
           html: htmlContent,
