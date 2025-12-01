@@ -119,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
         `;
 
         const emailResult = await resend.emails.send({
-          from: 'RCORP Seguros <rcaldas@rcaldas.com.br>',
+          from: 'RCORP Seguros <noreply@rcorp.rcaldas.com.br>',
           to: [companyData.email],
           subject: `Relatório Mensal - ${companyName} - ${companyData.policies.length} apólices vencendo`,
           html: emailHtml,
