@@ -598,7 +598,7 @@ serve(async (req) => {
               <div class="alert-box">
                 <h3>Relatorio em Anexo</h3>
                 <p>O relatorio executivo em PDF esta anexado a este email. Para analises mais detalhadas e graficos interativos, acesse o sistema:</p>
-                <a href="https://fdab69fb-cde0-4bb7-ac60-2a713d93f1b4.lovableproject.com" class="download-btn">Acessar Sistema Completo</a>
+                <a href="https://rcorp.rcaldas.com.br" class="download-btn">Acessar Sistema Completo</a>
               </div>
 
               <div class="section">
@@ -653,8 +653,8 @@ serve(async (req) => {
 
               <div class="footer">
                 <p><strong>RCORP Gestão de Seguros</strong></p>
-                <p>Este é um relatório automático. Não responda este email.</p>
-                <p>Para acessar o sistema completo e baixar o relatorio em PDF, visite: <a href="https://fdab69fb-cde0-4bb7-ac60-2a713d93f1b4.lovableproject.com">Dashboard RCORP</a></p>
+                <p>Dúvidas? Entre em contato conosco.</p>
+                <p>Acesse: <a href="https://rcorp.rcaldas.com.br">rcorp.rcaldas.com.br</a></p>
               </div>
             </div>
           </body>
@@ -663,7 +663,7 @@ serve(async (req) => {
 
         // Enviar email via Resend com PDF anexado
         const { data: emailData, error: emailError } = await resend.emails.send({
-          from: "RCORP Seguros <noreply@rcorp.rcaldas.com.br>",
+          from: "RCORP Seguros <relatorios@rcorp.rcaldas.com.br>",
           to: [schedule.email],
           subject: `📊 Relatório ${schedule.frequencia_dias} dias - ${schedule.empresas?.nome || "Sua Empresa"}`,
           html: htmlContent,
