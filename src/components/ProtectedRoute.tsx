@@ -30,6 +30,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         return;
       }
 
+      // Admin não precisa aceitar termos
+      if (profile.is_admin === true) {
+        setShowTermsModal(false);
+        setTermsChecked(true);
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from('user_profiles')
@@ -39,6 +46,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
         if (error) {
           console.error('Erro ao verificar termos:', error);
+          // Se deu erro, mostra modal por segurança
           setShowTermsModal(true);
           setTermsChecked(true);
           return;
@@ -47,10 +55,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         const currentVersion = '1.0';
         const needsAcceptance = !data?.termos_aceitos || data?.termos_versao !== currentVersion;
         
+        console.log('Verificação de termos:', { 
+          userId: user.id, 
+          termos_aceitos: data?.termos_aceitos, 
+          termos_versao: data?.termos_versao,
+          needsAcceptance 
+        });
+        
         setShowTermsModal(needsAcceptance);
         setTermsChecked(true);
       } catch (error) {
         console.error('Erro ao verificar termos:', error);
+        setShowTermsModal(true);
         setTermsChecked(true);
       }
     };
@@ -141,8 +157,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Mostrar modal de termos se necessário
-  if (showTermsModal && termsChecked) {
+  // Mostrar modal de termos se necessário (exceto para admin)
+  if (showTermsModal && termsChecked && !isAdmin) {
     return (
       <>
         {children}

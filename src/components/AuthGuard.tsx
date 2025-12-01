@@ -1,18 +1,80 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardContent } from '@/components/DashboardContent';
 import { Shield, Loader2 } from 'lucide-react';
+import { TermsModal } from '@/components/auth/TermsModal';
+import { supabase } from '@/integrations/supabase/client';
 
 const AuthGuardContent = () => {
   const { user, profile, isLoading } = useAuth();
   const navigate = useNavigate();
+  
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsChecked, setTermsChecked] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
       navigate('/system-selection');
     }
   }, [user, isLoading, navigate]);
+
+  // Verificar se precisa mostrar modal de termos
+  useEffect(() => {
+    const checkTermsAcceptance = async () => {
+      if (!user || !profile) {
+        setTermsChecked(true);
+        return;
+      }
+
+      // Admin não precisa aceitar termos
+      if (profile.is_admin === true) {
+        setShowTermsModal(false);
+        setTermsChecked(true);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('termos_aceitos, termos_versao')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Erro ao verificar termos:', error);
+          setShowTermsModal(true);
+          setTermsChecked(true);
+          return;
+        }
+
+        const currentVersion = '1.0';
+        const needsAcceptance = !data?.termos_aceitos || data?.termos_versao !== currentVersion;
+        
+        console.log('AuthGuard - Verificação de termos:', { 
+          userId: user.id, 
+          termos_aceitos: data?.termos_aceitos, 
+          termos_versao: data?.termos_versao,
+          needsAcceptance 
+        });
+        
+        setShowTermsModal(needsAcceptance);
+        setTermsChecked(true);
+      } catch (error) {
+        console.error('Erro ao verificar termos:', error);
+        setShowTermsModal(true);
+        setTermsChecked(true);
+      }
+    };
+
+    if (user && profile && !isLoading) {
+      checkTermsAcceptance();
+    }
+  }, [user, profile, isLoading]);
+
+  const handleTermsAccept = () => {
+    setShowTermsModal(false);
+  };
 
   if (isLoading) {
     return (
@@ -59,7 +121,19 @@ const AuthGuardContent = () => {
     return null;
   }
 
-  return <DashboardContent />;
+  // Mostrar modal de termos se necessário
+  return (
+    <>
+      <DashboardContent />
+      {showTermsModal && termsChecked && user && (
+        <TermsModal 
+          open={showTermsModal} 
+          onAccept={handleTermsAccept}
+          userId={user.id}
+        />
+      )}
+    </>
+  );
 };
 
 const AuthGuard = () => {
