@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Mail, Send, Calendar, Clock, Trash2 } from 'lucide-react';
+import { Loader2, Mail, Send, Calendar, Clock, Trash2, FileText, BarChart3, Shield, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -248,137 +248,172 @@ export function SendReportEmailModal({ open, onOpenChange }: SendReportEmailModa
     });
   };
 
+  const reportFeatures = [
+    { icon: BarChart3, label: 'KPIs de gestão de frotas' },
+    { icon: FileText, label: 'Resumo de sinistros e assistências' },
+    { icon: Shield, label: 'Status das apólices de benefícios' },
+    { icon: Lightbulb, label: 'Insights automáticos do período' },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5 text-primary" />
-            Relatório por Email
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-4 border-b">
+          <DialogTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Mail className="h-5 w-5 text-primary" />
+            </div>
+            Relatório Executivo por Email
           </DialogTitle>
-          <DialogDescription>
-            Configure o envio automático do relatório executivo por email.
+          <DialogDescription className="text-sm pt-2">
+            Configure o envio automático do seu relatório executivo personalizado.
           </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="text-sm text-muted-foreground">Carregando configurações...</span>
           </div>
         ) : (
-          <div className="grid gap-4 py-4">
-            {/* Email de destino */}
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email de destino</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="exemplo@empresa.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSaving}
-              />
-            </div>
-
-            {/* Frequência */}
-            <div className="grid gap-2">
-              <Label>Frequência de envio</Label>
-              <Select value={frequencia} onValueChange={setFrequencia} disabled={isSaving}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a frequência" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">Semanal (7 dias)</SelectItem>
-                  <SelectItem value="15">Quinzenal (15 dias)</SelectItem>
-                  <SelectItem value="30">Mensal (30 dias)</SelectItem>
-                  <SelectItem value="60">Bimestral (60 dias)</SelectItem>
-                  <SelectItem value="90">Trimestral (90 dias)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Dia do envio */}
-            <div className="grid gap-2">
-              <Label>Dia do envio</Label>
-              <Select value={diaEnvio} onValueChange={setDiaEnvio} disabled={isSaving}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o dia" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 5, 10, 15, 20, 25].map((dia) => (
-                    <SelectItem key={dia} value={dia.toString()}>
-                      Dia {dia} do mês
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
+          <div className="space-y-6 py-6">
             {/* Status do agendamento existente */}
             {existingSchedule && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm">
-                <div className="flex items-center gap-2 text-green-700 font-medium mb-2">
-                  <Calendar className="h-4 w-4" />
-                  Agendamento ativo
-                </div>
-                <div className="flex items-center gap-2 text-green-600 text-xs">
-                  <Clock className="h-3 w-3" />
-                  Próximo envio: {formatProximoEnvio(existingSchedule.proximo_envio)}
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
+                      <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-emerald-700 dark:text-emerald-300">Agendamento ativo</p>
+                      <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs mt-0.5">
+                        <Clock className="h-3 w-3" />
+                        Próximo envio: {formatProximoEnvio(existingSchedule.proximo_envio)}
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDeleteSchedule}
+                    disabled={isSaving}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             )}
 
+            {/* Configurações de envio */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-semibold">1</span>
+                Configurações de envio
+              </h3>
+              
+              <div className="grid gap-4 pl-8">
+                {/* Email de destino */}
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm">Email de destino</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="exemplo@empresa.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isSaving}
+                    className="h-11"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Frequência */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Frequência</Label>
+                    <Select value={frequencia} onValueChange={setFrequencia} disabled={isSaving}>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        <SelectItem value="7">Semanal</SelectItem>
+                        <SelectItem value="15">Quinzenal</SelectItem>
+                        <SelectItem value="30">Mensal</SelectItem>
+                        <SelectItem value="60">Bimestral</SelectItem>
+                        <SelectItem value="90">Trimestral</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Dia do envio */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Dia do mês</Label>
+                    <Select value={diaEnvio} onValueChange={setDiaEnvio} disabled={isSaving}>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        {[1, 5, 10, 15, 20, 25].map((dia) => (
+                          <SelectItem key={dia} value={dia.toString()}>
+                            Dia {dia}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Informação sobre o relatório */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
-              <p className="font-medium mb-1">O relatório incluirá:</p>
-              <ul className="list-disc list-inside space-y-0.5 text-xs">
-                <li>KPIs de gestão de frotas</li>
-                <li>Resumo de sinistros e assistências</li>
-                <li>Status das apólices de benefícios</li>
-                <li>Insights automáticos do período</li>
-              </ul>
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-semibold">2</span>
+                Conteúdo do relatório
+              </h3>
+              
+              <div className="bg-muted/50 rounded-xl p-4 pl-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {reportFeatures.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                      <feature.icon className="h-4 w-4 text-primary/70 flex-shrink-0" />
+                      <span>{feature.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        <DialogFooter className="flex flex-col sm:flex-row gap-2">
-          {existingSchedule && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeleteSchedule}
-              disabled={isSaving}
-              className="w-full sm:w-auto"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Cancelar Agendamento
-            </Button>
-          )}
+        <DialogFooter className="border-t pt-4 flex flex-col sm:flex-row gap-3">
+          <Button
+            variant="outline"
+            onClick={handleSendNow}
+            disabled={isSaving || !email || isLoading}
+            className="w-full sm:w-auto order-2 sm:order-1"
+          >
+            {isSaving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="mr-2 h-4 w-4" />
+            )}
+            Enviar Agora
+          </Button>
           
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              onClick={handleSendNow}
-              disabled={isSaving || !email}
-              className="flex-1 sm:flex-none"
-            >
-              {isSaving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="mr-2 h-4 w-4" />
-              )}
-              Enviar Agora
-            </Button>
-            
-            <Button onClick={handleSaveSchedule} disabled={isSaving || isLoading} className="flex-1 sm:flex-none">
-              {isSaving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Calendar className="mr-2 h-4 w-4" />
-              )}
-              {existingSchedule ? 'Atualizar' : 'Agendar'}
-            </Button>
-          </div>
+          <Button 
+            onClick={handleSaveSchedule} 
+            disabled={isSaving || isLoading} 
+            className="w-full sm:w-auto order-1 sm:order-2"
+          >
+            {isSaving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Calendar className="mr-2 h-4 w-4" />
+            )}
+            {existingSchedule ? 'Atualizar Agendamento' : 'Criar Agendamento'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
