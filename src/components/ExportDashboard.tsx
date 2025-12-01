@@ -10,6 +10,7 @@ import {
   Mail 
 } from 'lucide-react';
 import { ClientReports } from '@/components/reports/ClientReports';
+import { SendReportEmailModal } from '@/components/reports/SendReportEmailModal';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +28,7 @@ interface ExportRecord {
 export function ExportDashboard() {
   const [exportHistory, setExportHistory] = useState<ExportRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -206,8 +208,7 @@ export function ExportDashboard() {
                 variant="outline" 
                 size="default"
                 className="rounded-xl border-gray-200 shadow-sm w-full sm:w-auto"
-                disabled
-                title="Em breve"
+                onClick={() => setIsEmailModalOpen(true)}
               >
                 <Mail className="w-4 h-4 mr-2" />
                 <span className="truncate">Enviar por Email</span>
@@ -314,6 +315,12 @@ export function ExportDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de envio por email */}
+      <SendReportEmailModal 
+        open={isEmailModalOpen} 
+        onOpenChange={setIsEmailModalOpen} 
+      />
     </div>
   );
 }
