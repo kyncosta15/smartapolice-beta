@@ -2847,6 +2847,9 @@ export type Database = {
           photo_url: string | null
           settings: Json | null
           state: string | null
+          termos_aceitos: boolean | null
+          termos_aceitos_em: string | null
+          termos_versao: string | null
           updated_at: string
           zip_code: string | null
         }
@@ -2867,6 +2870,9 @@ export type Database = {
           photo_url?: string | null
           settings?: Json | null
           state?: string | null
+          termos_aceitos?: boolean | null
+          termos_aceitos_em?: string | null
+          termos_versao?: string | null
           updated_at?: string
           zip_code?: string | null
         }
@@ -2887,6 +2893,9 @@ export type Database = {
           photo_url?: string | null
           settings?: Json | null
           state?: string | null
+          termos_aceitos?: boolean | null
+          termos_aceitos_em?: string | null
+          termos_versao?: string | null
           updated_at?: string
           zip_code?: string | null
         }
