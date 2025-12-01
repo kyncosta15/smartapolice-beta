@@ -402,7 +402,7 @@ serve(async (req) => {
     `;
 
     const emailResult = await resend.emails.send({
-      from: "SmartApolice <onboarding@resend.dev>",
+      from: "RCORP Seguros <rcaldas@rcaldas.com.br>",
       to: [email],
       subject: `Relatorio Executivo - ${empresaNome} - ${periodoFormatado}`,
       html: htmlContent,
