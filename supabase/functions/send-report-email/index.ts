@@ -402,7 +402,7 @@ serve(async (req) => {
     `;
 
     const emailResult = await resend.emails.send({
-      from: "RCORP Seguros <noreply@rcorp.rcaldas.com.br>",
+      from: "RCORP Seguros <relatorios@rcorp.rcaldas.com.br>",
       to: [email],
       subject: `Relatorio Executivo - ${empresaNome} - ${periodoFormatado}`,
       html: htmlContent,
