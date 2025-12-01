@@ -23,6 +23,7 @@ import { N8NUploadService, N8NUploadMetadata, N8NResponse } from '@/services/n8n
 import { supabase } from '@/integrations/supabase/client';
 import { ensureProfileAndCompany } from '@/utils/profileUtils';
 import { DuplicateVehiclesModal } from './DuplicateVehiclesModal';
+import { getWebhookUrl } from '@/lib/webhookConfig';
 
 interface FrotasUploadProps {
   onSuccess: () => void;
@@ -91,9 +92,11 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
   const sendToWebhook = async (file: File, metadata: N8NUploadMetadata, fileId: string) => {
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     const isPDF = fileExtension === 'pdf';
+    
+    // Buscar URL dinâmica do banco de dados
     const webhookUrl = isPDF 
-      ? 'https://rcorpcaldas.app.n8n.cloud/webhook/pdf-frota'
-      : 'https://rcorpcaldas.app.n8n.cloud/webhook/upload-planilha';
+      ? await getWebhookUrl('pdf_frota')
+      : await getWebhookUrl('planilha_frota');
 
     console.log(`📤 Enviando ${file.name} (${fileExtension?.toUpperCase()}) para webhook: ${isPDF ? 'PDF' : 'PLANILHA'}`);
 

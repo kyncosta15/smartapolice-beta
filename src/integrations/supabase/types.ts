@@ -1628,6 +1628,36 @@ export type Database = {
           },
         ]
       }
+      n8n_webhooks_config: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          id: string
+          nome: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       parcelas: {
         Row: {
           created_at: string | null

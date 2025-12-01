@@ -1,11 +1,16 @@
+import { getWebhookUrl } from '@/lib/webhookConfig';
+
 export class DynamicPDFExtractor {
-  private static readonly WEBHOOK_URL = 'https://rcorpcaldas.app.n8n.cloud/webhook/upload-arquivo';
+  private static async getWebhookUrl(): Promise<string> {
+    return getWebhookUrl('apolices_pdf');
+  }
   private static readonly TIMEOUT = 600000; // 10 minutos para múltiplos arquivos
   private static readonly MAX_FILES = 10; // Limite de arquivos por requisição
 
   static async extractFromPDF(file: File, userId?: string): Promise<any> {
+    const webhookUrl = await this.getWebhookUrl();
     console.log(`🔄 Enviando arquivo individual: ${file.name} (${file.size} bytes)`);
-    console.log('📡 Webhook URL:', this.WEBHOOK_URL);
+    console.log('📡 Webhook URL:', webhookUrl);
     console.log(`👤 userId: ${userId}`);
 
     try {
@@ -19,7 +24,7 @@ export class DynamicPDFExtractor {
         console.log(`✅ userId ${userId} adicionado ao FormData`);
       }
 
-      console.log(`📤 Enviando para: ${this.WEBHOOK_URL}`);
+      console.log(`📤 Enviando para: ${webhookUrl}`);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
@@ -27,7 +32,7 @@ export class DynamicPDFExtractor {
         controller.abort();
       }, this.TIMEOUT);
 
-      const response = await fetch(this.WEBHOOK_URL, {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         body: formData,
         signal: controller.signal,
@@ -94,6 +99,7 @@ export class DynamicPDFExtractor {
   }
 
   static async extractFromMultiplePDFs(files: File[], userId?: string): Promise<any[]> {
+    const webhookUrl = await this.getWebhookUrl();
     console.log('🚀🚀🚀 ==========================================');
     console.log('🚀🚀🚀 INICIANDO extractFromMultiplePDFs');
     console.log('🚀🚀🚀 ==========================================');
@@ -104,7 +110,7 @@ export class DynamicPDFExtractor {
 
     console.log(`🔄 Enviando ${files.length} arquivos em uma única requisição`);
     console.log(`👤 userId recebido:`, userId);
-    console.log(`📡 Endpoint: ${this.WEBHOOK_URL}`);
+    console.log(`📡 Endpoint: ${webhookUrl}`);
     
     try {
       const formData = new FormData();
@@ -133,7 +139,7 @@ export class DynamicPDFExtractor {
       }
 
       console.log('📤📤📤 ENVIANDO REQUISIÇÃO PARA O N8N...');
-      console.log(`📤 URL: ${this.WEBHOOK_URL}`);
+      console.log(`📤 URL: ${webhookUrl}`);
       console.log(`📤 Método: POST`);
       console.log(`📤 Timeout: ${this.TIMEOUT / 1000} segundos`);
 
@@ -146,7 +152,7 @@ export class DynamicPDFExtractor {
       console.log('🌐 Executando fetch...');
       const fetchStartTime = Date.now();
       
-      const response = await fetch(this.WEBHOOK_URL, {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         body: formData,
         signal: controller.signal,
