@@ -303,15 +303,19 @@ Deno.serve(async (req) => {
     // A busca por texto pode retornar apólices de outros clientes com nomes similares
     // Ex: buscar "AS ENGENHARIA" pode retornar "FACILITAS ENGENHARIA" também
     let apolices = apolicesRaw;
-    if (codigoCliente) {
-      // Filtrar por código do cliente se disponível
+    
+    // Verificar se a API de produção retorna código do cliente
+    const apiTemCodCli = apolicesRaw.some((ap: any) => ap.codcli || ap.cod_cliente || ap.codigo_cliente);
+    
+    if (codigoCliente && apiTemCodCli) {
+      // Filtrar por código do cliente se disponível na resposta
       apolices = apolicesRaw.filter((ap: any) => {
         const apCodCli = ap.codcli || ap.cod_cliente || ap.codigo_cliente;
         return apCodCli === codigoCliente;
       });
       console.log(`🎯 Filtrado por código cliente (${codigoCliente}): ${apolices.length} de ${apolicesRaw.length} apólices`);
     } else {
-      // Fallback: filtrar por nome exato do cliente
+      // Filtrar por nome exato do cliente (fallback ou quando API não tem codcli)
       const nomeClienteNormalizado = nomeCliente.toUpperCase().trim();
       apolices = apolicesRaw.filter((ap: any) => {
         const nomeApNormalizado = (ap.cliente || '').toUpperCase().trim();
@@ -325,6 +329,42 @@ Deno.serve(async (req) => {
     const apolicesAtivas = apolices.filter((ap: any) => ap.tipdoc === 'A');
     console.log(`📋 Apólices ativas (tipo A): ${apolicesAtivas.length}`);
     console.log(`⏭️  Ignorando ${apolices.length - apolicesAtivas.length} endossos (tipo C/M)`);
+
+    // LIMPAR APÓLICES QUE NÃO PERTENCEM MAIS A ESTE CLIENTE
+    // Coletar nosnum válidos para este documento
+    const nosnumValidos = apolicesAtivas.map((ap: any) => ap.nosnum);
+    console.log(`📋 Nosnum válidos para ${cleanDocument}: ${nosnumValidos.join(', ')}`);
+    
+    // Buscar apólices existentes deste vínculo que NÃO estão na lista válida
+    const { data: apolicesExistentes } = await supabaseClient
+      .from('policies')
+      .select('id, nosnum, numero_apolice, segurado')
+      .eq('user_id', user.id)
+      .eq('vinculo_cpf', doc);
+    
+    if (apolicesExistentes && apolicesExistentes.length > 0) {
+      const apolicesInvalidas = apolicesExistentes.filter(ap => 
+        ap.nosnum && !nosnumValidos.includes(ap.nosnum)
+      );
+      
+      if (apolicesInvalidas.length > 0) {
+        console.log(`🗑️ Removendo ${apolicesInvalidas.length} apólices que não pertencem mais a ${nomeCliente}...`);
+        apolicesInvalidas.forEach(ap => {
+          console.log(`   - ${ap.numero_apolice} (${ap.segurado}) - nosnum: ${ap.nosnum}`);
+        });
+        
+        const { error: deleteError } = await supabaseClient
+          .from('policies')
+          .delete()
+          .in('id', apolicesInvalidas.map(ap => ap.id));
+        
+        if (deleteError) {
+          console.error('❌ Erro ao remover apólices inválidas:', deleteError);
+        } else {
+          console.log(`✅ ${apolicesInvalidas.length} apólices removidas com sucesso`);
+        }
+      }
+    }
 
     let syncedCount = 0;
     let errorCount = 0;
