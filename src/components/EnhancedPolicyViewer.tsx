@@ -83,13 +83,12 @@ export function EnhancedPolicyViewer({
       return /iphone|ipad|ipod|android/.test(userAgent) && !/macintosh/.test(userAgent);
     };
 
-    // Helper function para download
+    // Helper function para download - CORRIGIDO para Mac desktop
     const shareOrDownload = async (blob: Blob, filename: string) => {
       // Criar blob com MIME type explícito para PDF
       const pdfBlob = new Blob([blob], { type: 'application/pdf' });
       
       // Usar Web Share API APENAS em dispositivos móveis (iPhone/iPad/Android)
-      // NÃO usar em Mac desktop para evitar o diálogo de compartilhamento
       if (isMobileDevice() && navigator.share && navigator.canShare) {
         try {
           const file = new File([pdfBlob], filename, { type: 'application/pdf' });
@@ -118,22 +117,37 @@ export function EnhancedPolicyViewer({
         }
       }
       
-      // Desktop (Mac/Windows) e fallback: download direto
+      // Desktop (Mac/Windows) - forçar download via blob URL
       const blobUrl = URL.createObjectURL(pdfBlob);
+      
+      // Método 1: Tentar com link direto (funciona em Chrome)
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = filename;
+      link.style.cssText = 'position:absolute;left:-9999px;visibility:hidden';
+      
+      // Forçar atributos para Safari
       link.setAttribute('download', filename);
-      link.style.display = 'none';
-      link.target = '_self';
+      link.setAttribute('type', 'application/pdf');
       
       document.body.appendChild(link);
-      link.click();
       
+      // Usar setTimeout para garantir que o DOM atualize antes do click
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Simular click
+      const clickEvent = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: true
+      });
+      link.dispatchEvent(clickEvent);
+      
+      // Cleanup após delay maior para Safari processar
       setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(blobUrl);
-      }, 100);
+      }, 1000);
       
       toast({
         title: "✅ Download iniciado",
