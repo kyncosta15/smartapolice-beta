@@ -15,10 +15,16 @@ Deno.serve(async (req) => {
     
     console.log('📥 Requisição de download recebida para:', pdfPath)
     
-    if (!pdfPath) {
-      console.error('❌ pdfPath não fornecido')
+    // Validar se pdfPath é válido (não vazio, não placeholder)
+    const invalidPaths = ['não informado', 'nao informado', 'n/a', 'undefined', 'null', ''];
+    const isInvalidPath = !pdfPath || 
+      invalidPaths.includes(pdfPath.toLowerCase().trim()) ||
+      pdfPath.trim() === '';
+    
+    if (isInvalidPath) {
+      console.error('❌ pdfPath inválido ou não fornecido:', pdfPath)
       return new Response(
-        JSON.stringify({ error: 'pdfPath é obrigatório' }),
+        JSON.stringify({ error: 'PDF não disponível para esta apólice', invalid_path: true }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
