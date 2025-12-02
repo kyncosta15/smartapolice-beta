@@ -613,7 +613,7 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
 
         {/* Tabs */}
         <Tabs value={activeSection} onValueChange={setActiveSection} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 mb-8 dark:bg-muted">
+          <TabsList className="w-fit mb-8 dark:bg-muted">
             {sections.map((section) => (
               <TabsTrigger 
                 key={section.value} 
