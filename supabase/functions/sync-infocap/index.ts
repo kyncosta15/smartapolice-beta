@@ -432,12 +432,17 @@ Deno.serve(async (req) => {
         const numeroApolice = (ap.numapo && ap.numapo !== '0' && ap.numapo !== 0) 
           ? ap.numapo 
           : `${ap.codfil}-${ap.nosnum}`;
+        
+        // CRÍTICO: Usar o nome do cliente DA APÓLICE, não do documento buscado
+        // Cada apólice pode pertencer a um cliente diferente (mesmo sendo encontrada pela busca)
+        const nomeClienteApolice = ap.cliente || detalhesApolice?.cliente || detalhesApolice?.nome_cliente || nomeCliente;
+        console.log(`🏢 Nome do cliente da apólice ${ap.nosnum}: "${nomeClienteApolice}" (ap.cliente: "${ap.cliente}", detalhes: "${detalhesApolice?.cliente}")`);
           
         const policyData = {
           user_id: user.id,
           documento: cleanDocument,
           vinculo_cpf: doc !== documento ? doc : null, // Marcar se veio de um CPF vinculado
-          segurado: nomeCliente,
+          segurado: nomeClienteApolice, // CORRIGIDO: Usar nome do cliente DA apólice
           seguradora: detalhesApolice?.seguradora || ap.seguradora || '',
           numero_apolice: numeroApolice,
           tipo_seguro: detalhesApolice?.ramo || ap.ramo || 'Não especificado',
@@ -451,7 +456,7 @@ Deno.serve(async (req) => {
           corretora: 'RCaldas Corretora de Seguros',
           extraction_timestamp: new Date().toISOString(),
           created_by_extraction: true,
-          responsavel_nome: nomeCliente,
+          responsavel_nome: nomeClienteApolice, // CORRIGIDO: Consistência
           nosnum: ap.nosnum,
           codfil: ap.codfil,
         };
