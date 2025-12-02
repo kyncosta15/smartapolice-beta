@@ -8,7 +8,7 @@ export const LandingPage = () => {
   return (
     <div className="min-h-screen flex relative overflow-hidden">
       {/* Left side - Content */}
-      <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/10 via-[hsl(var(--off-white-dark))] to-secondary/10 flex flex-col relative z-10">
+      <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/10 via-background to-secondary/10 dark:from-background dark:via-background dark:to-primary/5 flex flex-col relative z-10">
         <section className="isolate">
           <div className="mx-auto max-w-screen-md px-6 py-12 sm:py-16 text-center min-h-[75vh] flex flex-col justify-center">
             {/* Brand Lockup */}
