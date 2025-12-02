@@ -264,71 +264,53 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Cliente encontrado: ${nomeCliente} (código: ${codigoCliente})`);
 
-    // PASSO 2: Buscar apólices usando o endpoint /producao
-    // Definir período amplo para pegar todas as apólices
-    const dataInicial = '01/01/2015';
-    const dataFinal = '01/01/2027';
+    // PASSO 2: Buscar apólices usando o endpoint /cliente_ligacoes
+    // Este endpoint retorna TODAS as apólices vinculadas ao cliente pelo código
+    if (!codigoCliente) {
+      console.error('❌ Código do cliente não encontrado, não é possível buscar apólices');
+      throw new Error('Código do cliente não encontrado');
+    }
     
-    const producaoUrl = `${CORPNUVEM_API_URL}/producao?texto=${encodeURIComponent(nomeCliente)}&dt_ini=${dataInicial}&dt_fim=${dataFinal}&ordem=inivig&orientacao=asc&so_renovados=x&so_emitidos=x`;
-    console.log(`📄 Buscando produção: ${producaoUrl}`);
+    const ligacoesUrl = `${CORPNUVEM_API_URL}/cliente_ligacoes?codigo=${codigoCliente}`;
+    console.log(`📄 Buscando ligações do cliente: ${ligacoesUrl}`);
 
-    const producaoResponse = await corpNuvemFetch(producaoUrl);
+    const ligacoesResponse = await corpNuvemFetch(ligacoesUrl);
 
-    if (!producaoResponse.ok) {
-      const errorBody = await producaoResponse.text();
-      console.error(`❌ Erro ao buscar produção - Body: ${errorBody}`);
-      throw new Error(`Erro ao buscar produção: ${producaoResponse.statusText}`);
+    if (!ligacoesResponse.ok) {
+      const errorBody = await ligacoesResponse.text();
+      console.error(`❌ Erro ao buscar ligações - Body: ${errorBody}`);
+      throw new Error(`Erro ao buscar ligações: ${ligacoesResponse.statusText}`);
     }
 
-    const producaoData = await producaoResponse.json();
-    console.log(`📦 Produção encontrada:`, JSON.stringify(producaoData, null, 2));
+    const ligacoesData = await ligacoesResponse.json();
+    console.log(`📦 Ligações encontradas:`, JSON.stringify(ligacoesData, null, 2));
 
-    const apolicesRaw = producaoData?.producao || [];
-    console.log(`📋 Total de registros encontrados: ${apolicesRaw.length}`);
+    // Extrair documentos (apólices) da resposta
+    const documentosResponse = ligacoesData?.documentos?.documentos || [];
+    console.log(`📋 Total de documentos encontrados: ${documentosResponse.length}`);
     
     // 🔍 LOG DETALHADO: Mostrar JSON completo de cada apólice
     console.log('');
     console.log('═══════════════════════════════════════════════════');
     console.log('🔍 JSON COMPLETO DA API - TODAS AS APÓLICES');
     console.log('═══════════════════════════════════════════════════');
-    apolicesRaw.forEach((ap: any, index: number) => {
-      console.log(`\n📄 APÓLICE ${index + 1}/${apolicesRaw.length}:`);
+    documentosResponse.forEach((ap: any, index: number) => {
+      console.log(`\n📄 APÓLICE ${index + 1}/${documentosResponse.length}:`);
       console.log(JSON.stringify(ap, null, 2));
-      console.log(`   Key: codfil=${ap.codfil}, nosnum=${ap.nosnum}, numapo=${ap.numapo}, codcli=${ap.codcli}, cliente=${ap.cliente}`);
+      console.log(`   Key: codfil=${ap.codfil}, nosnum=${ap.nosnum}, numapo=${ap.numapo}, cliente_codigo=${ap.cliente_codigo}, cliente=${ap.cliente}`);
     });
     console.log('═══════════════════════════════════════════════════');
     console.log('');
     
-    // FILTRAR APENAS APÓLICES DO CLIENTE ESPECÍFICO
-    // A busca por texto pode retornar apólices de outros clientes com nomes similares
-    // Ex: buscar "AS ENGENHARIA" pode retornar "FACILITAS ENGENHARIA" também
-    let apolices = apolicesRaw;
+    // Todas as apólices já são do cliente correto (filtrado por código)
+    const apolices = documentosResponse;
+    console.log(`🎯 Total de apólices do cliente ${codigoCliente}: ${apolices.length}`);
     
-    // Verificar se a API de produção retorna código do cliente
-    const apiTemCodCli = apolicesRaw.some((ap: any) => ap.codcli || ap.cod_cliente || ap.codigo_cliente);
-    
-    if (codigoCliente && apiTemCodCli) {
-      // Filtrar por código do cliente se disponível na resposta
-      apolices = apolicesRaw.filter((ap: any) => {
-        const apCodCli = ap.codcli || ap.cod_cliente || ap.codigo_cliente;
-        return apCodCli === codigoCliente;
-      });
-      console.log(`🎯 Filtrado por código cliente (${codigoCliente}): ${apolices.length} de ${apolicesRaw.length} apólices`);
-    } else {
-      // Filtrar por nome exato do cliente (fallback ou quando API não tem codcli)
-      const nomeClienteNormalizado = nomeCliente.toUpperCase().trim();
-      apolices = apolicesRaw.filter((ap: any) => {
-        const nomeApNormalizado = (ap.cliente || '').toUpperCase().trim();
-        return nomeApNormalizado === nomeClienteNormalizado;
-      });
-      console.log(`🎯 Filtrado por nome exato "${nomeCliente}": ${apolices.length} de ${apolicesRaw.length} apólices`);
-    }
-    
-    // FILTRAR APENAS APÓLICES ATIVAS (tipo "A")
+    // FILTRAR APENAS APÓLICES ATIVAS (tipo "A") E NÃO CANCELADAS
     // Tipo "C" = Cancelamento/Endosso, "M" = Modificação não devem ser processados
-    const apolicesAtivas = apolices.filter((ap: any) => ap.tipdoc === 'A');
-    console.log(`📋 Apólices ativas (tipo A): ${apolicesAtivas.length}`);
-    console.log(`⏭️  Ignorando ${apolices.length - apolicesAtivas.length} endossos (tipo C/M)`);
+    const apolicesAtivas = apolices.filter((ap: any) => ap.tipdoc === 'A' && ap.cancelado !== 'S');
+    console.log(`📋 Apólices ativas (tipo A, não canceladas): ${apolicesAtivas.length}`);
+    console.log(`⏭️  Ignorando ${apolices.length - apolicesAtivas.length} endossos ou canceladas`);
 
     // LIMPAR APÓLICES QUE NÃO PERTENCEM MAIS A ESTE CLIENTE
     // Coletar nosnum válidos para este documento
