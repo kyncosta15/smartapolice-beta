@@ -613,15 +613,15 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
 
         {/* Tabs */}
         <Tabs value={activeSection} onValueChange={setActiveSection} className="w-full">
-          <TabsList className="w-fit mb-8 dark:bg-muted">
+          <TabsList className="h-10 p-1 mb-8 dark:bg-muted inline-flex">
             {sections.map((section) => (
               <TabsTrigger 
                 key={section.value} 
                 value={section.value}
-                className="flex items-center gap-2 text-xs sm:text-sm dark:data-[state=active]:bg-background"
+                className="flex items-center justify-center gap-2 px-4 text-sm dark:data-[state=active]:bg-background"
               >
                 <section.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{section.label}</span>
+                <span>{section.label}</span>
               </TabsTrigger>
             ))}
           </TabsList>
