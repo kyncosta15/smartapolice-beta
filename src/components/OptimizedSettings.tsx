@@ -58,13 +58,7 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
   const { toast } = useToast();
 
   const sections = [
-    { value: 'profile', label: 'Meu Perfil', icon: User },
-    { value: 'notifications', label: 'Notificações', icon: Bell },
-    { value: 'appearance', label: 'Aparência', icon: Palette },
-    { value: 'security', label: 'Segurança', icon: Shield },
-    { value: 'system', label: 'Sistema', icon: Monitor },
-    { value: 'integration', label: 'Integração', icon: Database },
-    { value: 'billing', label: 'Cobrança', icon: CreditCard }
+    { value: 'profile', label: 'Meu Perfil', icon: User }
   ];
 
   const handleSave = (section: string) => {
