@@ -160,7 +160,7 @@ export function DashboardContent() {
     setIsRefreshing(true);
     
     try {
-      // 1. Sincronizar do InfoCap - documento principal E vinculados
+      // 1. Sincronizar do InfoCap - a edge function já processa todos os vínculos
       try {
         const { data: userData } = await supabase
           .from('users')
@@ -168,37 +168,10 @@ export function DashboardContent() {
           .eq('id', user?.id)
           .maybeSingle();
 
-        // Buscar documentos vinculados
-        const { data: vinculos } = await supabase
-          .from('user_cpf_vinculos')
-          .select('cpf')
-          .eq('user_id', user?.id)
-          .eq('ativo', true);
-
-        const documentosParaSincronizar: string[] = [];
-        
         if (userData?.documento) {
-          documentosParaSincronizar.push(userData.documento);
-        }
-        
-        if (vinculos && vinculos.length > 0) {
-          vinculos.forEach(v => {
-            if (v.cpf && !documentosParaSincronizar.includes(v.cpf)) {
-              documentosParaSincronizar.push(v.cpf);
-            }
-          });
-        }
-
-        console.log(`📡 Sincronizando ${documentosParaSincronizar.length} documento(s):`, documentosParaSincronizar);
-        
-        // Sincronizar cada documento
-        for (const doc of documentosParaSincronizar) {
-          try {
-            await syncInfoCapPolicies(doc);
-            console.log(`✅ Documento ${doc} sincronizado`);
-          } catch (docError) {
-            console.warn(`⚠️ Erro ao sincronizar documento ${doc}:`, docError);
-          }
+          console.log('📡 Sincronizando apólices do InfoCap...');
+          // A edge function sync-infocap já busca e processa todos os vínculos internamente
+          await syncInfoCapPolicies(userData.documento);
         }
       } catch (syncError) {
         console.warn('⚠️ Erro na sincronização InfoCap:', syncError);
