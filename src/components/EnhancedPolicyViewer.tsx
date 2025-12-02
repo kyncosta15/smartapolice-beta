@@ -77,17 +77,23 @@ export function EnhancedPolicyViewer({
   const uniqueInsurers = [...new Set(policies.map(p => p.insurer))];
 
   const handleDownload = async (policy: ParsedPolicyData) => {
-    // Helper function para usar Web Share API (iOS/Safari nativo)
+    // Detectar se é dispositivo móvel (não desktop Mac/Windows)
+    const isMobileDevice = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      return /iphone|ipad|ipod|android/.test(userAgent) && !/macintosh/.test(userAgent);
+    };
+
+    // Helper function para download
     const shareOrDownload = async (blob: Blob, filename: string) => {
       // Criar blob com MIME type explícito para PDF
       const pdfBlob = new Blob([blob], { type: 'application/pdf' });
       
-      // Verificar se Web Share API está disponível e suporta files (iOS)
-      if (navigator.share && navigator.canShare) {
+      // Usar Web Share API APENAS em dispositivos móveis (iPhone/iPad/Android)
+      // NÃO usar em Mac desktop para evitar o diálogo de compartilhamento
+      if (isMobileDevice() && navigator.share && navigator.canShare) {
         try {
           const file = new File([pdfBlob], filename, { type: 'application/pdf' });
           
-          // Verificar se pode compartilhar arquivos
           if (navigator.canShare({ files: [file] })) {
             await navigator.share({
               title: policy.name || 'Apólice',
@@ -100,16 +106,19 @@ export function EnhancedPolicyViewer({
               description: "O arquivo foi salvo com sucesso!",
             });
             
-            console.log('✅ Compartilhado via Web Share API (iOS)');
+            console.log('✅ Compartilhado via Web Share API (mobile)');
             return true;
           }
         } catch (shareError) {
-          // Usuário cancelou ou erro - continuar com método fallback
-          console.log('⚠️ Web Share cancelado ou não disponível:', shareError);
+          if ((shareError as Error).name === 'AbortError') {
+            console.log('ℹ️ Usuário cancelou o compartilhamento');
+            return true;
+          }
+          console.log('⚠️ Web Share não disponível:', shareError);
         }
       }
       
-      // Fallback: método tradicional de download
+      // Desktop (Mac/Windows) e fallback: download direto
       const blobUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = blobUrl;
@@ -118,17 +127,18 @@ export function EnhancedPolicyViewer({
       link.style.display = 'none';
       link.target = '_self';
       
-      // Adicionar temporariamente ao DOM
       document.body.appendChild(link);
-      
-      // Trigger click imediato (importante para iOS)
       link.click();
       
-      // Cleanup após delay
       setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(blobUrl);
       }, 100);
+      
+      toast({
+        title: "✅ Download iniciado",
+        description: "O arquivo será salvo na pasta Downloads.",
+      });
       
       return false;
     };
