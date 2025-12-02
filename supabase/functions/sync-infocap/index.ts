@@ -242,15 +242,19 @@ Deno.serve(async (req) => {
     const clienteData = await clienteResponse.json();
     console.log(`📦 Dados do cliente:`, JSON.stringify(clienteData, null, 2));
 
-    // Extrair nome do cliente - ajustado para estrutura correta da API
+    // Extrair nome do cliente E código do cliente - ajustado para estrutura correta da API
     let nomeCliente = '';
+    let codigoCliente: number | null = null;
     if (Array.isArray(clienteData) && clienteData.length > 0) {
       nomeCliente = clienteData[0].nome || clienteData[0].cliente || '';
+      codigoCliente = clienteData[0].codigo || clienteData[0].cod || clienteData[0].codcli || null;
     } else if (clienteData?.cliente?.nome) {
       // API retorna { cliente: { nome: "..." } }
       nomeCliente = clienteData.cliente.nome;
+      codigoCliente = clienteData.cliente.codigo || clienteData.cliente.cod || null;
     } else if (clienteData?.nome) {
       nomeCliente = clienteData.nome;
+      codigoCliente = clienteData.codigo || clienteData.cod || null;
     }
 
     if (!nomeCliente) {
@@ -258,7 +262,7 @@ Deno.serve(async (req) => {
       throw new Error('Cliente não encontrado na base CorpNuvem');
     }
 
-    console.log(`✅ Cliente encontrado: ${nomeCliente}`);
+    console.log(`✅ Cliente encontrado: ${nomeCliente} (código: ${codigoCliente})`);
 
     // PASSO 2: Buscar apólices usando o endpoint /producao
     // Definir período amplo para pegar todas as apólices
@@ -279,21 +283,42 @@ Deno.serve(async (req) => {
     const producaoData = await producaoResponse.json();
     console.log(`📦 Produção encontrada:`, JSON.stringify(producaoData, null, 2));
 
-    const apolices = producaoData?.producao || [];
-    console.log(`📋 Total de registros encontrados: ${apolices.length}`);
+    const apolicesRaw = producaoData?.producao || [];
+    console.log(`📋 Total de registros encontrados: ${apolicesRaw.length}`);
     
     // 🔍 LOG DETALHADO: Mostrar JSON completo de cada apólice
     console.log('');
     console.log('═══════════════════════════════════════════════════');
     console.log('🔍 JSON COMPLETO DA API - TODAS AS APÓLICES');
     console.log('═══════════════════════════════════════════════════');
-    apolices.forEach((ap: any, index: number) => {
-      console.log(`\n📄 APÓLICE ${index + 1}/${apolices.length}:`);
+    apolicesRaw.forEach((ap: any, index: number) => {
+      console.log(`\n📄 APÓLICE ${index + 1}/${apolicesRaw.length}:`);
       console.log(JSON.stringify(ap, null, 2));
-      console.log(`   Key: codfil=${ap.codfil}, nosnum=${ap.nosnum}, numapo=${ap.numapo}`);
+      console.log(`   Key: codfil=${ap.codfil}, nosnum=${ap.nosnum}, numapo=${ap.numapo}, codcli=${ap.codcli}, cliente=${ap.cliente}`);
     });
     console.log('═══════════════════════════════════════════════════');
     console.log('');
+    
+    // FILTRAR APENAS APÓLICES DO CLIENTE ESPECÍFICO
+    // A busca por texto pode retornar apólices de outros clientes com nomes similares
+    // Ex: buscar "AS ENGENHARIA" pode retornar "FACILITAS ENGENHARIA" também
+    let apolices = apolicesRaw;
+    if (codigoCliente) {
+      // Filtrar por código do cliente se disponível
+      apolices = apolicesRaw.filter((ap: any) => {
+        const apCodCli = ap.codcli || ap.cod_cliente || ap.codigo_cliente;
+        return apCodCli === codigoCliente;
+      });
+      console.log(`🎯 Filtrado por código cliente (${codigoCliente}): ${apolices.length} de ${apolicesRaw.length} apólices`);
+    } else {
+      // Fallback: filtrar por nome exato do cliente
+      const nomeClienteNormalizado = nomeCliente.toUpperCase().trim();
+      apolices = apolicesRaw.filter((ap: any) => {
+        const nomeApNormalizado = (ap.cliente || '').toUpperCase().trim();
+        return nomeApNormalizado === nomeClienteNormalizado;
+      });
+      console.log(`🎯 Filtrado por nome exato "${nomeCliente}": ${apolices.length} de ${apolicesRaw.length} apólices`);
+    }
     
     // FILTRAR APENAS APÓLICES ATIVAS (tipo "A")
     // Tipo "C" = Cancelamento/Endosso, "M" = Modificação não devem ser processados
