@@ -806,16 +806,11 @@ export function MyPolicies() {
                     {toText(policy.insurer)}
                   </p>
                   {/* Nome do Plano de Saúde - apenas para tipo saúde */}
-                  {(() => {
-                    const normalizedType = policy.type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
-                    const isSaude = normalizedType.includes('saude') || normalizedType.includes('plano');
-                    const nomePlano = policy.nome_plano_saude?.trim();
-                    return isSaude && nomePlano ? (
-                      <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 truncate font-medium">
-                        📋 {toText(nomePlano)}
-                      </p>
-                    ) : null;
-                  })()}
+                  {policy.nome_plano_saude && policy.nome_plano_saude.trim() !== '' && (
+                    <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 truncate font-medium">
+                      Plano: {toText(policy.nome_plano_saude)}
+                    </p>
+                  )}
                 </CardHeader>
                 
                 <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-6 pb-3 sm:pb-6">
