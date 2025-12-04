@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, Users, Link, Car, Heart, Activity, Home, Building2, ShieldAlert, Ship, Shield, Anchor } from 'lucide-react';
+import { MonthlyValueEditor } from './policy/MonthlyValueEditor';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PolicyEditModal } from './PolicyEditModal';
@@ -829,9 +830,18 @@ export function MyPolicies() {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-[10px] sm:text-xs text-gray-500 dark:text-muted-foreground mb-0.5 sm:mb-1">Valor Mensal</p>
-                        <p className="font-semibold text-xs sm:text-sm text-green-600 dark:text-green-400 whitespace-nowrap">
-                          {moedaBR(policy.monthlyAmount)}
-                        </p>
+                        {/* Editor de valor mensal para apólices de saúde */}
+                        {(policy.type?.toLowerCase().includes('saude') || policy.type?.toLowerCase().includes('saúde')) ? (
+                          <MonthlyValueEditor
+                            policyId={policy.id}
+                            currentValue={policy.monthlyAmount || 0}
+                            onUpdate={updatePolicy}
+                          />
+                        ) : (
+                          <p className="font-semibold text-xs sm:text-sm text-green-600 dark:text-green-400 whitespace-nowrap">
+                            {moedaBR(policy.monthlyAmount)}
+                          </p>
+                        )}
                       </div>
                     </div>
                     
