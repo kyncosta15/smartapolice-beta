@@ -166,6 +166,13 @@ export function MyPolicies() {
       status: finalStatus,
       nosnum: policy.nosnum,
       codfil: policy.codfil,
+      // Campos de veículo/embarcação
+      marca: policy.marca,
+      placa: policy.placa,
+      ano_modelo: policy.ano_modelo,
+      nome_embarcacao: policy.nome_embarcacao,
+      // Campo específico saúde
+      nome_plano_saude: policy.nome_plano_saude,
     };
   });
 
