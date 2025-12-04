@@ -1818,6 +1818,7 @@ export type Database = {
           marca: string | null
           modelo_veiculo: string | null
           nome_embarcacao: string | null
+          nome_plano_saude: string | null
           nosnum: number | null
           numero_apolice: string | null
           placa: string | null
@@ -1871,6 +1872,7 @@ export type Database = {
           marca?: string | null
           modelo_veiculo?: string | null
           nome_embarcacao?: string | null
+          nome_plano_saude?: string | null
           nosnum?: number | null
           numero_apolice?: string | null
           placa?: string | null
@@ -1924,6 +1926,7 @@ export type Database = {
           marca?: string | null
           modelo_veiculo?: string | null
           nome_embarcacao?: string | null
+          nome_plano_saude?: string | null
           nosnum?: number | null
           numero_apolice?: string | null
           placa?: string | null
