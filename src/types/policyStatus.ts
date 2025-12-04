@@ -24,5 +24,12 @@ export interface PolicyWithStatus {
   status: PolicyStatus;
   nosnum?: number;
   codfil?: number;
+  // Campos de veículo/embarcação
+  marca?: string;
+  placa?: string;
+  ano_modelo?: string;
+  nome_embarcacao?: string;
+  // Campo específico saúde
+  nome_plano_saude?: string;
   // ... outros campos existentes
 }

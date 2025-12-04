@@ -806,9 +806,9 @@ export function MyPolicies() {
                     {toText(policy.insurer)}
                   </p>
                   {/* Nome do Plano de Saúde - apenas para tipo saúde */}
-                  {policy.type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'saude' && (policy as any).nome_plano_saude && (
+                  {policy.type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'saude' && policy.nome_plano_saude && (
                     <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 truncate font-medium">
-                      📋 {toText((policy as any).nome_plano_saude)}
+                      📋 {toText(policy.nome_plano_saude)}
                     </p>
                   )}
                 </CardHeader>

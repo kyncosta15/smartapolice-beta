@@ -92,4 +92,13 @@ export interface ParsedPolicyData {
   
   // ADDED: vinculo_cpf for linked policies
   vinculo_cpf?: string;
+  
+  // ADDED: campos de veículo/embarcação
+  marca?: string;
+  placa?: string;
+  ano_modelo?: string;
+  nome_embarcacao?: string;
+  
+  // ADDED: nome do plano de saúde para tipo saúde
+  nome_plano_saude?: string;
 }
