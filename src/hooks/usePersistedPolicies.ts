@@ -120,7 +120,20 @@ export function usePersistedPolicies() {
       
       // Normalizar e mapear status para novos valores
       const mappedPolicies = loadedPolicies.map(policy => {
+        // DEBUG: Verificar nome_plano_saude antes da normalização
+        console.log(`🏥 [usePersistedPolicies] ANTES normalização - ${policy.name}:`, {
+          nome_plano_saude: policy.nome_plano_saude,
+          tipo: policy.type
+        });
+        
         const normalized = normalizePolicy(policy);
+        
+        // DEBUG: Verificar nome_plano_saude após normalização
+        console.log(`🏥 [usePersistedPolicies] DEPOIS normalização - ${normalized.name}:`, {
+          nome_plano_saude: normalized.nome_plano_saude,
+          tipo: normalized.type
+        });
+        
         return {
           ...normalized,
           status: mapLegacyStatus(normalized.status)

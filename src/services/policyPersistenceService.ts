@@ -410,7 +410,9 @@ export class PolicyPersistenceService {
           name: safeString(policy.segurado),
           status_db: safeString(policy.status),
           documento_tipo: safeString(policy.documento_tipo),
-          documento: safeString(policy.documento)
+          documento: safeString(policy.documento),
+          nome_plano_saude_RAW: policy.nome_plano_saude,
+          tipo_seguro_RAW: policy.tipo_seguro
         });
 
         // Normalize policy data first to ensure all objects become strings
@@ -502,8 +504,8 @@ export class PolicyPersistenceService {
           ano_modelo: safeString(policy.ano_modelo),
           nome_embarcacao: safeString(policy.nome_embarcacao),
           
-          // Campo específico saúde
-          nome_plano_saude: safeString(policy.nome_plano_saude),
+          // Campo específico saúde - PRESERVAR VALOR ORIGINAL
+          nome_plano_saude: policy.nome_plano_saude || null,
         };
 
         console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada e CONVERTIDA COM SEGURANÇA`, {
