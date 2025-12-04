@@ -407,7 +407,7 @@ export function usePersistedPolicies() {
           description: `${error.message}${error.hint ? ` - ${error.hint}` : ''}`,
           variant: "destructive",
         });
-        throw error;
+        return false;
       }
 
       const dbRecord = data && data.length > 0 ? data[0] : null;
@@ -470,6 +470,7 @@ export function usePersistedPolicies() {
       
       return true;
     } catch (error: any) {
+      console.error('❌ [updatePolicy] Erro inesperado:', error);
       toast({
         title: "❌ Erro ao Atualizar",
         description: error?.message || "Não foi possível salvar as alterações",

@@ -136,11 +136,10 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
 
     try {
       await onSave(updatedPolicy);
+      // Modal será fechado pelo handleSaveEdit em caso de sucesso
     } catch (error) {
       console.error('Erro ao salvar:', error);
     }
-    
-    onClose();
   };
 
   if (!policy) return null;
