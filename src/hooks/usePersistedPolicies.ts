@@ -305,16 +305,23 @@ export function usePersistedPolicies() {
     }
 
     try {
-      // CRÍTICO: Criar objeto limpo DIRETAMENTE dos updates, sem buscar dados antigos
+      // Helper para truncar strings com segurança
+      const truncate = (val: any, maxLen: number): string | null => {
+        if (val === undefined || val === null) return null;
+        const str = String(val).trim();
+        return str ? str.substring(0, maxLen) : null;
+      };
+
+      // CRÍTICO: Criar objeto limpo DIRETAMENTE dos updates
       const dbUpdates: any = {
-        segurado: updates.name, // SEMPRE usar o valor de updates.name
+        segurado: truncate(updates.name, 255),
       };
       
-      // Adicionar outros campos apenas se estiverem definidos
-      if (updates.type !== undefined) dbUpdates.tipo_seguro = updates.type;
-      if ((updates as any).tipo_seguro !== undefined) dbUpdates.tipo_seguro = (updates as any).tipo_seguro;
-      if (updates.insurer !== undefined) dbUpdates.seguradora = updates.insurer;
-      if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = updates.policyNumber;
+      // Campos de texto com truncamento baseado nos limites do banco
+      if (updates.type !== undefined) dbUpdates.tipo_seguro = truncate(updates.type, 100);
+      if ((updates as any).tipo_seguro !== undefined) dbUpdates.tipo_seguro = truncate((updates as any).tipo_seguro, 100);
+      if (updates.insurer !== undefined) dbUpdates.seguradora = truncate(updates.insurer, 255);
+      if (updates.policyNumber !== undefined) dbUpdates.numero_apolice = truncate(updates.policyNumber, 255);
       
       // Valores financeiros
       const premiumValue = (updates as any).valor_premio !== undefined 
@@ -349,49 +356,40 @@ export function usePersistedPolicies() {
       
       if (updates.status !== undefined) {
         const mappedStatus = mapLegacyStatus(updates.status);
-        dbUpdates.status = mappedStatus;
+        dbUpdates.status = truncate(mappedStatus, 50);
       }
       
-      if (updates.category !== undefined) dbUpdates.forma_pagamento = updates.category;
-      if (updates.entity !== undefined) dbUpdates.corretora = updates.entity;
-      // REMOVIDO: if (updates.insuredName !== undefined) - usar apenas updates.name como fonte
-      if (updates.documento !== undefined) dbUpdates.documento = String(updates.documento).substring(0, 20);
-      if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = String(updates.documento_tipo).substring(0, 10);
-      if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = updates.vehicleModel || null;
+      // Campos de texto com limites específicos
+      if (updates.category !== undefined) dbUpdates.forma_pagamento = truncate(updates.category, 100);
+      if (updates.entity !== undefined) dbUpdates.corretora = truncate(updates.entity, 255);
+      if (updates.documento !== undefined) dbUpdates.documento = truncate(updates.documento, 20);
+      if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = truncate(updates.documento_tipo, 10);
+      if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = truncate(updates.vehicleModel, 255);
+      
+      // Campos de veículo/embarcação
       if ((updates as any).marca !== undefined) {
-        const marcaValue = (updates as any).marca;
-        dbUpdates.marca = marcaValue && marcaValue.trim() ? marcaValue.trim() : null;
+        dbUpdates.marca = truncate((updates as any).marca, 255);
       }
       if ((updates as any).placa !== undefined) {
         const placaValue = String((updates as any).placa || '').trim().toUpperCase();
-        dbUpdates.placa = placaValue ? placaValue.substring(0, 10) : null;
+        dbUpdates.placa = placaValue ? placaValue.substring(0, 20) : null;
       }
       if ((updates as any).nome_embarcacao !== undefined) {
-        const nomeValue = (updates as any).nome_embarcacao;
-        dbUpdates.nome_embarcacao = nomeValue && nomeValue.trim() ? nomeValue.trim() : null;
+        dbUpdates.nome_embarcacao = truncate((updates as any).nome_embarcacao, 255);
       }
       if ((updates as any).ano_modelo !== undefined) {
-        const anoValue = (updates as any).ano_modelo;
-        dbUpdates.ano_modelo = anoValue && anoValue.toString().trim() ? anoValue.toString().trim() : null;
+        dbUpdates.ano_modelo = truncate((updates as any).ano_modelo, 10); // varchar(10)
       }
-      if (updates.uf !== undefined) dbUpdates.uf = String(updates.uf).toUpperCase().substring(0, 2);
+      
+      if (updates.uf !== undefined) {
+        const ufValue = String(updates.uf || '').toUpperCase().trim();
+        dbUpdates.uf = ufValue ? ufValue.substring(0, 2) : null;
+      }
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
       if ((updates as any).franquia !== undefined) dbUpdates.franquia = (updates as any).franquia;
-      if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = updates.responsavel_nome;
+      if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = truncate(updates.responsavel_nome, 255);
 
-      console.log('💾 [updatePolicy] Atualizando apólice no banco:', {
-        policyId,
-        dbUpdates,
-        campos_veiculo: {
-          marca: dbUpdates.marca,
-          placa: dbUpdates.placa,
-          modelo_veiculo: dbUpdates.modelo_veiculo,
-          nome_embarcacao: dbUpdates.nome_embarcacao,
-          ano_modelo: dbUpdates.ano_modelo,
-          franquia: dbUpdates.franquia
-        },
-        todasChaves: Object.keys(dbUpdates)
-      });
+      console.log('💾 [updatePolicy] Atualizando apólice:', policyId, Object.keys(dbUpdates));
 
       const { data, error } = await supabase
         .from('policies')
