@@ -495,6 +495,15 @@ export class PolicyPersistenceService {
           // CRÍTICO: Campos CorpNuvem/InfoCap para download de PDFs
           nosnum: policy.nosnum,
           codfil: policy.codfil,
+          
+          // Campos veículo/embarcação
+          marca: safeString(policy.marca),
+          placa: safeString(policy.placa),
+          ano_modelo: safeString(policy.ano_modelo),
+          nome_embarcacao: safeString(policy.nome_embarcacao),
+          
+          // Campo específico saúde
+          nome_plano_saude: safeString(policy.nome_plano_saude),
         };
 
         console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada e CONVERTIDA COM SEGURANÇA`, {
