@@ -388,6 +388,11 @@ export function usePersistedPolicies() {
       if (updates.deductible !== undefined) dbUpdates.franquia = updates.deductible;
       if ((updates as any).franquia !== undefined) dbUpdates.franquia = (updates as any).franquia;
       if (updates.responsavel_nome !== undefined) dbUpdates.responsavel_nome = truncate(updates.responsavel_nome, 255);
+      
+      // Campo específico para saúde
+      if ((updates as any).nome_plano_saude !== undefined) {
+        dbUpdates.nome_plano_saude = truncate((updates as any).nome_plano_saude, 255);
+      }
 
       console.log('💾 [updatePolicy] Atualizando apólice:', policyId, Object.keys(dbUpdates));
 

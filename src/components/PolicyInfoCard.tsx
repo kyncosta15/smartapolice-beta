@@ -216,6 +216,14 @@ export function PolicyInfoCard({ policy }: PolicyInfoCardProps) {
           <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 break-words font-sans`}>{insurerName}</p>
         </div>
 
+        {/* Nome do Plano de Saúde - apenas para tipo saúde */}
+        {policy.type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'saude' && (policy as any).nome_plano_saude && (
+          <div>
+            <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium font-sans`}>Plano de Saúde</p>
+            <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-900 break-words font-sans`}>{(policy as any).nome_plano_saude}</p>
+          </div>
+        )}
+
         <div>
           <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mb-1 font-medium font-sans`}>Valor Mensal</p>
           <p className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-green-600 font-sans`}>

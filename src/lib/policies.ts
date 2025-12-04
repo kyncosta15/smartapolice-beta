@@ -105,6 +105,8 @@ export function normalizePolicy(raw: any) {
     ano_modelo: safeString(raw.ano_modelo ?? ""),
     deductible: toNumberSafe(raw.deductible ?? raw.franquia) ?? 0,
     franquia: toNumberSafe(raw.franquia ?? raw.deductible) ?? 0,
+    // Campo específico para saúde
+    nome_plano_saude: safeString(raw.nome_plano_saude ?? ""),
   };
 }
 

@@ -45,7 +45,9 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
     marca: '',
     placa: '',
     nome_embarcacao: '',
-    ano_modelo: ''
+    ano_modelo: '',
+    // Campo específico para saúde
+    nome_plano_saude: ''
   });
 
   useEffect(() => {
@@ -85,7 +87,8 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
         marca: policy.marca || '',
         placa: policy.placa || '',
         nome_embarcacao: policy.nome_embarcacao || '',
-        ano_modelo: policy.ano_modelo || ''
+        ano_modelo: policy.ano_modelo || '',
+        nome_plano_saude: policy.nome_plano_saude || ''
       });
     }
   }, [policy]);
@@ -131,7 +134,8 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
       marca: formData.marca,
       placa: formData.placa,
       nome_embarcacao: formData.nome_embarcacao,
-      ano_modelo: formData.ano_modelo
+      ano_modelo: formData.ano_modelo,
+      nome_plano_saude: formData.nome_plano_saude
     };
 
     try {
@@ -439,6 +443,18 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
                   />
                 </div>
               </>
+            )}
+
+            {formData.type.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'saude' && (
+              <div className="col-span-2">
+                <Label htmlFor="nome_plano_saude">Nome do Plano de Saúde</Label>
+                <Input
+                  id="nome_plano_saude"
+                  placeholder="Ex: Unimed, Bradesco Saúde, SulAmérica"
+                  value={formData.nome_plano_saude}
+                  onChange={(e) => setFormData({...formData, nome_plano_saude: e.target.value})}
+                />
+              </div>
             )}
 
             <div>
