@@ -805,6 +805,12 @@ export function MyPolicies() {
                   <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground truncate">
                     {toText(policy.insurer)}
                   </p>
+                  {/* Nome do Plano de Saúde - apenas para tipo saúde */}
+                  {policy.type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'saude' && (policy as any).nome_plano_saude && (
+                    <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 truncate font-medium">
+                      📋 {toText((policy as any).nome_plano_saude)}
+                    </p>
+                  )}
                 </CardHeader>
                 
                 <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-6 pb-3 sm:pb-6">
