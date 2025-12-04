@@ -633,6 +633,15 @@ export class RobustPolicyPersistence {
       // Campos CorpNuvem
       nosnum: dbPolicy.nosnum,
       codfil: dbPolicy.codfil,
+      
+      // Campos veículo/embarcação
+      marca: dbPolicy.marca,
+      placa: dbPolicy.placa,
+      ano_modelo: dbPolicy.ano_modelo,
+      nome_embarcacao: dbPolicy.nome_embarcacao,
+      
+      // Campo específico saúde
+      nome_plano_saude: dbPolicy.nome_plano_saude,
     };
   }
 }
