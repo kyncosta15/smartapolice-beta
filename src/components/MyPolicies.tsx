@@ -806,11 +806,16 @@ export function MyPolicies() {
                     {toText(policy.insurer)}
                   </p>
                   {/* Nome do Plano de Saúde - apenas para tipo saúde */}
-                  {policy.nome_plano_saude && policy.nome_plano_saude.trim() !== '' && (
-                    <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 truncate font-medium">
-                      Plano: {toText(policy.nome_plano_saude)}
-                    </p>
-                  )}
+                  {(() => {
+                    const plano = policy.nome_plano_saude?.trim();
+                    const isValid = plano && plano !== '' && plano !== 'Não informado' && plano !== 'N/A';
+                    console.log(`🏥 [MyPolicies] Plano Saúde para ${policy.name}: "${plano}" | válido: ${isValid}`);
+                    return isValid ? (
+                      <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 truncate font-medium">
+                        Plano: {plano}
+                      </p>
+                    ) : null;
+                  })()}
                 </CardHeader>
                 
                 <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-6 pb-3 sm:pb-6">
