@@ -86,16 +86,35 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
                   <LabelList
                     dataKey="insurer"
                     position="insideLeft"
-                    offset={8}
-                    style={{ fill: 'white' }}
-                    fontSize={12}
+                    offset={12}
+                    className="fill-white font-medium"
+                    fontSize={11}
+                    content={({ x, y, width, height, value }) => {
+                      const barWidth = Number(width) || 0;
+                      const textWidth = String(value).length * 7;
+                      const isInsideBar = barWidth > textWidth + 20;
+                      
+                      return (
+                        <text
+                          x={isInsideBar ? Number(x) + 12 : Number(x) + barWidth + 8}
+                          y={Number(y) + Number(height) / 2}
+                          fill={isInsideBar ? 'white' : 'hsl(var(--foreground))'}
+                          fontSize={11}
+                          fontWeight={500}
+                          dominantBaseline="middle"
+                        >
+                          {value}
+                        </text>
+                      );
+                    }}
                   />
                   <LabelList
                     dataKey="value"
                     position="right"
                     offset={8}
-                    style={{ fill: 'hsl(var(--foreground))' }}
-                    fontSize={12}
+                    className="fill-foreground"
+                    fontSize={11}
+                    formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`}
                   />
                 </Bar>
               </BarChart>
