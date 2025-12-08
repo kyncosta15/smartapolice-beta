@@ -55,8 +55,8 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
                   data={barChartData}
                   layout="vertical"
                   margin={{
-                    right: 16,
-                    left: 0,
+                    right: 120,
+                    left: 10,
                   }}
                 >
                   <CartesianGrid 
@@ -80,44 +80,43 @@ export const InsurerDistributionChart = ({ policies = [] }: InsurerDistributionC
                       borderRadius: '8px',
                       color: 'hsl(var(--foreground))'
                     }}
-                    formatter={(value: number) => [`${value}%`, 'Percentual']}
+                    formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Valor']}
                   />
-                <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={4}>
-                  <LabelList
-                    dataKey="insurer"
-                    position="insideLeft"
-                    offset={12}
-                    className="fill-white font-medium"
-                    fontSize={11}
-                    content={({ x, y, width, height, value }) => {
-                      const barWidth = Number(width) || 0;
-                      const textWidth = String(value).length * 7;
-                      const isInsideBar = barWidth > textWidth + 20;
-                      
-                      return (
-                        <text
-                          x={isInsideBar ? Number(x) + 12 : Number(x) + barWidth + 8}
-                          y={Number(y) + Number(height) / 2}
-                          fill={isInsideBar ? 'white' : 'hsl(var(--foreground))'}
-                          fontSize={11}
-                          fontWeight={500}
-                          dominantBaseline="middle"
-                        >
-                          {value}
-                        </text>
-                      );
-                    }}
-                  />
-                  <LabelList
-                    dataKey="value"
-                    position="right"
-                    offset={8}
-                    className="fill-foreground"
-                    fontSize={11}
-                    formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`}
-                  />
-                </Bar>
-              </BarChart>
+                  <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={4}>
+                    <LabelList
+                      dataKey="insurer"
+                      content={({ x, y, width, height, value }) => {
+                        const barWidth = Number(width) || 0;
+                        const textLength = String(value).length;
+                        const minBarWidth = textLength * 8 + 24;
+                        const isInsideBar = barWidth >= minBarWidth;
+                        
+                        return (
+                          <text
+                            x={isInsideBar ? Number(x) + 10 : Number(x) + barWidth + 10}
+                            y={Number(y) + Number(height) / 2}
+                            fill={isInsideBar ? 'white' : 'hsl(221, 39%, 11%)'}
+                            fontSize={11}
+                            fontWeight={600}
+                            dominantBaseline="middle"
+                            textAnchor="start"
+                          >
+                            {value}
+                          </text>
+                        );
+                      }}
+                    />
+                    <LabelList
+                      dataKey="value"
+                      position="right"
+                      offset={10}
+                      fontSize={11}
+                      fontWeight={500}
+                      formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`}
+                      fill="hsl(221, 39%, 11%)"
+                    />
+                  </Bar>
+                </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
           </div>
