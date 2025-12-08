@@ -60,6 +60,12 @@ export async function getDocumentoAnexos(params: BuscarDocumentoAnexosParams): P
   }
 }
 
+// Detectar se é dispositivo móvel
+function isMobileDevice(): boolean {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 0 && window.innerWidth <= 768);
+}
+
 export async function downloadDocumentoAnexo(url: string, fileName: string) {
   console.log('📥 [CorpNuvem Anexos] Baixando anexo de:', url);
   
@@ -72,14 +78,14 @@ export async function downloadDocumentoAnexo(url: string, fileName: string) {
     // Criar blob com MIME type explícito para PDF
     const pdfBlob = new Blob([blob], { type: 'application/pdf' });
     
-    // Verificar se Web Share API está disponível (iOS/Safari)
-    if (navigator.share && navigator.canShare) {
+    // Usar Web Share API APENAS em dispositivos móveis
+    if (isMobileDevice() && navigator.share && navigator.canShare) {
       try {
         const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
         
         // Verificar se pode compartilhar arquivos
         if (navigator.canShare({ files: [file] })) {
-          console.log('📱 Usando Web Share API (iOS nativo)');
+          console.log('📱 Usando Web Share API (mobile)');
           await navigator.share({
             title: fileName.replace('.pdf', ''),
             text: `Documento ${fileName}`,
