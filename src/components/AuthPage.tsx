@@ -183,16 +183,16 @@ export const AuthPage = () => {
   return (
     <div className="w-full">
       <Tabs defaultValue="login" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 h-11 p-1 rounded-lg bg-muted">
-          <TabsTrigger 
-            value="login" 
-            className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium text-sm"
+        <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 border-0 border-b border-border rounded-none shadow-none gap-0">
+          <TabsTrigger
+            value="login"
+            className="w-full rounded-none bg-transparent shadow-none px-0 py-3 border-0 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:border-b-2 data-[state=active]:border-0 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-foreground text-muted-foreground hover:text-foreground hover:bg-transparent font-medium text-sm focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0"
           >
             Entrar
           </TabsTrigger>
-          <TabsTrigger 
-            value="register" 
-            className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium text-sm"
+          <TabsTrigger
+            value="register"
+            className="w-full rounded-none bg-transparent shadow-none px-0 py-3 border-0 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:border-b-2 data-[state=active]:border-0 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-foreground text-muted-foreground hover:text-foreground hover:bg-transparent font-medium text-sm focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0"
           >
             Criar Conta
           </TabsTrigger>

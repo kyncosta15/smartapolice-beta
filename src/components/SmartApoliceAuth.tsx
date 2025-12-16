@@ -22,10 +22,13 @@ const SmartApoliceAuthContent = () => {
   }, [user, profile, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-white dark:from-background dark:via-background dark:to-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 dark:from-background dark:via-background dark:to-background flex flex-col">
       {/* Header */}
       <header className="p-6">
-        <Link to="/system-selection" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors text-sm font-medium">
+        <Link
+          to="/system-selection"
+          className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors text-sm font-medium"
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Link>
@@ -36,12 +39,12 @@ const SmartApoliceAuthContent = () => {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 mb-4">
-              <img 
-                src={smartapoliceShield} 
-                alt="SmartApólice" 
-                className="h-10 w-10 object-contain" 
-                loading="eager" 
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/12 to-primary/6 mb-4 border border-border/60">
+              <img
+                src={smartapoliceShield}
+                alt="SmartApólice"
+                className="h-9 w-9 object-contain"
+                loading="eager"
               />
             </div>
             <h1 className="text-xl font-semibold text-foreground">
