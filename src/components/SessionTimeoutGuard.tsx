@@ -26,11 +26,19 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
   const [showModal, setShowModal] = useState(false);
   const [countdown, setCountdown] = useState(CONFIRM_WINDOW_SECONDS);
 
+  // Usar ref para evitar race-condition no instante em que o modal abre
+  // (eventos de atividade podem disparar antes do React aplicar o novo state).
+  const showModalRef = useRef(false);
+
   const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const lastPointerPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    showModalRef.current = showModal;
+  }, [showModal]);
 
   const clearTimers = useCallback(() => {
     if (warningTimeoutRef.current) {
@@ -48,6 +56,7 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
   }, []);
 
   const handleLogout = useCallback(async () => {
+    showModalRef.current = false;
     clearTimers();
     setShowModal(false);
     try {
@@ -58,11 +67,15 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
   }, [clearTimers, signOut]);
 
   const startWarningModal = useCallback(() => {
+    // Se já abriu, não reiniciar (evita resetar o contador)
+    if (showModalRef.current) return;
+
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
       countdownIntervalRef.current = null;
     }
 
+    showModalRef.current = true;
     setCountdown(CONFIRM_WINDOW_SECONDS);
     setShowModal(true);
 
@@ -76,7 +89,7 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
 
   const scheduleInactivityTimers = useCallback(() => {
     if (!user) return;
-    if (showModal) return;
+    if (showModalRef.current) return;
 
     clearTimers();
 
@@ -87,9 +100,10 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
     logoutTimeoutRef.current = setTimeout(() => {
       handleLogout();
     }, INACTIVITY_LIMIT_MS);
-  }, [user, showModal, clearTimers, startWarningModal, handleLogout]);
+  }, [user, clearTimers, startWarningModal, handleLogout]);
 
   const handleStayLoggedIn = useCallback(() => {
+    showModalRef.current = false;
     clearTimers();
     setShowModal(false);
     setCountdown(CONFIRM_WINDOW_SECONDS);
@@ -109,7 +123,7 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
     const activityEvents = ['pointerdown', 'pointermove', 'keydown', 'scroll', 'touchstart', 'click', 'wheel'] as const;
 
     const handleActivity = (e: Event) => {
-      if (showModal) return;
+      if (showModalRef.current) return;
 
       if (e.type === 'pointermove') {
         const pe = e as PointerEvent;
@@ -134,7 +148,7 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
       });
       clearTimers();
     };
-  }, [user, showModal, scheduleInactivityTimers, clearTimers]);
+  }, [user, scheduleInactivityTimers, clearTimers]);
 
   if (!user) return <>{children}</>;
 
