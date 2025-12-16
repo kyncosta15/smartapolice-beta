@@ -106,6 +106,7 @@ export function FrotasDashboard({ kpis, veiculos, allVeiculos, loading, searchLo
           icon={<PieChartIcon className="h-5 w-5 text-blue-600" />}
           data={categoriaData}
           colorScale={chartColors}
+          loading={loading}
         />
         
         <PieCard
@@ -113,6 +114,7 @@ export function FrotasDashboard({ kpis, veiculos, allVeiculos, loading, searchLo
           icon={<Car className="h-5 w-5 text-cyan-600" />}
           data={marcasData}
           colorScale={chartColors}
+          loading={loading}
         />
         
         <PieCard
@@ -120,6 +122,7 @@ export function FrotasDashboard({ kpis, veiculos, allVeiculos, loading, searchLo
           icon={<Package className="h-5 w-5 text-violet-600" />}
           data={modelosData}
           colorScale={chartColors}
+          loading={loading}
         />
       </div>
 
