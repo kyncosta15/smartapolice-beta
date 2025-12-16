@@ -182,33 +182,26 @@ export const AuthPage = () => {
 
   return (
     <div className="w-full">
-      <div className="w-full">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Shield className="h-12 w-12 text-blue-600" />
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                SmartApólice
-              </h1>
-              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded tracking-wider">
-                BETA
-              </span>
-            </div>
-          </div>
-          <p className="text-muted-foreground">Gestão Inteligente de Apólices</p>
-        </div>
+      {/* Title */}
+      <h2 className="text-xl font-semibold text-center text-foreground mb-6">
+        Acesse sua conta
+      </h2>
 
-        <Card className="bg-card border-border shadow-xl">
-          <CardHeader className="pb-6">
-            <CardTitle className="text-center text-xl">Acesse sua conta</CardTitle>
-          </CardHeader>
-          <CardContent className="px-8 pb-8">
-            <Tabs defaultValue="login" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 h-12">
-                <TabsTrigger value="login" className="h-full">Entrar</TabsTrigger>
-                <TabsTrigger value="register" className="h-full">Criar Conta</TabsTrigger>
-              </TabsList>
+      <Tabs defaultValue="login" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 h-11 bg-muted/50 p-1 rounded-xl">
+          <TabsTrigger 
+            value="login" 
+            className="h-full rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium"
+          >
+            Entrar
+          </TabsTrigger>
+          <TabsTrigger 
+            value="register" 
+            className="h-full rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium"
+          >
+            Criar Conta
+          </TabsTrigger>
+        </TabsList>
 
               {/* Login Tab */}
               <TabsContent value="login">
@@ -518,9 +511,6 @@ export const AuthPage = () => {
                 </form>
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };
