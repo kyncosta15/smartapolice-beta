@@ -2,6 +2,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 type Item = { name: string; count: number };
@@ -12,6 +13,7 @@ type Props = {
   data: Item[];
   maxSlices?: number;
   colorScale?: string[];
+  loading?: boolean;
 };
 
 const palette = [
@@ -32,7 +34,8 @@ export default function PieCard({
   icon, 
   data, 
   maxSlices = 8, 
-  colorScale = palette 
+  colorScale = palette,
+  loading = false
 }: Props) {
   const [showLegend, setShowLegend] = useState(false);
 
@@ -117,6 +120,39 @@ export default function PieCard({
       </div>
     );
   };
+
+  // Skeleton loading state
+  if (loading) {
+    return (
+      <Card className="rounded-xl border-border bg-card">
+        <CardHeader className="pb-2 p-3 md:p-4">
+          <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+            {icon}
+            {title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 md:p-4">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_180px] gap-4 items-start">
+            <div className="h-64 w-full flex items-center justify-center">
+              <Skeleton className="w-40 h-40 rounded-full" />
+            </div>
+            <div className="hidden xl:block space-y-2">
+              <Skeleton className="h-3 w-16 mb-3" />
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-2 p-1.5">
+                  <Skeleton className="w-2.5 h-2.5 rounded-full" />
+                  <div className="flex-1 space-y-1">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-2.5 w-14" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (chartData.length === 0) {
     return (
