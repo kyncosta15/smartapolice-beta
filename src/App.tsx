@@ -20,6 +20,7 @@ import ColaboradorFormPage from "@/pages/ColaboradorFormPage";
 import NewSolicitacaoPage from "@/pages/NewSolicitacaoPage";
 import PublicFleetRequestPage from "@/pages/PublicFleetRequestPage";
 import AuthGuard from "@/components/AuthGuard";
+import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotFound from "./pages/NotFound";
 import RHDashboard from './pages/RHDashboard';
 import RHColaboradores from './pages/RHColaboradores';
@@ -55,8 +56,9 @@ const App = () => {
         <TooltipProvider>
           <AuthProvider>
             <TenantProvider>
-            <BrowserRouter>
-              <Routes>
+              <SessionTimeoutGuard>
+                <BrowserRouter>
+                  <Routes>
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/system-selection" element={<SystemSelection />} />
@@ -153,9 +155,10 @@ const App = () => {
               
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </TenantProvider>
-        </AuthProvider>
+                </BrowserRouter>
+              </SessionTimeoutGuard>
+            </TenantProvider>
+          </AuthProvider>
         <Toaster />
         <Sonner />
         <ProgressToaster />

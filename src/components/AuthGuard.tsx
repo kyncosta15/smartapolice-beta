@@ -5,7 +5,6 @@ import { DashboardContent } from '@/components/DashboardContent';
 import { Shield, Loader2 } from 'lucide-react';
 import { TermsModal } from '@/components/auth/TermsModal';
 import { supabase } from '@/integrations/supabase/client';
-import { SessionTimeoutGuard } from '@/components/SessionTimeoutGuard';
 
 const AuthGuardContent = () => {
   const { user, profile, isLoading } = useAuth();
@@ -124,7 +123,7 @@ const AuthGuardContent = () => {
 
   // Mostrar modal de termos se necessário
   return (
-    <SessionTimeoutGuard>
+    <>
       <DashboardContent />
       {showTermsModal && termsChecked && user && (
         <TermsModal 
@@ -133,7 +132,7 @@ const AuthGuardContent = () => {
           userId={user.id}
         />
       )}
-    </SessionTimeoutGuard>
+    </>
   );
 };
 
