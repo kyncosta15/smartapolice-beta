@@ -112,7 +112,7 @@ export function useUserProfile() {
 
       if (userData?.role === 'cliente') {
         console.log('🔍 DEBUG Usuário é cliente, carregando empresa específica...');
-        
+
         // Load memberships for client user
         const { data: membershipData, error: membershipError } = await supabase
           .from('user_memberships')
@@ -126,13 +126,23 @@ export function useUserProfile() {
           throw membershipError;
         }
 
-        setMemberships(membershipData || []);
-        
-        if (membershipData && membershipData.length > 0) {
-          setActiveEmpresa(membershipData[0].empresa_id);
-          console.log('✅ Empresa específica ativa:', membershipData[0].empresa_id);
-        }
-        
+        // Prefer most recent membership (important when a client has access to multiple empresas)
+        const sortedMemberships = (membershipData || []).slice().sort((a: any, b: any) => {
+          const aTime = a?.created_at ? new Date(a.created_at).getTime() : 0;
+          const bTime = b?.created_at ? new Date(b.created_at).getTime() : 0;
+          return bTime - aTime;
+        });
+
+        setMemberships(sortedMemberships);
+
+        const profileDefault = (profileData as any)?.default_empresa_id;
+        const defaultIsValid = !!profileDefault && sortedMemberships.some(m => m.empresa_id === profileDefault);
+
+        const nextActiveEmpresa =
+          (defaultIsValid ? profileDefault : sortedMemberships[0]?.empresa_id) ?? null;
+
+        setActiveEmpresa(nextActiveEmpresa);
+        console.log('✅ Empresa ativa (cliente):', nextActiveEmpresa);
       } else {
         // For non-client users, use existing logic
         const { data: membershipData, error: membershipError } = await supabase

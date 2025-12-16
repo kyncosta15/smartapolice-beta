@@ -185,31 +185,40 @@ export function useFrotasData(filters: FrotaFilters) {
           documentos:frota_documentos(*)
         `);
 
-      // Get user's empresa_id from membership data instead of RPC
-      const { data: userMembership } = await supabase
-        .from('user_memberships')
-        .select('empresa_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      console.log('🔍 DEBUG: User membership:', userMembership);
-      
-      let empresaId = userMembership?.empresa_id;
-      
-      // Se não tem membership, tentar criar empresa e membership
+      // Prefer the active empresa from TenantContext. If it's not set, fallback to the latest membership.
+      let empresaId = activeEmpresaId;
+
       if (!empresaId) {
-        console.log('⚠️ Membership não encontrado, tentando criar empresa...');
-        
+        const { data: latestMembership } = await supabase
+          .from('user_memberships')
+          .select('empresa_id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        empresaId = latestMembership?.empresa_id || null;
+      }
+
+      console.log('🔍 DEBUG: Empresa selecionada para frota:', {
+        activeEmpresaId,
+        empresaId,
+      });
+
+      // Se não tem empresa (caso raro), tentar criar empresa e membership
+      if (!empresaId) {
+        console.log('⚠️ Empresa não encontrada, tentando criar empresa...');
+
         // Criar empresa baseada no email do usuário
         const empresaName = 'Cliente - ' + user.email;
-        
+
         // Verificar se empresa já existe
         const { data: existingEmpresa } = await supabase
           .from('empresas')
           .select('id')
           .eq('nome', empresaName)
           .maybeSingle();
-          
+
         if (existingEmpresa) {
           empresaId = existingEmpresa.id;
         } else {
@@ -222,33 +231,29 @@ export function useFrotasData(filters: FrotaFilters) {
             })
             .select('id')
             .single();
-            
+
           if (empresaError) {
             console.error('❌ Erro ao criar empresa:', empresaError);
             throw new Error('Não foi possível criar empresa para o usuário');
           }
-          
+
           empresaId = newEmpresa.id;
         }
-        
-        // Criar membership
-        const { error: membershipError } = await supabase
-          .from('user_memberships')
-          .insert({
+
+        // Criar membership (idempotente)
+        const { error: membershipError } = await supabase.from('user_memberships').upsert(
+          {
             user_id: user.id,
             empresa_id: empresaId,
-            role: 'owner'
-          });
-          
+            role: 'owner',
+          },
+          { onConflict: 'user_id,empresa_id' }
+        );
+
         if (membershipError) {
           console.error('❌ Erro ao criar membership:', membershipError);
           // Não falhar aqui, apenas log do erro
         }
-      }
-      
-      if (!empresaId) {
-        console.error('❌ Não foi possível obter empresa_id');
-        throw new Error('Empresa não encontrada para o usuário. Entre em contato com o suporte.');
       }
       
       // Filter by user's company
