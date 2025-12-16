@@ -14,10 +14,14 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 interface FrotasKPICardsProps {
   kpis: FrotaKPIs;
   loading: boolean;
+  hasData?: boolean; // indica se os dados já foram carregados do servidor
 }
 
-export function FrotasKPICards({ kpis, loading }: FrotasKPICardsProps) {
-  if (loading) {
+export function FrotasKPICards({ kpis, loading, hasData = true }: FrotasKPICardsProps) {
+  // Mostrar skeleton se está carregando OU se ainda não tem dados carregados
+  const showSkeleton = loading || !hasData;
+
+  if (showSkeleton) {
     return (
       <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4 mb-4 md:mb-6">
         {[...Array(4)].map((_, i) => (
