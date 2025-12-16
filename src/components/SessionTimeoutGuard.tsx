@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   AlertDialog,
@@ -12,8 +12,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Clock, LogOut, UserCheck } from 'lucide-react';
 
-const INACTIVITY_TIMEOUT = 30 * 1000; // 30 segundos
-const COUNTDOWN_DURATION = 30; // 30 segundos para responder
+// Regra pedida: expirar após 30s sem interação.
+// Para conseguir perguntar "você ainda está aí?", abrimos o modal nos últimos 10s.
+const INACTIVITY_LIMIT_MS = 30_000;
+const CONFIRM_WINDOW_SECONDS = 10;
+const WARNING_START_MS = INACTIVITY_LIMIT_MS - CONFIRM_WINDOW_SECONDS * 1000; // 20s
 
 interface SessionTimeoutGuardProps {
   children: React.ReactNode;
@@ -21,15 +24,24 @@ interface SessionTimeoutGuardProps {
 
 export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ children }) => {
   const { user, signOut } = useAuth();
+
   const [showModal, setShowModal] = useState(false);
-  const [countdown, setCountdown] = useState(COUNTDOWN_DURATION);
-  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [countdown, setCountdown] = useState(CONFIRM_WINDOW_SECONDS);
+
+  const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const logoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const lastPointerPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const clearTimers = useCallback(() => {
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current);
-      inactivityTimerRef.current = null;
+    if (warningTimeoutRef.current) {
+      clearTimeout(warningTimeoutRef.current);
+      warningTimeoutRef.current = null;
+    }
+    if (logoutTimeoutRef.current) {
+      clearTimeout(logoutTimeoutRef.current);
+      logoutTimeoutRef.current = null;
     }
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
@@ -40,101 +52,117 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
   const handleLogout = useCallback(async () => {
     clearTimers();
     setShowModal(false);
-    await signOut();
-  }, [signOut, clearTimers]);
+    try {
+      await signOut();
+    } catch {
+      // noop
+    }
+  }, [clearTimers, signOut]);
 
-  const startCountdown = useCallback(() => {
-    setCountdown(COUNTDOWN_DURATION);
+  const startWarningModal = useCallback(() => {
+    // Evita múltiplos intervals em dev (StrictMode) / re-entrância.
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+
+    setCountdown(CONFIRM_WINDOW_SECONDS);
     setShowModal(true);
-    
+
     countdownIntervalRef.current = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          handleLogout();
-          return 0;
-        }
-        return prev - 1;
+      setCountdown((prev) => {
+        const next = prev - 1;
+        return next < 0 ? 0 : next;
       });
     }, 1000);
-  }, [handleLogout]);
+  }, []);
 
-  const resetInactivityTimer = useCallback(() => {
+  const scheduleInactivityTimers = useCallback(() => {
     if (!user) return;
-    
-    // Se o modal já está aberto, não reseta
+
+    // Não reinicia timers enquanto o modal está aberto (o usuário deve responder Sim/Não)
     if (showModal) return;
-    
+
     clearTimers();
-    
-    inactivityTimerRef.current = setTimeout(() => {
-      startCountdown();
-    }, INACTIVITY_TIMEOUT);
-  }, [user, showModal, clearTimers, startCountdown]);
+
+    warningTimeoutRef.current = setTimeout(() => {
+      startWarningModal();
+    }, Math.max(0, WARNING_START_MS));
+
+    logoutTimeoutRef.current = setTimeout(() => {
+      handleLogout();
+    }, INACTIVITY_LIMIT_MS);
+  }, [user, showModal, clearTimers, startWarningModal, handleLogout]);
 
   const handleStayLoggedIn = useCallback(() => {
     clearTimers();
     setShowModal(false);
-    setCountdown(COUNTDOWN_DURATION);
-    resetInactivityTimer();
-  }, [clearTimers, resetInactivityTimer]);
+    setCountdown(CONFIRM_WINDOW_SECONDS);
 
-  // Setup activity listeners
+    // Reagenda após fechar (garante que não depende do showModal ainda true nesta render)
+    setTimeout(() => {
+      scheduleInactivityTimers();
+    }, 0);
+  }, [clearTimers, scheduleInactivityTimers]);
+
   useEffect(() => {
     if (!user) {
       clearTimers();
+      setShowModal(false);
       return;
     }
 
-    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
-    
-    const handleActivity = () => {
-      resetInactivityTimer();
+    const activityEvents = ['pointerdown', 'pointermove', 'keydown', 'scroll', 'touchstart', 'click', 'wheel'] as const;
+
+    const handleActivity = (e: Event) => {
+      if (showModal) return;
+
+      // Evita “falso mousemove” quando o layout anima sob o cursor.
+      if (e.type === 'pointermove') {
+        const pe = e as PointerEvent;
+        const next = { x: pe.clientX, y: pe.clientY };
+        const last = lastPointerPosRef.current;
+        if (last && last.x === next.x && last.y === next.y) return;
+        lastPointerPosRef.current = next;
+      }
+
+      scheduleInactivityTimers();
     };
 
-    activityEvents.forEach(event => {
+    activityEvents.forEach((event) => {
       document.addEventListener(event, handleActivity, { passive: true });
     });
 
-    // Start initial timer
-    resetInactivityTimer();
+    // Timer inicial
+    scheduleInactivityTimers();
 
     return () => {
-      activityEvents.forEach(event => {
+      activityEvents.forEach((event) => {
         document.removeEventListener(event, handleActivity);
       });
       clearTimers();
     };
-  }, [user, resetInactivityTimer, clearTimers]);
+  }, [user, showModal, scheduleInactivityTimers, clearTimers]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      clearTimers();
-    };
-  }, [clearTimers]);
-
-  if (!user) {
-    return <>{children}</>;
-  }
+  if (!user) return <>{children}</>;
 
   return (
     <>
       {children}
-      
+
       <AlertDialog open={showModal} onOpenChange={() => {}}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-xl">
-              <Clock className="h-6 w-6 text-amber-500" />
+              <Clock className="h-6 w-6 text-primary" />
               Sessão Inativa
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-4">
-              <p className="text-base">
-                Sua sessão está prestes a expirar por inatividade.
-              </p>
+              <p className="text-base">Sua sessão vai expirar por inatividade.</p>
+
               <div className="flex items-center justify-center py-4">
-                <div className="relative w-24 h-24">
-                  <svg className="w-24 h-24 transform -rotate-90">
+                <div className="relative h-24 w-24">
+                  <svg className="h-24 w-24 -rotate-90 transform">
                     <circle
                       cx="48"
                       cy="48"
@@ -152,8 +180,8 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
                       strokeWidth="8"
                       fill="none"
                       strokeDasharray={264}
-                      strokeDashoffset={264 - (countdown / COUNTDOWN_DURATION) * 264}
-                      className="text-amber-500 transition-all duration-1000 ease-linear"
+                      strokeDashoffset={264 - (countdown / CONFIRM_WINDOW_SECONDS) * 264}
+                      className="text-primary transition-all duration-1000 ease-linear"
                       strokeLinecap="round"
                     />
                   </svg>
@@ -162,11 +190,11 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
                   </span>
                 </div>
               </div>
-              <p className="text-center text-sm text-muted-foreground">
-                Você ainda está aí?
-              </p>
+
+              <p className="text-center text-sm text-muted-foreground">Você ainda está aí?</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter className="flex gap-2 sm:gap-2">
             <AlertDialogCancel
               onClick={handleLogout}
@@ -175,10 +203,7 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
               <LogOut className="h-4 w-4" />
               Não, sair
             </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleStayLoggedIn}
-              className="flex-1 gap-2"
-            >
+            <AlertDialogAction onClick={handleStayLoggedIn} className="flex-1 gap-2">
               <UserCheck className="h-4 w-4" />
               Sim, continuar
             </AlertDialogAction>
