@@ -215,7 +215,7 @@ export function GestaoFrotas() {
             <TabsContent value="frotas" className="h-full flex flex-col min-h-0 m-0">
               {/* KPI Cards - apenas na aba Frotas */}
               <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-6 border-b border-border bg-muted/30 dark:bg-card/50">
-                <FrotasKPICards kpis={kpis} loading={loading} />
+                <FrotasKPICards kpis={kpis} loading={loading} hasData={!loading || allVeiculos.length > 0} />
               </div>
               
               <div className="p-3 sm:p-4 md:p-6">
