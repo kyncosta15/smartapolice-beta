@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -134,6 +134,7 @@ export function useFrotasData(filters: FrotaFilters) {
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const pendingLoadsRef = useRef(0);
 
   // Debounce search to avoid too many requests
   const debouncedSearch = useDebounce(filters.search, 500);
@@ -152,6 +153,7 @@ export function useFrotasData(filters: FrotaFilters) {
       if (isSearch) {
         setSearchLoading(true);
       } else {
+        pendingLoadsRef.current += 1;
         setLoading(true);
       }
       setError(null);
@@ -314,8 +316,12 @@ export function useFrotasData(filters: FrotaFilters) {
         });
       }
     } finally {
-      setLoading(false);
-      setSearchLoading(false);
+      if (isSearch) {
+        setSearchLoading(false);
+      } else {
+        pendingLoadsRef.current = Math.max(0, pendingLoadsRef.current - 1);
+        setLoading(pendingLoadsRef.current > 0);
+      }
     }
   }, [user?.id, activeEmpresaId, debouncedFilters, toast]);
 
