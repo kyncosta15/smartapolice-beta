@@ -14,6 +14,13 @@ export function useInfoCapSync() {
     if (!documento || isSyncing) return;
 
     try {
+      // Verificar sessão antes de chamar edge function
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log('⚠️ Sem sessão ativa - sincronização cancelada');
+        return;
+      }
+
       setIsSyncing(true);
       console.log('🔄 Iniciando sincronização InfoCap...');
 
