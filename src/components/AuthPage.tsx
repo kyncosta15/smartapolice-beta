@@ -182,81 +182,76 @@ export const AuthPage = () => {
 
   return (
     <div className="w-full">
-      {/* Title */}
-      <h2 className="text-xl font-semibold text-center text-foreground mb-6">
-        Acesse sua conta
-      </h2>
-
       <Tabs defaultValue="login" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 h-11 bg-muted/50 p-1 rounded-xl">
+        <TabsList className="grid w-full grid-cols-2 h-11 p-1 rounded-lg bg-muted">
           <TabsTrigger 
             value="login" 
-            className="h-full rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium"
+            className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium text-sm"
           >
             Entrar
           </TabsTrigger>
           <TabsTrigger 
             value="register" 
-            className="h-full rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium"
+            className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium text-sm"
           >
             Criar Conta
           </TabsTrigger>
         </TabsList>
 
-              {/* Login Tab */}
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-6">
-                  <div className="space-y-3">
-                    <Label htmlFor="login-email" className="text-sm font-semibold text-foreground">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        value={loginData.email}
-                        onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                        className="pl-12 h-12 text-base bg-background border-border"
-                        required
-                      />
-                    </div>
-                  </div>
+        {/* Login Tab */}
+        <TabsContent value="login">
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="login-email" className="text-sm font-medium text-foreground">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  id="login-email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={loginData.email}
+                  onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                  className="pl-10 h-11 bg-background"
+                  required
+                />
+              </div>
+            </div>
 
-                  <div className="space-y-3">
-                    <Label htmlFor="login-password" className="text-sm font-semibold text-foreground">Senha</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-                      <Input
-                        id="login-password"
-                        type="password"
-                        placeholder="Sua senha"
-                        value={loginData.password}
-                        onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                        className="pl-12 h-12 text-base bg-background border-border"
-                        required
-                      />
-                    </div>
-                  </div>
+            <div className="space-y-2">
+              <Label htmlFor="login-password" className="text-sm font-medium text-foreground">Senha</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  id="login-password"
+                  type="password"
+                  placeholder="Sua senha"
+                  value={loginData.password}
+                  onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                  className="pl-10 h-11 bg-background"
+                  required
+                />
+              </div>
+            </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full h-12 text-base font-medium"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Spinner className="size-4 mr-2" />
-                        Entrando...
-                      </>
-                    ) : (
-                      'Entrar'
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
+            <Button 
+              type="submit" 
+              className="w-full h-11 font-medium"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Spinner className="size-4 mr-2" />
+                  Entrando...
+                </>
+              ) : (
+                'Entrar'
+              )}
+            </Button>
+          </form>
+        </TabsContent>
 
-              {/* Register Tab */}
-              <TabsContent value="register">
+        {/* Register Tab */}
+        <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-6">
                   {/* Person Type Selection */}
                   <div className="space-y-4">
@@ -508,9 +503,9 @@ export const AuthPage = () => {
                       'Criar Conta'
                     )}
                   </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+          </form>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
