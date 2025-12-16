@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Shield, ShieldCheck, Users, Heart, BarChart3, FileText, RefreshCw, Building2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import smartapoliceShield from '@/assets/smartapolice-shield-transparent.png';
 import smartbeneficiosPeopleHeart from '@/assets/smartbeneficios-transparent.png';
@@ -18,10 +17,10 @@ const SystemSelection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 dark:from-background dark:via-background dark:to-background/95 flex flex-col">
       {/* Header */}
       <header className="p-6">
-        <Link to="/" className="flex items-center text-muted-foreground hover:text-primary transition-colors">
+        <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors font-medium">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Link>
@@ -29,81 +28,153 @@ const SystemSelection = () => {
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-6">
-        <div className="max-w-4xl w-full">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">
+        <div className="max-w-5xl w-full">
+          <div className="text-center mb-14">
+            <h1 className="text-4xl font-bold text-foreground mb-3 tracking-tight">
               Escolha seu sistema
-            </h2>
+            </h1>
             <p className="text-lg text-muted-foreground">
               Selecione a solução que melhor atende às suas necessidades
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* SmartApólice */}
-            <Card className="group cursor-pointer hover:shadow-2xl transition-all duration-500 border-2 hover:border-primary/30 hover:scale-105 relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 hover:from-primary/10 hover:to-primary/20"
-                  onClick={() => handleSystemSelect('smartapolice')}>
-              {/* Subtle animated background overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
-              
-              <CardHeader className="text-center pb-4 relative z-10">
-                <div className="w-28 h-28 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
-                  <img src={smartapoliceShield} alt="SmartApólice Shield" className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-300" loading="eager" fetchPriority="high" />
+          <div className="grid md:grid-cols-2 gap-10">
+            {/* SmartApólice Card */}
+            <div 
+              className="group cursor-pointer"
+              onClick={() => handleSystemSelect('smartapolice')}
+            >
+              <div className="bg-card rounded-2xl border border-border/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 p-8 h-full flex flex-col">
+                {/* Icon Container */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-primary/20 dark:to-primary/10 flex items-center justify-center shadow-inner">
+                      <img 
+                        src={smartapoliceShield} 
+                        alt="SmartApólice" 
+                        className="h-16 w-16 object-contain group-hover:scale-110 transition-transform duration-300" 
+                        loading="eager" 
+                        fetchPriority="high" 
+                      />
+                    </div>
+                    {/* Decorative ring */}
+                    <div className="absolute -inset-2 rounded-full border-2 border-dashed border-blue-200/50 dark:border-primary/20 group-hover:border-primary/40 transition-colors duration-300" />
+                  </div>
                 </div>
-                <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">SmartApólice</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center space-y-4 relative z-10">
-                <p className="text-muted-foreground">
+
+                {/* Title */}
+                <h2 className="text-2xl font-bold text-center mb-3">
+                  <span className="text-foreground">Smart</span>
+                  <span className="text-primary">Apólice</span>
+                </h2>
+
+                {/* Description */}
+                <p className="text-muted-foreground text-center mb-6 leading-relaxed">
                   Gestão inteligente de seguros e apólices corporativas
                 </p>
-                <ul className="text-sm text-muted-foreground space-y-2 text-left max-w-xs mx-auto">
-                  <li>• Controle de apólices</li>
-                  <li>• Dashboard analítico</li>
-                  <li>• Relatórios automatizados</li>
-                  <li>• Gestão de renovações</li>
+
+                {/* Features List */}
+                <ul className="space-y-3 mb-8 flex-1">
+                  <li className="flex items-center gap-3 text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                    <span>Controle de apólices</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                    <span>Dashboard analítico</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                    <span>Relatórios automatizados</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                    <span>Gestão de renovações</span>
+                  </li>
                 </ul>
-                <Button variant="gradient" className="w-full transition-all duration-300 hover:shadow-lg">
+
+                {/* CTA Button */}
+                <Button 
+                  variant="default" 
+                  className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300"
+                >
                   Acessar SmartApólice
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* SmartBenefícios */}
-            <Card className="group cursor-pointer hover:shadow-2xl transition-all duration-500 border-2 hover:border-primary/30 hover:scale-105 relative overflow-hidden bg-gradient-to-br from-secondary/5 via-background to-secondary/10 hover:from-secondary/10 hover:to-secondary/20"
-                  onClick={() => handleSystemSelect('smartbeneficios')}>
-              {/* Subtle animated background overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
-              
-              <CardHeader className="text-center pb-4 relative z-10">
-                <div className="w-28 h-28 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-secondary/30 group-hover:to-secondary/20 transition-all duration-300 shadow-lg group-hover:shadow-xl overflow-hidden">
-                  <img src={smartbeneficiosPeopleHeart} alt="SmartBenefícios People and Heart" className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-300" loading="eager" fetchPriority="high" />
+            {/* SmartBenefícios Card */}
+            <div 
+              className="group cursor-pointer"
+              onClick={() => handleSystemSelect('smartbeneficios')}
+            >
+              <div className="bg-card rounded-2xl border border-border/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 p-8 h-full flex flex-col">
+                {/* Icon Container */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-500/20 dark:to-emerald-500/10 flex items-center justify-center shadow-inner">
+                      <img 
+                        src={smartbeneficiosPeopleHeart} 
+                        alt="SmartBenefícios" 
+                        className="h-16 w-16 object-contain group-hover:scale-110 transition-transform duration-300" 
+                        loading="eager" 
+                        fetchPriority="high" 
+                      />
+                    </div>
+                    {/* Decorative ring */}
+                    <div className="absolute -inset-2 rounded-full border-2 border-dashed border-emerald-200/50 dark:border-emerald-500/20 group-hover:border-emerald-500/40 transition-colors duration-300" />
+                  </div>
                 </div>
-                <CardTitle className="text-2xl bg-gradient-to-r from-foreground to-secondary bg-clip-text text-transparent">SmartBenefícios</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center space-y-4 relative z-10">
-                <p className="text-muted-foreground">
+
+                {/* Title */}
+                <h2 className="text-2xl font-bold text-center mb-3">
+                  <span className="text-foreground">Smart</span>
+                  <span className="text-emerald-600 dark:text-emerald-500">Benefícios</span>
+                </h2>
+
+                {/* Description */}
+                <p className="text-muted-foreground text-center mb-6 leading-relaxed">
                   Administração completa de benefícios corporativos
                 </p>
-                <ul className="text-sm text-muted-foreground space-y-2 text-left max-w-xs mx-auto">
-                  <li>• Gestão de benefícios</li>
-                  <li>• Controle de colaboradores</li>
-                  <li>• Relatórios de utilização</li>
-                  <li>• Integração RH</li>
+
+                {/* Features List */}
+                <ul className="space-y-3 mb-8 flex-1">
+                  <li className="flex items-center gap-3 text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                    <span>Gestão de benefícios</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                    <span>Controle de colaboradores</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                    <span>Relatórios de utilização</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                    <span>Integração RH</span>
+                  </li>
                 </ul>
-                <Button variant="gradient" className="w-full transition-all duration-300 hover:shadow-lg">
+
+                {/* CTA Button */}
+                <Button 
+                  variant="default" 
+                  className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300"
+                >
                   Acessar SmartBenefícios
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="p-6 text-center text-muted-foreground">
-        <p>&copy; 2025 RCorp. Todos os direitos reservados.</p>
+      <footer className="p-6 text-center">
+        <p className="text-sm text-muted-foreground">&copy; 2025 RCorp. Todos os direitos reservados.</p>
       </footer>
     </div>
   );
