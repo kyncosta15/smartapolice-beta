@@ -12,11 +12,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Clock, LogOut, UserCheck } from 'lucide-react';
 
-// Regra pedida: expirar após 30s sem interação.
-// Para conseguir perguntar "você ainda está aí?", abrimos o modal nos últimos 10s.
 const INACTIVITY_LIMIT_MS = 30_000;
 const CONFIRM_WINDOW_SECONDS = 10;
-const WARNING_START_MS = INACTIVITY_LIMIT_MS - CONFIRM_WINDOW_SECONDS * 1000; // 20s
+const WARNING_START_MS = INACTIVITY_LIMIT_MS - CONFIRM_WINDOW_SECONDS * 1000;
 
 interface SessionTimeoutGuardProps {
   children: React.ReactNode;
@@ -60,7 +58,6 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
   }, [clearTimers, signOut]);
 
   const startWarningModal = useCallback(() => {
-    // Evita múltiplos intervals em dev (StrictMode) / re-entrância.
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
       countdownIntervalRef.current = null;
@@ -79,8 +76,6 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
 
   const scheduleInactivityTimers = useCallback(() => {
     if (!user) return;
-
-    // Não reinicia timers enquanto o modal está aberto (o usuário deve responder Sim/Não)
     if (showModal) return;
 
     clearTimers();
@@ -99,7 +94,6 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
     setShowModal(false);
     setCountdown(CONFIRM_WINDOW_SECONDS);
 
-    // Reagenda após fechar (garante que não depende do showModal ainda true nesta render)
     setTimeout(() => {
       scheduleInactivityTimers();
     }, 0);
@@ -117,7 +111,6 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
     const handleActivity = (e: Event) => {
       if (showModal) return;
 
-      // Evita “falso mousemove” quando o layout anima sob o cursor.
       if (e.type === 'pointermove') {
         const pe = e as PointerEvent;
         const next = { x: pe.clientX, y: pe.clientY };
@@ -133,7 +126,6 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
       document.addEventListener(event, handleActivity, { passive: true });
     });
 
-    // Timer inicial
     scheduleInactivityTimers();
 
     return () => {
@@ -146,64 +138,90 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
 
   if (!user) return <>{children}</>;
 
+  // Calculate circle progress
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (countdown / CONFIRM_WINDOW_SECONDS) * circumference;
+
   return (
     <>
       {children}
 
       <AlertDialog open={showModal} onOpenChange={() => {}}>
-        <AlertDialogContent className="max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-xl">
-              <Clock className="h-6 w-6 text-primary" />
+        <AlertDialogContent className="max-w-sm border-0 shadow-2xl">
+          <AlertDialogHeader className="space-y-4">
+            <AlertDialogTitle className="flex items-center justify-center gap-2 text-lg font-semibold">
+              <Clock className="h-5 w-5 text-primary" />
               Sessão Inativa
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4">
-              <p className="text-base">Sua sessão vai expirar por inatividade.</p>
+            
+            <AlertDialogDescription asChild>
+              <div className="space-y-6">
+                <p className="text-center text-sm text-muted-foreground">
+                  Sua sessão vai expirar por inatividade.
+                </p>
 
-              <div className="flex items-center justify-center py-4">
-                <div className="relative h-24 w-24">
-                  <svg className="h-24 w-24 -rotate-90 transform">
-                    <circle
-                      cx="48"
-                      cy="48"
-                      r="42"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      className="text-muted"
-                    />
-                    <circle
-                      cx="48"
-                      cy="48"
-                      r="42"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray={264}
-                      strokeDashoffset={264 - (countdown / CONFIRM_WINDOW_SECONDS) * 264}
-                      className="text-primary transition-all duration-1000 ease-linear"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-foreground">
-                    {countdown}
-                  </span>
+                {/* Circular Progress Timer */}
+                <div className="flex items-center justify-center">
+                  <div className="relative">
+                    <svg 
+                      width="140" 
+                      height="140" 
+                      viewBox="0 0 140 140"
+                      className="transform -rotate-90"
+                    >
+                      {/* Background circle */}
+                      <circle
+                        cx="70"
+                        cy="70"
+                        r={radius}
+                        fill="none"
+                        stroke="hsl(var(--muted))"
+                        strokeWidth="6"
+                      />
+                      {/* Progress circle */}
+                      <circle
+                        cx="70"
+                        cy="70"
+                        r={radius}
+                        fill="none"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={circumference - progress}
+                        className="transition-all duration-1000 ease-linear"
+                      />
+                    </svg>
+                    
+                    {/* Counter number */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-4xl font-bold tabular-nums text-foreground">
+                        {countdown}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <p className="text-center text-sm text-muted-foreground">Você ainda está aí?</p>
+                <p className="text-center text-base font-medium text-foreground">
+                  Você ainda está aí?
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <AlertDialogFooter className="flex gap-2 sm:gap-2">
+          <AlertDialogFooter className="mt-4 flex flex-row gap-3 sm:flex-row">
             <AlertDialogCancel
               onClick={handleLogout}
-              className="flex-1 gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="flex-1 h-11 gap-2 border-2 border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-destructive-foreground font-medium transition-colors"
             >
               <LogOut className="h-4 w-4" />
               Não, sair
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleStayLoggedIn} className="flex-1 gap-2">
+            <AlertDialogAction 
+              onClick={handleStayLoggedIn} 
+              className="flex-1 h-11 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
+            >
               <UserCheck className="h-4 w-4" />
               Sim, continuar
             </AlertDialogAction>
