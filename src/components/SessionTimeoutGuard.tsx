@@ -12,9 +12,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Clock, LogOut, UserCheck } from 'lucide-react';
 
-const INACTIVITY_LIMIT_MS = 30_000;
+// Tempo de ociosidade antes de aparecer o modal (10 minutos)
+const INACTIVITY_WARNING_MS = 10 * 60 * 1000;
 const CONFIRM_WINDOW_SECONDS = 10;
-const WARNING_START_MS = INACTIVITY_LIMIT_MS - CONFIRM_WINDOW_SECONDS * 1000;
+const INACTIVITY_LIMIT_MS = INACTIVITY_WARNING_MS + CONFIRM_WINDOW_SECONDS * 1000;
 
 interface SessionTimeoutGuardProps {
   children: React.ReactNode;
@@ -95,7 +96,7 @@ export const SessionTimeoutGuard: React.FC<SessionTimeoutGuardProps> = ({ childr
 
     warningTimeoutRef.current = setTimeout(() => {
       startWarningModal();
-    }, Math.max(0, WARNING_START_MS));
+    }, INACTIVITY_WARNING_MS);
 
     logoutTimeoutRef.current = setTimeout(() => {
       handleLogout();
