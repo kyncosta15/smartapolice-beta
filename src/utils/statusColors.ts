@@ -21,7 +21,7 @@ export const formatStatusText = (status: PolicyStatus | string): string => {
     aguardando_emissao: "EM RENOVAÇÃO",
     nao_renovada: "ANTIGA",
     antiga: "ANTIGA",
-    vencida: "VENCIDA",
+    vencida: "ANOS ANTERIORES",
     pendente_analise: "EM ANÁLISE",
     vencendo: "VENCENDO",
     desconhecido: "DESCONHECIDO"
