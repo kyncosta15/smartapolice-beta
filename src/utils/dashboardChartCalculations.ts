@@ -1,6 +1,6 @@
 
 import { PolicyWithStatus } from '@/types/policyStatus';
-import { getChartColor } from '@/utils/statusColors';
+import { getChartColor, formatStatusText } from '@/utils/statusColors';
 
 // Função para determinar o status correto baseado na data de vencimento
 const getCorrectPolicyStatus = (policy: any): string => {
@@ -45,7 +45,7 @@ export function calculateStatusChartData(policies: PolicyWithStatus[]) {
     status,
     count,
     color: getChartColor(status as any),
-    name: status.replace(/_/g, " ").toUpperCase()
+    name: formatStatusText(status)
   }));
 }
 
