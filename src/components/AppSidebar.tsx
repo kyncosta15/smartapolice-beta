@@ -14,7 +14,8 @@ import {
   Mail,
   LogOut,
   CheckSquare,
-  Crown
+  Crown,
+  Heart
 } from "lucide-react";
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { cn } from '@/lib/utils';
@@ -52,6 +53,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'export', title: 'Relatórios', icon: BarChart3 },
     { id: 'settings', title: 'Configurações', icon: Settings },
+    { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
   ];
 
   const adminNavigation = [
@@ -65,6 +67,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'export', title: 'Relatórios', icon: BarChart3 },
     { id: 'settings', title: 'Configurações', icon: Settings },
+    { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
   ];
 
   // Admin puro sempre tem navegação vazia, só acessa painel admin

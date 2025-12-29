@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { DynamicDashboard } from './DynamicDashboard';
 import { AdminDashboardNew } from './AdminDashboardNew';
 import { EnhancedPDFUpload } from './EnhancedPDFUpload';
@@ -20,6 +21,7 @@ import { SinistrosManagement } from './SinistrosManagement';
 import { N8NDataTester } from './N8NDataTester';
 import { UserProfile } from './UserProfile';
 import { AdminApprovalsPage } from './insurance/AdminApprovalsPage';
+import { SmartBeneficiosEmbed } from './SmartBeneficiosEmbed';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 
@@ -250,6 +252,9 @@ export function ContentRenderer({
 
     case 'aprovacoes':
       return <AdminApprovalsPage />;
+
+    case 'smartbeneficios':
+      return <SmartBeneficiosEmbed />;
 
     default:
       return (
