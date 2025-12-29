@@ -160,19 +160,21 @@ export function DashboardContent() {
     setIsRefreshing(true);
     
     try {
-      // 1. Sincronizar do InfoCap - a edge function já processa todos os vínculos
+      // 1. Sincronizar do InfoCap - a edge function processa documento principal + vínculos
       try {
+        // Buscar documento principal do usuário (pode ser null)
         const { data: userData } = await supabase
           .from('users')
           .select('documento')
           .eq('id', user?.id)
           .maybeSingle();
 
-        if (userData?.documento) {
-          console.log('📡 Sincronizando apólices do InfoCap...');
-          // A edge function sync-infocap já busca e processa todos os vínculos internamente
-          await syncInfoCapPolicies(userData.documento);
-        }
+        console.log('📡 Sincronizando apólices do InfoCap...');
+        console.log(`📄 Documento principal: ${userData?.documento || '(nenhum)'}`);
+        
+        // Chamar sincronização - a edge function buscará vínculos automaticamente
+        // Mesmo sem documento principal, os vínculos serão processados
+        await syncInfoCapPolicies(userData?.documento || null);
       } catch (syncError) {
         console.warn('⚠️ Erro na sincronização InfoCap:', syncError);
         // Continuar mesmo com erro na sincronização
@@ -181,13 +183,6 @@ export function DashboardContent() {
       // 2. Atualizar apólices do banco local
       await refreshPolicies();
       setLastRefresh(Date.now());
-      
-      toast({
-        title: "Dados Atualizados",
-        description: "Suas apólices foram atualizadas com sucesso",
-        variant: "success",
-        duration: 8000,
-      });
       
       console.log('✅ [handleManualRefresh] Refresh concluído');
     } catch (error) {

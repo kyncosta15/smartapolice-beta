@@ -10,8 +10,16 @@ export function useInfoCapSync() {
   const [lastSyncDate, setLastSyncDate] = useState<Date | null>(null);
   const { toast } = useToast();
 
-  const syncPolicies = async (documento: string, showToast: boolean = true) => {
-    if (!documento || isSyncing) return;
+  /**
+   * Sincroniza apólices do InfoCap
+   * @param documento - Documento principal (pode ser null/vazio se tiver vínculos)
+   * @param showToast - Se deve mostrar toast de resultado
+   */
+  const syncPolicies = async (documento: string | null = null, showToast: boolean = true) => {
+    if (isSyncing) {
+      console.log('⚠️ Sincronização já em andamento');
+      return;
+    }
 
     try {
       // Verificar sessão antes de chamar edge function
@@ -23,10 +31,11 @@ export function useInfoCapSync() {
 
       setIsSyncing(true);
       console.log('🔄 Iniciando sincronização InfoCap...');
+      console.log(`📄 Documento principal: ${documento || '(nenhum)'}`);
 
-      // Chamar edge function
+      // Chamar edge function - ela buscará os vínculos automaticamente
       const { data, error } = await supabase.functions.invoke('sync-infocap', {
-        body: { documento },
+        body: { documento: documento || '' },
       });
 
       if (error) throw error;
@@ -34,20 +43,35 @@ export function useInfoCapSync() {
       setLastSyncDate(new Date());
 
       // Contar apólices do usuário no banco após sincronização
+      const { data: { user } } = await supabase.auth.getUser();
       const { count: userPoliciesCount } = await supabase
         .from('policies')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', user?.id);
 
-      if (data?.synced > 0 && showToast) {
-        toast({
-          title: "Apólices Sincronizadas",
-          description: `${userPoliciesCount || data.synced} apólice(s) suas foram encontradas e sincronizadas.`,
-          duration: 8000,
-          variant: "success",
-        });
-      } else {
-        console.log('ℹ️ Nenhuma apólice nova encontrada');
+      console.log(`📊 Resultado: ${data?.synced || 0} apólices sincronizadas de ${data?.documentos || 0} documentos`);
+
+      if (showToast) {
+        if (data?.synced > 0) {
+          toast({
+            title: "Apólices Sincronizadas",
+            description: `${userPoliciesCount || data.synced} apólice(s) encontradas de ${data?.documentos || 1} documento(s).`,
+            duration: 8000,
+            variant: "success",
+          });
+        } else if (data?.documentos > 0) {
+          toast({
+            title: "Sincronização Concluída",
+            description: "Nenhuma apólice nova encontrada.",
+            duration: 5000,
+          });
+        } else {
+          toast({
+            title: "Nenhum Documento",
+            description: "Vincule um CPF/CNPJ nas configurações para sincronizar.",
+            duration: 5000,
+          });
+        }
       }
 
       return data;
@@ -84,21 +108,19 @@ export function useInfoCapSync() {
           return;
         }
 
-        // Buscar documento do usuário na tabela users
+        // Buscar documento do usuário na tabela users (pode ser null)
         const { data: userData } = await supabase
           .from('users')
           .select('documento')
           .eq('id', user.id)
           .maybeSingle();
 
-        if (userData?.documento) {
-          console.log('🔍 Documento encontrado:', userData.documento);
-          console.log('ℹ️ Sincronização automática no login - sem toast');
-          // Sincronizar automaticamente sem mostrar toast
-          await syncPolicies(userData.documento, false);
-        } else {
-          console.log('⚠️ Usuário sem documento cadastrado - sincronização InfoCap não disponível');
-        }
+        console.log('🔍 Documento principal:', userData?.documento || '(nenhum)');
+        console.log('ℹ️ Sincronização automática no login - sem toast');
+        
+        // Sincronizar automaticamente - mesmo sem documento principal
+        // A edge function buscará os CPFs vinculados automaticamente
+        await syncPolicies(userData?.documento || null, false);
       } catch (error) {
         console.error('❌ Erro ao verificar sessão:', error);
       }
