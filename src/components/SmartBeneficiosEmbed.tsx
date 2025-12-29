@@ -64,7 +64,7 @@ export function SmartBeneficiosEmbed() {
         <CardContent className="py-6">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button 
-              onClick={() => navigate('/smartbeneficios')}
+              onClick={() => navigate('/smartbeneficios/dashboard')}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               Acessar SmartBenefícios MVP
@@ -72,7 +72,7 @@ export function SmartBeneficiosEmbed() {
             </Button>
             <Button 
               variant="outline"
-              onClick={() => navigate('/colaborador')}
+              onClick={() => navigate('/colaborador/solicitacao')}
             >
               Portal do Colaborador
             </Button>
