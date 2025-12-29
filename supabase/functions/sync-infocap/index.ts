@@ -142,35 +142,60 @@ Deno.serve(async (req) => {
     }
 
     console.log('✅ Usuário autenticado:', user.id);
-    console.log('🚀 ===== FUNÇÃO SYNC-INFOCAP INICIADA - VERSÃO COM LOGS DETALHADOS =====');
+    console.log('🚀 ===== FUNÇÃO SYNC-INFOCAP INICIADA - VERSÃO COM FILA SEQUENCIAL =====');
 
     const { documento } = await req.json();
 
-    if (!documento) {
-      return new Response(
-        JSON.stringify({ error: 'Documento (CPF/CNPJ) é obrigatório' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`🔄 Iniciando sincronização para documento: ${documento}`);
-
-    // Buscar CPFs vinculados do usuário
+    // Buscar CPFs vinculados do usuário PRIMEIRO
     const { data: cpfsVinculados } = await supabaseClient
       .from('user_cpf_vinculos')
       .select('cpf, nome, tipo')
       .eq('user_id', user.id)
       .eq('ativo', true);
 
-    const documentosParaBuscar = [documento];
     const cpfsAtivos = cpfsVinculados?.map(v => v.cpf.replace(/\D/g, '')) || [];
     
+    // Construir lista de documentos a sincronizar
+    const documentosParaBuscar: string[] = [];
+    
+    // Adicionar documento principal se existir
+    if (documento && documento.trim()) {
+      documentosParaBuscar.push(documento);
+      console.log(`📄 Documento principal: ${documento}`);
+    } else {
+      console.log('ℹ️ Nenhum documento principal fornecido');
+    }
+    
+    // Adicionar CPFs vinculados
     if (cpfsVinculados && cpfsVinculados.length > 0) {
       console.log(`📋 Encontrados ${cpfsVinculados.length} CPFs vinculados`);
-      cpfsVinculados.forEach(v => documentosParaBuscar.push(v.cpf));
+      cpfsVinculados.forEach(v => {
+        // Evitar duplicatas
+        if (!documentosParaBuscar.includes(v.cpf)) {
+          documentosParaBuscar.push(v.cpf);
+          console.log(`   + ${v.cpf} (${v.nome || 'sem nome'})`);
+        }
+      });
     } else {
       console.log('ℹ️ Nenhum CPF vinculado encontrado');
     }
+
+    // Verificar se há documentos para processar
+    if (documentosParaBuscar.length === 0) {
+      console.log('⚠️ Nenhum documento para sincronizar');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Nenhum documento para sincronizar',
+          synced: 0,
+          documentos: 0 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`\n📊 TOTAL DE DOCUMENTOS A PROCESSAR: ${documentosParaBuscar.length}`);
+    console.log(`📋 Lista de documentos: ${documentosParaBuscar.join(', ')}\n`);
 
     // LIMPAR APÓLICES DE CPFs DESVINCULADOS
     console.log('🧹 Verificando apólices de CPFs desvinculados...');
