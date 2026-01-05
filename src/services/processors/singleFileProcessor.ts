@@ -16,19 +16,32 @@ export async function processSingleFile(file: File): Promise<ParsedPolicyData | 
     }
 
     const extractedData = extractedDataArray[0];
+    console.log('📋 Dados extraídos do N8N:', extractedData);
 
     // Convert the extracted data to ParsedPolicyData
     let parsedPolicy: ParsedPolicyData;
 
-    if (extractedData.numero_apolice && extractedData.segurado && extractedData.seguradora) {
-      // É dado direto do N8N
+    // CORREÇÃO: Validação mais flexível - aceita dados se tiver segurado OU seguradora
+    // O numero_apolice pode estar vazio em alguns PDFs
+    const hasN8NDirectData = (extractedData.segurado || extractedData.seguradora) && 
+      !extractedData.informacoes_gerais;
+    
+    const hasStructuredData = extractedData.informacoes_gerais && 
+      extractedData.seguradora && 
+      extractedData.vigencia;
+
+    if (hasN8NDirectData) {
+      // É dado direto do N8N (segurado, seguradora, documento, etc.)
+      console.log('✅ Detectado formato N8N direto');
       parsedPolicy = N8NDataConverter.convertN8NDirectData(extractedData, file.name, file);
-    } else if (extractedData.informacoes_gerais && extractedData.seguradora && extractedData.vigencia) {
-      // É dado estruturado
+    } else if (hasStructuredData) {
+      // É dado estruturado (informacoes_gerais, seguradora object, vigencia)
+      console.log('✅ Detectado formato estruturado');
       parsedPolicy = StructuredDataConverter.convertStructuredData(extractedData, file.name, file);
     } else {
       // Fallback para dados não estruturados
-      console.warn('Dados não estruturados recebidos, usando fallback');
+      console.warn('⚠️ Dados não estruturados recebidos, usando fallback');
+      console.warn('Dados recebidos:', extractedData);
       parsedPolicy = createFallbackPolicy(file);
     }
 
