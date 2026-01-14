@@ -632,28 +632,6 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
         </Card>
       )}
 
-      {/* Help Card */}
-      <Card className="border-0 shadow-sm bg-blue-50 border-blue-200">
-        <CardContent className="pt-6">
-          <h3 className="font-semibold text-blue-900 mb-3">
-            🚗 Gestão de Frotas Integrada
-          </h3>
-          <div className="space-y-2 text-sm text-blue-800">
-            <p>
-              • <strong>Processamento automático:</strong> Dados extraídos com ajuda da IA
-            </p>
-            <p>
-              • <strong>Dashboard atualizado:</strong> Após o processamento, os dados aparecem imediatamente no painel
-            </p>
-            <p>
-              • <strong>Estrutura completa:</strong> Veículos, responsáveis e pagamentos são organizados automaticamente
-            </p>
-            <p>
-              • <strong>Empresas vinculadas:</strong> Dados são associados à sua empresa no sistema
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
