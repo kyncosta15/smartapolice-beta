@@ -33,6 +33,7 @@ import AdminEmailSettingsPage from './pages/AdminEmailSettingsPage';
 import AdminWebhooksPage from './pages/AdminWebhooksPage';
 import CentralDeDadosPage from './pages/CentralDeDadosPage';
 import InserirVeiculosLotePage from './pages/InserirVeiculosLotePage';
+import AdminAccessLogsPage from './pages/AdminAccessLogsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -134,6 +135,14 @@ const App = () => {
                 element={
                   <ProtectedRoute requiredRoles={['admin', 'administrador']}>
                     <CentralDeDadosPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/acessos"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                    <AdminAccessLogsPage />
                   </ProtectedRoute>
                 }
               />
