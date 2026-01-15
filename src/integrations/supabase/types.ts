@@ -2767,6 +2767,36 @@ export type Database = {
           },
         ]
       }
+      user_access_logs: {
+        Row: {
+          created_at: string
+          device_name: string | null
+          hidden: boolean
+          id: string
+          ip_address: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_name?: string | null
+          hidden?: boolean
+          id?: string
+          ip_address: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_name?: string | null
+          hidden?: boolean
+          id?: string
+          ip_address?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_cpf_vinculos: {
         Row: {
           ativo: boolean | null
@@ -3125,6 +3155,10 @@ export type Database = {
           issue_type: string
           policy_id: string
         }[]
+      }
+      check_ip_exists: {
+        Args: { _ip_address: string; _user_id: string }
+        Returns: boolean
       }
       current_empresa_id: { Args: never; Returns: string }
       debug_frota_auth: {

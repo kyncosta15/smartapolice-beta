@@ -116,3 +116,6 @@ verify_jwt = false
 
 [functions.change-password]
 verify_jwt = false
+
+[functions.get-client-ip]
+verify_jwt = false

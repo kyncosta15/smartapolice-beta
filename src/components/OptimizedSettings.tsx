@@ -25,6 +25,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from '@/components/UserProfile';
 import { ChangePasswordForm } from '@/components/ChangePasswordForm';
+import { AccessLogsTab } from '@/components/settings/AccessLogsTab';
 
 interface OptimizedSettingsProps {
   onBackToHome?: () => void;
@@ -61,7 +62,8 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
 
   const sections = [
     { value: 'profile', label: 'Meu Perfil', icon: User },
-    { value: 'security', label: 'Segurança', icon: KeyRound }
+    { value: 'security', label: 'Segurança', icon: KeyRound },
+    { value: 'access', label: 'Acessos', icon: Globe }
   ];
 
   const handleSave = (section: string) => {
@@ -309,6 +311,21 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        );
+
+      case 'access':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
+                <Globe className="h-5 w-5 mr-2" />
+                Histórico de Acessos
+              </h3>
+              <p className="text-muted-foreground mb-6">Visualize todos os dispositivos e locais de onde você acessou o sistema</p>
+            </div>
+
+            <AccessLogsTab />
           </div>
         );
 

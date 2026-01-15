@@ -4,7 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardContent } from '@/components/DashboardContent';
 import { Shield, Loader2 } from 'lucide-react';
 import { TermsModal } from '@/components/auth/TermsModal';
+import { NewAccessModal } from '@/components/NewAccessModal';
 import { supabase } from '@/integrations/supabase/client';
+import { useAccessTracker } from '@/hooks/useAccessTracker';
 
 const AuthGuardContent = () => {
   const { user, profile, isLoading } = useAuth();
@@ -12,6 +14,15 @@ const AuthGuardContent = () => {
   
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
+
+  // Hook para rastrear acessos por IP
+  const { 
+    isNewAccess, 
+    ipAddress, 
+    userAgent, 
+    isLoading: accessLoading, 
+    markAsRegistered 
+  } = useAccessTracker(user?.id);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -130,6 +141,16 @@ const AuthGuardContent = () => {
           open={showTermsModal} 
           onAccept={handleTermsAccept}
           userId={user.id}
+        />
+      )}
+      {/* Modal de novo acesso por IP */}
+      {!accessLoading && isNewAccess && user && !showTermsModal && (
+        <NewAccessModal
+          open={isNewAccess}
+          onClose={markAsRegistered}
+          userId={user.id}
+          ipAddress={ipAddress}
+          userAgent={userAgent}
         />
       )}
     </>
