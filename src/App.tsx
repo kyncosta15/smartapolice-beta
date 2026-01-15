@@ -34,6 +34,7 @@ import AdminWebhooksPage from './pages/AdminWebhooksPage';
 import CentralDeDadosPage from './pages/CentralDeDadosPage';
 import InserirVeiculosLotePage from './pages/InserirVeiculosLotePage';
 import AdminAccessLogsPage from './pages/AdminAccessLogsPage';
+import AdminPresencePage from './pages/admin/AdminPresencePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -143,6 +144,14 @@ const App = () => {
                 element={
                   <ProtectedRoute requiredRoles={['admin', 'administrador']}>
                     <AdminAccessLogsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/presenca"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                    <AdminPresencePage />
                   </ProtectedRoute>
                 }
               />

@@ -4,9 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardContent } from '@/components/DashboardContent';
 import { Shield, Loader2 } from 'lucide-react';
 import { TermsModal } from '@/components/auth/TermsModal';
-import { NewAccessModal } from '@/components/NewAccessModal';
+import { PresenceNameModal } from '@/components/PresenceNameModal';
 import { supabase } from '@/integrations/supabase/client';
-import { useAccessTracker } from '@/hooks/useAccessTracker';
+import { usePresence } from '@/hooks/usePresence';
 
 const AuthGuardContent = () => {
   const { user, profile, isLoading } = useAuth();
@@ -15,14 +15,12 @@ const AuthGuardContent = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
 
-  // Hook para rastrear acessos por IP
+  // Hook de presença com heartbeat e IP hash
   const { 
-    isNewAccess, 
-    ipAddress, 
-    userAgent, 
-    isLoading: accessLoading, 
-    markAsRegistered 
-  } = useAccessTracker(user?.id);
+    needsName, 
+    isLoading: presenceLoading, 
+    setDisplayName 
+  } = usePresence(user?.id);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -143,14 +141,11 @@ const AuthGuardContent = () => {
           userId={user.id}
         />
       )}
-      {/* Modal de novo acesso por IP */}
-      {!accessLoading && isNewAccess && user && !showTermsModal && (
-        <NewAccessModal
-          open={isNewAccess}
-          onClose={markAsRegistered}
-          userId={user.id}
-          ipAddress={ipAddress}
-          userAgent={userAgent}
+      {/* Modal de identificação de presença */}
+      {!presenceLoading && needsName && user && !showTermsModal && (
+        <PresenceNameModal
+          open={needsName}
+          onSetName={setDisplayName}
         />
       )}
     </>
