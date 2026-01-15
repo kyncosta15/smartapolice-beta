@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Calendar, Send, Trash2, Plus, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Mail, Calendar, Send, Trash2, Plus, CheckCircle, XCircle, Clock, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -44,9 +44,10 @@ export function AdminEmailSettings() {
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [sendingWelcome, setSendingWelcome] = useState(false);
   const { toast } = useToast();
 
-  // Formulário
+  // Formulário de agendamento
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     empresa_id: "",
@@ -55,6 +56,10 @@ export function AdminEmailSettings() {
     frequencia_dias: 30,
     dia_envio: 1,
   });
+
+  // Formulário de email de boas-vindas
+  const [welcomeEmail, setWelcomeEmail] = useState("");
+  const [welcomePassword, setWelcomePassword] = useState("");
 
   useEffect(() => {
     loadData();
@@ -229,7 +234,48 @@ export function AdminEmailSettings() {
         variant: "destructive",
       });
     } finally {
-      setSending(false);
+    setSending(false);
+    }
+  };
+
+  const sendWelcomeEmail = async () => {
+    if (!welcomeEmail || !welcomePassword) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha o email e a senha",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSendingWelcome(true);
+
+      const { data, error } = await supabase.functions.invoke("send-welcome-email", {
+        body: { 
+          email: welcomeEmail, 
+          password: welcomePassword 
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado!",
+        description: `Email de boas-vindas enviado para ${welcomeEmail}`,
+      });
+
+      setWelcomeEmail("");
+      setWelcomePassword("");
+    } catch (error: any) {
+      console.error("Erro ao enviar email:", error);
+      toast({
+        title: "Erro ao enviar",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSendingWelcome(false);
     }
   };
 
@@ -254,6 +300,53 @@ export function AdminEmailSettings() {
 
   return (
     <div className="space-y-6 p-6">
+      {/* Email de Boas-vindas */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="w-5 h-5" />
+            Testar Email de Boas-vindas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Envie um email de boas-vindas com login e senha para novos usuários.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="welcome-email">Email do Usuário</Label>
+              <Input
+                id="welcome-email"
+                type="email"
+                placeholder="usuario@email.com"
+                value={welcomeEmail}
+                onChange={(e) => setWelcomeEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="welcome-password">Senha Temporária</Label>
+              <Input
+                id="welcome-password"
+                type="text"
+                placeholder="SenhaTemp123"
+                value={welcomePassword}
+                onChange={(e) => setWelcomePassword(e.target.value)}
+              />
+            </div>
+            <div className="flex items-end">
+              <Button 
+                onClick={sendWelcomeEmail} 
+                disabled={sendingWelcome}
+                className="w-full"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                {sendingWelcome ? "Enviando..." : "Enviar Email"}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Envio Automático de Relatórios</h2>
