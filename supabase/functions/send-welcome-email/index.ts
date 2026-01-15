@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -10,8 +9,8 @@ const corsHeaders = {
 };
 
 interface WelcomeEmailRequest {
-  userId: string;
   email: string;
+  password: string;
   name?: string;
 }
 
@@ -22,11 +21,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { userId, email, name }: WelcomeEmailRequest = await req.json();
+    const { email, password, name }: WelcomeEmailRequest = await req.json();
 
     console.log(`Enviando email de boas-vindas para: ${email}`);
-
-    const userName = name || email.split('@')[0];
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -34,87 +31,156 @@ const handler = async (req: Request): Promise<Response> => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bem-vindo à RCORP Seguros</title>
+  <title>Bem-vindo à RCORP</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+  </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+<body style="margin: 0; padding: 0; font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0a1628;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #0a1628;">
     <tr>
-      <td align="center" style="padding: 40px 0;">
-        <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+      <td align="center" style="padding: 0;">
+        <table role="presentation" style="width: 100%; max-width: 700px; border-collapse: collapse; background: linear-gradient(135deg, #0a1628 0%, #132743 50%, #0a1628 100%); position: relative;">
           
-          <!-- Header -->
+          <!-- Decorative hexagons background (simulated with borders) -->
           <tr>
-            <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); border-radius: 12px 12px 0 0;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                🎉 Bem-vindo à RCORP Seguros!
+            <td style="padding: 30px 40px 20px; position: relative;">
+              <!-- Header row -->
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="color: #8899aa; font-size: 12px; letter-spacing: 2px; font-weight: 400;">
+                    SEU PRIMEIRO ACESSO
+                  </td>
+                  <td style="text-align: right; color: #8899aa; font-size: 12px; letter-spacing: 2px; font-weight: 400;">
+                    RCORP
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Main Title -->
+          <tr>
+            <td style="padding: 20px 40px 30px; text-align: center;">
+              <h1 style="margin: 0; color: #d4a53c; font-size: 48px; font-weight: 700; font-style: italic; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                Seja bem vindo (a)
               </h1>
             </td>
           </tr>
           
-          <!-- Body -->
+          <!-- Welcome text -->
           <tr>
-            <td style="padding: 40px;">
-              <p style="margin: 0 0 20px; color: #333333; font-size: 18px; line-height: 1.6;">
-                Olá, <strong>${userName}</strong>!
+            <td style="padding: 0 40px 30px; text-align: center;">
+              <p style="margin: 0 0 15px; color: #a8b8c8; font-size: 18px; line-height: 1.6;">
+                É muito bom perceber que confiou em nós!
               </p>
-              
-              <p style="margin: 0 0 20px; color: #555555; font-size: 16px; line-height: 1.6;">
-                Estamos muito felizes em tê-lo conosco! Sua conta foi criada com sucesso e agora você tem acesso completo ao nosso sistema de gestão de seguros.
+              <p style="margin: 0; color: #a8b8c8; font-size: 18px; line-height: 1.6;">
+                Com um imenso prazer, estamos a disposição para mudar a forma de<br>
+                cuidar melhor das suas apólices.
               </p>
-              
-              <div style="background-color: #f8f9fa; border-left: 4px solid #1e3a5f; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;">
-                <h3 style="margin: 0 0 15px; color: #1e3a5f; font-size: 18px;">
-                  📋 O que você pode fazer no sistema:
-                </h3>
-                <ul style="margin: 0; padding-left: 20px; color: #555555; font-size: 15px; line-height: 2;">
-                  <li><strong>Gestão de Apólices</strong> - Visualize e gerencie todas as suas apólices de seguro</li>
-                  <li><strong>Gestão de Frota</strong> - Controle completo dos veículos da sua empresa</li>
-                  <li><strong>Sinistros e Assistências</strong> - Abertura e acompanhamento de ocorrências</li>
-                  <li><strong>Relatórios Executivos</strong> - Insights e análises do seu portfólio</li>
-                  <li><strong>Gestão de Colaboradores</strong> - Administre benefícios da sua equipe</li>
-                </ul>
-              </div>
-              
-              <p style="margin: 0 0 20px; color: #555555; font-size: 16px; line-height: 1.6;">
-                Para começar, basta acessar o sistema e explorar as funcionalidades disponíveis. Se precisar de ajuda, nossa equipe está sempre à disposição!
-              </p>
-              
-              <!-- CTA Button -->
-              <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0;">
-                <tr>
-                  <td align="center">
-                    <a href="https://rcorp.rcaldas.com.br/dashboard" 
-                       style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 15px rgba(30, 58, 95, 0.3);">
-                      Acessar o Sistema →
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              
-              <div style="border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;">
-                <p style="margin: 0 0 10px; color: #777777; font-size: 14px;">
-                  <strong>Precisa de ajuda?</strong>
-                </p>
-                <p style="margin: 0; color: #777777; font-size: 14px; line-height: 1.6;">
-                  Entre em contato conosco pelo email <a href="mailto:suporte@rcaldas.com.br" style="color: #1e3a5f;">suporte@rcaldas.com.br</a> ou pelo WhatsApp.
-                </p>
-              </div>
             </td>
           </tr>
           
-          <!-- Footer -->
+          <!-- Access instructions -->
           <tr>
-            <td style="padding: 30px 40px; background-color: #f8f9fa; border-radius: 0 0 12px 12px; text-align: center;">
-              <p style="margin: 0 0 10px; color: #999999; font-size: 13px;">
-                © ${new Date().getFullYear()} RCORP Seguros - Todos os direitos reservados
+            <td style="padding: 20px 40px 30px; text-align: center;">
+              <p style="margin: 0; color: #ffffff; font-size: 18px; line-height: 1.6;">
+                Acesse com os <strong>dados abaixo</strong> e altere sua senha no <strong>primeiro login.</strong>
               </p>
-              <p style="margin: 0; color: #999999; font-size: 12px;">
-                Este email foi enviado automaticamente após a criação da sua conta.
-              </p>
+            </td>
+          </tr>
+          
+          <!-- URL Link -->
+          <tr>
+            <td style="padding: 0 40px 25px; text-align: center;">
+              <a href="https://rcorp.rcaldas.com.br" style="color: #4a9eff; font-size: 20px; text-decoration: underline; font-weight: 500;">
+                https://rcorp.rcaldas.com.br
+              </a>
+            </td>
+          </tr>
+          
+          <!-- Login Box -->
+          <tr>
+            <td style="padding: 0 40px 15px; text-align: center;">
+              <table role="presentation" style="margin: 0 auto; border-collapse: collapse;">
+                <tr>
+                  <td style="background: rgba(255,255,255,0.05); border: 2px solid #8b4513; border-radius: 50px; padding: 15px 40px;">
+                    <table role="presentation" style="border-collapse: collapse;">
+                      <tr>
+                        <td style="color: #ffffff; font-size: 14px; font-weight: 600; padding-right: 15px; letter-spacing: 1px;">
+                          LOGIN
+                        </td>
+                        <td style="padding-right: 15px;">
+                          <div style="width: 40px; height: 40px; background: #ffffff; border-radius: 50%; display: inline-block; text-align: center; line-height: 40px;">
+                            <span style="color: #0a1628; font-size: 20px;">👤</span>
+                          </div>
+                        </td>
+                        <td style="color: #d4a53c; font-size: 18px; font-weight: 500;">
+                          ${email}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Password Box -->
+          <tr>
+            <td style="padding: 0 40px 40px; text-align: center;">
+              <table role="presentation" style="margin: 0 auto; border-collapse: collapse;">
+                <tr>
+                  <td style="background: rgba(255,255,255,0.05); border: 2px solid #8b4513; border-radius: 50px; padding: 15px 40px;">
+                    <table role="presentation" style="border-collapse: collapse;">
+                      <tr>
+                        <td style="color: #ffffff; font-size: 14px; font-weight: 600; padding-right: 15px; letter-spacing: 1px;">
+                          SENHA
+                        </td>
+                        <td style="padding-right: 15px;">
+                          <div style="width: 40px; height: 40px; background: #ffffff; border-radius: 50%; display: inline-block; text-align: center; line-height: 40px;">
+                            <span style="color: #0a1628; font-size: 20px;">🔒</span>
+                          </div>
+                        </td>
+                        <td style="color: #d4a53c; font-size: 18px; font-weight: 500; letter-spacing: 3px;">
+                          ${password}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer with logo -->
+          <tr>
+            <td style="padding: 30px 40px 40px;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="color: #ffffff; font-size: 14px; font-weight: 600;">
+                    <span style="font-weight: 700;">ℝ</span> RCALDAS <span style="font-weight: 300;">Tech</span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           
         </table>
+      </td>
+    </tr>
+  </table>
+  
+  <!-- Additional info -->
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #0a1628;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p style="margin: 0; color: #666666; font-size: 12px;">
+          © ${new Date().getFullYear()} RCORP - Todos os direitos reservados
+        </p>
+        <p style="margin: 10px 0 0; color: #666666; font-size: 11px;">
+          Este email foi enviado automaticamente após a criação da sua conta.
+        </p>
       </td>
     </tr>
   </table>
@@ -125,7 +191,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "RCORP Seguros <relatorios@rcorp.rcaldas.com.br>",
       to: [email],
-      subject: "🎉 Bem-vindo à RCORP Seguros!",
+      subject: "🎉 Seu Primeiro Acesso - RCORP",
       html: htmlContent,
     });
 
