@@ -1,11 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import smartapoliceShield from '@/assets/smartapolice-shield-transparent.png';
+import { useAuth } from '@/contexts/AuthContext';
 
 const SystemSelection = () => {
   const navigate = useNavigate();
+  const { user, profile, isLoading } = useAuth();
+
+  // Se já estiver logado, redireciona para o dashboard apropriado
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (profile?.is_admin) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, profile, isLoading, navigate]);
 
   const handleSystemSelect = () => {
     navigate('/auth/smartapolice');
