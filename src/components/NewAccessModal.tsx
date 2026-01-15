@@ -145,24 +145,13 @@ export function NewAccessModal({ open, onClose, userId, ipAddress, userAgent }: 
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              onClick={handleSkip}
-              disabled={isLoading}
-            >
-              Pular
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Salvando...' : 'Confirmar'}
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Salvando...' : 'Confirmar'}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>
