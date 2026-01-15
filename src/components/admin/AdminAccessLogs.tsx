@@ -41,7 +41,6 @@ interface AccessLog {
   device_name: string | null;
   user_agent: string | null;
   created_at: string;
-  last_accessed: string | null;
   hidden: boolean;
 }
 
@@ -94,11 +93,11 @@ export function AdminAccessLogs() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Buscar logs de acesso incluindo last_accessed
+      // Buscar logs de acesso
       const { data: logsData, error: logsError } = await supabase
         .from('user_access_logs')
-        .select('*')
-        .order('created_at', { ascending: false }) as { data: AccessLog[] | null; error: any };
+        .select('id, user_id, ip_address, device_name, user_agent, created_at, hidden')
+        .order('created_at', { ascending: false });
 
       if (logsError) throw logsError;
 
@@ -152,18 +151,13 @@ export function AdminAccessLogs() {
 
     logs.forEach(log => {
       if (!userMap[log.user_id]) {
-        // Usar last_accessed para determinar status online (mais preciso)
+        // Encontrar o acesso mais recente baseado em created_at
         const userLogs = logs.filter(l => l.user_id === log.user_id);
+        const mostRecentLog = userLogs.reduce((latest, current) => 
+          new Date(current.created_at).getTime() > new Date(latest.created_at).getTime() ? current : latest
+        , userLogs[0]);
         
-        // Encontrar o registro com last_accessed mais recente
-        const mostRecentAccess = userLogs.reduce((latest, current) => {
-          const latestTime = latest.last_accessed ? new Date(latest.last_accessed).getTime() : new Date(latest.created_at).getTime();
-          const currentTime = current.last_accessed ? new Date(current.last_accessed).getTime() : new Date(current.created_at).getTime();
-          return currentTime > latestTime ? current : latest;
-        }, userLogs[0]);
-        
-        const lastAccessedTime = mostRecentAccess?.last_accessed || mostRecentAccess?.created_at;
-        const lastSeenDate = lastAccessedTime ? new Date(lastAccessedTime) : null;
+        const lastSeenDate = mostRecentLog ? new Date(mostRecentLog.created_at) : null;
         const isOnline = lastSeenDate 
           ? (Date.now() - lastSeenDate.getTime()) < ONLINE_THRESHOLD_MS 
           : false;
@@ -173,7 +167,7 @@ export function AdminAccessLogs() {
           email: usersWithEmail[log.user_id] || 'Email não disponível',
           displayName: profiles[log.user_id]?.display_name || null,
           isOnline,
-          lastSeen: lastAccessedTime || null,
+          lastSeen: mostRecentLog?.created_at || null,
           totalAccesses: 0,
           uniqueIPs: [],
           devices: [],

@@ -28,6 +28,14 @@ interface AccessLog {
   hidden: boolean;
 }
 
+// Função para verificar se está online (acessou nos últimos 5 minutos)
+const isRecentAccess = (createdAt: string): boolean => {
+  const accessTime = new Date(createdAt).getTime();
+  const now = Date.now();
+  const FIVE_MINUTES = 5 * 60 * 1000;
+  return (now - accessTime) < FIVE_MINUTES;
+};
+
 export function AccessLogsTab() {
   const [logs, setLogs] = useState<AccessLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -167,6 +175,7 @@ export function AccessLogsTab() {
             {logs.map((log) => {
               const DeviceIcon = getDeviceIcon(log.user_agent);
               const { date, time } = formatDateTime(log.created_at);
+              const online = isRecentAccess(log.created_at);
               
               return (
                 <div
@@ -177,8 +186,11 @@ export function AccessLogsTab() {
                       : 'bg-card'
                   }`}
                 >
-                  <div className="bg-primary/10 rounded-full p-2.5 flex-shrink-0">
+                  <div className="bg-primary/10 rounded-full p-2.5 flex-shrink-0 relative">
                     <DeviceIcon className="h-5 w-5 text-primary" />
+                    {online && (
+                      <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
+                    )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
@@ -186,6 +198,11 @@ export function AccessLogsTab() {
                       <p className="font-medium truncate">
                         {log.device_name || 'Dispositivo desconhecido'}
                       </p>
+                      {online && (
+                        <Badge variant="default" className="text-xs bg-green-500 hover:bg-green-600">
+                          Online
+                        </Badge>
+                      )}
                       {log.hidden && (
                         <Badge variant="secondary" className="text-xs">
                           Oculto
