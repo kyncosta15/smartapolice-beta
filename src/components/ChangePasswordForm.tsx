@@ -67,12 +67,20 @@ export function ChangePasswordForm() {
         },
       });
 
+      // Verifica erro retornado pelo invoke (erro de rede/função não encontrada)
       if (error) {
-        throw new Error(error.message);
+        // Tenta extrair a mensagem de erro do contexto
+        const errorMessage = error.message || "Erro ao conectar com o servidor";
+        throw new Error(errorMessage);
       }
 
+      // Verifica erro retornado no body da resposta da edge function
       if (data?.error) {
         throw new Error(data.error);
+      }
+
+      if (!data?.success) {
+        throw new Error("Erro desconhecido ao alterar senha");
       }
 
       toast({
@@ -86,9 +94,25 @@ export function ChangePasswordForm() {
       setConfirmPassword('');
     } catch (error: any) {
       console.error('Erro ao alterar senha:', error);
+      
+      // Mensagens de erro amigáveis
+      let errorMessage = "Ocorreu um erro ao alterar sua senha";
+      
+      if (error.message) {
+        if (error.message.includes("Senha atual incorreta")) {
+          errorMessage = "A senha atual está incorreta";
+        } else if (error.message.includes("não autenticado")) {
+          errorMessage = "Sua sessão expirou. Faça login novamente.";
+        } else if (error.message.includes("6 caracteres")) {
+          errorMessage = "A nova senha deve ter no mínimo 6 caracteres";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Erro ao alterar senha",
-        description: error.message || "Ocorreu um erro ao alterar sua senha",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
