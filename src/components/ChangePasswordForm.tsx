@@ -67,10 +67,42 @@ export function ChangePasswordForm() {
         },
       });
 
-      // Verifica erro retornado pelo invoke (erro de rede/função não encontrada)
+      // Verifica erro retornado pelo invoke (ex.: edge function retornou não-2xx)
       if (error) {
-        // Tenta extrair a mensagem de erro do contexto
-        const errorMessage = error.message || "Erro ao conectar com o servidor";
+        let errorMessage = error.message || "Erro ao conectar com o servidor";
+
+        // Em erros HTTP, o supabase-js coloca o Response em `error.context`
+        const ctx = (error as any)?.context;
+
+        // Caso `context` seja um Response (padrão)
+        if (ctx && typeof ctx.clone === 'function' && typeof ctx.text === 'function') {
+          try {
+            const text = await ctx.clone().text();
+            if (text) {
+              try {
+                const parsed = JSON.parse(text);
+                errorMessage = parsed?.error || parsed?.message || errorMessage;
+              } catch {
+                // Se não for JSON, usa o texto bruto
+                errorMessage = text;
+              }
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        // Fallback para implementações que retornam { status, body }
+        const body = (ctx && typeof ctx === 'object') ? (ctx as any).body : undefined;
+        if (body && typeof body === 'string') {
+          try {
+            const parsed = JSON.parse(body);
+            errorMessage = parsed?.error || parsed?.message || errorMessage;
+          } catch {
+            // ignore
+          }
+        }
+
         throw new Error(errorMessage);
       }
 
