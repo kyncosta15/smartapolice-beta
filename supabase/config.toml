@@ -119,3 +119,18 @@ verify_jwt = false
 
 [functions.get-client-ip]
 verify_jwt = false
+
+[functions.presence-start]
+verify_jwt = false
+
+[functions.presence-set-name]
+verify_jwt = false
+
+[functions.presence-heartbeat]
+verify_jwt = false
+
+[functions.presence-end]
+verify_jwt = false
+
+[functions.admin-presence]
+verify_jwt = false

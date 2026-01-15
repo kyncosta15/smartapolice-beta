@@ -2045,6 +2045,51 @@ export type Database = {
         }
         Relationships: []
       }
+      presence_sessions: {
+        Row: {
+          created_at: string
+          current_path: string | null
+          device_id: string | null
+          display_name: string | null
+          ended_at: string | null
+          id: string
+          ip_hash: string
+          last_heartbeat_at: string
+          started_at: string
+          tenant_id: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_path?: string | null
+          device_id?: string | null
+          display_name?: string | null
+          ended_at?: string | null
+          id?: string
+          ip_hash: string
+          last_heartbeat_at?: string
+          started_at?: string
+          tenant_id: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_path?: string | null
+          device_id?: string | null
+          display_name?: string | null
+          ended_at?: string | null
+          id?: string
+          ip_hash?: string
+          last_heartbeat_at?: string
+          started_at?: string
+          tenant_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2589,6 +2634,45 @@ export type Database = {
           ip_address?: unknown
           last_attempt_at?: string | null
           submission_count?: number | null
+        }
+        Relationships: []
+      }
+      tenant_ip_registry: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          display_name: string | null
+          first_seen_at: string
+          id: string
+          ip_hash: string
+          last_seen_at: string
+          tenant_id: string
+          times_seen: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          display_name?: string | null
+          first_seen_at?: string
+          id?: string
+          ip_hash: string
+          last_seen_at?: string
+          tenant_id: string
+          times_seen?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          display_name?: string | null
+          first_seen_at?: string
+          id?: string
+          ip_hash?: string
+          last_seen_at?: string
+          tenant_id?: string
+          times_seen?: number
+          updated_at?: string
         }
         Relationships: []
       }
