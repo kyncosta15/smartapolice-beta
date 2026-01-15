@@ -19,10 +19,12 @@ import {
   ArrowLeft,
   User,
   Monitor,
-  Globe
+  Globe,
+  KeyRound
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from '@/components/UserProfile';
+import { ChangePasswordForm } from '@/components/ChangePasswordForm';
 
 interface OptimizedSettingsProps {
   onBackToHome?: () => void;
@@ -58,7 +60,8 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
   const { toast } = useToast();
 
   const sections = [
-    { value: 'profile', label: 'Meu Perfil', icon: User }
+    { value: 'profile', label: 'Meu Perfil', icon: User },
+    { value: 'security', label: 'Segurança', icon: KeyRound }
   ];
 
   const handleSave = (section: string) => {
@@ -278,75 +281,33 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
         return (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <Shield className="h-5 w-5 mr-2" />
-                Configurações de Segurança
+              <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
+                <KeyRound className="h-5 w-5 mr-2" />
+                Segurança da Conta
               </h3>
-              <p className="text-gray-600 mb-6">Gerencie suas configurações de segurança e privacidade</p>
+              <p className="text-muted-foreground mb-6">Gerencie sua senha e configurações de segurança</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Autenticação</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="two-factor">Autenticação de dois fatores</Label>
-                      <p className="text-sm text-gray-500">Adiciona uma camada extra de segurança</p>
-                    </div>
-                    <Switch
-                      id="two-factor"
-                      checked={settings.security.twoFactor}
-                      onCheckedChange={(checked) => updateSetting('security', 'twoFactor', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="auto-logout">Logout automático</Label>
-                      <p className="text-sm text-gray-500">Sair automaticamente após inatividade</p>
-                    </div>
-                    <Switch
-                      id="auto-logout"
-                      checked={settings.security.autoLogout}
-                      onCheckedChange={(checked) => updateSetting('security', 'autoLogout', checked)}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              <ChangePasswordForm />
 
-              <Card>
+              <Card className="dark:bg-card dark:border">
                 <CardHeader>
-                  <CardTitle className="text-base">Sessão</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2 dark:text-foreground">
+                    <Shield className="w-4 h-4" />
+                    Dicas de Segurança
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="session-timeout">Timeout da sessão (minutos)</Label>
-                    <Select
-                      value={settings.security.sessionTimeout.toString()}
-                      onValueChange={(value) => updateSetting('security', 'sessionTimeout', parseInt(value))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="15">15 minutos</SelectItem>
-                        <SelectItem value="30">30 minutos</SelectItem>
-                        <SelectItem value="60">1 hora</SelectItem>
-                        <SelectItem value="120">2 horas</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <CardContent className="space-y-3">
+                  <div className="text-sm text-muted-foreground space-y-2">
+                    <p>• Use uma senha forte com letras, números e símbolos</p>
+                    <p>• Não compartilhe sua senha com terceiros</p>
+                    <p>• Altere sua senha regularmente</p>
+                    <p>• Nunca use a mesma senha em diferentes serviços</p>
+                    <p>• Faça logout ao usar computadores públicos</p>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-            
-            <div className="pt-4 border-t">
-              <Button onClick={() => handleSave('segurança')} className="bg-blue-600 hover:bg-blue-700">
-                Salvar Configurações
-              </Button>
             </div>
           </div>
         );
