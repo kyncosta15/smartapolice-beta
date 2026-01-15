@@ -79,6 +79,17 @@ export function AdminAccessLogs() {
   // Considerar online se acessou nos últimos 15 minutos
   const ONLINE_THRESHOLD_MS = 15 * 60 * 1000;
 
+  const getDeviceType = (userAgent: string | null): string => {
+    if (!userAgent) return 'Desconhecido';
+    const ua = userAgent.toLowerCase();
+    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+      return 'Mobile';
+    } else if (ua.includes('tablet') || ua.includes('ipad')) {
+      return 'Tablet';
+    }
+    return 'Desktop';
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -189,16 +200,6 @@ export function AdminAccessLogs() {
     });
   }, [logs, profiles, usersWithEmail]);
 
-  const getDeviceType = (userAgent: string | null): string => {
-    if (!userAgent) return 'Desconhecido';
-    const ua = userAgent.toLowerCase();
-    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
-      return 'Mobile';
-    } else if (ua.includes('tablet') || ua.includes('ipad')) {
-      return 'Tablet';
-    }
-    return 'Desktop';
-  };
 
   const getDeviceIcon = (type: string) => {
     switch (type) {
