@@ -28,12 +28,28 @@ interface AccessLog {
   hidden: boolean;
 }
 
-// Função para verificar se está online (acessou nos últimos 5 minutos)
+// Função para verificar se está online (acessou nos últimos 2 minutos)
 const isRecentAccess = (createdAt: string): boolean => {
   const accessTime = new Date(createdAt).getTime();
   const now = Date.now();
-  const FIVE_MINUTES = 5 * 60 * 1000;
-  return (now - accessTime) < FIVE_MINUTES;
+  const TWO_MINUTES = 2 * 60 * 1000;
+  return (now - accessTime) < TWO_MINUTES;
+};
+
+// Agrupar logs por IP e retornar apenas o mais recente de cada
+const groupLogsByIP = (logs: AccessLog[]): AccessLog[] => {
+  const ipMap = new Map<string, AccessLog>();
+  
+  logs.forEach(log => {
+    const existing = ipMap.get(log.ip_address);
+    if (!existing || new Date(log.created_at) > new Date(existing.created_at)) {
+      ipMap.set(log.ip_address, log);
+    }
+  });
+  
+  return Array.from(ipMap.values()).sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 };
 
 export function AccessLogsTab() {
@@ -172,7 +188,7 @@ export function AccessLogsTab() {
           </div>
         ) : (
           <div className="space-y-3">
-            {logs.map((log) => {
+            {groupLogsByIP(logs).map((log) => {
               const DeviceIcon = getDeviceIcon(log.user_agent);
               const { date, time } = formatDateTime(log.created_at);
               const online = isRecentAccess(log.created_at);
