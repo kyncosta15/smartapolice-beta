@@ -7,6 +7,21 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// Função para extrair IP do request (mesma lógica do presence-start)
+function getClientIP(req: Request): string {
+  const cfConnectingIp = req.headers.get('cf-connecting-ip');
+  const xRealIp = req.headers.get('x-real-ip');
+  const xForwardedFor = req.headers.get('x-forwarded-for');
+  const xClientIp = req.headers.get('x-client-ip');
+
+  if (cfConnectingIp) return cfConnectingIp;
+  if (xRealIp) return xRealIp;
+  if (xForwardedFor) return xForwardedFor.split(',')[0].trim();
+  if (xClientIp) return xClientIp;
+
+  return 'unknown';
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -58,13 +73,39 @@ serve(async (req) => {
       .eq('tenant_id', session.tenant_id)
       .eq('ip_hash', session.ip_hash)
       .eq('device_id', session.device_id || '');
-    
+
     if (updateRegistryError) {
       console.error('Error updating registry:', updateRegistryError);
     }
-    
+
+    // Atualizar também o log de acesso mais recente desse IP (para aparecer com nome no Histórico de Acessos)
+    const clientIP = getClientIP(req);
+
+    const { data: latestLog, error: latestLogError } = await supabase
+      .from('user_access_logs')
+      .select('id')
+      .eq('user_id', session.user_id)
+      .eq('ip_address', clientIP)
+      .is('device_name', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestLogError) {
+      console.error('Error fetching latest user_access_logs:', latestLogError);
+    } else if (latestLog?.id) {
+      const { error: updateLogError } = await supabase
+        .from('user_access_logs')
+        .update({ device_name: display_name })
+        .eq('id', latestLog.id);
+
+      if (updateLogError) {
+        console.error('Error updating user_access_logs device_name:', updateLogError);
+      }
+    }
+
     console.log('Name set for session:', session_id, 'Name:', display_name);
-    
+
     return new Response(
       JSON.stringify({ success: true, display_name }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
