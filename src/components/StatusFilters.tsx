@@ -11,18 +11,18 @@ export const StatusFilters = ({ selectedStatus, onStatusChange }: StatusFiltersP
     { 
       value: 'vigente', 
       label: 'Vigente', 
-      bgColor: 'bg-emerald-500',
-      bgColorHover: 'hover:bg-emerald-500',
-      textColor: 'text-emerald-700',
-      borderColor: 'border-emerald-200'
+      bgColor: 'bg-success',
+      bgColorHover: 'hover:bg-success',
+      textColor: 'text-success-foreground',
+      borderColor: 'border-success/30'
     },
     { 
       value: 'renovada_aguardando', 
       label: 'Renovada/Aguardando emissão', 
-      bgColor: 'bg-blue-500',
-      bgColorHover: 'hover:bg-blue-500',
-      textColor: 'text-blue-700',
-      borderColor: 'border-blue-200'
+      bgColor: 'bg-primary',
+      bgColorHover: 'hover:bg-primary',
+      textColor: 'text-primary',
+      borderColor: 'border-primary/30'
     },
     { 
       value: 'nao_renovada', 

@@ -3,9 +3,9 @@ import { PolicyStatus } from '@/types/policyStatus';
 
 // Mapeamento de cores para cada status (atualizado com cores mais visuais)
 export const STATUS_COLORS: Record<string, string> = {
-  vigente: "bg-green-100 text-green-800 border-green-200 hover:bg-green-50",
-  ativa: "bg-green-100 text-green-800 border-green-200 hover:bg-green-50",
-  aguardando_emissao: "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-50", 
+  vigente: "bg-success/20 text-success-foreground border-success/30 hover:bg-success/10",
+  ativa: "bg-success/20 text-success-foreground border-success/30 hover:bg-success/10",
+  aguardando_emissao: "bg-primary/10 text-primary border-primary/20 hover:bg-primary/5", 
   nao_renovada: "bg-red-100 text-red-800 border-red-200 hover:bg-red-50",
   vencida: "bg-red-100 text-red-800 border-red-200 hover:bg-red-50",
   pendente_analise: "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-50",
@@ -33,9 +33,9 @@ export const formatStatusText = (status: PolicyStatus | string): string => {
 // Função para obter a cor do gráfico (apenas a cor base)
 export const getChartColor = (status: PolicyStatus | string): string => {
   const colorMap: Record<string, string> = {
-    vigente: "#10b981",    // Verde
-    ativa: "#10b981",      // Verde  
-    aguardando_emissao: "#3b82f6",  // Azul
+    vigente: "#c4a574",    // Soft Fawn (success)
+    ativa: "#c4a574",      // Soft Fawn (success)
+    aguardando_emissao: "#0c1539",  // Prussian Blue (primary)
     nao_renovada: "#ef4444",        // Vermelho
     vencida: "#dc2626",             // Vermelho mais escuro
     pendente_analise: "#f59e0b",    // Amarelo/Laranja
