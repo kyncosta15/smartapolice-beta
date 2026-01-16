@@ -111,6 +111,21 @@ serve(async (req) => {
       }
     }
     
+    // Registrar acesso real (histórico) com IP capturado no backend
+    // (usado por telas que leem user_access_logs)
+    const { error: accessLogError } = await supabase
+      .from('user_access_logs')
+      .insert({
+        user_id,
+        ip_address: clientIP,
+        device_name: currentName,
+        user_agent: user_agent || null,
+      });
+
+    if (accessLogError) {
+      console.error('Error inserting user_access_logs:', accessLogError);
+    }
+
     // Criar nova sessão de presença
     const { data: session, error: sessionError } = await supabase
       .from('presence_sessions')
