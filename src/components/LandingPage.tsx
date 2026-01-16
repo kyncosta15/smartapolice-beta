@@ -117,23 +117,14 @@ export const LandingPage = () => {
 
       {/* Right side - Background Image */}
       <div className="hidden md:block md:w-1/2 relative">
-        <picture className="absolute inset-0 w-full h-full">
-          <source
-            srcSet="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3-optimized.webp"
-            type="image/webp"
-            sizes="50vw"
-          />
-          <img
-            src="/lovable-uploads/c45b3700-3cc2-43a7-aa42-8f99beb081e3.png"
-            alt="Background"
-            className="absolute inset-0 w-full h-full object-cover"
-            width="960"
-            height="1080"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-          />
-        </picture>
+        <img
+          src="/lovable-uploads/rcorp-background-new.png"
+          alt="RCorp Logo"
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+        />
       </div>
     </div>
   );
