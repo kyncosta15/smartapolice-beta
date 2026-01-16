@@ -37,7 +37,7 @@ serve(async (req) => {
         current_path: current_path || undefined
       })
       .eq('id', session_id)
-      .eq('ended_at', null) // Só atualizar sessões ativas
+      .is('ended_at', null) // Só atualizar sessões ativas
       .select()
       .single();
     
