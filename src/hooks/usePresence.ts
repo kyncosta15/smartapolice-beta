@@ -99,9 +99,21 @@ export function usePresence(userId: string | undefined): PresenceState {
       if (heartbeatError) {
         console.error('Heartbeat error:', heartbeatError);
         
-        // Se a sessão expirou, reiniciar
-        if (data?.should_restart) {
+        // Check both data and error context for should_restart
+        const errorBody = heartbeatError?.context?.body;
+        let shouldRestart = data?.should_restart;
+        
+        if (!shouldRestart && errorBody) {
+          try {
+            const parsed = typeof errorBody === 'string' ? JSON.parse(errorBody) : errorBody;
+            shouldRestart = parsed?.should_restart;
+          } catch {}
+        }
+        
+        if (shouldRestart) {
           console.log('Session expired, restarting...');
+          sessionIdRef.current = null;
+          setSessionId(null);
           await startSession();
         }
       }
