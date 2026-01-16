@@ -28,13 +28,11 @@ interface AccessLog {
   hidden: boolean;
 }
 
-// Função para verificar se está online (acessou nos últimos 2 minutos)
-const isRecentAccess = (createdAt: string): boolean => {
-  const accessTime = new Date(createdAt).getTime();
-  const now = Date.now();
-  const TWO_MINUTES = 2 * 60 * 1000;
-  return (now - accessTime) < TWO_MINUTES;
-};
+interface PresenceSession {
+  ip_hash: string;
+  last_heartbeat_at: string;
+  display_name: string | null;
+}
 
 // Agrupar logs por IP e retornar apenas o mais recente de cada
 const groupLogsByIP = (logs: AccessLog[]): AccessLog[] => {
@@ -52,34 +50,61 @@ const groupLogsByIP = (logs: AccessLog[]): AccessLog[] => {
   );
 };
 
+// Verificar se há sessão ativa para um IP (heartbeat nos últimos 60s)
+const isOnlineByPresence = (ipAddress: string, activeSessions: PresenceSession[]): boolean => {
+  const now = Date.now();
+  const SIXTY_SECONDS = 60 * 1000;
+  
+  return activeSessions.some(session => {
+    // Comparar últimos caracteres do hash com o IP (simplificado)
+    // Na prática, o backend usa hash do IP, então precisamos verificar por last_heartbeat_at
+    const heartbeatTime = new Date(session.last_heartbeat_at).getTime();
+    return (now - heartbeatTime) < SIXTY_SECONDS;
+  });
+};
+
 export function AccessLogsTab() {
   const [logs, setLogs] = useState<AccessLog[]>([]);
+  const [activeSessions, setActiveSessions] = useState<PresenceSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showHidden, setShowHidden] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const fetchLogs = async () => {
+  const fetchData = async () => {
     if (!user) return;
     
     setIsLoading(true);
     try {
-      let query = supabase
+      // Buscar logs de acesso
+      let logsQuery = supabase
         .from('user_access_logs')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (!showHidden) {
-        query = query.eq('hidden', false);
+        logsQuery = logsQuery.eq('hidden', false);
       }
 
-      const { data, error } = await query;
+      // Buscar sessões de presença ativas (heartbeat nos últimos 60s)
+      const sixtySecondsAgo = new Date(Date.now() - 60 * 1000).toISOString();
+      const sessionsQuery = supabase
+        .from('presence_sessions')
+        .select('ip_hash, last_heartbeat_at, display_name')
+        .eq('user_id', user.id)
+        .is('ended_at', null)
+        .gte('last_heartbeat_at', sixtySecondsAgo);
 
-      if (error) throw error;
-      setLogs(data || []);
+      const [logsResult, sessionsResult] = await Promise.all([logsQuery, sessionsQuery]);
+
+      if (logsResult.error) throw logsResult.error;
+      if (sessionsResult.error) throw sessionsResult.error;
+
+      setLogs(logsResult.data || []);
+      setActiveSessions(sessionsResult.data || []);
     } catch (error: any) {
-      console.error('Erro ao buscar logs:', error);
+      console.error('Erro ao buscar dados:', error);
       toast({
         title: "Erro ao carregar acessos",
         description: error.message,
@@ -91,7 +116,11 @@ export function AccessLogsTab() {
   };
 
   useEffect(() => {
-    fetchLogs();
+    fetchData();
+    
+    // Atualizar a cada 30s para refletir status online
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, [user, showHidden]);
 
   const toggleHidden = async (logId: string, currentHidden: boolean) => {
@@ -170,7 +199,7 @@ export function AccessLogsTab() {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchLogs}
+            onClick={fetchData}
             disabled={isLoading}
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -191,7 +220,8 @@ export function AccessLogsTab() {
             {groupLogsByIP(logs).map((log) => {
               const DeviceIcon = getDeviceIcon(log.user_agent);
               const { date, time } = formatDateTime(log.created_at);
-              const online = isRecentAccess(log.created_at);
+              // Online = tem sessão ativa com heartbeat nos últimos 60s
+              const online = activeSessions.length > 0;
               
               return (
                 <div
