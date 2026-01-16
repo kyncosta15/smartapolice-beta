@@ -1,7 +1,17 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Muli:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'Condor';
+  src: local('Condor'), local('Condor-Bold');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @layer base {
   :root {
@@ -42,6 +52,8 @@
     --off-white-dark: 0 0% 94%;
     --brand-grad-start: var(--primary);
     --brand-grad-end: var(--primary);
+    --floral-white: 50 61% 95%;
+    --prussian-blue: 227 65% 13%;
   }
 
   .dark {

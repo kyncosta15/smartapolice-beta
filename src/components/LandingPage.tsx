@@ -33,7 +33,7 @@ export const LandingPage = () => {
 
               {/* H1 Brand Name with Gradient */}
               <h1
-                className="font-extrabold tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent leading-tight mb-2"
+                className="font-condor font-bold tracking-tight text-foreground leading-tight mb-2"
                 style={{
                   fontSize: "clamp(40px, 6vw, 80px)",
                   lineHeight: "1.05",
@@ -44,12 +44,12 @@ export const LandingPage = () => {
               </h1>
 
               {/* Tagline */}
-              <p className="text-sm sm:text-base text-muted-foreground mb-6">Soluções corporativas inteligentes</p>
+              <p className="text-sm sm:text-base font-muli text-muted-foreground mb-6">Soluções corporativas inteligentes</p>
             </div>
 
             {/* H2 Secondary Title */}
             <h2
-              className="font-extrabold tracking-tight text-foreground mb-3"
+              className="font-muli font-semibold tracking-tight text-foreground mb-3"
               style={{
                 textWrap: "balance" as any,
                 fontSize: "clamp(28px, 4.2vw, 54px)",
@@ -60,7 +60,7 @@ export const LandingPage = () => {
 
             {/* Description - Single sentence */}
             <p
-              className="mx-auto max-w-prose text-muted-foreground mb-4"
+              className="mx-auto max-w-prose font-muli text-muted-foreground mb-4"
               style={{ fontSize: "clamp(16px, 1.6vw, 20px)" }}
             >
               Otimize processos, centralize documentos e acompanhe tudo em um único painel.
@@ -116,11 +116,11 @@ export const LandingPage = () => {
       </div>
 
       {/* Right side - Background Image */}
-      <div className="hidden md:block md:w-1/2 relative">
+      <div className="hidden md:block md:w-1/2 relative bg-floral-white">
         <img
           src="/lovable-uploads/rcorp-background-new.png"
           alt="RCorp Logo"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-contain"
           loading="eager"
           fetchPriority="high"
           decoding="async"
