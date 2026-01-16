@@ -8,7 +8,7 @@ export const LandingPage = () => {
   return (
     <div className="min-h-screen flex relative overflow-hidden">
       {/* Left side - Content */}
-      <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/10 via-background to-secondary/10 dark:from-background dark:via-background dark:to-primary/5 flex flex-col relative z-10">
+      <div className="w-full md:w-1/2 bg-floral-white flex flex-col relative z-10">
         <section className="isolate">
           <div className="mx-auto max-w-screen-md px-6 py-12 sm:py-16 text-center min-h-[75vh] flex flex-col justify-center">
             {/* Brand Lockup */}
@@ -33,7 +33,7 @@ export const LandingPage = () => {
 
               {/* H1 Brand Name with Gradient */}
               <h1
-                className="font-condor font-bold tracking-tight text-foreground leading-tight mb-2"
+                className="font-condor font-bold tracking-tight bg-gradient-to-r from-prussian-blue to-prussian-blue/80 bg-clip-text text-transparent leading-tight mb-2"
                 style={{
                   fontSize: "clamp(40px, 6vw, 80px)",
                   lineHeight: "1.05",
@@ -116,11 +116,11 @@ export const LandingPage = () => {
       </div>
 
       {/* Right side - Background Image */}
-      <div className="hidden md:block md:w-1/2 relative bg-floral-white">
+      <div className="hidden md:block md:w-1/2 relative">
         <img
           src="/lovable-uploads/rcorp-background-new.png"
           alt="RCorp Logo"
-          className="absolute inset-0 w-full h-full object-contain"
+          className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
           fetchPriority="high"
           decoding="async"
