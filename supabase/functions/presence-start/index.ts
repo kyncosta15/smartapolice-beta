@@ -62,12 +62,14 @@ serve(async (req) => {
     const tenantId = user_id;
     
     // Verificar/atualizar registro de IP no tenant_ip_registry
+    // Buscar apenas por tenant_id + ip_hash (ignorar device_id para não pedir nome repetidamente)
     const { data: existingRegistry, error: registryError } = await supabase
       .from('tenant_ip_registry')
       .select('*')
       .eq('tenant_id', tenantId)
       .eq('ip_hash', ipHash)
-      .eq('device_id', device_id || '')
+      .order('last_seen_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
     
     if (registryError) {
