@@ -67,10 +67,14 @@ export default {
 				accent: 'hsl(var(--sidebar-accent))',
 				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 				border: 'hsl(var(--sidebar-border))',
-				ring: 'hsl(var(--sidebar-ring))'
+			ring: 'hsl(var(--sidebar-ring))'
 			},
 			'floral-white': 'hsl(var(--floral-white))',
-			'prussian-blue': 'hsl(var(--prussian-blue))'
+			'prussian-blue': 'hsl(var(--prussian-blue))',
+			success: {
+				DEFAULT: 'hsl(var(--success))',
+				foreground: 'hsl(var(--success-foreground))'
+			}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
