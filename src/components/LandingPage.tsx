@@ -78,11 +78,17 @@ export const LandingPage = () => {
 
             {/* Single CTA */}
             <div className="flex justify-center mb-8">
-              <Link to="/system-selection">
+              <Link to="/system-selection" className="group/glow relative">
+                {/* Outer glow border container */}
+                <div className="absolute -inset-[2px] rounded-lg bg-gradient-to-r from-prussian-blue/40 via-prussian-blue/60 to-prussian-blue/40 opacity-0 group-hover/glow:opacity-100 blur-[3px] transition-opacity duration-500" />
+                <div className="absolute -inset-[1px] rounded-lg bg-gradient-to-r from-prussian-blue/30 via-prussian-blue/50 to-prussian-blue/30 opacity-0 group-hover/glow:opacity-100 transition-opacity duration-300 overflow-hidden">
+                  {/* Shimmer effect on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/glow:translate-x-full transition-transform duration-1000 ease-in-out" />
+                </div>
                 <Button
                   variant="gradient"
                   size="lg"
-                  className="text-base font-medium px-6 py-3 min-h-[44px] group"
+                  className="relative text-base font-medium px-6 py-3 min-h-[44px] group"
                   aria-label="Entrar no painel da RCorp"
                 >
                   Entrar no painel
