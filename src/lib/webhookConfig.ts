@@ -123,19 +123,19 @@ function getDefaultWebhooks(): Record<string, WebhookConfig> {
     pdf_frota: {
       id: 'pdf_frota',
       nome: 'PDF Frota',
-      url: 'https://gruporcaldas2026.app.n8n.cloud/webhook/pdf-frota',
+      url: 'https://gruporcaldas0fc.app.n8n.cloud/webhook/pdf-frota',
       ativo: true,
     },
     planilha_frota: {
       id: 'planilha_frota',
       nome: 'Planilha Frota',
-      url: 'https://gruporcaldas2026.app.n8n.cloud/webhook/upload-planilha',
+      url: 'https://gruporcaldas0fc.app.n8n.cloud/webhook/upload-planilha',
       ativo: true,
     },
     apolices_pdf: {
       id: 'apolices_pdf',
       nome: 'Apólices PDF',
-      url: 'https://gruporcaldas2026.app.n8n.cloud/webhook/upload-arquivo',
+      url: 'https://gruporcaldas0fc.app.n8n.cloud/webhook/upload-arquivo',
       ativo: true,
     },
   };
