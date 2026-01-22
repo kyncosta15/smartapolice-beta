@@ -18,7 +18,7 @@ interface DocumentsCardProps {
   policyId: string;
 }
 
-export function DocumentsCard({ policyId }: DocumentsCardProps) {
+export function EndossosCard({ policyId }: DocumentsCardProps) {
   const { toast } = useToast();
   const [endossos, setEndossos] = useState<PolicyDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
