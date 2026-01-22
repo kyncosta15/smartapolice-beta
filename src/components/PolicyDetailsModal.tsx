@@ -10,7 +10,7 @@ import { CoveragesCard } from './policy-details/CoveragesCard';
 import { ValidityInfoCard } from './policy-details/ValidityInfoCard';
 import { VehicleInfoCard } from './policy-details/VehicleInfoCard';
 import { ResponsiblePersonCard } from './policy-details/ResponsiblePersonCard';
-import { DocumentsCard } from './policy-details/DocumentsCard';
+import { EndossosCard } from './policy-details/EndossosCard';
 import { renderValue } from '@/utils/renderValue';
 import {
   AlertDialog,
@@ -114,7 +114,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
             <ValidityInfoCard policy={policy} />
             <VehicleInfoCard policy={policy} />
 
-            <DocumentsCard policyId={policy.id} />
+            <EndossosCard policyId={policy.id} />
 
             {(policy.insuredName || policy.documento) && (
               <ResponsiblePersonCard policy={policy} />
