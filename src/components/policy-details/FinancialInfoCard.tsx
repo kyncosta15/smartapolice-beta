@@ -17,6 +17,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
   const { toast } = useToast();
   const [showInstallments, setShowInstallments] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editField, setEditField] = useState<'valor' | 'vencimento' | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const [localInstallments, setLocalInstallments] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -97,7 +98,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
   
   // Obter parcelas com datas e valores
   const getInstallmentsDetails = () => {
-    // Se houver installments detalhados, usar
+    // Se houver installments detalhados do banco, usar
     if (policy.installments && Array.isArray(policy.installments) && policy.installments.length > 0) {
       console.log('📋 Usando installments array:', policy.installments.length);
       return policy.installments;
@@ -109,22 +110,17 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
       return policy.parcelas;
     }
     
-    // Se não houver parcelas detalhadas, gerar parcelas baseadas em quantidade_parcelas
+    // Se não houver parcelas detalhadas, gerar parcelas SEM datas automáticas
+    // Para que o usuário insira manualmente
     const installments = [];
-    const startDate = policy.startDate || policy.inicio_vigencia 
-      ? new Date(policy.startDate || policy.inicio_vigencia) 
-      : new Date();
     
-    console.log('📋 Gerando parcelas genéricas:', installmentsCount);
+    console.log('📋 Gerando parcelas para edição manual:', installmentsCount);
     
     for (let i = 0; i < installmentsCount; i++) {
-      const dueDate = new Date(startDate);
-      dueDate.setMonth(dueDate.getMonth() + i);
-      
       installments.push({
         numero: i + 1,
         valor: monthlyPremium,
-        vencimento: dueDate.toISOString().split('T')[0],
+        vencimento: '', // Deixar vazio para inserção manual
         status: 'pendente'
       });
     }
@@ -141,7 +137,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
         id: inst.id,
         numero: inst.numero || inst.number || idx + 1,
         valor: inst.valor || inst.value || monthlyPremium,
-        vencimento: inst.vencimento || inst.dueDate || inst.date || inst.data_vencimento,
+        vencimento: inst.vencimento || inst.dueDate || inst.date || inst.data_vencimento || '',
         status: inst.status || 'pendente'
       })));
       setHasChanges(false);
@@ -151,26 +147,46 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
 
   const handleStartEdit = (index: number, currentValue: number) => {
     setEditingIndex(index);
+    setEditField('valor');
     setEditValue(currentValue.toFixed(2).replace('.', ','));
   };
 
+  const handleStartEditDate = (index: number, currentDate: string) => {
+    setEditingIndex(index);
+    setEditField('vencimento');
+    setEditValue(currentDate || '');
+  };
+
   const handleConfirmEdit = (index: number) => {
-    const newValue = parseFloat(editValue.replace(',', '.'));
-    if (!isNaN(newValue) && newValue >= 0) {
-      const newInstallments = [...localInstallments];
+    const newInstallments = [...localInstallments];
+    
+    if (editField === 'valor') {
+      const newValue = parseFloat(editValue.replace(',', '.'));
+      if (!isNaN(newValue) && newValue >= 0) {
+        newInstallments[index] = {
+          ...newInstallments[index],
+          valor: newValue
+        };
+        setLocalInstallments(newInstallments);
+        setHasChanges(true);
+      }
+    } else if (editField === 'vencimento') {
       newInstallments[index] = {
         ...newInstallments[index],
-        valor: newValue
+        vencimento: editValue
       };
       setLocalInstallments(newInstallments);
       setHasChanges(true);
     }
+    
     setEditingIndex(null);
+    setEditField(null);
     setEditValue('');
   };
 
   const handleCancelEdit = () => {
     setEditingIndex(null);
+    setEditField(null);
     setEditValue('');
   };
 
@@ -187,24 +203,46 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
     
     setIsSaving(true);
     try {
-      // Atualizar cada parcela no banco
+      // Atualizar ou criar cada parcela no banco
       for (const inst of localInstallments) {
         if (inst.id) {
-          // Atualizar parcela existente
+          // Atualizar parcela existente (valor E data)
           const { error } = await supabase
             .from('installments')
-            .update({ valor: inst.valor })
+            .update({ 
+              valor: inst.valor,
+              data_vencimento: inst.vencimento || null
+            })
             .eq('id', inst.id);
           
           if (error) {
             console.error('Erro ao atualizar parcela:', error);
+          }
+        } else {
+          // Criar nova parcela no banco se não existir
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { error } = await supabase
+              .from('installments')
+              .insert({
+                policy_id: policy.id,
+                user_id: user.id,
+                numero_parcela: inst.numero,
+                valor: inst.valor,
+                data_vencimento: inst.vencimento || null,
+                status: inst.status || 'pendente'
+              });
+            
+            if (error) {
+              console.error('Erro ao criar parcela:', error);
+            }
           }
         }
       }
 
       toast({
         title: "✅ Parcelas atualizadas",
-        description: "Os valores das parcelas foram salvos com sucesso",
+        description: "Os valores e datas das parcelas foram salvos com sucesso",
       });
 
       setHasChanges(false);
@@ -286,7 +324,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                 </DialogHeader>
                 
                 <p className="text-xs text-muted-foreground">
-                  Clique no valor de cada parcela para editar individualmente
+                  Clique no valor ou na data para editar manualmente
                 </p>
                 
                 <div className="space-y-2 mt-4 max-h-[400px] overflow-y-auto pr-2">
@@ -304,8 +342,9 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                           <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0">
                             {numero}
                           </div>
-                          <div>
-                            {editingIndex === index ? (
+                          <div className="flex flex-col gap-1">
+                            {/* Valor - Editável */}
+                            {editingIndex === index && editField === 'valor' ? (
                               <div className="flex items-center gap-1">
                                 <span className="text-sm text-gray-500">R$</span>
                                 <Input
@@ -345,11 +384,45 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                                 <Pencil className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </button>
                             )}
-                            {vencimento && (
-                              <p className="text-xs text-blue-600 flex items-center gap-1">
+                            
+                            {/* Data - Editável */}
+                            {editingIndex === index && editField === 'vencimento' ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  autoFocus
+                                  type="date"
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  onKeyDown={(e) => handleKeyDown(e, index)}
+                                  className="w-36 h-7 text-sm"
+                                />
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  onClick={() => handleConfirmEdit(index)}
+                                >
+                                  <Check className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={handleCancelEdit}
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditDate(index, vencimento || '')}
+                                className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700 group cursor-pointer"
+                              >
                                 <Calendar className="h-3 w-3" />
-                                {new Date(vencimento).toLocaleDateString('pt-BR')}
-                              </p>
+                                {vencimento ? new Date(vencimento).toLocaleDateString('pt-BR') : 'Inserir data'}
+                                <Pencil className="h-2.5 w-2.5 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </button>
                             )}
                           </div>
                         </div>
