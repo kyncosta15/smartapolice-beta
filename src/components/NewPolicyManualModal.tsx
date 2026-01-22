@@ -8,7 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, Plus, X, Upload } from 'lucide-react';
+import { PolicyDocumentUploadModal } from '@/components/policy/PolicyDocumentUploadModal';
 
 interface NewPolicyManualModalProps {
   open: boolean;
@@ -25,6 +26,8 @@ export function NewPolicyManualModal({ open, onOpenChange, onSuccess }: NewPolic
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadedPdfPath, setUploadedPdfPath] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     nome_apolice: '',
@@ -102,6 +105,7 @@ export function NewPolicyManualModal({ open, onOpenChange, onSuccess }: NewPolic
           responsavel_nome: formData.responsavel,
           status: 'vigente',
           created_by_extraction: false,
+          arquivo_url: uploadedPdfPath,
         })
         .select()
         .single();
@@ -144,7 +148,7 @@ export function NewPolicyManualModal({ open, onOpenChange, onSuccess }: NewPolic
         responsavel: '',
       });
       setCoberturas([{ descricao: '', lmi: '' }]);
-
+      setUploadedPdfPath(null);
     } catch (error) {
       console.error('Erro ao criar apólice:', error);
       toast({
@@ -379,27 +383,55 @@ export function NewPolicyManualModal({ open, onOpenChange, onSuccess }: NewPolic
             </div>
           </ScrollArea>
 
-          <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
+          <div className="flex justify-between gap-3 p-6 border-t bg-gray-50">
             <Button
               type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowUploadModal(true)}
+              className="text-muted-foreground hover:text-primary"
             >
-              Cancelar
+              <Upload className="h-4 w-4 mr-2" />
+              {uploadedPdfPath ? 'PDF Anexado ✓' : 'Anexar PDF'}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                'Salvar Apólice'
-              )}
-            </Button>
+            
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar Apólice'
+                )}
+              </Button>
+            </div>
           </div>
         </form>
+
+        {user && (
+          <PolicyDocumentUploadModal
+            open={showUploadModal}
+            onOpenChange={setShowUploadModal}
+            userId={user.id}
+            onUploadComplete={(path, type) => {
+              setUploadedPdfPath(path);
+              toast({
+                title: "PDF anexado",
+                description: "O documento será vinculado à apólice ao salvar",
+              });
+            }}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

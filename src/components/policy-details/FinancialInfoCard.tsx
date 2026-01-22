@@ -1,16 +1,26 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { DollarSign, Hash, ChevronRight, Calendar } from 'lucide-react';
+import { DollarSign, Hash, ChevronRight, Calendar, Pencil, Check, X, Save, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface FinancialInfoCardProps {
   policy: any;
+  onInstallmentsUpdate?: (installments: any[]) => void;
 }
 
-export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
+export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInfoCardProps) => {
+  const { toast } = useToast();
   const [showInstallments, setShowInstallments] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
+  const [localInstallments, setLocalInstallments] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   
   // CRÍTICO: Priorizar campos do banco de dados
   const premiumValue = policy.valor_premio ?? policy.premium ?? 0;
@@ -124,6 +134,96 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
   
   const installmentsDetails = getInstallmentsDetails();
 
+  // Inicializar localInstallments quando abrir o modal
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      setLocalInstallments(installmentsDetails.map((inst: any, idx: number) => ({
+        id: inst.id,
+        numero: inst.numero || inst.number || idx + 1,
+        valor: inst.valor || inst.value || monthlyPremium,
+        vencimento: inst.vencimento || inst.dueDate || inst.date || inst.data_vencimento,
+        status: inst.status || 'pendente'
+      })));
+      setHasChanges(false);
+    }
+    setShowInstallments(open);
+  };
+
+  const handleStartEdit = (index: number, currentValue: number) => {
+    setEditingIndex(index);
+    setEditValue(currentValue.toFixed(2).replace('.', ','));
+  };
+
+  const handleConfirmEdit = (index: number) => {
+    const newValue = parseFloat(editValue.replace(',', '.'));
+    if (!isNaN(newValue) && newValue >= 0) {
+      const newInstallments = [...localInstallments];
+      newInstallments[index] = {
+        ...newInstallments[index],
+        valor: newValue
+      };
+      setLocalInstallments(newInstallments);
+      setHasChanges(true);
+    }
+    setEditingIndex(null);
+    setEditValue('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setEditValue('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'Enter') {
+      handleConfirmEdit(index);
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+
+  const handleSaveInstallments = async () => {
+    if (!policy.id) return;
+    
+    setIsSaving(true);
+    try {
+      // Atualizar cada parcela no banco
+      for (const inst of localInstallments) {
+        if (inst.id) {
+          // Atualizar parcela existente
+          const { error } = await supabase
+            .from('installments')
+            .update({ valor: inst.valor })
+            .eq('id', inst.id);
+          
+          if (error) {
+            console.error('Erro ao atualizar parcela:', error);
+          }
+        }
+      }
+
+      toast({
+        title: "✅ Parcelas atualizadas",
+        description: "Os valores das parcelas foram salvos com sucesso",
+      });
+
+      setHasChanges(false);
+      onInstallmentsUpdate?.(localInstallments);
+      
+    } catch (error) {
+      console.error('Erro ao salvar parcelas:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Não foi possível salvar as alterações",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const totalValue = localInstallments.reduce((sum, inst) => sum + (inst.valor || 0), 0);
+
   return (
     <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 overflow-hidden">
       <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-amber-200 pb-3 px-4 sm:px-6 pt-4">
@@ -162,12 +262,12 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
                   {installmentsCount}x parcelas
                 </p>
                 <p className="text-xs sm:text-sm text-blue-600 font-sf-pro">
-                  Pagamento facilitado
+                  Clique para editar valores
                 </p>
               </div>
             </div>
             
-            <Dialog open={showInstallments} onOpenChange={setShowInstallments}>
+            <Dialog open={showInstallments} onOpenChange={handleOpenChange}>
               <DialogTrigger asChild>
                 <Button 
                   variant="ghost" 
@@ -181,14 +281,19 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2 text-blue-900">
                     <Calendar className="h-5 w-5" />
-                    Detalhes das Parcelas
+                    Editar Parcelas
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-2 mt-4">
-                  {installmentsDetails.map((installment, index) => {
-                    const valor = installment.valor || installment.value || monthlyPremium;
-                    const vencimento = installment.vencimento || installment.dueDate || installment.date;
-                    const numero = installment.numero || installment.number || index + 1;
+                
+                <p className="text-xs text-muted-foreground">
+                  Clique no valor de cada parcela para editar individualmente
+                </p>
+                
+                <div className="space-y-2 mt-4 max-h-[400px] overflow-y-auto pr-2">
+                  {localInstallments.map((installment, index) => {
+                    const valor = installment.valor || monthlyPremium;
+                    const vencimento = installment.vencimento;
+                    const numero = installment.numero || index + 1;
                     
                     return (
                       <div 
@@ -200,9 +305,46 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
                             {numero}
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">
-                              R$ {Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </p>
+                            {editingIndex === index ? (
+                              <div className="flex items-center gap-1">
+                                <span className="text-sm text-gray-500">R$</span>
+                                <Input
+                                  autoFocus
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  onKeyDown={(e) => handleKeyDown(e, index)}
+                                  className="w-28 h-7 text-sm"
+                                  placeholder="0,00"
+                                />
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  onClick={() => handleConfirmEdit(index)}
+                                >
+                                  <Check className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={handleCancelEdit}
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleStartEdit(index, valor)}
+                                className="flex items-center gap-1.5 group text-left"
+                              >
+                                <span className="text-sm font-semibold text-gray-900">
+                                  R$ {Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                                <Pencil className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </button>
+                            )}
                             {vencimento && (
                               <p className="text-xs text-blue-600 flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
@@ -215,14 +357,47 @@ export const FinancialInfoCard = ({ policy }: FinancialInfoCardProps) => {
                     );
                   })}
                 </div>
+                
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-semibold text-gray-700">Total:</span>
-                    <span className="text-lg font-bold text-blue-900">
-                      R$ {(installmentsDetails.reduce((sum, inst) => sum + (inst.valor || inst.value || monthlyPremium), 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span className={cn(
+                      "text-lg font-bold",
+                      Math.abs(totalValue - premiumValue) > 0.01 && premiumValue > 0 
+                        ? "text-amber-600" 
+                        : "text-blue-900"
+                    )}>
+                      R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
+                  {Math.abs(totalValue - premiumValue) > 0.01 && premiumValue > 0 && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      ⚠️ Total difere do prêmio anual (R$ {premiumValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                    </p>
+                  )}
                 </div>
+
+                {hasChanges && (
+                  <div className="mt-4 flex justify-end">
+                    <Button
+                      onClick={handleSaveInstallments}
+                      disabled={isSaving}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Salvando...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Salvar Alterações
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </div>

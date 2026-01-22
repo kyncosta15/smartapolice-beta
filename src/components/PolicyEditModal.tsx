@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { Upload } from 'lucide-react';
+import { PolicyDocumentUploadModal } from '@/components/policy/PolicyDocumentUploadModal';
 
 interface PolicyEditModalProps {
   isOpen: boolean;
@@ -17,6 +19,8 @@ interface PolicyEditModalProps {
 
 export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditModalProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     type: '',
@@ -507,20 +511,48 @@ export const PolicyEditModal = ({ isOpen, onClose, policy, onSave }: PolicyEditM
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mt-4 px-4 pb-4 sm:px-6 sm:pb-6 border-t pt-4 sticky bottom-0 bg-white">
-          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-            Cancelar
-          </Button>
+        <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4 mt-4 px-4 pb-4 sm:px-6 sm:pb-6 border-t pt-4 sticky bottom-0 bg-white">
           <Button 
-            onClick={() => {
-              console.log('🖱️ [PolicyEditModal] Botão "Salvar Alterações" CLICADO');
-              handleSave();
-            }} 
-            className="w-full sm:w-auto"
+            variant="ghost" 
+            size="sm"
+            onClick={() => setShowUploadModal(true)}
+            className="text-muted-foreground hover:text-primary w-full sm:w-auto"
           >
-            Salvar Alterações
+            <Upload className="h-4 w-4 mr-2" />
+            Anexar PDF
           </Button>
+          
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+            <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                console.log('🖱️ [PolicyEditModal] Botão "Salvar Alterações" CLICADO');
+                handleSave();
+              }} 
+              className="w-full sm:w-auto"
+            >
+              Salvar Alterações
+            </Button>
+          </div>
         </div>
+
+        {user && (
+          <PolicyDocumentUploadModal
+            open={showUploadModal}
+            onOpenChange={setShowUploadModal}
+            policyId={policy?.id}
+            userId={user.id}
+            onUploadComplete={(path, type) => {
+              console.log('✅ Upload completo:', path, type);
+              toast({
+                title: "Documento anexado",
+                description: `${type === 'apolice' ? 'Apólice' : type === 'endosso' ? 'Endosso' : 'Renovação'} anexada com sucesso`,
+              });
+            }}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
