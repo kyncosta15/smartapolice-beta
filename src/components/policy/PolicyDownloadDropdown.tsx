@@ -47,8 +47,35 @@ export function PolicyDownloadDropdown({
     
     const docs: PolicyDocument[] = [];
     
-    // Adicionar arquivo principal se existir
-    if (arquivoUrl && arquivoUrl !== 'Não informado' && arquivoUrl.trim() !== '') {
+    // 1. Buscar da tabela policy_documents (nova estrutura multi-arquivo)
+    if (policyId) {
+      try {
+        const { data: policyDocs, error } = await (supabase as any)
+          .from('policy_documents')
+          .select('*')
+          .eq('policy_id', policyId)
+          .order('created_at', { ascending: false });
+        
+        if (!error && policyDocs && policyDocs.length > 0) {
+          policyDocs.forEach((doc: any) => {
+            const tipoLabel = doc.tipo === 'apolice' ? 'Apólice' 
+              : doc.tipo === 'endosso' ? 'Endosso' 
+              : 'Renovação';
+            
+            docs.push({
+              tipo: tipoLabel,
+              path: doc.storage_path,
+              nome: doc.nome_arquivo || `${tipoLabel} - ${policyName}`
+            });
+          });
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao carregar documentos da policy_documents:', error);
+      }
+    }
+    
+    // 2. Fallback: arquivo_url legado (se nenhum doc encontrado na nova tabela)
+    if (docs.length === 0 && arquivoUrl && arquivoUrl !== 'Não informado' && arquivoUrl.trim() !== '') {
       const tipoFromPath = arquivoUrl.includes('endosso') 
         ? 'Endosso' 
         : arquivoUrl.includes('renovacao') 
@@ -62,7 +89,7 @@ export function PolicyDownloadDropdown({
       });
     }
 
-    // Se tiver nosnum/codfil, tentar buscar da API InfoCap
+    // 3. Se tiver nosnum/codfil, tentar buscar da API InfoCap
     if (nosnum && codfil) {
       try {
         const { getDocumentoAnexos } = await import('@/services/corpnuvem/anexos');

@@ -81,8 +81,25 @@ export function PolicyDocumentUploadModal({
 
       console.log('✅ Upload concluído:', data.path);
 
-      // Se tiver policy_id, atualizar o arquivo_url da apólice
+      // Se tiver policy_id, inserir na tabela policy_documents E atualizar arquivo_url
       if (policyId) {
+        // 1. Inserir na nova tabela policy_documents para manter histórico
+        const { error: insertError } = await (supabase as any)
+          .from('policy_documents')
+          .insert({
+            policy_id: policyId,
+            user_id: userId,
+            tipo: documentType,
+            nome_arquivo: selectedFile.name,
+            storage_path: data.path,
+            tamanho_bytes: selectedFile.size,
+          });
+
+        if (insertError) {
+          console.error('Erro ao registrar documento:', insertError);
+        }
+
+        // 2. Atualizar arquivo_url para manter compatibilidade com fluxos existentes
         const { error: updateError } = await supabase
           .from('policies')
           .update({ arquivo_url: data.path })
