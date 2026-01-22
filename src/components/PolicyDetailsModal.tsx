@@ -27,9 +27,10 @@ interface PolicyDetailsModalProps {
   onClose: () => void;
   policy: any;
   onDelete: (policyId: string) => void;
+  onUpdate?: () => void; // Callback para atualizar dados após edição de parcelas
 }
 
-export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: PolicyDetailsModalProps) {
+export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate }: PolicyDetailsModalProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (!policy) return null;
@@ -101,7 +102,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete }: Policy
               type={policy.tipo_seguro || policy.type || 'Não informado'}
             />
 
-            <FinancialInfoCard policy={policy} />
+            <FinancialInfoCard policy={policy} onInstallmentsUpdate={() => onUpdate?.()} />
             <CoveragesCard 
               coverages={coverages} 
               policyId={policy.id}

@@ -187,7 +187,13 @@ export function InstallmentEditor({
                     )}
                   >
                     <Calendar className="h-3 w-3" />
-                    {installment.data ? new Date(installment.data).toLocaleDateString('pt-BR') : 'Sem data'}
+                    {installment.data ? (() => {
+                      // Evita bug de timezone: formatar manualmente sem criar Date UTC
+                      const clean = String(installment.data).split('T')[0];
+                      const [y, m, d] = clean.split('-');
+                      if (!y || !m || !d) return 'Sem data';
+                      return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+                    })() : 'Sem data'}
                     {allowDateEdit && <Pencil className="h-2.5 w-2.5 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ml-1" />}
                   </button>
                 )}

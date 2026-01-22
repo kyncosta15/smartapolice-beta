@@ -445,6 +445,7 @@ export function DashboardContent() {
           onClose={() => setIsDetailsModalOpen(false)}
           policy={selectedPolicy}
           onDelete={handleDeletePolicy}
+          onUpdate={refreshPolicies}
         />
 
         {/* Botão de teste para toasts com progresso */}
