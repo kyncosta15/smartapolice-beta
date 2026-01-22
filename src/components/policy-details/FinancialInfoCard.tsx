@@ -23,6 +23,11 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // DB constraint: installments.status must be 'vencido' or 'a vencer'
+  const normalizeInstallmentStatus = (status: unknown): 'vencido' | 'a vencer' => {
+    return status === 'vencido' || status === 'a vencer' ? status : 'a vencer';
+  };
+
   // Evita bug de timezone: new Date('YYYY-MM-DD') interpreta como UTC e mostra -1 dia no Brasil
   const formatDatePtBr = (value?: string | null) => {
     if (!value) return '';
@@ -130,7 +135,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
         numero: i + 1,
         valor: monthlyPremium,
         vencimento: '', // Deixar vazio para inserção manual
-        status: 'pendente'
+        status: 'a vencer'
       });
     }
     
@@ -158,7 +163,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
             numero: inst.numero_parcela,
             valor: inst.valor ?? monthlyPremium,
             vencimento: inst.data_vencimento || '',
-            status: inst.status || 'pendente'
+             status: normalizeInstallmentStatus(inst.status)
           })));
           setHasChanges(false);
           setShowInstallments(open);
@@ -173,7 +178,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
         numero: inst.numero || inst.number || idx + 1,
         valor: inst.valor || inst.value || monthlyPremium,
         vencimento: inst.vencimento || inst.dueDate || inst.date || inst.data_vencimento || '',
-        status: inst.status || 'pendente'
+         status: normalizeInstallmentStatus(inst.status)
       })));
       setHasChanges(false);
     }
@@ -275,7 +280,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
               numero_parcela: inst.numero,
               valor: inst.valor,
               data_vencimento: inst.vencimento || null,
-              status: inst.status || 'pendente'
+              status: normalizeInstallmentStatus(inst.status)
             });
           
           if (error) {
