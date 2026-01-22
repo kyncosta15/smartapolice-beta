@@ -88,12 +88,7 @@ export function FrotasDashboard({ kpis, veiculos, allVeiculos, loading, searchLo
 
   // Estado vazio - mostrar quando não há dados E não tem filtros ativos
   if (!loading && Array.isArray(allVeiculos) && allVeiculos.length === 0 && !hasActiveFilters) {
-    return (
-      <FrotasEmptyState 
-        onUploadClick={() => {}} 
-        onCreateClick={() => {}}
-      />
-    );
+    return <FrotasEmptyState />;
   }
 
   return (
