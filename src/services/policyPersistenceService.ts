@@ -376,7 +376,8 @@ export class PolicyPersistenceService {
         .from('policies')
         .select(`
           *,
-          installments!fk_installments_policy_id (
+        installments!fk_installments_policy_id (
+            id,
             numero_parcela,
             valor,
             data_vencimento,
@@ -467,8 +468,9 @@ export class PolicyPersistenceService {
           policyStatus: finalStatus as any,
           quantidade_parcelas: policy.quantidade_parcelas || 1,
           
-          // Installments - fix type
+          // Installments - fix type - CRÍTICO: incluir id para permitir updates
           installments: (policy.installments as any[])?.map(inst => ({
+            id: inst.id,
             numero: Number(inst.numero_parcela) || 0,
             valor: Number(inst.valor) || 0,
             data: safeString(inst.data_vencimento),

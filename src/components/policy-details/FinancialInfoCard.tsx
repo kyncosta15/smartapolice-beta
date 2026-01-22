@@ -139,9 +139,35 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
   
   const installmentsDetails = getInstallmentsDetails();
 
-  // Inicializar localInstallments quando abrir o modal
-  const handleOpenChange = (open: boolean) => {
+  // CRÍTICO: Carregar parcelas do banco ao abrir o modal
+  const handleOpenChange = async (open: boolean) => {
     if (open) {
+      // Primeiro, tentar carregar parcelas diretamente do banco
+      if (policy.id) {
+        console.log('📋 Carregando parcelas do banco para policy:', policy.id);
+        const { data: dbInstallments, error } = await supabase
+          .from('installments')
+          .select('id, numero_parcela, valor, data_vencimento, status')
+          .eq('policy_id', policy.id)
+          .order('numero_parcela', { ascending: true });
+        
+        if (!error && dbInstallments && dbInstallments.length > 0) {
+          console.log('✅ Parcelas carregadas do banco:', dbInstallments.length);
+          setLocalInstallments(dbInstallments.map((inst: any) => ({
+            id: inst.id,
+            numero: inst.numero_parcela,
+            valor: inst.valor ?? monthlyPremium,
+            vencimento: inst.data_vencimento || '',
+            status: inst.status || 'pendente'
+          })));
+          setHasChanges(false);
+          setShowInstallments(open);
+          return;
+        }
+      }
+      
+      // Fallback: usar dados da policy (memória)
+      console.log('📋 Usando parcelas da memória');
       setLocalInstallments(installmentsDetails.map((inst: any, idx: number) => ({
         id: inst.id,
         numero: inst.numero || inst.number || idx + 1,
@@ -211,11 +237,21 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
     if (!policy.id) return;
     
     setIsSaving(true);
+    let hasError = false;
+    
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log('💾 Salvando parcelas...', localInstallments.length);
+
       // Atualizar ou criar cada parcela no banco
       for (const inst of localInstallments) {
         if (inst.id) {
           // Atualizar parcela existente (valor E data)
+          console.log(`📝 Atualizando parcela ${inst.id}:`, { valor: inst.valor, vencimento: inst.vencimento });
           const { error } = await supabase
             .from('installments')
             .update({ 
@@ -225,40 +261,77 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
             .eq('id', inst.id);
           
           if (error) {
-            console.error('Erro ao atualizar parcela:', error);
+            console.error('❌ Erro ao atualizar parcela:', error);
+            hasError = true;
           }
         } else {
           // Criar nova parcela no banco se não existir
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const { error } = await supabase
-              .from('installments')
-              .insert({
-                policy_id: policy.id,
-                user_id: user.id,
-                numero_parcela: inst.numero,
-                valor: inst.valor,
-                data_vencimento: inst.vencimento || null,
-                status: inst.status || 'pendente'
-              });
-            
-            if (error) {
-              console.error('Erro ao criar parcela:', error);
-            }
+          console.log(`➕ Criando nova parcela:`, { numero: inst.numero, valor: inst.valor });
+          const { error } = await supabase
+            .from('installments')
+            .insert({
+              policy_id: policy.id,
+              user_id: user.id,
+              numero_parcela: inst.numero,
+              valor: inst.valor,
+              data_vencimento: inst.vencimento || null,
+              status: inst.status || 'pendente'
+            });
+          
+          if (error) {
+            console.error('❌ Erro ao criar parcela:', error);
+            hasError = true;
           }
         }
       }
 
-      toast({
-        title: "✅ Parcelas atualizadas",
-        description: "Os valores e datas das parcelas foram salvos com sucesso",
+      // CRÍTICO: Calcular novo valor mensal (média das parcelas) e atualizar na apólice
+      const totalParcelas = localInstallments.reduce((sum, inst) => sum + (inst.valor || 0), 0);
+      const novoValorMensal = localInstallments.length > 0 
+        ? totalParcelas / localInstallments.length 
+        : monthlyPremium;
+      
+      console.log('💰 Atualizando custo_mensal da apólice:', {
+        policy_id: policy.id,
+        totalParcelas,
+        qtdParcelas: localInstallments.length,
+        novoValorMensal
       });
 
+      const { error: policyError } = await supabase
+        .from('policies')
+        .update({ 
+          custo_mensal: novoValorMensal,
+          valor_parcela: novoValorMensal
+        })
+        .eq('id', policy.id);
+
+      if (policyError) {
+        console.error('❌ Erro ao atualizar custo_mensal da apólice:', policyError);
+        hasError = true;
+      }
+
+      if (hasError) {
+        toast({
+          title: "⚠️ Atenção",
+          description: "Algumas alterações podem não ter sido salvas. Tente novamente.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "✅ Parcelas atualizadas",
+          description: "Os valores e datas das parcelas foram salvos com sucesso",
+        });
+      }
+
       setHasChanges(false);
+      
+      // CRÍTICO: Chamar callback para atualizar o dashboard/projeção
+      console.log('🔄 Chamando onInstallmentsUpdate para refresh...');
       onInstallmentsUpdate?.(localInstallments);
       
     } catch (error) {
-      console.error('Erro ao salvar parcelas:', error);
+      console.error('❌ Erro ao salvar parcelas:', error);
       toast({
         title: "❌ Erro",
         description: "Não foi possível salvar as alterações",

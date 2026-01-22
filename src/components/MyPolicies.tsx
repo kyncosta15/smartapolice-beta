@@ -1093,6 +1093,7 @@ export function MyPolicies() {
             refreshPolicies();
           }
         }}
+        onUpdate={refreshPolicies}
       />
 
       <PolicyEditModal
