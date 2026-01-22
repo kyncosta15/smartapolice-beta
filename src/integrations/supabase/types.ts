@@ -2045,6 +2045,57 @@ export type Database = {
         }
         Relationships: []
       }
+      policy_documents: {
+        Row: {
+          created_at: string
+          id: string
+          nome_arquivo: string | null
+          policy_id: string
+          storage_path: string
+          tamanho_bytes: number | null
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome_arquivo?: string | null
+          policy_id: string
+          storage_path: string
+          tamanho_bytes?: number | null
+          tipo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome_arquivo?: string | null
+          policy_id?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_documents_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_documents_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies_ui"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       presence_sessions: {
         Row: {
           created_at: string
