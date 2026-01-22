@@ -114,7 +114,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
             <ValidityInfoCard policy={policy} />
             <VehicleInfoCard policy={policy} />
 
-            <DocumentsCard policyId={policy.id} arquivoUrl={policy.arquivo_url} />
+            <DocumentsCard policyId={policy.id} />
 
             {(policy.insuredName || policy.documento) && (
               <ResponsiblePersonCard policy={policy} />
