@@ -22,6 +22,15 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
   const [localInstallments, setLocalInstallments] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Evita bug de timezone: new Date('YYYY-MM-DD') interpreta como UTC e mostra -1 dia no Brasil
+  const formatDatePtBr = (value?: string | null) => {
+    if (!value) return '';
+    const clean = String(value).split('T')[0];
+    const [y, m, d] = clean.split('-');
+    if (!y || !m || !d) return '';
+    return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+  };
   
   // CRÍTICO: Priorizar campos do banco de dados
   const premiumValue = policy.valor_premio ?? policy.premium ?? 0;
@@ -420,7 +429,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                                 className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700 group cursor-pointer"
                               >
                                 <Calendar className="h-3 w-3" />
-                                {vencimento ? new Date(vencimento).toLocaleDateString('pt-BR') : 'Inserir data'}
+                                {vencimento ? formatDatePtBr(vencimento) : 'Inserir data'}
                                 <Pencil className="h-2.5 w-2.5 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </button>
                             )}
