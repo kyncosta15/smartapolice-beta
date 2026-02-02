@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ensureProfileAndCompany } from '@/utils/profileUtils';
 import { DuplicateVehiclesModal } from './DuplicateVehiclesModal';
 import { getWebhookUrl } from '@/lib/webhookConfig';
+import { LocalSpreadsheetProcessor } from '@/services/localSpreadsheetProcessor';
 
 interface FrotasUploadProps {
   onSuccess: () => void;
@@ -144,16 +145,115 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
       console.log(`📄 Resposta raw do webhook (${file.name}):`, responseText?.substring(0, 500));
       
       let result: any;
+      const isSpreadsheet = ['xlsx', 'xls', 'csv'].includes(fileExtension || '');
+      
       if (!responseText || responseText.trim() === '') {
         console.warn(`⚠️ Webhook retornou resposta vazia para ${file.name}`);
-        result = { success: true, message: 'Arquivo enviado, mas webhook não retornou dados' };
+        
+        // Fallback: processar planilha localmente se webhook não retornou dados
+        if (isSpreadsheet) {
+          console.log('🔄 Usando processador local como fallback...');
+          
+          setFiles(prev => prev.map(f => 
+            f.id === fileId 
+              ? { ...f, status: 'processing', progress: 60 }
+              : f
+          ));
+          
+          const localResult = await LocalSpreadsheetProcessor.processFile(file);
+          console.log('📊 Resultado do processador local:', localResult);
+          
+          if (localResult.success && localResult.veiculos.length > 0) {
+            // Inserir diretamente no banco via edge function
+            console.log('🚀 Inserindo veículos processados localmente...');
+            
+            setFiles(prev => prev.map(f => 
+              f.id === fileId 
+                ? { ...f, status: 'processing', progress: 80 }
+                : f
+            ));
+            
+            const edgeFunctionData = LocalSpreadsheetProcessor.toEdgeFunctionFormat(
+              localResult, 
+              metadata.empresa_id
+            );
+            
+            const { data: insertResult, error: insertError } = await supabase.functions.invoke('processar-n8n-frotas', {
+              body: {
+                veiculos: edgeFunctionData.veiculos,
+                empresaId: metadata.empresa_id,
+                userEmail: metadata.user_email
+              }
+            });
+            
+            if (insertError) {
+              console.error('❌ Erro ao inserir dados processados localmente:', insertError);
+              throw insertError;
+            }
+            
+            console.log('✅ Dados processados localmente inseridos:', insertResult);
+            
+            result = {
+              success: true,
+              message: 'Processado localmente (fallback)',
+              metrics: localResult.metrics,
+              detalhes: {
+                total_recebidos: localResult.totalProcessados,
+                veiculos_inseridos: localResult.veiculos.length,
+                erros_insercao: localResult.erros.length
+              }
+            };
+          } else {
+            throw new Error(`Erro no processamento local: ${localResult.erros.join(', ')}`);
+          }
+        } else {
+          result = { success: true, message: 'Arquivo enviado, mas webhook não retornou dados' };
+        }
       } else {
         try {
           result = JSON.parse(responseText);
         } catch (parseError) {
           console.error('❌ Erro ao parsear JSON da resposta:', parseError);
           console.error('📄 Conteúdo que tentou parsear:', responseText);
-          throw new Error(`Resposta inválida do webhook: ${responseText.substring(0, 100)}`);
+          
+          // Fallback: tentar processar localmente se JSON inválido
+          if (isSpreadsheet) {
+            console.log('🔄 JSON inválido, tentando processador local...');
+            
+            const localResult = await LocalSpreadsheetProcessor.processFile(file);
+            
+            if (localResult.success && localResult.veiculos.length > 0) {
+              const edgeFunctionData = LocalSpreadsheetProcessor.toEdgeFunctionFormat(
+                localResult, 
+                metadata.empresa_id
+              );
+              
+              const { data: insertResult, error: insertError } = await supabase.functions.invoke('processar-n8n-frotas', {
+                body: {
+                  veiculos: edgeFunctionData.veiculos,
+                  empresaId: metadata.empresa_id,
+                  userEmail: metadata.user_email
+                }
+              });
+              
+              if (insertError) throw insertError;
+              
+              result = {
+                success: true,
+                message: 'Processado localmente (fallback)',
+                metrics: localResult.metrics,
+                detalhes: {
+                  total_recebidos: localResult.totalProcessados,
+                  veiculos_inseridos: localResult.veiculos.length,
+                  erros_insercao: localResult.erros.length
+                }
+              };
+            } else {
+              throw new Error(`Resposta inválida do webhook e erro no processamento local: ${localResult.erros.join(', ')}`);
+            }
+          } else {
+            throw new Error(`Resposta inválida do webhook: ${responseText.substring(0, 100)}`);
+          }
         }
       }
       
