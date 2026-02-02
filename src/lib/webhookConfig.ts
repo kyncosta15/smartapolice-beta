@@ -129,7 +129,7 @@ function getDefaultWebhooks(): Record<string, WebhookConfig> {
     planilha_frota: {
       id: 'planilha_frota',
       nome: 'Planilha Frota',
-      url: 'https://gruporcaldas0fc.app.n8n.cloud/webhook/upload-planilha',
+      url: 'https://gruporcaldasofc.app.n8n.cloud/webhook/upload-planilha-oficial',
       ativo: true,
     },
     apolices_pdf: {
