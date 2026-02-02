@@ -139,7 +139,24 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
         throw new Error(`Erro ao enviar para webhook ${isPDF ? 'PDF' : 'PLANILHA'}: ${response.statusText}`);
       }
 
-      const result = await response.json();
+      // Verificar se há conteúdo na resposta antes de tentar parsear JSON
+      const responseText = await response.text();
+      console.log(`📄 Resposta raw do webhook (${file.name}):`, responseText?.substring(0, 500));
+      
+      let result: any;
+      if (!responseText || responseText.trim() === '') {
+        console.warn(`⚠️ Webhook retornou resposta vazia para ${file.name}`);
+        result = { success: true, message: 'Arquivo enviado, mas webhook não retornou dados' };
+      } else {
+        try {
+          result = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('❌ Erro ao parsear JSON da resposta:', parseError);
+          console.error('📄 Conteúdo que tentou parsear:', responseText);
+          throw new Error(`Resposta inválida do webhook: ${responseText.substring(0, 100)}`);
+        }
+      }
+      
       console.log(`✅ ${file.name} dados extraídos:`, result);
       console.log('📋 Tipo do resultado:', typeof result, 'É array?', Array.isArray(result));
 
