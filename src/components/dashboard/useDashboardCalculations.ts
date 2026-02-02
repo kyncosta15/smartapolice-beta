@@ -1,11 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { safeString } from '@/utils/safeDataRenderer';
 import { extractFieldValue } from '@/utils/extractFieldValue';
+import { fetchEndossosTotal } from '@/services/endossosService';
 
 interface DashboardData {
   totalPolicies: number;
   totalMonthlyCost: number;
+  totalEndossosValue: number;
   totalInsuredValue: number;
   expiringPolicies: number;
   expiredPolicies: number;
@@ -27,9 +29,10 @@ interface DashboardData {
   }>;
 }
 
-export const useDashboardCalculations = (policies: ParsedPolicyData[]): DashboardData => {
+export const useDashboardCalculations = (policies: ParsedPolicyData[], endossosTotal: number = 0): DashboardData => {
   return useMemo(() => {
     console.log('🔍 Recalculando métricas do dashboard para', policies.length, 'apólices - MODO SUPER SEGURO');
+    console.log('💰 Total de endossos recebido:', endossosTotal);
     
     // Função para extrair nome da seguradora de forma SUPER SEGURA
     const getInsurerName = (insurerData: any): string => {
@@ -238,7 +241,8 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
 
     const dashboardData = {
       totalPolicies,
-      totalMonthlyCost,
+      totalMonthlyCost: totalMonthlyCost + endossosTotal, // Soma endossos ao prêmio mensal
+      totalEndossosValue: endossosTotal,
       totalInsuredValue,
       expiringPolicies,
       expiredPolicies,
@@ -253,7 +257,8 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[]): Dashboar
     };
 
     console.log('📊 Dashboard data final (SUPER SEGURO):', dashboardData);
+    console.log('💰 Prêmio mensal com endossos:', totalMonthlyCost, '+', endossosTotal, '=', dashboardData.totalMonthlyCost);
     
     return dashboardData;
-  }, [policies]);
+  }, [policies, endossosTotal]);
 };

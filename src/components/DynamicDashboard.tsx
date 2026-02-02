@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { KPICards } from './dashboard/KPICards';
 import { ClassificationCharts } from './dashboard/ClassificationCharts';
@@ -11,6 +11,7 @@ import { useRealDashboardData } from '@/hooks/useRealDashboardData';
 import { PDFReportGenerator } from './PDFReportGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { calculateStatusChartData, calculateInsurerChartData } from '@/utils/dashboardChartCalculations';
+import { fetchEndossosTotal } from '@/services/endossosService';
 
 interface DynamicDashboardProps {
   policies: ParsedPolicyData[];
@@ -21,8 +22,25 @@ interface DynamicDashboardProps {
 export function DynamicDashboard({ policies, viewMode = 'client', onSectionChange }: DynamicDashboardProps) {
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16'];
   const isMobile = useIsMobile();
+  const [endossosTotal, setEndossosTotal] = useState(0);
 
-  const dashboardData = useDashboardCalculations(policies);
+  // Buscar total de endossos quando policies mudar
+  useEffect(() => {
+    const loadEndossosTotal = async () => {
+      if (policies.length === 0) {
+        setEndossosTotal(0);
+        return;
+      }
+      
+      const policyIds = policies.map(p => p.id).filter(Boolean);
+      const total = await fetchEndossosTotal(policyIds);
+      setEndossosTotal(total);
+    };
+    
+    loadEndossosTotal();
+  }, [policies]);
+
+  const dashboardData = useDashboardCalculations(policies, endossosTotal);
   
   // Sempre usar dados calculados das apólices carregadas
   const displayMetrics = {
