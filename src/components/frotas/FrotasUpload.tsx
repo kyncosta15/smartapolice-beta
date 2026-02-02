@@ -340,7 +340,17 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     
     try {
       // Garantir que usuário tem perfil e empresa configurados
-      const { user: authenticatedUser, empresa_id } = await ensureProfileAndCompany(supabase);
+      const { user: authenticatedUser, empresa_id: fallbackEmpresaId } = await ensureProfileAndCompany(supabase);
+      
+      // IMPORTANTE: Usar activeEmpresaId do TenantContext se disponível
+      // Isso garante que os veículos sejam inseridos na empresa correta que o usuário está visualizando
+      const empresa_id = activeEmpresaId || fallbackEmpresaId;
+      
+      console.log('🏢 Upload - Empresa selecionada:', {
+        activeEmpresaId,
+        fallbackEmpresaId,
+        empresaUsada: empresa_id
+      });
       
       // Buscar dados da empresa
       const { data: empresa } = await supabase
@@ -352,10 +362,10 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
       // Preparar metadados
       const metadata: N8NUploadMetadata = {
         empresa_id,
-        empresa_nome: empresa?.nome || 'Empresa',
+        empresa_nome: activeEmpresaName || empresa?.nome || 'Empresa',
         user_id: authenticatedUser.id,
         user_email: authenticatedUser.email,
-        razao_social: empresa?.nome || 'Empresa',
+        razao_social: activeEmpresaName || empresa?.nome || 'Empresa',
         overwrite_duplicates: overwriteDuplicates
       };
 
