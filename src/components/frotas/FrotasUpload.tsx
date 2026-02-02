@@ -131,13 +131,112 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
           : f
       ));
 
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro ao enviar para webhook ${isPDF ? 'PDF' : 'PLANILHA'}: ${response.statusText}`);
+      let response: Response;
+      let webhookFailed = false;
+      
+      try {
+        response = await fetch(webhookUrl, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          console.warn(`⚠️ Webhook retornou erro ${response.status}: ${response.statusText}`);
+          webhookFailed = true;
+        }
+      } catch (fetchError) {
+        console.warn(`⚠️ Erro ao conectar com webhook: ${fetchError}`);
+        webhookFailed = true;
+        response = new Response(null, { status: 500 });
+      }
+      
+      const isSpreadsheet = ['xlsx', 'xls', 'csv'].includes(fileExtension || '');
+      
+      // Se webhook falhou e é planilha, usar processador local diretamente
+      if (webhookFailed && isSpreadsheet) {
+        console.log('🔄 Webhook falhou, usando processador local...');
+        
+        setFiles(prev => prev.map(f => 
+          f.id === fileId 
+            ? { ...f, status: 'processing', progress: 60 }
+            : f
+        ));
+        
+        const localResult = await LocalSpreadsheetProcessor.processFile(file);
+        console.log('📊 Resultado do processador local:', localResult);
+        
+        if (localResult.success && localResult.veiculos.length > 0) {
+          console.log('🚀 Inserindo veículos processados localmente...');
+          
+          setFiles(prev => prev.map(f => 
+            f.id === fileId 
+              ? { ...f, status: 'processing', progress: 80 }
+              : f
+          ));
+          
+          const edgeFunctionData = LocalSpreadsheetProcessor.toEdgeFunctionFormat(
+            localResult, 
+            metadata.empresa_id
+          );
+          
+          const { data: insertResult, error: insertError } = await supabase.functions.invoke('processar-n8n-frotas', {
+            body: {
+              veiculos: edgeFunctionData.veiculos,
+              empresaId: metadata.empresa_id,
+              userEmail: metadata.user_email
+            }
+          });
+          
+          if (insertError) {
+            console.error('❌ Erro ao inserir dados processados localmente:', insertError);
+            throw insertError;
+          }
+          
+          console.log('✅ Dados processados localmente inseridos:', insertResult);
+          
+          // Status: Completed
+          const localProcessResult: N8NResponse = {
+            success: true,
+            message: 'Processado localmente (webhook indisponível)',
+            metrics: {
+              totalLinhas: localResult.totalProcessados,
+              totalVeiculos: localResult.veiculos.length,
+              porFamilia: {},
+              porLocalizacao: {},
+              processadoEm: new Date().toISOString()
+            },
+            detalhes: {
+              total_recebidos: localResult.totalProcessados,
+              veiculos_inseridos: localResult.veiculos.length,
+              erros_insercao: localResult.erros.length,
+              empresa_id: metadata.empresa_id
+            }
+          };
+          
+          setFiles(prev => prev.map(f => 
+            f.id === fileId 
+              ? { ...f, status: 'completed' as const, progress: 100, result: localProcessResult }
+              : f
+          ));
+          
+          return {
+            success: true,
+            message: 'Processado localmente (webhook indisponível)',
+            metrics: localResult.metrics,
+            detalhes: {
+              total_recebidos: localResult.totalProcessados,
+              veiculos_inseridos: localResult.veiculos.length,
+              erros_insercao: localResult.erros.length
+            }
+          };
+        } else {
+          throw new Error(`Erro no processamento local: ${localResult.erros.join(', ')}`);
+        }
+      }
+      
+      // Se webhook falhou e não é planilha (PDF), lançar erro
+      if (webhookFailed && !isSpreadsheet) {
+        throw new Error(`Erro ao enviar para webhook PDF: servidor retornou erro`);
       }
 
       // Verificar se há conteúdo na resposta antes de tentar parsear JSON
@@ -145,7 +244,6 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
       console.log(`📄 Resposta raw do webhook (${file.name}):`, responseText?.substring(0, 500));
       
       let result: any;
-      const isSpreadsheet = ['xlsx', 'xls', 'csv'].includes(fileExtension || '');
       
       if (!responseText || responseText.trim() === '') {
         console.warn(`⚠️ Webhook retornou resposta vazia para ${file.name}`);
