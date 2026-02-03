@@ -171,12 +171,6 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
           
           console.log('✅ [FrotasUpload] Dados processados localmente inseridos com sucesso:', insertResult);
           
-          // Chamar onSuccess para recarregar a lista
-          toast({
-            title: "✅ Frota Processada",
-            description: `${localResult.veiculos.length} veículos inseridos com sucesso!`,
-          });
-          
           const localProcessResult: N8NResponse = {
             success: true,
             message: 'Processado localmente',
@@ -200,6 +194,16 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
               ? { ...f, status: 'completed' as const, progress: 100, result: localProcessResult }
               : f
           ));
+
+          // CRÍTICO: Chamar onSuccess para recarregar a lista de veículos
+          toast({
+            title: "✅ Frota Processada",
+            description: `${insertResult?.detalhes?.veiculos_inseridos || localResult.veiculos.length} veículos inseridos com sucesso!`,
+          });
+          
+          // Disparar evento e chamar onSuccess
+          window.dispatchEvent(new CustomEvent('frota-data-updated'));
+          onSuccess();
           
           return localProcessResult;
         } else {
@@ -708,23 +712,41 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
                     
                     {fileItem.result && (
                       <div className="text-sm text-green-600 bg-green-50 p-3 rounded border space-y-2">
-                        <div className="font-semibold">📊 Resultado do Processamento:</div>
+                        <div className="flex items-center justify-between">
+                          <div className="font-semibold">📊 Resultado do Processamento:</div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              window.dispatchEvent(new CustomEvent('frota-data-updated'));
+                              onSuccess();
+                              toast({
+                                title: "🔄 Lista atualizada",
+                                description: "A lista de veículos foi recarregada",
+                              });
+                            }}
+                            className="flex items-center gap-2 text-green-700 border-green-300 hover:bg-green-100"
+                          >
+                            <RefreshCw className="h-3 w-3" />
+                            Atualizar Lista
+                          </Button>
+                        </div>
                         <div className="grid grid-cols-2 gap-4 text-xs">
                           <div>
                             <span className="font-medium">Total de Veículos:</span>
                             <div className="text-lg font-bold text-green-700">
-                              {fileItem.result.metrics?.totalVeiculos || 0}
+                              {fileItem.result.metrics?.totalVeiculos || fileItem.result.detalhes?.veiculos_inseridos || 0}
                             </div>
                           </div>
                           <div>
-                            <span className="font-medium">Total de Linhas:</span>
+                            <span className="font-medium">Inseridos:</span>
                             <div className="text-lg font-bold text-blue-700">
-                              {fileItem.result.metrics?.totalLinhas || 0}
+                              {fileItem.result.detalhes?.veiculos_inseridos || fileItem.result.metrics?.totalVeiculos || 0}
                             </div>
                           </div>
                         </div>
                         
-                        {fileItem.result.metrics?.porFamilia && (
+                        {fileItem.result.metrics?.porFamilia && Object.keys(fileItem.result.metrics.porFamilia).length > 0 && (
                           <div>
                             <span className="font-medium">Por Família:</span>
                             <div className="mt-1 space-y-1">
@@ -742,7 +764,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
                         
                         {fileItem.result.metrics?.processadoEm && (
                           <div className="text-xs text-gray-600">
-                            Processado em: {fileItem.result.metrics.processadoEm}
+                            Processado em: {new Date(fileItem.result.metrics.processadoEm).toLocaleString('pt-BR')}
                           </div>
                         )}
                       </div>
