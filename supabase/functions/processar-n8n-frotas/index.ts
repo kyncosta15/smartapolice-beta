@@ -186,6 +186,22 @@ serve(async (req) => {
       // Qualquer outro formato: descartar para não quebrar o lote
       return null;
     };
+
+    // Normaliza status_seguro para valores aceitos pela constraint: 'segurado', 'sem_seguro', 'cotacao'
+    const normalizarStatusSeguro = (status?: string): string => {
+      if (!status) return 'sem_seguro';
+      const s = String(status).toLowerCase().trim();
+      
+      // Mapeamentos aceitos
+      if (s === 'segurado' || s === 'com_seguro' || s === 'com seguro' || s.includes('segur')) {
+        return 'segurado';
+      }
+      if (s === 'cotacao' || s === 'cotação' || s.includes('cota')) {
+        return 'cotacao';
+      }
+      // Padrão
+      return 'sem_seguro';
+    };
     
     // Mapear e normalizar dados dos veículos
     const veiculosProcessados = n8nData.veiculos.map((veiculo, index) => {
@@ -211,7 +227,7 @@ serve(async (req) => {
         proprietario_doc: veiculo.proprietario_doc || null,
         proprietario_tipo: veiculo.proprietario_tipo || (veiculo.proprietario ? 'pj' : null),
         status_veiculo: veiculo.status || 'ativo',
-        status_seguro: veiculo.status_seguro || 'sem_seguro',
+        status_seguro: normalizarStatusSeguro(veiculo.status_seguro),
         preco_nf: veiculo.preco_nf || null,
         preco_fipe: veiculo.preco_fipe || null,
         data_venc_emplacamento: normalizarDataISO(veiculo.data_venc_emplacamento),
