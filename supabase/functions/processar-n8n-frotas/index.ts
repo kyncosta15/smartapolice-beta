@@ -163,6 +163,29 @@ serve(async (req) => {
       // Carros (passeio, utilitário, picape, van, etc.)
       return 'Carros';
     };
+
+    // Normaliza datas para ISO (YYYY-MM-DD) para evitar falha de inserção em colunas DATE
+    const normalizarDataISO = (valor?: string): string | null => {
+      if (!valor) return null;
+      const v = String(valor).trim();
+      if (!v) return null;
+
+      // ISO date (ou datetime)
+      const iso = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+
+      // DD/MM/YYYY ou DD-MM-YYYY
+      const br = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+      if (br) {
+        const dd = br[1].padStart(2, '0');
+        const mm = br[2].padStart(2, '0');
+        const yyyy = br[3].length === 2 ? `20${br[3]}` : br[3];
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      // Qualquer outro formato: descartar para não quebrar o lote
+      return null;
+    };
     
     // Mapear e normalizar dados dos veículos
     const veiculosProcessados = n8nData.veiculos.map((veiculo, index) => {
@@ -191,7 +214,7 @@ serve(async (req) => {
         status_seguro: veiculo.status_seguro || 'sem_seguro',
         preco_nf: veiculo.preco_nf || null,
         preco_fipe: veiculo.preco_fipe || null,
-        data_venc_emplacamento: veiculo.data_venc_emplacamento || null,
+        data_venc_emplacamento: normalizarDataISO(veiculo.data_venc_emplacamento),
         modalidade_compra: veiculo.modalidade_compra || null,
         origem_planilha: veiculo.origem_planilha || 'N8N',
         observacoes: veiculo.observacoes || null

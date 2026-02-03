@@ -202,14 +202,44 @@ function toNumber(value: any): number | undefined {
   if (value === undefined || value === null || value === '') return undefined;
   
   if (typeof value === 'number') return value;
-  
-  // Remove R$, pontos de milhar, e converte vírgula para ponto
-  const cleaned = String(value)
-    .replace(/R\$\s*/g, '')
-    .replace(/\./g, '')
-    .replace(',', '.')
+
+  // Normaliza formatos PT-BR e EN-US
+  // Exemplos suportados:
+  //  - "R$ 1.234,56" -> 1234.56
+  //  - "1,234.56"    -> 1234.56
+  //  - "1234,56"     -> 1234.56
+  //  - "1234.56"     -> 1234.56
+  const raw = String(value)
+    .replace(/R\$\s*/gi, '')
+    .replace(/\s/g, '')
     .trim();
-  
+
+  const hasDot = raw.includes('.');
+  const hasComma = raw.includes(',');
+
+  let cleaned = raw;
+
+  if (hasDot && hasComma) {
+    const lastDot = raw.lastIndexOf('.');
+    const lastComma = raw.lastIndexOf(',');
+    // Se a vírgula vem depois do ponto, é PT-BR: 1.234,56
+    if (lastComma > lastDot) {
+      cleaned = raw.replace(/\./g, '').replace(',', '.');
+    } else {
+      // EN-US: 1,234.56
+      cleaned = raw.replace(/,/g, '');
+    }
+  } else if (hasComma && !hasDot) {
+    // PT-BR sem milhar: 1234,56
+    cleaned = raw.replace(',', '.');
+  } else {
+    // Apenas ponto (ou nenhum separador) — assume decimal com ponto
+    cleaned = raw;
+  }
+
+  // Remove qualquer coisa que não seja dígito, sinal ou ponto (por segurança)
+  cleaned = cleaned.replace(/[^0-9+\-\.]/g, '');
+
   const num = parseFloat(cleaned);
   return isNaN(num) ? undefined : num;
 }
@@ -228,6 +258,46 @@ function toYear(value: any): number | undefined {
   return undefined;
 }
 
+// Converte datas vindas do Excel/CSV para ISO (YYYY-MM-DD)
+function toDateISO(value: any): string | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+
+  // Date já parseada
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  // Excel serial date
+  if (typeof value === 'number' && value > 1000) {
+    // Excel epoch: 1899-12-30
+    const ms = (value - 25569) * 86400 * 1000;
+    const dt = new Date(ms);
+    if (!isNaN(dt.getTime())) return dt.toISOString().slice(0, 10);
+  }
+
+  const str = String(value).trim();
+  if (!str) return undefined;
+
+  // ISO date (ou datetime)
+  const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+
+  // DD/MM/YYYY ou DD-MM-YYYY
+  const br = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (br) {
+    const dd = br[1].padStart(2, '0');
+    const mm = br[2].padStart(2, '0');
+    const yyyy = br[3].length === 2 ? `20${br[3]}` : br[3];
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // YYYYMMDD
+  const compact = str.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (compact) return `${compact[1]}-${compact[2]}-${compact[3]}`;
+
+  return undefined;
+}
+
 export class LocalSpreadsheetProcessor {
   /**
    * Processa um arquivo Excel localmente
@@ -241,7 +311,7 @@ export class LocalSpreadsheetProcessor {
       
       // Lê o arquivo
       const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array' });
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
       
       // Pega a primeira aba (ou a aba "Modelo" se existir)
       let sheetName = workbook.SheetNames[0];
@@ -324,7 +394,7 @@ export class LocalSpreadsheetProcessor {
             modalidade_compra: columnIndex.modalidade_compra !== undefined ? String(row[columnIndex.modalidade_compra] || '').trim() || undefined : undefined,
             preco_nf: toNumber(row[columnIndex.preco_nf]),
             preco_fipe: toNumber(row[columnIndex.preco_fipe]),
-            data_venc_emplacamento: columnIndex.data_venc_emplacamento !== undefined ? String(row[columnIndex.data_venc_emplacamento] || '').trim() || undefined : undefined,
+            data_venc_emplacamento: columnIndex.data_venc_emplacamento !== undefined ? toDateISO(row[columnIndex.data_venc_emplacamento]) : undefined,
             observacoes: columnIndex.observacoes !== undefined ? String(row[columnIndex.observacoes] || '').trim() || undefined : undefined,
           };
           
