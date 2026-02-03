@@ -151,6 +151,22 @@ export function GestaoFrotas() {
           
           <div className="flex items-center gap-2 flex-shrink-0">
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                refetch();
+                toast({
+                  title: "🔄 Lista atualizada",
+                  description: "Os dados da frota foram recarregados",
+                });
+              }}
+              disabled={loading}
+              className="flex items-center gap-2 h-10 px-3"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Atualizar</span>
+            </Button>
+            <Button
               variant="secondary"
               size="sm"
               onClick={() => setPublicLinkModalOpen(true)}
