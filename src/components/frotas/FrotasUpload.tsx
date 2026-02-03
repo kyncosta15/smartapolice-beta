@@ -168,6 +168,19 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
             console.error('❌ [FrotasUpload] Erro retornado pela edge function:', insertError);
             throw new Error(`Erro na edge function: ${insertError.message || JSON.stringify(insertError)}`);
           }
+
+           if (!insertResult) {
+             throw new Error('Edge function não retornou dados de inserção');
+           }
+
+           const inseridos = insertResult?.detalhes?.veiculos_inseridos ?? 0;
+           const errosInsercao = insertResult?.detalhes?.erros_insercao ?? 0;
+
+           // Se nada foi inserido, tratar como erro (normalmente causado por campo inválido, ex: datas)
+           if (inseridos === 0) {
+             console.error('❌ [FrotasUpload] Nenhum veículo inserido. Resposta:', insertResult);
+             throw new Error(insertResult?.message || 'Nenhum veículo foi inserido (verifique datas/valores na planilha)');
+           }
           
           console.log('✅ [FrotasUpload] Dados processados localmente inseridos com sucesso:', insertResult);
           
@@ -198,7 +211,7 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
           // CRÍTICO: Chamar onSuccess para recarregar a lista de veículos
           toast({
             title: "✅ Frota Processada",
-            description: `${insertResult?.detalhes?.veiculos_inseridos || localResult.veiculos.length} veículos inseridos com sucesso!`,
+            description: `${inseridos} veículos inseridos${errosInsercao > 0 ? ` (${errosInsercao} com erro)` : ''}.`,
           });
           
           // Disparar evento e chamar onSuccess
