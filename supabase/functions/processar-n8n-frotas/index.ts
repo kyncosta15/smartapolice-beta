@@ -15,9 +15,21 @@ interface VeiculoN8N {
   marca?: string;
   ano?: number;
   proprietario?: string;
+  proprietario_doc?: string;
+  proprietario_tipo?: string;
   localizacao?: string;
   familia?: string;
+  funcao?: string;
   status?: string;
+  status_seguro?: string;
+  combustivel?: string;
+  codigo_fipe?: string;
+  uf_emplacamento?: string;
+  preco_nf?: number;
+  preco_fipe?: number;
+  data_venc_emplacamento?: string;
+  modalidade_compra?: string;
+  observacoes?: string;
   origem_planilha?: string;
 }
 
@@ -163,17 +175,26 @@ serve(async (req) => {
         marca: veiculo.marca || null,
         modelo: veiculo.modelo || null,
         categoria: normalizarCategoria(veiculo.familia || 'Carros'), // Normalizar categoria
-        funcao: veiculo.familia || null, // Guardar categoria original em funcao
-        ano_modelo: veiculo.ano || null, // ano → ano_modelo
+        funcao: veiculo.funcao || veiculo.familia || null, // Guardar função/categoria original
+        ano_modelo: veiculo.ano || null,
         chassi: veiculo.chassi || null,
         renavam: veiculo.renavam || null,
         codigo: veiculo.codigo || null,
+        codigo_fipe: veiculo.codigo_fipe || null,
+        combustivel: veiculo.combustivel || null,
+        uf_emplacamento: veiculo.uf_emplacamento || null,
         localizacao: veiculo.localizacao || null,
-        proprietario_nome: veiculo.proprietario || null, // proprietario → proprietario_nome
-        proprietario_tipo: veiculo.proprietario ? 'juridica' : null,
+        proprietario_nome: veiculo.proprietario || null,
+        proprietario_doc: veiculo.proprietario_doc || null,
+        proprietario_tipo: veiculo.proprietario_tipo || (veiculo.proprietario ? 'pj' : null),
+        status_veiculo: veiculo.status || 'ativo',
+        status_seguro: veiculo.status_seguro || 'sem_seguro',
+        preco_nf: veiculo.preco_nf || null,
+        preco_fipe: veiculo.preco_fipe || null,
+        data_venc_emplacamento: veiculo.data_venc_emplacamento || null,
+        modalidade_compra: veiculo.modalidade_compra || null,
         origem_planilha: veiculo.origem_planilha || 'N8N',
-        status_seguro: 'sem_seguro', // Status padrão
-        observacoes: `Importado via N8N - Status original: ${veiculo.status || 'não informado'}`
+        observacoes: veiculo.observacoes || null
       };
       
       console.log(`Veículo mapeado:`, veiculoMapeado);
