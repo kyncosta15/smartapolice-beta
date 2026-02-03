@@ -84,6 +84,27 @@ export function NewPolicyManualModal({ open, onOpenChange, onSuccess }: NewPolic
           lmi: c.lmi ? parseFloat(c.lmi.replace(/[^\d,]/g, '').replace(',', '.')) : undefined,
         }));
 
+      // Helper para converter valores monetários de forma segura
+      const parseMonetaryValue = (value: string): number => {
+        if (!value || value.trim() === '') return 0;
+        const cleaned = value.replace(/[^\d,]/g, '').replace(',', '.');
+        const parsed = parseFloat(cleaned);
+        return isNaN(parsed) ? 0 : parsed;
+      };
+
+      const parsedPremioTotal = parseMonetaryValue(formData.premio_total);
+      const parsedValorMensal = parseMonetaryValue(formData.valor_mensal);
+      const parsedQuantidadeParcelas = parseInt(formData.quantidade_parcelas) || 1;
+
+      console.log('📝 Inserindo apólice:', {
+        user_id: user.id,
+        segurado: formData.nome_segurado,
+        tipo_seguro: formData.tipo_beneficio,
+        valor_premio: parsedPremioTotal,
+        custo_mensal: parsedValorMensal,
+        quantidade_parcelas: parsedQuantidadeParcelas,
+      });
+
       // Inserir apólice no banco
       const { data: policy, error } = await supabase
         .from('policies')
@@ -91,18 +112,18 @@ export function NewPolicyManualModal({ open, onOpenChange, onSuccess }: NewPolic
           user_id: user.id,
           segurado: formData.nome_segurado,
           tipo_seguro: formData.tipo_beneficio,
-          documento: formData.documento,
+          documento: formData.documento || null,
           documento_tipo: formData.documento_tipo,
           numero_apolice: formData.numero_apolice,
-          valor_premio: parseFloat(formData.premio_total.replace(/[^\d,]/g, '').replace(',', '.')),
-          custo_mensal: parseFloat(formData.valor_mensal.replace(/[^\d,]/g, '').replace(',', '.')),
-          valor_parcela: parseFloat(formData.valor_mensal.replace(/[^\d,]/g, '').replace(',', '.')),
-          quantidade_parcelas: parseInt(formData.quantidade_parcelas),
-          inicio_vigencia: formData.data_inicio,
-          fim_vigencia: formData.data_fim,
-          expiration_date: formData.data_fim,
+          valor_premio: parsedPremioTotal,
+          custo_mensal: parsedValorMensal,
+          valor_parcela: parsedValorMensal,
+          quantidade_parcelas: parsedQuantidadeParcelas,
+          inicio_vigencia: formData.data_inicio || null,
+          fim_vigencia: formData.data_fim || null,
+          expiration_date: formData.data_fim || null,
           seguradora: formData.seguradora,
-          responsavel_nome: formData.responsavel,
+          responsavel_nome: formData.responsavel || null,
           status: 'vigente',
           created_by_extraction: false,
           arquivo_url: uploadedPdfPath,
@@ -110,7 +131,12 @@ export function NewPolicyManualModal({ open, onOpenChange, onSuccess }: NewPolic
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao inserir apólice:', error);
+        throw error;
+      }
+
+      console.log('✅ Apólice inserida com sucesso:', policy);
 
       // Inserir coberturas
       if (coberturasFormatadas.length > 0) {
