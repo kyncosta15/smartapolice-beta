@@ -134,3 +134,6 @@ verify_jwt = false
 
 [functions.admin-presence]
 verify_jwt = false
+
+[functions.processar-n8n-frotas]
+verify_jwt = false

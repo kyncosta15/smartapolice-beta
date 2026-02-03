@@ -107,7 +107,9 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
     try {
       // Para planilhas: usar SEMPRE o processador local (N8N em standby)
       if (isSpreadsheet) {
-        console.log('📊 Usando processador local para planilha...');
+        console.log('📊 [FrotasUpload] Usando processador local para planilha...');
+        console.log('📊 [FrotasUpload] Arquivo:', file.name, 'Tamanho:', file.size);
+        console.log('📊 [FrotasUpload] Metadata:', JSON.stringify(metadata));
         
         setFiles(prev => prev.map(f => 
           f.id === fileId 
@@ -115,11 +117,17 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
             : f
         ));
         
-        const localResult = await LocalSpreadsheetProcessor.processFile(file);
-        console.log('📊 Resultado do processador local:', localResult);
+        let localResult;
+        try {
+          localResult = await LocalSpreadsheetProcessor.processFile(file);
+          console.log('📊 [FrotasUpload] Resultado do processador local:', JSON.stringify(localResult, null, 2));
+        } catch (processorError) {
+          console.error('❌ [FrotasUpload] Erro no processador local:', processorError);
+          throw new Error(`Falha ao processar planilha: ${processorError instanceof Error ? processorError.message : 'Erro desconhecido'}`);
+        }
         
         if (localResult.success && localResult.veiculos.length > 0) {
-          console.log('🚀 Inserindo veículos processados localmente...');
+          console.log(`🚀 [FrotasUpload] Inserindo ${localResult.veiculos.length} veículos processados localmente...`);
           
           setFiles(prev => prev.map(f => 
             f.id === fileId 
@@ -132,20 +140,42 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
             metadata.empresa_id
           );
           
-          const { data: insertResult, error: insertError } = await supabase.functions.invoke('processar-n8n-frotas', {
-            body: {
-              veiculos: edgeFunctionData.veiculos,
-              empresaId: metadata.empresa_id,
-              userEmail: metadata.user_email
-            }
+          console.log('📤 [FrotasUpload] Dados para edge function:', {
+            totalVeiculos: edgeFunctionData.veiculos.length,
+            empresaId: edgeFunctionData.empresaId,
+            primeiroVeiculo: edgeFunctionData.veiculos[0]
           });
           
-          if (insertError) {
-            console.error('❌ Erro ao inserir dados processados localmente:', insertError);
-            throw insertError;
+          let insertResult, insertError;
+          try {
+            const response = await supabase.functions.invoke('processar-n8n-frotas', {
+              body: {
+                veiculos: edgeFunctionData.veiculos,
+                empresaId: metadata.empresa_id,
+                userEmail: metadata.user_email
+              }
+            });
+            insertResult = response.data;
+            insertError = response.error;
+            
+            console.log('📥 [FrotasUpload] Resposta da edge function:', { insertResult, insertError });
+          } catch (invokeError) {
+            console.error('❌ [FrotasUpload] Erro ao invocar edge function:', invokeError);
+            throw new Error(`Falha ao chamar edge function: ${invokeError instanceof Error ? invokeError.message : 'Erro desconhecido'}`);
           }
           
-          console.log('✅ Dados processados localmente inseridos:', insertResult);
+          if (insertError) {
+            console.error('❌ [FrotasUpload] Erro retornado pela edge function:', insertError);
+            throw new Error(`Erro na edge function: ${insertError.message || JSON.stringify(insertError)}`);
+          }
+          
+          console.log('✅ [FrotasUpload] Dados processados localmente inseridos com sucesso:', insertResult);
+          
+          // Chamar onSuccess para recarregar a lista
+          toast({
+            title: "✅ Frota Processada",
+            description: `${localResult.veiculos.length} veículos inseridos com sucesso!`,
+          });
           
           const localProcessResult: N8NResponse = {
             success: true,
@@ -159,8 +189,8 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
             },
             detalhes: {
               total_recebidos: localResult.totalProcessados,
-              veiculos_inseridos: localResult.veiculos.length,
-              erros_insercao: localResult.erros.length,
+              veiculos_inseridos: insertResult?.detalhes?.veiculos_inseridos || localResult.veiculos.length,
+              erros_insercao: insertResult?.detalhes?.erros_insercao || 0,
               empresa_id: metadata.empresa_id
             }
           };
@@ -173,7 +203,11 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
           
           return localProcessResult;
         } else {
-          throw new Error(`Erro no processamento: ${localResult.erros.join(', ') || 'Nenhum veículo encontrado na planilha'}`);
+          const errorMsg = localResult.erros.length > 0 
+            ? localResult.erros.join(', ') 
+            : 'Nenhum veículo encontrado na planilha';
+          console.error('❌ [FrotasUpload] Processamento falhou:', errorMsg);
+          throw new Error(`Erro no processamento: ${errorMsg}`);
         }
       }
 
