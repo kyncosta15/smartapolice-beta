@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useCurrentMonthInstallments } from '@/hooks/useCurrentMonthInstallments';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatCurrency } from '@/utils/currencyFormatter';
 
 interface DashboardCardsProps {
   dashboardStats: {
@@ -28,20 +29,22 @@ interface DashboardCardsProps {
 }
 
 export function DashboardCards({ dashboardStats, isLoading = false, onSectionChange }: DashboardCardsProps) {
-  const [showFullValue, setShowFullValue] = useState(false);
   const [expiringPeriod, setExpiringPeriod] = useState<30 | 60>(30);
   
   // Hook para buscar parcelas do mês atual
   const { data: currentMonthData, isLoading: isLoadingInstallments } = useCurrentMonthInstallments();
   
-  // Usar valores reais das parcelas do mês atual se disponíveis
-  const valorMensalReal = currentMonthData.totalMesAtual > 0 
-    ? currentMonthData.totalMesAtual 
-    : dashboardStats.totalMonthlyCost;
-  
-  const valorAnualReal = currentMonthData.totalAnualReal > 0 
-    ? currentMonthData.totalAnualReal 
-    : dashboardStats.totalInsuredValue;
+  // Sempre usar valores calculados a partir das parcelas (evita "média")
+  const valorMensalReal = currentMonthData.totalMesAtual;
+  const valorAnualReal = currentMonthData.totalAnualReal;
+
+  const formatDatePtBrSafe = (isoDate?: string) => {
+    if (!isoDate) return '';
+    const d = String(isoDate).slice(0, 10);
+    const [y, m, day] = d.split('-');
+    if (!y || !m || !day) return d;
+    return `${day}/${m}/${y}`;
+  };
   
   // Formatar mês vigente para exibição
   const mesAtual = new Date().toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
@@ -77,13 +80,10 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
     {
       id: 'premium',
       title: `Prêmio ${mesAtual.charAt(0).toUpperCase() + mesAtual.slice(1)}`,
-      value: new Intl.NumberFormat('pt-BR', { 
-        style: 'currency', 
-        currency: 'BRL' 
-      }).format(valorMensalReal || 0),
+      value: formatCurrency(valorMensalReal || 0),
       subtitle: currentMonthData.parcelas.length > 0 
         ? `${currentMonthData.parcelas.length} parcela${currentMonthData.parcelas.length > 1 ? 's' : ''} no mês`
-        : 'Valor total dos prêmios',
+        : (isLoadingInstallments ? 'Carregando parcelas…' : 'Nenhuma parcela no mês'),
       icon: DollarSign,
       badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
       iconColor: 'text-emerald-600',
@@ -92,12 +92,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
     {
       id: 'coverage',
       title: 'Custo anual',
-      value: new Intl.NumberFormat('pt-BR', { 
-        style: 'currency', 
-        currency: 'BRL',
-        notation: 'compact',
-        maximumFractionDigits: 1
-      }).format(valorAnualReal || 0),
+      value: formatCurrency(valorAnualReal || 0),
       subtitle: 'Soma das parcelas',
       icon: Shield,
       badgeColor: 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300',
@@ -170,44 +165,6 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
           {firstRowCards.map((card: any) => {
             const IconComponent = card.icon;
             
-            // Para o card de "Custo anual", mostrar valor completo ao hover
-            if (card.id === 'coverage') {
-              const fullValue = new Intl.NumberFormat('pt-BR', { 
-                style: 'currency', 
-                currency: 'BRL',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              }).format(valorAnualReal || 0);
-              
-              return (
-                <Card 
-                  key={card.id}
-                  className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200"
-                  onMouseEnter={() => setShowFullValue(true)}
-                  onMouseLeave={() => setShowFullValue(false)}
-                  onTouchStart={() => setShowFullValue(true)}
-                  onTouchEnd={() => setShowFullValue(false)}
-                >
-                  <CardContent className="p-0">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor}`}>
-                        <IconComponent className="size-3" />
-                        {card.title}
-                      </span>
-                    </div>
-                    
-                    <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1 transition-all duration-200">
-                      {showFullValue ? fullValue : card.value}
-                    </div>
-                    
-                    <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
-                      {card.subtitle}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            }
-            
             // Para o card de "Prêmio Mensal", adicionar tooltip com parcelas
             if (card.id === 'premium' && card.tooltipData && card.tooltipData.length > 0) {
               return (
@@ -239,15 +196,19 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                     <div className="space-y-2">
                       <p className="font-semibold text-sm">Parcelas do mês:</p>
                       {card.tooltipData.slice(0, 5).map((parcela: any, idx: number) => (
-                        <div key={idx} className="flex justify-between text-xs gap-4">
-                          <span className="truncate max-w-[150px]">
-                            {parcela.numero_apolice || 'Apólice'}
-                          </span>
+                        <div key={idx} className="flex items-center justify-between text-xs gap-4">
+                          <div className="min-w-0">
+                            <div className="truncate max-w-[160px]">
+                              {parcela.numero_apolice || 'Apólice'}
+                            </div>
+                            {parcela.data_vencimento && (
+                              <div className="text-[11px] text-muted-foreground">
+                                {formatDatePtBrSafe(parcela.data_vencimento)}
+                              </div>
+                            )}
+                          </div>
                           <span className="font-medium whitespace-nowrap">
-                            {new Intl.NumberFormat('pt-BR', { 
-                              style: 'currency', 
-                              currency: 'BRL' 
-                            }).format(parcela.valor)}
+                            {formatCurrency(parcela.valor)}
                           </span>
                         </div>
                       ))}
