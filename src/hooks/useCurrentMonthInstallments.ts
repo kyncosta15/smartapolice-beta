@@ -38,6 +38,15 @@ export function useCurrentMonthInstallments() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const toISODateLocal = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const toCents = (value: number | null | undefined) => Math.round((value ?? 0) * 100);
+
   const fetchCurrentMonthInstallments = async () => {
     if (!user?.id) return;
     
@@ -49,14 +58,12 @@ export function useCurrentMonthInstallments() {
       const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const firstDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+      const startISO = toISODateLocal(firstDayOfMonth);
+      const nextISO = toISODateLocal(firstDayOfNextMonth);
       
       // Formatar mês vigente para exibição (ex: "Fevereiro 2026")
       const mesVigente = now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-      
-      console.log('🔍 [CurrentMonth] Buscando parcelas do mês:', {
-        firstDayOfMonth: firstDayOfMonth.toISOString().split('T')[0],
-        firstDayOfNextMonth: firstDayOfNextMonth.toISOString().split('T')[0]
-      });
       
       // Query para buscar parcelas do mês atual
       const { data: parcelasData, error: parcelasError } = await supabase
@@ -68,26 +75,30 @@ export function useCurrentMonthInstallments() {
           valor,
           data_vencimento,
           status,
-          policies (
+          policies!fk_installments_policy_id (
             numero_apolice,
             segurado,
-            status
+            status,
+            policy_status
           )
         `)
-        .gte('data_vencimento', firstDayOfMonth.toISOString().split('T')[0])
-        .lt('data_vencimento', firstDayOfNextMonth.toISOString().split('T')[0]);
+        .eq('user_id', user.id)
+        .gte('data_vencimento', startISO)
+        .lt('data_vencimento', nextISO);
       
       if (parcelasError) {
         console.error('❌ Erro ao buscar parcelas do mês:', parcelasError);
         throw parcelasError;
       }
 
-      console.log('📊 [CurrentMonth] Parcelas encontradas:', parcelasData?.length || 0);
-
       // Filtrar apenas apólices vigentes no JS
       const parcelasVigentes = (parcelasData || []).filter((p: any) => {
-        const policyStatus = p.policies?.status?.toLowerCase();
-        return policyStatus === 'vigente' || policyStatus === 'ativa' || policyStatus === 'vencendo';
+        const legacyStatus = String(p.policies?.status ?? '').toLowerCase();
+        const enumStatus = String(p.policies?.policy_status ?? '').toLowerCase();
+
+        const isActiveLegacy = legacyStatus === 'vigente' || legacyStatus === 'ativa' || legacyStatus === 'vencendo';
+        const isActiveEnum = enumStatus === 'active' || enumStatus === 'expiring';
+        return isActiveLegacy || isActiveEnum;
       });
 
       // Calcular total do mês atual
@@ -102,41 +113,38 @@ export function useCurrentMonthInstallments() {
         segurado: p.policies?.segurado || '',
       }));
 
-      const totalMesAtual = parcelas.reduce((sum, p) => sum + (p.valor || 0), 0);
+      const totalMesAtualCents = parcelas.reduce((sum, p) => sum + toCents(p.valor), 0);
+      const totalMesAtual = totalMesAtualCents / 100;
       
       // Buscar total anual real (soma de todas as parcelas de apólices vigentes)
       const { data: allInstallmentsData, error: totalAnualError } = await supabase
         .from('installments')
         .select(`
           valor,
-          policies (
-            status
+          policies!fk_installments_policy_id (
+            status,
+            policy_status
           )
-        `);
+        `)
+        .eq('user_id', user.id);
       
       if (totalAnualError) {
         console.error('❌ Erro ao calcular total anual:', totalAnualError);
       }
       
       // Filtrar apenas apólices vigentes e somar
-      const totalAnualReal = (allInstallmentsData || [])
+      const totalAnualRealCents = (allInstallmentsData || [])
         .filter((p: any) => {
-          const policyStatus = p.policies?.status?.toLowerCase();
-          return policyStatus === 'vigente' || policyStatus === 'ativa' || policyStatus === 'vencendo';
+          const legacyStatus = String(p.policies?.status ?? '').toLowerCase();
+          const enumStatus = String(p.policies?.policy_status ?? '').toLowerCase();
+
+          const isActiveLegacy = legacyStatus === 'vigente' || legacyStatus === 'ativa' || legacyStatus === 'vencendo';
+          const isActiveEnum = enumStatus === 'active' || enumStatus === 'expiring';
+          return isActiveLegacy || isActiveEnum;
         })
-        .reduce((sum, p: any) => sum + (p.valor || 0), 0);
-      
-      console.log('📊 [CurrentMonth] Parcelas do mês atual:', {
-        mesVigente,
-        qtdParcelas: parcelas.length,
-        totalMesAtual,
-        totalAnualReal,
-        parcelas: parcelas.map(p => ({ 
-          apolice: p.numero_apolice, 
-          valor: p.valor,
-          vencimento: p.data_vencimento 
-        }))
-      });
+        .reduce((sum, p: any) => sum + toCents(p.valor), 0);
+
+      const totalAnualReal = totalAnualRealCents / 100;
 
       setData({
         totalMesAtual,
