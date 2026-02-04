@@ -80,6 +80,20 @@ export function ClassificationCharts({
   const [selectedPolicy, setSelectedPolicy] = useState<typeof recentPolicies[0] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Evita bug de timezone: new Date('YYYY-MM-DD') interpreta como UTC e pode mostrar -1 dia no Brasil
+  const formatCalendarDatePtBr = (value?: string | null) => {
+    if (!value) return '';
+    const clean = String(value).split('T')[0];
+    const [y, m, d] = clean.split('-');
+    if (y && m && d && y.length === 4) return `${d}/${m}/${y}`;
+    // fallback para strings não-ISO
+    try {
+      return new Date(String(value)).toLocaleDateString('pt-BR');
+    } catch {
+      return String(value);
+    }
+  };
+
   // Calculate total for donut chart center
   const totalPolicies = React.useMemo(() => {
     return typeDistribution.reduce((acc, curr) => acc + curr.value, 0);
@@ -313,14 +327,14 @@ export function ClassificationCharts({
                       <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground">
                         <div className="text-right">
                           <p className="font-medium text-foreground">
-                            {new Date(policy.insertDate).toLocaleDateString('pt-BR')}
+                            {formatCalendarDatePtBr(policy.insertDate)}
                           </p>
                           <p>Inserida</p>
                         </div>
                         
                         <div className="text-right">
                           <p className="font-medium text-foreground">
-                            {new Date(policy.dueDate).toLocaleDateString('pt-BR')}
+                            {formatCalendarDatePtBr(policy.dueDate)}
                           </p>
                           <p>Vencimento</p>
                         </div>
