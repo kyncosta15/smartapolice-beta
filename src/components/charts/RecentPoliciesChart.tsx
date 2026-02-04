@@ -37,12 +37,29 @@ export const RecentPoliciesChart = ({ policies }: RecentPoliciesChartProps) => {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    // Se vier como YYYY-MM-DD (data de calendário), não usar Date() pra evitar shift de timezone
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [y, m, d] = dateString.split('-');
+      return `${d}/${m}/${y}`;
+    }
     return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  const parseCalendarDateLocal = (value: string) => {
+    if (!value) return new Date('');
+    const clean = String(value).split('T')[0];
+    const [y, m, d] = clean.split('-').map(Number);
+    if (y && m && d) return new Date(y, m - 1, d);
+    return new Date(value);
   };
 
   const getDaysUntilExpiration = (endDate: string) => {
     const today = new Date();
-    const expiration = new Date(endDate);
+    today.setHours(0, 0, 0, 0);
+
+    const expiration = parseCalendarDateLocal(endDate);
+    expiration.setHours(0, 0, 0, 0);
     const diffTime = expiration.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;

@@ -994,11 +994,11 @@ export function MyPolicies() {
                     </TableCell>
                     <TableCell>
                       <span className={
-                        new Date(policy.expirationDate || policy.endDate) < new Date() 
-                          ? 'text-red-600 font-medium' 
+                        isDatePast(policy.expirationDate || policy.endDate)
+                          ? 'text-red-600 font-medium'
                           : ''
                       }>
-                        {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
+                        {formatDatePtBrSafe(policy.expirationDate || policy.endDate)}
                       </span>
                     </TableCell>
                     <TableCell>
