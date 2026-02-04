@@ -48,6 +48,24 @@ import {
 import { ManageCPFVinculosModal } from './ManageCPFVinculosModal';
 import { supabase } from '@/integrations/supabase/client';
 
+// Formatar data ISO p/ pt-BR sem bug de timezone UTC
+const formatDatePtBrSafe = (isoDate?: string | null): string => {
+  if (!isoDate) return '';
+  const d = String(isoDate).slice(0, 10); // "YYYY-MM-DD"
+  const [y, m, day] = d.split('-');
+  if (!y || !m || !day) return d;
+  return `${day}/${m}/${y}`;
+};
+
+// Verificar se data já passou (compara só YYYY-MM-DD, sem timezone)
+const isDatePast = (isoDate?: string | null): boolean => {
+  if (!isoDate) return false;
+  const d = String(isoDate).slice(0, 10);
+  const today = new Date();
+  const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  return d < todayISO;
+};
+
 export function MyPolicies() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -853,11 +871,11 @@ export function MyPolicies() {
                       <div className="text-right">
                         <p className="text-[10px] sm:text-xs text-gray-500 dark:text-muted-foreground mb-0.5 sm:mb-1">Vencimento</p>
                         <p className={`font-medium text-xs sm:text-sm whitespace-nowrap ${
-                          new Date(policy.expirationDate || policy.endDate) < new Date() 
+                          isDatePast(policy.expirationDate || policy.endDate) 
                             ? 'text-red-600 dark:text-red-400' 
                             : 'text-gray-900 dark:text-foreground'
                         }`}>
-                          {new Date(policy.expirationDate || policy.endDate).toLocaleDateString('pt-BR')}
+                          {formatDatePtBrSafe(policy.expirationDate || policy.endDate)}
                         </p>
                       </div>
                     </div>
