@@ -6,8 +6,11 @@ import {
   DollarSign, 
   AlertTriangle, 
   CheckCircle,
-  Clock
+  Clock,
+  Calendar
 } from 'lucide-react';
+import { useCurrentMonthInstallments } from '@/hooks/useCurrentMonthInstallments';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DashboardCardsProps {
   dashboardStats: {
@@ -27,6 +30,21 @@ interface DashboardCardsProps {
 export function DashboardCards({ dashboardStats, isLoading = false, onSectionChange }: DashboardCardsProps) {
   const [showFullValue, setShowFullValue] = useState(false);
   const [expiringPeriod, setExpiringPeriod] = useState<30 | 60>(30);
+  
+  // Hook para buscar parcelas do mês atual
+  const { data: currentMonthData, isLoading: isLoadingInstallments } = useCurrentMonthInstallments();
+  
+  // Usar valores reais das parcelas do mês atual se disponíveis
+  const valorMensalReal = currentMonthData.totalMesAtual > 0 
+    ? currentMonthData.totalMesAtual 
+    : dashboardStats.totalMonthlyCost;
+  
+  const valorAnualReal = currentMonthData.totalAnualReal > 0 
+    ? currentMonthData.totalAnualReal 
+    : dashboardStats.totalInsuredValue;
+  
+  // Formatar mês vigente para exibição
+  const mesAtual = new Date().toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
   
   // Loading skeleton component
   const CardSkeleton = () => (
@@ -58,15 +76,18 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
     },
     {
       id: 'premium',
-      title: 'Prêmio Mensal',
+      title: `Prêmio ${mesAtual.charAt(0).toUpperCase() + mesAtual.slice(1)}`,
       value: new Intl.NumberFormat('pt-BR', { 
         style: 'currency', 
         currency: 'BRL' 
-      }).format(dashboardStats.totalMonthlyCost || 0),
-      subtitle: 'Valor total dos prêmios',
+      }).format(valorMensalReal || 0),
+      subtitle: currentMonthData.parcelas.length > 0 
+        ? `${currentMonthData.parcelas.length} parcela${currentMonthData.parcelas.length > 1 ? 's' : ''} no mês`
+        : 'Valor total dos prêmios',
       icon: DollarSign,
       badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
-      iconColor: 'text-emerald-600'
+      iconColor: 'text-emerald-600',
+      tooltipData: currentMonthData.parcelas.length > 0 ? currentMonthData.parcelas : null
     },
     {
       id: 'coverage',
@@ -76,8 +97,8 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
         currency: 'BRL',
         notation: 'compact',
         maximumFractionDigits: 1
-      }).format(dashboardStats.totalInsuredValue || 0),
-      subtitle: 'Cobertura total',
+      }).format(valorAnualReal || 0),
+      subtitle: 'Soma das parcelas',
       icon: Shield,
       badgeColor: 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300',
       iconColor: 'text-purple-600'
@@ -145,26 +166,109 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       
       {/* First Row: Total, Premium, Coverage */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-        {firstRowCards.map((card) => {
-          const IconComponent = card.icon;
-          
-          // Para o card de "Custo anual", mostrar valor completo ao hover
-          if (card.id === 'coverage') {
-            const fullValue = new Intl.NumberFormat('pt-BR', { 
-              style: 'currency', 
-              currency: 'BRL',
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            }).format(dashboardStats.totalInsuredValue || 0);
+        <TooltipProvider>
+          {firstRowCards.map((card: any) => {
+            const IconComponent = card.icon;
+            
+            // Para o card de "Custo anual", mostrar valor completo ao hover
+            if (card.id === 'coverage') {
+              const fullValue = new Intl.NumberFormat('pt-BR', { 
+                style: 'currency', 
+                currency: 'BRL',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }).format(valorAnualReal || 0);
+              
+              return (
+                <Card 
+                  key={card.id}
+                  className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200"
+                  onMouseEnter={() => setShowFullValue(true)}
+                  onMouseLeave={() => setShowFullValue(false)}
+                  onTouchStart={() => setShowFullValue(true)}
+                  onTouchEnd={() => setShowFullValue(false)}
+                >
+                  <CardContent className="p-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor}`}>
+                        <IconComponent className="size-3" />
+                        {card.title}
+                      </span>
+                    </div>
+                    
+                    <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1 transition-all duration-200">
+                      {showFullValue ? fullValue : card.value}
+                    </div>
+                    
+                    <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
+                      {card.subtitle}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            }
+            
+            // Para o card de "Prêmio Mensal", adicionar tooltip com parcelas
+            if (card.id === 'premium' && card.tooltipData && card.tooltipData.length > 0) {
+              return (
+                <Tooltip key={card.id}>
+                  <TooltipTrigger asChild>
+                    <Card 
+                      className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-help"
+                    >
+                      <CardContent className="p-0">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor}`}>
+                            <IconComponent className="size-3" />
+                            {card.title}
+                          </span>
+                          <Calendar className="size-3 text-emerald-500" />
+                        </div>
+                        
+                        <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1">
+                          {card.value}
+                        </div>
+                        
+                        <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
+                          {card.subtitle}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs p-3 bg-popover text-popover-foreground border shadow-lg">
+                    <div className="space-y-2">
+                      <p className="font-semibold text-sm">Parcelas do mês:</p>
+                      {card.tooltipData.slice(0, 5).map((parcela: any, idx: number) => (
+                        <div key={idx} className="flex justify-between text-xs gap-4">
+                          <span className="truncate max-w-[150px]">
+                            {parcela.numero_apolice || 'Apólice'}
+                          </span>
+                          <span className="font-medium whitespace-nowrap">
+                            {new Intl.NumberFormat('pt-BR', { 
+                              style: 'currency', 
+                              currency: 'BRL' 
+                            }).format(parcela.valor)}
+                          </span>
+                        </div>
+                      ))}
+                      {card.tooltipData.length > 5 && (
+                        <p className="text-xs text-muted-foreground">
+                          +{card.tooltipData.length - 5} parcela(s)
+                        </p>
+                      )}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
             
             return (
               <Card 
-                key={card.id}
-                className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200"
-                onMouseEnter={() => setShowFullValue(true)}
-                onMouseLeave={() => setShowFullValue(false)}
-                onTouchStart={() => setShowFullValue(true)}
-                onTouchEnd={() => setShowFullValue(false)}
+                key={card.id} 
+                className={`bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl p-4 shadow-sm transition-all duration-200 ${
+                  card.clickable ? 'hover:shadow-md cursor-pointer hover:scale-[1.02]' : 'hover:shadow-md'
+                }`}
+                onClick={() => card.clickable && onSectionChange?.('policies')}
               >
                 <CardContent className="p-0">
                   <div className="flex items-center gap-2 mb-3">
@@ -174,8 +278,8 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                     </span>
                   </div>
                   
-                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1 transition-all duration-200">
-                    {showFullValue ? fullValue : card.value}
+                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1">
+                    {card.value}
                   </div>
                   
                   <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
@@ -184,35 +288,8 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                 </CardContent>
               </Card>
             );
-          }
-          
-          return (
-            <Card 
-              key={card.id} 
-              className={`bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl p-4 shadow-sm transition-all duration-200 ${
-                card.clickable ? 'hover:shadow-md cursor-pointer hover:scale-[1.02]' : 'hover:shadow-md'
-              }`}
-              onClick={() => card.clickable && onSectionChange?.('policies')}
-            >
-              <CardContent className="p-0">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${card.badgeColor}`}>
-                    <IconComponent className="size-3" />
-                    {card.title}
-                  </span>
-                </div>
-                
-                <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1">
-                  {card.value}
-                </div>
-                
-                <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
-                  {card.subtitle}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+          })}
+        </TooltipProvider>
       </div>
 
       {/* Second Row: Status Cards with Gradients */}
