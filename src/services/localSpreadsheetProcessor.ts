@@ -78,6 +78,9 @@ const COLUMN_MAPPING: Record<string, keyof ProcessedVehicle> = {
   'codigo_fipe': 'codigo_fipe',
   'Cod FIPE': 'codigo_fipe',
   'COD FIPE': 'codigo_fipe',
+  'Código FIPE (XXXXXX-X)': 'codigo_fipe',
+  'CÓDIGO FIPE (XXXXXX-X)': 'codigo_fipe',
+  'Codigo FIPE (XXXXXX-X)': 'codigo_fipe',
   'UF Emplacamento': 'uf_emplacamento',
   'UF EMPLACAMENTO': 'uf_emplacamento',
   'uf_emplacamento': 'uf_emplacamento',
@@ -358,12 +361,36 @@ export class LocalSpreadsheetProcessor {
       const headers = rawData[0] as string[];
       console.log('📋 [LocalProcessor] Cabeçalhos encontrados:', headers);
       
-      // Mapeia os índices das colunas
+      // Mapeia os índices das colunas usando match exato primeiro, depois parcial
       const columnIndex: Record<keyof ProcessedVehicle, number> = {} as any;
+      
+      // Normaliza header para comparação (lowercase, sem acentos)
+      const normalizeForMatch = (str: string) => str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[_\s]+/g, ' ')
+        .trim();
+      
       headers.forEach((header, index) => {
         const headerStr = String(header || '').trim();
-        const mappedField = COLUMN_MAPPING[headerStr];
-        if (mappedField) {
+        
+        // Primeiro tenta match exato
+        let mappedField = COLUMN_MAPPING[headerStr];
+        
+        // Se não encontrou, tenta match parcial para Código FIPE
+        if (!mappedField) {
+          const normalizedHeader = normalizeForMatch(headerStr);
+          if (normalizedHeader.includes('codigo fipe') || normalizedHeader.includes('cod fipe')) {
+            mappedField = 'codigo_fipe';
+          } else if (normalizedHeader.includes('preco fipe') || normalizedHeader.includes('valor fipe')) {
+            mappedField = 'preco_fipe';
+          } else if (normalizedHeader.includes('preco nf') || normalizedHeader.includes('valor nf')) {
+            mappedField = 'preco_nf';
+          }
+        }
+        
+        if (mappedField && columnIndex[mappedField] === undefined) {
           columnIndex[mappedField] = index;
           console.log(`  ✅ Coluna ${index} "${headerStr}" → ${mappedField}`);
         }
