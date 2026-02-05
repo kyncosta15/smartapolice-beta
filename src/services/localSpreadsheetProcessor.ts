@@ -174,6 +174,26 @@ function normalizeCategoria(categoria: string | undefined): string {
   return 'Carros';
 }
 
+// Normaliza o proprietario_tipo para valores aceitos pelo banco: 'pj', 'pf'
+function normalizeProprietarioTipo(tipo: string | undefined): string | undefined {
+  if (!tipo) return undefined;
+  
+  const t = String(tipo).toLowerCase().trim();
+  
+  // CNPJ ou variações de pessoa jurídica
+  if (t === 'pj' || t === 'cnpj' || t.includes('juridica') || t.includes('jurídica') || t.includes('empresa')) {
+    return 'pj';
+  }
+  
+  // CPF ou variações de pessoa física
+  if (t === 'pf' || t === 'cpf' || t.includes('fisica') || t.includes('física') || t.includes('pessoa')) {
+    return 'pf';
+  }
+  
+  // Fallback: não definido
+  return undefined;
+}
+
 // Limpa e valida placa
 function cleanPlaca(placa: string | undefined): string | null {
   if (!placa) return null;
@@ -364,10 +384,17 @@ export class LocalSpreadsheetProcessor {
         }
         
         try {
-          const placa = cleanPlaca(row[columnIndex.placa]);
+          let placa = cleanPlaca(row[columnIndex.placa]);
+          const chassi = columnIndex.chassi !== undefined ? String(row[columnIndex.chassi] || '').trim() || undefined : undefined;
+          
+          // Se não tem placa mas tem chassi, cria uma placa temporária baseada no chassi
+          if (!placa && chassi) {
+            placa = `CHASSI_${chassi.slice(-8).toUpperCase()}`;
+            console.log(`📋 [LocalProcessor] Linha ${i + 1}: Sem placa, usando chassi como identificador: ${placa}`);
+          }
           
           if (!placa) {
-            erros.push(`Linha ${i + 1}: Placa inválida ou vazia`);
+            erros.push(`Linha ${i + 1}: Placa e Chassi vazios - veículo ignorado`);
             continue;
           }
           
@@ -375,7 +402,7 @@ export class LocalSpreadsheetProcessor {
             placa,
             marca: columnIndex.marca !== undefined ? String(row[columnIndex.marca] || '').trim() || undefined : undefined,
             modelo: columnIndex.modelo !== undefined ? String(row[columnIndex.modelo] || '').trim() || undefined : undefined,
-            chassi: columnIndex.chassi !== undefined ? String(row[columnIndex.chassi] || '').trim() || undefined : undefined,
+            chassi, // Já extraído acima
             renavam: columnIndex.renavam !== undefined ? String(row[columnIndex.renavam] || '').trim() || undefined : undefined,
             ano_modelo: toYear(row[columnIndex.ano_modelo]),
             categoria: normalizeCategoria(row[columnIndex.categoria]),
@@ -385,7 +412,7 @@ export class LocalSpreadsheetProcessor {
             localizacao: columnIndex.localizacao !== undefined ? String(row[columnIndex.localizacao] || '').trim() || undefined : undefined,
             proprietario_nome: columnIndex.proprietario_nome !== undefined ? String(row[columnIndex.proprietario_nome] || '').trim() || undefined : undefined,
             proprietario_doc: columnIndex.proprietario_doc !== undefined ? String(row[columnIndex.proprietario_doc] || '').trim() || undefined : undefined,
-            proprietario_tipo: columnIndex.proprietario_tipo !== undefined ? String(row[columnIndex.proprietario_tipo] || '').toLowerCase().trim() || undefined : undefined,
+            proprietario_tipo: normalizeProprietarioTipo(row[columnIndex.proprietario_tipo]),
             status_veiculo: columnIndex.status_veiculo !== undefined ? String(row[columnIndex.status_veiculo] || '').toLowerCase().trim() || 'ativo' : 'ativo',
             status_seguro: columnIndex.status_seguro !== undefined ? String(row[columnIndex.status_seguro] || '').toLowerCase().trim() || 'sem_seguro' : 'sem_seguro',
             codigo_interno: columnIndex.codigo_interno !== undefined ? String(row[columnIndex.codigo_interno] || '').trim() || undefined : undefined,
