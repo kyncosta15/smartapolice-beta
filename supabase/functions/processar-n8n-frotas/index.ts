@@ -260,20 +260,71 @@ serve(async (req) => {
     });
 
     console.log('Inserindo veículos no banco de dados...');
-    
+
+    // Deduplicar placas dentro do payload (a planilha pode repetir veículos)
+    const mapaUnicos = new Map<string, any>();
+    let duplicadosPlanilha = 0;
+
+    for (const v of veiculosProcessados) {
+      const key = String(v.placa || '').trim();
+      if (!key) continue;
+
+      const existente = mapaUnicos.get(key);
+      if (!existente) {
+        mapaUnicos.set(key, v);
+        continue;
+      }
+
+      duplicadosPlanilha += 1;
+
+      // Merge conservador: só preenche campos vazios com valores não vazios do duplicado
+      for (const [k, val] of Object.entries(v)) {
+        if (val === null || val === undefined || val === '') continue;
+        const atual = (existente as any)[k];
+        if (atual === null || atual === undefined || atual === '') {
+          (existente as any)[k] = val;
+        }
+      }
+    }
+
+    const veiculosUnicos = Array.from(mapaUnicos.values());
+    console.log(`Veículos únicos para inserção: ${veiculosUnicos.length} (duplicados na planilha: ${duplicadosPlanilha})`);
+
+    // Verificar quantos já existem no banco (para relatório)
+    let jaExistiamNoBanco = 0;
+    try {
+      if (empresaId && veiculosUnicos.length > 0) {
+        const placas = Array.from(mapaUnicos.keys());
+        const { data: existentes, error: existErr } = await supabase
+          .from('frota_veiculos')
+          .select('placa')
+          .eq('empresa_id', empresaId)
+          .in('placa', placas);
+
+        if (existErr) {
+          console.warn('Aviso: erro ao verificar veículos já existentes:', existErr);
+        } else {
+          jaExistiamNoBanco = existentes?.length || 0;
+        }
+      }
+    } catch (e) {
+      console.warn('Aviso: falha ao verificar veículos já existentes:', e);
+    }
+
     // Inserir veículos em lotes para melhor performance
     const batchSize = 50;
     let veiculosInseridos = 0;
     let errosInsercao = 0;
     const errosDetalhados = [];
 
-    for (let i = 0; i < veiculosProcessados.length; i += batchSize) {
-      const lote = veiculosProcessados.slice(i, i + batchSize);
-      console.log(`Inserindo lote ${Math.floor(i/batchSize) + 1}/${Math.ceil(veiculosProcessados.length/batchSize)} (${lote.length} veículos)`);
-      
+    for (let i = 0; i < veiculosUnicos.length; i += batchSize) {
+      const lote = veiculosUnicos.slice(i, i + batchSize);
+      console.log(`Inserindo lote ${Math.floor(i/batchSize) + 1}/${Math.ceil(veiculosUnicos.length/batchSize)} (${lote.length} veículos)`);
+
+      // Upsert com ignoreDuplicates evita falha por placa repetida (único por empresa_id + placa)
       const { data, error } = await supabase
         .from('frota_veiculos')
-        .insert(lote)
+        .upsert(lote, { onConflict: 'empresa_id,placa', ignoreDuplicates: true })
         .select('id, placa');
 
       if (error) {
@@ -319,9 +370,12 @@ serve(async (req) => {
 
     const resultado = {
       success: errosInsercao === 0,
-      message: `Processamento concluído: ${veiculosInseridos} veículos inseridos, ${errosInsercao} erros${dadosPreenchidos > 0 ? `, ${dadosPreenchidos} campos vazios preenchidos automaticamente` : ''}`,
+      message: `Processamento concluído: ${veiculosInseridos} veículos inseridos${jaExistiamNoBanco > 0 ? `, ${jaExistiamNoBanco} já existiam no banco` : ''}${duplicadosPlanilha > 0 ? `, ${duplicadosPlanilha} duplicados na planilha` : ''}${errosInsercao > 0 ? `, ${errosInsercao} erros` : ''}${dadosPreenchidos > 0 ? `, ${dadosPreenchidos} campos vazios preenchidos automaticamente` : ''}`,
       detalhes: {
         total_recebidos: n8nData.veiculos.length,
+        total_unicos: veiculosUnicos.length,
+        duplicados_planilha: duplicadosPlanilha,
+        ja_existiam_no_banco: jaExistiamNoBanco,
         veiculos_inseridos: veiculosInseridos,
         erros_insercao: errosInsercao,
         empresa_id: empresaId,

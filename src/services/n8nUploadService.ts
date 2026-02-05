@@ -57,6 +57,9 @@ export interface N8NResponse {
   message?: string;
   detalhes?: {
     total_recebidos: number;
+    total_unicos?: number;
+    duplicados_planilha?: number;
+    ja_existiam_no_banco?: number;
     veiculos_inseridos: number;
     erros_insercao: number;
     empresa_id: string;
