@@ -175,44 +175,51 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
 
            const inseridos = insertResult?.detalhes?.veiculos_inseridos ?? 0;
            const errosInsercao = insertResult?.detalhes?.erros_insercao ?? 0;
+           const duplicadosPlanilha = (insertResult?.detalhes as any)?.duplicados_planilha ?? 0;
+           const jaExistiamNoBanco = (insertResult?.detalhes as any)?.ja_existiam_no_banco ?? 0;
 
-           // Se nada foi inserido, tratar como erro (normalmente causado por campo inválido, ex: datas)
-           if (inseridos === 0) {
+           // Se nada novo foi inserido mas há duplicados/veículos já existentes, tratar como sucesso (não como erro)
+           if (inseridos === 0 && errosInsercao === 0 && (duplicadosPlanilha > 0 || jaExistiamNoBanco > 0)) {
+             console.log('ℹ️ [FrotasUpload] Nenhum veículo novo inserido (apenas duplicados/já existentes).');
+           } else if (inseridos === 0) {
              console.error('❌ [FrotasUpload] Nenhum veículo inserido. Resposta:', insertResult);
-             throw new Error(insertResult?.message || 'Nenhum veículo foi inserido (verifique datas/valores na planilha)');
+             throw new Error(insertResult?.message || 'Nenhum veículo foi inserido (verifique dados/valores na planilha)');
            }
-          
-          console.log('✅ [FrotasUpload] Dados processados localmente inseridos com sucesso:', insertResult);
-          
-          const localProcessResult: N8NResponse = {
-            success: true,
-            message: 'Processado localmente',
-            metrics: {
-              totalLinhas: localResult.totalProcessados,
-              totalVeiculos: localResult.veiculos.length,
-              porFamilia: {},
-              porLocalizacao: {},
-              processadoEm: new Date().toISOString()
-            },
-            detalhes: {
-              total_recebidos: localResult.totalProcessados,
-              veiculos_inseridos: insertResult?.detalhes?.veiculos_inseridos || localResult.veiculos.length,
-              erros_insercao: insertResult?.detalhes?.erros_insercao || 0,
-              empresa_id: metadata.empresa_id
-            }
-          };
-          
-          setFiles(prev => prev.map(f => 
-            f.id === fileId 
-              ? { ...f, status: 'completed' as const, progress: 100, result: localProcessResult }
-              : f
-          ));
+           
+           console.log('✅ [FrotasUpload] Dados processados localmente inseridos com sucesso:', insertResult);
+           
+           const localProcessResult: N8NResponse = {
+             success: true,
+             message: 'Processado localmente',
+             metrics: {
+               totalLinhas: localResult.totalProcessados,
+               totalVeiculos: localResult.veiculos.length,
+               porFamilia: {},
+               porLocalizacao: {},
+               processadoEm: new Date().toISOString()
+             },
+             detalhes: {
+               total_recebidos: localResult.totalProcessados,
+               veiculos_inseridos: inseridos,
+               erros_insercao: errosInsercao,
+               empresa_id: metadata.empresa_id,
+               duplicados_planilha: duplicadosPlanilha,
+               ja_existiam_no_banco: jaExistiamNoBanco,
+               total_unicos: (insertResult?.detalhes as any)?.total_unicos
+             } as any
+           };
+           
+           setFiles(prev => prev.map(f => 
+             f.id === fileId 
+               ? { ...f, status: 'completed' as const, progress: 100, result: localProcessResult }
+               : f
+           ));
 
-          // CRÍTICO: Chamar onSuccess para recarregar a lista de veículos
-          toast({
-            title: "✅ Frota Processada",
-            description: `${inseridos} veículos inseridos${errosInsercao > 0 ? ` (${errosInsercao} com erro)` : ''}.`,
-          });
+           // CRÍTICO: Chamar onSuccess para recarregar a lista de veículos
+           toast({
+             title: "✅ Frota Processada",
+             description: `${inseridos} inseridos${jaExistiamNoBanco > 0 ? `, ${jaExistiamNoBanco} já existiam` : ''}${duplicadosPlanilha > 0 ? `, ${duplicadosPlanilha} duplicados na planilha` : ''}${errosInsercao > 0 ? ` (${errosInsercao} com erro)` : ''}.`,
+           });
           
           // Disparar evento e chamar onSuccess
           window.dispatchEvent(new CustomEvent('frota-data-updated'));
@@ -744,20 +751,37 @@ export function FrotasUpload({ onSuccess }: FrotasUploadProps) {
                             Atualizar Lista
                           </Button>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-xs">
-                          <div>
-                            <span className="font-medium">Total de Veículos:</span>
-                            <div className="text-lg font-bold text-green-700">
-                              {fileItem.result.metrics?.totalVeiculos || fileItem.result.detalhes?.veiculos_inseridos || 0}
-                            </div>
-                          </div>
-                          <div>
-                            <span className="font-medium">Inseridos:</span>
-                            <div className="text-lg font-bold text-blue-700">
-                              {fileItem.result.detalhes?.veiculos_inseridos || fileItem.result.metrics?.totalVeiculos || 0}
-                            </div>
-                          </div>
-                        </div>
+                         <div className="grid grid-cols-2 gap-4 text-xs">
+                           <div>
+                             <span className="font-medium">Total de Veículos:</span>
+                             <div className="text-lg font-bold text-green-700">
+                               {fileItem.result.detalhes?.total_recebidos ?? fileItem.result.metrics?.totalVeiculos ?? 0}
+                             </div>
+                           </div>
+                           <div>
+                             <span className="font-medium">Inseridos:</span>
+                             <div className="text-lg font-bold text-blue-700">
+                               {fileItem.result.detalhes?.veiculos_inseridos ?? 0}
+                             </div>
+                           </div>
+                         </div>
+
+                         {(((fileItem.result.detalhes as any)?.duplicados_planilha ?? 0) > 0 || ((fileItem.result.detalhes as any)?.ja_existiam_no_banco ?? 0) > 0) && (
+                           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                             {((fileItem.result.detalhes as any)?.duplicados_planilha ?? 0) > 0 && (
+                               <div>
+                                 <span className="font-medium">Duplicados na planilha:</span>{' '}
+                                 <span className="font-semibold text-foreground">{(fileItem.result.detalhes as any)?.duplicados_planilha}</span>
+                               </div>
+                             )}
+                             {((fileItem.result.detalhes as any)?.ja_existiam_no_banco ?? 0) > 0 && (
+                               <div>
+                                 <span className="font-medium">Já existiam no banco:</span>{' '}
+                                 <span className="font-semibold text-foreground">{(fileItem.result.detalhes as any)?.ja_existiam_no_banco}</span>
+                               </div>
+                             )}
+                           </div>
+                         )}
                         
                         {fileItem.result.metrics?.porFamilia && Object.keys(fileItem.result.metrics.porFamilia).length > 0 && (
                           <div>
