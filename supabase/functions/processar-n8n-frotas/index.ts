@@ -202,15 +202,34 @@ serve(async (req) => {
       // Padrão
       return 'sem_seguro';
     };
+
+    // Normaliza proprietario_tipo para valores aceitos pela constraint: 'pj', 'pf'
+    const normalizarProprietarioTipo = (tipo?: string): string | null => {
+      if (!tipo) return null;
+      const t = String(tipo).toLowerCase().trim();
+      
+      // Mapeamentos aceitos
+      if (t === 'pj' || t === 'cnpj' || t.includes('juridica') || t.includes('jurídica')) {
+        return 'pj';
+      }
+      if (t === 'pf' || t === 'cpf' || t.includes('fisica') || t.includes('física')) {
+        return 'pf';
+      }
+      // Fallback
+      return null;
+    };
     
     // Mapear e normalizar dados dos veículos
     const veiculosProcessados = n8nData.veiculos.map((veiculo, index) => {
       console.log(`Processando veículo ${index + 1}: ${veiculo.placa}`);
       
       // Mapear campos do N8N para campos da tabela
+      // Gerar código de chassi único se não houver placa
+      const placaFinal = veiculo.placa?.trim() || (veiculo.chassi ? `CHASSI_${veiculo.chassi.slice(-8)}` : `SEM_PLACA_${index}`);
+      
       const veiculoMapeado = {
         empresa_id: empresaId,
-        placa: veiculo.placa || 'SEM_PLACA',
+        placa: placaFinal,
         marca: veiculo.marca || null,
         modelo: veiculo.modelo || null,
         categoria: normalizarCategoria(veiculo.familia || 'Carros'), // Normalizar categoria
@@ -225,7 +244,7 @@ serve(async (req) => {
         localizacao: veiculo.localizacao || null,
         proprietario_nome: veiculo.proprietario || null,
         proprietario_doc: veiculo.proprietario_doc || null,
-        proprietario_tipo: veiculo.proprietario_tipo || (veiculo.proprietario ? 'pj' : null),
+        proprietario_tipo: normalizarProprietarioTipo(veiculo.proprietario_tipo) || (veiculo.proprietario ? 'pj' : null),
         status_veiculo: veiculo.status || 'ativo',
         status_seguro: normalizarStatusSeguro(veiculo.status_seguro),
         preco_nf: veiculo.preco_nf || null,
