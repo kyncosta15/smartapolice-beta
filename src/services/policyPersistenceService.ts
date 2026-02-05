@@ -10,12 +10,13 @@ import { safeString, safeConvertArray } from '@/utils/safeDataRenderer';
 
 export class PolicyPersistenceService {
   
-  // FUNÇÃO PRINCIPAL: Determinar status baseado na data de vencimento
-  private static determineStatusFromDate(expirationDate: string): string {
+  // FUNÇÃO PRINCIPAL: Determinar status baseado na data de vencimento e início
+  private static determineStatusFromDate(expirationDate: string, startDate?: string): string {
     if (!expirationDate) return 'vigente';
     
     const now = new Date();
     now.setHours(0, 0, 0, 0);
+    const currentYear = now.getFullYear();
     
     const expDate = new Date(expirationDate);
     expDate.setHours(0, 0, 0, 0);
@@ -29,6 +30,23 @@ export class PolicyPersistenceService {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     console.log(`📅 Determinando status por data: ${expirationDate}, dias: ${diffDays}`);
+    
+    // REGRA NOVA: Apólices com vigência fora do ano atual são "antigas" (não renovadas)
+    const expYear = expDate.getFullYear();
+    if (startDate) {
+      const startDateObj = new Date(startDate);
+      const startYear = startDateObj.getFullYear();
+      // Se a vigência terminou antes do ano atual, é antiga (não renovada)
+      if (expYear < currentYear) {
+        console.log(`📅 Apólice antiga: vigência terminou em ${expYear} (atual: ${currentYear})`);
+        return 'nao_renovada';
+      }
+      // Se início é anterior ao ano atual E já venceu, também é antiga
+      if (startYear < currentYear && diffDays < 0) {
+        console.log(`📅 Apólice antiga: iniciou em ${startYear} e já venceu`);
+        return 'nao_renovada';
+      }
+    }
     
     if (diffDays < -30) {
       return 'nao_renovada';
@@ -160,15 +178,17 @@ export class PolicyPersistenceService {
         }
       }
 
-      // DETERMINAR STATUS CORRETO baseado na data de vencimento
+      // DETERMINAR STATUS CORRETO baseado na data de vencimento E início
       const expirationDate = policyData.expirationDate || policyData.endDate;
-      const statusFromDate = this.determineStatusFromDate(expirationDate);
+      const startDate = policyData.startDate;
+      const statusFromDate = this.determineStatusFromDate(expirationDate, startDate);
       const finalStatus = this.mapToValidStatus(policyData.status || statusFromDate);
 
       console.log(`🎯 Status final determinado: ${finalStatus}`, {
         originalStatus: policyData.status,
         statusFromDate,
-        expirationDate
+        expirationDate,
+        startDate
       });
 
       // Preparar dados da apólice

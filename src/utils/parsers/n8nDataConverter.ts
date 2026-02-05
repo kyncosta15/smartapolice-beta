@@ -2,26 +2,56 @@
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyTypeNormalizer } from './policyTypeNormalizer';
 
-// Função auxiliar para mapear o status
-const mapStatus = (status: string | undefined): string => {
-  if (!status) return 'vigente';
-
-  const lowerStatus = status.toLowerCase();
-
-  if (lowerStatus.includes('ativo') || lowerStatus.includes('vigente') || lowerStatus.includes('ativa')) {
+// Função auxiliar para determinar status baseado nas datas de vigência
+const determineStatusFromDates = (endDate: string, startDate?: string): string => {
+  if (!endDate) return 'vigente';
+  
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const currentYear = now.getFullYear();
+  
+  const expDate = new Date(endDate);
+  expDate.setHours(0, 0, 0, 0);
+  
+  if (isNaN(expDate.getTime())) {
+    console.error(`❌ Data de expiração inválida: ${endDate}`);
     return 'vigente';
-  } else if (lowerStatus.includes('pendente')) {
-    return 'pendente_analise';
-  } else if (lowerStatus.includes('renovada') || lowerStatus.includes('aguardando')) {
-    return 'aguardando_emissao';
-  } else if (lowerStatus.includes('cancelado') || lowerStatus.includes('nao renovada') || lowerStatus.includes('não renovada')) {
+  }
+  
+  const diffTime = expDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const expYear = expDate.getFullYear();
+  
+  console.log(`📅 [N8N] Analisando vigência - Fim: ${endDate}, Dias: ${diffDays}, Ano exp: ${expYear}`);
+  
+  // REGRA: Apólices com vigência fora do ano atual são "antigas" (não renovadas)
+  if (expYear < currentYear) {
+    console.log(`📅 [N8N] Apólice ANTIGA: vigência terminou em ${expYear} (atual: ${currentYear})`);
     return 'nao_renovada';
+  }
+  
+  // Se início é anterior ao ano atual E já venceu, também é antiga
+  if (startDate) {
+    const startDateObj = new Date(startDate);
+    const startYear = startDateObj.getFullYear();
+    if (startYear < currentYear && diffDays < 0) {
+      console.log(`📅 [N8N] Apólice ANTIGA: iniciou em ${startYear} e já venceu`);
+      return 'nao_renovada';
+    }
+  }
+  
+  if (diffDays < -30) {
+    return 'nao_renovada';
+  } else if (diffDays < 0) {
+    return 'vencida';
+  } else if (diffDays <= 30) {
+    return 'vencendo';
   } else {
     return 'vigente';
   }
 };
 
-// Função para analisar o status da parcela
+// Função auxiliar para analisar o status da parcela
 const analyzeInstallmentStatus = (dueDate: string): 'paga' | 'pendente' => {
   const today = new Date();
   const parsedDueDate = new Date(dueDate);
@@ -141,12 +171,19 @@ export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => 
     endDate: data.fim_vigencia || data.fim || new Date().toISOString().split('T')[0],
     policyNumber: data.numero_apolice || 'N/A',
     paymentFrequency: data.forma_pagamento || data.pagamento || 'mensal',
-    status: mapStatus(data.status),
+    // CORREÇÃO: Determinar status baseado nas datas de vigência (antigas = nao_renovada)
+    status: determineStatusFromDates(
+      data.fim_vigencia || data.fim,
+      data.inicio_vigencia || data.inicio
+    ),
     extractedAt: new Date().toISOString(),
 
     // NOVOS CAMPOS OBRIGATÓRIOS
     expirationDate: data.fim_vigencia || data.fim || new Date().toISOString().split('T')[0],
-    policyStatus: 'vigente',
+    policyStatus: determineStatusFromDates(
+      data.fim_vigencia || data.fim,
+      data.inicio_vigencia || data.inicio
+    ) as 'vigente' | 'aguardando_emissao' | 'nao_renovada' | 'vencida' | 'pendente_analise' | 'vencendo',
 
     // Campos específicos do N8N
     insuredName: data.segurado,
@@ -216,13 +253,14 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File, us
     endDate: fim,
     policyNumber: numeroApolice,
     paymentFrequency: data.pagamento || data.forma_pagamento || 'mensal',
-    status: mapStatus(data.status),
+    // CORREÇÃO: Determinar status baseado nas datas de vigência (antigas = nao_renovada)
+    status: determineStatusFromDates(fim, inicio),
     file,
     extractedAt: new Date().toISOString(),
     
     // NOVOS CAMPOS OBRIGATÓRIOS
     expirationDate: fim,
-    policyStatus: 'vigente',
+    policyStatus: determineStatusFromDates(fim, inicio) as 'vigente' | 'aguardando_emissao' | 'nao_renovada' | 'vencida' | 'pendente_analise' | 'vencendo',
     
     // Campos específicos do N8N
     insuredName: segurado,

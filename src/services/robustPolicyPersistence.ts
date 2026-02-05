@@ -309,7 +309,14 @@ export class RobustPolicyPersistence {
       const pdfPath = await this.uploadPDF(file, userId);
       console.log('📄 PDF uploaded:', pdfPath);
 
-      // 2. Preparar dados para inserção
+      // 2. Determinar status baseado na vigência
+      const finalStatus = this.determineStatusFromDates(
+        normalizedData.endDate || normalizedData.expirationDate,
+        normalizedData.startDate
+      );
+      console.log('📅 Status determinado automaticamente:', finalStatus);
+
+      // 3. Preparar dados para inserção
       const policyId = window.crypto.randomUUID();
       const insertData = {
         id: policyId,
@@ -345,7 +352,8 @@ export class RobustPolicyPersistence {
         // Outros
         uf: normalizedData.uf,
         corretora: normalizedData.entity,
-        status: normalizedData.status,
+        status: finalStatus, // Usar status calculado automaticamente
+        policy_status: finalStatus as any,
         arquivo_url: pdfPath,
         
         // Campos CorpNuvem
@@ -459,6 +467,62 @@ export class RobustPolicyPersistence {
     return isNaN(date.getTime()) 
       ? new Date().toISOString().split('T')[0]
       : date.toISOString().split('T')[0];
+  }
+
+  /**
+   * DETERMINAR STATUS AUTOMATICAMENTE BASEADO NAS DATAS DE VIGÊNCIA
+   * - Apólices com vigência que terminou antes do ano atual = "nao_renovada" (antiga)
+   * - Apólices que venceram há mais de 30 dias = "nao_renovada"
+   * - Apólices vencidas há menos de 30 dias = "vencida"
+   * - Apólices que vencem em até 30 dias = "vencendo"
+   * - Demais = "vigente"
+   */
+  private static determineStatusFromDates(expirationDate?: string, startDate?: string): string {
+    if (!expirationDate) return 'vigente';
+    
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const currentYear = now.getFullYear();
+    
+    const expDate = new Date(expirationDate);
+    expDate.setHours(0, 0, 0, 0);
+    
+    if (isNaN(expDate.getTime())) {
+      console.error(`❌ Data de expiração inválida: ${expirationDate}`);
+      return 'vigente';
+    }
+    
+    const diffTime = expDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const expYear = expDate.getFullYear();
+    
+    console.log(`📅 Analisando vigência - Expiração: ${expirationDate}, Dias restantes: ${diffDays}, Ano exp: ${expYear}`);
+    
+    // REGRA: Apólices com vigência fora do ano atual são "antigas" (não renovadas)
+    if (expYear < currentYear) {
+      console.log(`📅 Apólice ANTIGA: vigência terminou em ${expYear} (atual: ${currentYear})`);
+      return 'nao_renovada';
+    }
+    
+    // Se início é anterior ao ano atual E já venceu, também é antiga
+    if (startDate) {
+      const startDateObj = new Date(startDate);
+      const startYear = startDateObj.getFullYear();
+      if (startYear < currentYear && diffDays < 0) {
+        console.log(`📅 Apólice ANTIGA: iniciou em ${startYear} e já venceu`);
+        return 'nao_renovada';
+      }
+    }
+    
+    if (diffDays < -30) {
+      return 'nao_renovada';
+    } else if (diffDays < 0) {
+      return 'vencida';
+    } else if (diffDays <= 30) {
+      return 'vencendo';
+    } else {
+      return 'vigente';
+    }
   }
 
   private static async getConfirmedFields(policyId: string): Promise<any[]> {
