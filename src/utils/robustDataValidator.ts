@@ -152,11 +152,12 @@ export class RobustDataValidator {
       },
       {
         fieldName: 'policyNumber', 
-        required: true,
+        required: false, // Agora opcional - N8N pode não retornar
+        allowEmpty: true,
         normalize: (value) => this.normalizePolicyNumber(value),
         validate: (value) => ({
-          isValid: typeof value === 'string' && value.length >= 5,
-          message: 'Número da apólice deve ter pelo menos 5 caracteres'
+          isValid: !value || (typeof value === 'string' && value.length >= 1),
+          message: 'Número da apólice inválido'
         })
       },
       {

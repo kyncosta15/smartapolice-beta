@@ -169,7 +169,7 @@ export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => 
     monthlyAmount: custoMensal,
     startDate: data.inicio_vigencia || data.inicio || new Date().toISOString().split('T')[0],
     endDate: data.fim_vigencia || data.fim || new Date().toISOString().split('T')[0],
-    policyNumber: data.numero_apolice || 'N/A',
+    policyNumber: data.numero_apolice || `TEMP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
     paymentFrequency: data.forma_pagamento || data.pagamento || 'mensal',
     // CORREÇÃO: Determinar status baseado nas datas de vigência (antigas = nao_renovada)
     status: determineStatusFromDates(
@@ -228,7 +228,7 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File, us
   // CORREÇÃO: Mapear campos com diferentes nomes possíveis do N8N
   const segurado = data.segurado || data.num_segurado || data.nome_segurado || fileName.replace('.pdf', '');
   const seguradora = data.seguradora || data.num_seguradora || data.nome_seguradora || 'Seguradora não informada';
-  const numeroApolice = data.numero_apolice || data.num_apolice || data.apolice || 'N/A';
+  const numeroApolice = data.numero_apolice || data.num_apolice || data.apolice || `TEMP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   const tipoSeguro = data.tipo_seguro || data.tipo || 'auto';
   const inicio = data.inicio || data.inicio_vigencia || data.data_inicio || new Date().toISOString().split('T')[0];
   const fim = data.fim || data.fim_vigencia || data.data_fim || new Date().toISOString().split('T')[0];
