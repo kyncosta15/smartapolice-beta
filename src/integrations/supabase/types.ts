@@ -1309,7 +1309,7 @@ export type Database = {
           observacoes: string | null
           origem_planilha: string | null
           percentual_tabela: number | null
-          placa: string
+          placa: string | null
           preco_fipe: number | null
           preco_nf: number | null
           proprietario_doc: string | null
@@ -1348,7 +1348,7 @@ export type Database = {
           observacoes?: string | null
           origem_planilha?: string | null
           percentual_tabela?: number | null
-          placa: string
+          placa?: string | null
           preco_fipe?: number | null
           preco_nf?: number | null
           proprietario_doc?: string | null
@@ -1387,7 +1387,7 @@ export type Database = {
           observacoes?: string | null
           origem_planilha?: string | null
           percentual_tabela?: number | null
-          placa?: string
+          placa?: string | null
           preco_fipe?: number | null
           preco_nf?: number | null
           proprietario_doc?: string | null
