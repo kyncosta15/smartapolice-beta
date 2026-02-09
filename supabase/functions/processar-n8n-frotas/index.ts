@@ -324,27 +324,47 @@ serve(async (req) => {
     let errosInsercao = 0;
     const errosDetalhados = [];
 
-    for (let i = 0; i < veiculosUnicos.length; i += batchSize) {
-      const lote = veiculosUnicos.slice(i, i + batchSize);
-      console.log(`Inserindo lote ${Math.floor(i/batchSize) + 1}/${Math.ceil(veiculosUnicos.length/batchSize)} (${lote.length} veículos)`);
+    // Separar veículos com e sem placa (sem placa não pode usar upsert)
+    const comPlaca = veiculosUnicos.filter(v => v.placa);
+    const semPlaca = veiculosUnicos.filter(v => !v.placa);
 
-      // Upsert com ignoreDuplicates evita falha por placa repetida (único por empresa_id + placa)
+    // Inserir veículos COM placa via upsert (evita duplicatas)
+    for (let i = 0; i < comPlaca.length; i += batchSize) {
+      const lote = comPlaca.slice(i, i + batchSize);
+      console.log(`Inserindo lote com placa ${Math.floor(i/batchSize) + 1} (${lote.length} veículos)`);
+
       const { data, error } = await supabase
         .from('frota_veiculos')
         .upsert(lote, { onConflict: 'empresa_id,placa', ignoreDuplicates: true })
         .select('id, placa');
 
       if (error) {
-        console.error(`Erro no lote ${Math.floor(i/batchSize) + 1}:`, error);
+        console.error(`Erro no lote:`, error);
         errosInsercao += lote.length;
-        errosDetalhados.push({
-          lote: Math.floor(i/batchSize) + 1,
-          erro: error.message,
-          veiculos: lote.map(v => v.placa)
-        });
+        errosDetalhados.push({ lote: Math.floor(i/batchSize) + 1, erro: error.message, veiculos: lote.map(v => v.placa) });
       } else {
-        console.log(`Lote ${Math.floor(i/batchSize) + 1} inserido com sucesso:`, data?.length || 0, 'veículos');
         veiculosInseridos += data?.length || 0;
+      }
+    }
+
+    // Inserir veículos SEM placa via insert simples (cada um é único)
+    if (semPlaca.length > 0) {
+      for (let i = 0; i < semPlaca.length; i += batchSize) {
+        const lote = semPlaca.slice(i, i + batchSize);
+        console.log(`Inserindo lote sem placa (${lote.length} veículos)`);
+
+        const { data, error } = await supabase
+          .from('frota_veiculos')
+          .insert(lote)
+          .select('id, chassi');
+
+        if (error) {
+          console.error(`Erro no lote sem placa:`, error);
+          errosInsercao += lote.length;
+          errosDetalhados.push({ lote: 'sem_placa', erro: error.message, veiculos: lote.map(v => v.chassi) });
+        } else {
+          veiculosInseridos += data?.length || 0;
+        }
       }
     }
 
