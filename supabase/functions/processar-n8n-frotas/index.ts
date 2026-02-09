@@ -225,7 +225,12 @@ serve(async (req) => {
       
       // Mapear campos do N8N para campos da tabela
       // Gerar código de chassi único se não houver placa
-      const placaFinal = veiculo.placa?.trim() || (veiculo.chassi ? `CHASSI_${veiculo.chassi.slice(-8)}` : `SEM_PLACA_${index}`);
+      // Tratar "SEM PLACA" e variações como ausência de placa
+      const placaRaw = veiculo.placa?.trim().toUpperCase().replace(/[\s\-\.]/g, '') || '';
+      const isSemPlaca = !placaRaw || placaRaw === 'SEMPLACA' || placaRaw === 'SEM_PLACA' || placaRaw.startsWith('SEMPLACA');
+      const placaFinal = isSemPlaca
+        ? (veiculo.chassi ? `CHASSI_${veiculo.chassi.toUpperCase()}` : `SEM_PLACA_${index}`)
+        : veiculo.placa!.trim().toUpperCase();
       
       const veiculoMapeado = {
         empresa_id: empresaId,
@@ -261,12 +266,16 @@ serve(async (req) => {
 
     console.log('Inserindo veículos no banco de dados...');
 
-    // Deduplicar placas dentro do payload (a planilha pode repetir veículos)
+    // Deduplicar por placa+chassi dentro do payload (a planilha pode repetir veículos)
+    // Apenas placa e chassi são identificadores únicos; marca/modelo podem se repetir na frota
     const mapaUnicos = new Map<string, any>();
     let duplicadosPlanilha = 0;
 
     for (const v of veiculosProcessados) {
-      const key = String(v.placa || '').trim();
+      // Chave composta: placa + chassi (veículos diferentes podem ter mesma marca/modelo)
+      const placaKey = String(v.placa || '').trim();
+      const chassiKey = String(v.chassi || '').trim();
+      const key = chassiKey ? `${placaKey}|${chassiKey}` : placaKey;
       if (!key) continue;
 
       const existente = mapaUnicos.get(key);
