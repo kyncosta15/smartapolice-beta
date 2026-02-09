@@ -228,9 +228,7 @@ serve(async (req) => {
       // Tratar "SEM PLACA" e variações como ausência de placa
       const placaRaw = veiculo.placa?.trim().toUpperCase().replace(/[\s\-\.]/g, '') || '';
       const isSemPlaca = !placaRaw || placaRaw === 'SEMPLACA' || placaRaw === 'SEM_PLACA' || placaRaw.startsWith('SEMPLACA');
-      const placaFinal = isSemPlaca
-        ? (veiculo.chassi ? `CHASSI_${veiculo.chassi.toUpperCase()}` : `SEM_PLACA_${index}`)
-        : veiculo.placa!.trim().toUpperCase();
+      const placaFinal = isSemPlaca ? null : veiculo.placa!.trim().toUpperCase();
       
       const veiculoMapeado = {
         empresa_id: empresaId,
