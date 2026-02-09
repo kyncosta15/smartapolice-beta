@@ -204,6 +204,11 @@ function cleanPlaca(placa: string | undefined): string | null {
   // Remove espaços, traços e converte para maiúsculo
   const cleaned = String(placa).replace(/[\s\-\.]/g, '').toUpperCase().trim();
   
+  // Tratar placeholders como "SEM PLACA" como null para acionar fallback pelo chassi
+  if (!cleaned || cleaned === 'SEMPLACA' || cleaned === 'SEM_PLACA' || cleaned.startsWith('SEMPLACA')) {
+    return null;
+  }
+  
   // Valida formato (Mercosul ou antigo)
   const mercosulRegex = /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/;
   const antigoRegex = /^[A-Z]{3}[0-9]{4}$/;
@@ -414,10 +419,15 @@ export class LocalSpreadsheetProcessor {
           let placa = cleanPlaca(row[columnIndex.placa]);
           const chassi = columnIndex.chassi !== undefined ? String(row[columnIndex.chassi] || '').trim() || undefined : undefined;
           
-          // Se não tem placa mas tem chassi, cria uma placa temporária baseada no chassi
+          // Se não tem placa mas tem chassi, cria uma placa temporária baseada no chassi completo
           if (!placa && chassi) {
-            placa = `CHASSI_${chassi.slice(-8).toUpperCase()}`;
+            placa = `CHASSI_${chassi.toUpperCase()}`;
             console.log(`📋 [LocalProcessor] Linha ${i + 1}: Sem placa, usando chassi como identificador: ${placa}`);
+          }
+          
+          // Se ainda não tem placa (sem chassi também), gera identificador único
+          if (!placa) {
+            placa = `SEM_ID_${i}`;
           }
           
           if (!placa) {
