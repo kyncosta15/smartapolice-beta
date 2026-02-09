@@ -173,8 +173,10 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
       const pdfBlob = new Blob([blob], { type: 'application/pdf' });
       const filename = documento.nome_arquivo;
       
-      // Verificar se Web Share API está disponível (iOS/Safari)
-      if (navigator.share && navigator.canShare) {
+      // Usar Web Share API APENAS em dispositivos móveis
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 0 && window.innerWidth <= 768);
+      if (isMobile && navigator.share && navigator.canShare) {
         try {
           const file = new window.File([pdfBlob], filename, { type: 'application/pdf' });
           
@@ -244,8 +246,10 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
       const pdfBlob = new Blob([downloadData], { type: 'application/pdf' });
       const filename = documento.nome_arquivo;
       
-      // Verificar se Web Share API está disponível (iOS/Safari)
-      if (navigator.share && navigator.canShare) {
+      // Usar Web Share API APENAS em dispositivos móveis
+      const isMobile2 = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 0 && window.innerWidth <= 768);
+      if (isMobile2 && navigator.share && navigator.canShare) {
         try {
           const file = new window.File([pdfBlob], filename, { type: 'application/pdf' });
           

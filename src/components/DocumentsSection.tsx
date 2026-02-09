@@ -123,8 +123,10 @@ export function DocumentsSection({ colaboradorId }: DocumentsSectionProps) {
       const pdfBlob = new Blob([data], { type: 'application/pdf' });
       const filename = document.nome_arquivo;
       
-      // Verificar se Web Share API está disponível (iOS/Safari)
-      if (navigator.share && navigator.canShare) {
+      // Usar Web Share API APENAS em dispositivos móveis
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 0 && window.innerWidth <= 768);
+      if (isMobile && navigator.share && navigator.canShare) {
         try {
           const file = new File([pdfBlob], filename, { type: 'application/pdf' });
           
