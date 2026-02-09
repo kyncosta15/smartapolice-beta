@@ -419,18 +419,13 @@ export class LocalSpreadsheetProcessor {
           let placa = cleanPlaca(row[columnIndex.placa]);
           const chassi = columnIndex.chassi !== undefined ? String(row[columnIndex.chassi] || '').trim() || undefined : undefined;
           
-          // Se não tem placa mas tem chassi, cria uma placa temporária baseada no chassi completo
-          if (!placa && chassi) {
-            placa = `CHASSI_${chassi.toUpperCase()}`;
-            console.log(`📋 [LocalProcessor] Linha ${i + 1}: Sem placa, usando chassi como identificador: ${placa}`);
+          // Veículos sem placa são aceitos normalmente (placa fica null)
+          if (!placa) {
+            console.log(`📋 [LocalProcessor] Linha ${i + 1}: Sem placa${chassi ? `, chassi: ${chassi}` : ''}`);
           }
           
-          // Se ainda não tem placa (sem chassi também), gera identificador único
-          if (!placa) {
-            placa = `SEM_ID_${i}`;
-          }
-          
-          if (!placa) {
+          // Precisa ter pelo menos placa ou chassi para ser um registro válido
+          if (!placa && !chassi) {
             erros.push(`Linha ${i + 1}: Placa e Chassi vazios - veículo ignorado`);
             continue;
           }
