@@ -147,23 +147,61 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
   // CRÍTICO: Carregar parcelas do banco ao abrir o modal
   const handleOpenChange = async (open: boolean) => {
     if (open) {
-      // Primeiro, tentar carregar parcelas diretamente do banco
       if (policy.id) {
         console.log('📋 Carregando parcelas do banco para policy:', policy.id);
-        const { data: dbInstallments, error } = await supabase
-          .from('installments')
-          .select('id, numero_parcela, valor, data_vencimento, status')
-          .eq('policy_id', policy.id)
-          .order('numero_parcela', { ascending: true });
         
-        if (!error && dbInstallments && dbInstallments.length > 0) {
-          console.log('✅ Parcelas carregadas do banco:', dbInstallments.length);
-          setLocalInstallments(dbInstallments.map((inst: any) => ({
-            id: inst.id,
-            numero: inst.numero_parcela,
-            valor: inst.valor ?? monthlyPremium,
-            vencimento: inst.data_vencimento || '',
-             status: normalizeInstallmentStatus(inst.status)
+        // Carregar de ambas as tabelas em paralelo
+        const [installmentsRes, apParcelasRes] = await Promise.all([
+          supabase
+            .from('installments')
+            .select('id, numero_parcela, valor, data_vencimento, status')
+            .eq('policy_id', policy.id)
+            .order('numero_parcela', { ascending: true }),
+          supabase
+            .from('apolice_parcelas')
+            .select('id, numero_parcela, valor, vencimento, status_pagamento')
+            .eq('apolice_id', policy.id)
+            .order('numero_parcela', { ascending: true })
+        ]);
+
+        // Criar mapa de status_pagamento da apolice_parcelas
+        const statusMap = new Map<number, { status_pagamento: string; ap_id: string }>();
+        if (!apParcelasRes.error && apParcelasRes.data) {
+          apParcelasRes.data.forEach((ap: any) => {
+            statusMap.set(ap.numero_parcela, { status_pagamento: ap.status_pagamento, ap_id: ap.id });
+          });
+        }
+
+        if (!installmentsRes.error && installmentsRes.data && installmentsRes.data.length > 0) {
+          console.log('✅ Parcelas carregadas do banco:', installmentsRes.data.length);
+          setLocalInstallments(installmentsRes.data.map((inst: any) => {
+            const apInfo = statusMap.get(inst.numero_parcela);
+            return {
+              id: inst.id,
+              numero: inst.numero_parcela,
+              valor: inst.valor ?? monthlyPremium,
+              vencimento: inst.data_vencimento || '',
+              status: normalizeInstallmentStatus(inst.status),
+              status_pagamento: apInfo?.status_pagamento || null,
+              apolice_parcela_id: apInfo?.ap_id || null
+            };
+          }));
+          setHasChanges(false);
+          setShowInstallments(open);
+          return;
+        }
+
+        // Se só tem apolice_parcelas
+        if (!apParcelasRes.error && apParcelasRes.data && apParcelasRes.data.length > 0) {
+          console.log('✅ Usando apolice_parcelas:', apParcelasRes.data.length);
+          setLocalInstallments(apParcelasRes.data.map((ap: any) => ({
+            id: null,
+            numero: ap.numero_parcela,
+            valor: ap.valor ?? monthlyPremium,
+            vencimento: ap.vencimento || '',
+            status: 'a vencer',
+            status_pagamento: ap.status_pagamento || null,
+            apolice_parcela_id: ap.id
           })));
           setHasChanges(false);
           setShowInstallments(open);
@@ -178,7 +216,9 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
         numero: inst.numero || inst.number || idx + 1,
         valor: inst.valor || inst.value || monthlyPremium,
         vencimento: inst.vencimento || inst.data || inst.dueDate || inst.date || inst.data_vencimento || '',
-         status: normalizeInstallmentStatus(inst.status)
+        status: normalizeInstallmentStatus(inst.status),
+        status_pagamento: inst.status_pagamento || null,
+        apolice_parcela_id: null
       })));
       setHasChanges(false);
     }
@@ -254,33 +294,18 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
 
       // Atualizar ou criar cada parcela no banco
       for (const inst of localInstallments) {
+        // Save to installments table
         if (inst.id) {
-          // Atualizar parcela existente (valor E data)
-          console.log(`📝 Atualizando parcela ${inst.id}:`, { valor: inst.valor, vencimento: inst.vencimento });
           const { error } = await supabase
             .from('installments')
             .update({ 
               valor: inst.valor,
               data_vencimento: inst.vencimento || null,
-              status: inst.status_pagamento === 'Pago' ? 'a vencer' : normalizeInstallmentStatus(inst.status)
+              status: normalizeInstallmentStatus(inst.status)
             })
             .eq('id', inst.id);
-          
-          // Also update apolice_parcelas if exists
-          if (inst.apolice_parcela_id) {
-            await supabase
-              .from('apolice_parcelas')
-              .update({ status_pagamento: inst.status_pagamento || 'Pendente' })
-              .eq('id', inst.apolice_parcela_id);
-          }
-          
-          if (error) {
-            console.error('❌ Erro ao atualizar parcela:', error);
-            hasError = true;
-          }
+          if (error) { console.error('❌ Erro installments update:', error); hasError = true; }
         } else {
-          // Criar nova parcela no banco se não existir
-          console.log(`➕ Criando nova parcela:`, { numero: inst.numero, valor: inst.valor });
           const { error } = await supabase
             .from('installments')
             .insert({
@@ -291,11 +316,29 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
               data_vencimento: inst.vencimento || null,
               status: normalizeInstallmentStatus(inst.status)
             });
-          
-          if (error) {
-            console.error('❌ Erro ao criar parcela:', error);
-            hasError = true;
-          }
+          if (error) { console.error('❌ Erro installments insert:', error); hasError = true; }
+        }
+
+        // Persist status_pagamento to apolice_parcelas (upsert)
+        const statusPagamento = inst.status_pagamento || 'Pendente';
+        if (inst.apolice_parcela_id) {
+          const { error } = await supabase
+            .from('apolice_parcelas')
+            .update({ status_pagamento: statusPagamento, valor: inst.valor, vencimento: inst.vencimento || '' })
+            .eq('id', inst.apolice_parcela_id);
+          if (error) { console.error('❌ Erro apolice_parcelas update:', error); hasError = true; }
+        } else {
+          // Create record in apolice_parcelas to persist status
+          const { error } = await supabase
+            .from('apolice_parcelas')
+            .upsert({
+              apolice_id: policy.id,
+              numero_parcela: inst.numero,
+              valor: inst.valor || 0,
+              vencimento: inst.vencimento || new Date().toISOString().split('T')[0],
+              status_pagamento: statusPagamento
+            }, { onConflict: 'apolice_id,numero_parcela' });
+          if (error) { console.error('❌ Erro apolice_parcelas upsert:', error); hasError = true; }
         }
       }
 
