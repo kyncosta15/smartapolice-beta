@@ -420,13 +420,26 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                     const vencimento = installment.vencimento;
                     const numero = installment.numero || index + 1;
                     
+                    // Determine status color for the circle
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const isPago = installment.status_pagamento === 'Pago';
+                    const vencDate = vencimento ? new Date(vencimento + 'T00:00:00') : null;
+                    const isOverdue = !isPago && vencDate && vencDate < today;
+                    
+                    const circleColor = isPago
+                      ? 'bg-green-500'
+                      : isOverdue
+                        ? 'bg-red-500'
+                        : 'bg-blue-600';
+                    
                     return (
                       <div 
                         key={index}
                         className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0">
+                          <div className={cn(circleColor, "text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0")}>
                             {numero}
                           </div>
                           <div className="flex flex-col gap-1">
