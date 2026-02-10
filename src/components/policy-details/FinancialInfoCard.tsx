@@ -261,9 +261,18 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
             .from('installments')
             .update({ 
               valor: inst.valor,
-              data_vencimento: inst.vencimento || null
+              data_vencimento: inst.vencimento || null,
+              status: inst.status_pagamento === 'Pago' ? 'a vencer' : normalizeInstallmentStatus(inst.status)
             })
             .eq('id', inst.id);
+          
+          // Also update apolice_parcelas if exists
+          if (inst.apolice_parcela_id) {
+            await supabase
+              .from('apolice_parcelas')
+              .update({ status_pagamento: inst.status_pagamento || 'Pendente' })
+              .eq('id', inst.apolice_parcela_id);
+          }
           
           if (error) {
             console.error('❌ Erro ao atualizar parcela:', error);
@@ -439,9 +448,22 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                         className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={cn(circleColor, "text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0")}>
-                            {numero}
-                          </div>
+                          <button
+                            type="button"
+                            title={isPago ? 'Marcar como não pago' : 'Marcar como pago'}
+                            onClick={() => {
+                              const newInstallments = [...localInstallments];
+                              newInstallments[index] = {
+                                ...newInstallments[index],
+                                status_pagamento: isPago ? null : 'Pago'
+                              };
+                              setLocalInstallments(newInstallments);
+                              setHasChanges(true);
+                            }}
+                            className={cn(circleColor, "text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0 hover:opacity-80 transition-opacity cursor-pointer")}
+                          >
+                            {isPago ? <Check className="h-4 w-4" /> : numero}
+                          </button>
                           <div className="flex flex-col gap-1">
                             {/* Valor - Editável */}
                             {editingIndex === index && editField === 'valor' ? (
