@@ -337,16 +337,6 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
                 </div>
               )}
 
-              {/* Link para Ver Detalhes */}
-              <Button
-                onClick={() => setShowDetailsDrawer(true)}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                <FileJson className="w-4 h-4 mr-2" />
-                Ver Detalhes FIPE (LLM)
-              </Button>
             </div>
           )}
         </div>
