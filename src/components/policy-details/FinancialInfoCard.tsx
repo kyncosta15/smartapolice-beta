@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
-import { DollarSign, Hash, ChevronRight, Calendar, Pencil, Check, X, Save, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { DollarSign, Hash, ChevronRight, Calendar, Pencil, Check, X, Save, Loader2, CircleCheck, CircleAlert, Circle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -22,10 +23,44 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
   const [localInstallments, setLocalInstallments] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [hoverSummary, setHoverSummary] = useState<{
+    total: number; pagas: number; atrasadas: number; pendentes: number;
+    valorTotal: number; parcelas: { numero: number; valor: number; status: string; vencimento: string }[];
+  } | null>(null);
 
   // DB constraint: installments.status must be 'vencido' or 'a vencer'
   const normalizeInstallmentStatus = (status: unknown): 'vencido' | 'a vencer' => {
     return status === 'vencido' || status === 'a vencer' ? status : 'a vencer';
+  };
+
+  const loadHoverSummary = async () => {
+    if (hoverSummary || !policy.id) return;
+    const { data } = await supabase
+      .from('apolice_parcelas')
+      .select('numero_parcela, valor, vencimento, status_pagamento')
+      .eq('apolice_id', policy.id)
+      .order('numero_parcela', { ascending: true });
+    
+    if (data && data.length > 0) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const pagas = data.filter((p: any) => p.status_pagamento === 'Pago').length;
+      const atrasadas = data.filter((p: any) => {
+        if (p.status_pagamento === 'Pago') return false;
+        const d = p.vencimento ? new Date(p.vencimento + 'T00:00:00') : null;
+        return d && d < today;
+      }).length;
+      setHoverSummary({
+        total: data.length,
+        pagas,
+        atrasadas,
+        pendentes: data.length - pagas - atrasadas,
+        valorTotal: data.reduce((s: number, p: any) => s + (p.valor || 0), 0),
+        parcelas: data.map((p: any) => ({
+          numero: p.numero_parcela, valor: p.valor || 0,
+          status: p.status_pagamento || 'Pendente', vencimento: p.vencimento || ''
+        }))
+      });
+    }
   };
 
   // Evita bug de timezone: new Date('YYYY-MM-DD') interpreta como UTC e mostra -1 dia no Brasil
@@ -424,25 +459,27 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 sm:p-4 shadow-sm border border-blue-100">
-          <label className="text-xs sm:text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-2">
-            <Hash className="h-4 w-4" />
-            Parcelamento
-          </label>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-600 text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center font-bold text-lg sm:text-xl shadow-md shrink-0">
-                {installmentsCount}
-              </div>
-              <div className="min-w-0">
-                <p className="text-base sm:text-lg font-bold text-gray-900 font-sf-pro">
-                  {installmentsCount}x parcelas
-                </p>
-                <p className="text-xs sm:text-sm text-blue-600 font-sf-pro">
-                  Clique para editar valores
-                </p>
-              </div>
-            </div>
+        <HoverCard onOpenChange={(open) => { if (open) loadHoverSummary(); }}>
+          <HoverCardTrigger asChild>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 sm:p-4 shadow-sm border border-blue-100 cursor-default">
+              <label className="text-xs sm:text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-2">
+                <Hash className="h-4 w-4" />
+                Parcelamento
+              </label>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-600 text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center font-bold text-lg sm:text-xl shadow-md shrink-0">
+                    {installmentsCount}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-base sm:text-lg font-bold text-gray-900 font-sf-pro">
+                      {installmentsCount}x parcelas
+                    </p>
+                    <p className="text-xs sm:text-sm text-blue-600 font-sf-pro">
+                      Passe o mouse para ver resumo
+                    </p>
+                  </div>
+                </div>
             
             <Dialog open={showInstallments} onOpenChange={handleOpenChange}>
               <DialogTrigger asChild>
@@ -672,6 +709,70 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
             </Dialog>
           </div>
         </div>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-80 p-0" side="top" align="start">
+            <div className="p-4 space-y-3">
+              <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Hash className="h-4 w-4 text-blue-600" />
+                Resumo do Parcelamento
+              </h4>
+              {hoverSummary ? (
+                <>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-green-50 rounded-lg p-2 border border-green-100">
+                      <p className="text-lg font-bold text-green-700">{hoverSummary.pagas}</p>
+                      <p className="text-[10px] text-green-600 font-medium">Pagas</p>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-2 border border-red-100">
+                      <p className="text-lg font-bold text-red-700">{hoverSummary.atrasadas}</p>
+                      <p className="text-[10px] text-red-600 font-medium">Atrasadas</p>
+                    </div>
+                    <div className="bg-blue-50 rounded-lg p-2 border border-blue-100">
+                      <p className="text-lg font-bold text-blue-700">{hoverSummary.pendentes}</p>
+                      <p className="text-[10px] text-blue-600 font-medium">Pendentes</p>
+                    </div>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">Total:</span>
+                      <span className="text-sm font-bold text-foreground">
+                        R$ {hoverSummary.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {hoverSummary.parcelas.map((p) => {
+                      const today = new Date(); today.setHours(0, 0, 0, 0);
+                      const isPago = p.status === 'Pago';
+                      const vd = p.vencimento ? new Date(p.vencimento + 'T00:00:00') : null;
+                      const isOverdue = !isPago && vd && vd < today;
+                      return (
+                        <div key={p.numero} className="flex items-center justify-between text-xs py-1 border-b border-muted last:border-0">
+                          <div className="flex items-center gap-2">
+                            <span className={cn(
+                              "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white",
+                              isPago ? 'bg-green-500' : isOverdue ? 'bg-red-500' : 'bg-blue-600'
+                            )}>
+                              {isPago ? '✓' : p.numero}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {p.vencimento ? formatDatePtBr(p.vencimento) : '—'}
+                            </span>
+                          </div>
+                          <span className="font-medium text-foreground">
+                            R$ {p.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-2">Carregando...</p>
+              )}
+            </div>
+          </HoverCardContent>
+        </HoverCard>
 
         {(policy.forma_pagamento || policy.paymentForm) && (
           <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-amber-100">
