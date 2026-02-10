@@ -35,31 +35,52 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
 
   const loadHoverSummary = async () => {
     if (hoverSummary || !policy.id) return;
-    const { data } = await supabase
-      .from('apolice_parcelas')
-      .select('numero_parcela, valor, vencimento, status_pagamento')
-      .eq('apolice_id', policy.id)
-      .order('numero_parcela', { ascending: true });
     
-    if (data && data.length > 0) {
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const pagas = data.filter((p: any) => p.status_pagamento === 'Pago').length;
-      const atrasadas = data.filter((p: any) => {
-        if (p.status_pagamento === 'Pago') return false;
-        const d = p.vencimento ? new Date(p.vencimento + 'T00:00:00') : null;
-        return d && d < today;
-      }).length;
-      setHoverSummary({
-        total: data.length,
-        pagas,
-        atrasadas,
-        pendentes: data.length - pagas - atrasadas,
-        valorTotal: data.reduce((s: number, p: any) => s + (p.valor || 0), 0),
-        parcelas: data.map((p: any) => ({
-          numero: p.numero_parcela, valor: p.valor || 0,
-          status: p.status_pagamento || 'Pendente', vencimento: p.vencimento || ''
-        }))
-      });
+    try {
+      const { data } = await supabase
+        .from('apolice_parcelas')
+        .select('numero_parcela, valor, vencimento, status_pagamento')
+        .eq('apolice_id', policy.id)
+        .order('numero_parcela', { ascending: true });
+      
+      let rows = data && data.length > 0 ? data : null;
+      
+      // Fallback: use local installments if DB has no rows
+      if (!rows && localInstallments.length > 0) {
+        rows = localInstallments.map((inst: any) => ({
+          numero_parcela: inst.numero_parcela ?? inst.numero ?? 0,
+          valor: inst.valor ?? 0,
+          vencimento: inst.vencimento ?? inst.data_vencimento ?? '',
+          status_pagamento: inst.status_pagamento ?? 'Pendente'
+        }));
+      }
+
+      if (rows && rows.length > 0) {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const pagas = rows.filter((p: any) => p.status_pagamento === 'Pago').length;
+        const atrasadas = rows.filter((p: any) => {
+          if (p.status_pagamento === 'Pago') return false;
+          const d = p.vencimento ? new Date(p.vencimento + 'T00:00:00') : null;
+          return d && d < today;
+        }).length;
+        setHoverSummary({
+          total: rows.length,
+          pagas,
+          atrasadas,
+          pendentes: rows.length - pagas - atrasadas,
+          valorTotal: rows.reduce((s: number, p: any) => s + (p.valor || 0), 0),
+          parcelas: rows.map((p: any) => ({
+            numero: p.numero_parcela, valor: p.valor || 0,
+            status: p.status_pagamento || 'Pendente', vencimento: p.vencimento || ''
+          }))
+        });
+      } else {
+        // No data at all - show empty state instead of infinite loading
+        setHoverSummary({ total: 0, pagas: 0, atrasadas: 0, pendentes: 0, valorTotal: 0, parcelas: [] });
+      }
+    } catch (err) {
+      console.error('Erro ao carregar resumo:', err);
+      setHoverSummary({ total: 0, pagas: 0, atrasadas: 0, pendentes: 0, valorTotal: 0, parcelas: [] });
     }
   };
 
@@ -539,6 +560,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                                 status_pagamento: newStatus
                               };
                               setLocalInstallments(newInstallments);
+                              setHoverSummary(null); // Reset para recarregar no próximo hover
 
                               // Salvar imediatamente no banco
                               const apId = installment.apolice_parcela_id;
