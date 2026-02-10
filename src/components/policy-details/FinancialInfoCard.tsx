@@ -177,7 +177,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
         id: inst.id,
         numero: inst.numero || inst.number || idx + 1,
         valor: inst.valor || inst.value || monthlyPremium,
-        vencimento: inst.vencimento || inst.dueDate || inst.date || inst.data_vencimento || '',
+        vencimento: inst.vencimento || inst.data || inst.dueDate || inst.date || inst.data_vencimento || '',
          status: normalizeInstallmentStatus(inst.status)
       })));
       setHasChanges(false);
