@@ -548,6 +548,41 @@ export class PolicyPersistenceService {
         }, {} as Record<string, number>)
       });
 
+      // AUTO-GERAR parcelas para apólices que têm quantidade_parcelas e valor mas não têm parcelas no DB
+      const policiesToGenerate = parsedPolicies.filter(p => {
+        const hasNoInstallments = !p.installments || p.installments.length === 0;
+        const hasParcelasInfo = (p.quantidade_parcelas || 0) > 0 && (p.monthlyAmount || (p as any).valor_parcela || 0) > 0;
+        return hasNoInstallments && hasParcelasInfo;
+      });
+
+      if (policiesToGenerate.length > 0) {
+        console.log(`🔄 Auto-gerando parcelas para ${policiesToGenerate.length} apólices sem parcelas no DB`);
+        for (const policy of policiesToGenerate) {
+          try {
+            const numParcelas = policy.quantidade_parcelas || 1;
+            const valorParcela = Number(policy.monthlyAmount || (policy as any).valor_parcela) || 0;
+            const startDate = policy.startDate || new Date().toISOString().split('T')[0];
+            
+            const generatedInstallments = this.generateBasicInstallments(numParcelas, valorParcela, startDate);
+            
+            await this.saveInstallments(policy.id, generatedInstallments, userId);
+            
+            // Atualizar o objeto em memória com as parcelas geradas
+            policy.installments = generatedInstallments.map((inst, idx) => ({
+              id: `generated-${idx}`,
+              numero: inst.numero,
+              valor: inst.valor,
+              data: inst.data,
+              status: inst.status
+            }));
+            
+            console.log(`✅ Parcelas auto-geradas para apólice ${policy.policyNumber}: ${numParcelas}x R$${valorParcela}`);
+          } catch (err) {
+            console.error(`❌ Erro ao auto-gerar parcelas para ${policy.id}:`, err);
+          }
+        }
+      }
+
       return parsedPolicies;
 
     } catch (error) {
