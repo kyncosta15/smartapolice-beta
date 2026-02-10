@@ -459,9 +459,9 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
           </p>
         </div>
 
-        <HoverCard onOpenChange={(open) => { if (open) loadHoverSummary(); }}>
+        <HoverCard openDelay={200} closeDelay={300} onOpenChange={(open) => { if (open) loadHoverSummary(); }}>
           <HoverCardTrigger asChild>
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 sm:p-4 shadow-sm border border-blue-100 cursor-default">
+            <div role="button" tabIndex={0} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 sm:p-4 shadow-sm border border-blue-100 cursor-default pointer-events-auto">
               <label className="text-xs sm:text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-2">
                 <Hash className="h-4 w-4" />
                 Parcelamento
@@ -710,7 +710,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
           </div>
         </div>
           </HoverCardTrigger>
-          <HoverCardContent className="w-80 p-0" side="top" align="start">
+          <HoverCardContent className="w-80 p-0 z-[100] pointer-events-auto" side="top" align="start">
             <div className="p-4 space-y-3">
               <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Hash className="h-4 w-4 text-blue-600" />
