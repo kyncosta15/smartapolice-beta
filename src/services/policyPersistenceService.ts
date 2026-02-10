@@ -386,12 +386,8 @@ export class PolicyPersistenceService {
 
   // MÉTODO MELHORADO: Carregar e processar apólices do usuário - USA VIEW SEGURA
   static async loadUserPolicies(userId: string): Promise<ParsedPolicyData[]> {
-    const sessionId = window.crypto.randomUUID();
     const { normalizePolicy } = await import('@/lib/policies');
     try {
-      console.log(`📖 [loadUserPolicies-${sessionId}] Carregando apólices do usuário: ${userId}`);
-
-      // Use the main policies table to get all fields including documento and documento_tipo
       const { data: policies, error: policiesError } = await supabase
         .from('policies')
         .select(`
@@ -413,63 +409,29 @@ export class PolicyPersistenceService {
         .order('created_at', { ascending: false });
 
       if (policiesError) {
-        console.error(`❌ [loadUserPolicies-${sessionId}] Erro ao carregar:`, policiesError);
+        console.error('❌ Erro ao carregar apólices:', policiesError);
         return [];
       }
 
       if (!policies || policies.length === 0) {
-        console.log(`📭 [loadUserPolicies-${sessionId}] Nenhuma apólice encontrada`);
         return [];
       }
 
-      console.log(`✅ [loadUserPolicies-${sessionId}] ${policies.length} apólices carregadas da view segura`);
+      console.log(`✅ ${policies.length} apólices carregadas`);
 
       // Process policies with COMPLETE SAFE CONVERSION
-      const parsedPolicies: ParsedPolicyData[] = policies.map((policy, index) => {
-        console.log(`🔍 [loadUserPolicies-${sessionId}] Processando apólice ${index + 1}:`, {
-          id: policy.id,
-          name: safeString(policy.segurado),
-          status_db: safeString(policy.status),
-          documento_tipo: safeString(policy.documento_tipo),
-          documento: safeString(policy.documento),
-          nome_plano_saude_RAW: policy.nome_plano_saude,
-          tipo_seguro_RAW: policy.tipo_seguro
-        });
-
-        // Normalize policy data first to ensure all objects become strings
+      const parsedPolicies: ParsedPolicyData[] = policies.map((policy) => {
         const normalizedPolicy = normalizePolicy(policy);
-
-        // Status already normalized by view
         const finalStatus = this.mapToValidStatus(policy.status || 'vigente');
 
-        console.log(`🎯 [loadUserPolicies-${sessionId}] Status da apólice ${policy.id}: ${finalStatus}`);
-        
-        console.log(`💰 [loadUserPolicies-${sessionId}] Valores financeiros da apólice ${policy.id}:`, {
-          segurado: policy.segurado,
-          valor_premio_db: policy.valor_premio,
-          custo_mensal_db: policy.custo_mensal,
-          valor_parcela_db: policy.valor_parcela,
-          quantidade_parcelas: policy.quantidade_parcelas
-        });
-
-        // CONVERSÃO SEGURA - GARANTIR QUE NÃO RENDERIZAMOS OBJETOS
-        // CRÍTICO: Para valores financeiros, usar SEMPRE os valores diretos do banco, SEM normalização
         const valorMensalDoBanco = Number(policy.custo_mensal || policy.valor_parcela || policy.valor_mensal_num) || 0;
         const premioDoBanco = Number(policy.valor_premio) || 0;
-        
-        console.log(`💰💰 [loadUserPolicies-${sessionId}] VALORES FINAIS para ${policy.segurado}:`, {
-          valorMensalDoBanco,
-          premioDoBanco,
-          custo_mensal_original: policy.custo_mensal,
-          valor_parcela_original: policy.valor_parcela
-        });
         
         const convertedPolicy = {
           id: policy.id,
           name: safeString(normalizedPolicy.name),
           type: safeString(normalizedPolicy.type),
           insurer: safeString(normalizedPolicy.insurer),
-          // CRÍTICO: Usar valores diretos do banco SEM normalização
           premium: premioDoBanco,
           valor_premio: premioDoBanco,
           monthlyAmount: valorMensalDoBanco,
@@ -483,12 +445,10 @@ export class PolicyPersistenceService {
           pdfPath: safeString(policy.arquivo_url),
           extractedAt: safeString(policy.extraction_timestamp || policy.created_at || new Date().toISOString()),
           
-          // Required fields
           expirationDate: safeString(policy.expiration_date || policy.fim_vigencia || new Date().toISOString().split('T')[0]),
           policyStatus: finalStatus as any,
           quantidade_parcelas: policy.quantidade_parcelas || 1,
           
-          // Installments - fix type - CRÍTICO: incluir id para permitir updates
           installments: (policy.installments as any[])?.map(inst => ({
             id: inst.id,
             numero: Number(inst.numero_parcela) || 0,
@@ -497,14 +457,12 @@ export class PolicyPersistenceService {
             status: (inst.status === 'paga' || inst.status === 'pendente') ? inst.status : 'pendente'
           })) || [],
           
-          // Coverages
           coberturas: (policy.coberturas as any[])?.map(cob => ({
             id: cob.id,
             descricao: safeString(cob.descricao),
             lmi: cob.lmi ? Number(cob.lmi) : undefined
           })) || [],
           
-          // Other fields
           insuredName: safeString(policy.segurado),
           documento: safeString(policy.documento),
           documento_tipo: (policy.documento_tipo === 'CPF' || policy.documento_tipo === 'CNPJ') ? policy.documento_tipo as 'CPF' | 'CNPJ' : undefined,
@@ -516,39 +474,22 @@ export class PolicyPersistenceService {
           coverage: (policy.coberturas as any[])?.map(cob => safeString(cob.descricao)) || ['Cobertura Básica'],
           totalCoverage: Number(policy.valor_mensal_num || policy.custo_mensal) * 12 || 0,
           limits: 'R$ 100.000 por sinistro',
-          // CRÍTICO: Campos CorpNuvem/InfoCap para download de PDFs
           nosnum: policy.nosnum,
           codfil: policy.codfil,
           
-          // Campos veículo/embarcação
           marca: safeString(policy.marca),
           placa: safeString(policy.placa),
           ano_modelo: safeString(policy.ano_modelo),
           nome_embarcacao: safeString(policy.nome_embarcacao),
           
-          // Campo específico saúde - PRESERVAR VALOR ORIGINAL
           nome_plano_saude: policy.nome_plano_saude || null,
         };
-
-        console.log(`✅ [loadUserPolicies-${sessionId}] Apólice ${policy.id} processada e CONVERTIDA COM SEGURANÇA`, {
-          premium: convertedPolicy.premium,
-          valor_premio: convertedPolicy.valor_premio,
-          monthlyAmount: convertedPolicy.monthlyAmount,
-          custo_mensal: convertedPolicy.custo_mensal
-        });
 
         return convertedPolicy;
       });
 
-      console.log(`✅ [loadUserPolicies-${sessionId}] Processamento concluído com dados seguros:`, {
-        total: parsedPolicies.length,
-        statusDistribution: parsedPolicies.reduce((acc, p) => {
-          acc[p.status] = (acc[p.status] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>)
-      });
-
-      // AUTO-GERAR parcelas para apólices que têm quantidade_parcelas e valor mas não têm parcelas no DB
+      // AUTO-GERAR parcelas apenas para apólices que têm metadados mas nenhuma parcela no DB
+      // Isso roda apenas uma vez pois na próxima carga as parcelas já existirão
       const policiesToGenerate = parsedPolicies.filter(p => {
         const hasNoInstallments = !p.installments || p.installments.length === 0;
         const hasParcelasInfo = (p.quantidade_parcelas || 0) > 0 && (p.monthlyAmount || (p as any).valor_parcela || 0) > 0;
@@ -556,7 +497,7 @@ export class PolicyPersistenceService {
       });
 
       if (policiesToGenerate.length > 0) {
-        console.log(`🔄 Auto-gerando parcelas para ${policiesToGenerate.length} apólices sem parcelas no DB`);
+        console.log(`🔄 Auto-gerando parcelas para ${policiesToGenerate.length} apólices`);
         for (const policy of policiesToGenerate) {
           try {
             const numParcelas = policy.quantidade_parcelas || 1;
@@ -567,7 +508,6 @@ export class PolicyPersistenceService {
             
             await this.saveInstallments(policy.id, generatedInstallments, userId);
             
-            // Atualizar o objeto em memória com as parcelas geradas
             policy.installments = generatedInstallments.map((inst, idx) => ({
               id: `generated-${idx}`,
               numero: inst.numero,
@@ -575,8 +515,6 @@ export class PolicyPersistenceService {
               data: inst.data,
               status: inst.status
             }));
-            
-            console.log(`✅ Parcelas auto-geradas para apólice ${policy.policyNumber}: ${numParcelas}x R$${valorParcela}`);
           } catch (err) {
             console.error(`❌ Erro ao auto-gerar parcelas para ${policy.id}:`, err);
           }
@@ -586,7 +524,7 @@ export class PolicyPersistenceService {
       return parsedPolicies;
 
     } catch (error) {
-      console.error(`❌ [loadUserPolicies-${sessionId}] Erro crítico:`, error);
+      console.error('❌ Erro crítico ao carregar apólices:', error);
       return [];
     }
   }

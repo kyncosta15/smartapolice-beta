@@ -46,118 +46,58 @@ export function usePersistedPolicies() {
     }
   };
 
-  // CORREÇÃO PRINCIPAL: Carregar apólices quando usuário faz login - COM RETRY E LOG DETALHADO
   useEffect(() => {
-    console.log('🔄 usePersistedPolicies useEffect triggered:', { 
-      userId: user?.id, 
-      userExists: !!user,
-      userEmail: user?.email 
-    });
-
     if (user?.id) {
-      // Aguardar um pouco para garantir que a sessão está estável
       const timer = setTimeout(() => {
-        console.log('⏰ Timer executado, iniciando carregamento das apólices');
         loadPersistedPolicies();
       }, 100);
-
       return () => clearTimeout(timer);
     } else {
-      // Limpar dados quando usuário faz logout
-      console.log('🧹 Limpando dados - usuário não autenticado');
       setPolicies([]);
     }
-  }, [user?.id, user?.email]); // Adicionado user?.email como dependência
+  }, [user?.id, user?.email]);
 
   const loadPersistedPolicies = async () => {
-    if (!user?.id) {
-      console.log('❌ loadPersistedPolicies: user.id não disponível');
-      return;
-    }
+    if (!user?.id) return;
 
-    console.log(`🔍 Iniciando carregamento de apólices para usuário: ${user.id}`);
     setIsLoading(true);
     setError(null);
 
     try {
-      // CORREÇÃO: Verificar sessão antes de fazer queries - mas permitir para novos usuários
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error('❌ Erro na sessão:', sessionError);
-        // Para novos usuários, não falhar imediatamente
-        console.log('⚠️ Erro de sessão, mas continuando para novos usuários...');
       }
 
-      // Para novos usuários, retornar lista vazia e não bloquear outras funcionalidades
       if (!session && user?.id) {
-        console.log('⚠️ Sessão temporariamente indisponível, mas user.id existe - continuando...');
         setPolicies([]);
         setIsLoading(false);
-        setError(null); // Importante: limpar erro
+        setError(null);
         return;
       }
 
       if (!session) {
-        console.error('❌ Sessão não encontrada e user.id também não existe');
         throw new Error('Sessão não encontrada - faça login novamente');
       }
 
-      console.log('✅ Sessão válida encontrada, prosseguindo com carregamento');
-      
-      console.log('📖 Chamando PolicyPersistenceService.loadUserPolicies...');
       const loadedPolicies = await PolicyPersistenceService.loadUserPolicies(user.id);
       
-      console.log(`✅ Apólices carregadas do serviço: ${loadedPolicies.length}`);
+      console.log(`✅ ${loadedPolicies.length} apólices carregadas`);
       
-      // DEBUG: Verificar documento_tipo nas apólices carregadas
-      console.log('🔍 DEBUG APÓLICES DO BANCO:', loadedPolicies.map(p => ({
-        id: p.id,
-        name: p.name,
-        documento_tipo: p.documento_tipo,
-        documento: p.documento
-      })));
-      
-      // Normalizar e mapear status para novos valores
       const mappedPolicies = loadedPolicies.map(policy => {
-        // DEBUG: Verificar nome_plano_saude antes da normalização
-        console.log(`🏥 [usePersistedPolicies] ANTES normalização - ${policy.name}:`, {
-          nome_plano_saude: policy.nome_plano_saude,
-          tipo: policy.type
-        });
-        
         const normalized = normalizePolicy(policy);
-        
-        // DEBUG: Verificar nome_plano_saude após normalização
-        console.log(`🏥 [usePersistedPolicies] DEPOIS normalização - ${normalized.name}:`, {
-          nome_plano_saude: normalized.nome_plano_saude,
-          tipo: normalized.type
-        });
-        
         return {
           ...normalized,
           status: mapLegacyStatus(normalized.status)
         };
       });
       
-      console.log(`📝 Definindo políticas no estado: ${mappedPolicies.length} apólices`);
       setPolicies(mappedPolicies);
-
-      // Log de sucesso com detalhes
-      console.log('🎉 Carregamento de apólices CONCLUÍDO com sucesso:', {
-        totalPolicies: mappedPolicies.length,
-        userInfo: { id: user.id, email: user.email },
-        policyNames: mappedPolicies.map(p => p.name)
-      });
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados';
-      console.error('❌ Erro DETALHADO no carregamento:', {
-        error: err,
-        message: errorMessage,
-        userId: user.id,
-        userEmail: user.email
-      });
+      console.error('❌ Erro ao carregar apólices:', errorMessage);
       
       setError(errorMessage);
       
