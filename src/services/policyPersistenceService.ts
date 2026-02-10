@@ -361,7 +361,7 @@ export class PolicyPersistenceService {
         numero_parcela: installment.numero || (index + 1),
         valor: Number(installment.valor) || 0,
         data_vencimento: installment.data,
-        status: installment.status === 'paga' ? 'paga' : 'pendente'
+        status: 'a vencer'
       }));
 
       console.log(`📝 Dados das parcelas preparados:`, installmentInserts);
@@ -492,16 +492,17 @@ export class PolicyPersistenceService {
       // Isso roda apenas uma vez pois na próxima carga as parcelas já existirão
       const policiesToGenerate = parsedPolicies.filter(p => {
         const hasNoInstallments = !p.installments || p.installments.length === 0;
-        const hasParcelasInfo = (p.quantidade_parcelas || 0) > 0 && (p.monthlyAmount || (p as any).valor_parcela || 0) > 0;
-        return hasNoInstallments && hasParcelasInfo;
+        const monthlyVal = p.monthlyAmount || (p as any).valor_parcela || (p as any).custo_mensal || 0;
+        const hasValue = monthlyVal > 0;
+        return hasNoInstallments && hasValue;
       });
 
       if (policiesToGenerate.length > 0) {
         console.log(`🔄 Auto-gerando parcelas para ${policiesToGenerate.length} apólices`);
         for (const policy of policiesToGenerate) {
           try {
-            const numParcelas = policy.quantidade_parcelas || 1;
-            const valorParcela = Number(policy.monthlyAmount || (policy as any).valor_parcela) || 0;
+            const numParcelas = policy.quantidade_parcelas || 12;
+            const valorParcela = Number(policy.monthlyAmount || (policy as any).valor_parcela || (policy as any).custo_mensal) || 0;
             const startDate = policy.startDate || new Date().toISOString().split('T')[0];
             
             const generatedInstallments = this.generateBasicInstallments(numParcelas, valorParcela, startDate);
@@ -546,7 +547,7 @@ export class PolicyPersistenceService {
         numero: i + 1,
         valor: monthlyAmount,
         data: installmentDate.toISOString().split('T')[0],
-        status: 'pendente' as const
+        status: 'a vencer' as const
       });
     }
     
