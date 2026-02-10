@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      apolice_parcelas: {
+        Row: {
+          apolice_id: string
+          created_at: string
+          id: string
+          numero_parcela: number
+          status_pagamento: string
+          valor: number
+          vencimento: string
+        }
+        Insert: {
+          apolice_id: string
+          created_at?: string
+          id?: string
+          numero_parcela: number
+          status_pagamento?: string
+          valor: number
+          vencimento: string
+        }
+        Update: {
+          apolice_id?: string
+          created_at?: string
+          id?: string
+          numero_parcela?: number
+          status_pagamento?: string
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apolice_parcelas_apolice_id_fkey"
+            columns: ["apolice_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apolice_parcelas_apolice_id_fkey"
+            columns: ["apolice_id"]
+            isOneToOne: false
+            referencedRelation: "policies_ui"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apolices_beneficios: {
         Row: {
           cnpj: string

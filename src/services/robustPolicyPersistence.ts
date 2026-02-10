@@ -276,9 +276,10 @@ export class RobustPolicyPersistence {
         return { success: false, errors: [error.message] };
       }
 
-      // 5. Atualizar coberturas e parcelas
+      // 5. Atualizar coberturas, parcelas e apolice_parcelas
       await this.updateCoverages(existingPolicy.id, normalizedData);
       await this.updateInstallments(existingPolicy.id, normalizedData, userId);
+      await this.saveApoliceParcelas(existingPolicy.id, normalizedData);
 
       console.log('✅ ========================================');
       console.log('✅ POLÍTICA ATUALIZADA COM SUCESSO!');
@@ -391,7 +392,10 @@ export class RobustPolicyPersistence {
       await this.saveCoverages(policyId, normalizedData);
       await this.saveInstallments(policyId, normalizedData, userId);
 
-      // 5. Se não salvou parcelas mas tem custo_mensal, gerar parcelas automaticamente com datas
+      // 5. Salvar na tabela apolice_parcelas (vencimentos_futuros)
+      await this.saveApoliceParcelas(policyId, normalizedData);
+
+      // 6. Se não salvou parcelas mas tem custo_mensal, gerar parcelas automaticamente com datas
       if ((!normalizedData.installments || normalizedData.installments.length === 0) && normalizedData.monthlyAmount && normalizedData.monthlyAmount > 0) {
         const numParcelas = normalizedData.quantidade_parcelas || 12;
         const startDate = normalizedData.startDate || new Date().toISOString().split('T')[0];
@@ -416,6 +420,18 @@ export class RobustPolicyPersistence {
           console.error('❌ Erro ao auto-gerar parcelas:', instError);
         } else {
           console.log(`✅ ${numParcelas} parcelas auto-geradas com datas`);
+        }
+
+        // Também salvar em apolice_parcelas se não havia vencimentos_futuros
+        if (!(normalizedData as any).vencimentos_futuros || (normalizedData as any).vencimentos_futuros.length === 0) {
+          const apoliceParcelas = generatedInstallments.map(inst => ({
+            apolice_id: policyId,
+            numero_parcela: inst.numero_parcela,
+            vencimento: inst.data_vencimento,
+            valor: inst.valor,
+            status_pagamento: 'Pendente'
+          }));
+          await supabase.from('apolice_parcelas').insert(apoliceParcelas);
         }
       }
 
@@ -739,5 +755,62 @@ export class RobustPolicyPersistence {
       // Campo específico saúde
       nome_plano_saude: dbPolicy.nome_plano_saude,
     };
+  }
+
+  /**
+   * Salva parcelas na tabela apolice_parcelas a partir de vencimentos_futuros ou installments
+   */
+  private static async saveApoliceParcelas(policyId: string, policyData: Partial<ParsedPolicyData>): Promise<void> {
+    const vencimentos = (policyData as any).vencimentos_futuros;
+    const installments = policyData.installments;
+
+    let parcelas: Array<{ apolice_id: string; numero_parcela: number; vencimento: string; valor: number; status_pagamento: string }> = [];
+
+    if (vencimentos && Array.isArray(vencimentos) && vencimentos.length > 0) {
+      // Fonte de verdade: vencimentos_futuros do JSON
+      parcelas = vencimentos.map((v: any, i: number) => {
+        let vencimento: string;
+        let valor: number;
+        
+        if (typeof v === 'string') {
+          vencimento = v;
+          valor = policyData.monthlyAmount || 0;
+        } else if (v && typeof v === 'object') {
+          vencimento = v.vencimento || v.data || v.date || new Date().toISOString().split('T')[0];
+          valor = Number(v.valor) || Number(v.value) || policyData.monthlyAmount || 0;
+        } else {
+          return null;
+        }
+
+        return {
+          apolice_id: policyId,
+          numero_parcela: v?.parcela || v?.numero || (i + 1),
+          vencimento,
+          valor: Math.round(valor * 100) / 100,
+          status_pagamento: 'Pendente'
+        };
+      }).filter(Boolean) as any[];
+    } else if (installments && installments.length > 0) {
+      // Fallback: usar installments processados
+      parcelas = installments.map((inst, i) => ({
+        apolice_id: policyId,
+        numero_parcela: inst.numero || (i + 1),
+        vencimento: inst.data,
+        valor: Math.round(inst.valor * 100) / 100,
+        status_pagamento: 'Pendente'
+      }));
+    }
+
+    if (parcelas.length === 0) return;
+
+    // Upsert: remover antigas e inserir novas
+    await supabase.from('apolice_parcelas').delete().eq('apolice_id', policyId);
+    
+    const { error } = await supabase.from('apolice_parcelas').insert(parcelas as any);
+    if (error) {
+      console.error('❌ Erro ao salvar apolice_parcelas:', error);
+    } else {
+      console.log(`✅ ${parcelas.length} parcelas salvas em apolice_parcelas`);
+    }
   }
 }

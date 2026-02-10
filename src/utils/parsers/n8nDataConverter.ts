@@ -207,8 +207,11 @@ export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => 
     category: normalizedType === 'auto' ? 'Veicular' : 
              normalizedType === 'empresarial' ? 'Empresarial' : 'Outros',
     coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo) || [],
-    totalCoverage: valorPremio
-  };
+    totalCoverage: valorPremio,
+
+    // Preservar vencimentos_futuros raw para salvar em apolice_parcelas
+    vencimentos_futuros: data.vencimentos_futuros || [],
+  } as ParsedPolicyData;
 };
 
 // CORREÇÃO CRÍTICA: Função para converter dados diretos do N8N com userId correto
@@ -284,9 +287,11 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File, us
     category: normalizedType === 'auto' ? 'Veicular' : 
              normalizedType === 'empresarial' ? 'Empresarial' : 'Outros',
     coverage: data.coberturas?.map((c: any) => c.descricao || c.tipo || c.nome) || [],
-    totalCoverage: premio
-  };
+    totalCoverage: premio,
 
+    // Preservar vencimentos_futuros raw para salvar em apolice_parcelas
+    vencimentos_futuros: data.vencimentos_futuros || [],
+  } as ParsedPolicyData;
   console.log('✅ Política convertida:', convertedPolicy);
   return convertedPolicy;
 };
