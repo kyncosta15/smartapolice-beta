@@ -37,6 +37,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
     if (hoverSummary || !policy.id) return;
     
     try {
+      // 1. Tentar apolice_parcelas primeiro
       const { data } = await supabase
         .from('apolice_parcelas')
         .select('numero_parcela, valor, vencimento, status_pagamento')
@@ -45,7 +46,25 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
       
       let rows = data && data.length > 0 ? data : null;
       
-      // Fallback: use local installments if DB has no rows
+      // 2. Fallback: tabela installments
+      if (!rows) {
+        const { data: instData } = await supabase
+          .from('installments')
+          .select('numero_parcela, valor, data_vencimento, status')
+          .eq('policy_id', policy.id)
+          .order('numero_parcela', { ascending: true });
+        
+        if (instData && instData.length > 0) {
+          rows = instData.map((inst: any) => ({
+            numero_parcela: inst.numero_parcela ?? 0,
+            valor: inst.valor ?? 0,
+            vencimento: inst.data_vencimento ?? '',
+            status_pagamento: inst.status === 'vencido' ? 'Pendente' : 'Pendente'
+          }));
+        }
+      }
+      
+      // 3. Fallback: parcelas locais do componente
       if (!rows && localInstallments.length > 0) {
         rows = localInstallments.map((inst: any) => ({
           numero_parcela: inst.numero_parcela ?? inst.numero ?? 0,
@@ -75,7 +94,6 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
           }))
         });
       } else {
-        // No data at all - show empty state instead of infinite loading
         setHoverSummary({ total: 0, pagas: 0, atrasadas: 0, pendentes: 0, valorTotal: 0, parcelas: [] });
       }
     } catch (err) {
@@ -480,7 +498,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
           </p>
         </div>
 
-        <HoverCard openDelay={200} closeDelay={300} onOpenChange={(open) => { if (open) loadHoverSummary(); }}>
+        <HoverCard openDelay={300} closeDelay={100} onOpenChange={(open) => { if (open) loadHoverSummary(); }}>
           <HoverCardTrigger asChild>
             <div role="button" tabIndex={0} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 sm:p-4 shadow-sm border border-blue-100 cursor-default pointer-events-auto">
               <label className="text-xs sm:text-sm font-medium text-blue-700 font-sf-pro flex items-center gap-2 mb-2">
@@ -732,7 +750,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
           </div>
         </div>
           </HoverCardTrigger>
-          <HoverCardContent className="w-80 p-0 z-[100] pointer-events-auto" side="top" align="start">
+          <HoverCardContent className="w-80 p-0 z-[100]" side="top" align="start">
             <div className="p-4 space-y-3">
               <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Hash className="h-4 w-4 text-blue-600" />
