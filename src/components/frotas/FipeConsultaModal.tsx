@@ -317,7 +317,7 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
                   <div className="text-sm font-medium text-destructive">
                     {result.error === 'MISSING_FIELDS' 
                       ? 'Campos obrigatórios faltando (marca, modelo ou ano)'
-                      : result.error || 'Erro desconhecido'}
+                      : 'Dados incorretos, confirme o código FIPE e/ou categoria do veículo'}
                   </div>
                   
                   {/* Mostrar dados normalizados mesmo com erro, se existirem */}
