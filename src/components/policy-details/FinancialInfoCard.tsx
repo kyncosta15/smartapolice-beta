@@ -494,14 +494,46 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                           <button
                             type="button"
                             title={isPago ? 'Marcar como não pago' : 'Marcar como pago'}
-                            onClick={() => {
+                            onClick={async () => {
+                              const newStatus = isPago ? 'Pendente' : 'Pago';
                               const newInstallments = [...localInstallments];
                               newInstallments[index] = {
                                 ...newInstallments[index],
-                                status_pagamento: isPago ? null : 'Pago'
+                                status_pagamento: newStatus
                               };
                               setLocalInstallments(newInstallments);
-                              setHasChanges(true);
+
+                              // Salvar imediatamente no banco
+                              const apId = installment.apolice_parcela_id;
+                              if (apId) {
+                                const { error } = await supabase
+                                  .from('apolice_parcelas')
+                                  .update({ status_pagamento: newStatus })
+                                  .eq('id', apId);
+                                if (error) {
+                                  console.error('❌ Erro ao salvar status:', error);
+                                  toast({ title: '❌ Erro ao salvar status', variant: 'destructive' });
+                                } else {
+                                  console.log('✅ Status salvo:', newStatus, 'parcela:', numero);
+                                }
+                              } else {
+                                // Upsert se não tem apolice_parcela_id
+                                const { error } = await supabase
+                                  .from('apolice_parcelas')
+                                  .upsert({
+                                    apolice_id: policy.id,
+                                    numero_parcela: numero,
+                                    valor: valor || 0,
+                                    vencimento: vencimento || new Date().toISOString().split('T')[0],
+                                    status_pagamento: newStatus
+                                  }, { onConflict: 'apolice_id,numero_parcela' });
+                                if (error) {
+                                  console.error('❌ Erro ao salvar status (upsert):', error);
+                                  toast({ title: '❌ Erro ao salvar status', variant: 'destructive' });
+                                } else {
+                                  console.log('✅ Status salvo (upsert):', newStatus, 'parcela:', numero);
+                                }
+                              }
                             }}
                             className={cn(circleColor, "text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0 hover:opacity-80 transition-opacity cursor-pointer")}
                           >
