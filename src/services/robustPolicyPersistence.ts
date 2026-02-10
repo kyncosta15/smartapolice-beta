@@ -356,6 +356,10 @@ export class RobustPolicyPersistence {
         policy_status: finalStatus as any,
         arquivo_url: pdfPath,
         
+        // Parcelas
+        quantidade_parcelas: normalizedData.quantidade_parcelas || (normalizedData.installments?.length) || null,
+        valor_parcela: normalizedData.monthlyAmount || null,
+        
         // Campos CorpNuvem
         nosnum: normalizedData.nosnum,
         codfil: normalizedData.codfil,
@@ -386,6 +390,34 @@ export class RobustPolicyPersistence {
       // 4. Salvar coberturas e parcelas
       await this.saveCoverages(policyId, normalizedData);
       await this.saveInstallments(policyId, normalizedData, userId);
+
+      // 5. Se não salvou parcelas mas tem custo_mensal, gerar parcelas automaticamente com datas
+      if ((!normalizedData.installments || normalizedData.installments.length === 0) && normalizedData.monthlyAmount && normalizedData.monthlyAmount > 0) {
+        const numParcelas = normalizedData.quantidade_parcelas || 12;
+        const startDate = normalizedData.startDate || new Date().toISOString().split('T')[0];
+        const generatedInstallments = [];
+        const baseDate = new Date(startDate + 'T00:00:00');
+        
+        for (let i = 0; i < numParcelas; i++) {
+          const installmentDate = new Date(baseDate);
+          installmentDate.setMonth(installmentDate.getMonth() + i);
+          generatedInstallments.push({
+            policy_id: policyId,
+            user_id: userId,
+            numero_parcela: i + 1,
+            valor: normalizedData.monthlyAmount,
+            data_vencimento: installmentDate.toISOString().split('T')[0],
+            status: 'a vencer'
+          });
+        }
+        
+        const { error: instError } = await supabase.from('installments').insert(generatedInstallments);
+        if (instError) {
+          console.error('❌ Erro ao auto-gerar parcelas:', instError);
+        } else {
+          console.log(`✅ ${numParcelas} parcelas auto-geradas com datas`);
+        }
+      }
 
       console.log('✅ Nova política criada com sucesso');
       return { success: true, policyId, isUpdate: false };
@@ -636,7 +668,7 @@ export class RobustPolicyPersistence {
       numero_parcela: inst.numero,
       valor: inst.valor,
       data_vencimento: inst.data,
-      status: inst.status
+      status: 'a vencer'
     }));
 
     const { error } = await supabase
