@@ -181,7 +181,7 @@ export function useFipeConsulta() {
 
         toast({
           title: "Erro ao consultar FIPE",
-          description: errorMsg,
+          description: "Verifique se o código FIPE ou categoria do veículo está correto, tente novamente.",
           variant: "destructive",
         });
 
@@ -238,7 +238,7 @@ export function useFipeConsulta() {
 
       toast({
         title: "Erro ao consultar FIPE",
-        description: error.message || "Falha na conexão",
+        description: "Verifique se o código FIPE ou categoria do veículo está correto, tente novamente.",
         variant: "destructive",
       });
 
