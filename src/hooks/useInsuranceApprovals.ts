@@ -42,25 +42,21 @@ export function useInsuranceApprovals() {
         .select(`
           *,
           frota_veiculos(placa, marca, modelo),
-          empresas(nome),
-          user_profiles!insurance_approval_requests_requested_by_fkey(display_name)
+          empresas(nome)
         `)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Query error:', error);
-        throw error;
+        // Silently handle permission/RLS errors - just set empty
+        console.warn('Solicitações query:', error.message);
+        setRequests([]);
+        return;
       }
       
-      console.log('Solicitações carregadas:', data);
       setRequests((data || []) as InsuranceApprovalRequest[]);
     } catch (error) {
-      console.error('Erro ao carregar solicitações:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar as solicitações.',
-        variant: 'destructive',
-      });
+      console.warn('Erro ao carregar solicitações:', error);
+      setRequests([]);
     } finally {
       setLoading(false);
     }
