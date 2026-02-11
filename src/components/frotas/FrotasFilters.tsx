@@ -156,7 +156,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
         <div className="relative flex-1 min-w-0">
           <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${searchLoading ? 'text-primary animate-pulse' : 'text-gray-400 dark:text-muted-foreground'}`} />
           <Input
-            placeholder="Buscar por placa, CNPJ, CPF ou proprietário..."
+            placeholder="Buscar por placa, chassi, CNPJ, CPF ou proprietário..."
             value={filters.search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className={`pl-10 pr-10 h-9 sm:h-10 w-full ${searchLoading ? 'border-primary' : ''}`}
