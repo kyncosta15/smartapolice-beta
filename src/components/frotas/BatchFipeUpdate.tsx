@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogRCorp } from '@/components/ui-v2/dialog-rcorp';
 import { RefreshCw, CheckCircle2, XCircle, AlertCircle, Zap } from 'lucide-react';
@@ -36,7 +36,15 @@ export function BatchFipeUpdate({ selectedVehicleIds, onSuccess }: BatchFipeUpda
   const { toast } = useToast();
   const { activeEmpresaId } = useTenant();
 
+  const isRunningRef = useRef(false);
+
   const handleProcess = async () => {
+    // Prevenir chamadas concorrentes
+    if (isRunningRef.current) {
+      console.log('[BatchFipeUpdate] Processamento já em andamento, ignorando clique duplicado');
+      return;
+    }
+
     if (!activeEmpresaId) {
       toast({
         title: 'Erro',
@@ -46,6 +54,7 @@ export function BatchFipeUpdate({ selectedVehicleIds, onSuccess }: BatchFipeUpda
       return;
     }
 
+    isRunningRef.current = true;
     setIsProcessing(true);
     setProgress(0);
     setResult(null);
@@ -104,6 +113,7 @@ export function BatchFipeUpdate({ selectedVehicleIds, onSuccess }: BatchFipeUpda
       setProgress(0);
     } finally {
       setIsProcessing(false);
+      isRunningRef.current = false;
     }
   };
 

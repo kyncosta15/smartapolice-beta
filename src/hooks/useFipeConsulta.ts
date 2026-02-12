@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -82,8 +82,15 @@ export function useFipeConsulta() {
   const [result, setResult] = useState<FipeResponse | null>(null);
   const [fullResponse, setFullResponse] = useState<any>(null);
   const { toast } = useToast();
+  const isRunningRef = useRef(false);
 
-  const consultar = async (vehicle: VehicleData, refId?: number) => {
+  const consultar = useCallback(async (vehicle: VehicleData, refId?: number) => {
+    // Prevenir chamadas concorrentes
+    if (isRunningRef.current) {
+      console.log('[useFipeConsulta] Consulta já em andamento, ignorando clique duplicado');
+      return null;
+    }
+    isRunningRef.current = true;
     if (!vehicle.fipeCode) {
       toast({
         title: "Código FIPE obrigatório",
@@ -245,8 +252,9 @@ export function useFipeConsulta() {
       return errorResult;
     } finally {
       setIsLoading(false);
+      isRunningRef.current = false;
     }
-  };
+  }, [toast]);
 
   return { consultar, isLoading, result, fullResponse };
 }
