@@ -77,27 +77,51 @@ interface FipeResponse {
   error?: string;
 }
 
+function resolveVehicleType(vehicleType?: string, categoria?: string): "cars" | "motorcycles" | "trucks" {
+  if (vehicleType === "cars" || vehicleType === "motorcycles" || vehicleType === "trucks") {
+    return vehicleType;
+  }
+
+  if (!categoria) return "cars";
+
+  if (categoria === "Carros") return "cars";
+  if (categoria === "Caminhão") return "trucks";
+  if (categoria === "Moto") return "motorcycles";
+
+  const cat = categoria.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  if (cat.includes('caminh') || cat.includes('truck')) return 'trucks';
+  if (cat.includes('moto')) return 'motorcycles';
+  return 'cars';
+}
+
 export function useFipeConsulta() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<FipeResponse | null>(null);
   const [fullResponse, setFullResponse] = useState<any>(null);
   const { toast } = useToast();
   const isRunningRef = useRef(false);
+  const callCountRef = useRef(0);
+
+  const reset = useCallback(() => {
+    setResult(null);
+    setFullResponse(null);
+    isRunningRef.current = false;
+  }, []);
 
   const consultar = useCallback(async (vehicle: VehicleData, refId?: number) => {
     // Prevenir chamadas concorrentes
     if (isRunningRef.current) {
-      console.log('[useFipeConsulta] Consulta já em andamento, ignorando clique duplicado');
+      console.log('[useFipeConsulta] Consulta já em andamento, ignorando');
       return null;
     }
-    isRunningRef.current = true;
+
     if (!vehicle.fipeCode) {
       toast({
         title: "Código FIPE obrigatório",
         description: "É necessário informar o código FIPE do veículo",
         variant: "destructive",
       });
-      return;
+      return null;
     }
 
     if (!vehicle.year) {
@@ -106,50 +130,27 @@ export function useFipeConsulta() {
         description: "É necessário informar o ano do modelo do veículo",
         variant: "destructive",
       });
-      return;
+      return null;
     }
+
+    isRunningRef.current = true;
+    callCountRef.current += 1;
+    const thisCall = callCountRef.current;
 
     setIsLoading(true);
     setResult(null);
     setFullResponse(null);
 
     try {
-      console.log('=== Consultando FIPE v2 via edge function ===');
-      console.log('Veículo:', vehicle);
-      console.log('RefId:', refId);
-
-      // Mapear categoria para vehicleType (usando as 3 categorias padronizadas)
-      let vehicleType = vehicle.vehicleType;
-      
-      if (!vehicleType && vehicle.categoria) {
-        // Mapeamento direto das 3 categorias padronizadas
-        if (vehicle.categoria === "Carros") {
-          vehicleType = "cars";
-        } else if (vehicle.categoria === "Caminhão") {
-          vehicleType = "trucks";
-        } else if (vehicle.categoria === "Moto") {
-          vehicleType = "motorcycles";
-        } else {
-          // Fallback: normalizar para compatibilidade retroativa
-          const cat = vehicle.categoria
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .trim();
-          
-          console.log(`Hook: Mapping legacy category "${vehicle.categoria}" -> normalized: "${cat}"`);
-          
-          if (cat.includes('caminh') || cat.includes('truck')) {
-            vehicleType = 'trucks';
-          } else if (cat.includes('moto')) {
-            vehicleType = 'motorcycles';
-          } else {
-            vehicleType = 'cars'; // Default para carros
-          }
-        }
+      // Delay progressivo: a cada 5 consultas seguidas, adicionar 500ms de pausa
+      // para não estourar rate limit da API FIPE
+      if (thisCall > 1) {
+        const delay = Math.min((thisCall - 1) * 100, 1000);
+        console.log(`[useFipeConsulta] Delay de ${delay}ms (consulta #${thisCall})`);
+        await new Promise(r => setTimeout(r, delay));
       }
-      
-      console.log(`Hook: Final vehicleType: ${vehicleType}`);
+
+      const vehicleType = resolveVehicleType(vehicle.vehicleType, vehicle.categoria);
 
       const payload = {
         fipeCode: vehicle.fipeCode,
@@ -157,33 +158,33 @@ export function useFipeConsulta() {
         plate: vehicle.placa,
         reference: refId,
         category: vehicle.categoria,
-        vehicleType: vehicleType
+        vehicleType
       };
 
-      console.log('Payload para edge function:', payload);
+      console.log('[useFipeConsulta] Payload:', payload);
 
       const { data: edgeData, error: edgeError } = await supabase.functions.invoke<FipeEdgeFunctionResponse>(
         'get-fipe-by-code-year',
         { body: payload }
       );
 
+      // Se outra chamada foi iniciada enquanto esta rodava, descartar resultado
+      if (callCountRef.current !== thisCall) {
+        console.log('[useFipeConsulta] Chamada obsoleta, descartando resultado');
+        return null;
+      }
+
       if (edgeError) {
         console.error('Erro na edge function:', edgeError);
         throw new Error(edgeError.message || 'Erro ao consultar FIPE');
       }
 
-      console.log('Resposta da edge function:', edgeData);
       setFullResponse(edgeData);
 
       if (!edgeData || !edgeData.ok) {
         const errorMsg = edgeData?.error?.message || 'Erro desconhecido ao consultar FIPE';
-        console.error('Erro retornado pela API:', errorMsg);
 
-        const mappedError: FipeResponse = {
-          status: 'error',
-          error: errorMsg
-        };
-
+        const mappedError: FipeResponse = { status: 'error', error: errorMsg };
         setResult(mappedError);
 
         toast({
@@ -195,7 +196,6 @@ export function useFipeConsulta() {
         return mappedError;
       }
 
-      // Mapear resposta para formato interno
       const fipeData = edgeData.data!;
       const mappedData: FipeResponse = {
         status: 'ok',
@@ -216,7 +216,6 @@ export function useFipeConsulta() {
         priceHistory: fipeData.priceHistory
       };
 
-      console.log('Dados mapeados:', mappedData);
       setResult(mappedData);
 
       if (mappedData.fipeValue) {
@@ -256,5 +255,5 @@ export function useFipeConsulta() {
     }
   }, [toast]);
 
-  return { consultar, isLoading, result, fullResponse };
+  return { consultar, isLoading, result, fullResponse, reset };
 }
