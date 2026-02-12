@@ -28,7 +28,7 @@ interface FipeConsultaModalProps {
 }
 
 export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate }: FipeConsultaModalProps) {
-  const { consultar, isLoading, result, fullResponse } = useFipeConsulta();
+  const { consultar, isLoading, result, fullResponse, reset } = useFipeConsulta();
   const { toast } = useToast();
   const [showDetailsDrawer, setShowDetailsDrawer] = useState(false);
   const [isFetchingValue, setIsFetchingValue] = useState(false);
@@ -60,10 +60,11 @@ export function FipeConsultaModal({ open, onOpenChange, vehicle, onVehicleUpdate
       modelo: vehicle.modelo,
       ano: vehicle.ano_modelo,
     });
-    // Limpar resultados anteriores
+    // Limpar resultados anteriores e liberar trava de concorrência
     setShowDetailsDrawer(false);
     setIsFetchingValue(false);
-  }, [vehicle.id, vehicle.marca, vehicle.modelo, vehicle.ano_modelo]);
+    reset();
+  }, [vehicle.id, vehicle.marca, vehicle.modelo, vehicle.ano_modelo, reset]);
 
   const handleConsultar = async () => {
     setIsFetchingValue(false); // Reset estado
