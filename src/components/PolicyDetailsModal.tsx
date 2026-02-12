@@ -96,8 +96,8 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
             </div>
           </DialogHeader>
 
-          {/* GRID DE CARDS: 2 POR LINHA EM TELAS GRANDES */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 items-start">
+          {/* LAYOUT MASONRY: elimina espaços vazios entre cards */}
+          <div className="p-4 sm:p-6 columns-1 lg:columns-2 gap-4 sm:gap-6 [&>*]:break-inside-avoid [&>*]:mb-4 sm:[&>*]:mb-6">
             <GeneralInfoCard policy={policy} />
             <InsurerInfoCard 
               insurer={policy.seguradora || policy.insurer || 'Não informado'}
