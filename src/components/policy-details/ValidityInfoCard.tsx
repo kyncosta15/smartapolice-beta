@@ -45,7 +45,7 @@ export const ValidityInfoCard = ({ policy }: ValidityInfoCardProps) => {
   const fileName = renderValue(policy?.fileName || policy?.file?.name || policy?.arquivo);
 
   return (
-    <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 overflow-hidden">
+    <Card className="border-0 shadow-lg rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 overflow-hidden h-fit">
       <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-indigo-200 py-3">
         <CardTitle className="flex items-center text-xl font-bold text-indigo-900 font-sf-pro">
           <Calendar className="h-6 w-6 mr-3 text-indigo-600" />
