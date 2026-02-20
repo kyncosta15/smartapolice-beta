@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
     const {
       mode = "query",
       offset = 0,
-      limit = 200,
+      limit = 1000,
       filter,
       list = [],
       reference = null,
@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
             const priceNumber = brlToNumber(priceFormatted);
             
             const payload: any = {
-              preco_fipe: priceFormatted,
+              preco_fipe: priceNumber,
               codigo_fipe: body?.codeFipe ?? item.codigo_fipe, // Atualiza código FIPE se veio da API
               codigo: body?.codeFipe ?? item.codigo_fipe, // Também atualiza campo legado 'codigo' para compatibilidade
               marca: body?.brand ?? null,
@@ -277,7 +277,7 @@ Deno.serve(async (req) => {
       input: { mode, offset, limit, reference, concurrency, pageSize, dryRun },
       stats: { total: items.length, processed, success, fail, skipped },
       updatedSample,
-      errors: errors.slice(0, 10)
+      errors: errors.slice(0, 50)
     };
 
     console.log('Batch update completed', result.stats);
