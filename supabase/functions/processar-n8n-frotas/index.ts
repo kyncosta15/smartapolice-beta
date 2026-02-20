@@ -192,7 +192,10 @@ serve(async (req) => {
       if (!status) return 'sem_seguro';
       const s = String(status).toLowerCase().trim();
       
-      // Mapeamentos aceitos
+      // Checar "sem" primeiro para não ser capturado pelo includes('segur')
+      if (s === 'sem_seguro' || s === 'sem seguro' || s === 'nao_segurado' || s === 'não segurado' || s.startsWith('sem')) {
+        return 'sem_seguro';
+      }
       if (s === 'segurado' || s === 'com_seguro' || s === 'com seguro' || s.includes('segur')) {
         return 'segurado';
       }
