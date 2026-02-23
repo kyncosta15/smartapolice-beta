@@ -133,17 +133,33 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5);
 
-      // Combinar todas as apólices
+      // Função para classificar status baseado na data de vencimento (igual ao dashboard)
+      const classifyPolicyStatus = (fimVigencia: string | null): string => {
+        if (!fimVigencia) return 'vigente';
+        const now = new Date();
+        const endDate = new Date(fimVigencia);
+        const diffTime = endDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) return 'nao_renovada';
+        if (diffDays <= 30) return 'vencendo';
+        return 'vigente';
+      };
+
+      // Combinar todas as apólices com status correto baseado em datas
       const todasApolices = [
-        ...apolicesBeneficios,
+        ...apolicesBeneficios.map(a => ({
+          ...a,
+          status_calculado: classifyPolicyStatus(a.fim_vigencia)
+        })),
         ...apolicesSeguros.map(p => ({
           numero_apolice: p.numero_apolice || '-',
-          seguradora: p.seguradora || '-',
+          seguradora: p.seguradora || p.seguradora_empresa || '-',
           tipo_beneficio: p.tipo_seguro || 'Auto',
           status: p.status || '-',
+          status_calculado: classifyPolicyStatus(p.fim_vigencia),
           inicio_vigencia: p.inicio_vigencia,
           fim_vigencia: p.fim_vigencia,
-          valor_total: parseFloat(String(p.valor_premio || 0)),
+          valor_total: parseFloat(String(p.custo_mensal || p.valor_premio || 0)),
           quantidade_vidas: null
         }))
       ];
@@ -397,17 +413,17 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         pdf.text('Gestao de Apolices e Beneficios', 20, yPos);
         yPos += 15;
 
-        // KPIs de Apólices
-        const apolicesAtivas = todasApolices.filter(a => a.status === 'ativa' || a.status === 'Ativa');
-        const apolicesCanceladas = todasApolices.filter(a => a.status === 'cancelada');
+        // KPIs de Apólices - classificação por data (igual ao dashboard)
+        const apolicesVigentes = todasApolices.filter(a => a.status_calculado === 'vigente');
+        const apolicesAntigas = todasApolices.filter(a => a.status_calculado === 'nao_renovada');
+        const apolicesVencendo = todasApolices.filter(a => a.status_calculado === 'vencendo');
         const valorTotalApolices = todasApolices.reduce((sum, a) => sum + (parseFloat(String(a.valor_total || 0))), 0);
-        const totalVidas = todasApolices.reduce((sum, a) => sum + (a.quantidade_vidas || 0), 0);
 
         const apolicesKpis = [
           { label: 'Total Apolices', value: todasApolices.length, color: [0, 72, 255] },
-          { label: 'Ativas', value: apolicesAtivas.length, color: [34, 197, 94] },
-          { label: 'Vidas', value: totalVidas > 0 ? totalVidas : apolicesBeneficios.length, color: [249, 115, 22] },
-          { label: 'Valor Total', value: valorTotalApolices > 0 ? `R$ ${(valorTotalApolices / 1000).toFixed(0)}k` : '-', color: [168, 85, 247], isText: true }
+          { label: 'Vigentes', value: apolicesVigentes.length + apolicesVencendo.length, color: [34, 197, 94] },
+          { label: 'Antigas', value: apolicesAntigas.length, color: [239, 68, 68] },
+          { label: 'Vencendo 30d', value: apolicesVencendo.length, color: [249, 115, 22] }
         ];
 
         const apoliceKpiWidth = 42;
@@ -420,7 +436,7 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
           pdf.rect(apoliceKpiX, yPos, apoliceKpiWidth, apoliceKpiHeight, 'F');
           
           pdf.setTextColor(255, 255, 255);
-          pdf.setFontSize(kpi.isText ? 14 : 18);
+          pdf.setFontSize(18);
           pdf.setFont('helvetica', 'bold');
           pdf.text(String(kpi.value), apoliceKpiX + apoliceKpiWidth / 2, yPos + 12, { align: 'center' });
           
@@ -433,9 +449,62 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
 
         yPos += apoliceKpiHeight + 15;
 
+        // Distribuição por categoria/tipo com valores
+        const categoriaValores = todasApolices.reduce((acc, a) => {
+          const tipo = a.tipo_beneficio || 'Outros';
+          if (!acc[tipo]) acc[tipo] = { total: 0, vigentes: 0, antigas: 0, valor: 0 };
+          acc[tipo].total++;
+          if (a.status_calculado === 'vigente' || a.status_calculado === 'vencendo') {
+            acc[tipo].vigentes++;
+          } else {
+            acc[tipo].antigas++;
+          }
+          acc[tipo].valor += parseFloat(String(a.valor_total || 0));
+          return acc;
+        }, {} as Record<string, { total: number; vigentes: number; antigas: number; valor: number }>);
+
+        // Tabela de distribuição por categoria
+        pdf.setTextColor(51, 51, 51);
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Distribuicao por Categoria', 20, yPos);
+        yPos += 8;
+
+        const categoriaTableData = Object.entries(categoriaValores)
+          .sort(([, a], [, b]) => b.total - a.total)
+          .map(([tipo, data]) => [
+            tipo,
+            String(data.total),
+            String(data.vigentes),
+            String(data.antigas),
+            `R$ ${data.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+          ]);
+
+        autoTable(pdf, {
+          startY: yPos,
+          head: [['Categoria', 'Total', 'Vigentes', 'Antigas', 'Valor Mensal']],
+          body: categoriaTableData,
+          theme: 'striped',
+          headStyles: { 
+            fillColor: [100, 116, 139],
+            textColor: [255, 255, 255],
+            fontSize: 9
+          },
+          styles: { fontSize: 9 },
+          columnStyles: {
+            0: { cellWidth: 45 },
+            1: { cellWidth: 20, halign: 'center' },
+            2: { cellWidth: 25, halign: 'center' },
+            3: { cellWidth: 25, halign: 'center' },
+            4: { cellWidth: 40, halign: 'right' }
+          }
+        });
+
+        yPos = (pdf as any).lastAutoTable.finalY + 15;
+
         // Insights de Apólices
-        const percentualAtivas = todasApolices.length > 0 
-          ? ((apolicesAtivas.length / todasApolices.length) * 100).toFixed(1)
+        const percentualVigentes = todasApolices.length > 0 
+          ? (((apolicesVigentes.length + apolicesVencendo.length) / todasApolices.length) * 100).toFixed(1)
           : '0.0';
         
         // Agrupar por tipo de benefício
@@ -448,6 +517,8 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
 
         const tipoPrincipal = Object.entries(tiposBeneficios)
           .sort(([, a], [, b]) => b - a)[0];
+
+        if (yPos > 240) { pdf.addPage(); yPos = 20; }
 
         pdf.setFillColor(255, 243, 205);
         pdf.rect(15, yPos - 5, 180, 30, 'F');
@@ -462,9 +533,9 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         yPos += 7;
         
         const apolicesInsights = [
-          `• ${percentualAtivas}% das apolices estao ativas`,
-          tipoPrincipal ? `• ${tipoPrincipal[0]} e o tipo de beneficio mais comum (${tipoPrincipal[1]} apolices)` : null,
-          `• ${totalVidas} vidas cobertas no total`,
+          `• ${percentualVigentes}% das apolices estao vigentes (${apolicesVigentes.length + apolicesVencendo.length} de ${todasApolices.length})`,
+          tipoPrincipal ? `• ${tipoPrincipal[0]} e o tipo mais comum (${tipoPrincipal[1]} apolices)` : null,
+          apolicesVencendo.length > 0 ? `• ${apolicesVencendo.length} apolice(s) vencendo nos proximos 30 dias` : null,
           valorTotalApolices > 0 ? `• Custo mensal total: R$ ${valorTotalApolices.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : null
         ].filter(Boolean);
 
@@ -487,18 +558,28 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         pdf.text('Detalhamento de Apolices', 20, yPos);
         yPos += 10;
 
+        const statusLabel = (s: string) => {
+          switch (s) {
+            case 'vigente': return 'Vigente';
+            case 'vencendo': return 'Vencendo';
+            case 'nao_renovada': return 'Antiga';
+            default: return s;
+          }
+        };
+
         const apolicesTableData = todasApolices.map(a => [
           a.numero_apolice || '-',
           a.seguradora || '-',
           a.tipo_beneficio || '-',
-          a.status || '-',
+          statusLabel(a.status_calculado),
           a.inicio_vigencia ? format(new Date(a.inicio_vigencia), 'dd/MM/yyyy', { locale: ptBR }) : '-',
-          a.fim_vigencia ? format(new Date(a.fim_vigencia), 'dd/MM/yyyy', { locale: ptBR }) : '-'
+          a.fim_vigencia ? format(new Date(a.fim_vigencia), 'dd/MM/yyyy', { locale: ptBR }) : '-',
+          `R$ ${parseFloat(String(a.valor_total || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
         ]);
 
         autoTable(pdf, {
           startY: yPos,
-          head: [['Numero', 'Seguradora', 'Tipo', 'Status', 'Inicio', 'Fim']],
+          head: [['Numero', 'Seguradora', 'Tipo', 'Status', 'Inicio', 'Fim', 'Valor']],
           body: apolicesTableData,
           theme: 'striped',
           headStyles: { 
@@ -507,12 +588,21 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
           },
           styles: { fontSize: 8 },
           columnStyles: {
-            0: { cellWidth: 30 },
-            1: { cellWidth: 35 },
-            2: { cellWidth: 28 },
-            3: { cellWidth: 22 },
-            4: { cellWidth: 25 },
-            5: { cellWidth: 25 }
+            0: { cellWidth: 28 },
+            1: { cellWidth: 32 },
+            2: { cellWidth: 22 },
+            3: { cellWidth: 20 },
+            4: { cellWidth: 22 },
+            5: { cellWidth: 22 },
+            6: { cellWidth: 25, halign: 'right' }
+          },
+          didParseCell: (data: any) => {
+            if (data.section === 'body' && data.column.index === 3) {
+              const val = data.cell.raw;
+              if (val === 'Vigente') data.cell.styles.textColor = [34, 197, 94];
+              else if (val === 'Antiga') data.cell.styles.textColor = [239, 68, 68];
+              else if (val === 'Vencendo') data.cell.styles.textColor = [249, 115, 22];
+            }
           }
         });
 
