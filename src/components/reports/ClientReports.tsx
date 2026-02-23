@@ -214,19 +214,25 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
       
       yPos += 10;
 
+      // Classificar apólices para KPIs
+      const apolicesAtivas = todasApolices.filter(a => a.status_calculado === 'vigente' || a.status_calculado === 'vencendo');
+      const apolicesAntigasTop = todasApolices.filter(a => a.status_calculado === 'nao_renovada');
+
       // KPIs em grid
       const kpis = [
         { label: 'Total de Veiculos', value: veiculos.length, color: [0, 72, 255] },
         { label: 'Segurados', value: veiculosSegurados.length, color: [34, 197, 94] },
         { label: 'Sem Seguro', value: veiculosSemSeguro.length, color: [239, 68, 68] },
-        { label: 'Total Apolices', value: todasApolices.length, color: [249, 115, 22] }
+        { label: 'Apolices Ativas', value: apolicesAtivas.length, color: [249, 115, 22] }
       ];
 
-      const kpiWidth = 42;
+      const kpiWidth = 40;
       const kpiHeight = 25;
+      const kpiGap = 3;
+      const totalKpiWidth = kpis.length * kpiWidth + (kpis.length - 1) * kpiGap;
       let kpiX = 20;
 
-      kpis.forEach((kpi, index) => {
+      kpis.forEach((kpi) => {
         const [r, g, b] = kpi.color;
         pdf.setFillColor(r, g, b);
         pdf.rect(kpiX, yPos, kpiWidth, kpiHeight, 'F');
@@ -240,10 +246,21 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
         pdf.setFont('helvetica', 'normal');
         pdf.text(kpi.label, kpiX + kpiWidth / 2, yPos + 19, { align: 'center' });
         
-        kpiX += kpiWidth + 3;
+        kpiX += kpiWidth + kpiGap;
       });
 
-      yPos += kpiHeight + 20;
+      yPos += kpiHeight + 8;
+
+      // Linha com total de apólices (antigas + atuais)
+      pdf.setTextColor(80, 80, 80);
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(
+        `Total de Apolices: ${todasApolices.length}  |  Ativas: ${apolicesAtivas.length}  |  Antigas: ${apolicesAntigasTop.length}`,
+        20, yPos
+      );
+
+      yPos += 15;
 
       // === INSIGHTS AUTOMÁTICOS ===
       const percentualSegurado = veiculos.length > 0 
