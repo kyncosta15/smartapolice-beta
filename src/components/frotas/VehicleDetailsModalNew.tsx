@@ -15,6 +15,7 @@ import {
   Shield, 
   DollarSign, 
   AlertTriangle,
+  Landmark,
   Settings,
   Calendar,
   Upload,
