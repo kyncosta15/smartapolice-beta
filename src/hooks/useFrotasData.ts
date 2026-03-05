@@ -38,6 +38,8 @@ export interface FrotaVeiculo {
   observacoes?: string;
   created_at: string;
   updated_at: string;
+  is_stolen_current?: boolean;
+  stolen_current_date?: string;
   
   // Additional fields for modal form
   motivo_sem_seguro?: string;
