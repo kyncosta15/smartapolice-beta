@@ -1347,6 +1347,7 @@ export type Database = {
           familia: string | null
           funcao: string | null
           id: string
+          is_stolen_current: boolean
           localizacao: string | null
           marca: string | null
           modalidade_compra: string | null
@@ -1363,6 +1364,7 @@ export type Database = {
           renavam: string | null
           status_seguro: string | null
           status_veiculo: string | null
+          stolen_current_date: string | null
           tipo_veiculo: number | null
           uf_emplacamento: string | null
           updated_at: string
@@ -1386,6 +1388,7 @@ export type Database = {
           familia?: string | null
           funcao?: string | null
           id?: string
+          is_stolen_current?: boolean
           localizacao?: string | null
           marca?: string | null
           modalidade_compra?: string | null
@@ -1402,6 +1405,7 @@ export type Database = {
           renavam?: string | null
           status_seguro?: string | null
           status_veiculo?: string | null
+          stolen_current_date?: string | null
           tipo_veiculo?: number | null
           uf_emplacamento?: string | null
           updated_at?: string
@@ -1425,6 +1429,7 @@ export type Database = {
           familia?: string | null
           funcao?: string | null
           id?: string
+          is_stolen_current?: boolean
           localizacao?: string | null
           marca?: string | null
           modalidade_compra?: string | null
@@ -1441,6 +1446,7 @@ export type Database = {
           renavam?: string | null
           status_seguro?: string | null
           status_veiculo?: string | null
+          stolen_current_date?: string | null
           tipo_veiculo?: number | null
           uf_emplacamento?: string | null
           updated_at?: string
@@ -2775,6 +2781,59 @@ export type Database = {
         }
         Relationships: []
       }
+      theft_risk_reference: {
+        Row: {
+          created_at: string
+          empresa_id: string | null
+          id: string
+          make: string
+          model: string
+          notes: string | null
+          reference_date: string
+          risk_level: string
+          risk_score: number
+          source: string | null
+          year_from: number | null
+          year_to: number | null
+        }
+        Insert: {
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          make: string
+          model: string
+          notes?: string | null
+          reference_date: string
+          risk_level: string
+          risk_score: number
+          source?: string | null
+          year_from?: number | null
+          year_to?: number | null
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          make?: string
+          model?: string
+          notes?: string | null
+          reference_date?: string
+          risk_level?: string
+          risk_score?: number
+          source?: string | null
+          year_from?: number | null
+          year_to?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theft_risk_reference_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_attachments: {
         Row: {
           created_at: string
@@ -3284,6 +3343,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "vehicle_fipe_snapshots_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_theft_events: {
+        Row: {
+          created_at: string
+          empresa_id: string
+          event_date: string
+          id: string
+          notes: string | null
+          status: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id: string
+          event_date: string
+          id?: string
+          notes?: string | null
+          status?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string
+          event_date?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_theft_events_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_theft_events_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "frota_veiculos"
