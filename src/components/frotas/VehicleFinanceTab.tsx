@@ -69,7 +69,7 @@ const emptyFinance = (vehicleId: string, empresaId: string): VehicleFinance => (
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edit' }: VehicleFinanceTabProps) {
+export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFinanceTabProps) {
   const [finance, setFinance] = useState<VehicleFinance | null>(null);
   const [hasRecord, setHasRecord] = useState(false);
   const [loading, setLoading] = useState(true);
