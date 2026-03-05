@@ -202,6 +202,7 @@ export function useFrotasData(filters: FrotaFilters) {
         });
         setFinanceMap(map);
       }
+    } catch (err: any) {
       console.error('Erro ao buscar veículos:', err);
       setError(err.message);
       setAllVeiculos([]);
