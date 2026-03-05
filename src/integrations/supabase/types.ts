@@ -3197,6 +3197,100 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_finance: {
+        Row: {
+          bank_name: string | null
+          created_at: string
+          direct_payment: boolean
+          down_payment: number | null
+          empresa_id: string
+          id: string
+          installment_value: number
+          installments_paid: number
+          notes: string | null
+          start_date: string | null
+          status: string
+          term_months: number
+          type: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          bank_name?: string | null
+          created_at?: string
+          direct_payment?: boolean
+          down_payment?: number | null
+          empresa_id: string
+          id?: string
+          installment_value?: number
+          installments_paid?: number
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          term_months?: number
+          type?: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          bank_name?: string | null
+          created_at?: string
+          direct_payment?: boolean
+          down_payment?: number | null
+          empresa_id?: string
+          id?: string
+          installment_value?: number
+          installments_paid?: number
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          term_months?: number
+          type?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_finance_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: true
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_fipe_snapshots: {
+        Row: {
+          created_at: string
+          fipe_value: number
+          id: string
+          reference_month: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          fipe_value?: number
+          id?: string
+          reference_month: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          fipe_value?: number
+          id?: string
+          reference_month?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_fipe_snapshots_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       veiculo_field_sources: {
         Row: {
           applied_at: string | null
