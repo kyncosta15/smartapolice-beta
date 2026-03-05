@@ -69,7 +69,7 @@ const emptyFinance = (vehicleId: string, empresaId: string): VehicleFinance => (
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edit' }: VehicleFinanceTabProps) {
+export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFinanceTabProps) {
   const [finance, setFinance] = useState<VehicleFinance | null>(null);
   const [hasRecord, setHasRecord] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -327,7 +327,6 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
                 <Select
                   value={finance.type}
                   onValueChange={(v) => updateField('type', v)}
-                  disabled={mode === 'view'}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -342,7 +341,6 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
                 <Input
                   value={finance.bank_name}
                   onChange={(e) => updateField('bank_name', e.target.value)}
-                  disabled={mode === 'view'}
                   placeholder="Ex: Itaú, Bradesco..."
                 />
               </div>
@@ -352,7 +350,6 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
                 <Select
                   value={finance.status}
                   onValueChange={(v) => updateField('status', v)}
-                  disabled={mode === 'view'}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -369,7 +366,6 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
                   min={1}
                   value={finance.term_months}
                   onChange={(e) => updateField('term_months', parseInt(e.target.value) || 1)}
-                  disabled={mode === 'view'}
                 />
               </div>
 
@@ -381,7 +377,6 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
                   step={0.01}
                   value={finance.installment_value}
                   onChange={(e) => updateField('installment_value', parseFloat(e.target.value) || 0)}
-                  disabled={mode === 'view'}
                 />
               </div>
 
@@ -393,7 +388,6 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
                   max={finance.term_months}
                   value={finance.installments_paid}
                   onChange={(e) => updateField('installments_paid', parseInt(e.target.value) || 0)}
-                  disabled={mode === 'view'}
                 />
               </div>
 
@@ -405,7 +399,6 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
                   step={0.01}
                   value={finance.down_payment}
                   onChange={(e) => updateField('down_payment', parseFloat(e.target.value) || 0)}
-                  disabled={mode === 'view'}
                 />
               </div>
 
@@ -415,7 +408,6 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
                   type="date"
                   value={finance.start_date}
                   onChange={(e) => updateField('start_date', e.target.value)}
-                  disabled={mode === 'view'}
                 />
               </div>
 
@@ -423,7 +415,6 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
                 <Switch
                   checked={finance.direct_payment}
                   onCheckedChange={(v) => updateField('direct_payment', v)}
-                  disabled={mode === 'view'}
                 />
                 <Label className="text-sm">Pagamento Direto</Label>
               </div>
@@ -434,36 +425,33 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
               <Textarea
                 value={finance.notes}
                 onChange={(e) => updateField('notes', e.target.value)}
-                disabled={mode === 'view'}
                 rows={2}
                 placeholder="Notas adicionais..."
               />
             </div>
 
-            {mode === 'edit' && (
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Button onClick={handleSave} disabled={saving}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Salvando...' : 'Salvar'}
+            <div className="flex flex-wrap gap-2 pt-2">
+              <Button onClick={handleSave} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Salvando...' : 'Salvar'}
+              </Button>
+              {!isQuitado && (
+                <Button variant="outline" onClick={handleMarkQuitado}>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Marcar como Quitado
                 </Button>
-                {!isQuitado && (
-                  <Button variant="outline" onClick={handleMarkQuitado}>
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Marcar como Quitado
-                  </Button>
-                )}
-                <Button variant="outline" onClick={handleGenerateSnapshot} disabled={!fipeAtual}>
-                  <Camera className="h-4 w-4 mr-2" />
-                  Snapshot FIPE
+              )}
+              <Button variant="outline" onClick={handleGenerateSnapshot} disabled={!fipeAtual}>
+                <Camera className="h-4 w-4 mr-2" />
+                Snapshot FIPE
+              </Button>
+              {hasRecord && (
+                <Button variant="destructive" size="sm" onClick={handleDelete} disabled={saving}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remover
                 </Button>
-                {hasRecord && (
-                  <Button variant="destructive" size="sm" onClick={handleDelete} disabled={saving}>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Remover
-                  </Button>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
