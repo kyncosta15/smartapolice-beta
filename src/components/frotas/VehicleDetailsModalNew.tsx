@@ -752,6 +752,15 @@ export function VehicleDetailsModalNew({
                 )}
               </TabsContent>
 
+              <TabsContent value="financeiro" className="mt-0 space-y-4 md:space-y-6">
+                <VehicleFinanceTab
+                  vehicleId={veiculo.id}
+                  empresaId={veiculo.empresa_id}
+                  fipeAtual={formData.preco_fipe}
+                  mode={mode}
+                />
+              </TabsContent>
+
               <TabsContent value="sinistros" className="mt-0 space-y-4 md:space-y-6">
                 <div className="p-3 md:p-6">
                   {ticketsLoading ? (
