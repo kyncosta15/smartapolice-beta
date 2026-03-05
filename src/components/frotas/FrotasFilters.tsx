@@ -12,7 +12,9 @@ import {
   Check,
   AlertTriangle,
   Wrench,
-  ArrowUpAZ
+  ArrowUpAZ,
+  Landmark,
+  CheckCircle2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -55,8 +57,9 @@ const statusOptions = [
 
 export function FrotasFilters({ filters, onFilterChange, loading, searchLoading = false }: FrotasFiltersProps) {
   const [marcaOptions, setMarcaOptions] = useState<{ value: string; label: string }[]>([]);
-  const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0;
-  const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length;
+  const [bancoOptions, setBancoOptions] = useState<string[]>([]);
+  const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0 || !!filters.quitado || !!filters.banco;
+  const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length + (filters.quitado ? 1 : 0) + (filters.banco ? 1 : 0);
 
   // Hook para correção automática de status
   const { 
@@ -84,8 +87,25 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
         console.error('Erro ao buscar marcas:', error);
       }
     };
+
+    const fetchBancos = async () => {
+      try {
+        const { data } = await supabase
+          .from('vehicle_finance')
+          .select('bank_name')
+          .not('bank_name', 'is', null);
+        
+        if (data) {
+          const bancosUnicos = [...new Set(data.map((d: any) => d.bank_name))].filter(Boolean) as string[];
+          setBancoOptions(bancosUnicos);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar bancos:', error);
+      }
+    };
     
     fetchMarcas();
+    fetchBancos();
   }, []);
 
   const handleClearFilters = () => {
@@ -95,6 +115,8 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
       status: [],
       marcaModelo: [],
       ordenacao: 'padrao',
+      quitado: undefined,
+      banco: undefined,
     });
   };
 
@@ -275,6 +297,47 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
                 </>
               )}
               
+              <DropdownMenuSeparator />
+              
+              {/* Quitado Section */}
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                Financeiro (Quitado)
+              </DropdownMenuLabel>
+              <DropdownMenuCheckboxItem
+                checked={filters.quitado === 'sim'}
+                onCheckedChange={(checked) => onFilterChange({ quitado: checked ? 'sim' : undefined })}
+              >
+                Quitado
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filters.quitado === 'nao'}
+                onCheckedChange={(checked) => onFilterChange({ quitado: checked ? 'nao' : undefined })}
+              >
+                Não Quitado
+              </DropdownMenuCheckboxItem>
+
+              {bancoOptions.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Landmark className="h-4 w-4" />
+                    Banco
+                  </DropdownMenuLabel>
+                  <div className="max-h-32 overflow-y-auto">
+                    {bancoOptions.map((banco) => (
+                      <DropdownMenuCheckboxItem
+                        key={banco}
+                        checked={filters.banco === banco}
+                        onCheckedChange={(checked) => onFilterChange({ banco: checked ? banco : undefined })}
+                      >
+                        {banco}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </div>
+                </>
+              )}
+
               {hasActiveFilters && (
                 <>
                   <DropdownMenuSeparator />
@@ -360,6 +423,32 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
               </Badge>
             );
           })}
+
+          {filters.quitado && (
+            <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
+              <CheckCircle2 className="h-3 w-3" />
+              {filters.quitado === 'sim' ? 'Quitado' : 'Não Quitado'}
+              <button
+                onClick={() => onFilterChange({ quitado: undefined })}
+                className="ml-1 hover:bg-muted rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          {filters.banco && (
+            <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
+              <Landmark className="h-3 w-3" />
+              {filters.banco}
+              <button
+                onClick={() => onFilterChange({ banco: undefined })}
+                className="ml-1 hover:bg-muted rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
         </div>
       )}
     </div>

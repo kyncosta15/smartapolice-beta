@@ -92,6 +92,8 @@ export interface FrotaFilters {
   categoria: string[];
   status: string[];
   ordenacao: string;
+  quitado?: string;
+  banco?: string;
 }
 
 export interface FrotaKPIs {
@@ -113,6 +115,7 @@ export function useFrotasData(filters: FrotaFilters) {
   const { toast } = useToast();
   const { activeEmpresaId } = useTenant();
   const [allVeiculos, setAllVeiculos] = useState<FrotaVeiculo[]>([]);
+  const [financeMap, setFinanceMap] = useState<Record<string, { status: string; bank_name: string | null }>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
@@ -185,6 +188,20 @@ export function useFrotasData(filters: FrotaFilters) {
       if (fetchError) throw fetchError;
 
       setAllVeiculos(Array.isArray(data) ? data : []);
+
+      // Load finance data for filtering
+      if (empresaId) {
+        const { data: financeData } = await supabase
+          .from('vehicle_finance')
+          .select('vehicle_id, status, bank_name')
+          .eq('empresa_id', empresaId);
+
+        const map: Record<string, { status: string; bank_name: string | null }> = {};
+        (financeData || []).forEach((f: any) => {
+          map[f.vehicle_id] = { status: f.status, bank_name: f.bank_name };
+        });
+        setFinanceMap(map);
+      }
     } catch (err: any) {
       console.error('Erro ao buscar veículos:', err);
       setError(err.message);
@@ -248,6 +265,24 @@ export function useFrotasData(filters: FrotaFilters) {
       result = result.filter(v => filters.marcaModelo.includes(v.marca || ''));
     }
 
+    // Quitado filter
+    if (filters.quitado) {
+      result = result.filter(v => {
+        const fin = financeMap[v.id];
+        if (filters.quitado === 'sim') return fin?.status === 'QUITADO';
+        if (filters.quitado === 'nao') return !fin || fin.status !== 'QUITADO';
+        return true;
+      });
+    }
+
+    // Banco filter
+    if (filters.banco) {
+      result = result.filter(v => {
+        const fin = financeMap[v.id];
+        return fin?.bank_name?.toLowerCase().includes(filters.banco!.toLowerCase());
+      });
+    }
+
     // Sorting
     if (filters.ordenacao && filters.ordenacao !== 'padrao') {
       result = [...result].sort((a, b) => {
@@ -260,7 +295,7 @@ export function useFrotasData(filters: FrotaFilters) {
     }
 
     return result;
-  }, [allVeiculos, filters.search, filters.categoria, filters.status, filters.marcaModelo, filters.ordenacao]);
+  }, [allVeiculos, financeMap, filters.search, filters.categoria, filters.status, filters.marcaModelo, filters.quitado, filters.banco, filters.ordenacao]);
 
   // KPIs based on all vehicles (unfiltered)
   const kpis = useMemo((): FrotaKPIs => {
