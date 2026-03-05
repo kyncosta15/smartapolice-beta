@@ -12,7 +12,9 @@ import {
   Check,
   AlertTriangle,
   Wrench,
-  ArrowUpAZ
+  ArrowUpAZ,
+  Landmark,
+  CheckCircle2
 } from 'lucide-react';
 import {
   DropdownMenu,
