@@ -297,6 +297,47 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
                 </>
               )}
               
+              <DropdownMenuSeparator />
+              
+              {/* Quitado Section */}
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                Financeiro (Quitado)
+              </DropdownMenuLabel>
+              <DropdownMenuCheckboxItem
+                checked={filters.quitado === 'sim'}
+                onCheckedChange={(checked) => onFilterChange({ quitado: checked ? 'sim' : undefined })}
+              >
+                Quitado
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filters.quitado === 'nao'}
+                onCheckedChange={(checked) => onFilterChange({ quitado: checked ? 'nao' : undefined })}
+              >
+                Não Quitado
+              </DropdownMenuCheckboxItem>
+
+              {bancoOptions.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Landmark className="h-4 w-4" />
+                    Banco
+                  </DropdownMenuLabel>
+                  <div className="max-h-32 overflow-y-auto">
+                    {bancoOptions.map((banco) => (
+                      <DropdownMenuCheckboxItem
+                        key={banco}
+                        checked={filters.banco === banco}
+                        onCheckedChange={(checked) => onFilterChange({ banco: checked ? banco : undefined })}
+                      >
+                        {banco}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </div>
+                </>
+              )}
+
               {hasActiveFilters && (
                 <>
                   <DropdownMenuSeparator />
