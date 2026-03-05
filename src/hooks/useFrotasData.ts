@@ -115,6 +115,7 @@ export function useFrotasData(filters: FrotaFilters) {
   const { toast } = useToast();
   const { activeEmpresaId } = useTenant();
   const [allVeiculos, setAllVeiculos] = useState<FrotaVeiculo[]>([]);
+  const [financeMap, setFinanceMap] = useState<Record<string, { status: string; bank_name: string | null }>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
