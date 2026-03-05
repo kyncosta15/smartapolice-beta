@@ -265,6 +265,24 @@ export function useFrotasData(filters: FrotaFilters) {
       result = result.filter(v => filters.marcaModelo.includes(v.marca || ''));
     }
 
+    // Quitado filter
+    if (filters.quitado) {
+      result = result.filter(v => {
+        const fin = financeMap[v.id];
+        if (filters.quitado === 'sim') return fin?.status === 'QUITADO';
+        if (filters.quitado === 'nao') return !fin || fin.status !== 'QUITADO';
+        return true;
+      });
+    }
+
+    // Banco filter
+    if (filters.banco) {
+      result = result.filter(v => {
+        const fin = financeMap[v.id];
+        return fin?.bank_name?.toLowerCase().includes(filters.banco!.toLowerCase());
+      });
+    }
+
     // Sorting
     if (filters.ordenacao && filters.ordenacao !== 'padrao') {
       result = [...result].sort((a, b) => {
@@ -277,7 +295,7 @@ export function useFrotasData(filters: FrotaFilters) {
     }
 
     return result;
-  }, [allVeiculos, filters.search, filters.categoria, filters.status, filters.marcaModelo, filters.ordenacao]);
+  }, [allVeiculos, financeMap, filters.search, filters.categoria, filters.status, filters.marcaModelo, filters.quitado, filters.banco, filters.ordenacao]);
 
   // KPIs based on all vehicles (unfiltered)
   const kpis = useMemo((): FrotaKPIs => {
