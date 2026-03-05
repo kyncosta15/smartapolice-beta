@@ -92,6 +92,8 @@ export interface FrotaFilters {
   categoria: string[];
   status: string[];
   ordenacao: string;
+  quitado?: string;
+  banco?: string;
 }
 
 export interface FrotaKPIs {

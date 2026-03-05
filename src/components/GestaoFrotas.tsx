@@ -50,6 +50,8 @@ export interface FrotaFilters {
   categoria: string[];
   status: string[];
   ordenacao: string;
+  quitado?: string; // 'sim' | 'nao' | undefined
+  banco?: string;
 }
 
 export function GestaoFrotas() {
