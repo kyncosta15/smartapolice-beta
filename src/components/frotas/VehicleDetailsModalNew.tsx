@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { fipeService } from '@/services/fipeService';
 import { VehicleDocumentsSection } from './VehicleDocumentsSection';
+import { VehicleFinanceTab } from './VehicleFinanceTab';
 import { Ticket } from '@/types/tickets';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
