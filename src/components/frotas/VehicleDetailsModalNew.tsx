@@ -286,7 +286,7 @@ export function VehicleDetailsModalNew({
         <div className="flex-1 overflow-hidden flex flex-col">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             <div className="shrink-0 px-2 md:px-4 py-2 overflow-x-auto">
-              <TabsList className="flex md:grid md:grid-cols-7 gap-1 h-auto p-1 bg-gray-100 w-full md:w-full min-w-max md:min-w-0">
+              <TabsList className="flex md:grid md:grid-cols-8 gap-1 h-auto p-1 bg-gray-100 w-full md:w-full min-w-max md:min-w-0">
                 <TabsTrigger 
                   value="veiculo" 
                   className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
@@ -328,6 +328,13 @@ export function VehicleDetailsModalNew({
                 >
                   <DollarSign className="h-3 w-3 mr-1.5" />
                   <span>Valores</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="financeiro" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
+                >
+                  <Landmark className="h-3 w-3 mr-1.5" />
+                  <span>Financeiro</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="sinistros" 
