@@ -423,6 +423,32 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
               </Badge>
             );
           })}
+
+          {filters.quitado && (
+            <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
+              <CheckCircle2 className="h-3 w-3" />
+              {filters.quitado === 'sim' ? 'Quitado' : 'Não Quitado'}
+              <button
+                onClick={() => onFilterChange({ quitado: undefined })}
+                className="ml-1 hover:bg-muted rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          {filters.banco && (
+            <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
+              <Landmark className="h-3 w-3" />
+              {filters.banco}
+              <button
+                onClick={() => onFilterChange({ banco: undefined })}
+                className="ml-1 hover:bg-muted rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
         </div>
       )}
     </div>
