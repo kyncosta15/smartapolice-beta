@@ -241,15 +241,13 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual, mode = 'edi
       <div className="flex flex-col items-center justify-center py-16 gap-4">
         <Landmark className="h-12 w-12 text-muted-foreground" />
         <p className="text-muted-foreground text-sm">Sem dados financeiros registrados</p>
-        {mode === 'edit' && (
-          <Button onClick={() => {
-            setFinance(emptyFinance(vehicleId, empresaId));
-            setShowForm(true);
-          }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Financeiro
-          </Button>
-        )}
+        <Button onClick={() => {
+          setFinance(emptyFinance(vehicleId, empresaId));
+          setShowForm(true);
+        }}>
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Financeiro
+        </Button>
       </div>
     );
   }
