@@ -87,8 +87,25 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
         console.error('Erro ao buscar marcas:', error);
       }
     };
+
+    const fetchBancos = async () => {
+      try {
+        const { data } = await supabase
+          .from('vehicle_finance')
+          .select('bank_name')
+          .not('bank_name', 'is', null);
+        
+        if (data) {
+          const bancosUnicos = [...new Set(data.map((d: any) => d.bank_name))].filter(Boolean) as string[];
+          setBancoOptions(bancosUnicos);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar bancos:', error);
+      }
+    };
     
     fetchMarcas();
+    fetchBancos();
   }, []);
 
   const handleClearFilters = () => {
