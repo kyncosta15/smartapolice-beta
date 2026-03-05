@@ -25,7 +25,8 @@ import {
   Edit,
   Wrench,
   Clock,
-  ExternalLink
+  ExternalLink,
+  ShieldAlert
 } from 'lucide-react';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { toast } from 'sonner';
@@ -33,6 +34,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { fipeService } from '@/services/fipeService';
 import { VehicleDocumentsSection } from './VehicleDocumentsSection';
 import { VehicleFinanceTab } from './VehicleFinanceTab';
+import { VehicleTheftSection } from './VehicleTheftSection';
 import { Ticket } from '@/types/tickets';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -286,7 +288,7 @@ export function VehicleDetailsModalNew({
         <div className="flex-1 overflow-hidden flex flex-col">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             <div className="shrink-0 px-2 md:px-4 py-2 overflow-x-auto">
-              <TabsList className="flex md:grid md:grid-cols-8 gap-1 h-auto p-1 bg-gray-100 w-full md:w-full min-w-max md:min-w-0">
+              <TabsList className="flex md:grid md:grid-cols-9 gap-1 h-auto p-1 bg-gray-100 w-full md:w-full min-w-max md:min-w-0">
                 <TabsTrigger 
                   value="veiculo" 
                   className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
@@ -342,6 +344,13 @@ export function VehicleDetailsModalNew({
                 >
                   <AlertTriangle className="h-3 w-3 mr-1.5" />
                   <span>Sinistros</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="roubo" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-red-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
+                >
+                  <ShieldAlert className="h-3 w-3 mr-1.5" />
+                  <span>Roubo</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -894,6 +903,17 @@ export function VehicleDetailsModalNew({
                     </div>
                   )}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="roubo" className="mt-0 space-y-4 md:space-y-6">
+                <VehicleTheftSection
+                  vehicleId={veiculo.id}
+                  empresaId={veiculo.empresa_id}
+                  isStolen={(veiculo as any).is_stolen_current || false}
+                  stolenDate={(veiculo as any).stolen_current_date || null}
+                  mode={mode}
+                  onUpdate={() => window.dispatchEvent(new Event('frota-data-updated'))}
+                />
               </TabsContent>
             </div>
           </Tabs>

@@ -38,6 +38,7 @@ import { AssistenciaDashboard } from './frotas/AssistenciaDashboard';
 import { FleetRequestsList } from './fleet-requests/FleetRequestsList';
 import { PublicLinkGenerator } from './fleet-requests/PublicLinkGenerator';
 import { FleetTemplateDownload } from './frotas/FleetTemplateDownload';
+import { TheftRiskDashboard } from './frotas/TheftRiskDashboard';
 
 import { useFrotasData } from '@/hooks/useFrotasData';
 import { useToast } from '@/hooks/use-toast';
@@ -218,6 +219,13 @@ export function GestaoFrotas() {
                     <span>Upload</span>
                   </TabsTrigger>
                   <TabsTrigger 
+                    value="risco" 
+                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
+                  >
+                    <Shield className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span>Risco e Roubos</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
                     value="solicitacoes" 
                     className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
                   >
@@ -287,6 +295,14 @@ export function GestaoFrotas() {
                 <FleetTemplateDownload variant="secondary" />
               </div>
               <FrotasUpload onSuccess={refetch} />
+            </TabsContent>
+
+            <TabsContent value="risco" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
+              <TheftRiskDashboard 
+                veiculos={veiculos} 
+                allVeiculos={allVeiculos} 
+                loading={loading} 
+              />
             </TabsContent>
 
             <TabsContent value="solicitacoes" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
