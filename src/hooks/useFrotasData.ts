@@ -188,7 +188,20 @@ export function useFrotasData(filters: FrotaFilters) {
       if (fetchError) throw fetchError;
 
       setAllVeiculos(Array.isArray(data) ? data : []);
-    } catch (err: any) {
+
+      // Load finance data for filtering
+      if (empresaId) {
+        const { data: financeData } = await supabase
+          .from('vehicle_finance')
+          .select('vehicle_id, status, bank_name')
+          .eq('empresa_id', empresaId);
+
+        const map: Record<string, { status: string; bank_name: string | null }> = {};
+        (financeData || []).forEach((f: any) => {
+          map[f.vehicle_id] = { status: f.status, bank_name: f.bank_name };
+        });
+        setFinanceMap(map);
+      }
       console.error('Erro ao buscar veículos:', err);
       setError(err.message);
       setAllVeiculos([]);
