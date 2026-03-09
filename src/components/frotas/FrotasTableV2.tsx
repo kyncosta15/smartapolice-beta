@@ -19,6 +19,7 @@ import { VehicleDetailsModalV2 } from './VehicleDetailsModalV2'
 import { VehicleListMobile } from './VehicleListMobile'
 import { FrotasBulkActions } from './FrotasBulkActions'
 import { VehicleStatusBadge } from './VehicleStatusBadge'
+import { VehicleReviewIndicator } from './VehicleReviewIndicator'
 
 interface FrotasTableV2Props {
   veiculos: FrotaVeiculo[]
