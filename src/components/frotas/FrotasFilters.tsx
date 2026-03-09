@@ -116,6 +116,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
       marcaModelo: [],
       ordenacao: 'padrao',
       quitado: undefined,
+      revisao: undefined,
       banco: undefined,
     });
   };
