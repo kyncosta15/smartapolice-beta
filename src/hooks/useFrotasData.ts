@@ -96,6 +96,7 @@ export interface FrotaFilters {
   ordenacao: string;
   quitado?: string;
   banco?: string;
+  revisao?: string;
 }
 
 export interface FrotaKPIs {

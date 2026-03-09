@@ -53,6 +53,7 @@ export interface FrotaFilters {
   ordenacao: string;
   quitado?: string; // 'sim' | 'nao' | undefined
   banco?: string;
+  revisao?: string; // 'com_revisao' | 'sem_revisao' | undefined
 }
 
 export function GestaoFrotas() {

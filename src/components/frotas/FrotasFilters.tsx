@@ -470,6 +470,19 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
               </button>
             </Badge>
           )}
+
+          {filters.revisao && (
+            <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
+              <Wrench className="h-3 w-3" />
+              {filters.revisao === 'com_revisao' ? 'Com Revisão' : 'Sem Revisão'}
+              <button
+                onClick={() => onFilterChange({ revisao: undefined })}
+                className="ml-1 hover:bg-muted rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
         </div>
       )}
     </div>
