@@ -27,6 +27,7 @@ const tipoLabels: Record<string, string> = {
   troca_pneus: 'Troca de Pneus',
   troca_freios: 'Troca de Freios',
   troca_filtros: 'Troca de Filtros',
+  troca_bateria: 'Troca de Bateria',
   outra: 'Outra',
 };
 
