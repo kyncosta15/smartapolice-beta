@@ -244,7 +244,10 @@ export function FrotasTableV2({
                                 {veiculo.ano_modelo}
                               </div>
                             )}
-                            {getCategoriaBadge(veiculo.categoria)}
+                            <div className="flex items-center gap-1.5">
+                              {getCategoriaBadge(veiculo.categoria)}
+                              <VehicleReviewIndicator vehicleId={veiculo.id} />
+                            </div>
                           </div>
                         </TableCell>
                         

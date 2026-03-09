@@ -459,7 +459,10 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                                 {veiculo.ano_modelo}
                               </div>
                             )}
-                            {getCategoriaBadge(veiculo.categoria)}
+                            <div className="flex items-center gap-1.5">
+                              {getCategoriaBadge(veiculo.categoria)}
+                              <VehicleReviewIndicator vehicleId={veiculo.id} />
+                            </div>
                           </div>
                         </TableCell>
                         
