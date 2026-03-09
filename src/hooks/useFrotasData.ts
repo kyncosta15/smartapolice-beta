@@ -96,6 +96,7 @@ export interface FrotaFilters {
   ordenacao: string;
   quitado?: string;
   banco?: string;
+  revisao?: string;
 }
 
 export interface FrotaKPIs {
@@ -118,6 +119,7 @@ export function useFrotasData(filters: FrotaFilters) {
   const { activeEmpresaId } = useTenant();
   const [allVeiculos, setAllVeiculos] = useState<FrotaVeiculo[]>([]);
   const [financeMap, setFinanceMap] = useState<Record<string, { status: string; bank_name: string | null }>>({});
+  const [reviewedVehicleIds, setReviewedVehicleIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
@@ -193,16 +195,26 @@ export function useFrotasData(filters: FrotaFilters) {
 
       // Load finance data for filtering
       if (empresaId) {
-        const { data: financeData } = await supabase
-          .from('vehicle_finance')
-          .select('vehicle_id, status, bank_name')
-          .eq('empresa_id', empresaId);
+        const [financeResult, reviewResult] = await Promise.all([
+          supabase
+            .from('vehicle_finance')
+            .select('vehicle_id, status, bank_name')
+            .eq('empresa_id', empresaId),
+          supabase
+            .from('vehicle_reviews')
+            .select('vehicle_id')
+            .eq('empresa_id', empresaId)
+            .eq('realizada', true)
+        ]);
 
         const map: Record<string, { status: string; bank_name: string | null }> = {};
-        (financeData || []).forEach((f: any) => {
+        (financeResult.data || []).forEach((f: any) => {
           map[f.vehicle_id] = { status: f.status, bank_name: f.bank_name };
         });
         setFinanceMap(map);
+
+        const reviewIds = new Set<string>((reviewResult.data || []).map((r: any) => r.vehicle_id));
+        setReviewedVehicleIds(reviewIds);
       }
     } catch (err: any) {
       console.error('Erro ao buscar veículos:', err);
@@ -285,6 +297,14 @@ export function useFrotasData(filters: FrotaFilters) {
       });
     }
 
+    // Revisão filter
+    if (filters.revisao) {
+      result = result.filter(v => {
+        const hasReview = reviewedVehicleIds.has(v.id);
+        return filters.revisao === 'com_revisao' ? hasReview : !hasReview;
+      });
+    }
+
     // Sorting
     if (filters.ordenacao && filters.ordenacao !== 'padrao') {
       result = [...result].sort((a, b) => {
@@ -297,7 +317,7 @@ export function useFrotasData(filters: FrotaFilters) {
     }
 
     return result;
-  }, [allVeiculos, financeMap, filters.search, filters.categoria, filters.status, filters.marcaModelo, filters.quitado, filters.banco, filters.ordenacao]);
+  }, [allVeiculos, financeMap, reviewedVehicleIds, filters.search, filters.categoria, filters.status, filters.marcaModelo, filters.quitado, filters.banco, filters.revisao, filters.ordenacao]);
 
   // KPIs based on all vehicles (unfiltered)
   const kpis = useMemo((): FrotaKPIs => {

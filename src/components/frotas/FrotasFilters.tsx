@@ -58,8 +58,8 @@ const statusOptions = [
 export function FrotasFilters({ filters, onFilterChange, loading, searchLoading = false }: FrotasFiltersProps) {
   const [marcaOptions, setMarcaOptions] = useState<{ value: string; label: string }[]>([]);
   const [bancoOptions, setBancoOptions] = useState<string[]>([]);
-  const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0 || !!filters.quitado || !!filters.banco;
-  const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length + (filters.quitado ? 1 : 0) + (filters.banco ? 1 : 0);
+  const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0 || !!filters.quitado || !!filters.banco || !!filters.revisao;
+  const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length + (filters.quitado ? 1 : 0) + (filters.banco ? 1 : 0) + (filters.revisao ? 1 : 0);
 
   // Hook para correção automática de status
   const { 
@@ -116,6 +116,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
       marcaModelo: [],
       ordenacao: 'padrao',
       quitado: undefined,
+      revisao: undefined,
       banco: undefined,
     });
   };
@@ -338,6 +339,26 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
                 </>
               )}
 
+              <DropdownMenuSeparator />
+
+              {/* Revisão Section */}
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <Wrench className="h-4 w-4" />
+                Revisão
+              </DropdownMenuLabel>
+              <DropdownMenuCheckboxItem
+                checked={filters.revisao === 'com_revisao'}
+                onCheckedChange={(checked) => onFilterChange({ revisao: checked ? 'com_revisao' : undefined })}
+              >
+                Com Revisão
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filters.revisao === 'sem_revisao'}
+                onCheckedChange={(checked) => onFilterChange({ revisao: checked ? 'sem_revisao' : undefined })}
+              >
+                Sem Revisão
+              </DropdownMenuCheckboxItem>
+
               {hasActiveFilters && (
                 <>
                   <DropdownMenuSeparator />
@@ -443,6 +464,19 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
               {filters.banco}
               <button
                 onClick={() => onFilterChange({ banco: undefined })}
+                className="ml-1 hover:bg-muted rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          {filters.revisao && (
+            <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
+              <Wrench className="h-3 w-3" />
+              {filters.revisao === 'com_revisao' ? 'Com Revisão' : 'Sem Revisão'}
+              <button
+                onClick={() => onFilterChange({ revisao: undefined })}
                 className="ml-1 hover:bg-muted rounded-full p-0.5"
               >
                 <X className="h-3 w-3" />
