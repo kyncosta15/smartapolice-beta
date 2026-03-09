@@ -415,6 +415,15 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label className="text-sm">Data Final (Quitação)</Label>
+                <Input
+                  type="date"
+                  value={finance.end_date}
+                  onChange={(e) => updateField('end_date', e.target.value)}
+                />
+              </div>
+
               <div className="flex items-center gap-3 pt-6">
                 <Switch
                   checked={finance.direct_payment}
