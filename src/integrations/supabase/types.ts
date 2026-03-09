@@ -3263,6 +3263,7 @@ export type Database = {
           direct_payment: boolean
           down_payment: number | null
           empresa_id: string
+          end_date: string | null
           id: string
           installment_value: number
           installments_paid: number
@@ -3280,6 +3281,7 @@ export type Database = {
           direct_payment?: boolean
           down_payment?: number | null
           empresa_id: string
+          end_date?: string | null
           id?: string
           installment_value?: number
           installments_paid?: number
@@ -3297,6 +3299,7 @@ export type Database = {
           direct_payment?: boolean
           down_payment?: number | null
           empresa_id?: string
+          end_date?: string | null
           id?: string
           installment_value?: number
           installments_paid?: number

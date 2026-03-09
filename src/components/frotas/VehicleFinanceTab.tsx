@@ -30,6 +30,7 @@ interface VehicleFinance {
   direct_payment: boolean;
   status: string;
   start_date: string;
+  end_date: string;
   term_months: number;
   installment_value: number;
   installments_paid: number;
@@ -59,6 +60,7 @@ const emptyFinance = (vehicleId: string, empresaId: string): VehicleFinance => (
   direct_payment: false,
   status: 'EM_ANDAMENTO',
   start_date: '',
+  end_date: '',
   term_months: 12,
   installment_value: 0,
   installments_paid: 0,
@@ -107,6 +109,7 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
           installment_value: Number(data.installment_value),
           installments_paid: data.installments_paid,
           down_payment: Number(data.down_payment || 0),
+          end_date: data.end_date || '',
           notes: data.notes || '',
         });
         setHasRecord(true);
@@ -270,7 +273,7 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
               {isQuitado ? 'Quitado' : 'Em andamento'}
             </Badge>
             <p className="text-xs text-muted-foreground mt-1">
-              {finance.type === 'CONSORCIO' ? 'Consórcio' : 'Financiamento'} • {finance.bank_name || 'N/A'}
+              {finance.type === 'CONSORCIO' ? 'Consórcio' : finance.type === 'A_VISTA' ? 'À Vista' : 'Financiamento'} • {finance.bank_name || 'N/A'}
             </p>
           </Card>
 
@@ -332,6 +335,7 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
                   <SelectContent>
                     <SelectItem value="FINANCIAMENTO">Financiamento</SelectItem>
                     <SelectItem value="CONSORCIO">Consórcio</SelectItem>
+                    <SelectItem value="A_VISTA">À Vista</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -408,6 +412,15 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
                   type="date"
                   value={finance.start_date}
                   onChange={(e) => updateField('start_date', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm">Data Final (Quitação)</Label>
+                <Input
+                  type="date"
+                  value={finance.end_date}
+                  onChange={(e) => updateField('end_date', e.target.value)}
                 />
               </div>
 

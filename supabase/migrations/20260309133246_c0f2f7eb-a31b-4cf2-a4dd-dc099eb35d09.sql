@@ -1,0 +1,1 @@
+ALTER TABLE public.vehicle_finance ADD COLUMN IF NOT EXISTS end_date date;
