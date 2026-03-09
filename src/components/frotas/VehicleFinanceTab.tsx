@@ -109,6 +109,7 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
           installment_value: Number(data.installment_value),
           installments_paid: data.installments_paid,
           down_payment: Number(data.down_payment || 0),
+          end_date: data.end_date || '',
           notes: data.notes || '',
         });
         setHasRecord(true);
