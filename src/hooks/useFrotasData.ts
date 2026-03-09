@@ -297,6 +297,14 @@ export function useFrotasData(filters: FrotaFilters) {
       });
     }
 
+    // Revisão filter
+    if (filters.revisao) {
+      result = result.filter(v => {
+        const hasReview = reviewedVehicleIds.has(v.id);
+        return filters.revisao === 'com_revisao' ? hasReview : !hasReview;
+      });
+    }
+
     // Sorting
     if (filters.ordenacao && filters.ordenacao !== 'padrao') {
       result = [...result].sort((a, b) => {
