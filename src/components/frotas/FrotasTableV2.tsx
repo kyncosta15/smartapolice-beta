@@ -19,6 +19,7 @@ import { VehicleDetailsModalV2 } from './VehicleDetailsModalV2'
 import { VehicleListMobile } from './VehicleListMobile'
 import { FrotasBulkActions } from './FrotasBulkActions'
 import { VehicleStatusBadge } from './VehicleStatusBadge'
+import { VehicleReviewIndicator } from './VehicleReviewIndicator'
 
 interface FrotasTableV2Props {
   veiculos: FrotaVeiculo[]
@@ -243,7 +244,10 @@ export function FrotasTableV2({
                                 {veiculo.ano_modelo}
                               </div>
                             )}
-                            {getCategoriaBadge(veiculo.categoria)}
+                            <div className="flex items-center gap-1.5">
+                              {getCategoriaBadge(veiculo.categoria)}
+                              <VehicleReviewIndicator vehicleId={veiculo.id} />
+                            </div>
                           </div>
                         </TableCell>
                         

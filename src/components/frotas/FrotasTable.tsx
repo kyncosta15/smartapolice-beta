@@ -38,6 +38,7 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { VehicleListMobile } from './VehicleListMobile';
+import { VehicleReviewIndicator } from './VehicleReviewIndicator';
 import { VehicleDetailsModalNew } from './VehicleDetailsModalNew';
 import { FrotasBulkActions } from './FrotasBulkActions';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -458,7 +459,10 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                                 {veiculo.ano_modelo}
                               </div>
                             )}
-                            {getCategoriaBadge(veiculo.categoria)}
+                            <div className="flex items-center gap-1.5">
+                              {getCategoriaBadge(veiculo.categoria)}
+                              <VehicleReviewIndicator vehicleId={veiculo.id} />
+                            </div>
                           </div>
                         </TableCell>
                         
