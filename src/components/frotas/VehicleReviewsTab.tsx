@@ -271,7 +271,8 @@ export default function VehicleReviewsTab({ vehicleId, empresaId }: VehicleRevie
                      r.tipo === 'troca_oleo' ? 'Troca de Óleo' :
                      r.tipo === 'troca_pneus' ? 'Troca de Pneus' :
                      r.tipo === 'troca_freios' ? 'Troca de Freios' :
-                     r.tipo === 'troca_filtros' ? 'Troca de Filtros' : 'Outra'}
+                     r.tipo === 'troca_filtros' ? 'Troca de Filtros' :
+                     r.tipo === 'troca_bateria' ? 'Troca de Bateria' : 'Outra'}
                   </p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <CalendarDays className="h-3 w-3" />
