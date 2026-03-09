@@ -273,7 +273,7 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
               {isQuitado ? 'Quitado' : 'Em andamento'}
             </Badge>
             <p className="text-xs text-muted-foreground mt-1">
-              {finance.type === 'CONSORCIO' ? 'Consórcio' : 'Financiamento'} • {finance.bank_name || 'N/A'}
+              {finance.type === 'CONSORCIO' ? 'Consórcio' : finance.type === 'A_VISTA' ? 'À Vista' : 'Financiamento'} • {finance.bank_name || 'N/A'}
             </p>
           </Card>
 
