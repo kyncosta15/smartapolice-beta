@@ -177,6 +177,7 @@ export default function VehicleReviewsTab({ vehicleId, empresaId }: VehicleRevie
                 <option value="troca_pneus">Troca de Pneus</option>
                 <option value="troca_freios">Troca de Freios</option>
                 <option value="troca_filtros">Troca de Filtros</option>
+                <option value="troca_bateria">Troca de Bateria</option>
                 <option value="outra">Outra</option>
               </select>
             </div>
