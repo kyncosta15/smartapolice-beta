@@ -339,6 +339,26 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
                 </>
               )}
 
+              <DropdownMenuSeparator />
+
+              {/* Revisão Section */}
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <Wrench className="h-4 w-4" />
+                Revisão
+              </DropdownMenuLabel>
+              <DropdownMenuCheckboxItem
+                checked={filters.revisao === 'com_revisao'}
+                onCheckedChange={(checked) => onFilterChange({ revisao: checked ? 'com_revisao' : undefined })}
+              >
+                Com Revisão
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filters.revisao === 'sem_revisao'}
+                onCheckedChange={(checked) => onFilterChange({ revisao: checked ? 'sem_revisao' : undefined })}
+              >
+                Sem Revisão
+              </DropdownMenuCheckboxItem>
+
               {hasActiveFilters && (
                 <>
                   <DropdownMenuSeparator />
