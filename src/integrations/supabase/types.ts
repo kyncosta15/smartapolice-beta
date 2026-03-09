@@ -3353,6 +3353,63 @@ export type Database = {
           },
         ]
       }
+      vehicle_reviews: {
+        Row: {
+          created_at: string
+          data_revisao: string
+          empresa_id: string
+          id: string
+          km_atual: number | null
+          observacoes: string | null
+          realizada: boolean
+          tipo: string
+          updated_at: string
+          valor: number | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_revisao: string
+          empresa_id: string
+          id?: string
+          km_atual?: number | null
+          observacoes?: string | null
+          realizada?: boolean
+          tipo?: string
+          updated_at?: string
+          valor?: number | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          data_revisao?: string
+          empresa_id?: string
+          id?: string
+          km_atual?: number | null
+          observacoes?: string | null
+          realizada?: boolean
+          tipo?: string
+          updated_at?: string
+          valor?: number | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_reviews_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_reviews_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_theft_events: {
         Row: {
           created_at: string
