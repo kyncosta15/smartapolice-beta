@@ -673,6 +673,11 @@ export function VehicleDetailsModalNew({
                     </div>
                   </div>
                 </Card>
+
+                <VehicleReviewsTab
+                  vehicleId={veiculo.id}
+                  empresaId={veiculo.empresa_id}
+                />
               </TabsContent>
 
               <TabsContent value="valores" className="mt-0 space-y-4 md:space-y-6">
