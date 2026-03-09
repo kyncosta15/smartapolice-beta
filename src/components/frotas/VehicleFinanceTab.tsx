@@ -60,6 +60,7 @@ const emptyFinance = (vehicleId: string, empresaId: string): VehicleFinance => (
   direct_payment: false,
   status: 'EM_ANDAMENTO',
   start_date: '',
+  end_date: '',
   term_months: 12,
   installment_value: 0,
   installments_paid: 0,
