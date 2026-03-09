@@ -30,6 +30,7 @@ interface VehicleFinance {
   direct_payment: boolean;
   status: string;
   start_date: string;
+  end_date: string;
   term_months: number;
   installment_value: number;
   installments_paid: number;
