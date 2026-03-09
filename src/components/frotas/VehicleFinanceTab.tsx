@@ -335,6 +335,7 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
                   <SelectContent>
                     <SelectItem value="FINANCIAMENTO">Financiamento</SelectItem>
                     <SelectItem value="CONSORCIO">Consórcio</SelectItem>
+                    <SelectItem value="A_VISTA">À Vista</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
