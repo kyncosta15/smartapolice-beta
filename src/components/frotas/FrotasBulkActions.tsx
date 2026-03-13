@@ -377,6 +377,7 @@ export function FrotasBulkActions({
   };
 
   return (
+    <>
     <Card className="border-2 border-blue-200 bg-blue-50">
       <CardContent className="p-3 md:p-4">
         {/* Mobile-first layout */}
