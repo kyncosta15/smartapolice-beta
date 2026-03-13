@@ -55,7 +55,7 @@ export function FrotasBulkActions({
   const { createRequest } = useInsuranceApprovals();
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  
+  const [showChoiceDialog, setShowChoiceDialog] = useState(false);
   const isAdmin = profile?.is_admin === true;
   
   // Filtros para seleção múltipla (removido filtro por categoria)
