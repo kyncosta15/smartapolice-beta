@@ -21,6 +21,7 @@ import {
   Search,
   Loader2
 } from 'lucide-react';
+import { StatusChangeChoiceDialog } from './StatusChangeChoiceDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,7 +55,7 @@ export function FrotasBulkActions({
   const { createRequest } = useInsuranceApprovals();
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  
+  const [showChoiceDialog, setShowChoiceDialog] = useState(false);
   const isAdmin = profile?.is_admin === true;
   
   // Filtros para seleção múltipla (removido filtro por categoria)
@@ -139,44 +140,83 @@ export function FrotasBulkActions({
       return;
     }
 
-    // Se não é admin e está tentando marcar como "segurado", criar solicitação de aprovação
+    // Se não é admin e está tentando marcar como "segurado", mostrar diálogo de escolha
     if (!isAdmin && bulkStatus === 'segurado') {
-      setLoading(true);
-      try {
-        let successCount = 0;
-        
-        for (const vehicle of selectedVehicles) {
-          const success = await createRequest({
-            veiculo_id: vehicle.id,
-            empresa_id: vehicle.empresa_id,
-            current_status: vehicle.status_seguro,
-            requested_status: 'segurado',
-            motivo: 'Solicitação de alteração em lote para status Segurado',
-            silent: true,
-          });
-          
-          if (success) successCount++;
-        }
-        
-        if (successCount > 0) {
-          toast.success(
-            `${successCount} solicitaç${successCount === 1 ? 'ão enviada' : 'ões enviadas'} para aprovação do administrador`,
-            { duration: 5000 }
-          );
-        }
-        
-        onClearSelection();
-        setBulkStatus('');
-      } catch (error) {
-        console.error('Erro ao criar solicitações:', error);
-        toast.error('Erro ao criar solicitações de aprovação');
-      } finally {
-        setLoading(false);
-      }
+      setShowChoiceDialog(true);
       return;
     }
 
-    // Admin pode alterar diretamente
+    // Admin pode alterar diretamente (or non-segurado statuses)
+    await executeBulkStatusUpdate();
+  };
+
+  const handleWaitApproval = async () => {
+    setLoading(true);
+    try {
+      let successCount = 0;
+      
+      for (const vehicle of selectedVehicles) {
+        const success = await createRequest({
+          veiculo_id: vehicle.id,
+          empresa_id: vehicle.empresa_id,
+          current_status: vehicle.status_seguro,
+          requested_status: 'segurado',
+          motivo: 'Solicitação de alteração em lote para status Segurado',
+          silent: true,
+        });
+        
+        if (success) successCount++;
+      }
+      
+      if (successCount > 0) {
+        toast.success(
+          `${successCount} solicitaç${successCount === 1 ? 'ão enviada' : 'ões enviadas'} para aprovação do administrador`,
+          { duration: 5000 }
+        );
+      }
+      
+      onClearSelection();
+      setBulkStatus('');
+    } catch (error) {
+      console.error('Erro ao criar solicitações:', error);
+      toast.error('Erro ao criar solicitações de aprovação');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCodeApproval = async (_code: string): Promise<boolean> => {
+    // Code validated in dialog, do direct update
+    setLoading(true);
+    try {
+      const vehicleIds = selectedVehicles.map(v => v.id);
+      
+      const { error } = await supabase
+        .from('frota_veiculos')
+        .update({ 
+          status_seguro: 'segurado',
+          updated_at: new Date().toISOString()
+        })
+        .in('id', vehicleIds);
+
+      if (error) throw error;
+
+      toast.success(`Status atualizado para ${selectedVehicles.length} veículo(s)`);
+      onClearSelection();
+      onUpdateComplete();
+      setBulkStatus('');
+      window.dispatchEvent(new CustomEvent('frota-data-updated'));
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error('Erro ao atualizar o status dos veículos');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const executeBulkStatusUpdate = async () => {
     setLoading(true);
     try {
       const vehicleIds = selectedVehicles.map(v => v.id);
@@ -337,6 +377,7 @@ export function FrotasBulkActions({
   };
 
   return (
+    <>
     <Card className="border-2 border-blue-200 bg-blue-50">
       <CardContent className="p-3 md:p-4">
         {/* Mobile-first layout */}
@@ -655,5 +696,14 @@ export function FrotasBulkActions({
         </div>
       </CardContent>
     </Card>
+
+    <StatusChangeChoiceDialog
+      open={showChoiceDialog}
+      onOpenChange={setShowChoiceDialog}
+      vehicleCount={selectedVehicles.length}
+      onWaitApproval={handleWaitApproval}
+      onCodeApproval={handleCodeApproval}
+    />
+    </>
   );
 }
