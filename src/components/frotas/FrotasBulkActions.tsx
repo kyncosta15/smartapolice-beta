@@ -695,5 +695,14 @@ export function FrotasBulkActions({
         </div>
       </CardContent>
     </Card>
+
+    <StatusChangeChoiceDialog
+      open={showChoiceDialog}
+      onOpenChange={setShowChoiceDialog}
+      vehicleCount={selectedVehicles.length}
+      onWaitApproval={handleWaitApproval}
+      onCodeApproval={handleCodeApproval}
+    />
+    </>
   );
 }
