@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, XCircle, Clock, Building2, Car } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Building2, Car, Loader2 } from 'lucide-react';
 import { useInsuranceApprovals, InsuranceApprovalRequest } from '@/hooks/useInsuranceApprovals';
 import { DecisionModal } from './DecisionModal';
 import { format } from 'date-fns';
@@ -13,6 +14,8 @@ export function AdminApprovalsPage() {
   const { requests, loading, approveRequest, rejectRequest } = useInsuranceApprovals();
   const [selectedRequest, setSelectedRequest] = useState<InsuranceApprovalRequest | null>(null);
   const [decisionType, setDecisionType] = useState<'approve' | 'reject'>('approve');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const pendingRequests = requests.filter((r) => r.status === 'pending');
   const decidedRequests = requests.filter((r) => r.status !== 'pending');
@@ -26,105 +29,54 @@ export function AdminApprovalsPage() {
     setSelectedRequest(null);
   };
 
-  const renderRequestCard = (request: InsuranceApprovalRequest) => {
-    const statusColors = {
-      pending: 'bg-yellow-500',
-      approved: 'bg-green-500',
-      rejected: 'bg-red-500',
-    };
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
-    return (
-      <Card key={request.id} className="mb-4">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Car className="h-5 w-5" />
-                {request.frota_veiculos?.placa || 'Sem placa'}
-              </CardTitle>
-              <CardDescription>
-                {request.frota_veiculos?.marca} {request.frota_veiculos?.modelo}
-              </CardDescription>
-            </div>
-            <Badge className={statusColors[request.status]}>
-              {request.status === 'pending' && 'Pendente'}
-              {request.status === 'approved' && 'Aprovada'}
-              {request.status === 'rejected' && 'Rejeitada'}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Empresa</p>
-              <p className="font-medium flex items-center gap-1">
-                <Building2 className="h-4 w-4" />
-                {request.empresas?.nome || 'N/A'}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Solicitado por</p>
-              <p className="font-medium">{request.profiles?.display_name || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Status Atual</p>
-              <p className="font-medium">{request.current_status}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Status Solicitado</p>
-              <p className="font-medium text-primary">{request.requested_status}</p>
-            </div>
-          </div>
+  const toggleSelectAll = (items: InsuranceApprovalRequest[]) => {
+    const allSelected = items.every(r => selectedIds.has(r.id));
+    if (allSelected) {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        items.forEach(r => next.delete(r.id));
+        return next;
+      });
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        items.forEach(r => next.add(r.id));
+        return next;
+      });
+    }
+  };
 
-          {request.motivo && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Motivo</p>
-              <p className="text-sm bg-muted p-3 rounded-md">{request.motivo}</p>
-            </div>
-          )}
+  const handleBulkAction = async (action: 'approve' | 'reject') => {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    try {
+      const promises = Array.from(selectedIds).map(id =>
+        action === 'approve'
+          ? approveRequest(id, `Aprovação em massa`)
+          : rejectRequest(id, `Rejeição em massa`)
+      );
+      await Promise.all(promises);
+      setSelectedIds(new Set());
+    } finally {
+      setBulkLoading(false);
+    }
+  };
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            Solicitado em {format(new Date(request.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-          </div>
+  const selectedPendingCount = pendingRequests.filter(r => selectedIds.has(r.id)).length;
 
-          {request.decision_note && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Nota da Decisão</p>
-              <p className="text-sm bg-muted p-3 rounded-md">{request.decision_note}</p>
-            </div>
-          )}
-
-          {request.status === 'pending' && (
-            <div className="flex gap-2 pt-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  setSelectedRequest(request);
-                  setDecisionType('reject');
-                }}
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Rejeitar
-              </Button>
-              <Button
-                size="sm"
-                className="flex-1"
-                onClick={() => {
-                  setSelectedRequest(request);
-                  setDecisionType('approve');
-                }}
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Aprovar
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
+  const statusBadge = (status: string) => {
+    if (status === 'pending') return <Badge className="bg-yellow-500 text-xs">Pendente</Badge>;
+    if (status === 'approved') return <Badge className="bg-green-500 text-xs">Aprovada</Badge>;
+    return <Badge className="bg-red-500 text-xs">Rejeitada</Badge>;
   };
 
   if (loading) {
@@ -133,15 +85,8 @@ export function AdminApprovalsPage() {
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-6 bg-muted rounded w-1/3" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded w-full" />
-                  <div className="h-4 bg-muted rounded w-2/3" />
-                </div>
-              </CardContent>
+              <CardHeader><div className="h-6 bg-muted rounded w-1/3" /></CardHeader>
+              <CardContent><div className="space-y-2"><div className="h-4 bg-muted rounded w-full" /><div className="h-4 bg-muted rounded w-2/3" /></div></CardContent>
             </Card>
           ))}
         </div>
@@ -153,59 +98,61 @@ export function AdminApprovalsPage() {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Aprovações de Seguros</h1>
-        <p className="text-muted-foreground mt-2">
-          Gerencie solicitações de mudança de status de veículos
-        </p>
+        <p className="text-muted-foreground mt-2">Gerencie solicitações de mudança de status de veículos</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pendentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-yellow-600">{pendingRequests.length}</div>
-          </CardContent>
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle></CardHeader>
+          <CardContent><div className="text-3xl font-bold text-yellow-600">{pendingRequests.length}</div></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Aprovadas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">
-              {requests.filter((r) => r.status === 'approved').length}
-            </div>
-          </CardContent>
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-muted-foreground">Aprovadas</CardTitle></CardHeader>
+          <CardContent><div className="text-3xl font-bold text-green-600">{requests.filter(r => r.status === 'approved').length}</div></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Rejeitadas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-red-600">
-              {requests.filter((r) => r.status === 'rejected').length}
-            </div>
-          </CardContent>
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-muted-foreground">Rejeitadas</CardTitle></CardHeader>
+          <CardContent><div className="text-3xl font-bold text-red-600">{requests.filter(r => r.status === 'rejected').length}</div></CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="pending">
-            Pendentes ({pendingRequests.length})
-          </TabsTrigger>
-          <TabsTrigger value="decided">
-            Decididas ({decidedRequests.length})
-          </TabsTrigger>
+          <TabsTrigger value="pending">Pendentes ({pendingRequests.length})</TabsTrigger>
+          <TabsTrigger value="decided">Decididas ({decidedRequests.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">
+          {/* Bulk actions bar */}
+          {selectedPendingCount > 0 && (
+            <Card className="border-2 border-blue-200 bg-blue-50">
+              <CardContent className="p-3 flex flex-wrap items-center gap-3">
+                <span className="text-sm font-medium text-blue-900">
+                  {selectedPendingCount} selecionada(s)
+                </span>
+                <div className="flex gap-2 ml-auto">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={bulkLoading}
+                    onClick={() => handleBulkAction('reject')}
+                  >
+                    {bulkLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <XCircle className="h-4 w-4 mr-1" />}
+                    Rejeitar Selecionadas
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={bulkLoading}
+                    onClick={() => handleBulkAction('approve')}
+                  >
+                    {bulkLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
+                    Aprovar Selecionadas
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {pendingRequests.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
@@ -213,7 +160,80 @@ export function AdminApprovalsPage() {
               </CardContent>
             </Card>
           ) : (
-            pendingRequests.map(renderRequestCard)
+            <>
+              {/* Table header */}
+              <div className="rounded-lg border bg-card">
+                <div className="hidden md:grid grid-cols-[40px_1fr_1fr_120px_120px_140px_120px] gap-2 px-4 py-2 border-b bg-muted/50 text-xs font-medium text-muted-foreground items-center">
+                  <div>
+                    <Checkbox
+                      checked={pendingRequests.length > 0 && pendingRequests.every(r => selectedIds.has(r.id))}
+                      onCheckedChange={() => toggleSelectAll(pendingRequests)}
+                    />
+                  </div>
+                  <div>Veículo</div>
+                  <div>Empresa</div>
+                  <div>Status Atual</div>
+                  <div>Solicitado</div>
+                  <div>Data</div>
+                  <div className="text-right">Ações</div>
+                </div>
+
+                {pendingRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="grid grid-cols-1 md:grid-cols-[40px_1fr_1fr_120px_120px_140px_120px] gap-2 px-4 py-3 border-b last:border-b-0 items-center hover:bg-muted/30 transition-colors"
+                  >
+                    <div>
+                      <Checkbox
+                        checked={selectedIds.has(request.id)}
+                        onCheckedChange={() => toggleSelect(request.id)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Car className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-sm">{request.frota_veiculos?.placa || 'Sem placa'}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {request.frota_veiculos?.marca} {request.frota_veiculos?.modelo}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm">
+                      <Building2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <span className="truncate">{request.empresas?.nome || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <Badge variant="outline" className="text-xs">{request.current_status}</Badge>
+                    </div>
+                    <div>
+                      <Badge className="bg-primary/10 text-primary text-xs">{request.requested_status}</Badge>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {format(new Date(request.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
+                    </div>
+                    <div className="flex gap-1 justify-end">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => { setSelectedRequest(request); setDecisionType('reject'); }}
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={() => { setSelectedRequest(request); setDecisionType('approve'); }}
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </TabsContent>
 
@@ -225,7 +245,50 @@ export function AdminApprovalsPage() {
               </CardContent>
             </Card>
           ) : (
-            decidedRequests.map(renderRequestCard)
+            <div className="rounded-lg border bg-card">
+              <div className="hidden md:grid grid-cols-[1fr_1fr_120px_120px_140px_100px] gap-2 px-4 py-2 border-b bg-muted/50 text-xs font-medium text-muted-foreground items-center">
+                <div>Veículo</div>
+                <div>Empresa</div>
+                <div>Status Atual</div>
+                <div>Solicitado</div>
+                <div>Data</div>
+                <div className="text-right">Decisão</div>
+              </div>
+
+              {decidedRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="grid grid-cols-1 md:grid-cols-[1fr_1fr_120px_120px_140px_100px] gap-2 px-4 py-3 border-b last:border-b-0 items-center hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Car className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-sm">{request.frota_veiculos?.placa || 'Sem placa'}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {request.frota_veiculos?.marca} {request.frota_veiculos?.modelo}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    <Building2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate">{request.empresas?.nome || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <Badge variant="outline" className="text-xs">{request.current_status}</Badge>
+                  </div>
+                  <div>
+                    <Badge className="bg-primary/10 text-primary text-xs">{request.requested_status}</Badge>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    {format(new Date(request.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
+                  </div>
+                  <div className="text-right">
+                    {statusBadge(request.status)}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </TabsContent>
       </Tabs>
