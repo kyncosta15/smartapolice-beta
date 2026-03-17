@@ -1341,11 +1341,15 @@ export type Database = {
           consorcio_taxa_adm: number | null
           created_at: string
           created_by: string | null
+          current_responsible_name: string | null
+          current_worksite_name: string | null
+          current_worksite_start_date: string | null
           data_venc_emplacamento: string | null
           data_venc_ultima_parcela: string | null
           empresa_id: string
           familia: string | null
           funcao: string | null
+          has_assignment_info: boolean
           id: string
           is_stolen_current: boolean
           localizacao: string | null
@@ -1382,11 +1386,15 @@ export type Database = {
           consorcio_taxa_adm?: number | null
           created_at?: string
           created_by?: string | null
+          current_responsible_name?: string | null
+          current_worksite_name?: string | null
+          current_worksite_start_date?: string | null
           data_venc_emplacamento?: string | null
           data_venc_ultima_parcela?: string | null
           empresa_id: string
           familia?: string | null
           funcao?: string | null
+          has_assignment_info?: boolean
           id?: string
           is_stolen_current?: boolean
           localizacao?: string | null
@@ -1423,11 +1431,15 @@ export type Database = {
           consorcio_taxa_adm?: number | null
           created_at?: string
           created_by?: string | null
+          current_responsible_name?: string | null
+          current_worksite_name?: string | null
+          current_worksite_start_date?: string | null
           data_venc_emplacamento?: string | null
           data_venc_ultima_parcela?: string | null
           empresa_id?: string
           familia?: string | null
           funcao?: string | null
+          has_assignment_info?: boolean
           id?: string
           is_stolen_current?: boolean
           localizacao?: string | null
@@ -3255,6 +3267,56 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      vehicle_assignment_history: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          responsible_contact: string | null
+          responsible_name: string
+          start_date: string
+          vehicle_id: string
+          worksite_code: string | null
+          worksite_name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          responsible_contact?: string | null
+          responsible_name: string
+          start_date: string
+          vehicle_id: string
+          worksite_code?: string | null
+          worksite_name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          responsible_contact?: string | null
+          responsible_name?: string
+          start_date?: string
+          vehicle_id?: string
+          worksite_code?: string | null
+          worksite_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_assignment_history_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicle_finance: {
         Row: {
