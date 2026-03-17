@@ -36,6 +36,7 @@ import { VehicleDocumentsSection } from './VehicleDocumentsSection';
 import { VehicleFinanceTab } from './VehicleFinanceTab';
 import { VehicleTheftSection } from './VehicleTheftSection';
 import VehicleReviewsTab from './VehicleReviewsTab';
+import VehicleAssignmentTab from './VehicleAssignmentTab';
 import { Ticket } from '@/types/tickets';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
