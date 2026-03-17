@@ -25,7 +25,7 @@ const MANUTENCAO_TYPES: MaintenanceType[] = ['TROCA_OLEO', 'TROCA_PNEUS', 'TROCA
 
 export default function VehicleMaintenanceModule({ vehicleId }: Props) {
   const { toast } = useToast();
-  const { logs, allLogs, rules, loading, fetchData, getStatusInfo } = useMaintenanceData(vehicleId);
+  const { logs, allLogs, rules, loading, initialLoaded, fetchData, getStatusInfo } = useMaintenanceData(vehicleId);
   const [logModalOpen, setLogModalOpen] = useState(false);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
   const [editingLog, setEditingLog] = useState<MaintenanceLog | null>(null);
