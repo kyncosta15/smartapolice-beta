@@ -173,12 +173,10 @@ export default function VehicleAssignmentTab({
               <History className="h-3.5 w-3.5 mr-1.5" />
               Histórico
             </Button>
-            {mode === 'edit' && (
-              <Button size="sm" onClick={openEdit} className="bg-primary hover:bg-primary/90">
-                <Plus className="h-3.5 w-3.5 mr-1.5" />
-                Nova Alocação
-              </Button>
-            )}
+            <Button size="sm" onClick={openEdit} className="bg-primary hover:bg-primary/90">
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
+              Nova Alocação
+            </Button>
           </div>
         </div>
 
