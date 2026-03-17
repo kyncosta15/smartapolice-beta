@@ -208,11 +208,9 @@ export default function VehicleAssignmentTab({
           <div className="text-center py-8 text-muted-foreground">
             <HardHat className="mx-auto h-10 w-10 mb-3 opacity-30" />
             <p className="text-sm">Nenhuma alocação registrada</p>
-            {mode === 'edit' && (
-              <Button variant="link" size="sm" className="mt-2" onClick={openEdit}>
-                Registrar primeira alocação
-              </Button>
-            )}
+            <Button variant="link" size="sm" className="mt-2" onClick={openEdit}>
+              Registrar primeira alocação
+            </Button>
           </div>
         )}
       </Card>
