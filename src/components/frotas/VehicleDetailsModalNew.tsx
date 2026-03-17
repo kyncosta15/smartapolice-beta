@@ -683,9 +683,11 @@ export function VehicleDetailsModalNew({
                   </div>
                 </Card>
 
-                <VehicleMaintenanceModule
-                  vehicleId={veiculo.id}
-                />
+                {activeTab === 'operacao' && (
+                  <VehicleMaintenanceModule
+                    vehicleId={veiculo.id}
+                  />
+                )}
               </TabsContent>
 
               <TabsContent value="valores" className="mt-0 space-y-4 md:space-y-6">
