@@ -3415,6 +3415,91 @@ export type Database = {
           },
         ]
       }
+      vehicle_maintenance_logs: {
+        Row: {
+          cost: number
+          created_at: string
+          id: string
+          notes: string | null
+          odometer_km: number
+          performed_date: string
+          type: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          cost?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          odometer_km?: number
+          performed_date: string
+          type: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          odometer_km?: number
+          performed_date?: string
+          type?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_maintenance_logs_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_maintenance_rules: {
+        Row: {
+          alert_before_days: number | null
+          alert_before_km: number | null
+          created_at: string
+          due_every_km: number | null
+          due_every_months: number | null
+          id: string
+          type: string
+          vehicle_id: string
+        }
+        Insert: {
+          alert_before_days?: number | null
+          alert_before_km?: number | null
+          created_at?: string
+          due_every_km?: number | null
+          due_every_months?: number | null
+          id?: string
+          type: string
+          vehicle_id: string
+        }
+        Update: {
+          alert_before_days?: number | null
+          alert_before_km?: number | null
+          created_at?: string
+          due_every_km?: number | null
+          due_every_months?: number | null
+          id?: string
+          type?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_maintenance_rules_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_reviews: {
         Row: {
           created_at: string
