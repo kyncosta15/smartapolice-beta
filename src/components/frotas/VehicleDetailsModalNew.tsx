@@ -930,6 +930,17 @@ export function VehicleDetailsModalNew({
                   onUpdate={() => window.dispatchEvent(new Event('frota-data-updated'))}
                 />
               </TabsContent>
+
+              <TabsContent value="alocacao" className="mt-0 space-y-4 md:space-y-6">
+                <VehicleAssignmentTab
+                  vehicleId={veiculo.id}
+                  currentResponsible={(veiculo as any).current_responsible_name}
+                  currentWorksite={(veiculo as any).current_worksite_name}
+                  currentWorksiteStartDate={(veiculo as any).current_worksite_start_date}
+                  mode={mode}
+                  onAssignmentSaved={() => window.dispatchEvent(new Event('frota-data-updated'))}
+                />
+              </TabsContent>
             </div>
           </Tabs>
         </div>
