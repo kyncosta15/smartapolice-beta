@@ -6,7 +6,8 @@ import { differenceInDays, addMonths, parseISO } from 'date-fns';
 export function useMaintenanceData(vehicleId: string) {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [rules, setRules] = useState<MaintenanceRule[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const [filter, setFilter] = useState<MaintenanceType | 'ALL'>('ALL');
 
   const fetchData = useCallback(async () => {
@@ -28,6 +29,7 @@ export function useMaintenanceData(vehicleId: string) {
     if (logsRes.data) setLogs(logsRes.data as MaintenanceLog[]);
     if (rulesRes.data) setRules(rulesRes.data as MaintenanceRule[]);
     setLoading(false);
+    setInitialLoaded(true);
   }, [vehicleId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -89,5 +91,5 @@ export function useMaintenanceData(vehicleId: string) {
     };
   }, [logs, rules]);
 
-  return { logs: filteredLogs, allLogs: logs, rules, loading, filter, setFilter, fetchData, getStatusInfo };
+  return { logs: filteredLogs, allLogs: logs, rules, loading, initialLoaded, filter, setFilter, fetchData, getStatusInfo };
 }

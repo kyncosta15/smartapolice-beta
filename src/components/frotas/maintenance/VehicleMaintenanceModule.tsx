@@ -25,7 +25,7 @@ const MANUTENCAO_TYPES: MaintenanceType[] = ['TROCA_OLEO', 'TROCA_PNEUS', 'TROCA
 
 export default function VehicleMaintenanceModule({ vehicleId }: Props) {
   const { toast } = useToast();
-  const { logs, allLogs, rules, loading, fetchData, getStatusInfo } = useMaintenanceData(vehicleId);
+  const { logs, allLogs, rules, loading, initialLoaded, fetchData, getStatusInfo } = useMaintenanceData(vehicleId);
   const [logModalOpen, setLogModalOpen] = useState(false);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
   const [editingLog, setEditingLog] = useState<MaintenanceLog | null>(null);
@@ -76,9 +76,7 @@ export default function VehicleMaintenanceModule({ vehicleId }: Props) {
     return count;
   })();
 
-  if (loading) {
-    return <div className="text-center py-6 text-muted-foreground text-sm">Carregando manutenções...</div>;
-  }
+  // No blocking loading screen - render immediately with empty state
 
   const filterOptions = internalTab === 'revisoes'
     ? [{ value: 'ALL' as const, label: 'Todos' }, ...REVISAO_TYPES.map(t => ({ value: t, label: `${MAINTENANCE_TYPE_ICONS[t]} ${MAINTENANCE_TYPE_LABELS[t]}` }))]
