@@ -463,6 +463,12 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                             <div className="flex items-center gap-1.5">
                               {getCategoriaBadge(veiculo.categoria)}
                               <VehicleReviewIndicator vehicleId={veiculo.id} />
+                              <VehicleAssignmentIndicator
+                                hasAssignmentInfo={veiculo.has_assignment_info}
+                                responsibleName={veiculo.current_responsible_name}
+                                worksiteName={veiculo.current_worksite_name}
+                                worksiteStartDate={veiculo.current_worksite_start_date}
+                              />
                             </div>
                           </div>
                         </TableCell>
