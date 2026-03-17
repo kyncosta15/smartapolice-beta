@@ -26,7 +26,8 @@ import {
   Wrench,
   Clock,
   ExternalLink,
-  ShieldAlert
+  ShieldAlert,
+  HardHat
 } from 'lucide-react';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { toast } from 'sonner';
