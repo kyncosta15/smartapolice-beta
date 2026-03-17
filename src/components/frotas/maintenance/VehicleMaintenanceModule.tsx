@@ -76,9 +76,7 @@ export default function VehicleMaintenanceModule({ vehicleId }: Props) {
     return count;
   })();
 
-  if (loading) {
-    return <div className="text-center py-6 text-muted-foreground text-sm">Carregando manutenções...</div>;
-  }
+  // No blocking loading screen - render immediately with empty state
 
   const filterOptions = internalTab === 'revisoes'
     ? [{ value: 'ALL' as const, label: 'Todos' }, ...REVISAO_TYPES.map(t => ({ value: t, label: `${MAINTENANCE_TYPE_ICONS[t]} ${MAINTENANCE_TYPE_LABELS[t]}` }))]

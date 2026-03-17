@@ -90,5 +90,5 @@ export function useMaintenanceData(vehicleId: string) {
     };
   }, [logs, rules]);
 
-  return { logs: filteredLogs, allLogs: logs, rules, loading, filter, setFilter, fetchData, getStatusInfo };
+  return { logs: filteredLogs, allLogs: logs, rules, loading, initialLoaded, filter, setFilter, fetchData, getStatusInfo };
 }
