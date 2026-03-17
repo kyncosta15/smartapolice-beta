@@ -41,6 +41,12 @@ export interface FrotaVeiculo {
   is_stolen_current?: boolean;
   stolen_current_date?: string;
   
+  // Assignment fields
+  current_responsible_name?: string | null;
+  current_worksite_name?: string | null;
+  current_worksite_start_date?: string | null;
+  has_assignment_info?: boolean;
+  
   // Additional fields for modal form
   motivo_sem_seguro?: string;
   previsao_circulacao?: string;
