@@ -28,6 +28,7 @@ export function useMaintenanceData(vehicleId: string) {
     if (logsRes.data) setLogs(logsRes.data as MaintenanceLog[]);
     if (rulesRes.data) setRules(rulesRes.data as MaintenanceRule[]);
     setLoading(false);
+    setInitialLoaded(true);
   }, [vehicleId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
