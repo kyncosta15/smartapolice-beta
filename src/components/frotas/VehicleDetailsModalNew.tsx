@@ -683,9 +683,8 @@ export function VehicleDetailsModalNew({
                   </div>
                 </Card>
 
-                <VehicleReviewsTab
+                <VehicleMaintenanceModule
                   vehicleId={veiculo.id}
-                  empresaId={veiculo.empresa_id}
                 />
               </TabsContent>
 
