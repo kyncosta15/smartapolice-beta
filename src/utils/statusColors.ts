@@ -3,8 +3,8 @@ import { PolicyStatus } from '@/types/policyStatus';
 
 // Mapeamento de cores para cada status (atualizado com cores mais visuais)
 export const STATUS_COLORS: Record<string, string> = {
-  vigente: "bg-success/20 text-success-foreground border-success/30 hover:bg-success/10",
-  ativa: "bg-success/20 text-success-foreground border-success/30 hover:bg-success/10",
+  vigente: "bg-success/20 text-success-foreground border-success/30 hover:bg-success/10 dark:bg-blue-400/20 dark:text-white dark:border-blue-400/30",
+  ativa: "bg-success/20 text-success-foreground border-success/30 hover:bg-success/10 dark:bg-blue-400/20 dark:text-white dark:border-blue-400/30",
   aguardando_emissao: "bg-primary/10 text-primary border-primary/20 hover:bg-primary/5", 
   nao_renovada: "bg-red-100 text-red-800 border-red-200 hover:bg-red-50",
   vencida: "bg-red-100 text-red-800 border-red-200 hover:bg-red-50",
