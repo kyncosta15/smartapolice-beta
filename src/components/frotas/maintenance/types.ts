@@ -1,4 +1,16 @@
-export type MaintenanceType = 'BATERIA' | 'PNEU' | 'REVISAO';
+export type MaintenanceType =
+  | 'REVISAO'
+  | 'REVISAO_COMPLETA'
+  | 'PREVENTIVA'
+  | 'CORRETIVA'
+  | 'TROCA_OLEO'
+  | 'TROCA_PNEUS'
+  | 'TROCA_FREIOS'
+  | 'TROCA_FILTROS'
+  | 'TROCA_BATERIA'
+  | 'BATERIA'
+  | 'PNEU'
+  | 'OUTRA';
 
 export interface MaintenanceLog {
   id: string;
@@ -8,6 +20,7 @@ export interface MaintenanceLog {
   odometer_km: number;
   cost: number;
   notes: string | null;
+  realizada: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -38,13 +51,41 @@ export interface MaintenanceStatusInfo {
 }
 
 export const MAINTENANCE_TYPE_LABELS: Record<MaintenanceType, string> = {
+  REVISAO: 'Revisão Básica',
+  REVISAO_COMPLETA: 'Revisão Completa',
+  PREVENTIVA: 'Preventiva',
+  CORRETIVA: 'Corretiva',
+  TROCA_OLEO: 'Troca de Óleo',
+  TROCA_PNEUS: 'Troca de Pneus',
+  TROCA_FREIOS: 'Troca de Freios',
+  TROCA_FILTROS: 'Troca de Filtros',
+  TROCA_BATERIA: 'Troca de Bateria',
   BATERIA: 'Bateria',
   PNEU: 'Pneu',
-  REVISAO: 'Revisão',
+  OUTRA: 'Outra',
 };
 
 export const MAINTENANCE_TYPE_ICONS: Record<MaintenanceType, string> = {
+  REVISAO: '🔧',
+  REVISAO_COMPLETA: '🔧',
+  PREVENTIVA: '🛡️',
+  CORRETIVA: '🔨',
+  TROCA_OLEO: '🛢️',
+  TROCA_PNEUS: '🛞',
+  TROCA_FREIOS: '🛑',
+  TROCA_FILTROS: '🌀',
+  TROCA_BATERIA: '🔋',
   BATERIA: '🔋',
   PNEU: '🛞',
-  REVISAO: '🔧',
+  OUTRA: '📋',
 };
+
+// Groups for status cards (main categories)
+export const STATUS_CARD_TYPES: MaintenanceType[] = ['REVISAO', 'PNEU', 'BATERIA'];
+
+// All types for filter chips
+export const ALL_MAINTENANCE_TYPES: MaintenanceType[] = [
+  'REVISAO', 'REVISAO_COMPLETA', 'PREVENTIVA', 'CORRETIVA',
+  'TROCA_OLEO', 'TROCA_PNEUS', 'TROCA_FREIOS', 'TROCA_FILTROS',
+  'TROCA_BATERIA', 'BATERIA', 'PNEU', 'OUTRA',
+];

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MaintenanceType, MaintenanceStatusInfo, MAINTENANCE_TYPE_LABELS, MAINTENANCE_TYPE_ICONS } from './types';
+import { MaintenanceType, MaintenanceStatusInfo, MAINTENANCE_TYPE_LABELS, MAINTENANCE_TYPE_ICONS, STATUS_CARD_TYPES } from './types';
 import { format, parseISO } from 'date-fns';
 
 interface Props {
@@ -21,11 +21,9 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function MaintenanceStatusCards({ getStatusInfo }: Props) {
-  const types: MaintenanceType[] = ['REVISAO', 'PNEU', 'BATERIA'];
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      {types.map(type => {
+      {STATUS_CARD_TYPES.map(type => {
         const info = getStatusInfo(type);
         return (
           <Card key={type} className="p-3 space-y-2">

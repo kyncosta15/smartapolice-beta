@@ -6,7 +6,7 @@ import { Plus, Settings, Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useMaintenanceData } from './useMaintenanceData';
-import { MaintenanceType, MaintenanceLog, MAINTENANCE_TYPE_LABELS } from './types';
+import { MaintenanceType, MaintenanceLog, MAINTENANCE_TYPE_LABELS, MAINTENANCE_TYPE_ICONS } from './types';
 import MaintenanceStatusCards from './MaintenanceStatusCards';
 import MaintenanceLogList from './MaintenanceLogList';
 import MaintenanceLogModal from './MaintenanceLogModal';
@@ -18,9 +18,18 @@ interface Props {
 
 const FILTER_OPTIONS: { value: MaintenanceType | 'ALL'; label: string }[] = [
   { value: 'ALL', label: 'Todos' },
-  { value: 'REVISAO', label: '🔧 Revisão' },
+  { value: 'REVISAO', label: '🔧 Revisão Básica' },
+  { value: 'REVISAO_COMPLETA', label: '🔧 Revisão Completa' },
+  { value: 'PREVENTIVA', label: '🛡️ Preventiva' },
+  { value: 'CORRETIVA', label: '🔨 Corretiva' },
+  { value: 'TROCA_OLEO', label: '🛢️ Troca de Óleo' },
+  { value: 'TROCA_PNEUS', label: '🛞 Troca de Pneus' },
+  { value: 'TROCA_FREIOS', label: '🛑 Troca de Freios' },
+  { value: 'TROCA_FILTROS', label: '🌀 Troca de Filtros' },
+  { value: 'TROCA_BATERIA', label: '🔋 Troca de Bateria' },
   { value: 'PNEU', label: '🛞 Pneu' },
   { value: 'BATERIA', label: '🔋 Bateria' },
+  { value: 'OUTRA', label: '📋 Outra' },
 ];
 
 export default function VehicleMaintenanceModule({ vehicleId }: Props) {
@@ -58,8 +67,8 @@ export default function VehicleMaintenanceModule({ vehicleId }: Props) {
     <Card className="p-3 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base md:text-lg font-semibold flex items-center gap-2">
-          <Wrench className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
-          Manutenções & Acompanhamento
+          <Wrench className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+          Revisões e Acompanhamento
         </h3>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setRulesModalOpen(true)}>

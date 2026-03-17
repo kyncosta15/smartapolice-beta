@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { MaintenanceRule, MaintenanceType, MAINTENANCE_TYPE_LABELS, MAINTENANCE_TYPE_ICONS } from './types';
+import { MaintenanceRule, MaintenanceType, MAINTENANCE_TYPE_LABELS, MAINTENANCE_TYPE_ICONS, STATUS_CARD_TYPES } from './types';
 import { Save } from 'lucide-react';
 
 interface Props {
@@ -23,8 +23,6 @@ interface RuleForm {
   alert_before_days: string;
 }
 
-const TYPES: MaintenanceType[] = ['REVISAO', 'PNEU', 'BATERIA'];
-
 const emptyForm = (): RuleForm => ({
   due_every_km: '',
   due_every_months: '',
@@ -35,45 +33,32 @@ const emptyForm = (): RuleForm => ({
 export default function MaintenanceRulesModal({ open, onOpenChange, vehicleId, rules, onSaved }: Props) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  const [forms, setForms] = useState<Record<MaintenanceType, RuleForm>>({
-    REVISAO: emptyForm(),
-    PNEU: emptyForm(),
-    BATERIA: emptyForm(),
-  });
+  const [forms, setForms] = useState<Record<string, RuleForm>>({});
 
   useEffect(() => {
-    const newForms: Record<MaintenanceType, RuleForm> = {
-      REVISAO: emptyForm(),
-      PNEU: emptyForm(),
-      BATERIA: emptyForm(),
-    };
+    const newForms: Record<string, RuleForm> = {};
+    STATUS_CARD_TYPES.forEach(t => { newForms[t] = emptyForm(); });
     rules.forEach(r => {
-      if (r.type in newForms) {
-        newForms[r.type as MaintenanceType] = {
-          due_every_km: r.due_every_km ? String(r.due_every_km) : '',
-          due_every_months: r.due_every_months ? String(r.due_every_months) : '',
-          alert_before_km: r.alert_before_km !== null ? String(r.alert_before_km) : '500',
-          alert_before_days: r.alert_before_days !== null ? String(r.alert_before_days) : '15',
-        };
-      }
+      newForms[r.type] = {
+        due_every_km: r.due_every_km ? String(r.due_every_km) : '',
+        due_every_months: r.due_every_months ? String(r.due_every_months) : '',
+        alert_before_km: r.alert_before_km !== null ? String(r.alert_before_km) : '500',
+        alert_before_days: r.alert_before_days !== null ? String(r.alert_before_days) : '15',
+      };
     });
     setForms(newForms);
   }, [rules, open]);
 
-  const updateForm = (type: MaintenanceType, field: keyof RuleForm, value: string) => {
+  const updateForm = (type: string, field: keyof RuleForm, value: string) => {
     setForms(prev => ({ ...prev, [type]: { ...prev[type], [field]: value } }));
   };
 
   const handleSave = async () => {
     setSaving(true);
-    const upserts = TYPES.map(type => {
-      const f = forms[type];
+    const upserts = Object.entries(forms).map(([type, f]) => {
       const dueKm = f.due_every_km ? parseInt(f.due_every_km) : null;
       const dueMonths = f.due_every_months ? parseInt(f.due_every_months) : null;
-
-      // Skip if no rules defined
       if (!dueKm && !dueMonths) return null;
-
       return {
         vehicle_id: vehicleId,
         type,
@@ -84,7 +69,6 @@ export default function MaintenanceRulesModal({ open, onOpenChange, vehicleId, r
       };
     }).filter(Boolean);
 
-    // Delete existing rules for this vehicle and re-insert
     const { error: delError } = await supabase
       .from('vehicle_maintenance_rules')
       .delete()
@@ -122,7 +106,7 @@ export default function MaintenanceRulesModal({ open, onOpenChange, vehicleId, r
         </DialogHeader>
 
         <div className="space-y-6">
-          {TYPES.map(type => (
+          {STATUS_CARD_TYPES.map(type => (
             <div key={type} className="border rounded-lg p-4 space-y-3">
               <h4 className="font-semibold text-sm flex items-center gap-1.5">
                 {MAINTENANCE_TYPE_ICONS[type]} {MAINTENANCE_TYPE_LABELS[type]}
@@ -134,7 +118,7 @@ export default function MaintenanceRulesModal({ open, onOpenChange, vehicleId, r
                     type="number"
                     min="1"
                     placeholder="Ex: 10000"
-                    value={forms[type].due_every_km}
+                    value={forms[type]?.due_every_km || ''}
                     onChange={e => updateForm(type, 'due_every_km', e.target.value)}
                   />
                 </div>
@@ -144,7 +128,7 @@ export default function MaintenanceRulesModal({ open, onOpenChange, vehicleId, r
                     type="number"
                     min="1"
                     placeholder="Ex: 6"
-                    value={forms[type].due_every_months}
+                    value={forms[type]?.due_every_months || ''}
                     onChange={e => updateForm(type, 'due_every_months', e.target.value)}
                   />
                 </div>
@@ -154,7 +138,7 @@ export default function MaintenanceRulesModal({ open, onOpenChange, vehicleId, r
                     type="number"
                     min="0"
                     placeholder="500"
-                    value={forms[type].alert_before_km}
+                    value={forms[type]?.alert_before_km || ''}
                     onChange={e => updateForm(type, 'alert_before_km', e.target.value)}
                   />
                 </div>
@@ -164,7 +148,7 @@ export default function MaintenanceRulesModal({ open, onOpenChange, vehicleId, r
                     type="number"
                     min="0"
                     placeholder="15"
-                    value={forms[type].alert_before_days}
+                    value={forms[type]?.alert_before_days || ''}
                     onChange={e => updateForm(type, 'alert_before_days', e.target.value)}
                   />
                 </div>

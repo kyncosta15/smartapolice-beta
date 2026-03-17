@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { MaintenanceLog, MaintenanceType, MAINTENANCE_TYPE_LABELS } from './types';
+import { MaintenanceLog, MaintenanceType, ALL_MAINTENANCE_TYPES, MAINTENANCE_TYPE_LABELS } from './types';
 import { Save } from 'lucide-react';
 
 interface Props {
@@ -26,6 +27,7 @@ export default function MaintenanceLogModal({ open, onOpenChange, vehicleId, edi
   const [odometerKm, setOdometerKm] = useState('');
   const [cost, setCost] = useState('');
   const [notes, setNotes] = useState('');
+  const [realizada, setRealizada] = useState(false);
 
   useEffect(() => {
     if (editingLog) {
@@ -34,12 +36,14 @@ export default function MaintenanceLogModal({ open, onOpenChange, vehicleId, edi
       setOdometerKm(String(editingLog.odometer_km));
       setCost(String(editingLog.cost));
       setNotes(editingLog.notes || '');
+      setRealizada(editingLog.realizada ?? false);
     } else {
       setType('REVISAO');
       setPerformedDate(new Date().toISOString().split('T')[0]);
       setOdometerKm('');
       setCost('');
       setNotes('');
+      setRealizada(false);
     }
   }, [editingLog, open]);
 
@@ -69,6 +73,7 @@ export default function MaintenanceLogModal({ open, onOpenChange, vehicleId, edi
       odometer_km: km,
       cost: costVal,
       notes: notes || null,
+      realizada,
     };
 
     let error;
@@ -103,26 +108,34 @@ export default function MaintenanceLogModal({ open, onOpenChange, vehicleId, edi
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(Object.keys(MAINTENANCE_TYPE_LABELS) as MaintenanceType[]).map(t => (
+                {ALL_MAINTENANCE_TYPES.map(t => (
                   <SelectItem key={t} value={t}>{MAINTENANCE_TYPE_LABELS[t]}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Data *</Label>
-            <Input type="date" value={performedDate} onChange={e => setPerformedDate(e.target.value)} />
-          </div>
-
-          <div className="space-y-2">
-            <Label>KM Atual *</Label>
-            <Input type="number" min="0" placeholder="Ex: 45000" value={odometerKm} onChange={e => setOdometerKm(e.target.value)} />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Data *</Label>
+              <Input type="date" value={performedDate} onChange={e => setPerformedDate(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>KM Atual *</Label>
+              <Input type="number" min="0" placeholder="Ex: 45000" value={odometerKm} onChange={e => setOdometerKm(e.target.value)} />
+            </div>
           </div>
 
           <div className="space-y-2">
             <Label>Custo (R$)</Label>
             <Input type="number" min="0" step="0.01" placeholder="Ex: 350.00" value={cost} onChange={e => setCost(e.target.value)} />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Switch checked={realizada} onCheckedChange={setRealizada} />
+            <Label className="text-sm font-medium cursor-pointer" onClick={() => setRealizada(!realizada)}>
+              Manutenção realizada
+            </Label>
           </div>
 
           <div className="space-y-2">
