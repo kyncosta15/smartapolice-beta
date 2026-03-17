@@ -6,7 +6,8 @@ import { differenceInDays, addMonths, parseISO } from 'date-fns';
 export function useMaintenanceData(vehicleId: string) {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [rules, setRules] = useState<MaintenanceRule[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const [filter, setFilter] = useState<MaintenanceType | 'ALL'>('ALL');
 
   const fetchData = useCallback(async () => {
