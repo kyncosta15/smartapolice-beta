@@ -3423,6 +3423,7 @@ export type Database = {
           notes: string | null
           odometer_km: number
           performed_date: string
+          realizada: boolean
           type: string
           updated_at: string
           vehicle_id: string
@@ -3434,6 +3435,7 @@ export type Database = {
           notes?: string | null
           odometer_km?: number
           performed_date: string
+          realizada?: boolean
           type: string
           updated_at?: string
           vehicle_id: string
@@ -3445,6 +3447,7 @@ export type Database = {
           notes?: string | null
           odometer_km?: number
           performed_date?: string
+          realizada?: boolean
           type?: string
           updated_at?: string
           vehicle_id?: string
