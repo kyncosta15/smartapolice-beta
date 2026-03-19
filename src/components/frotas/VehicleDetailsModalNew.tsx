@@ -249,6 +249,8 @@ export function VehicleDetailsModalNew({
     }).format(value);
   };
 
+  const isTruck = !!(formData.categoria && ['Caminhão', 'caminhao', 'CAMINHAO'].includes(formData.categoria));
+
   if (!veiculo) return null;
 
   return (
