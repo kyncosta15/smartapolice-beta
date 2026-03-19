@@ -173,7 +173,7 @@ export default function MaintenanceLogModal({ open, onOpenChange, vehicleId, edi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isRevisao ? <ClipboardCheck className="h-5 w-5 text-primary" /> : <Wrench className="h-5 w-5 text-primary" />}
@@ -181,127 +181,128 @@ export default function MaintenanceLogModal({ open, onOpenChange, vehicleId, edi
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Tab selector */}
-          <Tabs value={modalTab} onValueChange={handleTabChange}>
-            <TabsList className="w-full">
-              <TabsTrigger value="revisao" className="flex-1 gap-1.5">
-                <ClipboardCheck className="h-3.5 w-3.5" />
-                Revisão
-              </TabsTrigger>
-              <TabsTrigger value="manutencao" className="flex-1 gap-1.5">
-                <Wrench className="h-3.5 w-3.5" />
-                Manutenção
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+        <ScrollArea className="max-h-[calc(90vh-10rem)] pr-3">
+          <div className="space-y-4 pb-1">
+            {/* Tab selector */}
+            <Tabs value={modalTab} onValueChange={handleTabChange}>
+              <TabsList className="w-full">
+                <TabsTrigger value="revisao" className="flex-1 gap-1.5">
+                  <ClipboardCheck className="h-3.5 w-3.5" />
+                  Revisão
+                </TabsTrigger>
+                <TabsTrigger value="manutencao" className="flex-1 gap-1.5">
+                  <Wrench className="h-3.5 w-3.5" />
+                  Manutenção
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
 
-          {/* Tipo */}
-          <div className="space-y-2">
-            <Label>Tipo *</Label>
-            <Select value={type} onValueChange={(v) => setType(v as MaintenanceType)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {currentTypes.map(t => (
-                  <SelectItem key={t} value={t}>{MAINTENANCE_TYPE_ICONS[t]} {MAINTENANCE_TYPE_LABELS[t]}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Common fields: Data, KM, Custo */}
-          <div className="grid grid-cols-2 gap-3">
+            {/* Tipo */}
             <div className="space-y-2">
-              <Label>Data *</Label>
-              <Input type="date" value={performedDate} onChange={e => setPerformedDate(e.target.value)} />
+              <Label>Tipo *</Label>
+              <Select value={type} onValueChange={(v) => setType(v as MaintenanceType)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {currentTypes.map(t => (
+                    <SelectItem key={t} value={t}>{MAINTENANCE_TYPE_ICONS[t]} {MAINTENANCE_TYPE_LABELS[t]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <Label>KM Atual *</Label>
-              <Input type="number" min="0" placeholder="Ex: 45000" value={odometerKm} onChange={e => setOdometerKm(e.target.value)} />
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label>Custo (R$)</Label>
-            <Input type="number" min="0" step="0.01" placeholder="Ex: 350.00" value={cost} onChange={e => setCost(e.target.value)} />
-          </div>
-
-          {/* ===== REVISÃO-SPECIFIC FIELDS ===== */}
-          {isRevisao && (
-            <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/20">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                <ClipboardCheck className="h-3.5 w-3.5" />
-                Dados da Revisão
-              </p>
+            {/* Common fields: Data, KM, Custo */}
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
-                <Label className="text-xs">Local / Oficina</Label>
-                <Input placeholder="Ex: Concessionária Toyota Centro" value={localRevisao} onChange={e => setLocalRevisao(e.target.value)} />
+                <Label>Data *</Label>
+                <Input type="date" value={performedDate} onChange={e => setPerformedDate(e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>KM Atual *</Label>
+                <Input type="number" min="0" placeholder="Ex: 45000" value={odometerKm} onChange={e => setOdometerKm(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Custo (R$)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="Ex: 350.00" value={cost} onChange={e => setCost(e.target.value)} />
+              </div>
+            </div>
+
+            {/* ===== REVISÃO-SPECIFIC FIELDS ===== */}
+            {isRevisao && (
+              <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/20">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <ClipboardCheck className="h-3.5 w-3.5" />
+                  Dados da Revisão
+                </p>
                 <div className="space-y-2">
-                  <Label className="text-xs">Próxima revisão (data)</Label>
-                  <Input type="date" value={proximaRevisaoData} onChange={e => setProximaRevisaoData(e.target.value)} />
+                  <Label className="text-xs">Local / Oficina</Label>
+                  <Input placeholder="Ex: Concessionária Toyota Centro" value={localRevisao} onChange={e => setLocalRevisao(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Próxima revisão (data)</Label>
+                    <Input type="date" value={proximaRevisaoData} onChange={e => setProximaRevisaoData(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Próxima revisão (KM)</Label>
+                    <Input type="number" min="0" placeholder="Ex: 55000" value={proximaRevisaoKm} onChange={e => setProximaRevisaoKm(e.target.value)} />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Próxima revisão (KM)</Label>
-                  <Input type="number" min="0" placeholder="Ex: 55000" value={proximaRevisaoKm} onChange={e => setProximaRevisaoKm(e.target.value)} />
+                  <Label className="text-xs">Itens verificados / Serviços</Label>
+                  <Textarea rows={2} placeholder="Ex: Óleo, filtros, freios, correia dentada..." value={itensVerificados} onChange={e => setItensVerificados(e.target.value)} className="resize-none text-sm" />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Itens verificados / Serviços</Label>
-                <Textarea rows={2} placeholder="Ex: Óleo, filtros, freios, correia dentada..." value={itensVerificados} onChange={e => setItensVerificados(e.target.value)} className="resize-none text-sm" />
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* ===== MANUTENÇÃO-SPECIFIC FIELDS ===== */}
-          {!isRevisao && (
-            <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/20">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                <Wrench className="h-3.5 w-3.5" />
-                Dados da Manutenção
-              </p>
-              <div className="space-y-2">
-                <Label className="text-xs">Peça / Componente substituído</Label>
-                <Input placeholder="Ex: Pneu Michelin 205/55R16" value={pecaSubstituida} onChange={e => setPecaSubstituida(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
+            {/* ===== MANUTENÇÃO-SPECIFIC FIELDS ===== */}
+            {!isRevisao && (
+              <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/20">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <Wrench className="h-3.5 w-3.5" />
+                  Dados da Manutenção
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Peça / Componente substituído</Label>
+                    <Input placeholder="Ex: Pneu Michelin 205/55R16" value={pecaSubstituida} onChange={e => setPecaSubstituida(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Prestador de serviço</Label>
+                    <Input placeholder="Ex: Auto Center Silva" value={prestadorServico} onChange={e => setPrestadorServico(e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-2 max-w-[200px]">
                   <Label className="text-xs">Garantia (meses)</Label>
                   <Input type="number" min="0" placeholder="Ex: 12" value={garantiaMeses} onChange={e => setGarantiaMeses(e.target.value)} />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Prestador de serviço</Label>
-                  <Input placeholder="Ex: Auto Center Silva" value={prestadorServico} onChange={e => setPrestadorServico(e.target.value)} />
-                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Status toggle */}
-          <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
-            <Switch checked={realizada} onCheckedChange={setRealizada} />
-            <div className="flex-1">
-              <Label className="text-sm font-medium cursor-pointer" onClick={() => setRealizada(!realizada)}>
-                {isRevisao ? 'Revisão realizada' : 'Manutenção realizada'}
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                {realizada ? '✅ Concluído' : '⏳ Agendado / Pendente'}
-              </p>
+            {/* Status toggle */}
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+              <Switch checked={realizada} onCheckedChange={setRealizada} />
+              <div className="flex-1">
+                <Label className="text-sm font-medium cursor-pointer" onClick={() => setRealizada(!realizada)}>
+                  {isRevisao ? 'Revisão realizada' : 'Manutenção realizada'}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {realizada ? '✅ Concluído' : '⏳ Agendado / Pendente'}
+                </p>
+              </div>
+              <Badge variant={realizada ? 'default' : 'secondary'} className={`text-[10px] ${realizada ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-500/80 hover:bg-amber-500 text-white'}`}>
+                {realizada ? 'Concluído' : 'Pendente'}
+              </Badge>
             </div>
-            <Badge variant={realizada ? 'default' : 'secondary'} className={`text-[10px] ${realizada ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-500/80 hover:bg-amber-500 text-white'}`}>
-              {realizada ? 'Concluído' : 'Pendente'}
-            </Badge>
-          </div>
 
-          {/* Observações */}
-          <div className="space-y-2">
-            <Label>Observações</Label>
-            <Textarea rows={2} placeholder="Detalhes adicionais..." value={notes} onChange={e => setNotes(e.target.value)} className="resize-none" />
+            {/* Observações */}
+            <div className="space-y-2">
+              <Label>Observações</Label>
+              <Textarea rows={2} placeholder="Detalhes adicionais..." value={notes} onChange={e => setNotes(e.target.value)} className="resize-none" />
+            </div>
           </div>
-        </div>
+        </ScrollArea>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
