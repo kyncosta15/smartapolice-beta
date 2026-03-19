@@ -3021,6 +3021,97 @@ export type Database = {
           },
         ]
       }
+      truck_tachograph_inspections: {
+        Row: {
+          attachments: Json | null
+          certificate_number: string | null
+          cost: number
+          created_at: string
+          id: string
+          inspection_date: string
+          notes: string | null
+          provider_name: string | null
+          valid_until: string
+          vehicle_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          certificate_number?: string | null
+          cost?: number
+          created_at?: string
+          id?: string
+          inspection_date: string
+          notes?: string | null
+          provider_name?: string | null
+          valid_until: string
+          vehicle_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          certificate_number?: string | null
+          cost?: number
+          created_at?: string
+          id?: string
+          inspection_date?: string
+          notes?: string | null
+          provider_name?: string | null
+          valid_until?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "truck_tachograph_inspections_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      truck_tachograph_yearly_records: {
+        Row: {
+          created_at: string
+          id: string
+          incidents: string | null
+          km_end: number | null
+          km_start: number | null
+          notes: string | null
+          summary: string | null
+          vehicle_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          incidents?: string | null
+          km_end?: number | null
+          km_start?: number | null
+          notes?: string | null
+          summary?: string | null
+          vehicle_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          incidents?: string | null
+          km_end?: number | null
+          km_start?: number | null
+          notes?: string | null
+          summary?: string | null
+          vehicle_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "truck_tachograph_yearly_records_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_access_logs: {
         Row: {
           created_at: string

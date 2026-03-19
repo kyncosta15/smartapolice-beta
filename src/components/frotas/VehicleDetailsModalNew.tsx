@@ -37,6 +37,7 @@ import { VehicleDocumentsSection } from './VehicleDocumentsSection';
 import { VehicleFinanceTab } from './VehicleFinanceTab';
 import { VehicleTheftSection } from './VehicleTheftSection';
 import VehicleMaintenanceModule from './maintenance/VehicleMaintenanceModule';
+import TachographTab from './tachograph/TachographTab';
 import VehicleAssignmentTab from './VehicleAssignmentTab';
 import { Ticket } from '@/types/tickets';
 import { format } from 'date-fns';
@@ -248,6 +249,8 @@ export function VehicleDetailsModalNew({
     }).format(value);
   };
 
+  const isTruck = !!(formData.categoria && ['Caminhão', 'caminhao', 'CAMINHAO'].includes(formData.categoria));
+
   if (!veiculo) return null;
 
   return (
@@ -291,7 +294,7 @@ export function VehicleDetailsModalNew({
         <div className="flex-1 overflow-hidden flex flex-col">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             <div className="shrink-0 px-2 md:px-4 py-2 overflow-x-auto">
-              <TabsList className="flex md:grid md:grid-cols-10 gap-1 h-auto p-1 bg-gray-100 w-full md:w-full min-w-max md:min-w-0">
+              <TabsList className={`flex md:grid ${isTruck ? 'md:grid-cols-11' : 'md:grid-cols-10'} gap-1 h-auto p-1 bg-gray-100 w-full md:w-full min-w-max md:min-w-0`}>
                 <TabsTrigger 
                   value="veiculo" 
                   className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
@@ -362,6 +365,15 @@ export function VehicleDetailsModalNew({
                   <HardHat className="h-3 w-3 mr-1.5" />
                   <span>Obra</span>
                 </TabsTrigger>
+                {isTruck && (
+                  <TabsTrigger 
+                    value="tacografo" 
+                    className="data-[state=active]:bg-white data-[state=active]:text-emerald-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
+                  >
+                    <Clock className="h-3 w-3 mr-1.5" />
+                    <span>Tacógrafo</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
@@ -942,6 +954,12 @@ export function VehicleDetailsModalNew({
                   onAssignmentSaved={() => window.dispatchEvent(new Event('frota-data-updated'))}
                 />
               </TabsContent>
+
+              {isTruck && activeTab === 'tacografo' && (
+                <TabsContent value="tacografo" className="mt-0 space-y-4 md:space-y-6" forceMount>
+                  <TachographTab vehicleId={veiculo.id} />
+                </TabsContent>
+              )}
             </div>
           </Tabs>
         </div>
