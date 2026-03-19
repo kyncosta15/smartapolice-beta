@@ -365,6 +365,15 @@ export function VehicleDetailsModalNew({
                   <HardHat className="h-3 w-3 mr-1.5" />
                   <span>Obra</span>
                 </TabsTrigger>
+                {isTruck && (
+                  <TabsTrigger 
+                    value="tacografo" 
+                    className="data-[state=active]:bg-white data-[state=active]:text-emerald-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
+                  >
+                    <Clock className="h-3 w-3 mr-1.5" />
+                    <span>Tacógrafo</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
