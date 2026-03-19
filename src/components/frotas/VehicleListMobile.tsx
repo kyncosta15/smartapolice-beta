@@ -22,6 +22,7 @@ import { formatCurrency } from '@/utils/currencyFormatter';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { VehicleStatusBadge } from './VehicleStatusBadge';
+import { VehicleTachographIndicator } from './VehicleTachographIndicator';
 
 interface VehicleListMobileProps {
   veiculos: FrotaVeiculo[];
@@ -127,6 +128,7 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs, onViewSinistros, getTick
               status={veiculo.status_seguro} 
               vehicleId={veiculo.id}
             />
+            <VehicleTachographIndicator vehicleId={veiculo.id} categoria={veiculo.categoria} />
             <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded tracking-wide">
               {veiculo.placa}
             </span>

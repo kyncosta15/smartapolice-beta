@@ -40,6 +40,7 @@ import { ptBR } from 'date-fns/locale';
 import { VehicleListMobile } from './VehicleListMobile';
 import { VehicleReviewIndicator } from './VehicleReviewIndicator';
 import { VehicleAssignmentIndicator } from './VehicleAssignmentIndicator';
+import { VehicleTachographIndicator } from './VehicleTachographIndicator';
 import { VehicleDetailsModalNew } from './VehicleDetailsModalNew';
 import { FrotasBulkActions } from './FrotasBulkActions';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -463,6 +464,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
                             <div className="flex items-center gap-1.5">
                               {getCategoriaBadge(veiculo.categoria)}
                               <VehicleReviewIndicator vehicleId={veiculo.id} />
+                              <VehicleTachographIndicator vehicleId={veiculo.id} categoria={veiculo.categoria} />
                               <VehicleAssignmentIndicator
                                 hasAssignmentInfo={veiculo.has_assignment_info}
                                 responsibleName={veiculo.current_responsible_name}
