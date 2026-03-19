@@ -37,6 +37,7 @@ import { VehicleDocumentsSection } from './VehicleDocumentsSection';
 import { VehicleFinanceTab } from './VehicleFinanceTab';
 import { VehicleTheftSection } from './VehicleTheftSection';
 import VehicleMaintenanceModule from './maintenance/VehicleMaintenanceModule';
+import TachographTab from './tachograph/TachographTab';
 import VehicleAssignmentTab from './VehicleAssignmentTab';
 import { Ticket } from '@/types/tickets';
 import { format } from 'date-fns';
