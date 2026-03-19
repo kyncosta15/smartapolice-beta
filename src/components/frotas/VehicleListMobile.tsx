@@ -128,6 +128,7 @@ function VehicleCard({ veiculo, onView, onEdit, onDocs, onViewSinistros, getTick
               status={veiculo.status_seguro} 
               vehicleId={veiculo.id}
             />
+            <VehicleTachographIndicator vehicleId={veiculo.id} categoria={veiculo.categoria} />
             <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded tracking-wide">
               {veiculo.placa}
             </span>
