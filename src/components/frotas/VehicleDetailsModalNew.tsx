@@ -954,6 +954,12 @@ export function VehicleDetailsModalNew({
                   onAssignmentSaved={() => window.dispatchEvent(new Event('frota-data-updated'))}
                 />
               </TabsContent>
+
+              {isTruck && activeTab === 'tacografo' && (
+                <TabsContent value="tacografo" className="mt-0 space-y-4 md:space-y-6" forceMount>
+                  <TachographTab vehicleId={veiculo.id} />
+                </TabsContent>
+              )}
             </div>
           </Tabs>
         </div>
