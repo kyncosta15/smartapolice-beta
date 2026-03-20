@@ -251,6 +251,9 @@ export function ContentRenderer({
         </div>
       );
 
+    case 'documentos':
+      return <DocumentsCenter />;
+
     case 'aprovacoes':
       return <AdminApprovalsPage />;
 
