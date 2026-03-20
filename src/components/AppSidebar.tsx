@@ -49,6 +49,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'policies', title: 'Minhas Apólices', icon: FileText },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+    { id: 'documentos', title: 'Documentos', icon: FolderOpen },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'export', title: 'Relatórios', icon: BarChart3 },
