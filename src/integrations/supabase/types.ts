@@ -888,6 +888,100 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          account_id: string | null
+          bucket_name: string
+          category: string
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          document_date: string | null
+          entity_type: string
+          file_extension: string | null
+          file_size: number
+          id: string
+          insurer: string | null
+          mime_type: string | null
+          original_filename: string
+          policy_id: string | null
+          storage_path: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          uploaded_by_user_id: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          bucket_name?: string
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          document_date?: string | null
+          entity_type?: string
+          file_extension?: string | null
+          file_size?: number
+          id?: string
+          insurer?: string | null
+          mime_type?: string | null
+          original_filename: string
+          policy_id?: string | null
+          storage_path: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          uploaded_by_user_id?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          bucket_name?: string
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          document_date?: string | null
+          entity_type?: string
+          file_extension?: string | null
+          file_size?: number
+          id?: string
+          insurer?: string | null
+          mime_type?: string | null
+          original_filename?: string
+          policy_id?: string | null
+          storage_path?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          uploaded_by_user_id?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies_ui"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "frota_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_plans: {
         Row: {
           created_at: string | null

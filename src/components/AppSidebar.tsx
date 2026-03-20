@@ -15,7 +15,8 @@ import {
   LogOut,
   CheckSquare,
   Crown,
-  Heart
+  Heart,
+  FolderOpen
 } from "lucide-react";
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { cn } from '@/lib/utils';
@@ -49,6 +50,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'policies', title: 'Minhas Apólices', icon: FileText },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+    { id: 'documentos', title: 'Documentos', icon: FolderOpen },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'export', title: 'Relatórios', icon: BarChart3 },
@@ -62,6 +64,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+    { id: 'documentos', title: 'Documentos', icon: FolderOpen },
     { id: 'aprovacoes', title: 'Aprovações', icon: CheckSquare },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
