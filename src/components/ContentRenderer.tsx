@@ -22,6 +22,7 @@ import { N8NDataTester } from './N8NDataTester';
 import { UserProfile } from './UserProfile';
 import { AdminApprovalsPage } from './insurance/AdminApprovalsPage';
 import { SmartBeneficiosEmbed } from './SmartBeneficiosEmbed';
+import { DocumentsCenter } from './documents/DocumentsCenter';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 

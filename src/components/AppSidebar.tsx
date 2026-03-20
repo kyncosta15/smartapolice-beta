@@ -15,7 +15,8 @@ import {
   LogOut,
   CheckSquare,
   Crown,
-  Heart
+  Heart,
+  FolderOpen
 } from "lucide-react";
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { cn } from '@/lib/utils';
