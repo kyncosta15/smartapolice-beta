@@ -1,0 +1,1 @@
+UPDATE auth.users SET email = 'manutencao@metroec.com.br', email_confirmed_at = now(), updated_at = now() WHERE id = 'ced8c62f-478f-43a0-871a-7236ef9c13a5';
