@@ -833,7 +833,7 @@ export function MyPolicies() {
                   <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground truncate">
                     {toText(policy.insurer)}
                   </p>
-                  {(['auto', 'automovel', 'AUTOMOVEL', 'AUTO'].includes(policy.type)) && (policy.modelo_veiculo || policy.vehicleModel || policy.marca) && (
+                  {policy.type && ['auto', 'automovel'].includes(policy.type.toLowerCase()) && (policy.modelo_veiculo || policy.vehicleModel || policy.marca) && (
                     <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-foreground truncate">
                       {[policy.marca, policy.modelo_veiculo || policy.vehicleModel].filter(Boolean).join(' ')}
                     </p>
