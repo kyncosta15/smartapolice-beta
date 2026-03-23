@@ -41,6 +41,7 @@ const BUCKET = 'rcorp-docs';
 export function useDocuments() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { activeEmpresaId } = useTenant();
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<DocFilters>({
@@ -51,11 +52,17 @@ export function useDocuments() {
   });
 
   const fetchDocuments = useCallback(async () => {
+    if (!activeEmpresaId) {
+      setDocuments([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       let query = (supabase as any)
         .from('documents')
         .select('*')
+        .eq('account_id', activeEmpresaId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(200);
@@ -75,7 +82,7 @@ export function useDocuments() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, activeEmpresaId]);
 
   useEffect(() => {
     fetchDocuments();
