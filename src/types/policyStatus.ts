@@ -29,6 +29,8 @@ export interface PolicyWithStatus {
   placa?: string;
   ano_modelo?: string;
   nome_embarcacao?: string;
+  modelo_veiculo?: string;
+  vehicleModel?: string;
   // Campo específico saúde
   nome_plano_saude?: string;
   // ... outros campos existentes
