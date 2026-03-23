@@ -831,6 +831,11 @@ export function MyPolicies() {
                   <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground truncate">
                     {toText(policy.insurer)}
                   </p>
+                  {(policy.type === 'auto' || policy.type === 'automovel') && ((originalPolicy as any)?.modelo_veiculo || (originalPolicy as any)?.vehicleModel || (originalPolicy as any)?.marca) && (
+                    <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-foreground truncate">
+                      {[(originalPolicy as any)?.marca, (originalPolicy as any)?.modelo_veiculo || (originalPolicy as any)?.vehicleModel].filter(Boolean).join(' ')}
+                    </p>
+                  )}
                   {/* Nome do Plano de Saúde */}
                   {policy.nome_plano_saude && String(policy.nome_plano_saude).trim() !== '' && policy.nome_plano_saude !== 'Não informado' && policy.nome_plano_saude !== 'N/A' && (
                     <p className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 truncate font-medium">

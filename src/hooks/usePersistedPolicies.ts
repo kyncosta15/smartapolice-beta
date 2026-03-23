@@ -320,6 +320,7 @@ export function usePersistedPolicies() {
       if (updates.documento !== undefined) dbUpdates.documento = truncate(updates.documento, 20);
       if (updates.documento_tipo !== undefined) dbUpdates.documento_tipo = truncate(updates.documento_tipo, 10);
       if (updates.vehicleModel !== undefined) dbUpdates.modelo_veiculo = truncate(updates.vehicleModel, 255);
+      if ((updates as any).modelo_veiculo !== undefined) dbUpdates.modelo_veiculo = truncate((updates as any).modelo_veiculo, 255);
       
       // Campos de veículo/embarcação
       if ((updates as any).marca !== undefined) {
