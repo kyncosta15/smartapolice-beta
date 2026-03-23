@@ -812,11 +812,6 @@ export function MyPolicies() {
                            policy.type === 'nautico' ? 'NÁUTICO' :
                            policy.type.toUpperCase()}
                         </span>
-                        {(policy.type === 'auto' || policy.type === 'automovel') && ((originalPolicy as any)?.modelo_veiculo || (originalPolicy as any)?.vehicleModel || (originalPolicy as any)?.marca) && (
-                          <span className="text-[10px] sm:text-xs font-bold text-gray-800 dark:text-gray-200">
-                            — {[(originalPolicy as any)?.marca, (originalPolicy as any)?.modelo_veiculo || (originalPolicy as any)?.vehicleModel].filter(Boolean).join(' ')}
-                          </span>
-                        )}
                       </div>
                       <div className="flex items-start gap-1.5">
                         {originalPolicy?.documento && isDependentCPF(originalPolicy.documento) && (
