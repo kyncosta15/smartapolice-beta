@@ -200,6 +200,47 @@ export function useDocuments() {
     toast({ title: 'Documento excluído' });
   };
 
+  const bulkSoftDelete = async (docIds: string[]) => {
+    const results = await Promise.all(
+      docIds.map(id =>
+        (supabase as any)
+          .from('documents')
+          .update({ deleted_at: new Date().toISOString() })
+          .eq('id', id)
+          .then(({ error }: any) => ({ id, error }))
+      )
+    );
+    const failed = results.filter(r => r.error);
+    const succeeded = results.filter(r => !r.error).map(r => r.id);
+    setDocuments(prev => prev.filter(d => !succeeded.includes(d.id)));
+    toast({
+      title: `${succeeded.length} documento(s) excluído(s)`,
+      ...(failed.length > 0 && { description: `${failed.length} falharam` }),
+      ...(failed.length > 0 && { variant: 'destructive' as const }),
+    });
+  };
+
+  const bulkUpdateCategory = async (docIds: string[], category: DocCategory) => {
+    const results = await Promise.all(
+      docIds.map(id =>
+        (supabase as any)
+          .from('documents')
+          .update({ category })
+          .eq('id', id)
+          .then(({ error }: any) => ({ id, error }))
+      )
+    );
+    const failed = results.filter(r => r.error);
+    const succeeded = results.filter(r => !r.error).map(r => r.id);
+    setDocuments(prev =>
+      prev.map(d => (succeeded.includes(d.id) ? { ...d, category } : d))
+    );
+    toast({
+      title: `${succeeded.length} documento(s) atualizado(s)`,
+      ...(failed.length > 0 && { description: `${failed.length} falharam`, variant: 'destructive' as const }),
+    });
+  };
+
   return {
     documents,
     loading,
@@ -209,5 +250,7 @@ export function useDocuments() {
     uploadDocument,
     getSignedUrl,
     softDelete,
+    bulkSoftDelete,
+    bulkUpdateCategory,
   };
 }
