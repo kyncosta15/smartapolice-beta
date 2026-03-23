@@ -812,9 +812,9 @@ export function MyPolicies() {
                            policy.type === 'nautico' ? 'NÁUTICO' :
                            policy.type.toUpperCase()}
                         </span>
-                        {(policy.type === 'auto' || policy.type === 'automovel') && ((policy as any).vehicleModel || (policy as any).modelo_veiculo || (policy as any).marca) && (
+                        {(policy.type === 'auto' || policy.type === 'automovel') && (originalPolicy?.modelo_veiculo || (originalPolicy as any)?.vehicleModel || originalPolicy?.marca) && (
                           <span className="text-[10px] sm:text-xs font-bold text-gray-800 dark:text-gray-200">
-                            — {[(policy as any).marca, (policy as any).vehicleModel || (policy as any).modelo_veiculo].filter(Boolean).join(' ')}
+                            — {[originalPolicy?.marca, originalPolicy?.modelo_veiculo || (originalPolicy as any)?.vehicleModel].filter(Boolean).join(' ')}
                           </span>
                         )}
                       </div>
