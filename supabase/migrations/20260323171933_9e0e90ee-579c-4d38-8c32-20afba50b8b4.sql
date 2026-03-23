@@ -1,0 +1,3 @@
+ALTER TABLE public.frota_veiculos DROP CONSTRAINT frota_veiculos_categoria_check;
+ALTER TABLE public.frota_veiculos ADD CONSTRAINT frota_veiculos_categoria_check CHECK (categoria = ANY (ARRAY['Carros'::text, 'Caminhão'::text, 'Moto'::text, 'Lanchas'::text]));
+UPDATE frota_veiculos SET categoria = 'Lanchas', updated_at = now() WHERE id IN ('9a1078bc-567d-413c-9c22-3e4b657e6947', '0fa6d0b0-aff3-4683-a6c5-8e691b8dc918');
