@@ -799,7 +799,7 @@ export function MyPolicies() {
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6 space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between items-start gap-2 sm:gap-3">
                     <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {getTypeIcon(policy.type)}
                         <span className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                           {policy.type === 'auto' || policy.type === 'automovel' ? 'AUTOMÓVEL' : 
@@ -812,6 +812,11 @@ export function MyPolicies() {
                            policy.type === 'nautico' ? 'NÁUTICO' :
                            policy.type.toUpperCase()}
                         </span>
+                        {(policy.type === 'auto' || policy.type === 'automovel') && (policy.vehicleModel || policy.modelo_veiculo || policy.marca) && (
+                          <span className="text-[10px] sm:text-xs font-bold text-gray-800 dark:text-gray-200">
+                            — {[policy.marca, policy.vehicleModel || policy.modelo_veiculo].filter(Boolean).join(' ')}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-start gap-1.5">
                         {originalPolicy?.documento && isDependentCPF(originalPolicy.documento) && (
