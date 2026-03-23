@@ -162,7 +162,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                     : "text-muted-foreground group-hover:text-accent-foreground group-hover:scale-110"
                 )} />
                 {open && <span className="truncate">{item.title}</span>}
-                {activeSection === item.id && open && (
+                {open && item.id === 'documentos' && docCount > 0 && (
+                  <span className="ml-auto text-[10px] font-semibold bg-primary/15 text-primary rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                    {docCount}
+                  </span>
+                )}
+                {activeSection === item.id && open && item.id !== 'documentos' && (
                   <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 )}
               </SidebarMenuButton>
