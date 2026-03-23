@@ -266,9 +266,11 @@ export function usePersistedPolicies() {
       };
 
       // CRÍTICO: Criar objeto limpo DIRETAMENTE dos updates
-      const dbUpdates: any = {
-        segurado: truncate(updates.name, 255),
-      };
+      const dbUpdates: any = {};
+      
+      if (updates.name !== undefined) {
+        dbUpdates.segurado = truncate(updates.name, 255);
+      }
       
       // Campos de texto com truncamento baseado nos limites do banco
       if (updates.type !== undefined) dbUpdates.tipo_seguro = truncate(updates.type, 100);
