@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from '@/contexts/TenantContext';
 import { 
   Home,
   FileText, 
@@ -41,7 +43,24 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const { user, profile, logout } = useAuth();
   const { open } = useSidebar();
   const navigate = useNavigate();
+  const { activeEmpresaId } = useTenant();
+  const [docCount, setDocCount] = useState<number>(0);
 
+  useEffect(() => {
+    if (!user) return;
+    const fetchCount = async () => {
+      let query = supabase
+        .from('documents')
+        .select('id', { count: 'exact', head: true })
+        .is('deleted_at', null);
+      if (activeEmpresaId) {
+        query = query.eq('account_id', activeEmpresaId);
+      }
+      const { count } = await query;
+      setDocCount(count ?? 0);
+    };
+    fetchCount();
+  }, [user, activeEmpresaId]);
   // Verificar se é admin pelo is_admin flag
   const isAdmin = profile?.is_admin === true;
 
@@ -143,7 +162,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                     : "text-muted-foreground group-hover:text-accent-foreground group-hover:scale-110"
                 )} />
                 {open && <span className="truncate">{item.title}</span>}
-                {activeSection === item.id && open && (
+                {open && item.id === 'documentos' && docCount > 0 && (
+                  <span className="ml-auto text-[10px] font-semibold bg-primary/15 text-primary rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                    {docCount}
+                  </span>
+                )}
+                {activeSection === item.id && open && item.id !== 'documentos' && (
                   <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 )}
               </SidebarMenuButton>
