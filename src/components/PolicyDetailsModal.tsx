@@ -113,7 +113,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
             />
 
             <ValidityInfoCard policy={policy} />
-            <VehicleInfoCard policy={policy} />
+            <VehicleInfoCard policy={policy} onUpdate={() => onUpdate?.()} />
 
             <EndossosCard policyId={policy.id} />
 
