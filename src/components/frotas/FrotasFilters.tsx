@@ -48,6 +48,7 @@ const categoriaOptions = [
   { value: 'Carros', label: 'Carros' },
   { value: 'Caminhão', label: 'Caminhão' },
   { value: 'Moto', label: 'Moto' },
+  { value: 'Lanchas', label: 'Lanchas' },
 ];
 
 const statusOptions = [
