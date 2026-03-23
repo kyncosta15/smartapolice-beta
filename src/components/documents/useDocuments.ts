@@ -115,6 +115,8 @@ export function useDocuments() {
       pathPrefix = `apolices/${metadata.policy_id}`;
     }
 
+    const accountPrefix = activeEmpresaId || 'default';
+
     const storagePath = `${pathPrefix}/${yyyy}/${mm}/${uuid}_${file.name}`;
 
     // Upload file
