@@ -117,7 +117,7 @@ export function useDocuments() {
 
     const accountPrefix = activeEmpresaId || 'default';
 
-    const storagePath = `${pathPrefix}/${yyyy}/${mm}/${uuid}_${file.name}`;
+    const storagePath = `${accountPrefix}/${pathPrefix}/${yyyy}/${mm}/${uuid}_${file.name}`;
 
     // Upload file
     const { error: uploadError } = await supabase.storage
