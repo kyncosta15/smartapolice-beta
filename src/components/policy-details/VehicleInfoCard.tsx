@@ -20,8 +20,8 @@ export const VehicleInfoCard = ({ policy, onUpdate }: VehicleInfoCardProps) => {
   const { updatePolicy } = usePersistedPolicies();
 
   const normalizedType = policy?.type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
-  const isVehicleType = normalizedType === 'auto' || normalizedType === 'nautico';
   const isNautico = normalizedType === 'nautico';
+  const isAutoOrNautico = normalizedType === 'auto' || isNautico;
 
   const [form, setForm] = useState({
     marca: policy?.marca || '',
@@ -32,7 +32,7 @@ export const VehicleInfoCard = ({ policy, onUpdate }: VehicleInfoCardProps) => {
     franquia: policy?.deductible ?? policy?.franquia ?? 0,
   });
 
-  if (!isVehicleType) return null;
+  // Removed early return - always show the card with option to register vehicle
 
   const vehicleModel = renderValue(policy?.vehicleModel || policy?.veiculo?.modelo || policy?.modelo_veiculo);
   const marca = renderValue(policy?.marca);
