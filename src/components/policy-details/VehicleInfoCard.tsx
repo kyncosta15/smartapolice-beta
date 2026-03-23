@@ -32,7 +32,7 @@ export const VehicleInfoCard = ({ policy, onUpdate }: VehicleInfoCardProps) => {
     franquia: policy?.deductible ?? policy?.franquia ?? 0,
   });
 
-  if (!isVehicleType) return null;
+  // Removed early return - always show the card with option to register vehicle
 
   const vehicleModel = renderValue(policy?.vehicleModel || policy?.veiculo?.modelo || policy?.modelo_veiculo);
   const marca = renderValue(policy?.marca);
