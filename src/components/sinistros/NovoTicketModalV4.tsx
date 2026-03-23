@@ -168,13 +168,36 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
       return
     }
 
+    // Resolve empresa_id: use activeEmpresa or fetch from DB
+    let empresaId = activeEmpresa
+    if (!empresaId) {
+      try {
+        const { data: empresaData } = await supabase.rpc('get_user_empresa_id')
+        empresaId = empresaData as string | null
+      } catch (e) {
+        console.error('Erro ao obter empresa:', e)
+      }
+    }
+
+    if (!empresaId) {
+      toast({
+        title: "Erro ao criar segurado",
+        description: "Não foi possível identificar a empresa. Tente recarregar a página.",
+        variant: "destructive"
+      })
+      return
+    }
+
     try {
+      const { data: authUser } = await supabase.auth.getUser()
+      
       const { data, error } = await supabase
         .from('colaboradores')
         .insert({
           nome: newSegurado.nome.trim(),
           cpf: newSegurado.cpf.trim(),
-          empresa_id: activeEmpresa,
+          empresa_id: empresaId,
+          user_id: authUser?.user?.id || null,
           status: 'ativo'
         })
         .select()
@@ -191,11 +214,11 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
       setIsCreatingNewSegurado(false)
       setNewSegurado({ nome: '', cpf: '' })
       setStep('dados')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar segurado:', error)
       toast({
         title: "Erro ao criar segurado",
-        description: "Não foi possível criar o segurado. Tente novamente.",
+        description: error?.message || "Não foi possível criar o segurado. Tente novamente.",
         variant: "destructive"
       })
     }
