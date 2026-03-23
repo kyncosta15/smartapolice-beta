@@ -43,7 +43,24 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const { user, profile, logout } = useAuth();
   const { open } = useSidebar();
   const navigate = useNavigate();
+  const { activeEmpresaId } = useTenant();
+  const [docCount, setDocCount] = useState<number>(0);
 
+  useEffect(() => {
+    if (!user) return;
+    const fetchCount = async () => {
+      let query = supabase
+        .from('documents')
+        .select('id', { count: 'exact', head: true })
+        .is('deleted_at', null);
+      if (activeEmpresaId) {
+        query = query.eq('account_id', activeEmpresaId);
+      }
+      const { count } = await query;
+      setDocCount(count ?? 0);
+    };
+    fetchCount();
+  }, [user, activeEmpresaId]);
   // Verificar se é admin pelo is_admin flag
   const isAdmin = profile?.is_admin === true;
 
