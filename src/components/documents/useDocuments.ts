@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useTenant } from '@/contexts/TenantContext';
 
 export type EntityType = 'GERAL' | 'VEICULO' | 'APOLICE';
 export type DocCategory = 'APOLICE' | 'ENDOSSO' | 'BOLETO' | 'LAUDO' | 'CRLV' | 'CNH' | 'FOTO' | 'OUTROS';
