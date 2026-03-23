@@ -256,6 +256,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
       utilitario: 'bg-purple-100 text-purple-800 border-purple-200',
       caminhao: 'bg-orange-100 text-orange-800 border-orange-200',
       moto: 'bg-green-100 text-green-800 border-green-200',
+      Lanchas: 'bg-cyan-100 text-cyan-800 border-cyan-200',
       outros: 'bg-gray-100 text-gray-800 border-gray-200',
     };
 
@@ -264,6 +265,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
       utilitario: 'Utilitário',
       caminhao: 'Caminhão',
       moto: 'Moto',
+      Lanchas: 'Lanchas',
       outros: 'Outros',
     };
 

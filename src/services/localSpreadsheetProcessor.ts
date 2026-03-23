@@ -173,6 +173,12 @@ function normalizeCategoria(categoria: string | undefined): string {
       cat.includes('trator') || cat.includes('onibus') || cat.includes('ônibus')) {
     return 'Caminhão';
   }
+
+  if (cat.includes('lancha') || cat.includes('barco') || cat.includes('embarcação') || 
+      cat.includes('embarcacao') || cat.includes('jet') || cat.includes('boat') || 
+      cat.includes('nautic') || cat.includes('náutic')) {
+    return 'Lanchas';
+  }
   
   return 'Carros';
 }

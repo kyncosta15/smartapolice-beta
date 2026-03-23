@@ -87,6 +87,7 @@ function resolveVehicleType(vehicleType?: string, categoria?: string): "cars" | 
   if (categoria === "Carros") return "cars";
   if (categoria === "Caminhão") return "trucks";
   if (categoria === "Moto") return "motorcycles";
+  if (categoria === "Lanchas") return "cars";
 
   const cat = categoria.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
   if (cat.includes('caminh') || cat.includes('truck')) return 'trucks';

@@ -50,6 +50,7 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
       carro: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-800',
       moto: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-800',
       caminhao: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950 dark:text-orange-200 dark:border-orange-800',
+      Lanchas: 'bg-cyan-100 text-cyan-800 border-cyan-200 dark:bg-cyan-950 dark:text-cyan-200 dark:border-cyan-800',
       outros: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600',
     }
 
@@ -57,6 +58,7 @@ export function VehicleDetailsModalV2({ veiculo, open, onOpenChange }: VehicleDe
       carro: 'Carro',
       moto: 'Moto',
       caminhao: 'Caminhão',
+      Lanchas: 'Lanchas',
       outros: 'Outros',
     }
 

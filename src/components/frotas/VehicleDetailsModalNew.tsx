@@ -232,7 +232,8 @@ export function VehicleDetailsModalNew({
     const labels = {
       'Carros': 'Carros',
       'Caminhão': 'Caminhão',
-      'Moto': 'Moto'
+      'Moto': 'Moto',
+      'Lanchas': 'Lanchas'
     };
 
     return (
