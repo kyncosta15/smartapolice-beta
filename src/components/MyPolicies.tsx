@@ -190,6 +190,8 @@ export function MyPolicies() {
       placa: policy.placa,
       ano_modelo: policy.ano_modelo,
       nome_embarcacao: policy.nome_embarcacao,
+      modelo_veiculo: policy.modelo_veiculo || policy.vehicleModel,
+      vehicleModel: policy.vehicleModel || policy.modelo_veiculo,
       // Campo específico saúde
       nome_plano_saude: policy.nome_plano_saude,
     };
