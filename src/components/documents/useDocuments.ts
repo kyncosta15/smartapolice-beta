@@ -115,7 +115,9 @@ export function useDocuments() {
       pathPrefix = `apolices/${metadata.policy_id}`;
     }
 
-    const storagePath = `${pathPrefix}/${yyyy}/${mm}/${uuid}_${file.name}`;
+    const accountPrefix = activeEmpresaId || 'default';
+
+    const storagePath = `${accountPrefix}/${pathPrefix}/${yyyy}/${mm}/${uuid}_${file.name}`;
 
     // Upload file
     const { error: uploadError } = await supabase.storage
@@ -132,6 +134,7 @@ export function useDocuments() {
     const { error: insertError } = await (supabase as any)
       .from('documents')
       .insert({
+        account_id: activeEmpresaId || null,
         title: metadata.title,
         original_filename: file.name,
         file_extension: ext,
