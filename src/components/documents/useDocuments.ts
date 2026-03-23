@@ -38,6 +38,24 @@ export interface DocFilters {
 
 const BUCKET = 'rcorp-docs';
 
+function sanitizeStorageFileName(fileName: string) {
+  const ext = fileName.split('.').pop()?.toLowerCase() || '';
+  const baseName = fileName.replace(/\.[^.]+$/, '');
+
+  const normalizedBaseName = baseName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9-_\s.]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^[.-]+|[.-]+$/g, '')
+    .slice(0, 120);
+
+  const safeBaseName = normalizedBaseName || 'documento';
+  return ext ? `${safeBaseName}.${ext}` : safeBaseName;
+}
+
 export function useDocuments() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -103,6 +121,7 @@ export function useDocuments() {
     }
   ) => {
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const safeFileName = sanitizeStorageFileName(file.name);
     const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -117,7 +136,7 @@ export function useDocuments() {
 
     const accountPrefix = activeEmpresaId || 'default';
 
-    const storagePath = `${accountPrefix}/${pathPrefix}/${yyyy}/${mm}/${uuid}_${file.name}`;
+    const storagePath = `${accountPrefix}/${pathPrefix}/${yyyy}/${mm}/${uuid}_${safeFileName}`;
 
     // Upload file
     const { error: uploadError } = await supabase.storage
