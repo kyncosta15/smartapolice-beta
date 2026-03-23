@@ -60,6 +60,16 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       setDocCount(count ?? 0);
     };
     fetchCount();
+
+    // Realtime subscription to keep count updated
+    const channel = supabase
+      .channel('doc-count-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, () => {
+        fetchCount();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user, activeEmpresaId]);
   // Verificar se é admin pelo is_admin flag
   const isAdmin = profile?.is_admin === true;
