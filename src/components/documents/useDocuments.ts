@@ -134,6 +134,7 @@ export function useDocuments() {
     const { error: insertError } = await (supabase as any)
       .from('documents')
       .insert({
+        account_id: activeEmpresaId || null,
         title: metadata.title,
         original_filename: file.name,
         file_extension: ext,
