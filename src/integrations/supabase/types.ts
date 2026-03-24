@@ -3020,6 +3020,7 @@ export type Database = {
       tickets: {
         Row: {
           apolice_id: string | null
+          beneficiario_nome: string | null
           created_at: string | null
           created_by: string | null
           data_evento: string | null
@@ -3027,21 +3028,27 @@ export type Database = {
           external_ref: string | null
           id: string
           localizacao: string | null
+          numero_sinistro: string | null
           origem: string | null
           payload: Json
+          prazo: string | null
           protocol_code: string | null
           request_id: string | null
           rh_note: string | null
           segurado_id: string | null
           status: string
+          status_indenizacao: string | null
+          subsidiaria: string | null
           subtipo: string | null
           tipo: string | null
           updated_at: string | null
           valor_estimado: number | null
+          valor_pago: number | null
           vehicle_id: string | null
         }
         Insert: {
           apolice_id?: string | null
+          beneficiario_nome?: string | null
           created_at?: string | null
           created_by?: string | null
           data_evento?: string | null
@@ -3049,21 +3056,27 @@ export type Database = {
           external_ref?: string | null
           id?: string
           localizacao?: string | null
+          numero_sinistro?: string | null
           origem?: string | null
           payload: Json
+          prazo?: string | null
           protocol_code?: string | null
           request_id?: string | null
           rh_note?: string | null
           segurado_id?: string | null
           status?: string
+          status_indenizacao?: string | null
+          subsidiaria?: string | null
           subtipo?: string | null
           tipo?: string | null
           updated_at?: string | null
           valor_estimado?: number | null
+          valor_pago?: number | null
           vehicle_id?: string | null
         }
         Update: {
           apolice_id?: string | null
+          beneficiario_nome?: string | null
           created_at?: string | null
           created_by?: string | null
           data_evento?: string | null
@@ -3071,17 +3084,22 @@ export type Database = {
           external_ref?: string | null
           id?: string
           localizacao?: string | null
+          numero_sinistro?: string | null
           origem?: string | null
           payload?: Json
+          prazo?: string | null
           protocol_code?: string | null
           request_id?: string | null
           rh_note?: string | null
           segurado_id?: string | null
           status?: string
+          status_indenizacao?: string | null
+          subsidiaria?: string | null
           subtipo?: string | null
           tipo?: string | null
           updated_at?: string | null
           valor_estimado?: number | null
+          valor_pago?: number | null
           vehicle_id?: string | null
         }
         Relationships: [
