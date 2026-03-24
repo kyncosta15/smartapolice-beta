@@ -430,10 +430,28 @@ export function TicketsListV2({
         );
         
       case 'veiculo':
+        const isBeneficiario = !item.veiculo.placa || item.veiculo.placa === 'N/A';
+        
+        if (isBeneficiario && 'beneficiario_nome' in item && (item as any).beneficiario_nome) {
+          return (
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <User className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />
+                <Badge variant="outline" className="text-xs border-purple-300 text-purple-700 dark:text-purple-300">
+                  Beneficiário
+                </Badge>
+              </div>
+              <div className="text-sm font-semibold truncate pl-5">
+                {(item as any).beneficiario_nome}
+              </div>
+            </div>
+          );
+        }
+        
         return (
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <Car className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
               <span className="font-bold text-sm tracking-wide truncate">{item.veiculo.placa}</span>
             </div>
             {(item.veiculo.marca || item.veiculo.modelo) && (
