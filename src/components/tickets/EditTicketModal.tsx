@@ -5,12 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Ticket, TicketStatus } from '@/types/tickets';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, DollarSign, Tag, MapPin, User, FileText } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -33,11 +34,21 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
     localizacao: '',
     descricao: '',
     gravidade: 'media',
+    numero_sinistro: '',
+    subsidiaria: '',
+    beneficiario_nome: '',
+    prazo: null as Date | null,
+    valor_pago: '',
+    status_indenizacao: 'pendente',
   });
 
   useEffect(() => {
-    if (ticket) {
-      setFormData({
+    if (ticket && open) {
+      // Load extended fields from DB
+      loadExtendedFields(ticket.id);
+      
+      setFormData(prev => ({
+        ...prev,
         subtipo: ticket.subtipo || '',
         status: ticket.status,
         data_evento: ticket.data_evento ? parseISO(ticket.data_evento) : new Date(),
@@ -45,9 +56,33 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
         localizacao: ticket.localizacao || '',
         descricao: ticket.descricao || (ticket.payload?.descricao) || '',
         gravidade: ticket.gravidade || (ticket.payload?.gravidade) || 'media',
-      });
+      }));
     }
-  }, [ticket]);
+  }, [ticket, open]);
+
+  const loadExtendedFields = async (ticketId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('numero_sinistro, subsidiaria, beneficiario_nome, prazo, valor_pago, status_indenizacao')
+        .eq('id', ticketId)
+        .single();
+
+      if (!error && data) {
+        setFormData(prev => ({
+          ...prev,
+          numero_sinistro: data.numero_sinistro || '',
+          subsidiaria: data.subsidiaria || '',
+          beneficiario_nome: data.beneficiario_nome || '',
+          prazo: data.prazo ? parseISO(data.prazo) : null,
+          valor_pago: data.valor_pago?.toString() || '',
+          status_indenizacao: data.status_indenizacao || 'pendente',
+        }));
+      }
+    } catch (err) {
+      console.error('Erro ao carregar campos estendidos:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +98,12 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
         data_evento: formData.data_evento.toISOString(),
         valor_estimado: formData.valor_estimado ? parseFloat(formData.valor_estimado) : null,
         localizacao: formData.localizacao || null,
+        numero_sinistro: formData.numero_sinistro || null,
+        subsidiaria: formData.subsidiaria || null,
+        beneficiario_nome: formData.beneficiario_nome || null,
+        prazo: formData.prazo ? format(formData.prazo, 'yyyy-MM-dd') : null,
+        valor_pago: formData.valor_pago ? parseFloat(formData.valor_pago) : null,
+        status_indenizacao: formData.status_indenizacao || 'pendente',
         payload: {
           ...ticket.payload,
           descricao: formData.descricao,
@@ -71,7 +112,6 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
         updated_at: new Date().toISOString(),
       };
 
-      // Atualizar ticket no banco
       const { error: updateError } = await supabase
         .from('tickets')
         .update(updateData)
@@ -79,7 +119,6 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
 
       if (updateError) throw updateError;
 
-      // Se mudou o status, criar movimento
       if (previousStatus !== formData.status) {
         await supabase
           .from('ticket_movements')
@@ -94,16 +133,9 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
           });
       }
 
-      const statusMessages: Record<TicketStatus, string> = {
-        aberto: 'Status alterado para Aberto',
-        em_analise: 'Status alterado para Em Análise',
-        finalizado: 'Ticket finalizado com sucesso!',
-        cancelado: 'Ticket cancelado',
-      };
-
       toast({
         title: 'Sucesso',
-        description: statusMessages[formData.status] || 'Registro atualizado com sucesso!',
+        description: 'Registro atualizado com sucesso!',
       });
 
       onSuccess();
@@ -127,6 +159,9 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
         { value: 'incendio', label: 'Incêndio' },
         { value: 'danos_terceiros', label: 'Danos a Terceiros' },
         { value: 'perda_total', label: 'Perda Total' },
+        { value: 'morte', label: 'Morte' },
+        { value: 'invalidez_acidente', label: 'Invalidez Acidente' },
+        { value: 'invalidez_doenca', label: 'Invalidez por Doença' },
         { value: 'outros', label: 'Outros' },
       ]
     : [
@@ -187,7 +222,7 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Tipo/Categoria */}
+          {/* Categoria */}
           <div className="space-y-2">
             <Label htmlFor="subtipo">Categoria</Label>
             <Select
@@ -228,11 +263,6 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
                 ))}
               </SelectContent>
             </Select>
-            {formData.status === 'finalizado' && (
-              <p className="text-xs text-green-600 dark:text-green-400 font-medium">
-                ✓ Este ticket será marcado como finalizado no sistema
-              </p>
-            )}
           </div>
 
           {/* Data do Evento */}
@@ -315,9 +345,129 @@ export function EditTicketModal({ ticket, open, onOpenChange, onSuccess }: EditT
               value={formData.descricao}
               onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
               placeholder="Descreva o ocorrido..."
-              rows={4}
+              rows={3}
             />
           </div>
+
+          {/* Separador - Campos do Sinistro/Beneficiário */}
+          {ticket?.tipo === 'sinistro' && (
+            <>
+              <Separator className="my-4" />
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <FileText className="h-4 w-4 text-primary" />
+                <span>Dados do Sinistro / Beneficiário</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nº do Sinistro */}
+                <div className="space-y-2">
+                  <Label htmlFor="numero_sinistro" className="flex items-center gap-1">
+                    <Tag className="h-3 w-3" />
+                    Nº do Sinistro (Seguradora)
+                  </Label>
+                  <Input
+                    id="numero_sinistro"
+                    value={formData.numero_sinistro}
+                    onChange={(e) => setFormData({ ...formData, numero_sinistro: e.target.value })}
+                    placeholder="Ex: 993/8664/2025"
+                  />
+                </div>
+
+                {/* Subsidiária */}
+                <div className="space-y-2">
+                  <Label htmlFor="subsidiaria" className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    Subsidiária
+                  </Label>
+                  <Input
+                    id="subsidiaria"
+                    value={formData.subsidiaria}
+                    onChange={(e) => setFormData({ ...formData, subsidiaria: e.target.value })}
+                    placeholder="Ex: ESCAVE BA"
+                  />
+                </div>
+
+                {/* Beneficiário */}
+                <div className="space-y-2">
+                  <Label htmlFor="beneficiario_nome" className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    Nome do Beneficiário
+                  </Label>
+                  <Input
+                    id="beneficiario_nome"
+                    value={formData.beneficiario_nome}
+                    onChange={(e) => setFormData({ ...formData, beneficiario_nome: e.target.value })}
+                    placeholder="Nome completo"
+                  />
+                </div>
+
+                {/* Prazo */}
+                <div className="space-y-2">
+                  <Label>Prazo</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formData.prazo && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.prazo ? format(formData.prazo, "PPP", { locale: ptBR }) : "Selecione o prazo"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={formData.prazo || undefined}
+                        onSelect={(date) => setFormData({ ...formData, prazo: date || null })}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Valor Pago */}
+                <div className="space-y-2">
+                  <Label htmlFor="valor_pago" className="flex items-center gap-1">
+                    <DollarSign className="h-3 w-3" />
+                    Valor Pago / Indenizado (R$)
+                  </Label>
+                  <Input
+                    id="valor_pago"
+                    type="number"
+                    step="0.01"
+                    value={formData.valor_pago}
+                    onChange={(e) => setFormData({ ...formData, valor_pago: e.target.value })}
+                    placeholder="0,00"
+                  />
+                </div>
+
+                {/* Status Indenização */}
+                <div className="space-y-2">
+                  <Label htmlFor="status_indenizacao">Status Indenização</Label>
+                  <Select
+                    value={formData.status_indenizacao}
+                    onValueChange={(value) => setFormData({ ...formData, status_indenizacao: value })}
+                  >
+                    <SelectTrigger className={cn(
+                      formData.status_indenizacao === 'indenizado' && 'border-green-500 bg-green-50 dark:bg-green-950/20',
+                      formData.status_indenizacao === 'negado' && 'border-red-500 bg-red-50 dark:bg-red-950/20',
+                      formData.status_indenizacao === 'pendente' && 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
+                    )}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pendente">Pendente</SelectItem>
+                      <SelectItem value="indenizado">Indenizado</SelectItem>
+                      <SelectItem value="negado">Negado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </>
+          )}
 
           <DialogFooter>
             <Button
