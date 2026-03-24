@@ -227,6 +227,13 @@ export class ClaimsService {
           valor_estimado,
           localizacao,
           payload,
+          numero_sinistro,
+          subsidiaria,
+          beneficiario_nome,
+          prazo,
+          valor_pago,
+          status_indenizacao,
+          segurado_id,
           created_at,
           updated_at,
           vehicle:frota_veiculos!tickets_vehicle_id_fkey (
