@@ -32,7 +32,7 @@ interface Vehicle {
 }
 
 const SINISTRO_SUBTIPOS: TicketSubtipo[] = [
-  'colisao', 'roubo', 'furto', 'avaria', 'incendio', 'danos_terceiros'
+  'colisao', 'roubo', 'furto', 'avaria', 'incendio', 'danos_terceiros', 'invalidez_acidente', 'invalidez_doenca', 'morte'
 ];
 
 const ASSISTENCIA_SUBTIPOS: TicketSubtipo[] = [

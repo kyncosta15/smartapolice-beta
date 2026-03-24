@@ -12,7 +12,7 @@ interface TicketsFiltersProps {
 }
 
 const SINISTRO_SUBTIPOS: TicketSubtipo[] = [
-  'colisao', 'roubo', 'furto', 'avaria', 'incendio', 'danos_terceiros', 'invalidez_acidente', 'morte'
+  'colisao', 'roubo', 'furto', 'avaria', 'incendio', 'danos_terceiros', 'invalidez_acidente', 'invalidez_doenca', 'morte'
 ];
 
 const ASSISTENCIA_SUBTIPOS: TicketSubtipo[] = [
