@@ -254,37 +254,66 @@ export function TicketDetailsDrawer({
               </div>
 
               {/* Informações do veículo */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-lg font-bold text-foreground">
-                  <Car className="h-5 w-5 text-primary" />
-                  <span>Informações do Veículo</span>
+              {ticket.veiculo && ticket.veiculo.placa !== 'N/A' && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-lg font-bold text-foreground">
+                    <Car className="h-5 w-5 text-primary" />
+                    <span>Informações do Veículo</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-card border rounded-lg p-5">
+                    <div className="space-y-1.5">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide">Placa</div>
+                      <div className="font-bold text-lg tracking-wider">
+                        {ticket.veiculo.placa}
+                      </div>
+                    </div>
+                    {ticket.veiculo.marca && (
+                      <div className="space-y-1.5">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide">Marca/Modelo</div>
+                        <div className="font-semibold text-base">
+                          {ticket.veiculo.marca} {ticket.veiculo.modelo}
+                        </div>
+                      </div>
+                    )}
+                    {ticket.veiculo.proprietario_nome && (
+                      <div className="space-y-1.5 md:col-span-2">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide">Proprietário</div>
+                        <div className="font-medium flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          {ticket.veiculo.proprietario_nome}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-card border rounded-lg p-5">
-                  <div className="space-y-1.5">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Placa</div>
-                    <div className="font-bold text-lg tracking-wider">
-                      {ticket.veiculo.placa}
+              )}
+
+              {/* Informações do Beneficiário / Segurado */}
+              {isClaim(ticket) && (ticket.beneficiario_nome || ticket.segurado_nome) && (
+                <>
+                  <Separator />
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-lg font-bold text-foreground">
+                      <User className="h-5 w-5 text-primary" />
+                      <span>Informações do Beneficiário</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-card border rounded-lg p-5">
+                      {ticket.beneficiario_nome && (
+                        <div className="space-y-1.5">
+                          <div className="text-xs text-muted-foreground uppercase tracking-wide">Nome do Beneficiário</div>
+                          <div className="font-semibold text-base">{ticket.beneficiario_nome}</div>
+                        </div>
+                      )}
+                      {ticket.segurado_nome && (
+                        <div className="space-y-1.5">
+                          <div className="text-xs text-muted-foreground uppercase tracking-wide">Segurado</div>
+                          <div className="font-semibold text-base">{ticket.segurado_nome}</div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  {ticket.veiculo.marca && (
-                    <div className="space-y-1.5">
-                      <div className="text-xs text-muted-foreground uppercase tracking-wide">Marca/Modelo</div>
-                      <div className="font-semibold text-base">
-                        {ticket.veiculo.marca} {ticket.veiculo.modelo}
-                      </div>
-                    </div>
-                  )}
-                  {ticket.veiculo.proprietario_nome && (
-                    <div className="space-y-1.5 md:col-span-2">
-                      <div className="text-xs text-muted-foreground uppercase tracking-wide">Proprietário</div>
-                      <div className="font-medium flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        {ticket.veiculo.proprietario_nome}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+                </>
+              )}
 
               <Separator />
 
@@ -296,18 +325,83 @@ export function TicketDetailsDrawer({
                     <span>Detalhes do Sinistro</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Nº do Sinistro */}
+                    {ticket.numero_sinistro && (
+                      <div className="bg-card border rounded-lg p-5 space-y-2">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                          <Tag className="h-4 w-4" />
+                          Nº do Sinistro (Seguradora)
+                        </div>
+                        <div className="font-bold text-lg">{ticket.numero_sinistro}</div>
+                      </div>
+                    )}
+
+                    {/* Subsidiária */}
+                    {ticket.subsidiaria && (
+                      <div className="bg-card border rounded-lg p-5 space-y-2">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          Subsidiária
+                        </div>
+                        <div className="font-medium text-base">{ticket.subsidiaria}</div>
+                      </div>
+                    )}
+
                     {/* Valor estimado */}
                     {ticket.valor_estimado && (
                       <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 rounded-lg p-5 space-y-2">
                         <div className="text-xs text-green-700 dark:text-green-400 uppercase tracking-wide font-semibold flex items-center gap-1">
                           <DollarSign className="h-4 w-4" />
-                          Valor Estimado do Sinistro
+                          Valor Estimado
                         </div>
                         <div className="font-bold text-2xl text-green-700 dark:text-green-400">
-                          {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                          }).format(ticket.valor_estimado)}
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ticket.valor_estimado)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Valor Pago */}
+                    {ticket.valor_pago != null && (
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-5 space-y-2">
+                        <div className="text-xs text-blue-700 dark:text-blue-400 uppercase tracking-wide font-semibold flex items-center gap-1">
+                          <DollarSign className="h-4 w-4" />
+                          Valor Pago / Indenizado
+                        </div>
+                        <div className="font-bold text-2xl text-blue-700 dark:text-blue-400">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ticket.valor_pago)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Status Indenização */}
+                    {ticket.status_indenizacao && (
+                      <div className="bg-card border rounded-lg p-5 space-y-2">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                          <AlertTriangle className="h-4 w-4" />
+                          Status Indenização
+                        </div>
+                        <Badge 
+                          variant={
+                            ticket.status_indenizacao === 'indenizado' ? 'default' :
+                            ticket.status_indenizacao === 'negado' ? 'destructive' : 'secondary'
+                          } 
+                          className="text-base font-semibold capitalize"
+                        >
+                          {ticket.status_indenizacao === 'indenizado' ? 'Indenizado' :
+                           ticket.status_indenizacao === 'negado' ? 'Negado' : 'Pendente'}
+                        </Badge>
+                      </div>
+                    )}
+
+                    {/* Prazo */}
+                    {ticket.prazo && (
+                      <div className="bg-card border rounded-lg p-5 space-y-2">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          Prazo
+                        </div>
+                        <div className="font-semibold text-lg">
+                          {format(new Date(ticket.prazo), 'dd/MM/yyyy', { locale: ptBR })}
                         </div>
                       </div>
                     )}
@@ -320,9 +414,7 @@ export function TicketDetailsDrawer({
                           Data do Evento/Sinistro
                         </div>
                         <div className="font-semibold text-lg">
-                          {format(new Date(ticket.data_evento), "dd/MM/yyyy 'às' HH:mm", {
-                            locale: ptBR,
-                          })}
+                          {format(new Date(ticket.data_evento), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </div>
                       </div>
                     )}
@@ -347,9 +439,7 @@ export function TicketDetailsDrawer({
                           <MapPin className="h-4 w-4" />
                           Local do Sinistro
                         </div>
-                        <div className="font-medium text-base">
-                          {ticket.localizacao}
-                        </div>
+                        <div className="font-medium text-base">{ticket.localizacao}</div>
                       </div>
                     )}
 
@@ -361,9 +451,7 @@ export function TicketDetailsDrawer({
                           Última Atualização
                         </div>
                         <div className="font-medium text-base">
-                          {format(new Date(ticket.updated_at), "dd/MM/yyyy 'às' HH:mm", {
-                            locale: ptBR,
-                          })}
+                          {format(new Date(ticket.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </div>
                       </div>
                     )}
