@@ -27,6 +27,7 @@ const TIPOS_SINISTRO: ComboboxItem[] = [
   { id: 'incendio', label: 'Incêndio' },
   { id: 'danos_terceiros', label: 'Danos a Terceiros' },
   { id: 'invalidez_acidente', label: 'Invalidez por Acidente' },
+  { id: 'invalidez_doenca', label: 'Invalidez por Doença' },
   { id: 'morte', label: 'Morte' },
 ]
 

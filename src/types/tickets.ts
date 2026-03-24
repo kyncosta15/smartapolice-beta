@@ -6,7 +6,7 @@ export type TicketStatus = 'aberto' | 'em_analise' | 'finalizado' | 'cancelado';
 
 export type TicketSubtipo = 
   // Subtipos de Sinistro
-  | 'colisao' | 'roubo' | 'furto' | 'avaria' | 'incendio' | 'danos_terceiros' | 'invalidez_acidente' | 'morte'
+  | 'colisao' | 'roubo' | 'furto' | 'avaria' | 'incendio' | 'danos_terceiros' | 'invalidez_acidente' | 'invalidez_doenca' | 'morte'
   // Subtipos de Assistência
   | 'guincho' | 'vidro' | 'mecanica' | 'chaveiro' | 'pneu' | 'combustivel' | 'residencia';
 
