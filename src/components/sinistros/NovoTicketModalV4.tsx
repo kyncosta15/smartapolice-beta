@@ -242,17 +242,23 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
 
       // Preparar dados do ticket
       const ticketData = {
-        tipo: tipoTicket, // 'sinistro' ou 'assistencia'
-        subtipo: currentSubtipo, // tipo específico (colisao, guincho, etc)
+        tipo: tipoTicket,
+        subtipo: currentSubtipo,
         vehicle_id: selectedVehicle?.id || undefined,
         segurado_id: selectedSegurado?.id || undefined,
         apolice_id: relatedPolicy?.id,
         data_evento: dataEvento.toString(),
         valor_estimado: valorEstimado ? parseFloat(valorEstimado.replace(/[^\d,]/g, '').replace(',', '.')) : undefined,
-        localizacao: undefined, // Pode ser adicionado se necessário
+        localizacao: undefined,
         empresa_id: activeEmpresa,
         status: 'aberto',
         origem: 'portal',
+        numero_sinistro: numeroSinistro || undefined,
+        subsidiaria: subsidiaria || undefined,
+        beneficiario_nome: beneficiarioNome || undefined,
+        prazo: prazo ? prazo.toString() : undefined,
+        valor_pago: valorPago ? parseFloat(valorPago.replace(/[^\d,]/g, '').replace(',', '.')) : undefined,
+        status_indenizacao: statusIndenizacao,
         payload: {
           descricao,
           gravidade: tipoTicket === 'sinistro' ? gravidade : undefined,
