@@ -836,27 +836,95 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
             </div>
 
             {tipoTicket === 'sinistro' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Valor Estimado (R$)</Label>
-                  <Input
-                    placeholder="Ex: 5.000,00"
-                    value={valorEstimado}
-                    onChange={(e) => setValorEstimado(e.target.value)}
-                  />
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Nº do Sinistro</Label>
+                    <Input
+                      placeholder="Ex: 993/8664/2025"
+                      value={numeroSinistro}
+                      onChange={(e) => setNumeroSinistro(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Subsidiária</Label>
+                    <Input
+                      placeholder="Ex: ESCAVE BA"
+                      value={subsidiaria}
+                      onChange={(e) => setSubsidiaria(e.target.value)}
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <ComboboxRCorp
-                    label="Gravidade"
-                    placeholder="Digite para buscar..."
-                    items={NIVEIS_GRAVIDADE}
-                    selectedKey={gravidade || null}
-                    onSelectionChange={(key) => setGravidade(key as string || '')}
-                    allowsCustomValue={false}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Beneficiário</Label>
+                    <Input
+                      placeholder="Nome do beneficiário"
+                      value={beneficiarioNome}
+                      onChange={(e) => setBeneficiarioNome(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <ComboboxRCorp
+                      label="Gravidade"
+                      placeholder="Digite para buscar..."
+                      items={NIVEIS_GRAVIDADE}
+                      selectedKey={gravidade || null}
+                      onSelectionChange={(key) => setGravidade(key as string || '')}
+                      allowsCustomValue={false}
+                    />
+                  </div>
                 </div>
-              </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Valor Estimado (R$)</Label>
+                    <Input
+                      placeholder="Ex: 5.000,00"
+                      value={valorEstimado}
+                      onChange={(e) => setValorEstimado(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Valor Pago (R$)</Label>
+                    <Input
+                      placeholder="Ex: 56.000,00"
+                      value={valorPago}
+                      onChange={(e) => setValorPago(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <DatePickerRCorp
+                      label="Prazo"
+                      value={prazo}
+                      onChange={(date) => setPrazo(date)}
+                      description="Data limite para resolução"
+                    />
+                  </div>
+
+                  <div>
+                    <ComboboxRCorp
+                      label="Status Indenização"
+                      placeholder="Selecione..."
+                      items={[
+                        { id: 'indenizado', label: 'Indenizado' },
+                        { id: 'pendente', label: 'Pendente' },
+                        { id: 'negado', label: 'Negado' },
+                      ]}
+                      selectedKey={statusIndenizacao || null}
+                      onSelectionChange={(key) => setStatusIndenizacao(key as string || 'pendente')}
+                      allowsCustomValue={false}
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             <div>
