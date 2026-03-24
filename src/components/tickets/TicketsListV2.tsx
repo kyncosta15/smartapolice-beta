@@ -475,6 +475,32 @@ export function TicketsListV2({
           'em_analise': 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300',
           'finalizado': 'border-green-500 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',
         };
+
+        const isBeneficiarioStatus = !item.veiculo.placa || item.veiculo.placa === 'N/A';
+        const statusIndenizacao = 'status_indenizacao' in item ? (item as any).status_indenizacao : null;
+        
+        if (isBeneficiarioStatus && statusIndenizacao) {
+          const indenizacaoColors: Record<string, string> = {
+            'indenizado': 'border-green-500 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',
+            'pendente': 'border-yellow-500 bg-yellow-50 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300',
+            'negado': 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
+          };
+          const indenizacaoLabels: Record<string, string> = {
+            'indenizado': 'Indenizado',
+            'pendente': 'Pendente',
+            'negado': 'Negado',
+          };
+          return (
+            <Badge 
+              className={cn(
+                "font-semibold border-2 shadow-sm",
+                indenizacaoColors[statusIndenizacao] || "border-gray-500 bg-gray-50 text-gray-700"
+              )}
+            >
+              {indenizacaoLabels[statusIndenizacao] || statusIndenizacao}
+            </Badge>
+          );
+        }
         
         return (
           <Badge 
