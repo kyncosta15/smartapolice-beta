@@ -514,17 +514,27 @@ export function TicketsListV2({
         );
         
       case 'valor_estimado':
-        if ('valor_estimado' in item && item.valor_estimado) {
+        const valorPago = 'valor_pago' in item ? (item as any).valor_pago : null;
+        const valorEstimado = 'valor_estimado' in item ? (item as any).valor_estimado : null;
+        const valorExibir = valorPago ?? valorEstimado;
+        
+        if (valorExibir) {
           return (
             <div className="flex items-center gap-2 min-w-0">
-              <div className="p-1.5 rounded-md bg-green-100 dark:bg-green-950 flex-shrink-0">
-                <span className="text-green-600 dark:text-green-400 text-xs font-bold">R$</span>
+              <div className={cn(
+                "p-1.5 rounded-md flex-shrink-0",
+                valorPago ? "bg-blue-100 dark:bg-blue-950" : "bg-green-100 dark:bg-green-950"
+              )}>
+                <span className={cn(
+                  "text-xs font-bold",
+                  valorPago ? "text-blue-600 dark:text-blue-400" : "text-green-600 dark:text-green-400"
+                )}>R$</span>
               </div>
               <span className="font-bold text-sm tabular-nums truncate">
                 {new Intl.NumberFormat('pt-BR', {
                   style: 'currency',
                   currency: 'BRL',
-                }).format(item.valor_estimado)}
+                }).format(valorExibir)}
               </span>
             </div>
           );
