@@ -44,6 +44,13 @@ export type Claim = {
   descricao?: string;
   gravidade?: string;
   segurado_nome?: string;
+  segurado_id?: string;
+  numero_sinistro?: string;
+  subsidiaria?: string;
+  beneficiario_nome?: string;
+  prazo?: string;
+  valor_pago?: number;
+  status_indenizacao?: string;
   attachments?: Array<{ id: string; tipo: string; nome_arquivo: string; }>;
   created_at: string;
   updated_at: string;
