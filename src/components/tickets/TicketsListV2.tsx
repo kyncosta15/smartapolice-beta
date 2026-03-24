@@ -431,8 +431,9 @@ export function TicketsListV2({
         
       case 'veiculo':
         const isBeneficiario = !item.veiculo.placa || item.veiculo.placa === 'N/A';
+        const beneficiarioNome = (item as any).beneficiario_nome || item.segurado_nome;
         
-        if (isBeneficiario && 'beneficiario_nome' in item && (item as any).beneficiario_nome) {
+        if (isBeneficiario && beneficiarioNome) {
           return (
             <div className="space-y-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -442,8 +443,19 @@ export function TicketsListV2({
                 </Badge>
               </div>
               <div className="text-sm font-semibold truncate pl-5">
-                {(item as any).beneficiario_nome}
+                {beneficiarioNome}
               </div>
+            </div>
+          );
+        }
+        
+        if (isBeneficiario) {
+          return (
+            <div className="flex items-center gap-2 min-w-0">
+              <User className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />
+              <Badge variant="outline" className="text-xs border-purple-300 text-purple-700 dark:text-purple-300">
+                Beneficiário
+              </Badge>
             </div>
           );
         }
