@@ -107,6 +107,13 @@ export class ClaimsService {
           descricao: payload?.descricao || undefined,
           gravidade: payload?.gravidade || undefined,
           segurado_nome: ticket.segurado?.nome || undefined,
+          segurado_id: ticket.segurado_id || undefined,
+          numero_sinistro: ticket.numero_sinistro || undefined,
+          subsidiaria: ticket.subsidiaria || undefined,
+          beneficiario_nome: ticket.beneficiario_nome || undefined,
+          prazo: ticket.prazo || undefined,
+          valor_pago: ticket.valor_pago ? Number(ticket.valor_pago) : undefined,
+          status_indenizacao: ticket.status_indenizacao || undefined,
           attachments: Array.isArray(ticket.ticket_attachments) ? ticket.ticket_attachments : [],
           created_at: ticket.created_at,
           updated_at: ticket.updated_at
