@@ -80,6 +80,12 @@ export function NovoTicketModalV4({ trigger, onTicketCreated, initialTipo = 'sin
   const [valorEstimado, setValorEstimado] = useState('')
   const [gravidade, setGravidade] = useState('')
   const [descricao, setDescricao] = useState('')
+  const [numeroSinistro, setNumeroSinistro] = useState('')
+  const [subsidiaria, setSubsidiaria] = useState('')
+  const [beneficiarioNome, setBeneficiarioNome] = useState('')
+  const [prazo, setPrazo] = useState<any>(null)
+  const [valorPago, setValorPago] = useState('')
+  const [statusIndenizacao, setStatusIndenizacao] = useState('pendente')
   const [submitting, setSubmitting] = useState(false)
   
   const { toast } = useToast()
