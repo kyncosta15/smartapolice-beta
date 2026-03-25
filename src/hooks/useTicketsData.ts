@@ -296,11 +296,11 @@ export function useTicketsData() {
 
     return {
       totalSinistros: sinistros.length,
-      sinistrosAbertos: sinistros.filter(t => t.status === 'aberto' && t.status_indenizacao !== 'indenizado').length,
-      sinistrosFinalizados: sinistros.filter(t => t.status === 'finalizado' || t.status_indenizacao === 'indenizado').length,
+      sinistrosAbertos: sinistros.filter(t => t.status === 'aberto' && t.status_indenizacao !== 'indenizado' && t.status_indenizacao !== 'negado').length,
+      sinistrosFinalizados: sinistros.filter(t => t.status === 'finalizado' || t.status_indenizacao === 'indenizado' || t.status_indenizacao === 'negado').length,
       totalAssistencias: assistencias.length,
-      assistenciasAbertas: assistencias.filter(t => t.status === 'aberto' && t.status_indenizacao !== 'indenizado').length,
-      assistenciasFinalizadas: assistencias.filter(t => t.status === 'finalizado' || t.status_indenizacao === 'indenizado').length,
+      assistenciasAbertas: assistencias.filter(t => t.status === 'aberto' && t.status_indenizacao !== 'indenizado' && t.status_indenizacao !== 'negado').length,
+      assistenciasFinalizadas: assistencias.filter(t => t.status === 'finalizado' || t.status_indenizacao === 'indenizado' || t.status_indenizacao === 'negado').length,
       totalUltimos60Dias: ultimos60Dias.length,
     };
   }, [tickets]);
