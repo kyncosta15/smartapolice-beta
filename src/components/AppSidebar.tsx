@@ -76,13 +76,20 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   useEffect(() => {
     if (!user) return;
     const fetchSinistrosCount = async () => {
-      const { count } = await supabase
+      const { count: openCount } = await supabase
         .from('tickets')
         .select('id', { count: 'exact', head: true })
         .eq('tipo', 'sinistro')
         .not('status', 'eq', 'finalizado')
         .not('status_indenizacao', 'in', '("indenizado","negado")');
-      setSinistrosCount(count ?? 0);
+      setSinistrosCount(openCount ?? 0);
+
+      const { count: closedCount } = await supabase
+        .from('tickets')
+        .select('id', { count: 'exact', head: true })
+        .eq('tipo', 'sinistro')
+        .or('status.eq.finalizado,status_indenizacao.eq.indenizado,status_indenizacao.eq.negado');
+      setSinistrosFinalizados(closedCount ?? 0);
     };
     fetchSinistrosCount();
 
