@@ -46,6 +46,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const { activeEmpresaId } = useTenant();
   const [docCount, setDocCount] = useState<number>(0);
   const [sinistrosCount, setSinistrosCount] = useState<number>(0);
+  const [sinistrosFinalizados, setSinistrosFinalizados] = useState<number>(0);
 
   useEffect(() => {
     if (!user) return;
@@ -75,13 +76,20 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   useEffect(() => {
     if (!user) return;
     const fetchSinistrosCount = async () => {
-      const { count } = await supabase
+      const { count: openCount } = await supabase
         .from('tickets')
         .select('id', { count: 'exact', head: true })
         .eq('tipo', 'sinistro')
         .not('status', 'eq', 'finalizado')
         .not('status_indenizacao', 'in', '("indenizado","negado")');
-      setSinistrosCount(count ?? 0);
+      setSinistrosCount(openCount ?? 0);
+
+      const { count: closedCount } = await supabase
+        .from('tickets')
+        .select('id', { count: 'exact', head: true })
+        .eq('tipo', 'sinistro')
+        .or('status.eq.finalizado,status_indenizacao.eq.indenizado,status_indenizacao.eq.negado');
+      setSinistrosFinalizados(closedCount ?? 0);
     };
     fetchSinistrosCount();
 
@@ -201,9 +209,16 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                   </span>
                 )}
                 {open && item.id === 'claims' && sinistrosCount > 0 && (
-                  <span className="ml-auto text-[10px] font-semibold bg-destructive/15 text-destructive rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-                    {sinistrosCount}
-                  </span>
+                  <div className="ml-auto flex items-center gap-1">
+                    <span className="text-[10px] font-semibold bg-destructive/15 text-destructive rounded-full px-1.5 py-0.5 min-w-[20px] text-center" title="Em Aberto">
+                      {sinistrosCount}
+                    </span>
+                    {sinistrosFinalizados > 0 && (
+                      <span className="text-[10px] font-semibold bg-green-500/15 text-green-500 rounded-full px-1.5 py-0.5 min-w-[20px] text-center" title="Finalizados">
+                        {sinistrosFinalizados}
+                      </span>
+                    )}
+                  </div>
                 )}
                 {activeSection === item.id && open && item.id !== 'documentos' && item.id !== 'claims' && (
                   <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
