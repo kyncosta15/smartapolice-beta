@@ -199,7 +199,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                     {docCount}
                   </span>
                 )}
-                {activeSection === item.id && open && item.id !== 'documentos' && (
+                {open && item.id === 'claims' && sinistrosCount > 0 && (
+                  <span className="ml-auto text-[10px] font-semibold bg-destructive/15 text-destructive rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                    {sinistrosCount}
+                  </span>
+                )}
+                {activeSection === item.id && open && item.id !== 'documentos' && item.id !== 'claims' && (
                   <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 )}
               </SidebarMenuButton>
