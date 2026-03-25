@@ -36,6 +36,7 @@ export interface Ticket {
   payload?: any;
   external_ref?: string;
   sla_due_at?: string;
+  status_indenizacao?: string;
   created_at: string;
   updated_at: string;
   // Relacionamentos
