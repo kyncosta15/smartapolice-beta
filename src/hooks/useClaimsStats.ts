@@ -25,7 +25,8 @@ function isOpen(status: string): boolean {
   return OPEN_STATUSES.includes(status?.toLowerCase());
 }
 
-function isClosed(status: string): boolean {
+function isClosed(status: string, statusIndenizacao?: string): boolean {
+  if (statusIndenizacao && CLOSED_STATUSES.includes(statusIndenizacao.toLowerCase())) return true;
   return CLOSED_STATUSES.includes(status?.toLowerCase());
 }
 
