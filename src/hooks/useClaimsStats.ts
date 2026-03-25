@@ -19,7 +19,7 @@ export interface ClaimsStats {
 }
 
 const OPEN_STATUSES = ['aberto', 'em_analise', 'em_andamento', 'open'];
-const CLOSED_STATUSES = ['finalizado', 'encerrado', 'pago', 'closed'];
+const CLOSED_STATUSES = ['finalizado', 'encerrado', 'pago', 'closed', 'indenizado'];
 
 function isOpen(status: string): boolean {
   return OPEN_STATUSES.includes(status?.toLowerCase());
