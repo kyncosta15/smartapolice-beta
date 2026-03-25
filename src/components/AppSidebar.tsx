@@ -79,7 +79,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         .from('tickets')
         .select('id', { count: 'exact', head: true })
         .eq('tipo', 'sinistro')
-        .not('status', 'eq', 'finalizado');
+        .not('status', 'eq', 'finalizado')
+        .not('status_indenizacao', 'in', '("indenizado","negado")');
       setSinistrosCount(count ?? 0);
     };
     fetchSinistrosCount();
