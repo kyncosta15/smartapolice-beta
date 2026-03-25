@@ -46,6 +46,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const { activeEmpresaId } = useTenant();
   const [docCount, setDocCount] = useState<number>(0);
   const [sinistrosCount, setSinistrosCount] = useState<number>(0);
+  const [sinistrosFinalizados, setSinistrosFinalizados] = useState<number>(0);
 
   useEffect(() => {
     if (!user) return;
