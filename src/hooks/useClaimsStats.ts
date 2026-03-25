@@ -46,13 +46,13 @@ export function useClaimsStats(
   return useMemo(() => {
     // Calcular estatísticas dos sinistros
     const sinistrosTotal = claims.length;
-    const sinistrosAbertos = claims.filter(claim => isOpen(claim.status)).length;
-    const sinistrosFinalizados = claims.filter(claim => isClosed(claim.status)).length;
+    const sinistrosAbertos = claims.filter(claim => isOpen(claim.status, claim.status_indenizacao)).length;
+    const sinistrosFinalizados = claims.filter(claim => isClosed(claim.status, claim.status_indenizacao)).length;
 
     // Calcular estatísticas das assistências  
     const assistenciasTotal = assistances.length;
-    const assistenciasAbertas = assistances.filter(assistance => isOpen(assistance.status)).length;
-    const assistenciasFinalizadas = assistances.filter(assistance => isClosed(assistance.status)).length;
+    const assistenciasAbertas = assistances.filter(assistance => isOpen(assistance.status, (assistance as any).status_indenizacao)).length;
+    const assistenciasFinalizadas = assistances.filter(assistance => isClosed(assistance.status, (assistance as any).status_indenizacao)).length;
 
     // Calcular totais gerais
     const totalTickets = sinistrosTotal + assistenciasTotal;
