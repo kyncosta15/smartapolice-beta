@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,8 +10,12 @@ import { ValidityInfoCard } from './policy-details/ValidityInfoCard';
 import { VehicleInfoCard } from './policy-details/VehicleInfoCard';
 import { ResponsiblePersonCard } from './policy-details/ResponsiblePersonCard';
 import { EndossosCard } from './policy-details/EndossosCard';
+import { PolicySmartHeader } from './policy-details/PolicySmartHeader';
+import { PolicyActionCards } from './policy-details/PolicyActionCards';
+import { PolicyInsights } from './policy-details/PolicyInsights';
+import { PolicyInstallmentTimeline } from './policy-details/PolicyInstallmentTimeline';
+import { usePolicyInstallments } from './policy-details/usePolicyInstallments';
 
-import { renderValue } from '@/utils/renderValue';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,17 +32,16 @@ interface PolicyDetailsModalProps {
   onClose: () => void;
   policy: any;
   onDelete: (policyId: string) => void;
-  onUpdate?: () => void; // Callback para atualizar dados após edição de parcelas
+  onUpdate?: () => void;
 }
 
 export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate }: PolicyDetailsModalProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { installments, summary, loading, reload } = usePolicyInstallments(policy?.id || '');
 
   if (!policy) return null;
 
-  const handleDelete = () => {
-    setShowDeleteConfirm(true);
-  };
+  const handleDelete = () => setShowDeleteConfirm(true);
 
   const confirmDelete = () => {
     onDelete(policy.id);
@@ -47,48 +49,55 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
     onClose();
   };
 
-  // Processar coberturas - dar preferência para coberturas do N8N se disponíveis
-  let coverages = [];
+  // Build action items from installments
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   
-  if (policy.coberturas && Array.isArray(policy.coberturas)) {
-    // Coberturas do N8N com estrutura {descricao, lmi}
-    coverages = policy.coberturas;
-    console.log('📋 Usando coberturas do N8N:', coverages.map(c => ({ 
-      id: c.id, 
-      descricao: typeof c.descricao === 'string' ? c.descricao : 'objeto complexo',
-      lmi: c.lmi 
-    })));
-  } else if (policy.coverage && Array.isArray(policy.coverage)) {
-    // Fallback para coverage legacy (apenas strings)
-    coverages = policy.coverage.map((desc: string) => ({ 
-      descricao: desc,
-      lmi: undefined 
+  const actionItems = installments
+    .filter(inst => inst.status === 'vencido' || inst.status === 'a vencer')
+    .filter(inst => {
+      if (inst.status === 'vencido') return true;
+      // Upcoming: within 15 days
+      if (inst.vencimento) {
+        const d = new Date(inst.vencimento + 'T00:00:00');
+        const diff = (d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+        return diff <= 15 && diff >= 0;
+      }
+      return false;
+    })
+    .map(inst => ({
+      id: inst.id,
+      numero: inst.numero,
+      valor: inst.valor,
+      vencimento: inst.vencimento,
+      type: inst.status === 'vencido' ? 'overdue' as const : 'upcoming' as const,
+      apolice_parcela_id: inst.apolice_parcela_id,
+      policy_id: policy.id,
     }));
-    console.log('📋 Usando coberturas legacy:', coverages.map(c => ({ 
-      id: c.id, 
-      descricao: typeof c.descricao === 'string' ? c.descricao : 'objeto complexo',
-      lmi: c.lmi 
-    })));
-  } else {
-    // Array vazio se não há coberturas
-    coverages = [];
-    console.log('📋 Nenhuma cobertura encontrada para a apólice');
+
+  // Coverages
+  let coverages = [];
+  if (policy.coberturas && Array.isArray(policy.coberturas)) {
+    coverages = policy.coberturas;
+  } else if (policy.coverage && Array.isArray(policy.coverage)) {
+    coverages = policy.coverage.map((desc: string) => ({ descricao: desc, lmi: undefined }));
   }
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-6xl xl:max-w-7xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-0">
-          <DialogHeader className="border-b border-gray-200 pb-3 px-4 pt-4 sm:px-6 sm:pt-6 sticky top-0 bg-white/95 backdrop-blur-sm z-10">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto bg-background p-0 gap-0">
+          {/* Sticky Header */}
+          <DialogHeader className="border-b border-border pb-4 px-5 pt-5 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
             <div className="flex items-center justify-between gap-2">
-              <DialogTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 font-sf-pro">
+              <DialogTitle className="text-xl font-bold text-foreground">
                 Detalhes da Apólice
               </DialogTitle>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={handleDelete}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 shrink-0"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
               >
                 <Trash2 className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Excluir</span>
@@ -96,15 +105,46 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
             </div>
           </DialogHeader>
 
-          {/* LAYOUT MASONRY: elimina espaços vazios entre cards */}
-          <div className="p-4 sm:p-6 columns-1 lg:columns-2 gap-4 sm:gap-6 [&>*]:break-inside-avoid [&>*]:mb-4 sm:[&>*]:mb-6">
-            <GeneralInfoCard policy={policy} />
-            <InsurerInfoCard 
-              insurer={policy.seguradora || policy.insurer || 'Não informado'}
-              type={policy.tipo_seguro || policy.type || 'Não informado'}
-            />
+          <div className="p-5 space-y-6">
+            {/* 1. Smart Header - Status + Progress */}
+            {!loading && (
+              <PolicySmartHeader policy={policy} installmentsSummary={summary} />
+            )}
 
-            <FinancialInfoCard policy={policy} onInstallmentsUpdate={() => onUpdate?.()} />
+            {/* 2. Action Cards */}
+            {!loading && actionItems.length > 0 && (
+              <PolicyActionCards actions={actionItems} onStatusChange={reload} />
+            )}
+
+            {/* 3. Insights */}
+            {!loading && (
+              <PolicyInsights policy={policy} installmentsSummary={summary} />
+            )}
+
+            {/* 4. Installment Timeline */}
+            {!loading && installments.length > 0 && (
+              <PolicyInstallmentTimeline installments={installments} />
+            )}
+
+            {/* Separator */}
+            <div className="border-t border-border" />
+
+            {/* 5. Detailed Cards - Clean grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <GeneralInfoCard policy={policy} />
+              <InsurerInfoCard 
+                insurer={policy.seguradora || policy.insurer || 'Não informado'}
+                type={policy.tipo_seguro || policy.type || 'Não informado'}
+              />
+              <FinancialInfoCard policy={policy} onInstallmentsUpdate={() => { reload(); onUpdate?.(); }} />
+              <ValidityInfoCard policy={policy} />
+              <VehicleInfoCard policy={policy} onUpdate={() => onUpdate?.()} />
+              {(policy.insuredName || policy.documento) && (
+                <ResponsiblePersonCard policy={policy} />
+              )}
+            </div>
+
+            {/* 6. Coverages - Full width */}
             <CoveragesCard 
               coverages={coverages} 
               policyId={policy.id}
@@ -112,14 +152,8 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
               codfil={policy.codfil}
             />
 
-            <ValidityInfoCard policy={policy} />
-            <VehicleInfoCard policy={policy} onUpdate={() => onUpdate?.()} />
-
+            {/* 7. Endossos - Full width */}
             <EndossosCard policyId={policy.id} />
-
-            {(policy.insuredName || policy.documento) && (
-              <ResponsiblePersonCard policy={policy} />
-            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -131,11 +165,9 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
               Confirmar Exclusão
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground space-y-3">
-              <p>
-                Tem certeza que deseja excluir esta apólice?
-              </p>
+              <p>Tem certeza que deseja excluir esta apólice?</p>
               <p className="text-xs">
-                Esta ação não pode ser desfeita. Todos os dados relacionados, incluindo o arquivo PDF, serão permanentemente removidos.
+                Esta ação não pode ser desfeita. Todos os dados relacionados serão permanentemente removidos.
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
