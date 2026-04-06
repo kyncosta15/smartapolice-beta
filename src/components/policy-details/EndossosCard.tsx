@@ -182,15 +182,15 @@ export function EndossosCard({ policyId, onEndossosChange }: EndossosCardProps) 
   }
 
   return (
-    <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-gray-50/50 overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-amber-100 to-amber-50 pb-3 pt-4 px-4 border-b">
+    <Card className="shadow-lg border-0 bg-card overflow-hidden">
+      <CardHeader className="bg-muted/50 pb-3 pt-4 px-4 border-b border-border">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base font-semibold text-amber-800">
-            <FilePlus className="h-5 w-5 text-amber-600" />
+          <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+            <FilePlus className="h-5 w-5 text-primary" />
             Endossos ({endossos.length})
           </CardTitle>
           {totalEndossos > 0 && (
-            <span className="text-sm font-semibold text-amber-700 bg-amber-200/50 px-2 py-1 rounded-md">
+            <span className="text-sm font-semibold text-primary bg-primary/10 px-2 py-1 rounded-md">
               Total: {formatCurrency(totalEndossos)}
             </span>
           )}
@@ -206,11 +206,11 @@ export function EndossosCard({ policyId, onEndossosChange }: EndossosCardProps) 
             {endossos.map((doc, index) => (
               <div
                 key={doc.id}
-                className="flex flex-col p-3 rounded-lg bg-amber-50/50 hover:bg-amber-100/50 transition-colors border border-amber-200/50"
+                className="flex flex-col p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors border border-border"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 text-amber-700 font-semibold text-sm shrink-0">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
                       {endossos.length - index}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -230,19 +230,19 @@ export function EndossosCard({ policyId, onEndossosChange }: EndossosCardProps) 
                     size="sm"
                     onClick={() => handleDownload(doc)}
                     disabled={downloadingId === doc.id}
-                    className="shrink-0 h-8 w-8 p-0 hover:bg-amber-200/50"
+                    className="shrink-0 h-8 w-8 p-0 hover:bg-muted"
                     title="Baixar endosso"
                   >
                     {downloadingId === doc.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Download className="h-4 w-4 text-amber-700" />
+                      <Download className="h-4 w-4 text-primary" />
                     )}
                   </Button>
                 </div>
 
                 {/* Seção de Valor */}
-                <div className="mt-2 pt-2 border-t border-amber-200/50 flex items-center gap-2">
+                <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
                   {editingId === doc.id ? (
                     <>
                       <span className="text-xs text-muted-foreground">R$</span>
@@ -286,10 +286,10 @@ export function EndossosCard({ policyId, onEndossosChange }: EndossosCardProps) 
                         variant="ghost"
                         size="sm"
                         onClick={() => startEditing(doc)}
-                        className="h-7 w-7 p-0 hover:bg-amber-200/50"
+                        className="h-7 w-7 p-0 hover:bg-muted"
                         title="Editar valor"
                       >
-                        <Pencil className="h-3.5 w-3.5 text-amber-700" />
+                        <Pencil className="h-3.5 w-3.5 text-primary" />
                       </Button>
                     </>
                   )}
