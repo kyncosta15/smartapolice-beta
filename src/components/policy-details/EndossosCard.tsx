@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Download, Loader2, FilePlus, Pencil, Check, X } from 'lucide-react';
+import { EndossoParcelasSection } from './EndossoParcelasSection';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/utils/currencyFormatter';
@@ -294,6 +295,9 @@ export function EndossosCard({ policyId, onEndossosChange }: EndossosCardProps) 
                     </>
                   )}
                 </div>
+
+                {/* Seção de Parcelas */}
+                <EndossoParcelasSection endossoId={doc.id} />
               </div>
             ))}
           </div>
