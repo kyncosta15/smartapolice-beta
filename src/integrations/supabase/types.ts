@@ -1102,6 +1102,47 @@ export type Database = {
         }
         Relationships: []
       }
+      endosso_parcelas: {
+        Row: {
+          created_at: string
+          endosso_id: string
+          id: string
+          numero_parcela: number
+          status: string
+          updated_at: string
+          valor: number
+          vencimento: string
+        }
+        Insert: {
+          created_at?: string
+          endosso_id: string
+          id?: string
+          numero_parcela: number
+          status?: string
+          updated_at?: string
+          valor?: number
+          vencimento: string
+        }
+        Update: {
+          created_at?: string
+          endosso_id?: string
+          id?: string
+          numero_parcela?: number
+          status?: string
+          updated_at?: string
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "endosso_parcelas_endosso_id_fkey"
+            columns: ["endosso_id"]
+            isOneToOne: false
+            referencedRelation: "policy_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       files: {
         Row: {
           created_at: string | null
