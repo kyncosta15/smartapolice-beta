@@ -834,10 +834,22 @@ export function MyPolicies() {
                     {toText(policy.insurer)}
                   </p>
                   {policy.type && ['auto', 'automovel'].includes(policy.type.toLowerCase()) && (() => {
-                    const marca = policy.marca && policy.marca !== 'Não informado' && policy.marca !== 'N/A' ? policy.marca : '';
-                    const modelo = (policy.modelo_veiculo || policy.vehicleModel);
-                    const modeloVal = modelo && modelo !== 'Não informado' && modelo !== 'N/A' ? modelo : '';
+                    const sanitizeVehicleField = (value?: string | null) => {
+                      const text = String(value ?? '').trim();
+                      const normalized = text
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .toLowerCase()
+                        .replace(/\s+/g, ' ');
+
+                      const invalidValues = new Set(['nao informado', 'n informado', 'na', 'n/a', '-', '']);
+                      return invalidValues.has(normalized) ? '' : text;
+                    };
+
+                    const marca = sanitizeVehicleField(policy.marca);
+                    const modeloVal = sanitizeVehicleField(policy.modelo_veiculo || policy.vehicleModel);
                     const veiculoText = [marca, modeloVal].filter(Boolean).join(' ');
+
                     return veiculoText ? (
                       <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-foreground truncate">
                         {veiculoText}
