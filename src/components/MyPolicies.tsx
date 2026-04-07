@@ -833,11 +833,17 @@ export function MyPolicies() {
                   <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground truncate">
                     {toText(policy.insurer)}
                   </p>
-                  {policy.type && ['auto', 'automovel'].includes(policy.type.toLowerCase()) && (policy.modelo_veiculo || policy.vehicleModel || policy.marca) && (
-                    <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-foreground truncate">
-                      {[policy.marca, policy.modelo_veiculo || policy.vehicleModel].filter(Boolean).join(' ')}
-                    </p>
-                  )}
+                  {policy.type && ['auto', 'automovel'].includes(policy.type.toLowerCase()) && (() => {
+                    const marca = policy.marca && policy.marca !== 'Não informado' && policy.marca !== 'N/A' ? policy.marca : '';
+                    const modelo = (policy.modelo_veiculo || policy.vehicleModel);
+                    const modeloVal = modelo && modelo !== 'Não informado' && modelo !== 'N/A' ? modelo : '';
+                    const veiculoText = [marca, modeloVal].filter(Boolean).join(' ');
+                    return veiculoText ? (
+                      <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-foreground truncate">
+                        {veiculoText}
+                      </p>
+                    ) : null;
+                  })()}
                   {/* Nome do Plano de Saúde */}
                   {policy.nome_plano_saude && String(policy.nome_plano_saude).trim() !== '' && policy.nome_plano_saude !== 'Não informado' && policy.nome_plano_saude !== 'N/A' && (
                     <p className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 truncate font-medium">
