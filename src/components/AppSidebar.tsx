@@ -18,8 +18,17 @@ import {
   CheckSquare,
   Crown,
   Heart,
-  FolderOpen
+  FolderOpen,
+  Shield,
+  ChevronDown,
+  Landmark,
+  Building2
 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -31,6 +40,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   useSidebar,
 } from '@/components/ui/sidebar';
 
@@ -104,12 +116,21 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   }, [user]);
   // Verificar se é admin pelo is_admin flag
   const isAdmin = profile?.is_admin === true;
+  const [centralSegurosOpen, setCentralSegurosOpen] = useState(
+    activeSection === 'seguro-garantia' || activeSection === 'fianca-locaticia'
+  );
+
+  const centralSegurosSubItems = [
+    { id: 'seguro-garantia', title: 'Seguro Garantia', icon: Shield },
+    { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: Building2 },
+  ];
 
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Minhas Apólices', icon: FileText },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+    { id: 'central-seguros', title: 'Central de Seguros', icon: Landmark, isGroup: true },
     { id: 'documentos', title: 'Documentos', icon: FolderOpen },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
@@ -124,6 +145,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+    { id: 'central-seguros', title: 'Central de Seguros', icon: Landmark, isGroup: true },
     { id: 'documentos', title: 'Documentos', icon: FolderOpen },
     { id: 'aprovacoes', title: 'Aprovações', icon: CheckSquare },
     { id: 'upload', title: 'Upload', icon: Upload },
@@ -133,8 +155,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
   ];
 
-  // Admin puro sempre tem navegação vazia, só acessa painel admin
-  // Usuários RH/Corretora/etc. têm navegação normal
   const navigation = isAdmin 
     ? [] 
     : clientNavigation;
@@ -175,7 +195,74 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         )}
         
         <SidebarMenu className={cn(open ? "space-y-1" : "space-y-4")}>
-          {navigation.map((item) => (
+          {navigation.map((item) => {
+            if (item.id === 'central-seguros') {
+              const isSubActive = centralSegurosSubItems.some(sub => sub.id === activeSection);
+              return (
+                <Collapsible
+                  key={item.id}
+                  open={centralSegurosOpen}
+                  onOpenChange={setCentralSegurosOpen}
+                  className="group/collapsible"
+                >
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton
+                        tooltip={item.title}
+                        className={cn(
+                          "group flex items-center gap-3 text-sm w-full",
+                          "transition-all duration-200 ease-out font-medium relative overflow-hidden",
+                          "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                          "hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]",
+                          "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
+                          open ? "rounded-xl px-3 py-2.5" : "rounded-full w-10 h-10 p-0 justify-center",
+                          isSubActive && [
+                            "bg-gradient-to-r from-primary/15 to-primary/5 text-foreground shadow-sm border border-primary/10",
+                          ]
+                        )}
+                      >
+                        <item.icon className={cn(
+                          "size-4 transition-all duration-200 flex-shrink-0",
+                          isSubActive
+                            ? "text-foreground drop-shadow-sm"
+                            : "text-muted-foreground group-hover:text-accent-foreground group-hover:scale-110"
+                        )} />
+                        {open && <span className="truncate">{item.title}</span>}
+                        {open && (
+                          <ChevronDown className={cn(
+                            "ml-auto size-4 text-muted-foreground transition-transform duration-200",
+                            centralSegurosOpen && "rotate-180"
+                          )} />
+                        )}
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    {open && (
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {centralSegurosSubItems.map((sub) => (
+                            <SidebarMenuSubItem key={sub.id}>
+                              <SidebarMenuSubButton
+                                onClick={() => onSectionChange(sub.id)}
+                                isActive={activeSection === sub.id}
+                                className={cn(
+                                  "cursor-pointer transition-all duration-200",
+                                  activeSection === sub.id && "text-foreground font-medium bg-primary/10"
+                                )}
+                              >
+                                <sub.icon className="size-3.5 mr-2 flex-shrink-0" />
+                                <span>{sub.title}</span>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    )}
+                  </SidebarMenuItem>
+                </Collapsible>
+              );
+            }
+
+            return (
             <SidebarMenuItem key={item.id}>
               <SidebarMenuButton
                 onClick={() => onSectionChange(item.id)}
@@ -187,7 +274,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                   "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                   "hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]",
                   "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
-                  // Quando colapsado: circular, caso contrário: rounded-xl
                   open ? "rounded-xl px-3 py-2.5" : "rounded-full w-10 h-10 p-0 justify-center",
                   activeSection === item.id && [
                     "bg-gradient-to-r from-primary/15 to-primary/5 text-foreground shadow-sm border border-primary/10",
@@ -214,7 +300,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                       {sinistrosCount}
                     </span>
                     {sinistrosFinalizados > 0 && (
-                      <span className="text-[10px] font-semibold bg-green-500/15 text-green-500 rounded-full px-1.5 py-0.5 min-w-[20px] text-center" title="Finalizados">
+                      <span className="text-[10px] font-semibold bg-green-500/15 text-green-600 rounded-full px-1.5 py-0.5 min-w-[20px] text-center" title="Finalizados">
                         {sinistrosFinalizados}
                       </span>
                     )}
@@ -225,7 +311,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 )}
               </SidebarMenuButton>
             </SidebarMenuItem>
-          ))}
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
 

@@ -23,6 +23,8 @@ import { UserProfile } from './UserProfile';
 import { AdminApprovalsPage } from './insurance/AdminApprovalsPage';
 import { SmartBeneficiosEmbed } from './SmartBeneficiosEmbed';
 import { DocumentsCenter } from './documents/DocumentsCenter';
+import { SeguroGarantiaPage } from './central-seguros/SeguroGarantiaPage';
+import { FiancaLocaticiaPage } from './central-seguros/FiancaLocaticiaPage';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { PolicyData } from './charts/chartData';
 
@@ -259,6 +261,12 @@ export function ContentRenderer({
 
     case 'smartbeneficios':
       return <SmartBeneficiosEmbed />;
+
+    case 'seguro-garantia':
+      return <SeguroGarantiaPage />;
+
+    case 'fianca-locaticia':
+      return <FiancaLocaticiaPage />;
 
     default:
       return (
