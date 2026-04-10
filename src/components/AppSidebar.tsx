@@ -116,12 +116,21 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   }, [user]);
   // Verificar se é admin pelo is_admin flag
   const isAdmin = profile?.is_admin === true;
+  const [centralSegurosOpen, setCentralSegurosOpen] = useState(
+    activeSection === 'seguro-garantia' || activeSection === 'fianca-locaticia'
+  );
+
+  const centralSegurosSubItems = [
+    { id: 'seguro-garantia', title: 'Seguro Garantia', icon: Shield },
+    { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: Building2 },
+  ];
 
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
     { id: 'policies', title: 'Minhas Apólices', icon: FileText },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+    { id: 'central-seguros', title: 'Central de Seguros', icon: Landmark, isGroup: true },
     { id: 'documentos', title: 'Documentos', icon: FolderOpen },
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
@@ -136,6 +145,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+    { id: 'central-seguros', title: 'Central de Seguros', icon: Landmark, isGroup: true },
     { id: 'documentos', title: 'Documentos', icon: FolderOpen },
     { id: 'aprovacoes', title: 'Aprovações', icon: CheckSquare },
     { id: 'upload', title: 'Upload', icon: Upload },
@@ -145,8 +155,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
   ];
 
-  // Admin puro sempre tem navegação vazia, só acessa painel admin
-  // Usuários RH/Corretora/etc. têm navegação normal
   const navigation = isAdmin 
     ? [] 
     : clientNavigation;
