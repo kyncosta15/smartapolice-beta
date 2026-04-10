@@ -1600,6 +1600,249 @@ export type Database = {
         }
         Relationships: []
       }
+      guarantee_auth_sessions: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string | null
+          status: string
+          token_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          status?: string
+          token_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          status?: string
+          token_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      guarantee_billing_sync_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          filters_used: Json | null
+          id: string
+          items_created: number | null
+          items_fetched: number | null
+          items_updated: number | null
+          status: string
+          sync_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          filters_used?: Json | null
+          id?: string
+          items_created?: number | null
+          items_fetched?: number | null
+          items_updated?: number | null
+          status: string
+          sync_type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          filters_used?: Json | null
+          id?: string
+          items_created?: number | null
+          items_fetched?: number | null
+          items_updated?: number | null
+          status?: string
+          sync_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      guarantee_billings: {
+        Row: {
+          amount_due: number | null
+          amount_paid: number | null
+          bill_url: string | null
+          booklet_number: string | null
+          cancellation_date: string | null
+          created_at: string
+          days_overdue: number | null
+          discount: number | null
+          document_number: string | null
+          document_type: string | null
+          economic_group: string | null
+          expiration_date: string | null
+          external_id: string | null
+          id: string
+          installment_number: number | null
+          modality: string | null
+          original_expiration_date: string | null
+          payment_date: string | null
+          policy_number: string | null
+          policyholder_document: string | null
+          policyholder_name: string | null
+          raw_data: Json | null
+          status: string | null
+          synced_at: string
+          updated_at: string
+          user_id: string
+          write_off_date: string | null
+        }
+        Insert: {
+          amount_due?: number | null
+          amount_paid?: number | null
+          bill_url?: string | null
+          booklet_number?: string | null
+          cancellation_date?: string | null
+          created_at?: string
+          days_overdue?: number | null
+          discount?: number | null
+          document_number?: string | null
+          document_type?: string | null
+          economic_group?: string | null
+          expiration_date?: string | null
+          external_id?: string | null
+          id?: string
+          installment_number?: number | null
+          modality?: string | null
+          original_expiration_date?: string | null
+          payment_date?: string | null
+          policy_number?: string | null
+          policyholder_document?: string | null
+          policyholder_name?: string | null
+          raw_data?: Json | null
+          status?: string | null
+          synced_at?: string
+          updated_at?: string
+          user_id: string
+          write_off_date?: string | null
+        }
+        Update: {
+          amount_due?: number | null
+          amount_paid?: number | null
+          bill_url?: string | null
+          booklet_number?: string | null
+          cancellation_date?: string | null
+          created_at?: string
+          days_overdue?: number | null
+          discount?: number | null
+          document_number?: string | null
+          document_type?: string | null
+          economic_group?: string | null
+          expiration_date?: string | null
+          external_id?: string | null
+          id?: string
+          installment_number?: number | null
+          modality?: string | null
+          original_expiration_date?: string | null
+          payment_date?: string | null
+          policy_number?: string | null
+          policyholder_document?: string | null
+          policyholder_name?: string | null
+          raw_data?: Json | null
+          status?: string | null
+          synced_at?: string
+          updated_at?: string
+          user_id?: string
+          write_off_date?: string | null
+        }
+        Relationships: []
+      }
+      guarantee_integration_logs: {
+        Row: {
+          action: string
+          created_at: string
+          duration_ms: number | null
+          endpoint: string | null
+          error_message: string | null
+          id: string
+          method: string | null
+          request_params: Json | null
+          response_summary: Json | null
+          status_code: number | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          duration_ms?: number | null
+          endpoint?: string | null
+          error_message?: string | null
+          id?: string
+          method?: string | null
+          request_params?: Json | null
+          response_summary?: Json | null
+          status_code?: number | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          duration_ms?: number | null
+          endpoint?: string | null
+          error_message?: string | null
+          id?: string
+          method?: string | null
+          request_params?: Json | null
+          response_summary?: Json | null
+          status_code?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      guarantee_settings: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          environment: string
+          id: string
+          last_connection_test: string | null
+          last_error: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          last_connection_test?: string | null
+          last_error?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          last_connection_test?: string | null
+          last_error?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       import_jobs: {
         Row: {
           created_at: string | null
