@@ -314,17 +314,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
             );
           })}
         </SidebarMenu>
-                      </span>
-                    )}
-                  </div>
-                )}
-                {activeSection === item.id && open && item.id !== 'documentos' && item.id !== 'claims' && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                )}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
       </SidebarContent>
 
       {/* Footer - Logout Button */}
