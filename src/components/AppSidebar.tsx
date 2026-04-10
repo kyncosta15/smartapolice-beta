@@ -18,8 +18,17 @@ import {
   CheckSquare,
   Crown,
   Heart,
-  FolderOpen
+  FolderOpen,
+  Shield,
+  ChevronDown,
+  Landmark,
+  Building2
 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -31,6 +40,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   useSidebar,
 } from '@/components/ui/sidebar';
 
