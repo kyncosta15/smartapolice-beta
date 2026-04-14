@@ -4430,6 +4430,7 @@ export type Database = {
         }[]
       }
       test_get_user_empresa: { Args: never; Returns: Json }
+      trigger_sinistro_sheet_sync: { Args: never; Returns: undefined }
       validate_session_token: {
         Args: { p_token: string }
         Returns: {
