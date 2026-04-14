@@ -3102,6 +3102,97 @@ export type Database = {
           },
         ]
       }
+      sinistro_sheet_configs: {
+        Row: {
+          created_at: string
+          empresa_id: string
+          id: string
+          last_synced_at: string | null
+          sheet_name: string
+          sheet_url: string
+          status: string
+          sync_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id: string
+          id?: string
+          last_synced_at?: string | null
+          sheet_name?: string
+          sheet_url: string
+          status?: string
+          sync_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          last_synced_at?: string | null
+          sheet_name?: string
+          sheet_url?: string
+          status?: string
+          sync_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sinistro_sheet_configs_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sinistro_sheet_sync_logs: {
+        Row: {
+          config_id: string
+          created_at: string
+          detalhes: Json | null
+          erros: number | null
+          id: string
+          registros_encontrados: number | null
+          registros_existentes: number | null
+          registros_novos: number | null
+          status: string
+        }
+        Insert: {
+          config_id: string
+          created_at?: string
+          detalhes?: Json | null
+          erros?: number | null
+          id?: string
+          registros_encontrados?: number | null
+          registros_existentes?: number | null
+          registros_novos?: number | null
+          status?: string
+        }
+        Update: {
+          config_id?: string
+          created_at?: string
+          detalhes?: Json | null
+          erros?: number | null
+          id?: string
+          registros_encontrados?: number | null
+          registros_existentes?: number | null
+          registros_novos?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sinistro_sheet_sync_logs_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "sinistro_sheet_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       submission_rate_limits: {
         Row: {
           blocked_until: string | null

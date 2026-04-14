@@ -6,7 +6,8 @@ import {
   BarChart3,
   FileText,
   Calculator,
-  Settings
+  Settings,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface HamburgerMenuProps {
@@ -16,6 +17,7 @@ interface HamburgerMenuProps {
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+  { id: 'importar', label: 'Importar Planilha', icon: FileSpreadsheet },
   { id: 'crlv', label: 'CRLV', icon: FileText },
   { id: 'relatorios', label: 'Relatórios', icon: Calculator },
   { id: 'config', label: 'Configurações', icon: Settings },
