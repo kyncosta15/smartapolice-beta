@@ -812,6 +812,7 @@ export function MyPolicies() {
                            policy.type === 'empresarial' ? 'EMPRESARIAL' :
                            policy.type === 'acidentes_pessoais' ? 'ACIDENTES PESSOAIS' :
                            policy.type === 'nautico' ? 'NÁUTICO' :
+                           policy.type === 'garantia' || policy.type === 'garantia_obrigacoes' ? 'GARANTIA DE OBRIGAÇÕES' :
                            policy.type.toUpperCase()}
                         </span>
                       </div>
