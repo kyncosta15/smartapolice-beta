@@ -1,4 +1,5 @@
 import { safeString } from '@/utils/safeDataRenderer';
+import { PolicyTypeNormalizer } from '@/utils/parsers/policyTypeNormalizer';
 
 // lib/policies.ts - CORREÇÃO CONSERVADORA
 type SeguradoraObj = { empresa?: string; entidade?: string | null };
@@ -62,10 +63,14 @@ export function normalizePolicy(raw: any) {
     premio_calculado: premio
   });
   
-  // CRÍTICO: Priorizar tipo_seguro do banco
-  const tipoSeguro = safeString(
+  // CRÍTICO: Priorizar tipo_seguro do banco e forçar normalização para garantias
+  const tipoSeguroRaw = safeString(
     raw.tipo_seguro ?? raw.tipo ?? raw.type ?? "N/A"
   );
+
+  const tipoSeguro = PolicyTypeNormalizer.normalizeType(tipoSeguroRaw) === 'garantia_obrigacoes'
+    ? 'garantia_obrigacoes'
+    : tipoSeguroRaw;
 
   return {
     ...raw,
