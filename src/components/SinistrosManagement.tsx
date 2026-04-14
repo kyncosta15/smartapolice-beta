@@ -10,6 +10,7 @@ import { SinistrosDashboard } from './sinistros/SinistrosDashboard';
 import { SinistrosCRLV } from './sinistros/SinistrosCRLV';
 import { SinistrosRelatorios } from './sinistros/SinistrosRelatorios';
 import { SinistrosConfiguracoes } from './sinistros/SinistrosConfiguracoes';
+import { SinistrosSheetSync } from './sinistros/SinistrosSheetSync';
 import { HamburgerMenu } from './sinistros/HamburgerMenu';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { normalizePolicy } from '@/lib/policies';
@@ -107,6 +108,10 @@ export function SinistrosManagement({
 
         <TabsContent value="tickets">
           <TicketsDashboard />
+        </TabsContent>
+
+        <TabsContent value="importar">
+          <SinistrosSheetSync />
         </TabsContent>
 
         <TabsContent value="novo">
