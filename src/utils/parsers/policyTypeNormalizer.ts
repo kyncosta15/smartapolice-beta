@@ -2,32 +2,45 @@
 export class PolicyTypeNormalizer {
   private static readonly TYPE_MAP: { [key: string]: string } = {
     'auto': 'auto',
-    'automóvel': 'auto',
     'automovel': 'auto',
     'veicular': 'auto',
     'veiculos': 'auto',
     'vida': 'vida',
-    'saúde': 'saude',
     'saude': 'saude',
     'residencial': 'patrimonial',
     'patrimonial': 'patrimonial',
-    'empresarial': 'empresarial', // CORREÇÃO: Adicionar mapeamento para empresarial
+    'empresarial': 'empresarial',
     'acidentes pessoais': 'acidentes_pessoais',
-    'acidentes pessoais - estagiário': 'acidentes_pessoais',
-    'acidentes pessoais - estagiario': 'acidentes_pessoais'
+    'acidentes pessoais - estagiario': 'acidentes_pessoais',
+    'garantia': 'garantia_obrigacoes',
+    'garantia de obrigacoes': 'garantia_obrigacoes',
+    'garantia obrigacoes': 'garantia_obrigacoes',
+    'seguro garantia': 'garantia_obrigacoes'
   };
 
+  private static sanitizeType(tipo: string): string {
+    return tipo
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
   static normalizeType(tipo: string): string {
-    const normalized = tipo.toLowerCase().trim();
-    
-    // Verificar se contém "acidentes pessoais" em qualquer variação
+    const normalized = this.sanitizeType(tipo || '');
+
+    if (!normalized) return 'auto';
+
     if (normalized.includes('acidentes pessoais')) {
       return 'acidentes_pessoais';
     }
-    
-    // CORREÇÃO: Verificar se contém "empresarial" em qualquer variação
+
     if (normalized.includes('empresarial')) {
       return 'empresarial';
+    }
+
+    if (normalized.includes('garantia')) {
+      return 'garantia_obrigacoes';
     }
     
     return this.TYPE_MAP[normalized] || 'auto';

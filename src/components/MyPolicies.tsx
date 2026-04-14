@@ -132,11 +132,49 @@ export function MyPolicies() {
     return isDependent;
   };
 
-  // Função para obter o ícone do tipo de seguro
+  // Funções helpers para normalizar e exibir o tipo de seguro
+  const normalizePolicyType = (type?: string) => {
+    const normalizedType =
+      type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() || '';
+
+    if (normalizedType.includes('garantia')) {
+      return 'garantia_obrigacoes';
+    }
+
+    return normalizedType;
+  };
+
+  const getPolicyTypeLabel = (type?: string) => {
+    switch (normalizePolicyType(type)) {
+      case 'auto':
+      case 'automovel':
+        return 'AUTOMÓVEL';
+      case 'vida':
+        return 'VIDA';
+      case 'saude':
+        return 'SAÚDE';
+      case 'residencial':
+        return 'RESIDENCIAL';
+      case 'patrimonial':
+        return 'PATRIMONIAL';
+      case 'empresarial':
+        return 'EMPRESARIAL';
+      case 'acidentes_pessoais':
+        return 'ACIDENTES PESSOAIS';
+      case 'nautico':
+        return 'NÁUTICO';
+      case 'garantia':
+      case 'garantia_obrigacoes':
+        return 'GARANTIA DE OBRIGAÇÕES';
+      default:
+        return type?.toUpperCase() || 'N/A';
+    }
+  };
+
   const getTypeIcon = (type: string) => {
     const iconClass = 'h-4 w-4';
-    const normalizedType = type?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
-    
+    const normalizedType = normalizePolicyType(type);
+
     switch (normalizedType) {
       case 'auto':
       case 'automovel':
@@ -155,6 +193,9 @@ export function MyPolicies() {
       case 'nautico':
         console.log('⚓ [getTypeIcon] Renderizando Anchor icon para nautico');
         return <Anchor className={`${iconClass} text-cyan-600 dark:text-cyan-400`} />;
+      case 'garantia':
+      case 'garantia_obrigacoes':
+        return <Shield className={`${iconClass} text-primary`} />;
       default:
         console.log('🛡️ [getTypeIcon] Usando Shield icon (default) para:', type);
         return <Shield className={`${iconClass} text-gray-600 dark:text-gray-400`} />;
@@ -169,6 +210,7 @@ export function MyPolicies() {
   
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
     const finalStatus = policy.status as PolicyStatus;
+    const normalizedPolicyType = normalizePolicyType(toText(policy.type)) || toText(policy.type);
     
     console.log(`✅ [MyPolicies] Apólice ${toText(policy.name)}: status do banco = ${finalStatus}`);
     
@@ -177,7 +219,7 @@ export function MyPolicies() {
       name: toText(policy.name),
       insurer: toText(policy.insurer),
       policyNumber: toText(policy.policyNumber),
-      type: toText(policy.type),
+      type: normalizedPolicyType,
       monthlyAmount: typeof policy.monthlyAmount === 'number' ? policy.monthlyAmount : 0,
       startDate: policy.startDate,
       endDate: policy.endDate,
@@ -804,16 +846,7 @@ export function MyPolicies() {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {getTypeIcon(policy.type)}
                         <span className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide leading-tight">
-                          {policy.type === 'auto' || policy.type === 'automovel' ? 'AUTOMÓVEL' : 
-                           policy.type === 'vida' ? 'VIDA' :
-                           policy.type === 'saude' ? 'SAÚDE' :
-                           policy.type === 'residencial' ? 'RESIDENCIAL' :
-                           policy.type === 'patrimonial' ? 'PATRIMONIAL' :
-                           policy.type === 'empresarial' ? 'EMPRESARIAL' :
-                           policy.type === 'acidentes_pessoais' ? 'ACIDENTES PESSOAIS' :
-                           policy.type === 'nautico' ? 'NÁUTICO' :
-                           policy.type === 'garantia' || policy.type === 'garantia_obrigacoes' ? 'GARANTIA DE OBRIGAÇÕES' :
-                           policy.type.toUpperCase()}
+                          {getPolicyTypeLabel(policy.type)}
                         </span>
                       </div>
                       <div className="flex items-start gap-1.5">
