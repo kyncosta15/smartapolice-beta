@@ -803,7 +803,7 @@ export function MyPolicies() {
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {getTypeIcon(policy.type)}
-                        <span className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                        <span className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide leading-tight">
                           {policy.type === 'auto' || policy.type === 'automovel' ? 'AUTOMÓVEL' : 
                            policy.type === 'vida' ? 'VIDA' :
                            policy.type === 'saude' ? 'SAÚDE' :
