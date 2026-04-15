@@ -15,9 +15,10 @@ import { GarantiaFilesPanel } from './garantia/GarantiaFilesPanel';
 import { GarantiaInsuredPanel } from './garantia/GarantiaInsuredPanel';
 import { GarantiaIncreaseValuePanel } from './garantia/GarantiaIncreaseValuePanel';
 import { GarantiaJudicialCivilPanel } from './garantia/GarantiaJudicialCivilPanel';
+import { GarantiaJudicialFiscalPanel } from './garantia/GarantiaJudicialFiscalPanel';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
-type ActiveView = 'home' | 'policies' | 'endorsements' | 'policyholders' | 'billings' | 'cancellation' | 'document' | 'files' | 'increasevalue' | 'economic-group' | 'insured' | 'judicial-civil';
+type ActiveView = 'home' | 'policies' | 'endorsements' | 'policyholders' | 'billings' | 'cancellation' | 'document' | 'files' | 'increasevalue' | 'economic-group' | 'insured' | 'judicial-civil' | 'judicial-fiscal';
 
 const modules: { key: ActiveView; label: string; desc: string; icon: React.ElementType; span?: 'full' | 'half' }[] = [
   { key: 'policies', label: 'Apólices', desc: 'Consultar e sincronizar apólices emitidas', icon: Shield },
