@@ -1765,6 +1765,93 @@ export type Database = {
         }
         Relationships: []
       }
+      guarantee_endorsements: {
+        Row: {
+          additional_info: string | null
+          broker_name: string | null
+          created_at: string
+          document_number: number | null
+          document_type: string | null
+          document_type_id: number | null
+          duration_days: number | null
+          duration_end: string | null
+          duration_start: string | null
+          endorsement_secured_amount: number | null
+          external_id: number | null
+          id: string
+          insured_document: string | null
+          insured_name: string | null
+          main_document_number: number | null
+          main_policy_number: string | null
+          modality: string | null
+          policyholder_document: string | null
+          policyholder_name: string | null
+          premium_value: number | null
+          raw_data: Json | null
+          status: string | null
+          submodality: string | null
+          synced_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_info?: string | null
+          broker_name?: string | null
+          created_at?: string
+          document_number?: number | null
+          document_type?: string | null
+          document_type_id?: number | null
+          duration_days?: number | null
+          duration_end?: string | null
+          duration_start?: string | null
+          endorsement_secured_amount?: number | null
+          external_id?: number | null
+          id?: string
+          insured_document?: string | null
+          insured_name?: string | null
+          main_document_number?: number | null
+          main_policy_number?: string | null
+          modality?: string | null
+          policyholder_document?: string | null
+          policyholder_name?: string | null
+          premium_value?: number | null
+          raw_data?: Json | null
+          status?: string | null
+          submodality?: string | null
+          synced_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_info?: string | null
+          broker_name?: string | null
+          created_at?: string
+          document_number?: number | null
+          document_type?: string | null
+          document_type_id?: number | null
+          duration_days?: number | null
+          duration_end?: string | null
+          duration_start?: string | null
+          endorsement_secured_amount?: number | null
+          external_id?: number | null
+          id?: string
+          insured_document?: string | null
+          insured_name?: string | null
+          main_document_number?: number | null
+          main_policy_number?: string | null
+          modality?: string | null
+          policyholder_document?: string | null
+          policyholder_name?: string | null
+          premium_value?: number | null
+          raw_data?: Json | null
+          status?: string | null
+          submodality?: string | null
+          synced_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       guarantee_integration_logs: {
         Row: {
           action: string
