@@ -284,40 +284,38 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
               {selectedFiles.length > 0 && (
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between px-1">
-                    <p className="text-sm font-medium text-gray-700">
+                    <p className="text-sm font-medium text-foreground">
                       {selectedFiles.length} arquivo(s) pronto(s)
                     </p>
                     <button
                       onClick={() => setSelectedFiles([])}
-                      className="text-xs text-gray-500 hover:text-red-600 underline"
+                      className="text-xs text-muted-foreground hover:text-destructive underline"
                     >
                       Limpar
                     </button>
                   </div>
                   
-                  <div className="max-h-40 overflow-y-auto space-y-2 bg-gray-50 rounded-lg p-3">
+                  <div className="max-h-40 overflow-y-auto space-y-1.5 bg-muted/30 rounded-lg p-3">
                     {selectedFiles.map((file, idx) => (
                       <div 
                         key={idx} 
-                        className="flex items-center justify-between p-2 bg-white rounded border border-gray-200"
+                        className="flex items-center gap-3 px-3 py-2 bg-background rounded-md border border-border"
                       >
-                        <div className="flex items-center space-x-2 flex-1 min-w-0">
-                          <span className="text-blue-500 text-sm">📄</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-800 truncate">
-                              {file.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {(file.size / 1024).toFixed(1)} KB
-                            </p>
-                          </div>
+                        <FilePlus className="h-4 w-4 text-primary flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground truncate">
+                            {file.name}
+                          </p>
                         </div>
+                        <span className="text-xs text-muted-foreground">
+                          {(file.size / 1024).toFixed(0)} KB
+                        </span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
                           }}
-                          className="ml-2 text-gray-400 hover:text-red-500 transition-colors text-lg"
+                          className="text-muted-foreground hover:text-destructive transition-colors text-lg leading-none"
                         >
                           ×
                         </button>
