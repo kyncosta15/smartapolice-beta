@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { RefreshCw, Loader2, Users, Search, Building2, Shield, TrendingUp } from 'lucide-react';
+import { RefreshCw, Loader2, Users, Search, Building2, Shield, TrendingUp, Eye, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,11 +26,19 @@ interface Policyholder {
   activityBranch?: string;
 }
 
+interface PolicyholderDetail {
+  policyholder: any;
+  modalities: any[] | null;
+  limits: any;
+}
+
 export function GarantiaPolicyholdersPanel() {
   const [policyholders, setPolicyholders] = useState<Policyholder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSynced, setHasSynced] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
+  const [selectedDetail, setSelectedDetail] = useState<PolicyholderDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const fetchPolicyholders = useCallback(async () => {
     setIsLoading(true);
@@ -41,7 +49,6 @@ export function GarantiaPolicyholdersPanel() {
         pageSize: 500,
       };
       if (searchFilter.trim()) {
-        // If looks like a CNPJ (digits only), use federalId; otherwise use name
         const cleaned = searchFilter.replace(/\D/g, '');
         if (cleaned.length >= 11) {
           body.federalId = cleaned;
@@ -70,6 +77,36 @@ export function GarantiaPolicyholdersPanel() {
       setIsLoading(false);
     }
   }, [searchFilter]);
+
+  const fetchDetails = useCallback(async (federalId: string) => {
+    setDetailLoading(true);
+    setSelectedDetail(null);
+
+    try {
+      // Fetch details, modalities and limits in parallel
+      const [detailRes, modalitiesRes, limitsRes] = await Promise.all([
+        supabase.functions.invoke('junto-garantia-policyholders', {
+          body: { environment: 'sandbox', action: 'details', federalId },
+        }),
+        supabase.functions.invoke('junto-garantia-policyholders', {
+          body: { environment: 'sandbox', action: 'modalities', federalId },
+        }),
+        supabase.functions.invoke('junto-garantia-policyholders', {
+          body: { environment: 'sandbox', action: 'limits', federalId },
+        }),
+      ]);
+
+      setSelectedDetail({
+        policyholder: detailRes.data?.policyholder || null,
+        modalities: modalitiesRes.data?.success ? (Array.isArray(modalitiesRes.data.modalities) ? modalitiesRes.data.modalities : [modalitiesRes.data.modalities]) : null,
+        limits: limitsRes.data?.success ? limitsRes.data.limits : null,
+      });
+    } catch (err: any) {
+      toast.error('Erro ao carregar detalhes: ' + err.message);
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
 
   const formatCurrency = (value: number | null | undefined) => {
     if (value === null || value === undefined) return '—';
@@ -175,6 +212,118 @@ export function GarantiaPolicyholdersPanel() {
         </div>
       )}
 
+      {/* Detail Panel */}
+      {(selectedDetail || detailLoading) && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold">Detalhes do Tomador</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedDetail(null)}>
+                <X className="size-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {detailLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="size-6 animate-spin text-primary" />
+                <span className="ml-2 text-sm text-muted-foreground">Carregando detalhes, modalidades e limites...</span>
+              </div>
+            ) : selectedDetail ? (
+              <div className="grid gap-6 lg:grid-cols-3">
+                {/* Dados do Tomador */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-foreground border-b border-border pb-1">Dados Gerais</h4>
+                  {selectedDetail.policyholder && (
+                    <div className="space-y-1 text-sm">
+                      {Object.entries(selectedDetail.policyholder).map(([key, value]) => {
+                        if (key === 'raw_data' || typeof value === 'object') return null;
+                        return (
+                          <div key={key} className="flex justify-between gap-2">
+                            <span className="text-muted-foreground text-xs truncate">{key}</span>
+                            <span className="text-foreground text-xs font-medium text-right">{String(value ?? '—')}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Modalidades */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-foreground border-b border-border pb-1">Modalidades</h4>
+                  {selectedDetail.modalities && selectedDetail.modalities.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedDetail.modalities.flat().map((mod: any, idx: number) => (
+                        <div key={idx} className="p-2 rounded-md border border-border bg-background text-xs">
+                          <p className="font-medium text-foreground">{mod.description || mod.name || mod.modalityDescription || JSON.stringify(mod)}</p>
+                          {mod.id && <p className="text-muted-foreground">ID: {mod.id}</p>}
+                          {mod.submodalities && Array.isArray(mod.submodalities) && (
+                            <div className="mt-1 pl-2 border-l-2 border-border space-y-0.5">
+                              {mod.submodalities.map((sub: any, sIdx: number) => (
+                                <p key={sIdx} className="text-muted-foreground">{sub.description || sub.name || JSON.stringify(sub)}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Nenhuma modalidade disponível.</p>
+                  )}
+                </div>
+
+                {/* Limites */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-foreground border-b border-border pb-1">Limites</h4>
+                  {selectedDetail.limits ? (
+                    <div className="space-y-1 text-sm">
+                      {Array.isArray(selectedDetail.limits) ? (
+                        selectedDetail.limits.map((limit: any, idx: number) => (
+                          <div key={idx} className="p-2 rounded-md border border-border bg-background text-xs space-y-1">
+                            {limit.modality && <p className="font-medium text-foreground">{limit.modality}</p>}
+                            {limit.approvedLimit != null && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Aprovado</span>
+                                <span className="font-medium text-foreground">{formatCurrency(limit.approvedLimit)}</span>
+                              </div>
+                            )}
+                            {limit.availableLimit != null && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Disponível</span>
+                                <span className="font-medium text-foreground">{formatCurrency(limit.availableLimit)}</span>
+                              </div>
+                            )}
+                            {limit.usedLimit != null && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Utilizado</span>
+                                <span className="font-medium text-foreground">{formatCurrency(limit.usedLimit)}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        Object.entries(selectedDetail.limits).map(([key, value]) => {
+                          if (typeof value === 'object') return null;
+                          return (
+                            <div key={key} className="flex justify-between gap-2">
+                              <span className="text-muted-foreground text-xs truncate">{key}</span>
+                              <span className="text-foreground text-xs font-medium text-right">{String(value ?? '—')}</span>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Nenhum limite disponível.</p>
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Table */}
       <Card className="border-border/50">
         <CardHeader className="pb-3">
@@ -213,6 +362,7 @@ export function GarantiaPolicyholdersPanel() {
                     <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-foreground/70">Limite</th>
                     <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-foreground/70">Disponível</th>
                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground/70">Cidade/UF</th>
+                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-foreground/70">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -236,6 +386,17 @@ export function GarantiaPolicyholdersPanel() {
                         <td className="px-4 py-3 text-right font-medium text-foreground">{formatCurrency(p.creditLimit)}</td>
                         <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(p.creditLimitAvailable)}</td>
                         <td className="px-4 py-3 text-muted-foreground text-xs">{location}</td>
+                        <td className="px-4 py-3 text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs"
+                            disabled={detailLoading}
+                            onClick={() => fetchDetails(p.federalId)}
+                          >
+                            <Eye className="size-3 mr-1" /> Detalhes
+                          </Button>
+                        </td>
                       </tr>
                     );
                   })}
