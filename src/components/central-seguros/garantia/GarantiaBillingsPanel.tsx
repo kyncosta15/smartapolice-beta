@@ -42,7 +42,7 @@ export function GarantiaBillingsPanel() {
   const [pagination, setPagination] = useState<BillingsPagination | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSynced, setHasSynced] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [policyFilter, setPolicyFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
