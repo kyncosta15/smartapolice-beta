@@ -33,10 +33,15 @@ export function SeguroGarantiaPage() {
 
       if (data?.success) {
         setConnectionStatus('connected');
-        setConnectionMessage('Conectado com sucesso à API Junto Seguros!');
-        setConnectionDetails(
-          `Ambiente: ${data.environment === 'production' ? 'Produção' : 'Sandbox'} • Token expira em ${data.expires_in ? Math.round(data.expires_in / 60) + ' min' : 'N/A'}`
-        );
+        setConnectionMessage(data?.message || 'Conectado com sucesso à API Junto Seguros!');
+
+        const details: string[] = [];
+        details.push(`Ambiente: ${data.environment === 'production' ? 'Produção' : 'Sandbox'}`);
+        if (data.expires_in) details.push(`Token expira em ${Math.round(data.expires_in / 60)} min`);
+        if (typeof data.validation_status === 'number') details.push(`Validação Bearer: HTTP ${data.validation_status}`);
+        if (data.validation_details) details.push(String(data.validation_details));
+
+        setConnectionDetails(details.join(' • '));
         toast.success('Conexão estabelecida com a Junto Seguros!');
       } else {
         setConnectionStatus('error');
@@ -52,21 +57,29 @@ export function SeguroGarantiaPage() {
     }
   };
 
-  const getStatusColor = () => {
+  const getStatusTone = () => {
     switch (connectionStatus) {
-      case 'connected': return 'bg-green-500/10 text-green-600 border-green-500/30';
-      case 'error': return 'bg-destructive/10 text-destructive border-destructive/30';
-      case 'testing': return 'bg-primary/10 text-primary border-primary/30';
-      default: return 'bg-muted text-muted-foreground border-border';
+      case 'connected':
+        return 'border border-primary/30 bg-primary/5';
+      case 'error':
+        return 'border border-destructive/30 bg-destructive/5';
+      case 'testing':
+        return 'border border-primary/30 bg-primary/5';
+      default:
+        return 'border border-border bg-card';
     }
   };
 
   const getStatusIcon = () => {
     switch (connectionStatus) {
-      case 'connected': return <Wifi className="size-5 text-green-600" />;
-      case 'error': return <WifiOff className="size-5 text-destructive" />;
-      case 'testing': return <Loader2 className="size-5 text-primary animate-spin" />;
-      default: return <Shield className="size-5 text-muted-foreground" />;
+      case 'connected':
+        return <Wifi className="size-5 text-primary" />;
+      case 'error':
+        return <WifiOff className="size-5 text-destructive" />;
+      case 'testing':
+        return <Loader2 className="size-5 text-primary animate-spin" />;
+      default:
+        return <Shield className="size-5 text-muted-foreground" />;
     }
   };
 
@@ -79,15 +92,14 @@ export function SeguroGarantiaPage() {
         </p>
       </div>
 
-      {/* Connection Status Card */}
-      <Card className={`border ${getStatusColor()}`}>
+      <Card className={getStatusTone()}>
         <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-background border border-border">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl border border-border bg-background">
                 {getStatusIcon()}
               </div>
-              <div>
+              <div className="space-y-1">
                 <p className="font-semibold text-foreground">
                   {connectionStatus === 'idle' ? 'Integração Junto Seguros' : connectionMessage}
                 </p>
@@ -97,10 +109,11 @@ export function SeguroGarantiaPage() {
                   </p>
                 )}
                 {connectionDetails && (
-                  <p className="text-xs text-muted-foreground mt-1">{connectionDetails}</p>
+                  <p className="text-xs text-muted-foreground">{connectionDetails}</p>
                 )}
               </div>
             </div>
+
             <Button
               onClick={testConnection}
               disabled={connectionStatus === 'testing'}
@@ -108,25 +121,24 @@ export function SeguroGarantiaPage() {
               size="sm"
             >
               {connectionStatus === 'testing' ? (
-                <Loader2 className="size-4 animate-spin mr-2" />
+                <Loader2 className="mr-2 size-4 animate-spin" />
               ) : (
-                <RefreshCw className="size-4 mr-2" />
+                <RefreshCw className="mr-2 size-4" />
               )}
-              {connectionStatus === 'connected' ? 'Testar novamente' : 'Testar Conexão'}
+              {connectionStatus === 'connected' ? 'Testar novamente' : 'Testar conexão'}
             </Button>
           </div>
 
           {connectionStatus === 'connected' && (
             <div className="mt-4 flex gap-2">
-              <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
-                <CheckCircle2 className="size-3 mr-1" /> Autenticado
+              <Badge variant="outline">
+                <CheckCircle2 className="mr-1 size-3" /> Autenticado
               </Badge>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-border/50">
           <CardContent className="p-5 flex items-center gap-4">
@@ -141,8 +153,8 @@ export function SeguroGarantiaPage() {
         </Card>
         <Card className="border-border/50">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-amber-500/10">
-              <Clock className="size-5 text-amber-500" />
+            <div className="p-3 rounded-xl bg-primary/10">
+              <Clock className="size-5 text-primary" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">0</p>
@@ -152,8 +164,8 @@ export function SeguroGarantiaPage() {
         </Card>
         <Card className="border-border/50">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-green-500/10">
-              <CheckCircle2 className="size-5 text-green-500" />
+            <div className="p-3 rounded-xl bg-primary/10">
+              <CheckCircle2 className="size-5 text-primary" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">R$ 0</p>
@@ -163,7 +175,6 @@ export function SeguroGarantiaPage() {
         </Card>
       </div>
 
-      {/* Policies Table */}
       <Card className="border-border/50">
         <CardHeader>
           <CardTitle className="text-base font-semibold">Apólices de Seguro Garantia</CardTitle>
@@ -175,8 +186,8 @@ export function SeguroGarantiaPage() {
             </div>
             <h3 className="font-semibold text-foreground mb-1">Nenhuma apólice cadastrada</h3>
             <p className="text-sm text-muted-foreground max-w-md">
-              {connectionStatus === 'connected' 
-                ? 'Conexão estabelecida! Em breve será possível sincronizar apólices automaticamente.'
+              {connectionStatus === 'connected'
+                ? 'Conexão estabelecida! O accessToken já está sendo enviado no Bearer para autenticar as próximas chamadas.'
                 : 'Teste a conexão com a Junto Seguros acima para começar a sincronizar apólices.'}
             </p>
           </div>
