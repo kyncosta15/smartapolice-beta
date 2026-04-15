@@ -24,19 +24,20 @@ export class UserIdResolver {
     console.log('👤 User ID do contexto:', contextUserId);
     console.log('📧 Email do usuário:', userEmail);
 
-    // PRIORIDADE 1: Usar email do usuário logado no sistema
+    // PRIORIDADE 1 (ABSOLUTA): User ID do contexto autenticado (quem fez o upload)
+    // Este SEMPRE deve prevalecer quando o usuário está logado fazendo upload
+    if (contextUserId && contextUserId !== 'null' && contextUserId.trim() !== '') {
+      console.log('✅ Usando user_id do contexto autenticado (prioridade absoluta):', contextUserId);
+      return contextUserId;
+    }
+
+    // PRIORIDADE 2: Buscar por email do usuário logado (fallback se contextUserId não veio)
     if (userEmail) {
       const userByEmail = await this.findUserByEmail(userEmail);
       if (userByEmail) {
         console.log('✅ User ID encontrado pelo email do usuário logado:', userByEmail);
         return userByEmail;
       }
-    }
-
-    // PRIORIDADE 2: User ID do contexto autenticado
-    if (contextUserId && contextUserId !== 'null' && contextUserId.trim() !== '') {
-      console.log('✅ Usando user_id do contexto autenticado:', contextUserId);
-      return contextUserId;
     }
 
     // PRIORIDADE 3: Mapear por e-mail do segurado nos dados
