@@ -8,7 +8,7 @@ export const LandingPage = () => {
   return (
     <div className="min-h-screen flex relative overflow-hidden">
       {/* Left side - Content */}
-      <div className="w-full md:w-1/2 bg-floral-white flex flex-col relative z-10">
+      <div className="w-full md:w-1/2 bg-floral-white dark:bg-background flex flex-col relative z-10">
         <section className="isolate">
           <div className="mx-auto max-w-screen-md px-6 py-12 sm:py-16 text-center min-h-[75vh] flex flex-col justify-center">
             {/* Brand Lockup */}
@@ -33,7 +33,7 @@ export const LandingPage = () => {
 
               {/* H1 Brand Name with Gradient */}
               <h1
-                className="font-condor font-bold tracking-tight bg-gradient-to-r from-prussian-blue to-prussian-blue/80 bg-clip-text text-transparent leading-tight mb-2"
+                className="font-condor font-bold tracking-tight bg-gradient-to-r from-prussian-blue to-prussian-blue/80 dark:from-primary-foreground dark:to-primary-foreground/80 bg-clip-text text-transparent leading-tight mb-2"
                 style={{
                   fontSize: "clamp(40px, 6vw, 80px)",
                   lineHeight: "1.05",
@@ -49,7 +49,7 @@ export const LandingPage = () => {
 
             {/* H2 Secondary Title */}
             <h2
-              className="font-muli font-semibold tracking-tight text-foreground mb-3"
+              className="font-muli font-semibold tracking-tight text-foreground dark:text-foreground mb-3"
               style={{
                 textWrap: "balance" as any,
                 fontSize: "clamp(28px, 4.2vw, 54px)",
