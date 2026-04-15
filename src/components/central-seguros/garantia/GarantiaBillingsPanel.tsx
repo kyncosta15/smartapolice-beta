@@ -55,7 +55,7 @@ export function GarantiaBillingsPanel() {
         pageNumber: page,
         rowsOfPage: 20,
       };
-      if (statusFilter) body.status = statusFilter;
+      if (statusFilter && statusFilter !== 'all') body.status = statusFilter;
       if (policyFilter.trim()) body.policyNumber = policyFilter.trim();
 
       const { data, error } = await supabase.functions.invoke('junto-garantia-billings', { body });
