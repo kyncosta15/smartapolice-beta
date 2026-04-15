@@ -200,6 +200,125 @@ Deno.serve(async (req) => {
         endorsements,
         environment,
       }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    } else if (action === "hangs") {
+      // GET /endorsements/{id}/hangs — Pendências de internalização do endosso
+      const endorsementId = body.endorsementId;
+      if (!endorsementId) {
+        return new Response(JSON.stringify({ success: false, error: "endorsementId é obrigatório" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const url = `${baseUrl}/endorsements/${endorsementId}/hangs`;
+      console.log(`[junto-endorsements] Hangs: ${url}`);
+
+      const response = await juntoFetch(url, environment);
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Erro ao buscar pendências (${response.status})`,
+          details: errorText.slice(0, 500),
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const hangs = await response.json();
+      return new Response(JSON.stringify({ success: true, hangs, environment }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    } else if (action === "files") {
+      // POST /endorsements/{id}/files — Enviar arquivos ao endosso (multipart)
+      const endorsementId = body.endorsementId;
+      if (!endorsementId) {
+        return new Response(JSON.stringify({ success: false, error: "endorsementId é obrigatório" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Files should be sent as base64 encoded in the body
+      const files = body.files;
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        return new Response(JSON.stringify({ success: false, error: "files (array de {name, base64, mimeType}) é obrigatório" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const token = await getValidToken(environment);
+      const formData = new FormData();
+      for (const file of files) {
+        const binary = Uint8Array.from(atob(file.base64), c => c.charCodeAt(0));
+        const blob = new Blob([binary], { type: file.mimeType || "application/octet-stream" });
+        formData.append("Files", blob, file.name);
+      }
+
+      const url = `${baseUrl}/endorsements/${endorsementId}/files`;
+      console.log(`[junto-endorsements] Upload files: ${url}`);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: token, Accept: "application/json" },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Erro ao enviar arquivos (${response.status})`,
+          details: errorText.slice(0, 500),
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const result = await response.json();
+      return new Response(JSON.stringify({ success: true, files: result, environment }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    } else if (action === "refunds") {
+      // POST /endorsements/{id}/refunds — Solicitar restituição
+      const endorsementId = body.endorsementId;
+      if (!endorsementId) {
+        return new Response(JSON.stringify({ success: false, error: "endorsementId é obrigatório" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const refundType = body.refundType;
+      if (!refundType) {
+        return new Response(JSON.stringify({ success: false, error: "refundType (1=Restituir valor, 2=Transferir crédito) é obrigatório" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const refundBody: Record<string, any> = { refundType };
+      if (body.referencePolicyNumberToTransfer) {
+        refundBody.referencePolicyNumberToTransfer = body.referencePolicyNumberToTransfer;
+      }
+
+      const url = `${baseUrl}/endorsements/${endorsementId}/refunds`;
+      console.log(`[junto-endorsements] Refund: ${url}`);
+
+      const response = await juntoFetch(url, environment, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" } as Record<string, string>,
+        body: JSON.stringify(refundBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Erro ao solicitar restituição (${response.status})`,
+          details: errorText.slice(0, 500),
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const result = await response.json();
+      return new Response(JSON.stringify({ success: true, refund: result, environment }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({ success: false, error: "Ação inválida" }), {

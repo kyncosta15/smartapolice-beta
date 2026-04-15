@@ -252,6 +252,103 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true, limits, environment }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+
+    } else if (action === "rates") {
+      // GET /policyholders/{federalId}/modalities/{modalityId}/rates
+      const federalId = body.federalId;
+      const modalityId = body.modalityId;
+      if (!federalId || !modalityId) {
+        return new Response(JSON.stringify({ success: false, error: "federalId e modalityId são obrigatórios" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const url = `${baseUrl}/policyholders/${federalId}/modalities/${modalityId}/rates`;
+      console.log(`[junto-policyholders] Rates: ${url}`);
+
+      const response = await juntoFetch(url, environment);
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Erro ao buscar taxas (${response.status})`,
+          details: errorText.slice(0, 500),
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const rates = await response.json();
+      return new Response(JSON.stringify({ success: true, rates, environment }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    } else if (action === "register") {
+      // POST /policyholders — Cadastro de tomador
+      const federalId = body.federalId;
+      if (!federalId) {
+        return new Response(JSON.stringify({ success: false, error: "federalId (CNPJ) é obrigatório" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const url = `${baseUrl}/policyholders`;
+      console.log(`[junto-policyholders] Register: ${url}`);
+
+      const response = await juntoFetch(url, environment, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" } as Record<string, string>,
+        body: JSON.stringify({ federalId }),
+      });
+
+      if (!response.ok && response.status !== 202) {
+        const errorText = await response.text();
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Erro ao cadastrar tomador (${response.status})`,
+          details: errorText.slice(0, 500),
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: "Cadastro de tomador iniciado. Aguarde processamento (8-10s) e consulte novamente.",
+        environment,
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    } else if (action === "expiring") {
+      // GET /policyholders — Tomadores com cadastro a vencer
+      const params = new URLSearchParams();
+      if (body.expirationStart) params.set("ExpirationStart", body.expirationStart);
+      if (body.expirationEnd) params.set("ExpirationEnd", body.expirationEnd);
+      if (body.pageNumber) params.set("PageNumber", String(body.pageNumber));
+      if (body.rowsOfPage) params.set("RowsOfPage", String(body.rowsOfPage));
+
+      const url = `${baseUrl}/policyholders?${params.toString()}`;
+      console.log(`[junto-policyholders] Expiring: ${url}`);
+
+      const response = await juntoFetch(url, environment);
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Erro ao buscar tomadores a vencer (${response.status})`,
+          details: errorText.slice(0, 500),
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const data = await response.json();
+      const policyholders = data.data || [];
+      return new Response(JSON.stringify({
+        success: true,
+        policyholders,
+        pagination: {
+          pageNumber: data.pageNumber,
+          totalPages: data.totalPages,
+          totalCount: data.totalCount,
+          hasNext: data.hasNext,
+          hasPrevious: data.hasPrevious,
+        },
+        environment,
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     return new Response(JSON.stringify({ success: false, error: "Ação inválida" }), {

@@ -217,6 +217,33 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true, policy: details, environment }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+
+    } else if (action === "hangs") {
+      // GET /policies/{id}/hangs — Pendências de internalização
+      const documentId = body.documentId;
+      if (!documentId) {
+        return new Response(JSON.stringify({ success: false, error: "documentId é obrigatório" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const url = `${baseUrl}/policies/${documentId}/hangs`;
+      console.log(`[junto-policies] Hangs: ${url}`);
+
+      const response = await juntoFetch(url, environment);
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Erro ao buscar pendências (${response.status})`,
+          details: errorText.slice(0, 500),
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const hangs = await response.json();
+      return new Response(JSON.stringify({ success: true, hangs, environment }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({ success: false, error: "Ação inválida" }), {
