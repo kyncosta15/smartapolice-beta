@@ -137,6 +137,7 @@ export function SeguroGarantiaPage() {
           <TabsTrigger value="files">Arquivos</TabsTrigger>
           <TabsTrigger value="increasevalue">Aumento IS</TabsTrigger>
           <TabsTrigger value="economic-group">Grupos Econômicos</TabsTrigger>
+          <TabsTrigger value="insured">Segurados</TabsTrigger>
         </TabsList>
         <TabsContent value="policies">
           <GarantiaPoliciesPanel />
@@ -164,6 +165,9 @@ export function SeguroGarantiaPage() {
         </TabsContent>
         <TabsContent value="economic-group">
           <GarantiaEconomicGroupPanel />
+        </TabsContent>
+        <TabsContent value="insured">
+          <GarantiaInsuredPanel />
         </TabsContent>
       </Tabs>
     </div>
