@@ -118,6 +118,7 @@ export function SeguroGarantiaPage() {
       case 'judicial-civil': return <GarantiaJudicialCivilPanel />;
       case 'judicial-fiscal': return <GarantiaJudicialFiscalPanel />;
       case 'judicial-labor-review': return <GarantiaJudicialLaborReviewPanel />;
+      case 'judicial-substitution': return <GarantiaJudicialSubstitutionPanel />;
       default: return null;
     }
   };
