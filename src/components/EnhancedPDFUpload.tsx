@@ -207,59 +207,41 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
         <CardContent>
           {/* Loading Screen - Componente único durante processamento */}
           {isProcessingBatch ? (
-            <div className="py-12">
-              <div className="max-w-md mx-auto text-center">
-                <div className="mb-6">
-                  <div className="relative w-20 h-20 mx-auto">
-                    <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+            <div className="py-10">
+              <div className="max-w-lg mx-auto">
+                {/* Spinner + Status */}
+                <div className="flex flex-col items-center mb-8">
+                  <div className="relative w-16 h-16 mb-4">
+                    <div className="absolute inset-0 border-[3px] border-muted rounded-full"></div>
+                    <div className="absolute inset-0 border-[3px] border-primary rounded-full border-t-transparent animate-spin"></div>
                   </div>
-                </div>
-                
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Processando Apólices
-                </h3>
-                
-                <p className="text-gray-600 mb-4">
-                  {selectedFiles.length} arquivo(s) sendo processado(s) via n8n
-                </p>
-                
-                <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-blue-800">
-                    ⏱️ Tempo estimado: <strong>até 10 minutos</strong>
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    O tempo varia conforme a quantidade e complexidade dos arquivos
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Processando {selectedFiles.length} {selectedFiles.length === 1 ? 'arquivo' : 'arquivos'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5" />
+                    Estimativa: até 10 min
                   </p>
                 </div>
 
-                <div className="space-y-2">
+                {/* File list compacta */}
+                <div className="space-y-1.5">
                   {selectedFiles.map((file, idx) => (
                     <div 
                       key={idx}
-                      className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg"
+                      className="flex items-center gap-3 px-4 py-2.5 bg-muted/50 border border-border rounded-lg"
                     >
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <div className="flex-shrink-0">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-blue-600 text-sm">📄</span>
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {file.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {(file.size / 1024).toFixed(1)} KB
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 ml-3">
-                        <div className="flex space-x-1">
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        </div>
+                      <FilePlus className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span className="text-sm text-foreground truncate flex-1">
+                        {file.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
+                        {(file.size / 1024).toFixed(0)} KB
+                      </span>
+                      <div className="flex gap-0.5 flex-shrink-0">
+                        <div className="w-1 h-1 bg-primary rounded-full animate-bounce"></div>
+                        <div className="w-1 h-1 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                        <div className="w-1 h-1 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                       </div>
                     </div>
                   ))}
