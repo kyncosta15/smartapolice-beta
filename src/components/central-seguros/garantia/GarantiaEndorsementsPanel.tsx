@@ -165,8 +165,8 @@ export function GarantiaEndorsementsPanel() {
               </Select>
             </div>
             <Button onClick={() => fetchEndorsements(1)} disabled={isLoading} size="sm">
-              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <RefreshCw className="mr-2 size-4" />}
-              Sincronizar
+              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+              Buscar
             </Button>
           </div>
         </CardContent>
@@ -234,7 +234,7 @@ export function GarantiaEndorsementsPanel() {
               </div>
               <h3 className="font-semibold text-foreground mb-1">Nenhum endosso carregado</h3>
               <p className="text-sm text-muted-foreground max-w-md">
-                Selecione o período e clique em "Sincronizar" para buscar endossos emitidos (máx. 90 dias).
+                Selecione o período e clique em "Buscar" para buscar endossos emitidos (máx. 90 dias).
               </p>
             </div>
           ) : endorsements.length === 0 ? (

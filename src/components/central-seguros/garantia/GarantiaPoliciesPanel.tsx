@@ -130,8 +130,8 @@ export function GarantiaPoliciesPanel() {
               <Input type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)} />
             </div>
             <Button onClick={fetchPolicies} disabled={isLoading} size="sm">
-              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <RefreshCw className="mr-2 size-4" />}
-              Sincronizar
+              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+              Buscar
             </Button>
           </div>
         </CardContent>
@@ -197,7 +197,7 @@ export function GarantiaPoliciesPanel() {
               </div>
               <h3 className="font-semibold text-foreground mb-1">Nenhuma apólice carregada</h3>
               <p className="text-sm text-muted-foreground max-w-md">
-                Selecione o período e clique em "Sincronizar" para buscar apólices emitidas (máx. 30 dias).
+                Selecione o período e clique em "Buscar" para buscar apólices emitidas (máx. 30 dias).
               </p>
             </div>
           ) : policies.length === 0 ? (
