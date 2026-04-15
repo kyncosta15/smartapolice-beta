@@ -26,6 +26,10 @@ export function GarantiaInsuredPanel() {
   const [searchName, setSearchName] = useState('');
   const [registerFederalId, setRegisterFederalId] = useState('');
   const [registerName, setRegisterName] = useState('');
+  const [registerStreet, setRegisterStreet] = useState('');
+  const [registerCity, setRegisterCity] = useState('');
+  const [registerState, setRegisterState] = useState('');
+  const [registerZipCode, setRegisterZipCode] = useState('');
   const [selectedInsured, setSelectedInsured] = useState<InsuredItem | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
 
@@ -78,6 +82,10 @@ export function GarantiaInsuredPanel() {
       toast.error('Informe o CNPJ/CPF do segurado');
       return;
     }
+    if (!registerStreet.trim() || !registerCity.trim() || !registerState.trim() || !registerZipCode.trim()) {
+      toast.error('Preencha todos os campos de endereço (Rua, Cidade, UF, CEP)');
+      return;
+    }
     setRegistering(true);
     try {
       const { data, error } = await supabase.functions.invoke('junto-garantia-insured', {
@@ -86,6 +94,12 @@ export function GarantiaInsuredPanel() {
           environment: 'sandbox',
           federalId: registerFederalId.replace(/\D/g, ''),
           name: registerName || undefined,
+          address: {
+            street: registerStreet,
+            city: registerCity,
+            state: registerState,
+            zipCode: registerZipCode.replace(/\D/g, ''),
+          },
         },
       });
       if (error) throw error;
@@ -93,6 +107,10 @@ export function GarantiaInsuredPanel() {
         toast.success(data.message || 'Segurado cadastrado com sucesso');
         setRegisterFederalId('');
         setRegisterName('');
+        setRegisterStreet('');
+        setRegisterCity('');
+        setRegisterState('');
+        setRegisterZipCode('');
       } else {
         const errorDetail = data?.details ? `\n${data.details}` : '';
         toast.error(`${data?.error || 'Erro ao cadastrar'}${errorDetail}`);
@@ -102,7 +120,7 @@ export function GarantiaInsuredPanel() {
     } finally {
       setRegistering(false);
     }
-  }, [registerFederalId, registerName]);
+  }, [registerFederalId, registerName, registerStreet, registerCity, registerState, registerZipCode]);
 
   return (
     <div className="space-y-4">
@@ -150,7 +168,7 @@ export function GarantiaInsuredPanel() {
                 placeholder="00.000.000/0000-00"
                 value={registerFederalId}
                 onChange={(e) => setRegisterFederalId(e.target.value)}
-                className="max-w-xs"
+                className="max-w-[200px]"
               />
             </div>
             <div>
@@ -159,7 +177,46 @@ export function GarantiaInsuredPanel() {
                 placeholder="Razão social"
                 value={registerName}
                 onChange={(e) => setRegisterName(e.target.value)}
-                className="max-w-xs"
+                className="max-w-[250px]"
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-3 items-end">
+            <div>
+              <label className="text-xs text-muted-foreground">Rua/Logradouro *</label>
+              <Input
+                placeholder="Rua, Av, etc."
+                value={registerStreet}
+                onChange={(e) => setRegisterStreet(e.target.value)}
+                className="max-w-[300px]"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Cidade *</label>
+              <Input
+                placeholder="São Paulo"
+                value={registerCity}
+                onChange={(e) => setRegisterCity(e.target.value)}
+                className="max-w-[180px]"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">UF *</label>
+              <Input
+                placeholder="SP"
+                value={registerState}
+                onChange={(e) => setRegisterState(e.target.value)}
+                className="max-w-[70px]"
+                maxLength={2}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">CEP *</label>
+              <Input
+                placeholder="00000-000"
+                value={registerZipCode}
+                onChange={(e) => setRegisterZipCode(e.target.value)}
+                className="max-w-[120px]"
               />
             </div>
             <Button onClick={handleRegister} disabled={registering} size="sm">
