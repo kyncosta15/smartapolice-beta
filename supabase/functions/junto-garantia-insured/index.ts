@@ -153,13 +153,21 @@ Deno.serve(async (req) => {
 
     // POST /insured — Cadastrar segurado
     if (action === "register") {
-      const { federalId, name } = body;
+      const { federalId, name, address } = body;
       if (!federalId) return jsonResponse({ success: false, error: "federalId (CNPJ/CPF) é obrigatório" });
 
       // Clean federalId - remove non-digits
       const cleanFederalId = federalId.replace(/\D/g, "");
-      const payload: Record<string, string> = { federalId: cleanFederalId };
+      const payload: Record<string, unknown> = { federalId: cleanFederalId };
       if (name) payload.name = name;
+      if (address) {
+        payload.address = {
+          street: address.street || "",
+          city: address.city || "",
+          state: address.state || "",
+          zipCode: (address.zipCode || "").replace(/\D/g, ""),
+        };
+      }
 
       const url = `${baseUrl}/insured`;
       console.log(`[junto-insured] Register: ${url}`);
