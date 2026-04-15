@@ -1807,6 +1807,114 @@ export type Database = {
         }
         Relationships: []
       }
+      guarantee_policies: {
+        Row: {
+          bill_url: string | null
+          cancellation_date: string | null
+          commission_value: number | null
+          created_at: string | null
+          document_number: number | null
+          document_url: string | null
+          duration_days: number | null
+          duration_end: string | null
+          duration_end_current: string | null
+          duration_start: string | null
+          economic_group: string | null
+          external_id: number | null
+          id: string
+          insured_amount: number | null
+          insured_amount_current: number | null
+          insured_document: string | null
+          insured_name: string | null
+          is_renewal: boolean | null
+          issue_date: string | null
+          issue_rate: number | null
+          junto_policy_number: string | null
+          modality: string | null
+          net_premium: number | null
+          policy_number: string | null
+          policyholder_document: string | null
+          policyholder_name: string | null
+          raw_data: Json | null
+          status: string | null
+          submodality: string | null
+          synced_at: string | null
+          total_premium: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bill_url?: string | null
+          cancellation_date?: string | null
+          commission_value?: number | null
+          created_at?: string | null
+          document_number?: number | null
+          document_url?: string | null
+          duration_days?: number | null
+          duration_end?: string | null
+          duration_end_current?: string | null
+          duration_start?: string | null
+          economic_group?: string | null
+          external_id?: number | null
+          id?: string
+          insured_amount?: number | null
+          insured_amount_current?: number | null
+          insured_document?: string | null
+          insured_name?: string | null
+          is_renewal?: boolean | null
+          issue_date?: string | null
+          issue_rate?: number | null
+          junto_policy_number?: string | null
+          modality?: string | null
+          net_premium?: number | null
+          policy_number?: string | null
+          policyholder_document?: string | null
+          policyholder_name?: string | null
+          raw_data?: Json | null
+          status?: string | null
+          submodality?: string | null
+          synced_at?: string | null
+          total_premium?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bill_url?: string | null
+          cancellation_date?: string | null
+          commission_value?: number | null
+          created_at?: string | null
+          document_number?: number | null
+          document_url?: string | null
+          duration_days?: number | null
+          duration_end?: string | null
+          duration_end_current?: string | null
+          duration_start?: string | null
+          economic_group?: string | null
+          external_id?: number | null
+          id?: string
+          insured_amount?: number | null
+          insured_amount_current?: number | null
+          insured_document?: string | null
+          insured_name?: string | null
+          is_renewal?: boolean | null
+          issue_date?: string | null
+          issue_rate?: number | null
+          junto_policy_number?: string | null
+          modality?: string | null
+          net_premium?: number | null
+          policy_number?: string | null
+          policyholder_document?: string | null
+          policyholder_name?: string | null
+          raw_data?: Json | null
+          status?: string | null
+          submodality?: string | null
+          synced_at?: string | null
+          total_premium?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       guarantee_settings: {
         Row: {
           client_id: string | null
