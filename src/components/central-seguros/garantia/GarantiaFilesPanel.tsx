@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { Loader2, Upload, Paperclip, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, Upload, Paperclip } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,7 +30,6 @@ export function GarantiaFilesPanel() {
 
     setUploading(true);
     try {
-      // Convert files to base64
       const filesPayload = await Promise.all(
         selectedFiles.map(async (file) => {
           const buffer = await file.arrayBuffer();
@@ -63,18 +62,17 @@ export function GarantiaFilesPanel() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Paperclip className="size-5 text-primary" />
-          Anexar Arquivos
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="p-4 space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Paperclip className="size-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Anexar Arquivos</h3>
+        </div>
+
         <p className="text-xs text-muted-foreground">
           Anexe arquivos a uma cotação/proposta. Obrigatório quando a criação de minuta retorna <code className="bg-muted px-1 rounded">hasHangs: true</code>. Máximo 30MB por requisição.
         </p>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <Label className="text-xs">Nº do Documento (documentNumber)</Label>
             <Input
@@ -84,7 +82,6 @@ export function GarantiaFilesPanel() {
               onChange={(e) => setDocumentNumber(e.target.value)}
             />
           </div>
-
           <div className="space-y-1">
             <Label className="text-xs">Arquivos</Label>
             <Input
@@ -93,30 +90,33 @@ export function GarantiaFilesPanel() {
               onChange={handleFileChange}
               className="cursor-pointer"
             />
-            {selectedFiles.length > 0 && (
-              <div className="mt-2 space-y-1">
-                {selectedFiles.map((f, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Paperclip className="size-3" />
-                    <span>{f.name}</span>
-                    <span className="text-[10px]">({(f.size / 1024).toFixed(0)} KB)</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
+        </div>
 
-          <Button onClick={handleUpload} disabled={uploading} className="w-full">
+        {selectedFiles.length > 0 && (
+          <div className="space-y-1 p-3 rounded-lg border border-border bg-muted/30">
+            {selectedFiles.map((f, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Paperclip className="size-3" />
+                <span>{f.name}</span>
+                <span className="text-[10px]">({(f.size / 1024).toFixed(0)} KB)</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex justify-end">
+          <Button onClick={handleUpload} disabled={uploading}>
             {uploading ? (
-              <Loader2 className="size-4 animate-spin mr-2" />
+              <Loader2 className="size-4 animate-spin mr-1.5" />
             ) : (
-              <Upload className="size-4 mr-2" />
+              <Upload className="size-4 mr-1.5" />
             )}
             Enviar Arquivo(s)
           </Button>
         </div>
 
-        <div className="text-[10px] text-muted-foreground border-t pt-3 space-y-1">
+        <div className="text-[10px] text-muted-foreground border-t border-border pt-3 space-y-1">
           <p><strong>Documentos necessários:</strong></p>
           <ul className="list-disc pl-4 space-y-0.5">
             <li>Contrato e seus anexos</li>

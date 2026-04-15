@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { RefreshCw, Loader2, Building, Search, Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, Building, Search, Users } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -54,14 +54,13 @@ export function GarantiaEconomicGroupPanel() {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Building className="size-4" />
-            Grupos Econômicos
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
+        <CardContent className="p-4 space-y-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Building className="size-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Grupos Econômicos</h3>
+          </div>
+
+          <div className="flex gap-2 items-end">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
@@ -72,16 +71,16 @@ export function GarantiaEconomicGroupPanel() {
                 onKeyDown={(e) => e.key === 'Enter' && fetchGroups()}
               />
             </div>
-            <Button onClick={fetchGroups} disabled={loading} size="sm">
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-              <span className="ml-1">Buscar</span>
+            <Button onClick={fetchGroups} disabled={loading}>
+              {loading ? <Loader2 className="size-4 animate-spin mr-1.5" /> : <Search className="size-4 mr-1.5" />}
+              Buscar
             </Button>
           </div>
 
           {!hasSearched && !loading && (
             <div className="text-center py-8 text-muted-foreground text-sm">
               <Building className="size-8 mx-auto mb-2 opacity-40" />
-              <p>Clique em "Buscar" para consultar grupos econômicos na API Junto Seguros.</p>
+              <p>Clique em "Buscar" para consultar grupos econômicos.</p>
             </div>
           )}
 
@@ -92,17 +91,18 @@ export function GarantiaEconomicGroupPanel() {
           )}
 
           {groups.length > 0 && (
-            <div className="space-y-2">
-              {groups.map((group, idx) => (
-                <Card key={group.id || idx} className="border">
-                  <CardContent className="p-4">
+            <div className="space-y-2 pt-2">
+              <p className="text-xs font-medium text-muted-foreground">{groups.length} resultado(s)</p>
+              <div className="space-y-1.5">
+                {groups.map((group, idx) => (
+                  <div key={group.id || idx} className="p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg border border-border bg-background">
+                        <div className="p-1.5 rounded-md bg-primary/10">
                           <Users className="size-4 text-primary" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">{group.name || 'Sem nome'}</p>
+                          <p className="text-sm font-medium text-foreground">{group.name || 'Sem nome'}</p>
                           {group.federalId && (
                             <p className="text-xs text-muted-foreground">CNPJ: {group.federalId}</p>
                           )}
@@ -122,7 +122,7 @@ export function GarantiaEconomicGroupPanel() {
                       </div>
                     </div>
                     {group.policyholders && group.policyholders.length > 0 && (
-                      <div className="mt-3 pl-12 space-y-1">
+                      <div className="mt-2 pl-10 space-y-0.5">
                         <p className="text-xs font-medium text-muted-foreground">Tomadores:</p>
                         {group.policyholders.map((ph, i) => (
                           <p key={i} className="text-xs text-muted-foreground">
@@ -131,9 +131,9 @@ export function GarantiaEconomicGroupPanel() {
                         ))}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </CardContent>
