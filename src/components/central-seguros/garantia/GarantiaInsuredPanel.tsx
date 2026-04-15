@@ -275,7 +275,7 @@ export function GarantiaInsuredPanel() {
                         variant="ghost"
                         size="sm"
                         disabled={detailsLoading}
-                        onClick={() => fetchDetails(doc)}
+                        onClick={() => showDetails(doc)}
                       >
                         <FileText className="size-3 mr-1" /> Detalhes
                       </Button>
