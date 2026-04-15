@@ -251,22 +251,20 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
           ) : (
             <>
               {/* Upload Area */}
-              <div
+               <div
                 {...getRootProps()} 
                 className={`relative border-2 border-dashed rounded-lg p-8 transition-all ${
                   selectedFiles.length > 0 
-                    ? 'border-gray-200 bg-gray-50/50 cursor-default'
-                    : 'hover:bg-blue-50/50 border-gray-300 cursor-pointer hover:border-blue-400'
-                } ${isDragActive ? 'border-blue-500 bg-blue-50' : ''}`}
+                    ? 'border-border bg-muted/30 cursor-default'
+                    : 'hover:bg-accent/50 border-border cursor-pointer hover:border-primary/50'
+                } ${isDragActive ? 'border-primary bg-primary/5' : ''}`}
               >
                 <input {...getInputProps()} multiple />
                 <div className="text-center">
                   <FilePlus className={`h-10 w-10 mx-auto mb-4 ${
-                    selectedFiles.length > 0 ? 'text-gray-400' : 'text-blue-500'
+                    selectedFiles.length > 0 ? 'text-muted-foreground' : 'text-primary'
                   }`} />
-                  <p className={`text-base font-medium mb-2 ${
-                    selectedFiles.length > 0 ? 'text-gray-600' : 'text-gray-700'
-                  }`}>
+                  <p className={`text-base font-medium mb-2 text-foreground`}>
                     {selectedFiles.length > 0 
                       ? `${selectedFiles.length} arquivo(s) selecionado(s)` 
                       : isDragActive 
@@ -275,7 +273,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
                     }
                   </p>
                   {selectedFiles.length === 0 && (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Máximo de 10 arquivos • Apenas PDF
                     </p>
                   )}
