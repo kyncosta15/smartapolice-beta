@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Shield, Wifi, WifiOff, Loader2, RefreshCw, CheckCircle2, ArrowLeft, FileText, Users, Receipt, XCircle, Building2, FolderOpen, TrendingUp, Scale, Search, FileEdit, Landmark, Briefcase, Replace, ShieldCheck } from 'lucide-react';
+import { Shield, Wifi, WifiOff, Loader2, RefreshCw, CheckCircle2, ArrowLeft, FileText, Users, Receipt, XCircle, Building2, FolderOpen, TrendingUp, Scale, Search, FileEdit, Landmark, Briefcase, Replace, ShieldCheck, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { GarantiaBillingsPanel } from './garantia/GarantiaBillingsPanel';
 import { GarantiaPoliciesPanel } from './garantia/GarantiaPoliciesPanel';
@@ -149,40 +149,42 @@ export function SeguroGarantiaPage() {
         </div>
       </div>
 
-      {/* Connection Status — compact */}
-      <Card className={getStatusTone()}>
-        <CardContent className="p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 rounded-lg border border-border bg-background">
-                {getStatusIcon()}
-              </div>
-              <div>
-                <p className="text-xs font-medium text-foreground">
-                  {connectionStatus === 'idle' ? 'Verificando conexão...' : connectionMessage}
-                </p>
-                {connectionDetails && (
-                  <p className="text-[11px] text-muted-foreground">{connectionDetails}</p>
+      {/* Connection Status — inline indicator */}
+      <TooltipProvider>
+        <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 cursor-default">
+                {connectionStatus === 'testing' ? (
+                  <Loader2 className="size-3.5 text-primary animate-spin" />
+                ) : connectionStatus === 'connected' ? (
+                  <CheckCircle2 className="size-3.5 text-emerald-500" />
+                ) : connectionStatus === 'error' ? (
+                  <AlertCircle className="size-3.5 text-destructive" />
+                ) : (
+                  <Loader2 className="size-3.5 text-muted-foreground animate-spin" />
                 )}
+                <span className="text-xs font-medium text-muted-foreground">
+                  {connectionStatus === 'connected' ? 'Conectado' : connectionStatus === 'error' ? 'Erro na conexão' : 'Verificando...'}
+                </span>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {connectionStatus === 'connected' && (
-                <Badge variant="outline" className="text-[10px] h-5"><CheckCircle2 className="mr-1 size-2.5" /> API Ativa</Badge>
-              )}
-              <Button
-                onClick={() => testConnection(false)}
-                disabled={connectionStatus === 'testing'}
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-              >
-                {connectionStatus === 'testing' ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="text-xs font-medium">{connectionMessage || 'Verificando conexão...'}</p>
+              {connectionDetails && <p className="text-[11px] text-muted-foreground mt-0.5">{connectionDetails}</p>}
+            </TooltipContent>
+          </Tooltip>
+          <Button
+            onClick={() => testConnection(false)}
+            disabled={connectionStatus === 'testing'}
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0"
+          >
+            {connectionStatus === 'testing' ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />}
+          </Button>
+        </div>
+      </TooltipProvider>
 
       {/* Home — Module Cards */}
       {activeView === 'home' ? (
