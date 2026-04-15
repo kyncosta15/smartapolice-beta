@@ -60,24 +60,18 @@ export function GarantiaInsuredPanel() {
     }
   }, [searchFederalId, searchName]);
 
-  const fetchDetails = useCallback(async (federalId: string) => {
-    setDetailsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('junto-garantia-insured', {
-        body: { action: 'details', environment: 'sandbox', federalId },
-      });
-      if (error) throw error;
-      if (data?.success) {
-        setSelectedInsured(data.insured);
-      } else {
-        toast.error(data?.error || 'Erro ao buscar detalhes');
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Erro inesperado');
-    } finally {
-      setDetailsLoading(false);
+  const showDetails = useCallback((federalId: string) => {
+    // Use data already loaded from the search results
+    const found = insuredList.find(item => {
+      const doc = (item.federalId || '').replace(/\D/g, '');
+      return doc === federalId.replace(/\D/g, '');
+    });
+    if (found) {
+      setSelectedInsured(found);
+    } else {
+      toast.error('Segurado não encontrado nos resultados');
     }
-  }, []);
+  }, [insuredList]);
 
   const handleRegister = useCallback(async () => {
     if (!registerFederalId.trim()) {
