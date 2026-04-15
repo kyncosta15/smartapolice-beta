@@ -198,6 +198,60 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true, policyholder: details, environment }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+
+    } else if (action === "modalities") {
+      // GET /policyholders/{federalId}/modalities — Modalidades do tomador
+      const federalId = body.federalId;
+      if (!federalId) {
+        return new Response(JSON.stringify({ success: false, error: "federalId é obrigatório" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const url = `${baseUrl}/policyholders/${federalId}/modalities`;
+      console.log(`[junto-policyholders] Modalidades: ${url}`);
+
+      const response = await juntoFetch(url, environment);
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Erro ao buscar modalidades (${response.status})`,
+          details: errorText.slice(0, 500),
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const modalities = await response.json();
+      return new Response(JSON.stringify({ success: true, modalities, environment }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    } else if (action === "limits") {
+      // GET /policyholders/{federalId}/limits — Limites do tomador
+      const federalId = body.federalId;
+      if (!federalId) {
+        return new Response(JSON.stringify({ success: false, error: "federalId é obrigatório" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const url = `${baseUrl}/policyholders/${federalId}/limits`;
+      console.log(`[junto-policyholders] Limites: ${url}`);
+
+      const response = await juntoFetch(url, environment);
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Erro ao buscar limites (${response.status})`,
+          details: errorText.slice(0, 500),
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const limits = await response.json();
+      return new Response(JSON.stringify({ success: true, limits, environment }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({ success: false, error: "Ação inválida" }), {
