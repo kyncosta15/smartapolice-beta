@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -30,6 +31,7 @@ export function GarantiaInsuredPanel() {
   const [registerCity, setRegisterCity] = useState('');
   const [registerState, setRegisterState] = useState('');
   const [registerZipCode, setRegisterZipCode] = useState('');
+  const [registerInsuredType, setRegisterInsuredType] = useState('9');
   const [selectedInsured, setSelectedInsured] = useState<InsuredItem | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
 
@@ -94,6 +96,7 @@ export function GarantiaInsuredPanel() {
           environment: 'sandbox',
           federalId: registerFederalId.replace(/\D/g, ''),
           name: registerName || undefined,
+          insuredType: parseInt(registerInsuredType, 10),
           address: {
             street: registerStreet,
             city: registerCity,
@@ -111,6 +114,7 @@ export function GarantiaInsuredPanel() {
         setRegisterCity('');
         setRegisterState('');
         setRegisterZipCode('');
+        setRegisterInsuredType('9');
       } else {
         const errorDetail = data?.details ? `\n${data.details}` : '';
         toast.error(`${data?.error || 'Erro ao cadastrar'}${errorDetail}`);
@@ -179,6 +183,18 @@ export function GarantiaInsuredPanel() {
                 onChange={(e) => setRegisterName(e.target.value)}
                 className="max-w-[250px]"
               />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Tipo *</label>
+              <Select value={registerInsuredType} onValueChange={setRegisterInsuredType}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="9">Empresa Privada</SelectItem>
+                  <SelectItem value="8">Empresa Pública</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="flex flex-wrap gap-3 items-end">
