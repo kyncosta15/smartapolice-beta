@@ -4,7 +4,7 @@ const corsHeaders = {
 };
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
-const JUNTO_TOKEN_URL = "https://ms-gateway.juntoseguros.com/auth/api/Token";
+const JUNTO_TOKEN_URL = "https://ms-gateway.juntoseguros.com/guarantee/api/v2/authentication";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -53,19 +53,18 @@ Deno.serve(async (req) => {
     const environment = body.environment || "production";
     
     const tokenUrl = environment === "sandbox" 
-      ? "https://ms-gateway-box.juntoseguros.com/auth/api/Token"
+      ? "https://ms-gateway-box.juntoseguros.com/guarantee/api/v2/authentication"
       : JUNTO_TOKEN_URL;
 
     console.log(`[junto-garantia-auth] Tentando autenticação em: ${tokenUrl}`);
 
-    // OAuth2 Client Credentials
+    // Junto API uses clientId/clientSecret (not OAuth2 standard)
     const authResponse = await fetch(tokenUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
-        grant_type: "client_credentials",
+        clientId: clientId,
+        clientSecret: clientSecret,
       }),
     });
 
