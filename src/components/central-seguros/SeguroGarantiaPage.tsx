@@ -139,6 +139,7 @@ export function SeguroGarantiaPage() {
           <TabsTrigger value="increasevalue">Aumento IS</TabsTrigger>
           <TabsTrigger value="economic-group">Grupos Econômicos</TabsTrigger>
           <TabsTrigger value="insured">Segurados</TabsTrigger>
+          <TabsTrigger value="judicial-civil">Judicial Civil</TabsTrigger>
         </TabsList>
         <TabsContent value="policies">
           <GarantiaPoliciesPanel />
