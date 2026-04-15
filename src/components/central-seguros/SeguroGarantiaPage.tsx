@@ -87,23 +87,7 @@ export function SeguroGarantiaPage() {
     testConnection(true);
   }, [testConnection]);
 
-  const getStatusTone = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'border border-primary/30 bg-primary/5';
-      case 'error': return 'border border-destructive/30 bg-destructive/5';
-      case 'testing': return 'border border-primary/30 bg-primary/5';
-      default: return 'border border-border bg-card';
-    }
-  };
 
-  const getStatusIcon = () => {
-    switch (connectionStatus) {
-      case 'connected': return <Wifi className="size-5 text-primary" />;
-      case 'error': return <WifiOff className="size-5 text-destructive" />;
-      case 'testing': return <Loader2 className="size-5 text-primary animate-spin" />;
-      default: return <Shield className="size-5 text-muted-foreground" />;
-    }
-  };
 
   const renderPanel = () => {
     switch (activeView) {
