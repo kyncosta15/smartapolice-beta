@@ -158,6 +158,9 @@ export function SeguroGarantiaPage() {
         <TabsContent value="files">
           <GarantiaFilesPanel />
         </TabsContent>
+        <TabsContent value="increasevalue">
+          <GarantiaIncreaseValuePanel />
+        </TabsContent>
         <TabsContent value="economic-group">
           <GarantiaEconomicGroupPanel />
         </TabsContent>
