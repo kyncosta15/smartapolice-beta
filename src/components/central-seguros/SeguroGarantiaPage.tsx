@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Shield, Wifi, WifiOff, Loader2, RefreshCw, CheckCircle2, ArrowLeft, FileText, Users, Receipt, XCircle, Building2, FolderOpen, TrendingUp, Scale, Search, FileEdit } from 'lucide-react';
+import { Shield, Wifi, WifiOff, Loader2, RefreshCw, CheckCircle2, ArrowLeft, FileText, Users, Receipt, XCircle, Building2, FolderOpen, TrendingUp, Scale, Search, FileEdit, Landmark } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
