@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Shield, Wifi, WifiOff, Loader2, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { GarantiaBillingsPanel } from './garantia/GarantiaBillingsPanel';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
@@ -14,9 +13,9 @@ export function SeguroGarantiaPage() {
   const [connectionMessage, setConnectionMessage] = useState('');
   const [connectionDetails, setConnectionDetails] = useState('');
 
-  const testConnection = async () => {
+  const testConnection = useCallback(async (silent = false) => {
     setConnectionStatus('testing');
-    setConnectionMessage('Testando conexão com a Junto Seguros...');
+    if (!silent) setConnectionMessage('Testando conexão com a Junto Seguros...');
     setConnectionDetails('');
 
     try {
@@ -28,7 +27,6 @@ export function SeguroGarantiaPage() {
         setConnectionStatus('error');
         setConnectionMessage('Erro ao conectar com a Edge Function');
         setConnectionDetails(error.message);
-        toast.error('Falha na conexão');
         return;
       }
 
@@ -39,20 +37,22 @@ export function SeguroGarantiaPage() {
         details.push(`Ambiente: ${data.environment === 'production' ? 'Produção' : 'Sandbox'}`);
         if (data.expires_in) details.push(`Token expira em ${Math.round(data.expires_in / 60)} min`);
         setConnectionDetails(details.join(' • '));
-        toast.success('Conexão estabelecida com a Junto Seguros!');
       } else {
         setConnectionStatus('error');
         setConnectionMessage(data?.error || 'Falha na autenticação');
         setConnectionDetails(data?.details || '');
-        toast.error('Falha na autenticação');
       }
     } catch (err: any) {
       setConnectionStatus('error');
       setConnectionMessage('Erro inesperado');
       setConnectionDetails(err.message);
-      toast.error('Erro inesperado');
     }
-  };
+  }, []);
+
+  // Auto-test connection on mount (silent — no toasts)
+  useEffect(() => {
+    testConnection(true);
+  }, [testConnection]);
 
   const getStatusTone = () => {
     switch (connectionStatus) {
@@ -81,47 +81,42 @@ export function SeguroGarantiaPage() {
         </p>
       </div>
 
-      {/* Connection Card */}
+      {/* Connection Status — diagnostic only */}
       <Card className={getStatusTone()}>
-        <CardContent className="p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl border border-border bg-background">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg border border-border bg-background">
                 {getStatusIcon()}
               </div>
-              <div className="space-y-1">
-                <p className="font-semibold text-foreground">
-                  {connectionStatus === 'idle' ? 'Integração Junto Seguros' : connectionMessage}
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {connectionStatus === 'idle' ? 'Verificando conexão...' : connectionMessage}
                 </p>
-                {connectionStatus === 'idle' && (
-                  <p className="text-sm text-muted-foreground">
-                    Teste a conexão com a API para começar a sincronizar títulos.
-                  </p>
-                )}
                 {connectionDetails && (
                   <p className="text-xs text-muted-foreground">{connectionDetails}</p>
                 )}
               </div>
             </div>
-            <Button
-              onClick={testConnection}
-              disabled={connectionStatus === 'testing'}
-              variant={connectionStatus === 'connected' ? 'outline' : 'default'}
-              size="sm"
-            >
-              {connectionStatus === 'testing' ? <Loader2 className="mr-2 size-4 animate-spin" /> : <RefreshCw className="mr-2 size-4" />}
-              {connectionStatus === 'connected' ? 'Testar novamente' : 'Testar conexão'}
-            </Button>
-          </div>
-          {connectionStatus === 'connected' && (
-            <div className="mt-4 flex gap-2">
-              <Badge variant="outline"><CheckCircle2 className="mr-1 size-3" /> Autenticado</Badge>
+            <div className="flex items-center gap-2">
+              {connectionStatus === 'connected' && (
+                <Badge variant="outline" className="text-xs"><CheckCircle2 className="mr-1 size-3" /> API Ativa</Badge>
+              )}
+              <Button
+                onClick={() => testConnection(false)}
+                disabled={connectionStatus === 'testing'}
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+              >
+                {connectionStatus === 'testing' ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />}
+              </Button>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Billings Panel */}
+      {/* Billings Panel — always visible, auth handled silently by edge function */}
       <GarantiaBillingsPanel />
     </div>
   );
