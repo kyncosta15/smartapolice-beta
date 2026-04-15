@@ -114,6 +114,7 @@ export function GarantiaInsuredPanel() {
         setRegisterCity('');
         setRegisterState('');
         setRegisterZipCode('');
+        setRegisterInsuredType('9');
       } else {
         const errorDetail = data?.details ? `\n${data.details}` : '';
         toast.error(`${data?.error || 'Erro ao cadastrar'}${errorDetail}`);
