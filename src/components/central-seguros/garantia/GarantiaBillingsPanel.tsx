@@ -132,12 +132,12 @@ export function GarantiaBillingsPanel() {
             </div>
             <div className="w-full sm:w-48">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="Opened">Em aberto</SelectItem>
                   <SelectItem value="Overdue">Vencido</SelectItem>
                   <SelectItem value="Paid">Pago</SelectItem>
