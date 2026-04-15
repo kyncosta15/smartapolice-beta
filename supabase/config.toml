@@ -137,3 +137,6 @@ verify_jwt = false
 
 [functions.processar-n8n-frotas]
 verify_jwt = false
+
+[functions.junto-garantia-auth]
+verify_jwt = false
