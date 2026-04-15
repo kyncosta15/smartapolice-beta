@@ -401,7 +401,7 @@ export function GarantiaJudicialCivilPanel() {
             <TabsContent value="emissao" className="space-y-4">
               <div className="p-4 border rounded-lg bg-muted/30 space-y-2">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="size-4 text-amber-500" />
+                  <AlertTriangle className="size-4 text-destructive" />
                   <span className="text-sm font-medium">Atenção</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
