@@ -134,6 +134,7 @@ export function SeguroGarantiaPage() {
           <TabsTrigger value="cancellation">Cancelamentos</TabsTrigger>
           <TabsTrigger value="document">Documento</TabsTrigger>
           <TabsTrigger value="files">Arquivos</TabsTrigger>
+          <TabsTrigger value="increasevalue">Aumento IS</TabsTrigger>
           <TabsTrigger value="economic-group">Grupos Econômicos</TabsTrigger>
         </TabsList>
         <TabsContent value="policies">
