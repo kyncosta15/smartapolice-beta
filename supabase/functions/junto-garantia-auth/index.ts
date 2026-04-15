@@ -173,8 +173,8 @@ Deno.serve(async (req) => {
     const authResponse = await fetch(authUrl, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+      "Content-Type": "application/json-patch+json",
+      Accept: "*/*",
       },
       body: JSON.stringify({ clientId, clientSecret }),
     });

@@ -20,7 +20,7 @@ export function SeguroGarantiaPage() {
 
     try {
       const { data, error } = await supabase.functions.invoke('junto-garantia-auth', {
-        body: { environment: 'production' },
+        body: { environment: 'sandbox' },
       });
 
       if (error) {
