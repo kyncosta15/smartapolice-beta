@@ -148,6 +148,9 @@ export function SeguroGarantiaPage() {
         <TabsContent value="cancellation">
           <GarantiaCancellationPanel />
         </TabsContent>
+        <TabsContent value="document">
+          <GarantiaDocumentPanel />
+        </TabsContent>
         <TabsContent value="economic-group">
           <GarantiaEconomicGroupPanel />
         </TabsContent>
