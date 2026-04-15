@@ -94,7 +94,8 @@ export function GarantiaInsuredPanel() {
         setRegisterFederalId('');
         setRegisterName('');
       } else {
-        toast.error(data?.error || 'Erro ao cadastrar');
+        const errorDetail = data?.details ? `\n${data.details}` : '';
+        toast.error(`${data?.error || 'Erro ao cadastrar'}${errorDetail}`);
       }
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado');
