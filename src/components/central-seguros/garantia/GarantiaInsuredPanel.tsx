@@ -295,23 +295,101 @@ export function GarantiaInsuredPanel() {
       )}
 
       {/* Details */}
-      {selectedInsured && (
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <UserCheck className="size-4" /> Detalhes do Segurado
-              </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedInsured(null)}>Fechar</Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-xs bg-muted/50 p-3 rounded-lg overflow-auto max-h-80 border border-border">
-              {JSON.stringify(selectedInsured, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
-      )}
+      {selectedInsured && (() => {
+        const insured = Array.isArray(selectedInsured) ? selectedInsured[0] : selectedInsured;
+        const addr = insured?.address?.[0] || {};
+        return (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <UserCheck className="size-4" /> Detalhes do Segurado
+                </CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedInsured(null)}>Fechar</Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Nome / Razão Social</p>
+                  <p className="text-sm font-medium text-foreground">{insured?.name || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">CNPJ / CPF</p>
+                  <p className="text-sm font-medium text-foreground">{insured?.federalId || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Tipo</p>
+                  <Badge variant="outline" className="text-xs mt-0.5">
+                    {insured?.typeDescription || (insured?.type === 8 ? 'Pública' : insured?.type === 9 ? 'Privada' : `Tipo ${insured?.type}`)}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">ID Interno</p>
+                  <p className="text-sm text-foreground">{insured?.id || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Pendente</p>
+                  <Badge variant={insured?.pending ? 'destructive' : 'secondary'} className="text-xs mt-0.5">
+                    {insured?.pending ? 'Sim' : 'Não'}
+                  </Badge>
+                </div>
+                {insured?.additionalName && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Nome Adicional</p>
+                    <p className="text-sm text-foreground">{insured.additionalName}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Address */}
+              {(addr.street || addr.city || addr.state) && (
+                <div className="border-t border-border pt-3">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">Endereço</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {addr.street && (
+                      <div className="sm:col-span-2">
+                        <p className="text-xs text-muted-foreground">Logradouro</p>
+                        <p className="text-sm text-foreground">{addr.street}</p>
+                      </div>
+                    )}
+                    {addr.city && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Cidade</p>
+                        <p className="text-sm text-foreground">{addr.city}</p>
+                      </div>
+                    )}
+                    {addr.state && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">UF</p>
+                        <p className="text-sm text-foreground">{addr.state}</p>
+                      </div>
+                    )}
+                    {addr.zipCode && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">CEP</p>
+                        <p className="text-sm text-foreground">{addr.zipCode}</p>
+                      </div>
+                    )}
+                    {addr.email && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">E-mail</p>
+                        <p className="text-sm text-foreground">{addr.email}</p>
+                      </div>
+                    )}
+                    {addr.phone && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Telefone</p>
+                        <p className="text-sm text-foreground">{addr.phone}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
     </div>
   );
 }
