@@ -4,7 +4,7 @@ const corsHeaders = {
 };
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
-const JUNTO_TOKEN_URL = "https://ms-gateway.juntoseguros.com/auth/api/Token";
+const JUNTO_TOKEN_URL = "https://ms-gateway.juntoseguros.com/guarantee/api/v2/authentication";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
