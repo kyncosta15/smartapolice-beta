@@ -32,6 +32,7 @@ const modules: { key: ActiveView; label: string; desc: string; icon: React.Eleme
   { key: 'judicial-civil', label: 'Judicial Civil', desc: 'Cotação, minuta e emissão judicial civil', icon: Scale },
   { key: 'judicial-fiscal', label: 'Judicial Fiscal', desc: 'Cotação, minuta e emissão judicial fiscal', icon: Landmark },
   { key: 'judicial-labor-review', label: 'Judicial Trabalhista', desc: 'Cotação, minuta e emissão trabalhista', icon: Briefcase },
+  { key: 'judicial-substitution', label: 'Judicial Substituição', desc: 'Cotação, minuta e emissão de substituição', icon: Replace },
   { key: 'insured', label: 'Segurados', desc: 'Consultar segurados cadastrados', icon: Search },
   { key: 'economic-group', label: 'Grupos Econômicos', desc: 'Consultar grupos econômicos', icon: Building2 },
   { key: 'document', label: 'Documento', desc: 'Buscar documentos de apólice', icon: FileText },
