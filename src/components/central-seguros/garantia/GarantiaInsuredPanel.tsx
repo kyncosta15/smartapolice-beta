@@ -31,6 +31,7 @@ export function GarantiaInsuredPanel() {
   const [registerCity, setRegisterCity] = useState('');
   const [registerState, setRegisterState] = useState('');
   const [registerZipCode, setRegisterZipCode] = useState('');
+  const [registerInsuredType, setRegisterInsuredType] = useState('9');
   const [selectedInsured, setSelectedInsured] = useState<InsuredItem | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
 
