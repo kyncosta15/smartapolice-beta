@@ -128,6 +128,7 @@ export function SeguroGarantiaPage() {
           <TabsTrigger value="endorsements">Endossos</TabsTrigger>
           <TabsTrigger value="policyholders">Tomadores</TabsTrigger>
           <TabsTrigger value="billings">Títulos / Boletos</TabsTrigger>
+          <TabsTrigger value="cancellation">Cancelamentos</TabsTrigger>
           <TabsTrigger value="economic-group">Grupos Econômicos</TabsTrigger>
         </TabsList>
         <TabsContent value="policies">
