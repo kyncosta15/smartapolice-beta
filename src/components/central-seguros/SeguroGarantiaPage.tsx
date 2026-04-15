@@ -15,6 +15,7 @@ import { GarantiaDocumentPanel } from './garantia/GarantiaDocumentPanel';
 import { GarantiaFilesPanel } from './garantia/GarantiaFilesPanel';
 import { GarantiaInsuredPanel } from './garantia/GarantiaInsuredPanel';
 import { GarantiaIncreaseValuePanel } from './garantia/GarantiaIncreaseValuePanel';
+import { GarantiaJudicialCivilPanel } from './garantia/GarantiaJudicialCivilPanel';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
 
