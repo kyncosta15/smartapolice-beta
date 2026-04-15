@@ -132,6 +132,7 @@ export function SeguroGarantiaPage() {
           <TabsTrigger value="billings">Títulos / Boletos</TabsTrigger>
           <TabsTrigger value="cancellation">Cancelamentos</TabsTrigger>
           <TabsTrigger value="document">Documento</TabsTrigger>
+          <TabsTrigger value="files">Arquivos</TabsTrigger>
           <TabsTrigger value="economic-group">Grupos Econômicos</TabsTrigger>
         </TabsList>
         <TabsContent value="policies">
