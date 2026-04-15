@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { GarantiaBillingsPanel } from './garantia/GarantiaBillingsPanel';
 import { GarantiaPoliciesPanel } from './garantia/GarantiaPoliciesPanel';
+import { GarantiaEndorsementsPanel } from './garantia/GarantiaEndorsementsPanel';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
 
@@ -78,7 +79,7 @@ export function SeguroGarantiaPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Seguro Garantia</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Gerencie apólices, títulos e boletos de seguro garantia — integrado à Junto Seguros.
+          Gerencie apólices, endossos, títulos e boletos de seguro garantia — integrado à Junto Seguros.
         </p>
       </div>
 
@@ -121,10 +122,14 @@ export function SeguroGarantiaPage() {
       <Tabs defaultValue="policies" className="space-y-4">
         <TabsList>
           <TabsTrigger value="policies">Apólices</TabsTrigger>
+          <TabsTrigger value="endorsements">Endossos</TabsTrigger>
           <TabsTrigger value="billings">Títulos / Boletos</TabsTrigger>
         </TabsList>
         <TabsContent value="policies">
           <GarantiaPoliciesPanel />
+        </TabsContent>
+        <TabsContent value="endorsements">
+          <GarantiaEndorsementsPanel />
         </TabsContent>
         <TabsContent value="billings">
           <GarantiaBillingsPanel />
