@@ -11,6 +11,7 @@ import { GarantiaEndorsementsPanel } from './garantia/GarantiaEndorsementsPanel'
 import { GarantiaPolicyholdersPanel } from './garantia/GarantiaPolicyholdersPanel';
 import { GarantiaCancellationPanel } from './garantia/GarantiaCancellationPanel';
 import { GarantiaEconomicGroupPanel } from './garantia/GarantiaEconomicGroupPanel';
+import { GarantiaDocumentPanel } from './garantia/GarantiaDocumentPanel';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
 
@@ -129,6 +130,7 @@ export function SeguroGarantiaPage() {
           <TabsTrigger value="policyholders">Tomadores</TabsTrigger>
           <TabsTrigger value="billings">Títulos / Boletos</TabsTrigger>
           <TabsTrigger value="cancellation">Cancelamentos</TabsTrigger>
+          <TabsTrigger value="document">Documento</TabsTrigger>
           <TabsTrigger value="economic-group">Grupos Econômicos</TabsTrigger>
         </TabsList>
         <TabsContent value="policies">
@@ -145,6 +147,9 @@ export function SeguroGarantiaPage() {
         </TabsContent>
         <TabsContent value="cancellation">
           <GarantiaCancellationPanel />
+        </TabsContent>
+        <TabsContent value="document">
+          <GarantiaDocumentPanel />
         </TabsContent>
         <TabsContent value="economic-group">
           <GarantiaEconomicGroupPanel />
