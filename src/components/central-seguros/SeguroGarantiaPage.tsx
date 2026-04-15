@@ -12,6 +12,7 @@ import { GarantiaPolicyholdersPanel } from './garantia/GarantiaPolicyholdersPane
 import { GarantiaCancellationPanel } from './garantia/GarantiaCancellationPanel';
 import { GarantiaEconomicGroupPanel } from './garantia/GarantiaEconomicGroupPanel';
 import { GarantiaDocumentPanel } from './garantia/GarantiaDocumentPanel';
+import { GarantiaFilesPanel } from './garantia/GarantiaFilesPanel';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
 
