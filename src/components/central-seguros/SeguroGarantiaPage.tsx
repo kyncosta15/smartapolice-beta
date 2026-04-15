@@ -171,6 +171,9 @@ export function SeguroGarantiaPage() {
         <TabsContent value="insured">
           <GarantiaInsuredPanel />
         </TabsContent>
+        <TabsContent value="judicial-civil">
+          <GarantiaJudicialCivilPanel />
+        </TabsContent>
       </Tabs>
     </div>
   );
