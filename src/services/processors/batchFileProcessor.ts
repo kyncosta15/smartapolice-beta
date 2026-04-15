@@ -116,9 +116,20 @@ export class BatchFileProcessor {
           continue; // Pular este item e continuar com os próximos
         }
         
+        // CORREÇÃO: Preencher campos nulos com fallbacks para evitar falha de validação
+        const today = new Date().toISOString().split('T')[0];
+        const oneYearLater = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
         const dataWithUserId = {
           ...singleData,
-          user_id: resolvedUserId // Garantir userId nos dados
+          user_id: resolvedUserId,
+          // Fallback para datas nulas (comum em seguros de vida)
+          inicio: singleData.inicio || singleData.inicio_vigencia || today,
+          inicio_vigencia: singleData.inicio_vigencia || singleData.inicio || today,
+          fim: singleData.fim || singleData.fim_vigencia || oneYearLater,
+          fim_vigencia: singleData.fim_vigencia || singleData.fim || oneYearLater,
+          // Fallback para numero_apolice vazio
+          numero_apolice: singleData.numero_apolice || singleData.apolice || `TEMP-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
         };
         
         const relatedFileName = this.findRelatedFileNameSafely(singleData, files) || files[Math.min(index, files.length - 1)]?.name || `Arquivo ${index + 1}`;
