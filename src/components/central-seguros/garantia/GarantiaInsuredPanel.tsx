@@ -33,7 +33,7 @@ export function GarantiaInsuredPanel() {
   const [registerZipCode, setRegisterZipCode] = useState('');
   const [registerInsuredType, setRegisterInsuredType] = useState('9');
   const [selectedInsured, setSelectedInsured] = useState<InsuredItem | null>(null);
-  const [detailsLoading, setDetailsLoading] = useState(false);
+  
 
   const fetchInsured = useCallback(async () => {
     setLoading(true);
