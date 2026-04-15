@@ -144,7 +144,7 @@ export function GarantiaInsuredPanel() {
               className="max-w-xs"
             />
             <Button onClick={fetchInsured} disabled={loading} size="sm">
-              {loading ? <Loader2 className="size-4 animate-spin mr-1" /> : <RefreshCw className="size-4 mr-1" />}
+              {loading ? <Loader2 className="size-4 animate-spin mr-1" /> : <Search className="size-4 mr-1" />}
               Buscar
             </Button>
           </div>
