@@ -18,6 +18,7 @@ import { GarantiaJudicialCivilPanel } from './garantia/GarantiaJudicialCivilPane
 import { GarantiaJudicialFiscalPanel } from './garantia/GarantiaJudicialFiscalPanel';
 import { GarantiaJudicialLaborReviewPanel } from './garantia/GarantiaJudicialLaborReviewPanel';
 import { GarantiaJudicialSubstitutionPanel } from './garantia/GarantiaJudicialSubstitutionPanel';
+import { GarantiaTraditionalPanel } from './garantia/GarantiaTraditionalPanel';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
 type ActiveView = 'home' | 'policies' | 'endorsements' | 'policyholders' | 'billings' | 'cancellation' | 'document' | 'files' | 'increasevalue' | 'economic-group' | 'insured' | 'judicial-civil' | 'judicial-fiscal' | 'judicial-labor-review' | 'judicial-substitution' | 'traditional';
