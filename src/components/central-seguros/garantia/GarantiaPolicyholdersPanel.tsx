@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { RefreshCw, Loader2, Users, Search, Building2, Shield, TrendingUp, Eye, X } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, Users, Search, Building2, Shield, TrendingUp, Eye, X } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -83,7 +83,6 @@ export function GarantiaPolicyholdersPanel() {
     setSelectedDetail(null);
 
     try {
-      // Fetch details, modalities and limits in parallel
       const [detailRes, modalitiesRes, limitsRes] = await Promise.all([
         supabase.functions.invoke('junto-garantia-policyholders', {
           body: { environment: 'sandbox', action: 'details', federalId },
@@ -116,12 +115,8 @@ export function GarantiaPolicyholdersPanel() {
   const formatCnpj = (doc: string | null | undefined) => {
     if (!doc) return '—';
     const clean = doc.replace(/\D/g, '');
-    if (clean.length === 14) {
-      return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-    }
-    if (clean.length === 11) {
-      return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
+    if (clean.length === 14) return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    if (clean.length === 11) return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     return doc;
   };
 
@@ -144,86 +139,18 @@ export function GarantiaPolicyholdersPanel() {
   const totalAvailable = policyholders.reduce((s, p) => s + (p.creditLimitAvailable || 0), 0);
   const utilizationPct = totalLimit > 0 ? ((totalLimit - totalAvailable) / totalLimit * 100).toFixed(1) : '0';
 
-  return (
-    <div className="space-y-4">
-      {/* Filters */}
-      <Card className="border-border/50">
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="flex-1">
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Buscar Tomador</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Nome ou CNPJ do tomador..."
-                  value={searchFilter}
-                  onChange={e => setSearchFilter(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-            <Button onClick={fetchPolicyholders} disabled={isLoading} size="sm">
-              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
-              Buscar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* KPIs */}
-      {hasSynced && (
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10"><Users className="size-4 text-primary" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{policyholders.length}</p>
-                <p className="text-xs text-muted-foreground">Tomadores</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10"><Shield className="size-4 text-emerald-600" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{formatCurrency(totalLimit)}</p>
-                <p className="text-xs text-muted-foreground">Limite Total</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10"><TrendingUp className="size-4 text-blue-600" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{formatCurrency(totalAvailable)}</p>
-                <p className="text-xs text-muted-foreground">Limite Disponível</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10"><Building2 className="size-4 text-amber-600" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{utilizationPct}%</p>
-                <p className="text-xs text-muted-foreground">Utilização</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Detail Panel */}
-      {(selectedDetail || detailLoading) && (
+  // Detail view
+  if (selectedDetail || detailLoading) {
+    return (
+      <div className="space-y-4">
         <Card className="border-primary/30 bg-primary/5">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold">Detalhes do Tomador</CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedDetail(null)}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-foreground">Detalhes do Tomador</h3>
+              <Button variant="ghost" size="icon" onClick={() => setSelectedDetail(null)}>
                 <X className="size-4" />
               </Button>
             </div>
-          </CardHeader>
-          <CardContent>
             {detailLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="size-6 animate-spin text-primary" />
@@ -231,7 +158,6 @@ export function GarantiaPolicyholdersPanel() {
               </div>
             ) : selectedDetail ? (
               <div className="grid gap-6 lg:grid-cols-3">
-                {/* Dados do Tomador */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold text-foreground border-b border-border pb-1">Dados Gerais</h4>
                   {selectedDetail.policyholder && (
@@ -249,7 +175,6 @@ export function GarantiaPolicyholdersPanel() {
                   )}
                 </div>
 
-                {/* Modalidades */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold text-foreground border-b border-border pb-1">Modalidades</h4>
                   {selectedDetail.modalities && selectedDetail.modalities.length > 0 ? (
@@ -273,7 +198,6 @@ export function GarantiaPolicyholdersPanel() {
                   )}
                 </div>
 
-                {/* Limites */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold text-foreground border-b border-border pb-1">Limites</h4>
                   {selectedDetail.limits ? (
@@ -322,18 +246,73 @@ export function GarantiaPolicyholdersPanel() {
             ) : null}
           </CardContent>
         </Card>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Search + KPIs in one card */}
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Buscar Tomador</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                  placeholder="Nome ou CNPJ do tomador..."
+                  value={searchFilter}
+                  onChange={e => setSearchFilter(e.target.value)}
+                  className="pl-9"
+                  onKeyDown={e => e.key === 'Enter' && fetchPolicyholders()}
+                />
+              </div>
+            </div>
+            <Button onClick={fetchPolicyholders} disabled={isLoading}>
+              {isLoading ? <Loader2 className="mr-1.5 size-4 animate-spin" /> : <Search className="mr-1.5 size-4" />}
+              Buscar
+            </Button>
+          </div>
+
+          {/* Inline KPIs */}
+          {hasSynced && (
+            <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 pt-2 border-t border-border">
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-primary/10"><Users className="size-4 text-primary" /></div>
+                <div>
+                  <p className="text-lg font-bold text-foreground">{policyholders.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Tomadores</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-emerald-500/10"><Shield className="size-4 text-emerald-600" /></div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">{formatCurrency(totalLimit)}</p>
+                  <p className="text-[10px] text-muted-foreground">Limite Total</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-blue-500/10"><TrendingUp className="size-4 text-blue-600" /></div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">{formatCurrency(totalAvailable)}</p>
+                  <p className="text-[10px] text-muted-foreground">Disponível</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-amber-500/10"><Building2 className="size-4 text-amber-600" /></div>
+                <div>
+                  <p className="text-lg font-bold text-foreground">{utilizationPct}%</p>
+                  <p className="text-[10px] text-muted-foreground">Utilização</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Table */}
-      <Card className="border-border/50">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Tomadores Cadastrados</CardTitle>
-            {hasSynced && (
-              <span className="text-xs text-muted-foreground">{policyholders.length} tomador(es)</span>
-            )}
-          </div>
-        </CardHeader>
+      <Card>
         <CardContent className="p-0">
           {!hasSynced ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-6">
@@ -373,15 +352,10 @@ export function GarantiaPolicyholdersPanel() {
                     const group = p.economicGroup?.name || p.economicGroupName || '—';
 
                     return (
-                      <tr key={p.federalId || idx} className="border-b border-border/50 hover:bg-primary/[0.02] transition-colors">
+                      <tr key={p.id || idx} className="border-b border-border/50 hover:bg-primary/[0.02] transition-colors">
                         <td className="px-4 py-3 font-mono text-xs text-foreground">{formatCnpj(p.federalId)}</td>
-                        <td className="px-4 py-3">
-                          <div className="max-w-[200px]">
-                            <p className="font-medium text-foreground truncate">{p.name || '—'}</p>
-                            {p.tradeName && <p className="text-xs text-muted-foreground truncate">{p.tradeName}</p>}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground max-w-[150px] truncate">{group}</td>
+                        <td className="px-4 py-3 font-medium text-foreground max-w-[200px] truncate">{p.name || p.tradeName || '—'}</td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs max-w-[150px] truncate">{group}</td>
                         <td className="px-4 py-3">{getRatingBadge(p.riskRating)}</td>
                         <td className="px-4 py-3 text-right font-medium text-foreground">{formatCurrency(p.creditLimit)}</td>
                         <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(p.creditLimitAvailable)}</td>
@@ -390,11 +364,10 @@ export function GarantiaPolicyholdersPanel() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-xs"
-                            disabled={detailLoading}
                             onClick={() => fetchDetails(p.federalId)}
+                            disabled={detailLoading}
                           >
-                            <Eye className="size-3 mr-1" /> Detalhes
+                            <Eye className="size-3.5 mr-1" /> Ver
                           </Button>
                         </td>
                       </tr>

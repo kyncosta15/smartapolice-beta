@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Loader2, Search, FileSearch, CheckCircle2, Clock, AlertTriangle, XCircle, Mail } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -57,13 +57,12 @@ export function GarantiaDocumentPanel() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileSearch className="size-5 text-primary" />
-          Status de Internalização
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="p-4 space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <FileSearch className="size-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Status de Internalização</h3>
+        </div>
+
         <p className="text-xs text-muted-foreground">
           Acompanhe as etapas de internalização de uma proposta até sua finalização.
         </p>
@@ -79,13 +78,13 @@ export function GarantiaDocumentPanel() {
             />
           </div>
           <Button onClick={fetchStatus} disabled={loading}>
-            {loading ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
-            <span className="ml-1">Consultar</span>
+            {loading ? <Loader2 className="size-4 animate-spin mr-1.5" /> : <Search className="size-4 mr-1.5" />}
+            Consultar
           </Button>
         </div>
 
         {searched && statuses.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-1.5 pt-2">
             {statuses.map((status, idx) => {
               const mapped = STATUS_MAP[status.id || 0];
               return (

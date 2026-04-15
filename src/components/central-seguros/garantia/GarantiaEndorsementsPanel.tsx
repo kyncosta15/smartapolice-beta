@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { RefreshCw, Loader2, FileText, Search, ArrowUpDown, ArrowDown, ArrowUp, XCircle, Calendar } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, FileText, Search, ArrowUpDown, ArrowDown, ArrowUp, XCircle, Calendar } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -91,9 +91,7 @@ export function GarantiaEndorsementsPanel() {
         pageNumber: page,
         rowsOfPage: 20,
       };
-      if (documentTypeFilter && documentTypeFilter !== 'all') {
-        body.documentType = Number(documentTypeFilter);
-      }
+      if (documentTypeFilter && documentTypeFilter !== 'all') body.documentType = Number(documentTypeFilter);
 
       const { data, error } = await supabase.functions.invoke('junto-garantia-endorsements', { body });
 
@@ -107,8 +105,7 @@ export function GarantiaEndorsementsPanel() {
         setPagination(data.pagination || null);
         setCurrentPage(page);
         setHasSynced(true);
-        const count = data.endorsements?.length || 0;
-        toast.success(`${count} endosso(s) encontrado(s)`);
+        toast.success(`${data.endorsements?.length || 0} endosso(s) encontrado(s)`);
       } else {
         toast.error(data?.error || 'Erro desconhecido');
       }
@@ -131,7 +128,6 @@ export function GarantiaEndorsementsPanel() {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   };
 
-  // KPIs
   const totalPremio = endorsements.reduce((s, e) => s + (e.premiumValue || 0), 0);
   const totalIS = endorsements.reduce((s, e) => s + (e.endorsementSecuredAmount || 0), 0);
   const aumentos = endorsements.filter(e => [2, 3, 4].includes(e.documentType?.id || 0)).length;
@@ -139,9 +135,9 @@ export function GarantiaEndorsementsPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <Card className="border-border/50">
-        <CardContent className="p-4">
+      {/* Filters + KPIs */}
+      <Card>
+        <CardContent className="p-4 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="w-full sm:w-40">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Data Início</label>
@@ -154,9 +150,7 @@ export function GarantiaEndorsementsPanel() {
             <div className="w-full sm:w-52">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Tipo de Endosso</label>
               <Select value={documentTypeFilter} onValueChange={setDocumentTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
                 <SelectContent>
                   {DOCUMENT_TYPE_OPTIONS.map(opt => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
@@ -164,78 +158,43 @@ export function GarantiaEndorsementsPanel() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={() => fetchEndorsements(1)} disabled={isLoading} size="sm">
-              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+            <Button onClick={() => fetchEndorsements(1)} disabled={isLoading}>
+              {isLoading ? <Loader2 className="mr-1.5 size-4 animate-spin" /> : <Search className="mr-1.5 size-4" />}
               Buscar
             </Button>
           </div>
+
+          {hasSynced && (
+            <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 pt-2 border-t border-border">
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-emerald-500/10"><ArrowUp className="size-4 text-emerald-600" /></div>
+                <div><p className="text-lg font-bold text-foreground">{aumentos}</p><p className="text-[10px] text-muted-foreground">Aumentos</p></div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-amber-500/10"><ArrowDown className="size-4 text-amber-600" /></div>
+                <div><p className="text-lg font-bold text-foreground">{reducoes}</p><p className="text-[10px] text-muted-foreground">Reduções / Cancel.</p></div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-primary/10"><Calendar className="size-4 text-primary" /></div>
+                <div><p className="text-sm font-bold text-foreground">{formatCurrency(totalPremio)}</p><p className="text-[10px] text-muted-foreground">Prêmio Total</p></div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-primary/10"><ArrowUpDown className="size-4 text-primary" /></div>
+                <div><p className="text-sm font-bold text-foreground">{formatCurrency(totalIS)}</p><p className="text-[10px] text-muted-foreground">IS Endossada</p></div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* KPIs */}
-      {hasSynced && (
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10"><ArrowUp className="size-4 text-emerald-600" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{aumentos}</p>
-                <p className="text-xs text-muted-foreground">Aumentos</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10"><ArrowDown className="size-4 text-amber-600" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{reducoes}</p>
-                <p className="text-xs text-muted-foreground">Reduções / Cancel.</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10"><Calendar className="size-4 text-primary" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{formatCurrency(totalPremio)}</p>
-                <p className="text-xs text-muted-foreground">Prêmio Total</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10"><ArrowUpDown className="size-4 text-primary" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{formatCurrency(totalIS)}</p>
-                <p className="text-xs text-muted-foreground">IS Endossada</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Table */}
-      <Card className="border-border/50">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Endossos Emitidos</CardTitle>
-            {pagination && (
-              <span className="text-xs text-muted-foreground">
-                {pagination.totalCount} endosso(s) • Página {pagination.pageNumber}/{pagination.totalPages}
-              </span>
-            )}
-          </div>
-        </CardHeader>
+      <Card>
         <CardContent className="p-0">
           {!hasSynced ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-6">
-              <div className="p-4 rounded-full bg-muted/50 mb-4">
-                <FileText className="size-8 text-muted-foreground" />
-              </div>
+              <div className="p-4 rounded-full bg-muted/50 mb-4"><FileText className="size-8 text-muted-foreground" /></div>
               <h3 className="font-semibold text-foreground mb-1">Nenhum endosso carregado</h3>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Selecione o período e clique em "Buscar" para buscar endossos emitidos (máx. 90 dias).
-              </p>
+              <p className="text-sm text-muted-foreground max-w-md">Selecione o período e clique em "Buscar" para buscar endossos emitidos (máx. 90 dias).</p>
             </div>
           ) : endorsements.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-6">
@@ -269,9 +228,7 @@ export function GarantiaEndorsementsPanel() {
                         <td className="px-4 py-3 font-medium text-foreground">{e.mainPolicyNumber || '—'}</td>
                         <td className="px-4 py-3 text-muted-foreground max-w-[180px] truncate">{e.policyholderName || '—'}</td>
                         <td className="px-4 py-3 text-muted-foreground max-w-[150px] truncate">{e.modalityDescription || '—'}</td>
-                        <td className="px-4 py-3 text-muted-foreground text-xs">
-                          {formatDate(e.durationStart)} — {formatDate(e.durationEnd)}
-                        </td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(e.durationStart)} — {formatDate(e.durationEnd)}</td>
                         <td className="px-4 py-3 text-right font-medium text-foreground">{formatCurrency(e.endorsementSecuredAmount)}</td>
                         <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(e.premiumValue)}</td>
                       </tr>
@@ -279,19 +236,11 @@ export function GarantiaEndorsementsPanel() {
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
               {pagination && (pagination.hasNext || pagination.hasPrevious) && (
                 <div className="flex items-center justify-center gap-2 p-4 border-t border-border">
-                  <Button variant="outline" size="sm" disabled={!pagination.hasPrevious || isLoading} onClick={() => fetchEndorsements(currentPage - 1)}>
-                    Anterior
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {pagination.pageNumber} / {pagination.totalPages}
-                  </span>
-                  <Button variant="outline" size="sm" disabled={!pagination.hasNext || isLoading} onClick={() => fetchEndorsements(currentPage + 1)}>
-                    Próximo
-                  </Button>
+                  <Button variant="outline" size="sm" disabled={!pagination.hasPrevious || isLoading} onClick={() => fetchEndorsements(currentPage - 1)}>Anterior</Button>
+                  <span className="text-sm text-muted-foreground">{pagination.pageNumber} / {pagination.totalPages}</span>
+                  <Button variant="outline" size="sm" disabled={!pagination.hasNext || isLoading} onClick={() => fetchEndorsements(currentPage + 1)}>Próximo</Button>
                 </div>
               )}
             </>

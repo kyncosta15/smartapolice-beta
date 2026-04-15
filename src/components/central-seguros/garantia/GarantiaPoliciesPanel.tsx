@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { RefreshCw, Loader2, FileText, Search, Shield, CheckCircle2, XCircle, AlertTriangle, Calendar } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, FileText, Search, Shield, CheckCircle2, XCircle, AlertTriangle, Calendar } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -76,12 +76,8 @@ export function GarantiaPoliciesPanel() {
   }, [dateStart, dateEnd, federalIdFilter]);
 
   const getStatusBadge = (p: Policy) => {
-    if (p.cancellationAt) {
-      return <Badge variant="secondary"><XCircle className="mr-1 size-3" />Cancelada</Badge>;
-    }
-    if (p.terminationDate) {
-      return <Badge className="bg-muted text-muted-foreground border-border"><AlertTriangle className="mr-1 size-3" />Baixada</Badge>;
-    }
+    if (p.cancellationAt) return <Badge variant="secondary"><XCircle className="mr-1 size-3" />Cancelada</Badge>;
+    if (p.terminationDate) return <Badge className="bg-muted text-muted-foreground border-border"><AlertTriangle className="mr-1 size-3" />Baixada</Badge>;
     return <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200"><CheckCircle2 className="mr-1 size-3" />Ativa</Badge>;
   };
 
@@ -97,7 +93,6 @@ export function GarantiaPoliciesPanel() {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   };
 
-  // KPIs
   const ativas = policies.filter(p => !p.cancellationAt && !p.terminationDate);
   const canceladas = policies.filter(p => !!p.cancellationAt);
   const totalIS = ativas.reduce((s, p) => s + (p.insuredAmount || 0), 0);
@@ -105,20 +100,15 @@ export function GarantiaPoliciesPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <Card className="border-border/50">
-        <CardContent className="p-4">
+      {/* Filters + KPIs */}
+      <Card>
+        <CardContent className="p-4 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">CNPJ Tomador</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Filtrar por CNPJ..."
-                  value={federalIdFilter}
-                  onChange={e => setFederalIdFilter(e.target.value)}
-                  className="pl-9"
-                />
+                <Input placeholder="Filtrar por CNPJ..." value={federalIdFilter} onChange={e => setFederalIdFilter(e.target.value)} className="pl-9" />
               </div>
             </div>
             <div className="w-full sm:w-40">
@@ -129,76 +119,43 @@ export function GarantiaPoliciesPanel() {
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Data Fim</label>
               <Input type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)} />
             </div>
-            <Button onClick={fetchPolicies} disabled={isLoading} size="sm">
-              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+            <Button onClick={fetchPolicies} disabled={isLoading}>
+              {isLoading ? <Loader2 className="mr-1.5 size-4 animate-spin" /> : <Search className="mr-1.5 size-4" />}
               Buscar
             </Button>
           </div>
+
+          {hasSynced && (
+            <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 pt-2 border-t border-border">
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-emerald-500/10"><CheckCircle2 className="size-4 text-emerald-600" /></div>
+                <div><p className="text-lg font-bold text-foreground">{ativas.length}</p><p className="text-[10px] text-muted-foreground">Ativas</p></div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-destructive/10"><XCircle className="size-4 text-destructive" /></div>
+                <div><p className="text-lg font-bold text-foreground">{canceladas.length}</p><p className="text-[10px] text-muted-foreground">Canceladas</p></div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-primary/10"><Shield className="size-4 text-primary" /></div>
+                <div><p className="text-sm font-bold text-foreground">{formatCurrency(totalIS)}</p><p className="text-[10px] text-muted-foreground">IS Total</p></div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-primary/10"><Calendar className="size-4 text-primary" /></div>
+                <div><p className="text-sm font-bold text-foreground">{formatCurrency(totalPremio)}</p><p className="text-[10px] text-muted-foreground">Prêmio Total</p></div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* KPIs */}
-      {hasSynced && (
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10"><CheckCircle2 className="size-4 text-emerald-600" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{ativas.length}</p>
-                <p className="text-xs text-muted-foreground">Ativas</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-destructive/10"><XCircle className="size-4 text-destructive" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{canceladas.length}</p>
-                <p className="text-xs text-muted-foreground">Canceladas</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10"><Shield className="size-4 text-primary" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{formatCurrency(totalIS)}</p>
-                <p className="text-xs text-muted-foreground">IS Total (Ativas)</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10"><Calendar className="size-4 text-primary" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{formatCurrency(totalPremio)}</p>
-                <p className="text-xs text-muted-foreground">Prêmio Total (Ativas)</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Table */}
-      <Card className="border-border/50">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Apólices Emitidas</CardTitle>
-            {hasSynced && (
-              <span className="text-xs text-muted-foreground">{policies.length} apólice(s)</span>
-            )}
-          </div>
-        </CardHeader>
+      <Card>
         <CardContent className="p-0">
           {!hasSynced ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-6">
-              <div className="p-4 rounded-full bg-muted/50 mb-4">
-                <FileText className="size-8 text-muted-foreground" />
-              </div>
+              <div className="p-4 rounded-full bg-muted/50 mb-4"><FileText className="size-8 text-muted-foreground" /></div>
               <h3 className="font-semibold text-foreground mb-1">Nenhuma apólice carregada</h3>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Selecione o período e clique em "Buscar" para buscar apólices emitidas (máx. 30 dias).
-              </p>
+              <p className="text-sm text-muted-foreground max-w-md">Selecione o período e clique em "Buscar" para buscar apólices emitidas (máx. 30 dias).</p>
             </div>
           ) : policies.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-6">
@@ -228,9 +185,7 @@ export function GarantiaPoliciesPanel() {
                       <td className="px-4 py-3 text-muted-foreground max-w-[180px] truncate">{p.policyholderName || '—'}</td>
                       <td className="px-4 py-3 text-muted-foreground max-w-[150px] truncate">{p.modalityDescription || '—'}</td>
                       <td className="px-4 py-3 text-muted-foreground">{formatDate(p.issueAt)}</td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">
-                        {formatDate(p.durationStart)} — {formatDate(p.durationEnd)}
-                      </td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(p.durationStart)} — {formatDate(p.durationEnd)}</td>
                       <td className="px-4 py-3 text-right font-medium text-foreground">{formatCurrency(p.insuredAmount)}</td>
                       <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(p.totalPremium)}</td>
                     </tr>

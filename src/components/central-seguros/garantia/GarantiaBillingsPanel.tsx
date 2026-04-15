@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { RefreshCw, Loader2, FileText, ExternalLink, AlertTriangle, CheckCircle2, Clock, XCircle, Search } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, FileText, ExternalLink, AlertTriangle, CheckCircle2, Clock, XCircle, Search } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -35,8 +35,6 @@ interface BillingsPagination {
   hasPrevious: boolean;
 }
 
-type StatusFilter = '' | 'Opened' | 'Overdue' | 'Paid' | 'Cancelled';
-
 export function GarantiaBillingsPanel() {
   const [billings, setBillings] = useState<Billing[]>([]);
   const [pagination, setPagination] = useState<BillingsPagination | null>(null);
@@ -70,8 +68,7 @@ export function GarantiaBillingsPanel() {
         setPagination(data.pagination || null);
         setCurrentPage(page);
         setHasSynced(true);
-        const count = data.billings?.length || 0;
-        toast.success(`${count} título(s) encontrado(s)`);
+        toast.success(`${data.billings?.length || 0} título(s) encontrado(s)`);
       } else {
         toast.error(data?.error || 'Erro desconhecido');
       }
@@ -83,15 +80,9 @@ export function GarantiaBillingsPanel() {
   }, [statusFilter, policyFilter]);
 
   const getStatusBadge = (billing: Billing) => {
-    if (billing.paymentDate) {
-      return <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200"><CheckCircle2 className="mr-1 size-3" />Pago</Badge>;
-    }
-    if (billing.cancellationDate) {
-      return <Badge variant="secondary"><XCircle className="mr-1 size-3" />Cancelado</Badge>;
-    }
-    if (billing.dayOfDelay > 0) {
-      return <Badge className="bg-destructive/15 text-destructive border-destructive/20"><AlertTriangle className="mr-1 size-3" />Vencido ({billing.dayOfDelay}d)</Badge>;
-    }
+    if (billing.paymentDate) return <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200"><CheckCircle2 className="mr-1 size-3" />Pago</Badge>;
+    if (billing.cancellationDate) return <Badge variant="secondary"><XCircle className="mr-1 size-3" />Cancelado</Badge>;
+    if (billing.dayOfDelay > 0) return <Badge className="bg-destructive/15 text-destructive border-destructive/20"><AlertTriangle className="mr-1 size-3" />Vencido ({billing.dayOfDelay}d)</Badge>;
     return <Badge className="bg-primary/10 text-primary border-primary/20"><Clock className="mr-1 size-3" />Em aberto</Badge>;
   };
 
@@ -107,35 +98,27 @@ export function GarantiaBillingsPanel() {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   };
 
-  // KPIs
   const totalAberto = billings.filter(b => !b.paymentDate && !b.cancellationDate && b.dayOfDelay <= 0).reduce((s, b) => s + (b.amountToPay || 0), 0);
   const totalVencido = billings.filter(b => !b.paymentDate && !b.cancellationDate && b.dayOfDelay > 0).reduce((s, b) => s + (b.amountToPay || 0), 0);
   const totalPago = billings.filter(b => !!b.paymentDate).reduce((s, b) => s + (b.amountPaid || b.amountToPay || 0), 0);
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <Card className="border-border/50">
-        <CardContent className="p-4">
+      {/* Filters + KPIs */}
+      <Card>
+        <CardContent className="p-4 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Nº Apólice</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por apólice..."
-                  value={policyFilter}
-                  onChange={e => setPolicyFilter(e.target.value)}
-                  className="pl-9"
-                />
+                <Input placeholder="Buscar por apólice..." value={policyFilter} onChange={e => setPolicyFilter(e.target.value)} className="pl-9" />
               </div>
             </div>
             <div className="w-full sm:w-48">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="Opened">Em aberto</SelectItem>
@@ -145,69 +128,39 @@ export function GarantiaBillingsPanel() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={() => fetchBillings(1)} disabled={isLoading} size="sm">
-              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+            <Button onClick={() => fetchBillings(1)} disabled={isLoading}>
+              {isLoading ? <Loader2 className="mr-1.5 size-4 animate-spin" /> : <Search className="mr-1.5 size-4" />}
               Buscar
             </Button>
           </div>
+
+          {hasSynced && (
+            <div className="grid gap-3 grid-cols-3 pt-2 border-t border-border">
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-primary/10"><Clock className="size-4 text-primary" /></div>
+                <div><p className="text-sm font-bold text-foreground">{formatCurrency(totalAberto)}</p><p className="text-[10px] text-muted-foreground">Em Aberto</p></div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-destructive/10"><AlertTriangle className="size-4 text-destructive" /></div>
+                <div><p className="text-sm font-bold text-foreground">{formatCurrency(totalVencido)}</p><p className="text-[10px] text-muted-foreground">Vencido</p></div>
+              </div>
+              <div className="flex items-center gap-3 p-2">
+                <div className="p-1.5 rounded-md bg-emerald-500/10"><CheckCircle2 className="size-4 text-emerald-600" /></div>
+                <div><p className="text-sm font-bold text-foreground">{formatCurrency(totalPago)}</p><p className="text-[10px] text-muted-foreground">Pago</p></div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* KPIs */}
-      {hasSynced && (
-        <div className="grid gap-3 grid-cols-3">
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10"><Clock className="size-4 text-primary" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{formatCurrency(totalAberto)}</p>
-                <p className="text-xs text-muted-foreground">Em Aberto</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-destructive/10"><AlertTriangle className="size-4 text-destructive" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{formatCurrency(totalVencido)}</p>
-                <p className="text-xs text-muted-foreground">Vencido</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10"><CheckCircle2 className="size-4 text-emerald-600" /></div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{formatCurrency(totalPago)}</p>
-                <p className="text-xs text-muted-foreground">Pago</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Table */}
-      <Card className="border-border/50">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Títulos / Boletos</CardTitle>
-            {pagination && (
-              <span className="text-xs text-muted-foreground">
-                {pagination.totalCount} título(s) • Página {pagination.pageNumber}/{pagination.totalPages}
-              </span>
-            )}
-          </div>
-        </CardHeader>
+      <Card>
         <CardContent className="p-0">
           {!hasSynced ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-6">
-              <div className="p-4 rounded-full bg-muted/50 mb-4">
-                <FileText className="size-8 text-muted-foreground" />
-              </div>
+              <div className="p-4 rounded-full bg-muted/50 mb-4"><FileText className="size-8 text-muted-foreground" /></div>
               <h3 className="font-semibold text-foreground mb-1">Nenhum título carregado</h3>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Clique em "Buscar" para buscar os títulos da API Junto Seguros.
-              </p>
+              <p className="text-sm text-muted-foreground max-w-md">Clique em "Buscar" para buscar os títulos da API Junto Seguros.</p>
             </div>
           ) : billings.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-6">
@@ -241,32 +194,20 @@ export function GarantiaBillingsPanel() {
                         <td className="px-4 py-3 text-center">
                           {b.billUrl ? (
                             <Button variant="ghost" size="sm" asChild>
-                              <a href={b.billUrl} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="size-4" />
-                              </a>
+                              <a href={b.billUrl} target="_blank" rel="noopener noreferrer"><ExternalLink className="size-4" /></a>
                             </Button>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
+                          ) : <span className="text-muted-foreground">—</span>}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
               {pagination && (pagination.hasNext || pagination.hasPrevious) && (
                 <div className="flex items-center justify-center gap-2 p-4 border-t border-border">
-                  <Button variant="outline" size="sm" disabled={!pagination.hasPrevious || isLoading} onClick={() => fetchBillings(currentPage - 1)}>
-                    Anterior
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {pagination.pageNumber} / {pagination.totalPages}
-                  </span>
-                  <Button variant="outline" size="sm" disabled={!pagination.hasNext || isLoading} onClick={() => fetchBillings(currentPage + 1)}>
-                    Próximo
-                  </Button>
+                  <Button variant="outline" size="sm" disabled={!pagination.hasPrevious || isLoading} onClick={() => fetchBillings(currentPage - 1)}>Anterior</Button>
+                  <span className="text-sm text-muted-foreground">{pagination.pageNumber} / {pagination.totalPages}</span>
+                  <Button variant="outline" size="sm" disabled={!pagination.hasNext || isLoading} onClick={() => fetchBillings(currentPage + 1)}>Próximo</Button>
                 </div>
               )}
             </>
