@@ -112,6 +112,7 @@ export function SeguroGarantiaPage() {
       case 'economic-group': return <GarantiaEconomicGroupPanel />;
       case 'insured': return <GarantiaInsuredPanel />;
       case 'judicial-civil': return <GarantiaJudicialCivilPanel />;
+      case 'judicial-fiscal': return <GarantiaJudicialFiscalPanel />;
       default: return null;
     }
   };
