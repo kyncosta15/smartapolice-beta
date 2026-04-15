@@ -1,4 +1,7 @@
-import { corsHeaders } from "https://deno.land/x/supabase_functions_js@v2.4.3/src/cors.ts";
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const JUNTO_TOKEN_URL = "https://ms-gateway.juntoseguros.com/auth/api/Token";
