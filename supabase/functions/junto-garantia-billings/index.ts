@@ -18,20 +18,26 @@ const BASE_URLS = {
 
 type Environment = keyof typeof AUTH_URLS;
 
-async function getAccessToken(environment: Environment): Promise<string> {
+// ── In-memory token cache (persists across warm invocations) ──
+interface CachedToken {
+  bearer: string;
+  expiresAt: number; // epoch ms
+}
+const tokenCache: Record<Environment, CachedToken | null> = {
+  production: null,
+  sandbox: null,
+};
+
+const TOKEN_MARGIN_MS = 60_000; // refresh 60s before expiry
+
+async function authenticate(environment: Environment): Promise<string> {
   const clientId = Deno.env.get("JUNTO_CLIENT_ID");
   const clientSecret = Deno.env.get("JUNTO_CLIENT_SECRET");
-
-  if (!clientId || !clientSecret) {
-    throw new Error("Credenciais da Junto não configuradas");
-  }
+  if (!clientId || !clientSecret) throw new Error("Credenciais da Junto não configuradas");
 
   const response = await fetch(AUTH_URLS[environment], {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json-patch+json",
-      Accept: "*/*",
-    },
+    headers: { "Content-Type": "application/json-patch+json", Accept: "*/*" },
     body: JSON.stringify({ clientId, clientSecret }),
   });
 
@@ -45,7 +51,48 @@ async function getAccessToken(environment: Environment): Promise<string> {
   if (!token) throw new Error("Token não retornado pela API");
 
   const tokenType = data.tokenType || data.token_type || "Bearer";
-  return `${tokenType} ${token}`;
+  const expiresIn = data.expiresIn || data.expires_in || 3600;
+  const bearer = `${tokenType} ${token}`;
+
+  tokenCache[environment] = {
+    bearer,
+    expiresAt: Date.now() + expiresIn * 1000,
+  };
+
+  console.log(`[junto-billings] Token renovado para ${environment}, expira em ${expiresIn}s`);
+  return bearer;
+}
+
+/** Returns a valid bearer token, refreshing silently if needed */
+async function getValidToken(environment: Environment): Promise<string> {
+  const cached = tokenCache[environment];
+  if (cached && cached.expiresAt - TOKEN_MARGIN_MS > Date.now()) {
+    return cached.bearer;
+  }
+  return authenticate(environment);
+}
+
+/** Fetch wrapper with automatic 401 retry (silent re-auth) */
+async function juntoFetch(
+  url: string,
+  environment: Environment,
+  options: RequestInit = {},
+): Promise<Response> {
+  const token = await getValidToken(environment);
+  const headers = { ...options.headers as Record<string, string>, Authorization: token, Accept: "application/json" };
+
+  let response = await fetch(url, { ...options, headers });
+
+  // On 401, force token refresh and retry once
+  if (response.status === 401) {
+    console.log("[junto-billings] 401 recebido, forçando refresh do token...");
+    tokenCache[environment] = null;
+    const freshToken = await authenticate(environment);
+    headers.Authorization = freshToken;
+    response = await fetch(url, { ...options, headers });
+  }
+
+  return response;
 }
 
 Deno.serve(async (req) => {
@@ -79,17 +126,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Parse request body
     const body = await req.json().catch(() => ({}));
     const environment: Environment = body.environment === "sandbox" ? "sandbox" : "production";
-    const action = body.action || "list"; // list | details
-
-    // Get Junto access token
-    const bearerToken = await getAccessToken(environment);
+    const action = body.action || "list";
     const baseUrl = BASE_URLS[environment];
 
     if (action === "list") {
-      // Build query params for billings list
       const params = new URLSearchParams();
       params.set("PageNumber", String(body.pageNumber || 1));
       params.set("RowsOfPage", String(body.rowsOfPage || 50));
@@ -103,14 +145,7 @@ Deno.serve(async (req) => {
       const url = `${baseUrl}/billings?${params.toString()}`;
       console.log(`[junto-billings] Buscando títulos: ${url}`);
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: bearerToken,
-          Accept: "application/json",
-        },
-      });
-
+      const response = await juntoFetch(url, environment);
       const responseText = await response.text();
       console.log(`[junto-billings] Status: ${response.status}`);
 
@@ -160,7 +195,6 @@ Deno.serve(async (req) => {
           synced_at: new Date().toISOString(),
         }));
 
-        // Upsert by external_id + user_id
         for (const record of billingRecords) {
           await adminClient
             .from("guarantee_billings")
@@ -200,13 +234,7 @@ Deno.serve(async (req) => {
       const url = `${baseUrl}/billings/${billingId}`;
       console.log(`[junto-billings] Detalhes do título: ${url}`);
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: bearerToken,
-          Accept: "application/json",
-        },
-      });
+      const response = await juntoFetch(url, environment);
 
       if (!response.ok) {
         const errorText = await response.text();
