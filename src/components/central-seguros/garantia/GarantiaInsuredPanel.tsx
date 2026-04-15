@@ -96,6 +96,7 @@ export function GarantiaInsuredPanel() {
           environment: 'sandbox',
           federalId: registerFederalId.replace(/\D/g, ''),
           name: registerName || undefined,
+          insuredType: parseInt(registerInsuredType, 10),
           address: {
             street: registerStreet,
             city: registerCity,
