@@ -142,108 +142,77 @@ export class BatchFileProcessor {
         
         try {
           console.log(`✅ Convertendo dados para apólice com userId: ${resolvedUserId}`);
-          console.log(`📋 Dados com userId adicionado:`, JSON.stringify(dataWithUserId, null, 2));
           
           const parsedPolicy = await this.convertToParsedPolicy(dataWithUserId, relatedFileName, files[Math.min(index, files.length - 1)], resolvedUserId);
           console.log(`✅ Apólice convertida com sucesso:`, parsedPolicy.name);
           
-          allResults.push(parsedPolicy);
+          // Salvar no banco usando sistema robusto
+          const relatedFile = files[Math.min(index, files.length - 1)];
+          let savedSuccessfully = false;
           
-            // Salvar no banco usando sistema robusto
-            const relatedFile = files[Math.min(index, files.length - 1)];
-            if (relatedFile) {
-              console.log(`💾 💾 💾 ============================================`);
-              console.log(`💾 💾 💾 SALVANDO APÓLICE: ${parsedPolicy.name}`);
-              console.log(`💾 💾 💾 Número: ${parsedPolicy.policyNumber}`);
-              console.log(`💾 💾 💾 ============================================`);
+          if (relatedFile) {
+            console.log(`💾 SALVANDO APÓLICE: ${parsedPolicy.name} | Número: ${parsedPolicy.policyNumber} | userId: ${resolvedUserId}`);
+            
+            const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
+            const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, resolvedUserId);
+            
+            console.log(`📊 RESULTADO SAVE: success=${saveResult.success}, isUpdate=${saveResult.isUpdate}, policyId=${saveResult.policyId}`);
+            
+            if (saveResult.success) {
+              savedSuccessfully = true;
+              const action = saveResult.isUpdate ? '🔄 atualizada' : '✅ criada';
+              console.log(`${action} no banco: ${parsedPolicy.name}`);
               
-              const { RobustPolicyPersistence } = await import('@/services/robustPolicyPersistence');
-              const saveResult = await RobustPolicyPersistence.savePolicyRobust(relatedFile, parsedPolicy, resolvedUserId);
-              
-              console.log(`📊 📊 📊 ================================================`);
-              console.log(`📊 📊 📊 RESULTADO DO SAVE POLICY ROBUST:`);
-              console.log(`📊 📊 📊 ================================================`);
-              console.log(`📊 saveResult COMPLETO:`, JSON.stringify(saveResult, null, 2));
-              console.log(`📊 saveResult.success:`, saveResult.success);
-              console.log(`📊 saveResult.isUpdate:`, saveResult.isUpdate);
-              console.log(`📊 saveResult.policyId:`, saveResult.policyId);
-              console.log(`📊 Tipo de isUpdate:`, typeof saveResult.isUpdate);
-              console.log(`📊 isUpdate é true?`, saveResult.isUpdate === true);
-              console.log(`📊 📊 📊 ================================================`);
-              
-              if (saveResult.success) {
-                const action = saveResult.isUpdate ? '🔄 atualizada' : '✅ criada';
-                console.log(`${action} no banco: ${parsedPolicy.name}`);
+              // Se for atualização, notificar duplicata
+              if (saveResult.isUpdate === true) {
+                const duplicateInfo = {
+                  policyNumber: parsedPolicy.policyNumber,
+                  policyId: saveResult.policyId || '',
+                  policyName: parsedPolicy.name
+                };
                 
-                // SEMPRE chamar callback com informações da apólice salva
-                console.log('🔔 🔔 🔔 ============================================');
-                console.log('🔔 🔔 🔔 VERIFICANDO SE É DUPLICATA...');
-                console.log('🔔 isUpdate:', saveResult.isUpdate);
-                console.log('🔔 onDuplicateDetected existe?', !!this.onDuplicateDetected);
-                console.log('🔔 🔔 🔔 ============================================');
+                this.toast({
+                  title: "📋 Apólice Duplicada Detectada",
+                  description: `A apólice ${parsedPolicy.policyNumber} foi atualizada com os novos dados`,
+                  duration: 5000,
+                });
                 
-                // Se for atualização, notificar com informações da duplicata
-                if (saveResult.isUpdate === true) {
-                  console.log('🔔🔔🔔 🔔🔔🔔 🔔🔔🔔 ================================================');
-                  console.log('🔔🔔🔔 🔔🔔🔔 🔔🔔🔔 DUPLICATA CONFIRMADA! CHAMANDO CALLBACK...');
-                  console.log('🔔🔔🔔 🔔🔔🔔 🔔🔔🔔 ================================================');
-                  
-                  const duplicateInfo = {
-                    policyNumber: parsedPolicy.policyNumber,
-                    policyId: saveResult.policyId || '',
-                    policyName: parsedPolicy.name
-                  };
-                  
-                  console.log('📋 Info da duplicata que será enviada:', duplicateInfo);
-                  
-                  // Toast imediato para feedback visual
-                  console.log('🍞 Chamando toast...');
-                  this.toast({
-                    title: "📋 Apólice Duplicada Detectada",
-                    description: `A apólice ${parsedPolicy.policyNumber} foi atualizada com os novos dados`,
-                    duration: 5000,
-                  });
-                  console.log('🍞 Toast chamado');
-                  
-                  // Chamar callback se disponível
-                  if (this.onDuplicateDetected) {
-                    console.log('✅✅✅ CHAMANDO onDuplicateDetected AGORA!');
-                    console.log('✅✅✅ Função callback:', this.onDuplicateDetected);
-                    
-                    this.onDuplicateDetected(duplicateInfo);
-                    
-                    console.log('✅✅✅ onDuplicateDetected CHAMADO COM SUCESSO!');
-                  } else {
-                    console.error('❌❌❌ Callback onDuplicateDetected NÃO EXISTE!');
-                    console.error('❌❌❌ this.onDuplicateDetected:', this.onDuplicateDetected);
-                  }
-                } else {
-                  console.log('ℹ️ Nova apólice criada (não é duplicata)');
-                  console.log('ℹ️ isUpdate era:', saveResult.isUpdate);
+                if (this.onDuplicateDetected) {
+                  this.onDuplicateDetected(duplicateInfo);
                 }
-              } else {
-                console.warn(`⚠️ Falha ao salvar apólice no banco: ${parsedPolicy.name}`, saveResult.errors);
               }
+            } else {
+              console.error(`❌ FALHA ao salvar apólice no banco: ${parsedPolicy.name}`, saveResult.errors);
+              this.toast({
+                title: "❌ Erro ao Salvar Apólice",
+                description: `Falha ao salvar "${parsedPolicy.name}": ${saveResult.errors?.join(', ') || 'Erro desconhecido'}`,
+                variant: "destructive",
+                duration: 8000,
+              });
             }
+          }
           
-          // Notificar componente pai
-          console.log(`📢 Notificando componente pai sobre nova apólice: ${parsedPolicy.name}`);
-          this.onPolicyExtracted(parsedPolicy);
+          // CORREÇÃO CRÍTICA: Só adicionar aos resultados se salvou com sucesso
+          if (savedSuccessfully) {
+            allResults.push(parsedPolicy);
+            
+            // Notificar componente pai SOMENTE após salvar com sucesso
+            console.log(`📢 Notificando componente pai sobre apólice salva: ${parsedPolicy.name}`);
+            this.onPolicyExtracted(parsedPolicy);
+          }
           
           this.updateFileStatus(relatedFileName, {
             progress: 90 + (index * 2),
-            status: 'processing',
-            message: `✅ Processado: ${parsedPolicy.insurer}`
+            status: savedSuccessfully ? 'processing' : 'failed',
+            message: savedSuccessfully ? `✅ Processado: ${parsedPolicy.insurer}` : `❌ Falha ao salvar: ${parsedPolicy.insurer}`
           });
           
         } catch (conversionError) {
           console.error(`❌ Erro na conversão do item ${index + 1}:`, conversionError);
-          console.error(`❌ Stack trace:`, conversionError instanceof Error ? conversionError.stack : 'N/A');
-          // Marcar como erro mas continuar processamento
           this.updateFileStatus(relatedFileName, {
             progress: 100,
             status: 'failed',
-            message: `❌ Erro na conversão: ${conversionError instanceof Error ? conversionError.message : 'Erro desconhecido'}`
+            message: `❌ Erro: ${conversionError instanceof Error ? conversionError.message : 'Erro desconhecido'}`
           });
         }
       }
