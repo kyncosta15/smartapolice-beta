@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Shield, Wifi, WifiOff, Loader2, RefreshCw, CheckCircle2, ArrowLeft, FileText, Users, Receipt, XCircle, Building2, FolderOpen, TrendingUp, Scale, Search, FileEdit, Landmark, Briefcase } from 'lucide-react';
+import { Shield, Wifi, WifiOff, Loader2, RefreshCw, CheckCircle2, ArrowLeft, FileText, Users, Receipt, XCircle, Building2, FolderOpen, TrendingUp, Scale, Search, FileEdit, Landmark, Briefcase, Replace } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,9 +17,10 @@ import { GarantiaIncreaseValuePanel } from './garantia/GarantiaIncreaseValuePane
 import { GarantiaJudicialCivilPanel } from './garantia/GarantiaJudicialCivilPanel';
 import { GarantiaJudicialFiscalPanel } from './garantia/GarantiaJudicialFiscalPanel';
 import { GarantiaJudicialLaborReviewPanel } from './garantia/GarantiaJudicialLaborReviewPanel';
+import { GarantiaJudicialSubstitutionPanel } from './garantia/GarantiaJudicialSubstitutionPanel';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
-type ActiveView = 'home' | 'policies' | 'endorsements' | 'policyholders' | 'billings' | 'cancellation' | 'document' | 'files' | 'increasevalue' | 'economic-group' | 'insured' | 'judicial-civil' | 'judicial-fiscal' | 'judicial-labor-review';
+type ActiveView = 'home' | 'policies' | 'endorsements' | 'policyholders' | 'billings' | 'cancellation' | 'document' | 'files' | 'increasevalue' | 'economic-group' | 'insured' | 'judicial-civil' | 'judicial-fiscal' | 'judicial-labor-review' | 'judicial-substitution';
 
 const modules: { key: ActiveView; label: string; desc: string; icon: React.ElementType; span?: 'full' | 'half' }[] = [
   { key: 'policies', label: 'Apólices', desc: 'Consultar e sincronizar apólices emitidas', icon: Shield },
@@ -31,6 +32,7 @@ const modules: { key: ActiveView; label: string; desc: string; icon: React.Eleme
   { key: 'judicial-civil', label: 'Judicial Civil', desc: 'Cotação, minuta e emissão judicial civil', icon: Scale },
   { key: 'judicial-fiscal', label: 'Judicial Fiscal', desc: 'Cotação, minuta e emissão judicial fiscal', icon: Landmark },
   { key: 'judicial-labor-review', label: 'Judicial Trabalhista', desc: 'Cotação, minuta e emissão trabalhista', icon: Briefcase },
+  { key: 'judicial-substitution', label: 'Judicial Substituição', desc: 'Cotação, minuta e emissão de substituição', icon: Replace },
   { key: 'insured', label: 'Segurados', desc: 'Consultar segurados cadastrados', icon: Search },
   { key: 'economic-group', label: 'Grupos Econômicos', desc: 'Consultar grupos econômicos', icon: Building2 },
   { key: 'document', label: 'Documento', desc: 'Buscar documentos de apólice', icon: FileText },
@@ -116,6 +118,7 @@ export function SeguroGarantiaPage() {
       case 'judicial-civil': return <GarantiaJudicialCivilPanel />;
       case 'judicial-fiscal': return <GarantiaJudicialFiscalPanel />;
       case 'judicial-labor-review': return <GarantiaJudicialLaborReviewPanel />;
+      case 'judicial-substitution': return <GarantiaJudicialSubstitutionPanel />;
       default: return null;
     }
   };
