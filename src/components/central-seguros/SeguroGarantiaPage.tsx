@@ -3,8 +3,10 @@ import { Shield, Wifi, WifiOff, Loader2, RefreshCw, CheckCircle2 } from 'lucide-
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { GarantiaBillingsPanel } from './garantia/GarantiaBillingsPanel';
+import { GarantiaPoliciesPanel } from './garantia/GarantiaPoliciesPanel';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
 
@@ -49,7 +51,6 @@ export function SeguroGarantiaPage() {
     }
   }, []);
 
-  // Auto-test connection on mount (silent — no toasts)
   useEffect(() => {
     testConnection(true);
   }, [testConnection]);
@@ -77,11 +78,11 @@ export function SeguroGarantiaPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Seguro Garantia</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Gerencie títulos, apólices e boletos de seguro garantia — integrado à Junto Seguros.
+          Gerencie apólices, títulos e boletos de seguro garantia — integrado à Junto Seguros.
         </p>
       </div>
 
-      {/* Connection Status — diagnostic only */}
+      {/* Connection Status */}
       <Card className={getStatusTone()}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
@@ -116,8 +117,19 @@ export function SeguroGarantiaPage() {
         </CardContent>
       </Card>
 
-      {/* Billings Panel — always visible, auth handled silently by edge function */}
-      <GarantiaBillingsPanel />
+      {/* Tabs */}
+      <Tabs defaultValue="policies" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="policies">Apólices</TabsTrigger>
+          <TabsTrigger value="billings">Títulos / Boletos</TabsTrigger>
+        </TabsList>
+        <TabsContent value="policies">
+          <GarantiaPoliciesPanel />
+        </TabsContent>
+        <TabsContent value="billings">
+          <GarantiaBillingsPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
