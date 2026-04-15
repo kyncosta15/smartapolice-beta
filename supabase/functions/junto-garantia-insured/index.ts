@@ -156,11 +156,14 @@ Deno.serve(async (req) => {
       const { federalId, name } = body;
       if (!federalId) return jsonResponse({ success: false, error: "federalId (CNPJ/CPF) é obrigatório" });
 
-      const payload: Record<string, string> = { federalId };
+      // Clean federalId - remove non-digits
+      const cleanFederalId = federalId.replace(/\D/g, "");
+      const payload: Record<string, string> = { federalId: cleanFederalId };
       if (name) payload.name = name;
 
       const url = `${baseUrl}/insured`;
       console.log(`[junto-insured] Register: ${url}`);
+      console.log(`[junto-insured] Payload: ${JSON.stringify(payload)}`);
 
       const response = await juntoFetch(url, environment, {
         method: "POST",
@@ -170,7 +173,8 @@ Deno.serve(async (req) => {
 
       if (!response.ok && response.status !== 202) {
         const errText = await response.text();
-        return jsonResponse({ success: false, error: `Erro ao cadastrar segurado (${response.status})`, details: errText.slice(0, 500) });
+        console.error(`[junto-insured] Register error ${response.status}: ${errText}`);
+        return jsonResponse({ success: false, error: `Erro ao cadastrar segurado (${response.status})`, details: errText.slice(0, 1000) });
       }
 
       const result = await response.json().catch(() => null);
