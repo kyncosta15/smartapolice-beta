@@ -163,8 +163,8 @@ export function GarantiaPolicyholdersPanel() {
               </div>
             </div>
             <Button onClick={fetchPolicyholders} disabled={isLoading} size="sm">
-              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <RefreshCw className="mr-2 size-4" />}
-              Sincronizar
+              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+              Buscar
             </Button>
           </div>
         </CardContent>
@@ -342,7 +342,7 @@ export function GarantiaPolicyholdersPanel() {
               </div>
               <h3 className="font-semibold text-foreground mb-1">Nenhum tomador carregado</h3>
               <p className="text-sm text-muted-foreground max-w-md">
-                Clique em "Sincronizar" para buscar tomadores cadastrados na Junto Seguros.
+                Clique em "Buscar" para buscar tomadores cadastrados na Junto Seguros.
               </p>
             </div>
           ) : policyholders.length === 0 ? (

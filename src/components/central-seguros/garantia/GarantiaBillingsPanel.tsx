@@ -146,8 +146,8 @@ export function GarantiaBillingsPanel() {
               </Select>
             </div>
             <Button onClick={() => fetchBillings(1)} disabled={isLoading} size="sm">
-              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <RefreshCw className="mr-2 size-4" />}
-              Sincronizar
+              {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+              Buscar
             </Button>
           </div>
         </CardContent>
@@ -206,7 +206,7 @@ export function GarantiaBillingsPanel() {
               </div>
               <h3 className="font-semibold text-foreground mb-1">Nenhum título carregado</h3>
               <p className="text-sm text-muted-foreground max-w-md">
-                Clique em "Sincronizar" para buscar os títulos da API Junto Seguros.
+                Clique em "Buscar" para buscar os títulos da API Junto Seguros.
               </p>
             </div>
           ) : billings.length === 0 ? (
