@@ -13,6 +13,7 @@ import { GarantiaCancellationPanel } from './garantia/GarantiaCancellationPanel'
 import { GarantiaEconomicGroupPanel } from './garantia/GarantiaEconomicGroupPanel';
 import { GarantiaDocumentPanel } from './garantia/GarantiaDocumentPanel';
 import { GarantiaFilesPanel } from './garantia/GarantiaFilesPanel';
+import { GarantiaIncreaseValuePanel } from './garantia/GarantiaIncreaseValuePanel';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
 
@@ -133,6 +134,7 @@ export function SeguroGarantiaPage() {
           <TabsTrigger value="cancellation">Cancelamentos</TabsTrigger>
           <TabsTrigger value="document">Documento</TabsTrigger>
           <TabsTrigger value="files">Arquivos</TabsTrigger>
+          <TabsTrigger value="increasevalue">Aumento IS</TabsTrigger>
           <TabsTrigger value="economic-group">Grupos Econômicos</TabsTrigger>
         </TabsList>
         <TabsContent value="policies">
@@ -155,6 +157,9 @@ export function SeguroGarantiaPage() {
         </TabsContent>
         <TabsContent value="files">
           <GarantiaFilesPanel />
+        </TabsContent>
+        <TabsContent value="increasevalue">
+          <GarantiaIncreaseValuePanel />
         </TabsContent>
         <TabsContent value="economic-group">
           <GarantiaEconomicGroupPanel />
