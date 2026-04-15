@@ -131,8 +131,10 @@ export class RobustPolicyPersistence {
       errors.push('Seguradora é obrigatória');
     }
     
+    // Se policyNumber estiver vazio, gerar TEMP automaticamente
     if (!policyData.policyNumber || policyData.policyNumber.trim() === '') {
-      errors.push('Número da apólice é obrigatório');
+      console.warn('⚠️ Número da apólice vazio - gerando ID temporário');
+      policyData.policyNumber = `TEMP-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     }
 
     // Normalizar dados financeiros (em centavos)
