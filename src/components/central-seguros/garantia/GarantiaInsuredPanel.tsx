@@ -184,6 +184,18 @@ export function GarantiaInsuredPanel() {
                 className="max-w-[250px]"
               />
             </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Tipo *</label>
+              <Select value={registerInsuredType} onValueChange={setRegisterInsuredType}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="9">Empresa Privada</SelectItem>
+                  <SelectItem value="8">Empresa Pública</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="flex flex-wrap gap-3 items-end">
             <div>
