@@ -2002,6 +2002,72 @@ export type Database = {
         }
         Relationships: []
       }
+      guarantee_policyholders: {
+        Row: {
+          address_city: string | null
+          address_state: string | null
+          created_at: string
+          credit_limit: number | null
+          credit_limit_available: number | null
+          economic_group: string | null
+          external_id: number | null
+          federal_id: string | null
+          id: string
+          name: string | null
+          raw_data: Json | null
+          registration_date: string | null
+          risk_rating: string | null
+          segment: string | null
+          status: string | null
+          synced_at: string
+          trade_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_city?: string | null
+          address_state?: string | null
+          created_at?: string
+          credit_limit?: number | null
+          credit_limit_available?: number | null
+          economic_group?: string | null
+          external_id?: number | null
+          federal_id?: string | null
+          id?: string
+          name?: string | null
+          raw_data?: Json | null
+          registration_date?: string | null
+          risk_rating?: string | null
+          segment?: string | null
+          status?: string | null
+          synced_at?: string
+          trade_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_city?: string | null
+          address_state?: string | null
+          created_at?: string
+          credit_limit?: number | null
+          credit_limit_available?: number | null
+          economic_group?: string | null
+          external_id?: number | null
+          federal_id?: string | null
+          id?: string
+          name?: string | null
+          raw_data?: Json | null
+          registration_date?: string | null
+          risk_rating?: string | null
+          segment?: string | null
+          status?: string | null
+          synced_at?: string
+          trade_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       guarantee_settings: {
         Row: {
           client_id: string | null
