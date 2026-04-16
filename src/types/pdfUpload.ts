@@ -7,8 +7,13 @@ export interface FileProcessingStatus {
   };
 }
 
+export interface EnhancedPDFUploadResult {
+  policies: any[];
+}
+
 export interface EnhancedPDFUploadProps {
   onPolicyExtracted: (policy: any) => void;
+  onUploadComplete?: (result: EnhancedPDFUploadResult) => void | Promise<void>;
 }
 
 export interface DynamicPDFData {

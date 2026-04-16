@@ -160,6 +160,9 @@ export class BatchFileProcessor {
             
             if (saveResult.success) {
               savedSuccessfully = true;
+              if (saveResult.policyId) {
+                parsedPolicy.id = saveResult.policyId;
+              }
               const action = saveResult.isUpdate ? '🔄 atualizada' : '✅ criada';
               console.log(`${action} no banco: ${parsedPolicy.name}`);
               

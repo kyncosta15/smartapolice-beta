@@ -14,7 +14,7 @@ import { EnhancedPDFUploadProps } from '@/types/pdfUpload';
 import { useAuth } from '@/contexts/AuthContext';
 import { DuplicatePolicyNotification } from './DuplicatePolicyNotification';
 
-export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps) {
+export function EnhancedPDFUpload({ onPolicyExtracted, onUploadComplete }: EnhancedPDFUploadProps) {
   const { 
     fileStatuses, 
     updateFileStatus, 
@@ -117,17 +117,19 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       const allResults = await fileProcessor.processMultipleFiles(selectedFiles, user.email);
       
       console.log(`🎉 Processamento completo! ${allResults.length} apólices extraídas e salvas`);
-      
-      allResults.forEach(policy => {
-        onPolicyExtracted(policy);
-      });
-      
+
       if (allResults.length > 0) {
         toast({
           title: "🎉 Upload Concluído com Sucesso",
           description: `${allResults.length} apólice(s) foram processadas e salvas no seu perfil`,
         });
         setSelectedFiles([]); // Limpar arquivos após sucesso
+
+        try {
+          await onUploadComplete?.({ policies: allResults });
+        } catch (callbackError) {
+          console.error('❌ Erro ao concluir fluxo pós-upload:', callbackError);
+        }
       } else {
         toast({
           title: "⚠️ Nenhuma Apólice Processada",
@@ -150,7 +152,7 @@ export function EnhancedPDFUpload({ onPolicyExtracted }: EnhancedPDFUploadProps)
       setIsProcessingBatch(false);
       console.log('🏁 Processamento finalizado');
     }
-  }, [selectedFiles, toast, user?.id, user?.email, updateFileStatus, removeFileStatus, onPolicyExtracted]);
+  }, [selectedFiles, toast, user?.id, user?.email, updateFileStatus, removeFileStatus, onPolicyExtracted, onUploadComplete]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
