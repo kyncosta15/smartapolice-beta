@@ -135,7 +135,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'export', title: 'Relatórios', icon: BarChart3 },
-    { id: 'settings', title: 'Configurações', icon: Settings },
     { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
   ];
 
@@ -151,7 +150,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'export', title: 'Relatórios', icon: BarChart3 },
-    { id: 'settings', title: 'Configurações', icon: Settings },
     { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
   ];
 
