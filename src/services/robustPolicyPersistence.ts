@@ -36,6 +36,39 @@ interface ValidationResult {
 }
 
 export class RobustPolicyPersistence {
+  private static toPolicyStatusEnum(status?: string): 'vigente' | 'aguardando_emissao' | 'nao_renovada' | 'pendente_analise' {
+    switch ((status || '').toLowerCase()) {
+      case 'aguardando_emissao':
+        return 'aguardando_emissao';
+      case 'nao_renovada':
+        return 'nao_renovada';
+      case 'pendente_analise':
+        return 'pendente_analise';
+      case 'vencida':
+        return 'nao_renovada';
+      case 'vencendo':
+      case 'vigente':
+      default:
+        return 'vigente';
+    }
+  }
+
+  private static async runNonBlockingPersistenceStep(stepName: string, action: () => Promise<void>): Promise<void> {
+    try {
+      await action();
+    } catch (error) {
+      console.error(`⚠️ Falha não-bloqueante em ${stepName}:`, error);
+    }
+  }
+
+  private static async tryUploadPDF(file: File, userId: string): Promise<string | null> {
+    try {
+      return await this.uploadPDF(file, userId);
+    } catch (error) {
+      console.error('⚠️ Upload do PDF falhou, continuando sem arquivo vinculado:', error);
+      return null;
+    }
+  }
   
   /**
    * FLUXO PRINCIPAL: Extração → Validação → Normalização → Persistência → Renderização
@@ -261,9 +294,18 @@ export class RobustPolicyPersistence {
       let pdfPath = existingPolicy.arquivo_url;
       if (fileHash !== existingPolicy.file_hash) {
         console.log('📄 Uploading novo PDF...');
-        pdfPath = await this.uploadPDF(file, userId);
-        updateData.arquivo_url = pdfPath;
+        const uploadedPdfPath = await this.tryUploadPDF(file, userId);
+        if (uploadedPdfPath) {
+          pdfPath = uploadedPdfPath;
+          updateData.arquivo_url = pdfPath;
+        }
       }
+
+      updateData.status = this.determineStatusFromDates(
+        normalizedData.endDate || normalizedData.expirationDate,
+        normalizedData.startDate
+      );
+      updateData.policy_status = this.toPolicyStatusEnum(updateData.status);
 
       // 4. Atualizar no banco (trigger de auditoria será executado automaticamente)
       const { data: updatedPolicy, error } = await supabase
@@ -278,10 +320,10 @@ export class RobustPolicyPersistence {
         return { success: false, errors: [error.message] };
       }
 
-      // 5. Atualizar coberturas, parcelas e apolice_parcelas
-      await this.updateCoverages(existingPolicy.id, normalizedData);
-      await this.updateInstallments(existingPolicy.id, normalizedData, userId);
-      await this.saveApoliceParcelas(existingPolicy.id, normalizedData);
+      // 5. Atualizar coberturas, parcelas e apolice_parcelas sem bloquear a persistência principal
+      await this.runNonBlockingPersistenceStep('updateCoverages', () => this.updateCoverages(existingPolicy.id, normalizedData));
+      await this.runNonBlockingPersistenceStep('updateInstallments', () => this.updateInstallments(existingPolicy.id, normalizedData, userId));
+      await this.runNonBlockingPersistenceStep('saveApoliceParcelas', () => this.saveApoliceParcelas(existingPolicy.id, normalizedData));
 
       console.log('✅ ========================================');
       console.log('✅ POLÍTICA ATUALIZADA COM SUCESSO!');
@@ -309,7 +351,7 @@ export class RobustPolicyPersistence {
 
     try {
       // 1. Upload do PDF
-      const pdfPath = await this.uploadPDF(file, userId);
+      const pdfPath = await this.tryUploadPDF(file, userId);
       console.log('📄 PDF uploaded:', pdfPath);
 
       // 2. Determinar status baseado na vigência
@@ -317,6 +359,7 @@ export class RobustPolicyPersistence {
         normalizedData.endDate || normalizedData.expirationDate,
         normalizedData.startDate
       );
+      const finalPolicyStatus = this.toPolicyStatusEnum(finalStatus);
       console.log('📅 Status determinado automaticamente:', finalStatus);
 
       // 3. Preparar dados para inserção
@@ -356,7 +399,7 @@ export class RobustPolicyPersistence {
         uf: normalizedData.uf,
         corretora: normalizedData.entity,
         status: finalStatus, // Usar status calculado automaticamente
-        policy_status: finalStatus as any,
+        policy_status: finalPolicyStatus,
         arquivo_url: pdfPath,
         
         // Parcelas
@@ -390,12 +433,12 @@ export class RobustPolicyPersistence {
         return { success: false, errors: [error.message], isUpdate: false };
       }
 
-      // 4. Salvar coberturas e parcelas
-      await this.saveCoverages(policyId, normalizedData);
-      await this.saveInstallments(policyId, normalizedData, userId);
+      // 4. Salvar coberturas e parcelas sem impedir a criação da apólice principal
+      await this.runNonBlockingPersistenceStep('saveCoverages', () => this.saveCoverages(policyId, normalizedData));
+      await this.runNonBlockingPersistenceStep('saveInstallments', () => this.saveInstallments(policyId, normalizedData, userId));
 
       // 5. Salvar na tabela apolice_parcelas (vencimentos_futuros)
-      await this.saveApoliceParcelas(policyId, normalizedData);
+      await this.runNonBlockingPersistenceStep('saveApoliceParcelas', () => this.saveApoliceParcelas(policyId, normalizedData));
 
       // 6. Se não salvou parcelas mas tem custo_mensal, gerar parcelas automaticamente com datas
       if ((!normalizedData.installments || normalizedData.installments.length === 0) && normalizedData.monthlyAmount && normalizedData.monthlyAmount > 0) {
@@ -433,7 +476,10 @@ export class RobustPolicyPersistence {
             valor: inst.valor,
             status_pagamento: 'Pendente'
           }));
-          await supabase.from('apolice_parcelas').insert(apoliceParcelas);
+          const { error: apoliceParcelasError } = await supabase.from('apolice_parcelas').insert(apoliceParcelas);
+          if (apoliceParcelasError) {
+            console.error('❌ Erro ao auto-gerar apolice_parcelas:', apoliceParcelasError);
+          }
         }
       }
 
