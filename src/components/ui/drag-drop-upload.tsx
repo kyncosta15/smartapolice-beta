@@ -242,6 +242,11 @@ export function DragDropUpload({
     onFilesChange(files);
   }, [files, onFilesChange]);
 
+  // Notificar parent sobre estado de upload
+  React.useEffect(() => {
+    onUploadingChange?.(uploading);
+  }, [uploading, onUploadingChange]);
+
   // Mostrar lista de arquivos no componente de upload
   const hasUploadedFiles = files.some(f => f.uploaded);
 
