@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { TenantContext } from '@/contexts/TenantContext';
 import { useToast } from '@/hooks/use-toast';
-import type { FleetChangeRequest, FleetRequestFormData } from '@/types/fleet-requests';
+import { FLEET_ADMIN_BYPASS_CODE, type FleetChangeRequest, type FleetRequestFormData } from '@/types/fleet-requests';
 
 export function useFleetRequests() {
   const { user } = useAuth();
@@ -84,6 +84,15 @@ export function useFleetRequests() {
         }
       }
 
+      // Validar código de liberação admin (se fornecido)
+      const hasValidAdminCode =
+        !!formData.admin_code &&
+        formData.admin_code.trim() === FLEET_ADMIN_BYPASS_CODE;
+
+      if (formData.admin_code && !hasValidAdminCode) {
+        throw new Error('Código de liberação admin inválido.');
+      }
+
       // Preparar payload
       const payload: Record<string, any> = {
         motivo: formData.motivo,
@@ -97,6 +106,11 @@ export function useFleetRequests() {
         payload.responsavel = formData.responsavel;
       }
 
+      if (hasValidAdminCode) {
+        payload.auto_aprovado_via_codigo = true;
+        payload.auto_aprovado_em = new Date().toISOString();
+      }
+
       // Criar solicitação
       const { data: request, error: insertError } = await supabase
         .from('fleet_change_requests')
@@ -108,6 +122,7 @@ export function useFleetRequests() {
           placa: formData.placa,
           chassi: formData.chassi,
           renavam: formData.renavam,
+          status: hasValidAdminCode ? 'aprovado' : 'aberto',
           payload,
           anexos: [], // Will be updated after file upload
         })
@@ -129,14 +144,20 @@ export function useFleetRequests() {
         if (updateError) throw updateError;
       }
 
-      // Enviar para webhook N8N
-      await sendToWebhook(request.id);
+      // Enviar para webhook N8N (somente quando NÃO foi auto-aprovada)
+      if (!hasValidAdminCode) {
+        await sendToWebhook(request.id);
+      }
 
       await fetchRequests();
 
       toast({
-        title: 'Solicitação enviada com sucesso',
-        description: 'Você pode acompanhar em Frotas → Solicitações',
+        title: hasValidAdminCode
+          ? 'Solicitação aprovada automaticamente'
+          : 'Solicitação enviada com sucesso',
+        description: hasValidAdminCode
+          ? 'Código de liberação validado. Solicitação marcada como aprovada.'
+          : 'Você pode acompanhar em Frotas → Solicitações',
       });
 
       return request as unknown as FleetChangeRequest;

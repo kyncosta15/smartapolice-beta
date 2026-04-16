@@ -451,6 +451,35 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
               </CardContent>
             </Card>
 
+            {/* Código de Liberação Admin (opcional) */}
+            <Card>
+              <CardContent className="pt-6">
+                <FormField
+                  control={form.control}
+                  name="admin_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">
+                        Código de liberação admin (opcional)
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Informe o código fornecido pelo admin para liberar imediatamente"
+                          autoComplete="off"
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Se preenchido com o código correto, a solicitação será aprovada automaticamente.
+                        Caso contrário, aguardará aprovação manual do administrador.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
             {/* Botões */}
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button
