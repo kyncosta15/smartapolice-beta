@@ -257,24 +257,56 @@ export function VehicleDetailsModalNew({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-6xl h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="shrink-0 pb-3 px-4 pt-4 border-b">
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
-              <div className="p-2 bg-blue-100 rounded-lg shrink-0">
-                <Car className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+        <DialogHeader className="shrink-0 pb-4 px-6 pt-5 border-b bg-gradient-to-b from-muted/30 to-background">
+          <DialogTitle className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
+              <div className="p-2.5 bg-primary/10 rounded-xl shrink-0">
+                <Car className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </div>
-              <div className="flex flex-col min-w-0 flex-1">
-                <h2 className="text-lg md:text-xl font-semibold truncate">{formData.marca} {formData.modelo}</h2>
-                <div className="flex items-center gap-2 md:gap-3 mt-1 flex-wrap">
-                  <span className="text-xs md:text-sm font-mono text-muted-foreground bg-gray-100 px-2 py-1 rounded">
-                    {formData.placa}
+              <div className="flex flex-col min-w-0 flex-1 gap-1.5">
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground truncate leading-tight">
+                  {formData.marca} {formData.modelo}
+                </h2>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                  <span className="font-mono font-medium text-foreground/80 bg-muted px-2 py-0.5 rounded text-xs">
+                    {formData.placa || '—'}
                   </span>
-                  {getCategoriaBadge(formData.categoria)}
+                  {formData.ano_modelo && (
+                    <>
+                      <span className="text-muted-foreground/50">•</span>
+                      <span>{formData.ano_modelo}</span>
+                    </>
+                  )}
+                  {formData.categoria && (
+                    <>
+                      <span className="text-muted-foreground/50">•</span>
+                      <span>{formData.categoria}</span>
+                    </>
+                  )}
+                  {formData.funcao && (
+                    <>
+                      <span className="text-muted-foreground/50">•</span>
+                      <span>{formData.funcao}</span>
+                    </>
+                  )}
+                  <span className="text-muted-foreground/50">•</span>
                   {getStatusBadge(formData.status_seguro || 'sem_seguro')}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0 mr-8">
+            <div className="flex items-center gap-1 shrink-0 mr-8">
+              {tickets.length > 0 && mode === 'view' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setActiveTab('sinistros')}
+                  className="h-9 gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full text-xs font-medium"
+                  title="Ver ocorrências"
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  <span className="hidden sm:inline">{tickets.length} ocorrência{tickets.length > 1 ? 's' : ''}</span>
+                </Button>
+              )}
               {mode === 'view' ? (
                 <Button
                   variant="ghost"
