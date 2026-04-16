@@ -337,92 +337,235 @@ export function VehicleDetailsModalNew({
 
         <div className="flex-1 overflow-hidden flex flex-col">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-            <div className="shrink-0 px-2 md:px-4 py-2 overflow-x-auto">
-              <TabsList className={`flex md:grid ${isTruck ? 'md:grid-cols-11' : 'md:grid-cols-10'} gap-1 h-auto p-1 bg-gray-100 w-full md:w-full min-w-max md:min-w-0`}>
-                <TabsTrigger 
-                  value="veiculo" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <Car className="h-3 w-3 mr-1.5" />
-                  <span>Info</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="proprietario" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <User className="h-3 w-3 mr-1.5" />
-                  <span>Dono</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="emplacamento" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <FileText className="h-3 w-3 mr-1.5" />
-                  <span>Docs</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="seguro" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <Shield className="h-3 w-3 mr-1.5" />
-                  <span>Seguro</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="operacao" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <Settings className="h-3 w-3 mr-1.5" />
-                  <span>Operação</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="valores" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <DollarSign className="h-3 w-3 mr-1.5" />
-                  <span>Valores</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="financeiro" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <Landmark className="h-3 w-3 mr-1.5" />
-                  <span>Financeiro</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="sinistros" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <AlertTriangle className="h-3 w-3 mr-1.5" />
-                  <span>Sinistros</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="roubo" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-red-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <ShieldAlert className="h-3 w-3 mr-1.5" />
-                  <span>Roubo</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="alocacao" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-amber-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <HardHat className="h-3 w-3 mr-1.5" />
-                  <span>Obra</span>
-                </TabsTrigger>
-                {isTruck && (
-                  <TabsTrigger 
-                    value="tacografo" 
-                    className="data-[state=active]:bg-white data-[state=active]:text-emerald-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
+            <div className="shrink-0 px-4 md:px-6 pt-3 pb-1 overflow-x-auto border-b">
+              <TabsList className="flex md:inline-flex gap-1 h-auto p-0 bg-transparent w-full md:w-auto min-w-max">
+                {[
+                  { value: 'veiculo', icon: Car, label: 'Info' },
+                  { value: 'proprietario', icon: User, label: 'Dono' },
+                  { value: 'emplacamento', icon: FileText, label: 'Docs' },
+                  { value: 'seguro', icon: Shield, label: 'Seguro' },
+                  { value: 'operacao', icon: Settings, label: 'Operação' },
+                  { value: 'valores', icon: DollarSign, label: 'Valores' },
+                  { value: 'financeiro', icon: Landmark, label: 'Financeiro' },
+                  { value: 'sinistros', icon: AlertTriangle, label: 'Sinistros' },
+                  { value: 'roubo', icon: ShieldAlert, label: 'Roubo' },
+                  { value: 'alocacao', icon: HardHat, label: 'Obra' },
+                  ...(isTruck ? [{ value: 'tacografo', icon: Clock, label: 'Tacógrafo' }] : []),
+                ].map(({ value, icon: Icon, label }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className="relative data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-200 rounded-full px-3.5 py-2 text-xs whitespace-nowrap flex-shrink-0 border-0"
                   >
-                    <Clock className="h-3 w-3 mr-1.5" />
-                    <span>Tacógrafo</span>
+                    <Icon className="h-3.5 w-3.5 mr-1.5" />
+                    <span>{label}</span>
                   </TabsTrigger>
-                )}
+                ))}
               </TabsList>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-2 md:px-4 pb-2">
-              <TabsContent value="veiculo" className="mt-0 space-y-4 md:space-y-6">
+            <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5 bg-muted/20">
+              <TabsContent value="veiculo" className="mt-0 space-y-5">
+                {/* Bloco: Identificação */}
+                <div className="bg-card rounded-2xl border border-border/60 p-5 md:p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <Car className="h-4 w-4 text-primary" />
+                        Identificação
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">Marca, modelo e ano do veículo</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="marca" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Marca</Label>
+                      <Input
+                        id="marca"
+                        value={formData.marca || ''}
+                        onChange={(e) => handleInputChange('marca', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-12 border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="modelo" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Modelo</Label>
+                      <Input
+                        id="modelo"
+                        value={formData.modelo || ''}
+                        onChange={(e) => handleInputChange('modelo', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-12 border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ano_modelo" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Ano do Modelo</Label>
+                      <Input
+                        id="ano_modelo"
+                        type="number"
+                        value={formData.ano_modelo || ''}
+                        onChange={(e) => handleInputChange('ano_modelo', parseInt(e.target.value) || null)}
+                        disabled={mode === 'view'}
+                        className="h-12 border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bloco: Documentação */}
+                <div className="bg-card rounded-2xl border border-border/60 p-5 md:p-6 shadow-sm">
+                  <div className="mb-5">
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-primary" />
+                      Documentação
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Placa, RENAVAM, chassi e código FIPE</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="placa" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Placa</Label>
+                      <Input
+                        id="placa"
+                        value={formData.placa || ''}
+                        onChange={(e) => handleInputChange('placa', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-12 font-mono border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="renavam" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">RENAVAM</Label>
+                      <Input
+                        id="renavam"
+                        value={formData.renavam || ''}
+                        onChange={(e) => handleInputChange('renavam', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-12 font-mono border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="chassi" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chassi</Label>
+                      <Input
+                        id="chassi"
+                        value={formData.chassi || ''}
+                        onChange={(e) => handleInputChange('chassi', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-12 font-mono border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="codigo_fipe" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Código FIPE</Label>
+                      <Input
+                        id="codigo_fipe"
+                        value={formData.codigo_fipe || formData.codigo || ''}
+                        onChange={(e) => handleInputChange('codigo_fipe', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-12 font-mono border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                        placeholder="Ex: 021601-0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bloco: Classificação */}
+                <div className="bg-card rounded-2xl border border-border/60 p-5 md:p-6 shadow-sm">
+                  <div className="mb-5">
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                      <Settings className="h-4 w-4 text-primary" />
+                      Classificação
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Categoria, função e localização</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="categoria" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Categoria (FIPE)</Label>
+                      <Select
+                        value={formData.categoria || ''}
+                        onValueChange={(value) => handleInputChange('categoria', value)}
+                        disabled={mode === 'view'}
+                      >
+                        <SelectTrigger className="h-12 border-border/60 bg-background focus:ring-primary/30">
+                          <SelectValue placeholder="Selecione a categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Carros">Carros</SelectItem>
+                          <SelectItem value="Caminhão">Caminhão</SelectItem>
+                          <SelectItem value="Moto">Moto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="funcao" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Função</Label>
+                      <Select
+                        value={formData.funcao || ''}
+                        onValueChange={(value) => handleInputChange('funcao', value)}
+                        disabled={mode === 'view'}
+                      >
+                        <SelectTrigger className="h-12 border-border/60 bg-background focus:ring-primary/30">
+                          <SelectValue placeholder="Selecione a função" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Passeio">Passeio</SelectItem>
+                          <SelectItem value="Utilitário">Utilitário</SelectItem>
+                          <SelectItem value="Carga">Carga</SelectItem>
+                          <SelectItem value="Transporte">Transporte</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="localizacao" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Localização</Label>
+                      <Input
+                        id="localizacao"
+                        value={formData.localizacao || ''}
+                        onChange={(e) => handleInputChange('localizacao', e.target.value)}
+                        disabled={mode === 'view'}
+                        placeholder="Cidade ou base"
+                        className="h-12 border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bloco: Origem & Observações (collapsible) */}
+                <details className="group bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+                  <summary className="flex items-center justify-between p-5 md:p-6 cursor-pointer hover:bg-muted/40 transition-colors list-none">
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        Origem & Observações
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">Informações complementares e notas internas</p>
+                    </div>
+                    <div className="text-muted-foreground transition-transform group-open:rotate-180">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                  </summary>
+                  <div className="px-5 md:px-6 pb-6 pt-1 grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="origem_planilha" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Origem da Planilha</Label>
+                      <Input
+                        id="origem_planilha"
+                        value={formData.origem_planilha || ''}
+                        onChange={(e) => handleInputChange('origem_planilha', e.target.value)}
+                        disabled={mode === 'view'}
+                        placeholder="Ex: importação 2024-01"
+                        className="h-12 border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                      />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-2">
+                      <Label htmlFor="observacoes" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Observações</Label>
+                      <Textarea
+                        id="observacoes"
+                        value={formData.observacoes || ''}
+                        onChange={(e) => handleInputChange('observacoes', e.target.value)}
+                        disabled={mode === 'view'}
+                        rows={3}
+                        placeholder="Notas internas sobre o veículo"
+                        className="resize-none border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                      />
+                    </div>
+                  </div>
+                </details>
+              </TabsContent>
                 <Card className="p-3 md:p-6">
                   <div className="flex items-center justify-between mb-3 md:mb-4">
                     <h3 className="text-base md:text-lg font-semibold flex items-center gap-2">
