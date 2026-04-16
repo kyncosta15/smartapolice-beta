@@ -409,6 +409,7 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
                         .map(f => f.file);
                       setFiles(originalFiles);
                     }}
+                    onUploadingChange={setIsUploading}
                     maxFiles={10}
                     maxSize={10 * 1024 * 1024}
                     bucketName="fleet-documents"
