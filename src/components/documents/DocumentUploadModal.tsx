@@ -223,7 +223,7 @@ export function DocumentUploadModal({ open, onOpenChange, onUpload }: Props) {
                     it.status === 'error'
                       ? 'border-destructive/50 bg-destructive/5'
                       : it.status === 'done'
-                      ? 'border-green-500/40 bg-green-500/5'
+                      ? 'border-success/40 bg-success/5'
                       : 'border-border bg-muted/20'
                   }`}
                 >
