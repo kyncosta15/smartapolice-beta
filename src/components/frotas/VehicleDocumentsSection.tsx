@@ -217,7 +217,7 @@ export function VehicleDocumentsSection({
   useEffect(() => {
     fetchDocuments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vehicleId, vehiclePlaca, vehicleChassi]);
+  }, [vehicleId]);
 
   const handleFilesUploaded = useCallback(async (files: Array<{ file: File; id: string; url?: string; uploaded?: boolean; error?: string }>) => {
     if (!vehicleId || files.length === 0) return;
