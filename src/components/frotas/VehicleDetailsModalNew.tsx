@@ -257,24 +257,56 @@ export function VehicleDetailsModalNew({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-6xl h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="shrink-0 pb-3 px-4 pt-4 border-b">
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
-              <div className="p-2 bg-blue-100 rounded-lg shrink-0">
-                <Car className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+        <DialogHeader className="shrink-0 pb-4 px-6 pt-5 border-b bg-gradient-to-b from-muted/30 to-background">
+          <DialogTitle className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
+              <div className="p-2.5 bg-primary/10 rounded-xl shrink-0">
+                <Car className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </div>
-              <div className="flex flex-col min-w-0 flex-1">
-                <h2 className="text-lg md:text-xl font-semibold truncate">{formData.marca} {formData.modelo}</h2>
-                <div className="flex items-center gap-2 md:gap-3 mt-1 flex-wrap">
-                  <span className="text-xs md:text-sm font-mono text-muted-foreground bg-gray-100 px-2 py-1 rounded">
-                    {formData.placa}
+              <div className="flex flex-col min-w-0 flex-1 gap-1.5">
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground truncate leading-tight">
+                  {formData.marca} {formData.modelo}
+                </h2>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                  <span className="font-mono font-medium text-foreground/80 bg-muted px-2 py-0.5 rounded text-xs">
+                    {formData.placa || '—'}
                   </span>
-                  {getCategoriaBadge(formData.categoria)}
+                  {formData.ano_modelo && (
+                    <>
+                      <span className="text-muted-foreground/50">•</span>
+                      <span>{formData.ano_modelo}</span>
+                    </>
+                  )}
+                  {formData.categoria && (
+                    <>
+                      <span className="text-muted-foreground/50">•</span>
+                      <span>{formData.categoria}</span>
+                    </>
+                  )}
+                  {formData.funcao && (
+                    <>
+                      <span className="text-muted-foreground/50">•</span>
+                      <span>{formData.funcao}</span>
+                    </>
+                  )}
+                  <span className="text-muted-foreground/50">•</span>
                   {getStatusBadge(formData.status_seguro || 'sem_seguro')}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0 mr-8">
+            <div className="flex items-center gap-1 shrink-0 mr-8">
+              {tickets.length > 0 && mode === 'view' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setActiveTab('sinistros')}
+                  className="h-9 gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full text-xs font-medium"
+                  title="Ver ocorrências"
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  <span className="hidden sm:inline">{tickets.length} ocorrência{tickets.length > 1 ? 's' : ''}</span>
+                </Button>
+              )}
               {mode === 'view' ? (
                 <Button
                   variant="ghost"
@@ -305,189 +337,153 @@ export function VehicleDetailsModalNew({
 
         <div className="flex-1 overflow-hidden flex flex-col">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-            <div className="shrink-0 px-2 md:px-4 py-2 overflow-x-auto">
-              <TabsList className={`flex md:grid ${isTruck ? 'md:grid-cols-11' : 'md:grid-cols-10'} gap-1 h-auto p-1 bg-gray-100 w-full md:w-full min-w-max md:min-w-0`}>
-                <TabsTrigger 
-                  value="veiculo" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <Car className="h-3 w-3 mr-1.5" />
-                  <span>Info</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="proprietario" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <User className="h-3 w-3 mr-1.5" />
-                  <span>Dono</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="emplacamento" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <FileText className="h-3 w-3 mr-1.5" />
-                  <span>Docs</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="seguro" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <Shield className="h-3 w-3 mr-1.5" />
-                  <span>Seguro</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="operacao" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <Settings className="h-3 w-3 mr-1.5" />
-                  <span>Operação</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="valores" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <DollarSign className="h-3 w-3 mr-1.5" />
-                  <span>Valores</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="financeiro" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <Landmark className="h-3 w-3 mr-1.5" />
-                  <span>Financeiro</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="sinistros" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <AlertTriangle className="h-3 w-3 mr-1.5" />
-                  <span>Sinistros</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="roubo" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-red-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <ShieldAlert className="h-3 w-3 mr-1.5" />
-                  <span>Roubo</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="alocacao" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-amber-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  <HardHat className="h-3 w-3 mr-1.5" />
-                  <span>Obra</span>
-                </TabsTrigger>
-                {isTruck && (
-                  <TabsTrigger 
-                    value="tacografo" 
-                    className="data-[state=active]:bg-white data-[state=active]:text-emerald-700 transition-all duration-200 rounded-lg px-3 py-2 text-xs whitespace-nowrap flex-shrink-0"
+            <div className="shrink-0 px-4 md:px-6 pt-3 pb-1 overflow-x-auto border-b">
+              <TabsList className="flex md:inline-flex gap-1 h-auto p-0 bg-transparent w-full md:w-auto min-w-max">
+                {[
+                  { value: 'veiculo', icon: Car, label: 'Info' },
+                  { value: 'proprietario', icon: User, label: 'Dono' },
+                  { value: 'emplacamento', icon: FileText, label: 'Docs' },
+                  { value: 'seguro', icon: Shield, label: 'Seguro' },
+                  { value: 'operacao', icon: Settings, label: 'Operação' },
+                  { value: 'valores', icon: DollarSign, label: 'Valores' },
+                  { value: 'financeiro', icon: Landmark, label: 'Financeiro' },
+                  { value: 'sinistros', icon: AlertTriangle, label: 'Sinistros' },
+                  { value: 'roubo', icon: ShieldAlert, label: 'Roubo' },
+                  { value: 'alocacao', icon: HardHat, label: 'Obra' },
+                  ...(isTruck ? [{ value: 'tacografo', icon: Clock, label: 'Tacógrafo' }] : []),
+                ].map(({ value, icon: Icon, label }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className="relative data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-200 rounded-full px-3.5 py-2 text-xs whitespace-nowrap flex-shrink-0 border-0"
                   >
-                    <Clock className="h-3 w-3 mr-1.5" />
-                    <span>Tacógrafo</span>
+                    <Icon className="h-3.5 w-3.5 mr-1.5" />
+                    <span>{label}</span>
                   </TabsTrigger>
-                )}
+                ))}
               </TabsList>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-2 md:px-4 pb-2">
-              <TabsContent value="veiculo" className="mt-0 space-y-4 md:space-y-6">
-                <Card className="p-3 md:p-6">
-                  <div className="flex items-center justify-between mb-3 md:mb-4">
-                    <h3 className="text-base md:text-lg font-semibold flex items-center gap-2">
-                      <Car className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
-                      Informações do Veículo
-                    </h3>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        console.log('🔄 Navegando para sinistros. Tickets:', tickets.length);
-                        setActiveTab('sinistros');
-                      }}
-                      className={tickets.length > 0 
-                        ? "gap-2 bg-red-50 border-red-300 text-red-700 hover:bg-red-100 hover:border-red-400" 
-                        : "gap-2"
-                      }
-                    >
-                      <AlertTriangle className="h-4 w-4" />
-                      <span className="hidden sm:inline">
-                        {tickets.length > 0 ? `${tickets.length} Ocorrência(s)` : 'Ver Ocorrências'}
-                      </span>
-                      <span className="sm:hidden">
-                        {tickets.length > 0 ? tickets.length : 'Ver'}
-                      </span>
-                    </Button>
+            <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5 bg-muted/20">
+              <TabsContent value="veiculo" className="mt-0 space-y-5">
+                {/* Bloco: Identificação */}
+                <div className="bg-card rounded-2xl border border-border/60 p-5 md:p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <Car className="h-4 w-4 text-primary" />
+                        Identificação
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">Marca, modelo e ano do veículo</p>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="marca" className="text-sm font-medium text-gray-700">Marca</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="marca" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Marca</Label>
                       <Input
                         id="marca"
                         value={formData.marca || ''}
                         onChange={(e) => handleInputChange('marca', e.target.value)}
                         disabled={mode === 'view'}
-                        className="h-10 md:h-11"
+                        className="h-12 border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="modelo" className="text-sm font-medium text-gray-700">Modelo</Label>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="modelo" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Modelo</Label>
                       <Input
                         id="modelo"
                         value={formData.modelo || ''}
                         onChange={(e) => handleInputChange('modelo', e.target.value)}
                         disabled={mode === 'view'}
-                        className="h-10 md:h-11"
+                        className="h-12 border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="ano_modelo" className="text-sm font-medium text-gray-700">Ano do Modelo</Label>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ano_modelo" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Ano do Modelo</Label>
                       <Input
                         id="ano_modelo"
                         type="number"
                         value={formData.ano_modelo || ''}
                         onChange={(e) => handleInputChange('ano_modelo', parseInt(e.target.value) || null)}
                         disabled={mode === 'view'}
-                        className="h-10 md:h-11"
+                        className="h-12 border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="placa" className="text-sm font-medium text-gray-700">Placa</Label>
+                  </div>
+                </div>
+
+                {/* Bloco: Documentação */}
+                <div className="bg-card rounded-2xl border border-border/60 p-5 md:p-6 shadow-sm">
+                  <div className="mb-5">
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-primary" />
+                      Documentação
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Placa, RENAVAM, chassi e código FIPE</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="placa" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Placa</Label>
                       <Input
                         id="placa"
                         value={formData.placa || ''}
                         onChange={(e) => handleInputChange('placa', e.target.value)}
                         disabled={mode === 'view'}
-                        className="h-10 md:h-11 font-mono"
+                        className="h-12 font-mono border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="renavam" className="text-sm font-medium text-gray-700">RENAVAM</Label>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="renavam" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">RENAVAM</Label>
                       <Input
                         id="renavam"
                         value={formData.renavam || ''}
                         onChange={(e) => handleInputChange('renavam', e.target.value)}
                         disabled={mode === 'view'}
-                        className="h-10 md:h-11 font-mono"
+                        className="h-12 font-mono border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="chassi" className="text-sm font-medium text-gray-700">Chassi</Label>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="chassi" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chassi</Label>
                       <Input
                         id="chassi"
                         value={formData.chassi || ''}
                         onChange={(e) => handleInputChange('chassi', e.target.value)}
                         disabled={mode === 'view'}
-                        className="h-10 md:h-11 font-mono"
+                        className="h-12 font-mono border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="categoria" className="text-sm font-medium text-gray-700">Categoria (API FIPE)</Label>
-                      <Select 
-                        value={formData.categoria || ''} 
+                    <div className="space-y-1.5">
+                      <Label htmlFor="codigo_fipe" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Código FIPE</Label>
+                      <Input
+                        id="codigo_fipe"
+                        value={formData.codigo_fipe || formData.codigo || ''}
+                        onChange={(e) => handleInputChange('codigo_fipe', e.target.value)}
+                        disabled={mode === 'view'}
+                        className="h-12 font-mono border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
+                        placeholder="Ex: 021601-0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bloco: Classificação */}
+                <div className="bg-card rounded-2xl border border-border/60 p-5 md:p-6 shadow-sm">
+                  <div className="mb-5">
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                      <Settings className="h-4 w-4 text-primary" />
+                      Classificação
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Categoria, função e localização</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="categoria" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Categoria (FIPE)</Label>
+                      <Select
+                        value={formData.categoria || ''}
                         onValueChange={(value) => handleInputChange('categoria', value)}
                         disabled={mode === 'view'}
                       >
-                        <SelectTrigger className="h-10 md:h-11">
+                        <SelectTrigger className="h-12 border-border/60 bg-background focus:ring-primary/30">
                           <SelectValue placeholder="Selecione a categoria" />
                         </SelectTrigger>
                         <SelectContent>
@@ -497,14 +493,14 @@ export function VehicleDetailsModalNew({
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="funcao" className="text-sm font-medium text-gray-700">Função</Label>
-                      <Select 
-                        value={formData.funcao || ''} 
+                    <div className="space-y-1.5">
+                      <Label htmlFor="funcao" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Função</Label>
+                      <Select
+                        value={formData.funcao || ''}
                         onValueChange={(value) => handleInputChange('funcao', value)}
                         disabled={mode === 'view'}
                       >
-                        <SelectTrigger className="h-10 md:h-11">
+                        <SelectTrigger className="h-12 border-border/60 bg-background focus:ring-primary/30">
                           <SelectValue placeholder="Selecione a função" />
                         </SelectTrigger>
                         <SelectContent>
@@ -515,50 +511,60 @@ export function VehicleDetailsModalNew({
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="localizacao" className="text-sm font-medium text-gray-700">Localização</Label>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="localizacao" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Localização</Label>
                       <Input
                         id="localizacao"
                         value={formData.localizacao || ''}
                         onChange={(e) => handleInputChange('localizacao', e.target.value)}
                         disabled={mode === 'view'}
-                        className="h-10 md:h-11"
+                        placeholder="Cidade ou base"
+                        className="h-12 border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="codigo_fipe" className="text-sm font-medium text-gray-700">Código FIPE</Label>
-                      <Input
-                        id="codigo_fipe"
-                        value={formData.codigo_fipe || formData.codigo || ''}
-                        onChange={(e) => handleInputChange('codigo_fipe', e.target.value)}
-                        disabled={mode === 'view'}
-                        className="h-10 md:h-11 font-mono"
-                        placeholder="Ex: 021601-0"
-                      />
+                  </div>
+                </div>
+
+                {/* Bloco: Origem & Observações (collapsible) */}
+                <details className="group bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+                  <summary className="flex items-center justify-between p-5 md:p-6 cursor-pointer hover:bg-muted/40 transition-colors list-none">
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        Origem & Observações
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">Informações complementares e notas internas</p>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="origem_planilha" className="text-sm font-medium text-gray-700">Origem da Planilha</Label>
+                    <div className="text-muted-foreground transition-transform group-open:rotate-180">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                  </summary>
+                  <div className="px-5 md:px-6 pb-6 pt-1 grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="origem_planilha" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Origem da Planilha</Label>
                       <Input
                         id="origem_planilha"
                         value={formData.origem_planilha || ''}
                         onChange={(e) => handleInputChange('origem_planilha', e.target.value)}
                         disabled={mode === 'view'}
-                        className="h-10 md:h-11"
+                        placeholder="Ex: importação 2024-01"
+                        className="h-12 border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
                       />
                     </div>
-                    <div className="space-y-2 md:col-span-2 xl:col-span-2">
-                      <Label htmlFor="observacoes" className="text-sm font-medium text-gray-700">Observações</Label>
+                    <div className="space-y-1.5 md:col-span-2">
+                      <Label htmlFor="observacoes" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Observações</Label>
                       <Textarea
                         id="observacoes"
                         value={formData.observacoes || ''}
                         onChange={(e) => handleInputChange('observacoes', e.target.value)}
                         disabled={mode === 'view'}
                         rows={3}
-                        className="resize-none"
+                        placeholder="Notas internas sobre o veículo"
+                        className="resize-none border-border/60 bg-background focus-visible:ring-primary/30 focus-visible:border-primary/40"
                       />
                     </div>
                   </div>
-                </Card>
+                </details>
               </TabsContent>
 
               <TabsContent value="proprietario" className="mt-0 space-y-4 md:space-y-6">
