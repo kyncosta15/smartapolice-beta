@@ -20,6 +20,7 @@ interface FileWithPreview {
 
 interface DragDropUploadProps {
   onFilesChange: (files: FileWithPreview[]) => void;
+  onUploadingChange?: (uploading: boolean) => void;
   maxFiles?: number;
   maxSize?: number;
   bucketName?: string;
@@ -31,6 +32,7 @@ interface DragDropUploadProps {
 
 export function DragDropUpload({
   onFilesChange,
+  onUploadingChange,
   maxFiles = 10,
   maxSize = 10 * 1024 * 1024, // 10MB
   bucketName = 'fleet-documents',
@@ -239,6 +241,11 @@ export function DragDropUpload({
   React.useEffect(() => {
     onFilesChange(files);
   }, [files, onFilesChange]);
+
+  // Notificar parent sobre estado de upload
+  React.useEffect(() => {
+    onUploadingChange?.(uploading);
+  }, [uploading, onUploadingChange]);
 
   // Mostrar lista de arquivos no componente de upload
   const hasUploadedFiles = files.some(f => f.uploaded);

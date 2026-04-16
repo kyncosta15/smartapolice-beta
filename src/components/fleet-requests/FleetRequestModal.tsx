@@ -76,6 +76,7 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
   const { submitRequest, submitting } = useFleetRequests();
   const [files, setFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -91,6 +92,9 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
   // Função removida - agora é gerenciada pelo DragDropUpload
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (isUploading) {
+      return;
+    }
     try {
       const formData: FleetRequestFormData = {
         tipo: values.tipo,
@@ -408,6 +412,7 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
                         .map(f => f.file);
                       setFiles(originalFiles);
                     }}
+                    onUploadingChange={setIsUploading}
                     maxFiles={10}
                     maxSize={10 * 1024 * 1024}
                     bucketName="fleet-documents"
@@ -451,9 +456,9 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Enviar solicitação
+              <Button type="submit" disabled={submitting || isUploading}>
+                {(submitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isUploading ? 'Aguarde upload...' : submitting ? 'Enviando...' : 'Enviar solicitação'}
               </Button>
             </div>
           </form>
