@@ -76,6 +76,7 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
   const { submitRequest, submitting } = useFleetRequests();
   const [files, setFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
