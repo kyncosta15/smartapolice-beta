@@ -554,14 +554,21 @@ export function UserProfile() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Label className="mb-0">Email</Label>
-                {memberships.find(m => m.empresa_id === activeEmpresa) && (
-                  <Badge variant="secondary" className="text-xs">
-                    {(() => {
-                      const role = memberships.find(m => m.empresa_id === activeEmpresa)?.role;
-                      return role === 'admin' ? 'Admin' : role === 'owner' ? 'Owner' : 'Membro';
-                    })()}
-                  </Badge>
-                )}
+                {memberships.find(m => m.empresa_id === activeEmpresa) && (() => {
+                  const role = memberships.find(m => m.empresa_id === activeEmpresa)?.role;
+                  const label = role === 'admin' ? 'Admin' : role === 'owner' ? 'Owner' : 'Membro';
+                  const colorClass =
+                    role === 'owner'
+                      ? 'bg-amber-500/20 text-amber-600 border-amber-500/30 hover:bg-amber-500/30 dark:text-amber-400'
+                      : role === 'admin'
+                      ? 'bg-primary/20 text-primary border-primary/30 hover:bg-primary/30'
+                      : 'bg-muted text-muted-foreground border-border';
+                  return (
+                    <Badge variant="outline" className={`text-xs ${colorClass}`}>
+                      {label}
+                    </Badge>
+                  );
+                })()}
               </div>
               <div className="flex gap-2">
                 <Input 
