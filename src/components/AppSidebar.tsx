@@ -116,23 +116,35 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   }, [user]);
   // Verificar se é admin pelo is_admin flag
   const isAdmin = profile?.is_admin === true;
-  const [centralSegurosOpen, setCentralSegurosOpen] = useState(
-    activeSection === 'seguro-garantia' || activeSection === 'fianca-locaticia'
-  );
 
+  const centralApolicesSubItems = [
+    { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+    { id: 'upload', title: 'Upload', icon: Upload },
+  ];
   const centralSegurosSubItems = [
     { id: 'seguro-garantia', title: 'Seguro Garantia', icon: Shield },
     { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: Building2 },
   ];
 
+  const [centralApolicesOpen, setCentralApolicesOpen] = useState(
+    centralApolicesSubItems.some(s => s.id === activeSection)
+  );
+  const [centralSegurosOpen, setCentralSegurosOpen] = useState(
+    centralSegurosSubItems.some(s => s.id === activeSection)
+  );
+
+  const groupConfig: Record<string, { items: typeof centralApolicesSubItems; open: boolean; setOpen: (v: boolean) => void }> = {
+    'central-apolices': { items: centralApolicesSubItems, open: centralApolicesOpen, setOpen: setCentralApolicesOpen },
+    'central-seguros': { items: centralSegurosSubItems, open: centralSegurosOpen, setOpen: setCentralSegurosOpen },
+  };
+
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+    { id: 'central-apolices', title: 'Central de Apólices', icon: FileText, isGroup: true },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
     { id: 'central-seguros', title: 'Central de Seguros', icon: Landmark, isGroup: true },
     { id: 'documentos', title: 'Documentos', icon: FolderOpen },
-    { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'export', title: 'Relatórios', icon: BarChart3 },
     { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
@@ -140,14 +152,13 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   const adminNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+    { id: 'central-apolices', title: 'Central de Apólices', icon: FileText, isGroup: true },
     { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
     { id: 'central-seguros', title: 'Central de Seguros', icon: Landmark, isGroup: true },
     { id: 'documentos', title: 'Documentos', icon: FolderOpen },
     { id: 'aprovacoes', title: 'Aprovações', icon: CheckSquare },
-    { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
     { id: 'export', title: 'Relatórios', icon: BarChart3 },
     { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
@@ -194,13 +205,14 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         
         <SidebarMenu className={cn(open ? "space-y-1" : "space-y-4")}>
           {navigation.map((item) => {
-            if (item.id === 'central-seguros') {
-              const isSubActive = centralSegurosSubItems.some(sub => sub.id === activeSection);
+            if ((item as any).isGroup && groupConfig[item.id]) {
+              const cfg = groupConfig[item.id];
+              const isSubActive = cfg.items.some(sub => sub.id === activeSection);
               return (
                 <Collapsible
                   key={item.id}
-                  open={centralSegurosOpen}
-                  onOpenChange={setCentralSegurosOpen}
+                  open={cfg.open}
+                  onOpenChange={cfg.setOpen}
                   className="group/collapsible"
                 >
                   <SidebarMenuItem>
@@ -229,7 +241,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                         {open && (
                           <ChevronDown className={cn(
                             "ml-auto size-4 text-muted-foreground transition-transform duration-200",
-                            centralSegurosOpen && "rotate-180"
+                            cfg.open && "rotate-180"
                           )} />
                         )}
                       </SidebarMenuButton>
@@ -237,7 +249,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                     {open && (
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {centralSegurosSubItems.map((sub) => (
+                          {cfg.items.map((sub) => (
                             <SidebarMenuSubItem key={sub.id}>
                               <SidebarMenuSubButton
                                 onClick={() => onSectionChange(sub.id)}
