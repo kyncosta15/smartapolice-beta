@@ -1,13 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTenant } from '@/contexts/TenantContext';
+import { TenantContext } from '@/contexts/TenantContext';
 import { useToast } from '@/hooks/use-toast';
 import type { FleetChangeRequest, FleetRequestFormData } from '@/types/fleet-requests';
 
 export function useFleetRequests() {
   const { user } = useAuth();
-  const { activeEmpresaId } = useTenant();
+  // Uso defensivo: não throw se TenantProvider não estiver na árvore
+  const tenant = useContext(TenantContext);
+  const activeEmpresaId = tenant?.activeEmpresaId ?? null;
   const { toast } = useToast();
   const [requests, setRequests] = useState<FleetChangeRequest[]>([]);
   const [loading, setLoading] = useState(true);
