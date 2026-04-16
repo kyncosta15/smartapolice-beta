@@ -27,12 +27,14 @@ import {
 import { 
   Home,
   FileText, 
+  FileSpreadsheet,
   BarChart3, 
   Users2,
   User,
   Car,
   Calculator,
   ShieldAlert,
+  ShieldCheck,
   Settings,
   Upload,
   Mail
@@ -145,10 +147,10 @@ export function DashboardContent() {
     {
       id: 'central-apolices',
       title: 'Central de Apólices',
-      icon: FileText,
+      icon: ShieldCheck,
       isGroup: true,
       children: [
-        { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+        { id: 'policies', title: 'Minhas Apólices', icon: FileSpreadsheet },
         { id: 'upload', title: 'Upload', icon: Upload },
       ],
     },
@@ -173,10 +175,10 @@ export function DashboardContent() {
     {
       id: 'central-apolices',
       title: 'Central de Apólices',
-      icon: FileText,
+      icon: ShieldCheck,
       isGroup: true,
       children: [
-        { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+        { id: 'policies', title: 'Minhas Apólices', icon: FileSpreadsheet },
         { id: 'upload', title: 'Upload', icon: Upload },
       ],
     },

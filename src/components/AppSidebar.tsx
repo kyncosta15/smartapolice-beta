@@ -6,11 +6,13 @@ import { useTenant } from '@/contexts/TenantContext';
 import { 
   Home,
   FileText, 
+  FileSpreadsheet,
   BarChart3, 
   Users2,
   User,
   Car,
   ShieldAlert,
+  ShieldCheck,
   Settings,
   Upload,
   Mail,
@@ -118,7 +120,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const isAdmin = profile?.is_admin === true;
 
   const centralApolicesSubItems = [
-    { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+    { id: 'policies', title: 'Minhas Apólices', icon: FileSpreadsheet },
     { id: 'upload', title: 'Upload', icon: Upload },
   ];
   const centralSegurosSubItems = [
@@ -140,7 +142,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'central-apolices', title: 'Central de Apólices', icon: FileText, isGroup: true },
+    { id: 'central-apolices', title: 'Central de Apólices', icon: ShieldCheck, isGroup: true },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
     { id: 'central-seguros', title: 'Central de Seguros', icon: Landmark, isGroup: true },
@@ -152,7 +154,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   const adminNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'central-apolices', title: 'Central de Apólices', icon: FileText, isGroup: true },
+    { id: 'central-apolices', title: 'Central de Apólices', icon: ShieldCheck, isGroup: true },
     { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
