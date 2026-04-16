@@ -308,7 +308,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                     : "text-muted-foreground group-hover:text-accent-foreground group-hover:scale-110",
                   drivingItemId === item.id && "car-drive-animation"
                 )} />
-                {open && <span className="truncate">{item.title}</span>}
+                {open && (
+                  <span className={cn(
+                    "truncate transition-opacity duration-200",
+                    drivingItemId === item.id && "opacity-0"
+                  )}>{item.title}</span>
+                )}
                 {open && item.id === 'documentos' && docCount > 0 && (
                   <span className="ml-auto text-[10px] font-semibold bg-primary/15 text-primary rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
                     {docCount}
