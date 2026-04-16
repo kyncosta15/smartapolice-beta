@@ -184,7 +184,10 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[], endossosT
     // Para cada apólice, distribuir o custo apenas nos meses onde há parcelas
     policies.forEach(policy => {
       const startDate = new Date(policy.startDate);
-      const qtdParcelas = (policy as any).quantidade_parcelas || policy.installments?.length || 1;
+      const qtdParcelas = (policy as any).quantidade_parcelas 
+        || (typeof policy.installments === 'number' ? policy.installments : null)
+        || (Array.isArray(policy.installments) ? policy.installments.length : null) 
+        || 1;
       const valorTotal = policy.premium || 0;
       
       if (valorTotal <= 0) return;
