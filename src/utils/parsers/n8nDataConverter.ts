@@ -168,7 +168,7 @@ export const convertN8NData = (data: any, userId?: string): ParsedPolicyData => 
     premium: valorPremio,
     monthlyAmount: custoMensal,
     startDate: data.inicio_vigencia || data.inicio || new Date().toISOString().split('T')[0],
-    endDate: data.fim_vigencia || data.fim || new Date().toISOString().split('T')[0],
+    endDate: data.fim_vigencia || data.fim || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     policyNumber: data.numero_apolice || `TEMP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
     paymentFrequency: data.forma_pagamento || data.pagamento || 'mensal',
     // CORREÇÃO: Determinar status baseado nas datas de vigência (antigas = nao_renovada)
