@@ -76,101 +76,121 @@ export function VehicleDocumentsSection({
   }, []);
 
   const fetchDocuments = useCallback(async () => {
-    if (!vehicleId || vehicleId.trim() === '' || isFetchingRef.current) return;
-    
+    if (!vehicleId || vehicleId.trim() === '') {
+      setLoading(false);
+      return;
+    }
+    if (isFetchingRef.current) return;
+
+    isFetchingRef.current = true;
+    setLoading(true);
+
+    // Safety timeout: nunca deixar o estado loading travado
+    const safetyTimer = setTimeout(() => {
+      console.warn('⚠️ fetchDocuments: timeout de 15s atingido, liberando loading');
+      setLoading(false);
+      isFetchingRef.current = false;
+    }, 15000);
+
     try {
-      isFetchingRef.current = true;
-      setLoading(true);
-      
-      // Buscar documentos na tabela frota_documentos (uploads diretos)
-      const { data: frotaDocs, error: frotaError } = await supabase
+      // 1) Documentos diretamente vinculados ao veículo (uploads)
+      const frotaDocsPromise = supabase
         .from('frota_documentos')
         .select('*')
         .eq('veiculo_id', vehicleId)
         .order('created_at', { ascending: false });
 
-      if (frotaError) {
-        console.error('Erro ao buscar documentos da frota:', frotaError);
-        throw frotaError;
+      // 2) Buscar dados do veículo apenas se necessário (placa/chassi não vieram nas props)
+      const needsVehicleLookup = !vehiclePlaca && !vehicleChassi;
+      const vehicleDataPromise: any = needsVehicleLookup
+        ? supabase
+            .from('frota_veiculos')
+            .select('placa, chassi')
+            .eq('id', vehicleId)
+            .maybeSingle()
+        : Promise.resolve({ data: { placa: vehiclePlaca, chassi: vehicleChassi }, error: null });
+
+      const [frotaResp, vehicleResp] = await Promise.all([frotaDocsPromise, vehicleDataPromise]);
+
+      if (frotaResp.error) {
+        console.error('Erro ao buscar documentos da frota:', frotaResp.error);
+      }
+      if (vehicleResp.error && vehicleResp.error.code !== 'PGRST116') {
+        console.error('Erro ao buscar dados do veículo:', vehicleResp.error);
       }
 
-      // Buscar informações do veículo para usar placa/chassi
-      const { data: vehicleData, error: vehicleError } = await supabase
-        .from('frota_veiculos')
-        .select('placa, chassi, renavam')
-        .eq('id', vehicleId)
-        .maybeSingle();
+      const frotaDocs = frotaResp.data || [];
+      const vehicleData = vehicleResp.data || null;
 
-      if (vehicleError && vehicleError.code !== 'PGRST116') {
-        console.error('Erro ao buscar dados do veículo:', vehicleError);
-        throw vehicleError;
-      }
-
+      // 3) Documentos vindos de solicitações executadas (best-effort, não bloqueia)
       let fleetRequestDocs: any[] = [];
-      
-      // Se temos dados do veículo, buscar documentos relacionados às solicitações
-      if (vehicleData && (vehiclePlaca || vehicleChassi)) {
-        const placa = vehiclePlaca || vehicleData.placa;
-        const chassi = vehicleChassi || vehicleData.chassi;
-        
-        if (placa || chassi) {
-          // Primeiro buscar as solicitações executadas para este veículo
-          const orConditions = [];
-          if (placa) orConditions.push(`placa.eq.${placa}`);
-          if (chassi) orConditions.push(`chassi.eq.${chassi}`);
-          
-          const { data: requestsData, error: requestsError } = await supabase
+      const placa = (vehiclePlaca ?? vehicleData?.placa ?? '').toString().trim();
+      const chassi = (vehicleChassi ?? vehicleData?.chassi ?? '').toString().trim();
+
+      if (placa || chassi) {
+        try {
+          let query = supabase
             .from('fleet_change_requests')
             .select('id')
-            .or(orConditions.join(','))
             .eq('status', 'executado');
 
-          if (!requestsError && requestsData && requestsData.length > 0) {
-            // Buscar documentos para essas solicitações
-            const requestIds = requestsData.map(r => r.id);
+          if (placa && chassi) {
+            query = query.or(`placa.eq.${placa},chassi.eq.${chassi}`);
+          } else if (placa) {
+            query = query.eq('placa', placa);
+          } else {
+            query = query.eq('chassi', chassi);
+          }
+
+          const { data: requestsData, error: requestsError } = await query;
+
+          if (requestsError) {
+            console.warn('Erro ao buscar solicitações vinculadas (ignorado):', requestsError);
+          } else if (requestsData && requestsData.length > 0) {
+            const requestIds = requestsData.map((r) => r.id);
             const { data: docsData, error: docsError } = await supabase
               .from('fleet_request_documents')
               .select('*')
               .in('request_id', requestIds);
 
-            if (!docsError && docsData) {
+            if (docsError) {
+              console.warn('Erro ao buscar documentos de solicitações (ignorado):', docsError);
+            } else if (docsData) {
               fleetRequestDocs = docsData.map((doc: any) => ({
-                ...doc,
+                id: doc.id,
                 origem: 'external',
                 tipo: getDocumentType(doc.file_name),
                 url: doc.file_url,
                 nome_arquivo: doc.file_name,
                 tamanho_arquivo: doc.file_size,
-                tipo_mime: doc.mime_type
+                tipo_mime: doc.mime_type,
+                created_at: doc.created_at,
               }));
             }
           }
+        } catch (linkedErr) {
+          console.warn('Falha ao buscar documentos vinculados (ignorado):', linkedErr);
         }
       }
 
-      // Combinar documentos de ambas as fontes
+      // 4) Combinar e deduplicar
       const allDocs = [
-        ...(frotaDocs || []).map(doc => ({
-          ...doc,
-          origem: doc.origem || 'upload'
-        })),
-        ...fleetRequestDocs
+        ...frotaDocs.map((doc: any) => ({ ...doc, origem: doc.origem || 'upload' })),
+        ...fleetRequestDocs,
       ];
-
-      // Remover duplicatas baseado no nome do arquivo e tamanho
-      const uniqueDocs = allDocs.filter((doc, index, arr) => 
-        arr.findIndex(d => 
-          d.nome_arquivo === doc.nome_arquivo && 
-          d.tamanho_arquivo === doc.tamanho_arquivo
-        ) === index
+      const uniqueDocs = allDocs.filter(
+        (doc, index, arr) =>
+          arr.findIndex(
+            (d) => d.nome_arquivo === doc.nome_arquivo && d.tamanho_arquivo === doc.tamanho_arquivo
+          ) === index
       );
 
       setDocuments(uniqueDocs);
     } catch (error) {
-      console.error('Erro ao buscar documentos:', error);
-      // Não mostrar toast aqui para evitar spam
+      console.error('Erro inesperado ao buscar documentos:', error);
       setDocuments([]);
     } finally {
+      clearTimeout(safetyTimer);
       setLoading(false);
       isFetchingRef.current = false;
     }
@@ -178,6 +198,7 @@ export function VehicleDocumentsSection({
 
   useEffect(() => {
     fetchDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleId, vehiclePlaca, vehicleChassi]);
 
   const handleFilesUploaded = useCallback(async (files: Array<{ file: File; id: string; url?: string; uploaded?: boolean; error?: string }>) => {
