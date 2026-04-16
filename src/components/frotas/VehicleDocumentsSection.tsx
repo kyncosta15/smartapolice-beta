@@ -129,7 +129,7 @@ export function VehicleDocumentsSection({
       setSearchingLinkedDocs(true);
 
       try {
-        const requestLookups: Promise<any>[] = [];
+        const requestLookups = [];
 
         if (placa) {
           requestLookups.push(
