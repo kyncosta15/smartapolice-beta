@@ -237,7 +237,7 @@ export function DocumentUploadModal({ open, onOpenChange, onUpload }: Props) {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatSize(it.file.size)}
-                          {it.status === 'done' && <span className="ml-2 text-green-600">✓ Enviado</span>}
+                          {it.status === 'done' && <span className="ml-2 text-success">✓ Enviado</span>}
                           {it.status === 'uploading' && <span className="ml-2 text-primary">Enviando…</span>}
                           {it.status === 'error' && <span className="ml-2 text-destructive">Erro: {it.errorMessage}</span>}
                         </p>
