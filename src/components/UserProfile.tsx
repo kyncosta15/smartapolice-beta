@@ -552,7 +552,17 @@ export function UserProfile() {
             </div>
 
             <div>
-              <Label>Email</Label>
+              <div className="flex items-center gap-2 mb-2">
+                <Label className="mb-0">Email</Label>
+                {memberships.find(m => m.empresa_id === activeEmpresa) && (
+                  <Badge variant="secondary" className="text-xs">
+                    {(() => {
+                      const role = memberships.find(m => m.empresa_id === activeEmpresa)?.role;
+                      return role === 'admin' ? 'Admin' : role === 'owner' ? 'Owner' : 'Membro';
+                    })()}
+                  </Badge>
+                )}
+              </div>
               <div className="flex gap-2">
                 <Input 
                   value={user?.email || ''} 
@@ -637,32 +647,6 @@ export function UserProfile() {
               </DialogContent>
             </Dialog>
 
-            {/* Company Selection */}
-            {memberships.length > 0 && (
-              <div>
-                <Label>Empresa Ativa</Label>
-                <Select
-                  value={activeEmpresa || ''}
-                  onValueChange={handleEmpresaChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma empresa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {memberships.map((membership) => (
-                      <SelectItem key={membership.empresa_id} value={membership.empresa_id}>
-                        <div className="flex items-center gap-2">
-                          <span>{membership.empresa?.nome}</span>
-                          <Badge variant={membership.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
-                            {membership.role === 'admin' ? 'Admin' : membership.role === 'owner' ? 'Owner' : 'Membro'}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
 
             {/* Memberships */}
             {memberships.length > 1 && (
