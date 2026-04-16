@@ -205,13 +205,14 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         
         <SidebarMenu className={cn(open ? "space-y-1" : "space-y-4")}>
           {navigation.map((item) => {
-            if (item.id === 'central-seguros') {
-              const isSubActive = centralSegurosSubItems.some(sub => sub.id === activeSection);
+            if ((item as any).isGroup && groupConfig[item.id]) {
+              const cfg = groupConfig[item.id];
+              const isSubActive = cfg.items.some(sub => sub.id === activeSection);
               return (
                 <Collapsible
                   key={item.id}
-                  open={centralSegurosOpen}
-                  onOpenChange={setCentralSegurosOpen}
+                  open={cfg.open}
+                  onOpenChange={cfg.setOpen}
                   className="group/collapsible"
                 >
                   <SidebarMenuItem>
