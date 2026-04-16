@@ -92,6 +92,9 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
   // Função removida - agora é gerenciada pelo DragDropUpload
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (isUploading) {
+      return;
+    }
     try {
       const formData: FleetRequestFormData = {
         tipo: values.tipo,
