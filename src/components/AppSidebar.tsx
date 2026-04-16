@@ -120,7 +120,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const isAdmin = profile?.is_admin === true;
 
   const centralApolicesSubItems = [
-    { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+    { id: 'policies', title: 'Minhas Apólices', icon: FileSpreadsheet },
     { id: 'upload', title: 'Upload', icon: Upload },
   ];
   const centralSegurosSubItems = [
