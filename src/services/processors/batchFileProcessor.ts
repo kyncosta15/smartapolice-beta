@@ -120,14 +120,18 @@ export class BatchFileProcessor {
         const today = new Date().toISOString().split('T')[0];
         const oneYearLater = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         
+        // CORREÇÃO CRÍTICA: Garantir que inicio e fim nunca sejam iguais
+        const resolvedInicio = singleData.inicio || singleData.inicio_vigencia || today;
+        const resolvedFim = singleData.fim || singleData.fim_vigencia || oneYearLater;
+        
         const dataWithUserId = {
           ...singleData,
           user_id: resolvedUserId,
           // Fallback para datas nulas (comum em seguros de vida)
-          inicio: singleData.inicio || singleData.inicio_vigencia || today,
-          inicio_vigencia: singleData.inicio_vigencia || singleData.inicio || today,
-          fim: singleData.fim || singleData.fim_vigencia || oneYearLater,
-          fim_vigencia: singleData.fim_vigencia || singleData.fim || oneYearLater,
+          inicio: resolvedInicio,
+          inicio_vigencia: resolvedInicio,
+          fim: resolvedFim,
+          fim_vigencia: resolvedFim,
           // Fallback para numero_apolice vazio
           numero_apolice: singleData.numero_apolice || singleData.apolice || `TEMP-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
         };
