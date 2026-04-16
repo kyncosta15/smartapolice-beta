@@ -234,7 +234,7 @@ export const convertN8NDirectData = (data: any, fileName: string, file: File, us
   const numeroApolice = data.numero_apolice || data.num_apolice || data.apolice || `TEMP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   const tipoSeguro = data.tipo_seguro || data.tipo || 'auto';
   const inicio = data.inicio || data.inicio_vigencia || data.data_inicio || new Date().toISOString().split('T')[0];
-  const fim = data.fim || data.fim_vigencia || data.data_fim || new Date().toISOString().split('T')[0];
+  const fim = data.fim || data.fim_vigencia || data.data_fim || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const premio = Number(data.premio) || Number(data.valor_premio) || Number(data.premio_total) || 0;
   const parcelas = Number(data.parcelas) || Number(data.num_parcelas) || 1;
   
