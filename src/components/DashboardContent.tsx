@@ -27,12 +27,14 @@ import {
 import { 
   Home,
   FileText, 
+  FileSpreadsheet,
   BarChart3, 
   Users2,
   User,
   Car,
   Calculator,
   ShieldAlert,
+  ShieldCheck,
   Settings,
   Upload,
   Mail
