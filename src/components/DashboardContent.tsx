@@ -142,28 +142,58 @@ export function DashboardContent() {
   // Navigation items - role-based visibility per specifications
   const clientNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+    {
+      id: 'central-apolices',
+      title: 'Central de Apólices',
+      icon: FileText,
+      isGroup: true,
+      children: [
+        { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+        { id: 'upload', title: 'Upload', icon: Upload },
+      ],
+    },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
-    { id: 'seguro-garantia', title: 'Seguro Garantia', icon: FileText },
-    { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: FileText },
+    {
+      id: 'central-seguros',
+      title: 'Central de Seguros',
+      icon: FileText,
+      isGroup: true,
+      children: [
+        { id: 'seguro-garantia', title: 'Seguro Garantia', icon: FileText },
+        { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: FileText },
+      ],
+    },
     { id: 'export', title: 'Relatório', icon: BarChart3 },
-    { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
-    { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 
   const adminNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+    {
+      id: 'central-apolices',
+      title: 'Central de Apólices',
+      icon: FileText,
+      isGroup: true,
+      children: [
+        { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+        { id: 'upload', title: 'Upload', icon: Upload },
+      ],
+    },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
-    { id: 'seguro-garantia', title: 'Seguro Garantia', icon: FileText },
-    { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: FileText },
+    {
+      id: 'central-seguros',
+      title: 'Central de Seguros',
+      icon: FileText,
+      isGroup: true,
+      children: [
+        { id: 'seguro-garantia', title: 'Seguro Garantia', icon: FileText },
+        { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: FileText },
+      ],
+    },
     { id: 'export', title: 'Relatório', icon: BarChart3 },
-    { id: 'upload', title: 'Upload', icon: Upload },
     { id: 'contatos', title: 'Contatos', icon: Mail },
-    { id: 'settings', title: 'Configurações', icon: Settings },
   ];
 
   const navigation = (['administrador', 'admin', 'corretora_admin'].includes(user?.role || '')) ? adminNavigation : clientNavigation;
