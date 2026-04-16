@@ -614,7 +614,7 @@ export function VehicleDetailsModalNew({
                 </Card>
               </TabsContent>
 
-              <TabsContent value="emplacamento" className="mt-0 space-y-4 md:space-y-6" forceMount>
+              <TabsContent value="emplacamento" className="mt-0 space-y-4 md:space-y-6">
                 <VehicleDocumentsSection
                   vehicleId={formData.id || ''}
                   mode={mode}
