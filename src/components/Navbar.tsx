@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, ChevronDown, Menu, ChevronLeft, ChevronRight, Moon, Sun, Monitor, RefreshCw } from 'lucide-react';
+import { LogOut, ChevronDown, Menu, ChevronLeft, ChevronRight, Moon, Sun, Monitor, RefreshCw, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -22,9 +22,10 @@ interface NavbarProps {
   isMobileMenuOpen?: boolean;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  onNavigateSection?: (section: string) => void;
 }
 
-export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false, onRefresh, isRefreshing = false }: NavbarProps) {
+export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false, onRefresh, isRefreshing = false, onNavigateSection }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { logout, user } = useAuth();
   const { profile: userProfile, memberships, activeEmpresa } = useUserProfile();
@@ -223,7 +224,20 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false, onRefresh
                       </div>
                     </div>
                   </div>
-                  <div className="pt-2">
+                  <div className="pt-2 space-y-1">
+                    {onNavigateSection && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          onNavigateSection('settings');
+                        }}
+                        className="w-full justify-start gap-2 text-sm text-foreground/70 hover:bg-accent transition-colors rounded-lg"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Configurações</span>
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       onClick={handleLogout}
