@@ -36,6 +36,7 @@ export function VehicleDocumentsSection({
 }: VehicleDocumentsSectionProps) {
   const [documents, setDocuments] = useState<VehicleDocument[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchingLinkedDocs, setSearchingLinkedDocs] = useState(false);
   const [uploading, setUploading] = useState(false);
   const isFetchingRef = useRef(false);
 
@@ -77,18 +78,22 @@ export function VehicleDocumentsSection({
 
   const fetchDocuments = useCallback(async () => {
     if (!vehicleId || vehicleId.trim() === '') {
+      setDocuments([]);
       setLoading(false);
+      setSearchingLinkedDocs(false);
       return;
     }
     if (isFetchingRef.current) return;
 
     isFetchingRef.current = true;
     setLoading(true);
+    setSearchingLinkedDocs(false);
 
     // Safety timeout: nunca deixar o estado loading travado
     const safetyTimer = setTimeout(() => {
       console.warn('⚠️ fetchDocuments: timeout de 8s atingido, liberando loading');
       setLoading(false);
+      setSearchingLinkedDocs(false);
       isFetchingRef.current = false;
     }, 8000);
 
@@ -121,28 +126,55 @@ export function VehicleDocumentsSection({
         return;
       }
 
-      try {
-        let query = supabase
-          .from('fleet_change_requests')
-          .select('id')
-          .eq('status', 'executado');
+      setSearchingLinkedDocs(true);
 
-        if (placa && chassi) {
-          query = query.or(`placa.eq.${placa},chassi.eq.${chassi}`);
-        } else if (placa) {
-          query = query.eq('placa', placa);
-        } else {
-          query = query.eq('chassi', chassi);
+      try {
+        const requestLookups: Promise<any>[] = [];
+
+        if (placa) {
+          requestLookups.push(
+            supabase
+              .from('fleet_change_requests')
+              .select('id')
+              .eq('status', 'executado')
+              .eq('placa', placa)
+          );
         }
 
-        const { data: requestsData, error: requestsError } = await query;
-        if (requestsError || !requestsData || requestsData.length === 0) return;
+        if (chassi) {
+          requestLookups.push(
+            supabase
+              .from('fleet_change_requests')
+              .select('id')
+              .eq('status', 'executado')
+              .eq('chassi', chassi)
+          );
+        }
 
-        const requestIds = requestsData.map((r) => r.id);
+        const requestResponses = await Promise.all(requestLookups);
+        const requestErrors = requestResponses
+          .map((response) => response.error)
+          .filter(Boolean);
+
+        if (requestErrors.length > 0) {
+          throw requestErrors[0];
+        }
+
+        const requestIds = Array.from(
+          new Set(
+            requestResponses.flatMap((response) =>
+              (response.data || []).map((request: { id: string }) => request.id)
+            )
+          )
+        );
+
+        if (requestIds.length === 0) return;
+
         const { data: docsData, error: docsError } = await supabase
           .from('fleet_request_documents')
           .select('*')
-          .in('request_id', requestIds);
+          .in('request_id', requestIds)
+          .order('created_at', { ascending: false });
 
         if (docsError || !docsData || docsData.length === 0) return;
 
@@ -169,6 +201,8 @@ export function VehicleDocumentsSection({
         });
       } catch (linkedErr) {
         console.warn('Falha ao buscar documentos vinculados (ignorado):', linkedErr);
+      } finally {
+        setSearchingLinkedDocs(false);
       }
     } catch (error) {
       console.error('Erro inesperado ao buscar documentos:', error);
@@ -326,11 +360,16 @@ export function VehicleDocumentsSection({
     [documents]
   );
 
+  const showLinkedLoadingState = !loading && documents.length === 0 && searchingLinkedDocs;
+
   if (loading && documents.length === 0) {
     return (
       <Card className="p-3 md:p-6">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-pulse text-gray-500">Carregando documentos...</div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            Carregando documentos...
+          </div>
         </div>
       </Card>
     );
@@ -392,15 +431,27 @@ export function VehicleDocumentsSection({
           {/* Lista de documentos */}
           <div className="space-y-3">
               {documents.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                  <p className="text-sm">Nenhum documento encontrado</p>
-                  {mode === 'edit' && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      Use a área de upload acima para adicionar documentos
+                showLinkedLoadingState ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-muted/40">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    </div>
+                    <p className="text-sm">Buscando documentos vinculados...</p>
+                    <p className="mt-1 text-xs text-muted-foreground/80">
+                      Os arquivos importados estão sendo localizados em segundo plano
                     </p>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
+                    <p className="text-sm">Nenhum documento encontrado</p>
+                    {mode === 'edit' && (
+                      <p className="mt-1 text-xs text-muted-foreground/80">
+                        Use a área de upload acima para adicionar documentos
+                      </p>
+                    )}
+                  </div>
+                )
               ) : (
                 <div>
                   {/* Seção de documentos externos */}
