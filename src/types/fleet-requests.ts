@@ -62,7 +62,10 @@ export interface FleetRequestFormData {
     email?: string;
   };
   anexos: File[];
+  admin_code?: string;
 }
+
+export const FLEET_ADMIN_BYPASS_CODE = 'ADM#2026';
 
 export interface PublicFleetToken {
   id: string;

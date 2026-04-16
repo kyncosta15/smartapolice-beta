@@ -1,0 +1,101 @@
+# Memory: index.md
+Updated: now
+
+# Project Memory
+
+## Core
+- **Design:** Primary color #0C1539 (Prussian Blue), Success #938F6F (Soft Fawn). Toasts always top-right with z-index 9999.
+- **Architecture:** Multi-tenant. Data isolated using `empresa_id` from `TenantContext`, enforced via `public.user_memberships` RLS.
+- **Dates:** Strictly `YYYY-MM-DD`. Always parse manually (`.split('-')`), never use `new Date()` to avoid UTC timezone shifts.
+- **Security:** Auto-logout after 30s inactivity (10s warning). Access controlled via `app_role` enum and `user_roles` table.
+- **Data:** Hard delete `.delete()` required for CPF/CNPJ bindings (no soft deletes). Bulk operations must execute in parallel via `Promise.all()`.
+- **Admin Bypass Code:** `ADM#2026` libera fluxos de aprovação de frota (status seguro e solicitações de alteração) sem precisar de admin.
+
+## Memories
+- [CPF/CNPJ Hard Delete](mem://data-management/cpf-vinculos-hard-delete) — Use `.delete()` for CPF/CNPJ bindings, no soft deletes
+- [CPF Sync Toast](mem://features/cpf-vinculos-modal-notification) — 8s toast for manual policy sync after adding dependent
+- [Fleet PDF Processing](mem://data-management/frota-pdf-processing) — Fleet PDF parsing via N8N edge function mapping
+- [Fleet RLS](mem://security/fleet-change-requests-rls) — RLS policies filtering by `empresa_id` via `user_memberships`
+- [Toast Position](mem://ui/toast-position) — Toasts strictly top-right with z-index 9999 to prevent overlap
+- [Policy Icons](mem://ui/apolices-tipo-icons) — Policy type icon mapping and text normalization
+- [Vehicle Normalization](mem://data-management/apolices-veiculo-normalizacao) — Explicit mapping for vehicle fields in `normalizePolicy`
+- [Vehicle Policy CRUD](mem://features/apolices-veiculo-crud-renderizacao) — Immediate CRUD persistence for Auto/Nautico policy vehicles
+- [Policy Upload N8N](mem://integrations/n8n-webhook-upload-apolices) — N8N webhook configuration for general policy uploads
+- [Bulk Deletion Parallelism](mem://features/bulk-deletion-parallel-execution) — UI updates and parallel processing for bulk deletes
+- [Ticket Details Layout](mem://features/ticket-details-and-documents) — Ticket details layout and flexible attachment types
+- [Ticket Policyholder Linking](mem://features/tickets-segurado-linkage) — Linking tickets directly to policyholders/employees
+- [Flexible Attachments](mem://features/document-attachments-flexible-types) — Unrestricted string types for ticket attachments
+- [Ticket Description Storage](mem://features/tickets-description-persistence) — Ticket descriptions and severity stored in payload
+- [Ticket Policyholder Display](mem://ui/tickets-table-policyholder-display) — Priority display of policyholder or owner names in ticket tables
+- [Ticket Attachments Column](mem://ui/tickets-table-attachments-column) — Tickets table Anexos column displaying document counts
+- [Multi-Document Policy Sync](mem://features/policy-sync-linked-documents) — Syncing policies across all CPF/CNPJ linked dependents
+- [Resend Configuration](mem://integrations/resend-email-configuration) — Verified domain `rcorp.rcaldas.com.br` configuration for Resend
+- [Terms Acceptance](mem://features/terms-acceptance-modal) — Mandatory, persistent terms of service modal for non-admins
+- [Scheduled Reports](mem://features/report-scheduling-periodic-email) — Scheduled periodic report generation and email delivery
+- [Single Call Policy Sync](mem://integrations/policy-sync-single-call-architecture) — Single API call architecture for multi-document policy sync
+- [Sync Filtering](mem://data-management/policy-sync-filtering-and-cleanup) — Sync filtering by client code/name and cleanup of stale policies
+- [Health Plan Field](mem://features/saude-plano-field) — Conditional rendering for Health plan (SAUDE) names in policies
+- [Health Plan Overrides](mem://features/health-plan-manual-monthly-value-correction) — Manual override for SAUDE monthly values to fix API inaccuracies
+- [Sync Auth Validation](mem://integrations/infocap-sync-session-verification) — Session validation before InfoCap policy synchronization
+- [Session Timeout](mem://security/session-timeout-inactivity-warning) — 30s inactivity timeout with 10s interactive warning modal
+- [Color Overrides](mem://style/color-palette-overrides) — Core color palette overrides (Prussian Blue, Soft Fawn)
+- [RBAC Architecture](mem://security/role-based-access-control-refactor) — Custom `app_role` enum and `user_roles` table architecture
+- [JWT Edge Functions](mem://security/jwt-edge-function-migration) — Edge functions for secure JWT signing and validation
+- [Fleet Excel Template](mem://features/fleet-management-excel-template) — Standardized Excel template for fleet vehicle uploads
+- [Presence Tracking](mem://features/real-time-presence-and-ip-tracking-v2) — Presence system using IP hashing and 25s heartbeats
+- [Admin Webhooks](mem://integrations/n8n-webhook-admin-management-v2) — Admin-managed N8N webhooks with 5-minute cache
+- [Fleet Empty State](mem://ui/fleet-empty-state-simplification) — Minimalist fleet empty state without action buttons
+- [Welcome Emails](mem://features/welcome-email-system) — Automated welcome emails with dynamic credentials
+- [Password Changes](mem://features/password-change-system) — Secure password changes via edge function
+- [Fleet Upload Scoping](mem://data-management/fleet-upload-tenant-scoping) — Uploads strictly scoped to `activeEmpresaId` from TenantContext
+- [Policy Installments](mem://features/policy-financial-management) — Auto-generation of 12 monthly installments for accurate KPIs
+- [N8N Webhook Fallbacks](mem://integrations/n8n-webhook-fallback-sync) — N8N webhook domain fallbacks for official spreadsheet uploads
+- [Fleet JWT Bypass](mem://technical/fleet-processing-edge-function-config) — `verify_jwt = false` config for `processar-n8n-frotas`
+- [Fleet Spreadsheet Parsing](mem://data-management/fleet-spreadsheet-processing) — Local processor mapping logic for fleet spreadsheets
+- [Fleet Data Normalization](mem://data-management/fleet-data-normalization) — `status_seguro` and `proprietario_tipo` normalization rules
+- [Dashboard KPIs](mem://features/dashboard-kpi-current-month-calculation) — Server-side SQL calculations for financial KPIs
+- [Date Parsing Standard](mem://technical/date-timezone-formatting-standard) — Mandatory string splitting for dates to prevent timezone shifts
+- [Fleet Manual Refresh](mem://ui/fleet-management-refresh-control) — Manual refresh and custom event for fleet data updates
+- [Fleet Upload Metrics](mem://technical/fleet-upload-metrics-tracking) — Detailed processed/duplicate metrics for fleet uploads
+- [Fleet Deduplication](mem://data-management/fleet-duplicate-handling) — In-memory duplicate merging and `(empresa_id, placa)` upserts
+- [Endorsement Values](mem://data-management/endorsement-value-integration) — Storing and aggregating monetary values for policy endorsements
+- [Policy Number Fallback](mem://data-management/policy-extraction-number-fallback) — Fallback generation for missing policy numbers
+- [Installments Hover](mem://features/policy-installment-hover-summary) — Real-time financial summary hover card for policy installments
+- [FIPE UI Simplification](mem://ui/fipe-consultation-simplified-interface) — Simplified FIPE error handling without technical codes
+- [Approval Error Handling](mem://features/insurance-approvals-error-handling) — Silent error handling for insurance approval queries
+- [FIPE Batch Fix](mem://data-management/fleet-fipe-batch-update-fix) — Batch FIPE updates parsing monetary strings for 1000+ vehicles
+- [Installment Constraints](mem://features/policy-financial-status-constraints) — Strict 'a vencer'/'vencido' status constraints for installments
+- [Client Reports](mem://features/client-reports-alignment-v2) — PDF client report alignment with dashboard KPIs
+- [Fleet Financial Management](mem://features/fleet-vehicle-financial-management) — Fleet financial controls for financing and spot payments
+- [FIPE Snapshots](mem://data-management/fleet-vehicle-fipe-snapshots) — Monthly historical snapshots for FIPE vehicle values
+- [Detailed Installments v3](mem://features/policy-detailed-installments-v3) — `apolice_parcelas` as source of truth for detailed installments
+- [Theft Risk Management](mem://features/fleet-theft-risk-management) — Theft status tracking and risk level categorizations
+- [Fleet Maintenance](mem://features/fleet-vehicle-maintenance-tracking) — Toggle-based revision and maintenance tracking with alerts
+- [Policy Status Rules](mem://features/policy-status-classification-rules) — Status classification rules based on expiration dates
+- [Maintenance Indicator](mem://ui/fleet-maintenance-indicator) — Wrench icon caching for maintenance history
+- [Fleet Status Bypass](mem://features/fleet-status-approval-workflow) — Fleet status approval workflow with 'ADM#2026' bypass code
+- [Fleet Change Requests Bypass](mem://features/fleet-change-requests-admin-code) — Optional ADM#2026 code on fleet change request form auto-approves to 'aprovado'
+- [Vehicle Assignments](mem://features/fleet-vehicle-assignment-tracking) — Responsible and Worksite allocation history tracking
+- [Assignment Indicator](mem://ui/fleet-assignment-indicator) — Worksite assignment tooltip indicator for fleet lists
+- [Fleet Filtering System](mem://features/fleet-management-filtering-system) — Client-side multi-filter system for fleet management
+- [Truck Tachograph Module](mem://features/fleet-truck-tachograph-module) — Truck tachograph biennial inspection tracking
+- [Tachograph Indicator](mem://ui/fleet-tachograph-indicator) — Semantic color tachograph indicators for trucks
+- [Document Central](mem://features/fleet-management-documents-central) — Tenant-isolated document central with Supabase Storage
+- [Maintenance Log Metadata](mem://data-management/maintenance-logs-metadata-persistence) — JSON metadata persistence in maintenance logs `notes` column
+- [Vehicle CRUD Sync](mem://data-management/apolices-veiculo-crud-persistencia-v2) — Segurado name protection during vehicle CRUD updates
+- [Vehicle Name Display](mem://ui/policy-card-vehicle-display) — Strict sanitization for displaying policy vehicle names on cards
+- [Document Paths](mem://data-management/document-storage-paths) — Storage path structure and sanitization for document uploads
+- [Document Actions](mem://features/document-center-bulk-actions-and-counts) — Real-time counts and bulk actions for document central
+- [Lanchas Category](mem://features/fleet-lanchas-category) — "Lanchas" category integration with FIPE car fallback
+- [Claim Types](mem://features/claim-types-sinistros-adicionais) — Additional claim types (invalidez, morte)
+- [Policyholder Creation RLS](mem://security/colaboradores-rls-sinistros-fix) — Cross-tenant RLS fallback for client policyholder creation
+- [Claim Tracking Fields](mem://features/tickets-extended-tracking-fields) — Extended tracking fields for ticket/claim indemnities
+- [Finalized Claims KPI](mem://features/claims-kpi-finalizados-logic) — KPI logic counting 'indenizado' and 'negado' as finalizados
+- [Claims Sidebar Badges](mem://ui/sinistros-sidebar-badges) — Dual badge system for open and finalized claims
+- [FIPE API Auth](mem://integrations/fipe-api-configuration) — FIPE API JWT configuration via `thiagoncosta15@gmail.com`
+- [Endorsement Installments](mem://features/policies/endorsement-installments) — Installment tracking UI and logic for policy endorsements
+- [Endorsement UI](mem://features/policies/document-management) — Accordion-based endorsement document management UI
+- [Decision Panel UI](mem://ui/policy-decision-panel-architecture) — Stripe-inspired decision panel architecture for policy details
+- [Central de Seguros](mem://features/navigation/central-seguros) — Central de Seguros specialized insurance routing and UI
+- [Junto Seguros API](mem://integrations/junto-seguros-api-garantias) — Server-side API integration architecture for Junto Seguros
+- [Google Sheets Sync](mem://features/sinistros-google-sheets-sync) — Daily automated Google Sheets sync for claim management
