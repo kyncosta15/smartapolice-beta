@@ -66,7 +66,17 @@ const isDatePast = (isoDate?: string | null): boolean => {
   return d < todayISO;
 };
 
-export function MyPolicies() {
+interface MyPoliciesProps {
+  initialStatusFilter?: 'todas' | 'vigentes' | 'antigas';
+  highlightPolicyId?: string | null;
+  refreshToken?: number;
+}
+
+export function MyPolicies({
+  initialStatusFilter = 'vigentes',
+  highlightPolicyId = null,
+  refreshToken = 0,
+}: MyPoliciesProps) {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showNewPolicyModal, setShowNewPolicyModal] = useState(false);
@@ -78,14 +88,49 @@ export function MyPolicies() {
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
-  const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>('vigentes');
+  const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>(initialStatusFilter);
   const [detailedStatusFilter, setDetailedStatusFilter] = useState<'todas' | 'ativa' | 'pendente_analise' | 'vencida'>('todas');
   const [showManageCPFModal, setShowManageCPFModal] = useState(false);
   const [cpfVinculos, setCpfVinculos] = useState<Array<{ cpf: string; tipo: string }>>([]);
+  const [activeHighlightId, setActiveHighlightId] = useState<string | null>(highlightPolicyId);
   const itemsPerPage = 10;
   const { policies, updatePolicy, deletePolicy, refreshPolicies, downloadPDF } = usePersistedPolicies();
   const { toast } = useToast();
   const { isSyncing: isInfoCapSyncing } = useInfoCapSync();
+
+  useEffect(() => {
+    setStatusFilter(initialStatusFilter);
+    setDetailedStatusFilter('todas');
+    setViewMode('cards');
+    setCurrentPage(1);
+
+    if (refreshToken > 0) {
+      void refreshPolicies();
+    }
+  }, [initialStatusFilter, refreshToken]);
+
+  useEffect(() => {
+    if (!highlightPolicyId) {
+      setActiveHighlightId(null);
+      return;
+    }
+
+    setActiveHighlightId(highlightPolicyId);
+
+    const scrollTimeout = window.setTimeout(() => {
+      const targetCard = document.getElementById(`policy-card-${highlightPolicyId}`);
+      targetCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 350);
+
+    const highlightTimeout = window.setTimeout(() => {
+      setActiveHighlightId(null);
+    }, 6000);
+
+    return () => {
+      window.clearTimeout(scrollTimeout);
+      window.clearTimeout(highlightTimeout);
+    };
+  }, [highlightPolicyId, refreshToken]);
   
   // Função para carregar vínculos de CPF
   const loadCPFVinculos = async () => {
@@ -839,7 +884,15 @@ export function MyPolicies() {
             });
             
             return (
-              <Card key={policy.id} className="hover:shadow-lg transition-shadow overflow-hidden dark:bg-card dark:border-border">
+              <Card
+                key={policy.id}
+                id={`policy-card-${policy.id}`}
+                className={`overflow-hidden dark:bg-card dark:border-border transition-all ${
+                  policy.id === activeHighlightId
+                    ? 'ring-2 ring-primary shadow-lg shadow-primary/20'
+                    : 'hover:shadow-lg'
+                }`}
+              >
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6 space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between items-start gap-2 sm:gap-3">
                     <div className="flex-1 min-w-0 space-y-1.5">

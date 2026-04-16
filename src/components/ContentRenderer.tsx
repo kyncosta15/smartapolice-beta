@@ -41,9 +41,15 @@ interface ContentRendererProps {
   onPolicyDelete: (policyId: string) => void;
   onPolicyDownload?: (policyId: string, policyName: string) => void;
   onPolicyExtracted: (policy: any) => void;
+  onUploadComplete?: (result: { policies: any[] }) => void | Promise<void>;
   onUserUpdate: (user: any) => void;
   onUserDelete: (userId: string) => void;
   onSectionChange: (section: string) => void;
+  uploadViewState?: {
+    refreshToken: number;
+    highlightPolicyId: string | null;
+    initialStatusFilter: 'todas' | 'vigentes' | 'antigas';
+  };
 }
 
 export function ContentRenderer({
@@ -59,9 +65,11 @@ export function ContentRenderer({
   onPolicyDelete,
   onPolicyDownload,
   onPolicyExtracted,
+  onUploadComplete,
   onUserUpdate,
   onUserDelete,
-  onSectionChange
+  onSectionChange,
+  uploadViewState
 }: ContentRendererProps) {
   const { user } = useAuth();
 
@@ -136,14 +144,21 @@ export function ContentRenderer({
     case 'policies':
       return (
         <div className="p-6">
-          <MyPolicies />
+          <MyPolicies
+            initialStatusFilter={uploadViewState?.initialStatusFilter}
+            highlightPolicyId={uploadViewState?.highlightPolicyId}
+            refreshToken={uploadViewState?.refreshToken}
+          />
         </div>
       );
 
     case 'upload':
       return (
         <div className="p-6">
-          <EnhancedPDFUpload onPolicyExtracted={onPolicyExtracted} />
+          <EnhancedPDFUpload
+            onPolicyExtracted={onPolicyExtracted}
+            onUploadComplete={onUploadComplete}
+          />
         </div>
       );
 

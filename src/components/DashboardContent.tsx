@@ -48,6 +48,15 @@ export function DashboardContent() {
   const [extractedPolicies, setExtractedPolicies] = useState<ParsedPolicyData[]>([]);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [uploadViewState, setUploadViewState] = useState<{
+    refreshToken: number;
+    highlightPolicyId: string | null;
+    initialStatusFilter: 'todas' | 'vigentes' | 'antigas';
+  }>({
+    refreshToken: 0,
+    highlightPolicyId: null,
+    initialStatusFilter: 'vigentes'
+  });
   const dashboardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { progressToast } = useProgressToast();
@@ -211,15 +220,21 @@ export function DashboardContent() {
     console.log('🔄 Forçando reload das apólices do banco...');
     
     await refreshPolicies();
+    setLastRefresh(Date.now());
     
     console.log('✅ Apólices recarregadas do banco');
-    
-    toast({
-      title: "Dados Atualizados",
-      description: `Suas apólices foram atualizadas com sucesso`,
-      variant: "success",
-      duration: 8000,
+  };
+
+  const handleUploadComplete = ({ policies }: { policies: any[] }) => {
+    const latestPolicy = policies[policies.length - 1] || null;
+
+    setUploadViewState({
+      refreshToken: Date.now(),
+      highlightPolicyId: latestPolicy?.id ?? null,
+      initialStatusFilter: 'todas'
     });
+
+    setActiveSection('policies');
   };
 
   // Função auxiliar para gerar parcelas a partir de um número
@@ -437,9 +452,11 @@ export function DashboardContent() {
               onPolicyDelete={handleDeletePolicy}
               onPolicyDownload={downloadPersistedPDF}
               onPolicyExtracted={handlePolicyExtracted}
+              onUploadComplete={handleUploadComplete}
               onUserUpdate={handleUserUpdate}
               onUserDelete={handleUserDelete}
               onSectionChange={setActiveSection}
+              uploadViewState={uploadViewState}
             />
           )}
         </div>
