@@ -162,42 +162,71 @@ export const useDashboardCalculations = (policies: ParsedPolicyData[], endossosT
     });
 
     // Evolução mensal (projeção de 12 meses)
+    // CORRIGIDO: Distribui custos apenas nos meses com parcelas reais,
+    // não ao longo de toda a vigência
     const currentDate = new Date();
-    const monthlyEvolution = [];
+    const monthlyEvolution: Array<{ month: string; custo: number; apolices: number }> = [];
+    const monthlyCosts: { [key: string]: number } = {};
+    const monthlyActiveCount: { [key: string]: number } = {};
     
-    console.log('📅 Gerando projeção dinâmica de 12 meses a partir de:', currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }));
+    console.log('📅 Gerando projeção dinâmica de 12 meses baseada em parcelas reais');
     
+    // Gerar chaves dos 12 meses
+    const monthKeys: string[] = [];
     for (let i = 0; i < 12; i++) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
-      const monthLabel = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+      const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+      monthKeys.push(key);
+      monthlyCosts[key] = 0;
+      monthlyActiveCount[key] = 0;
+    }
+    
+    // Para cada apólice, distribuir o custo apenas nos meses onde há parcelas
+    policies.forEach(policy => {
+      const startDate = new Date(policy.startDate);
+      const qtdParcelas = (policy as any).quantidade_parcelas || policy.installments?.length || 1;
+      const valorTotal = policy.premium || 0;
       
-      console.log(`📆 Mês ${i + 1}: ${monthLabel}`);
+      if (valorTotal <= 0) return;
       
-      // Calcular custo mensal considerando apólices ativas neste mês
-      const monthlyCost = policies.reduce((sum, policy) => {
-        const startDate = new Date(policy.startDate);
-        const endDate = new Date(policy.endDate);
+      const valorParcela = valorTotal / qtdParcelas;
+      
+      console.log(`💰 ${policy.name}: total=R$${valorTotal}, parcelas=${qtdParcelas}, valor/parcela=R$${valorParcela.toFixed(2)}`);
+      
+      // Distribuir o custo apenas nos meses das parcelas (a partir do início da vigência)
+      for (let i = 0; i < qtdParcelas; i++) {
+        const dataParcela = new Date(startDate);
+        dataParcela.setMonth(dataParcela.getMonth() + i);
+        const key = `${dataParcela.getFullYear()}-${(dataParcela.getMonth() + 1).toString().padStart(2, '0')}`;
         
-        // Verificar se a apólice está ativa neste mês
-        if (date >= startDate && date <= endDate) {
-          return sum + (policy.monthlyAmount || 0);
+        if (monthlyCosts[key] !== undefined) {
+          monthlyCosts[key] += valorParcela;
         }
-        return sum;
-      }, 0);
+      }
       
-      // Count active policies for this month
-      const activeCount = policies.filter(policy => {
-        const startDate = new Date(policy.startDate);
+      // Contar apólices ativas por mês (pela vigência)
+      monthKeys.forEach(key => {
+        const [year, month] = key.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1, 1);
         const endDate = new Date(policy.endDate);
-        return date >= startDate && date <= endDate;
-      }).length;
+        if (date >= startDate && date <= endDate) {
+          monthlyActiveCount[key]++;
+        }
+      });
+    });
+    
+    // Montar array final
+    monthKeys.forEach(key => {
+      const [year, month] = key.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const monthLabel = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
       
       monthlyEvolution.push({
         month: monthLabel,
-        custo: monthlyCost,
-        apolices: activeCount
+        custo: Math.round(monthlyCosts[key] * 100) / 100,
+        apolices: monthlyActiveCount[key]
       });
-    }
+    });
 
     console.log('📊 Projeção mensal dinâmica gerada:', monthlyEvolution);
 

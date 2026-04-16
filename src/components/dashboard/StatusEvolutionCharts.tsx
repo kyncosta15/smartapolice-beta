@@ -219,13 +219,13 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
           </div>
           {/* Resumo compacto com valores completos */}
           <div className={`${isMobile ? 'mt-2 grid grid-cols-3 gap-1' : 'mt-4 grid grid-cols-3 gap-4'} text-center`}>
-            <div className={`bg-gradient-to-br from-blue-50 to-indigo-50 ${isMobile ? 'p-1' : 'p-4'} rounded-xl border border-blue-100 shadow-sm`}>
-              <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-blue-600 font-semibold uppercase tracking-wide`}>
+            <div className={`bg-gradient-to-br from-blue-50 to-indigo-50 ${isMobile ? 'p-1.5' : 'p-4'} rounded-xl border border-blue-100 shadow-sm min-w-0`}>
+              <p className={`${isMobile ? 'text-[10px] leading-tight' : 'text-xs'} text-blue-600 font-semibold uppercase tracking-wide`}>
                 {isMobile ? 'Médio' : 'Custo Médio'}
               </p>
-              <p className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-blue-700 mt-1 break-words`}>
+              <p className={`${isMobile ? 'text-sm' : 'text-xl'} font-bold text-blue-700 mt-1 truncate`}>
                 {monthlyEvolution.length > 0 ? 
-                  formatCurrency(monthlyEvolution.reduce((sum, item) => sum + item.custo, 0) / monthlyEvolution.length, { 
+                  formatCurrency(monthlyEvolution.reduce((sum, item) => sum + item.custo, 0) / monthlyEvolution.filter(m => m.custo > 0).length || 0, { 
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                   }) :
@@ -233,11 +233,11 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
                 }
               </p>
             </div>
-            <div className={`bg-gradient-to-br from-green-50 to-emerald-50 ${isMobile ? 'p-1' : 'p-4'} rounded-xl border border-green-100 shadow-sm`}>
-              <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-green-600 font-semibold uppercase tracking-wide`}>
+            <div className={`bg-gradient-to-br from-green-50 to-emerald-50 ${isMobile ? 'p-1.5' : 'p-4'} rounded-xl border border-green-100 shadow-sm min-w-0`}>
+              <p className={`${isMobile ? 'text-[10px] leading-tight' : 'text-xs'} text-green-600 font-semibold uppercase tracking-wide`}>
                 {isMobile ? 'Maior' : 'Maior Custo'}
               </p>
-              <p className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-green-700 mt-1 break-words`}>
+              <p className={`${isMobile ? 'text-sm' : 'text-xl'} font-bold text-green-700 mt-1 truncate`}>
                 {monthlyEvolution.length > 0 ? 
                   formatCurrency(Math.max(...monthlyEvolution.map(item => item.custo)), { 
                     minimumFractionDigits: 2,
@@ -247,11 +247,11 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution, co
                 }
               </p>
             </div>
-            <div className={`bg-gradient-to-br from-orange-50 to-yellow-50 ${isMobile ? 'p-1' : 'p-4'} rounded-xl border border-orange-100 shadow-sm`}>
-              <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-orange-600 font-semibold uppercase tracking-wide`}>
+            <div className={`bg-gradient-to-br from-orange-50 to-yellow-50 ${isMobile ? 'p-1.5' : 'p-4'} rounded-xl border border-orange-100 shadow-sm min-w-0`}>
+              <p className={`${isMobile ? 'text-[10px] leading-tight' : 'text-xs'} text-orange-600 font-semibold uppercase tracking-wide`}>
                 {isMobile ? 'Atual' : 'Custo Atual'}
               </p>
-              <p className={`${isMobile ? 'text-xs' : 'text-xl'} font-bold text-orange-700 mt-1 break-words`}>
+              <p className={`${isMobile ? 'text-sm' : 'text-xl'} font-bold text-orange-700 mt-1 truncate`}>
                 {monthlyEvolution.length > 0 ? 
                   formatCurrency(monthlyEvolution[monthlyEvolution.length - 1].custo, { 
                     minimumFractionDigits: 2,
