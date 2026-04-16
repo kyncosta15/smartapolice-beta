@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DragDropUpload } from '@/components/ui/drag-drop-upload';
 import { MigrateDocumentsButton } from './MigrateDocumentsButton';
+import type { FrotaDocumento } from '@/hooks/useFrotasData';
 
 interface VehicleDocument {
   id: string;
@@ -26,15 +27,24 @@ interface VehicleDocumentsSectionProps {
   mode?: 'view' | 'edit';
   vehiclePlaca?: string;
   vehicleChassi?: string;
+  initialDocuments?: FrotaDocumento[];
 }
 
 export function VehicleDocumentsSection({ 
   vehicleId, 
   mode = 'view', 
   vehiclePlaca, 
-  vehicleChassi 
+  vehicleChassi,
+  initialDocuments = [],
 }: VehicleDocumentsSectionProps) {
-  const [documents, setDocuments] = useState<VehicleDocument[]>([]);
+  const normalizedInitialDocuments = useMemo<VehicleDocument[]>(() => {
+    return initialDocuments.map((doc) => ({
+      ...doc,
+      origem: doc.origem || 'upload',
+    }));
+  }, [initialDocuments]);
+
+  const [documents, setDocuments] = useState<VehicleDocument[]>(normalizedInitialDocuments);
   const [loading, setLoading] = useState(false);
   const [searchingLinkedDocs, setSearchingLinkedDocs] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -43,7 +53,6 @@ export function VehicleDocumentsSection({
   const getDocumentType = useCallback((fileName: string): string => {
     const lowerFileName = fileName.toLowerCase();
     
-    // Mapear baseado no nome do arquivo para tipos permitidos pela constraint
     if (lowerFileName.includes('nf') || lowerFileName.includes('nota') || lowerFileName.includes('fiscal')) {
       return 'nf';
     }
@@ -60,7 +69,6 @@ export function VehicleDocumentsSection({
       return 'contrato';
     }
     
-    // Para todos os outros casos, usar 'outro'
     return 'outro';
   }, []);
 
@@ -76,9 +84,13 @@ export function VehicleDocumentsSection({
     return labelMap[tipo] || 'Documento';
   }, []);
 
+  useEffect(() => {
+    setDocuments(normalizedInitialDocuments);
+  }, [vehicleId, normalizedInitialDocuments]);
+
   const fetchDocuments = useCallback(async () => {
     if (!vehicleId || vehicleId.trim() === '') {
-      setDocuments([]);
+      setDocuments(normalizedInitialDocuments);
       setLoading(false);
       setSearchingLinkedDocs(false);
       return;
@@ -86,10 +98,9 @@ export function VehicleDocumentsSection({
     if (isFetchingRef.current) return;
 
     isFetchingRef.current = true;
-    setLoading(true);
+    setLoading(normalizedInitialDocuments.length === 0);
     setSearchingLinkedDocs(false);
 
-    // Safety timeout: nunca deixar o estado loading travado
     const safetyTimer = setTimeout(() => {
       console.warn('⚠️ fetchDocuments: timeout de 8s atingido, liberando loading');
       setLoading(false);
@@ -98,7 +109,6 @@ export function VehicleDocumentsSection({
     }, 8000);
 
     try {
-      // 1) PRIORIDADE: Documentos diretamente vinculados ao veículo (rápido)
       const { data: frotaDocs, error: frotaError } = await supabase
         .from('frota_documentos')
         .select('*')
@@ -109,16 +119,15 @@ export function VehicleDocumentsSection({
         console.error('Erro ao buscar documentos da frota:', frotaError);
       }
 
-      // Renderiza imediatamente os documentos diretos — não bloqueia esperando a 2a query
       const baseDocs = (frotaDocs || []).map((doc: any) => ({
         ...doc,
         origem: doc.origem || 'upload',
       }));
+
       setDocuments(baseDocs);
       setLoading(false);
       clearTimeout(safetyTimer);
 
-      // 2) SECUNDÁRIO: documentos de solicitações executadas (em background, best-effort)
       const placa = (vehiclePlaca ?? '').toString().trim();
       const chassi = (vehicleChassi ?? '').toString().trim();
 
@@ -189,7 +198,6 @@ export function VehicleDocumentsSection({
           created_at: doc.created_at,
         }));
 
-        // Mescla sem duplicar
         setDocuments((prev) => {
           const merged = [...prev, ...externalDocs];
           return merged.filter(
@@ -206,13 +214,13 @@ export function VehicleDocumentsSection({
       }
     } catch (error) {
       console.error('Erro inesperado ao buscar documentos:', error);
-      setDocuments([]);
+      setDocuments((prev) => (prev.length > 0 ? prev : normalizedInitialDocuments));
     } finally {
       clearTimeout(safetyTimer);
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [vehicleId, vehiclePlaca, vehicleChassi, getDocumentType]);
+  }, [vehicleId, vehiclePlaca, vehicleChassi, getDocumentType, normalizedInitialDocuments]);
 
   useEffect(() => {
     fetchDocuments();
