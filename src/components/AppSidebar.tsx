@@ -154,7 +154,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   const adminNavigation = [
     { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'central-apolices', title: 'Central de Apólices', icon: FileText, isGroup: true },
+    { id: 'central-apolices', title: 'Central de Apólices', icon: ShieldCheck, isGroup: true },
     { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
     { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
     { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
