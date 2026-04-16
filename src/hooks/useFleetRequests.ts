@@ -1,35 +1,46 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
 import { useToast } from '@/hooks/use-toast';
 import type { FleetChangeRequest, FleetRequestFormData } from '@/types/fleet-requests';
 
 export function useFleetRequests() {
   const { user } = useAuth();
+  const { activeEmpresaId } = useTenant();
   const { toast } = useToast();
   const [requests, setRequests] = useState<FleetChangeRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  const resolveEmpresaId = useCallback(async (): Promise<string> => {
+    // Prioriza o contexto multi-tenant (mais confiável)
+    if (activeEmpresaId) return activeEmpresaId;
+
+    // Fallback: lookup por nome (legacy)
+    if (!user?.company) throw new Error('Usuário não está associado a uma empresa');
+
+    const { data: empresa } = await supabase
+      .from('empresas')
+      .select('id')
+      .eq('nome', user.company)
+      .maybeSingle();
+
+    if (!empresa) throw new Error('Empresa não encontrada');
+    return empresa.id;
+  }, [activeEmpresaId, user?.company]);
+
   const fetchRequests = useCallback(async () => {
-    if (!user?.company) return;
+    if (!user) return;
 
     try {
       setLoading(true);
-
-      // Buscar empresa
-      const { data: empresa } = await supabase
-        .from('empresas')
-        .select('id')
-        .eq('nome', user.company)
-        .single();
-
-      if (!empresa) throw new Error('Empresa não encontrada');
+      const empresaId = await resolveEmpresaId();
 
       const { data, error } = await supabase
         .from('fleet_change_requests')
         .select('*')
-        .eq('empresa_id', empresa.id)
+        .eq('empresa_id', empresaId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -45,22 +56,14 @@ export function useFleetRequests() {
     } finally {
       setLoading(false);
     }
-  }, [user?.company, toast]);
+  }, [user, resolveEmpresaId, toast]);
 
   const submitRequest = useCallback(async (formData: FleetRequestFormData) => {
-    if (!user?.company) throw new Error('Usuário não está associado a uma empresa');
+    if (!user) throw new Error('Usuário não autenticado');
 
     try {
       setSubmitting(true);
-
-      // Buscar empresa
-      const { data: empresa } = await supabase
-        .from('empresas')  
-        .select('id')
-        .eq('nome', user.company)
-        .single();
-
-      if (!empresa) throw new Error('Empresa não encontrada');
+      const empresaId = await resolveEmpresaId();
 
       // Verificar se existe veículo com a placa/chassi informado
       let vehicleId = null;
@@ -68,12 +71,12 @@ export function useFleetRequests() {
         const query = supabase
           .from('frota_veiculos')
           .select('id, marca, modelo, ano_modelo, categoria')
-          .eq('empresa_id', empresa.id);
+          .eq('empresa_id', empresaId);
 
         if (formData.placa) query.eq('placa', formData.placa);
         if (formData.chassi) query.eq('chassi', formData.chassi);
 
-        const { data: vehicle } = await query.single();
+        const { data: vehicle } = await query.maybeSingle();
         if (vehicle) {
           vehicleId = vehicle.id;
         }
@@ -96,7 +99,7 @@ export function useFleetRequests() {
       const { data: request, error: insertError } = await supabase
         .from('fleet_change_requests')
         .insert({
-          empresa_id: empresa.id,
+          empresa_id: empresaId,
           user_id: user.id,
           vehicle_id: vehicleId,
           tipo: formData.tipo,
