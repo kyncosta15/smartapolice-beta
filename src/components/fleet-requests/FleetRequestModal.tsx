@@ -453,9 +453,9 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Enviar solicitação
+              <Button type="submit" disabled={submitting || isUploading}>
+                {(submitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isUploading ? 'Aguarde upload...' : submitting ? 'Enviando...' : 'Enviar solicitação'}
               </Button>
             </div>
           </form>
