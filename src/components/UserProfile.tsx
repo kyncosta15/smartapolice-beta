@@ -579,21 +579,15 @@ export function UserProfile() {
                     Alterar Email
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-3 py-2">
-                  <div>
-                    <Label className="text-muted-foreground text-sm">Email atual</Label>
-                    <p className="font-medium">{user?.email}</p>
-                  </div>
-                  <div>
-                    <Label htmlFor="new-email">Novo email</Label>
-                    <Input
-                      id="new-email"
-                      type="email"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      placeholder="Digite o novo email"
-                    />
-                  </div>
+                <div className="py-2">
+                  <Label htmlFor="new-email">Novo email</Label>
+                  <Input
+                    id="new-email"
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder={user?.email || "Digite o novo email"}
+                  />
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowEmailModal(false)}>
