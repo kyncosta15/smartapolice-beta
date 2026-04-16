@@ -93,7 +93,8 @@ export const CostEvolutionChart = ({ policies = [] }: CostEvolutionChartProps) =
   const chartData = generateMonthlyData();
   const totalCusto = chartData.reduce((sum, item) => sum + item.custo, 0);
   const maxCusto = Math.max(...chartData.map(item => item.custo));
-  const avgCusto = chartData.length > 0 ? totalCusto / chartData.length : 0;
+  const mesesComCusto = chartData.filter(item => item.custo > 0).length;
+  const avgCusto = mesesComCusto > 0 ? totalCusto / mesesComCusto : 0;
 
   console.log('📊 Dados do gráfico gerados:', {
     totalCusto,
