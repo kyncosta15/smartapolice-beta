@@ -616,10 +616,11 @@ export function VehicleDetailsModalNew({
 
               <TabsContent value="emplacamento" className="mt-0 space-y-4 md:space-y-6">
                 <VehicleDocumentsSection
-                  vehicleId={formData.id || ''}
+                  vehicleId={veiculo?.id || formData.id || ''}
                   mode={mode}
-                  vehiclePlaca={formData.placa}
-                  vehicleChassi={formData.chassi}
+                  vehiclePlaca={veiculo?.placa || formData.placa}
+                  vehicleChassi={veiculo?.chassi || formData.chassi}
+                  initialDocuments={veiculo?.documentos || formData.documentos || []}
                 />
               </TabsContent>
 
