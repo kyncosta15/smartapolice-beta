@@ -79,11 +79,11 @@ export const LandingPage = () => {
             {/* Single CTA */}
             <div className="flex justify-center mb-8">
               <Link to="/system-selection" className="group/glow relative">
-                {/* Outer glow border container */}
-                <div className="absolute -inset-[2px] rounded-lg bg-gradient-to-r from-prussian-blue/40 via-prussian-blue/60 to-prussian-blue/40 opacity-0 group-hover/glow:opacity-100 blur-[3px] transition-opacity duration-500" />
-                <div className="absolute -inset-[1px] rounded-lg bg-gradient-to-r from-prussian-blue/30 via-prussian-blue/50 to-prussian-blue/30 opacity-0 group-hover/glow:opacity-100 transition-opacity duration-300 overflow-hidden">
+                {/* Outer glow border container - intensified for light mode */}
+                <div className="absolute -inset-[3px] rounded-lg bg-gradient-to-r from-prussian-blue/70 via-prussian-blue/90 to-prussian-blue/70 opacity-0 group-hover/glow:opacity-100 blur-[6px] transition-opacity duration-500" />
+                <div className="absolute -inset-[1px] rounded-lg bg-gradient-to-r from-prussian-blue/50 via-prussian-blue/80 to-prussian-blue/50 opacity-0 group-hover/glow:opacity-100 transition-opacity duration-300 overflow-hidden">
                   {/* Shimmer effect on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/glow:translate-x-full transition-transform duration-1000 ease-in-out" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/glow:translate-x-full transition-transform duration-1000 ease-in-out" />
                 </div>
                 <Button
                   variant="gradient"
