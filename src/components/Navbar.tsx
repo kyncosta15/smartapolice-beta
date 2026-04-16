@@ -216,11 +216,6 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false, onRefresh
                         <p className="text-xs text-muted-foreground">
                           {memberships?.find(m => m.empresa_id === activeEmpresa)?.role === 'admin' ? 'Administrador' : 'Usuário'}
                         </p>
-                        {memberships?.length > 0 && (
-                          <Badge variant="secondary" className="text-xs mt-1">
-                            {memberships?.find(m => m.empresa_id === activeEmpresa)?.role === 'admin' ? 'Admin' : 'Usuário'}
-                          </Badge>
-                        )}
                       </div>
                     </div>
                   </div>
