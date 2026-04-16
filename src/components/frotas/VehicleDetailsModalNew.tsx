@@ -274,13 +274,24 @@ export function VehicleDetailsModalNew({
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 mr-8">
               {mode === 'view' ? (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-2 md:px-3 py-1 text-xs md:text-sm">
-                  <Eye className="h-3 w-3 mr-1" />
-                  <span className="hidden sm:inline">Visualização</span>
-                  <span className="sm:hidden">Ver</span>
-                </Badge>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    if (onSave) {
+                      onOpenChange(false);
+                      setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('editVehicle', { detail: veiculo?.id }));
+                      }, 100);
+                    }
+                  }}
+                  className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full"
+                  title="Editar veículo"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
               ) : (
                 <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 px-2 md:px-3 py-1 text-xs md:text-sm">
                   <Edit className="h-3 w-3 mr-1" />
@@ -965,31 +976,7 @@ export function VehicleDetailsModalNew({
           </Tabs>
         </div>
 
-        <div className="flex justify-between items-center gap-2 pt-3 md:pt-4 border-t px-4 pb-4">
-          <div>
-            {mode === 'view' && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  // Switch to edit mode
-                  if (onSave) {
-                    onOpenChange(false);
-                    // Reopen in edit mode by calling parent handler
-                    setTimeout(() => {
-                      // This will be handled by the parent component
-                      window.dispatchEvent(new CustomEvent('editVehicle', { detail: veiculo?.id }));
-                    }, 100);
-                  }
-                }}
-                className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 text-xs md:text-sm"
-              >
-                <Edit className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Editar Veículo</span>
-                <span className="sm:hidden">Editar</span>
-              </Button>
-            )}
-          </div>
+        <div className="flex justify-end items-center gap-2 pt-3 md:pt-4 border-t px-4 pb-4">
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="text-xs md:text-sm">
               {mode === 'edit' ? 'Cancelar' : 'Fechar'}
