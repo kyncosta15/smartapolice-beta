@@ -26,24 +26,29 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    // Verificar se é admin
-    const { data: profile } = await supabaseClient
-      .from('user_profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
+    // Verificar se é admin OU se está alterando o próprio email
+    const { user_id, new_email } = await req.json();
 
-    if (!profile?.is_admin) {
+    const isAdmin = await (async () => {
+      const { data: profile } = await supabaseClient
+        .from('user_profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+      return !!profile?.is_admin;
+    })();
+
+    const isSelf = user.id === user_id;
+
+    if (!isAdmin && !isSelf) {
       return new Response(
-        JSON.stringify({ error: 'Acesso negado: apenas administradores podem alterar emails' }),
+        JSON.stringify({ error: 'Acesso negado: você só pode alterar seu próprio email' }),
         {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
     }
-
-    const { user_id, new_email } = await req.json();
 
     if (!user_id || !new_email) {
       return new Response(
