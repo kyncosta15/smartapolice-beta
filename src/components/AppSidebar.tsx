@@ -61,6 +61,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const [docCount, setDocCount] = useState<number>(0);
   const [sinistrosCount, setSinistrosCount] = useState<number>(0);
   const [sinistrosFinalizados, setSinistrosFinalizados] = useState<number>(0);
+  const [drivingItemId, setDrivingItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -277,7 +278,13 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
             return (
             <SidebarMenuItem key={item.id}>
               <SidebarMenuButton
-                onClick={() => onSectionChange(item.id)}
+                onClick={() => {
+                  if (item.id === 'frotas') {
+                    setDrivingItemId('frotas');
+                    window.setTimeout(() => setDrivingItemId(null), 1200);
+                  }
+                  onSectionChange(item.id);
+                }}
                 isActive={activeSection === item.id}
                 tooltip={item.title}
                 className={cn(
@@ -298,7 +305,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                   "size-4 transition-all duration-200 flex-shrink-0",
                   activeSection === item.id 
                     ? "text-foreground drop-shadow-sm" 
-                    : "text-muted-foreground group-hover:text-accent-foreground group-hover:scale-110"
+                    : "text-muted-foreground group-hover:text-accent-foreground group-hover:scale-110",
+                  drivingItemId === item.id && "car-drive-animation"
                 )} />
                 {open && <span className="truncate">{item.title}</span>}
                 {open && item.id === 'documentos' && docCount > 0 && (
