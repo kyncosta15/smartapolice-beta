@@ -250,6 +250,45 @@ export function useFleetRequests() {
     }
   };
 
+  const unlockRequestWithCode = useCallback(
+    async (requestId: string, code: string) => {
+      if (!code || code.trim() !== FLEET_ADMIN_BYPASS_CODE) {
+        throw new Error('Código de liberação admin inválido.');
+      }
+
+      const { data: current } = await supabase
+        .from('fleet_change_requests')
+        .select('payload, status')
+        .eq('id', requestId)
+        .maybeSingle();
+
+      if (!current) throw new Error('Solicitação não encontrada.');
+      if (!['aberto', 'em_triagem'].includes(current.status)) {
+        throw new Error('Esta solicitação não pode mais ser liberada.');
+      }
+
+      const newPayload = {
+        ...(current.payload as Record<string, any> || {}),
+        auto_aprovado_via_codigo: true,
+        auto_aprovado_em: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('fleet_change_requests')
+        .update({ status: 'aprovado', payload: newPayload })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      await fetchRequests();
+      toast({
+        title: 'Solicitação aprovada',
+        description: 'Código validado. Status alterado para Aprovado.',
+      });
+    },
+    [fetchRequests, toast],
+  );
+
   useEffect(() => {
     fetchRequests();
   }, [fetchRequests]);
@@ -260,5 +299,6 @@ export function useFleetRequests() {
     submitting,
     fetchRequests,
     submitRequest,
+    unlockRequestWithCode,
   };
 }

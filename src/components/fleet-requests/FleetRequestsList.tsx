@@ -38,6 +38,7 @@ import {
 import { useFleetRequests } from '@/hooks/useFleetRequests';
 import { FleetRequestDetailsModal } from './FleetRequestDetailsModal';
 import { FleetRequestApprovalActions } from './FleetRequestApprovalActions';
+import { FleetRequestUnlockButton } from './FleetRequestUnlockButton';
 import { 
   FLEET_REQUEST_TIPOS, 
   FLEET_REQUEST_STATUS, 
@@ -245,6 +246,7 @@ export function FleetRequestsList() {
                             request={request}
                             onUpdate={() => window.location.reload()}
                           />
+                          <FleetRequestUnlockButton request={request} />
                           <Button
                             variant="ghost"
                             size="sm"

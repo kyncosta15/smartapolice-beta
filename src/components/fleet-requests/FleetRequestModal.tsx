@@ -59,7 +59,6 @@ const formSchema = z.object({
   responsavel_nome: z.string().optional(),
   responsavel_telefone: z.string().optional(),
   responsavel_email: z.string().email('Email inválido').optional().or(z.literal('')),
-  admin_code: z.string().optional(),
 }).refine((data) => {
   return data.placa || data.chassi;
 }, {
@@ -122,10 +121,6 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
           telefone: values.responsavel_telefone,
           email: values.responsavel_email,
         };
-      }
-
-      if (values.admin_code) {
-        formData.admin_code = values.admin_code.trim();
       }
 
       await submitRequest(formData);
@@ -448,35 +443,6 @@ export function FleetRequestModal({ open, onOpenChange }: FleetRequestModalProps
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Código de Liberação Admin (opcional) */}
-            <Card>
-              <CardContent className="pt-6">
-                <FormField
-                  control={form.control}
-                  name="admin_code"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">
-                        Código de liberação admin (opcional)
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Informe o código fornecido pelo admin para liberar imediatamente"
-                          autoComplete="off"
-                          {...field}
-                        />
-                      </FormControl>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Se preenchido com o código correto, a solicitação será aprovada automaticamente.
-                        Caso contrário, aguardará aprovação manual do administrador.
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </CardContent>
             </Card>
 
