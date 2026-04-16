@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, User, Save, Trash2, Upload, MapPin, Building2, Phone, RefreshCw, Check, Pencil } from 'lucide-react';
+import { Camera, User, Save, Trash2, Upload, MapPin, Building2, Phone, RefreshCw, Check, Pencil, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +47,9 @@ export function UserProfile() {
   const [isLoadingFromAPI, setIsLoadingFromAPI] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { syncPolicies, syncAllLinkedDocuments } = useCorpNuvemSync();
@@ -549,12 +553,95 @@ export function UserProfile() {
 
             <div>
               <Label>Email</Label>
-              <Input 
-                value={user?.email || ''} 
-                disabled 
-                className="bg-gray-50"
-              />
+              <div className="flex gap-2">
+                <Input 
+                  value={user?.email || ''} 
+                  disabled 
+                  className="bg-muted"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => { setNewEmail(''); setShowEmailModal(true); }}
+                  className="flex items-center gap-2 shrink-0"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Alterar
+                </Button>
+              </div>
             </div>
+
+            {/* Modal de alteração de email */}
+            <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Mail className="w-5 h-5" />
+                    Alterar Email
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 py-2">
+                  <div>
+                    <Label className="text-muted-foreground text-sm">Email atual</Label>
+                    <p className="font-medium">{user?.email}</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="new-email">Novo email</Label>
+                    <Input
+                      id="new-email"
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="Digite o novo email"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowEmailModal(false)}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    disabled={!newEmail.trim() || newEmail === user?.email || isSavingEmail}
+                    onClick={async () => {
+                      setIsSavingEmail(true);
+                      try {
+                        // Usar a edge function admin para alterar diretamente
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (!session) throw new Error('Não autenticado');
+
+                        const response = await supabase.functions.invoke('admin-update-user-email', {
+                          body: { user_id: user?.id, new_email: newEmail.trim() },
+                        });
+
+                        if (response.error) throw new Error(response.error.message);
+                        if (response.data?.error) throw new Error(response.data.error);
+
+                        toast({
+                          title: "Email alterado",
+                          description: "Seu email foi atualizado com sucesso. Faça login novamente com o novo email.",
+                        });
+                        setShowEmailModal(false);
+
+                        // Fazer logout para forçar re-login com novo email
+                        setTimeout(() => {
+                          supabase.auth.signOut();
+                        }, 2000);
+                      } catch (error: any) {
+                        console.error('Erro ao alterar email:', error);
+                        toast({
+                          title: "Erro ao alterar email",
+                          description: error.message || "Não foi possível alterar o email.",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setIsSavingEmail(false);
+                      }
+                    }}
+                  >
+                    {isSavingEmail ? 'Salvando...' : 'Confirmar'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             {/* Company Selection */}
             {memberships.length > 0 && (
