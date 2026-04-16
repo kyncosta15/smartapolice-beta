@@ -6,11 +6,13 @@ import { useTenant } from '@/contexts/TenantContext';
 import { 
   Home,
   FileText, 
+  FileSpreadsheet,
   BarChart3, 
   Users2,
   User,
   Car,
   ShieldAlert,
+  ShieldCheck,
   Settings,
   Upload,
   Mail,
