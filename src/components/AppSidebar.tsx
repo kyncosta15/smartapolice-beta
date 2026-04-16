@@ -241,7 +241,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                         {open && (
                           <ChevronDown className={cn(
                             "ml-auto size-4 text-muted-foreground transition-transform duration-200",
-                            centralSegurosOpen && "rotate-180"
+                            cfg.open && "rotate-180"
                           )} />
                         )}
                       </SidebarMenuButton>
@@ -249,7 +249,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                     {open && (
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {centralSegurosSubItems.map((sub) => (
+                          {cfg.items.map((sub) => (
                             <SidebarMenuSubItem key={sub.id}>
                               <SidebarMenuSubButton
                                 onClick={() => onSectionChange(sub.id)}
