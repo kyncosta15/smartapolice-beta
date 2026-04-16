@@ -252,13 +252,14 @@ export function useFleetRequests() {
 
   const unlockRequestWithCode = useCallback(
     async (requestId: string, code: string) => {
+      if (!user) throw new Error('Usuário não autenticado');
       if (!code || code.trim() !== FLEET_ADMIN_BYPASS_CODE) {
         throw new Error('Código de liberação admin inválido.');
       }
 
       const { data: current } = await supabase
         .from('fleet_change_requests')
-        .select('payload, status')
+        .select('status')
         .eq('id', requestId)
         .maybeSingle();
 
@@ -267,26 +268,31 @@ export function useFleetRequests() {
         throw new Error('Esta solicitação não pode mais ser liberada.');
       }
 
-      const newPayload = {
-        ...(current.payload as Record<string, any> || {}),
-        auto_aprovado_via_codigo: true,
-        auto_aprovado_em: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
-        .from('fleet_change_requests')
-        .update({ status: 'aprovado', payload: newPayload })
-        .eq('id', requestId);
+      // Chama a edge function que aprova E executa a alteração na frota
+      const { data, error } = await supabase.functions.invoke(
+        'process-fleet-request-approval',
+        {
+          body: {
+            requestId,
+            action: 'approve',
+            comments: `Aprovado via código admin (${FLEET_ADMIN_BYPASS_CODE})`,
+            approvedBy: user.id,
+          },
+        },
+      );
 
       if (error) throw error;
+      if (data && data.success === false) {
+        throw new Error(data.error || 'Falha ao aprovar solicitação.');
+      }
 
       await fetchRequests();
       toast({
-        title: 'Solicitação aprovada',
-        description: 'Código validado. Status alterado para Aprovado.',
+        title: 'Solicitação aprovada e executada',
+        description: 'Código validado. Alteração aplicada na frota.',
       });
     },
-    [fetchRequests, toast],
+    [user, fetchRequests, toast],
   );
 
   useEffect(() => {
