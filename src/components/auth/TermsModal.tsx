@@ -64,7 +64,7 @@ export function TermsModal({ open, onAccept, userId }: TermsModalProps) {
             <div>
               <DialogTitle className="text-xl">Termos de Uso e Autorização</DialogTitle>
               <DialogDescription className="text-sm">
-                RCORP | SmartApólice
+                RCORP | SmartControl
               </DialogDescription>
             </div>
           </div>
@@ -73,7 +73,7 @@ export function TermsModal({ open, onAccept, userId }: TermsModalProps) {
         <ScrollArea className="max-h-[50vh] px-6">
           <div className="space-y-6 py-4">
             <p className="text-muted-foreground">
-              Ao acessar e utilizar o sistema RCORP (SmartApólice), o usuário declara estar ciente e de acordo com os seguintes termos:
+              Ao acessar e utilizar o sistema RCORP (SmartControl), o usuário declara estar ciente e de acordo com os seguintes termos:
             </p>
 
             {/* Finalidade do Sistema */}
@@ -83,7 +83,7 @@ export function TermsModal({ open, onAccept, userId }: TermsModalProps) {
                 <span>Finalidade do Sistema</span>
               </div>
               <p className="text-sm text-muted-foreground pl-7">
-                O SmartApólice é uma ferramenta gratuita disponibilizada pela RCaldas Corretora de Seguros, com o objetivo de facilitar a gestão de apólices e oferecer ao usuário maior transparência sobre seus seguros vigentes.
+                O SmartControl é uma ferramenta gratuita disponibilizada pela RCaldas Corretora de Seguros, com o objetivo de facilitar a gestão de apólices e oferecer ao usuário maior transparência sobre seus seguros vigentes.
               </p>
             </div>
 

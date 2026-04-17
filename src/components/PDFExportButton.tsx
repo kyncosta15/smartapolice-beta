@@ -168,7 +168,7 @@ export function PDFExportButton({ targetElementId = 'dashboard-pdf-content', onE
       // Cabeçalho do relatório
       pdf.setFontSize(18);
       pdf.setTextColor(51, 51, 51);
-      pdf.text('Relatório de Dashboard - SmartApólice', 20, 25);
+      pdf.text('Relatório de Dashboard - SmartControl', 20, 25);
       
       pdf.setFontSize(10);
       pdf.setTextColor(102, 102, 102);

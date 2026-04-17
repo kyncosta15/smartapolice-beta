@@ -42,13 +42,13 @@ const SmartApoliceAuthContent = () => {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/12 to-primary/6 mb-4 border border-border/60">
               <img
                 src={smartControlShield}
-                alt="SmartApólice"
+                alt="SmartControl"
                 className="h-9 w-9 object-contain"
                 loading="eager"
               />
             </div>
             <h1 className="text-xl font-semibold text-foreground">
-              Smart<span className="text-primary">Apólice</span>
+              Smart<span className="text-primary">Control</span>
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Gestão Inteligente de Apólices</p>
           </div>

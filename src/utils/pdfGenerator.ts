@@ -22,7 +22,7 @@ export class DashboardPDFGenerator {
     this.doc.setFontSize(24);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(17, 24, 39); // gray-900
-    this.doc.text('SmartApólice', this.margin, 30);
+    this.doc.text('SmartControl', this.margin, 30);
     
     this.doc.setFontSize(16);
     this.doc.setFont('helvetica', 'normal');
@@ -53,7 +53,7 @@ export class DashboardPDFGenerator {
     // Texto do rodapé
     this.doc.setFontSize(8);
     this.doc.setTextColor(156, 163, 175); // gray-400
-    this.doc.text('Gerado por SmartApólice — confidencial. Não distribuir sem autorização.', 
+    this.doc.text('Gerado por SmartControl — confidencial. Não distribuir sem autorização.', 
                   this.margin, footerY);
     
     // Numeração
@@ -429,7 +429,7 @@ export class DashboardPDFGenerator {
       // Convert to proper ArrayBuffer to avoid TypeScript issues with ArrayBufferLike
       const blob = new Blob([pdfBytes.slice().buffer], { type: 'application/pdf' });
       
-      const defaultFilename = `SmartApolice-Relatorio-${
+      const defaultFilename = `SmartControl-Relatorio-${
         data.generatedBy.company?.replace(/[^a-zA-Z0-9]/g, '-') || 'Dashboard'
       }-${data.generatedAt.toISOString().split('T')[0]}.pdf`;
       

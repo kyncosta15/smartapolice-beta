@@ -25,7 +25,7 @@ interface ClientReportPDFProps {
 export function ClientReportPDF({ 
   policies, 
   clientName = "Cliente", 
-  brokerName = "SmartApólice", 
+  brokerName = "SmartControl", 
   brokerLogo 
 }: ClientReportPDFProps) {
   const [isGenerating, setIsGenerating] = useState(false);

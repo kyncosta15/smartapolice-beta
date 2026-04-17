@@ -41,7 +41,7 @@ export function PDFReportGenerator({ policies, dashboardData }: PDFReportGenerat
       // CABEÇALHO DO RELATÓRIO
       pdf.setFontSize(24);
       pdf.setTextColor(51, 51, 51);
-      pdf.text('Relatório de Apólices - SmartApólice', 20, yPosition);
+      pdf.text('Relatório de Apólices - SmartControl', 20, yPosition);
       yPosition += 15;
 
       pdf.setFontSize(12);
@@ -268,7 +268,7 @@ export function PDFReportGenerator({ policies, dashboardData }: PDFReportGenerat
       // RODAPÉ
       pdf.setFontSize(8);
       pdf.setTextColor(150, 150, 150);
-      pdf.text('SmartApólice - Sistema de Gestão de Apólices', 20, pageHeight - 10);
+      pdf.text('SmartControl - Sistema de Gestão de Apólices', 20, pageHeight - 10);
       pdf.text(`Página ${pdf.getNumberOfPages()}`, pageWidth - 40, pageHeight - 10);
 
       // Salvar arquivo

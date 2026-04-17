@@ -644,7 +644,7 @@ export function ClientReports({ onExportComplete, className }: ClientReportsProp
           290
         );
         pdf.text(
-          'Gerado automaticamente pelo SmartApólice - RCORP Tecnologia',
+          'Gerado automaticamente pelo SmartControl - RCORP Tecnologia',
           105,
           290,
           { align: 'center' }
