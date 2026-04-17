@@ -35,7 +35,7 @@ export const LandingPage = () => {
                 aria-label="SmartControl"
               >
                 <span className="text-foreground dark:text-white">Smart</span>
-                <span className="bg-gradient-to-r from-[hsl(200,100%,55%)] via-[hsl(220,100%,55%)] to-[hsl(260,90%,60%)] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[hsl(190,100%,50%)] via-[hsl(230,100%,55%)] to-[hsl(280,100%,55%)] bg-clip-text text-transparent drop-shadow-[0_0_25px_hsl(220,100%,55%/0.5)]" style={{ WebkitTextStroke: '0.5px hsl(220,100%,55%/0.2)' }}>
                   Control
                 </span>
               </h1>
