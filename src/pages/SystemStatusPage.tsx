@@ -254,7 +254,7 @@ export default function SystemStatusPage() {
         {/* Providers — lista limpa, sem cards pesados */}
         <section className="space-y-px rounded-xl border overflow-hidden bg-card">
           {(['rcorp', 'lovable', 'supabase'] as const).map((key) => (
-            <ProviderRow key={key} provider={data?.providers[key]} loading={loading && !data} placeholderLabel={defaultLabel(key)} />
+            <ProviderRow key={key} provider={data?.providers[key]} loading={loading} placeholderLabel={defaultLabel(key)} />
           ))}
         </section>
 
@@ -338,7 +338,7 @@ function ProviderRow({
 }) {
   const [open, setOpen] = useState(false);
 
-  if (loading || !provider) {
+  if (loading) {
     return (
       <div className="px-5 py-4 flex items-center justify-between bg-card">
         <div className="flex items-center gap-3">
@@ -346,6 +346,18 @@ function ProviderRow({
           <span className="text-sm font-medium">{placeholderLabel}</span>
         </div>
         <span className="text-xs text-muted-foreground">Verificando…</span>
+      </div>
+    );
+  }
+
+  if (!provider) {
+    return (
+      <div className="px-5 py-4 flex items-center justify-between bg-card">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
+          <span className="text-sm font-medium">{placeholderLabel}</span>
+        </div>
+        <span className="text-xs text-muted-foreground">Indisponível</span>
       </div>
     );
   }
