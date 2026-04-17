@@ -36,6 +36,7 @@ import InserirVeiculosLotePage from './pages/InserirVeiculosLotePage';
 import AdminAccessLogsPage from './pages/AdminAccessLogsPage';
 import AdminPresencePage from './pages/admin/AdminPresencePage';
 import { SystemStatusBanner } from '@/components/SystemStatusBanner';
+import { SystemStatusIndicator } from '@/components/SystemStatusIndicator';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -175,6 +176,10 @@ const App = () => {
               
               <Route path="*" element={<NotFound />} />
             </Routes>
+                  {/* Indicador discreto de status — sempre visível, expansível */}
+                  <div className="fixed bottom-3 right-3 z-40">
+                    <SystemStatusIndicator />
+                  </div>
                 </BrowserRouter>
               </SessionTimeoutGuard>
             </TenantProvider>

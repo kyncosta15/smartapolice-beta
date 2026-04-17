@@ -140,3 +140,7 @@ verify_jwt = false
 
 [functions.junto-garantia-auth]
 verify_jwt = false
+
+[functions.health-ping]
+verify_jwt = false
+
