@@ -194,4 +194,15 @@ const App = () => {
   );
 };
 
+/** Indicador flutuante — escondido na página /status (painel completo já visível). */
+const SystemStatusIndicatorSlot = () => {
+  const { pathname } = useLocation();
+  if (pathname.startsWith('/status')) return null;
+  return (
+    <div className="fixed bottom-3 right-3 z-40">
+      <SystemStatusIndicator />
+    </div>
+  );
+};
+
 export default App;
