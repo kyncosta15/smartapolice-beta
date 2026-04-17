@@ -2104,6 +2104,21 @@ export type Database = {
         }
         Relationships: []
       }
+      health_check: {
+        Row: {
+          created_at: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       import_jobs: {
         Row: {
           created_at: string | null
