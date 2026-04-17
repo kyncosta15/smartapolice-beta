@@ -56,19 +56,26 @@ export const AuthPage = () => {
       return;
     }
 
-    const result = await login(loginData.email, loginData.password);
-    
-    if (result.success) {
-      toast({
-        title: "Sucesso",
-        description: "Login realizado com sucesso!",
-      });
-    } else {
-      toast({
-        title: "Erro",
-        description: result.error || "Erro no login",
-        variant: "destructive"
-      });
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      const result = await login(loginData.email, loginData.password);
+      
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: "Login realizado com sucesso!",
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: result.error || "Erro no login",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -236,9 +243,9 @@ export const AuthPage = () => {
             <Button 
               type="submit" 
               className="w-full h-11 font-medium"
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Spinner className="size-4 mr-2" />
                   Entrando...
