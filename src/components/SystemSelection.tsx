@@ -57,7 +57,7 @@ const SystemSelection = () => {
                 <div className="relative">
                   <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-primary/20 dark:to-primary/10 flex items-center justify-center shadow-inner">
                     <img 
-                      src={smartapoliceShield} 
+                      src={smartControlShield} 
                       alt="SmartApólice" 
                       className="h-16 w-16 object-contain group-hover:scale-110 transition-transform duration-300" 
                       loading="eager" 

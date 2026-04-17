@@ -41,7 +41,7 @@ const SmartApoliceAuthContent = () => {
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/12 to-primary/6 mb-4 border border-border/60">
               <img
-                src={smartapoliceShield}
+                src={smartControlShield}
                 alt="SmartApólice"
                 className="h-9 w-9 object-contain"
                 loading="eager"
