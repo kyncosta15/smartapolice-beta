@@ -144,3 +144,6 @@ verify_jwt = false
 [functions.health-ping]
 verify_jwt = false
 
+[functions.supabase-status-agent]
+verify_jwt = false
+
