@@ -69,7 +69,7 @@ const App = () => {
             <TenantProvider>
               <SessionTimeoutGuard>
                 <BrowserRouter>
-                  <SystemStatusBanner />
+                  {!window.location.pathname.startsWith('/status') && <SystemStatusBanner />}
                   <Suspense fallback={<RouteFallback />}>
                     <Routes>
                       <Route path="/" element={<LandingPage />} />
