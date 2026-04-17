@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity, ArrowLeft, RefreshCw, ExternalLink, Clock, Wrench, ChevronRight, Sparkles,
@@ -6,6 +6,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+
 
 type NormalizedStatus = 'operational' | 'degraded' | 'major' | 'critical' | 'unknown';
 
@@ -45,9 +46,11 @@ interface AggregatedResponse {
 }
 
 // Endpoint público — sem JWT, evita preflight pesado de invoke()
-const STATUS_ENDPOINT =
-  `${import.meta.env.VITE_SUPABASE_URL ?? 'https://jhvbfvqhuemuvwgqpskz.supabase.co'}/functions/v1/system-status-aggregator`;
-const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? 'https://jhvbfvqhuemuvwgqpskz.supabase.co';
+const STATUS_ENDPOINT = `${SUPABASE_URL}/functions/v1/system-status-aggregator`;
+const ANON_KEY =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpodmJmdnFodWVtdXZ3Z3Fwc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTI2MDEsImV4cCI6MjA2Njg4ODYwMX0.V8I0byW7xs0iMBEBc6C3h0lvPhgPZ4mGwjfm31XkEQg';
 
 const dotColor: Record<NormalizedStatus, string> = {
   operational: 'bg-emerald-500',
@@ -102,27 +105,46 @@ export default function SystemStatusPage() {
   const [data, setData] = useState<AggregatedResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const load = useCallback(async () => {
+    // Cancela request anterior se houver
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    // Timeout de 12s — evita travar "Verificando..." pra sempre
+    const timeout = setTimeout(() => controller.abort(), 12_000);
+
     setLoading(true);
     setError(null);
+    const t0 = performance.now();
     try {
+      console.log('[status] fetching…', STATUS_ENDPOINT);
       const res = await fetch(STATUS_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // anon key necessário para passar pelo gateway, mesmo com verify_jwt=false
-          ...(ANON_KEY ? { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } : {}),
+          apikey: ANON_KEY,
+          Authorization: `Bearer ${ANON_KEY}`,
         },
         body: '{}',
         cache: 'no-store',
+        signal: controller.signal,
       });
+      console.log('[status] http', res.status, `${Math.round(performance.now() - t0)}ms`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json()) as AggregatedResponse;
       setData(json);
     } catch (e: any) {
-      setError(e?.message ?? 'Falha ao carregar status');
+      const msg =
+        e?.name === 'AbortError'
+          ? 'Tempo esgotado (12s). Tente novamente.'
+          : e?.message ?? 'Falha ao carregar status';
+      console.warn('[status] erro:', msg);
+      setError(msg);
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   }, []);
@@ -130,7 +152,10 @@ export default function SystemStatusPage() {
   useEffect(() => {
     load();
     const i = setInterval(load, 60_000);
-    return () => clearInterval(i);
+    return () => {
+      clearInterval(i);
+      abortRef.current?.abort();
+    };
   }, [load]);
 
   const overall = data?.overall ?? 'unknown';
