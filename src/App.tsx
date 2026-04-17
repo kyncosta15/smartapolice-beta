@@ -36,6 +36,7 @@ import InserirVeiculosLotePage from './pages/InserirVeiculosLotePage';
 import AdminAccessLogsPage from './pages/AdminAccessLogsPage';
 import AdminPresencePage from './pages/admin/AdminPresencePage';
 import { SystemStatusBanner } from '@/components/SystemStatusBanner';
+import { SystemStatusIndicator } from '@/components/SystemStatusIndicator';
 
 const queryClient = new QueryClient({
   defaultOptions: {
