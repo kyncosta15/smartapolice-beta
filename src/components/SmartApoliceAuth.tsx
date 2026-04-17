@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { AuthPage } from '@/components/AuthPage';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { useAuth, AuthProvider } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import smartapoliceShield from '@/assets/smartapolice-shield-transparent.png';
 
 const SmartApoliceAuthContent = () => {
@@ -64,11 +64,7 @@ const SmartApoliceAuthContent = () => {
 };
 
 const SmartApoliceAuth = () => {
-  return (
-    <AuthProvider>
-      <SmartApoliceAuthContent />
-    </AuthProvider>
-  );
+  return <SmartApoliceAuthContent />;
 };
 
 export default SmartApoliceAuth;
