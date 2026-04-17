@@ -3,6 +3,7 @@ import { Bot, RefreshCw, ExternalLink, AlertTriangle, CheckCircle2, Info } from 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 type Severidade = 'none' | 'minor' | 'major' | 'critical';
 type Lang = 'pt' | 'en';
@@ -246,35 +247,116 @@ function interpretarIncidente(inc: RawIncident, lang: Lang): IncidenteInterpreta
   };
 }
 
-async function fetchAgent(signal: AbortSignal, lang: Lang): Promise<AgentResponse> {
-  const started = performance.now();
-  const res = await fetch(ENDPOINT, {
-    method: 'GET',
-    cache: 'no-store',
-    signal,
-    headers: { Accept: 'application/json' },
-  });
+interface AgentEdgeIncident {
+  id: string;
+  titulo: string;
+  status_original: string;
+  status_pt: string;
+  impacto_pt: string;
+  severidade: Severidade;
+  iniciado_em: string;
+  atualizado_em: string;
+  duracao_humana: string;
+  ultima_atualizacao: string;
+  componentes_afetados: string[];
+  link: string;
+  resumo_pt: string;
+  acao_recomendada: string;
+}
 
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  const rawIncidents = (json?.incidents ?? []) as RawIncident[];
-  const incidentes = rawIncidents.map((i) => interpretarIncidente(i, lang));
-  const severidade_global = incidentes.reduce<Severidade>((acc, inc) => {
-    return SEVERITY_RANK[inc.severidade] > SEVERITY_RANK[acc] ? inc.severidade : acc;
-  }, 'none');
+interface AgentEdgeResponse {
+  fonte: string;
+  verificado_em: string;
+  latencia_ms?: number;
+  total_incidentes: number;
+  severidade_global: Severidade;
+  diagnostico_geral: string;
+  incidentes: AgentEdgeIncident[];
+}
 
-  const diag = T[lang].diag;
-  let diagnostico_geral = diag.none;
-  if (incidentes.length > 0 && severidade_global === 'critical') diagnostico_geral = diag.critical(incidentes.length);
-  else if (incidentes.length > 0 && severidade_global === 'major') diagnostico_geral = diag.major(incidentes.length);
-  else if (incidentes.length > 0 && severidade_global === 'minor') diagnostico_geral = diag.minor(incidentes.length);
+/** Quando lang=en, troca textos PT da edge function para EN usando os mesmos mapas locais. */
+function localizeIncident(inc: AgentEdgeIncident, lang: Lang): IncidenteInterpretado {
+  const status_label = lang === 'en'
+    ? (STATUS_MAP.en[inc.status_original] ?? inc.status_pt)
+    : inc.status_pt;
+  const impacto_label = lang === 'en'
+    ? (IMPACT_MAP.en[inc.severidade] ?? inc.impacto_pt)
+    : inc.impacto_pt;
+
+  // Recalcula duração no idioma certo
+  const duracao = fmtDuration(inc.iniciado_em, lang);
+
+  // Resumo: se EN, gera localmente; se PT, usa o que o agente trouxe
+  let resumo = inc.resumo_pt;
+  let ultima_nota = '';
+  const noteMatch = inc.resumo_pt.match(/Última nota:\s*"([^"]+)"/);
+  if (noteMatch) ultima_nota = noteMatch[1];
+
+  if (lang === 'en') {
+    const tt = T.en.summary;
+    const componentesStr = inc.componentes_afetados.join(', ') || tt.diverseServices;
+    if (inc.status_original === 'identified') resumo = tt.identified(componentesStr, duracao);
+    else if (inc.status_original === 'investigating') resumo = tt.investigating(componentesStr, duracao);
+    else if (inc.status_original === 'monitoring') resumo = tt.monitoring(componentesStr);
+    else resumo = tt.generic(status_label, impacto_label, componentesStr, duracao);
+  } else {
+    // Em PT, remove o sufixo "Última nota: ..." pois exibimos separado no card
+    resumo = resumo.replace(/\s*Última nota:\s*"[^"]+"\.?$/, '').trim();
+  }
+
+  // Ação recomendada: traduz quando EN
+  let acao = inc.acao_recomendada;
+  if (lang === 'en') {
+    if (inc.severidade === 'major' || inc.severidade === 'critical') acao = T.en.actions.majorOrCritical;
+    else if (inc.severidade === 'minor') acao = T.en.actions.minor;
+    else acao = T.en.actions.default;
+  }
 
   return {
-    fonte: ENDPOINT,
-    verificado_em: new Date().toISOString(),
-    latencia_ms: Math.round(performance.now() - started),
+    id: inc.id,
+    titulo: inc.titulo,
+    status_label,
+    impacto_label,
+    severidade: inc.severidade,
+    duracao_humana: duracao,
+    componentes_afetados: inc.componentes_afetados,
+    link: inc.link,
+    resumo,
+    acao_recomendada: acao,
+    ultima_nota,
+  };
+}
+
+async function fetchAgent(signal: AbortSignal, lang: Lang): Promise<AgentResponse> {
+  // Usa a Edge Function como proxy — evita CORS direto do status.supabase.com
+  const started = performance.now();
+  const { data: edgeData, error: edgeError } = await supabase.functions.invoke<AgentEdgeResponse>(
+    'supabase-status-agent',
+    { body: {} },
+  );
+
+  if (signal.aborted) throw new DOMException('aborted', 'AbortError');
+  if (edgeError) throw new Error(edgeError.message ?? 'Edge function error');
+  if (!edgeData) throw new Error('Empty response');
+
+  const incidentes = (edgeData.incidentes ?? []).map((inc) => localizeIncident(inc, lang));
+
+  // Se idioma é PT, usa diagnóstico já pronto. Se EN, recalcula.
+  let diagnostico_geral = edgeData.diagnostico_geral;
+  if (lang === 'en') {
+    const diag = T.en.diag;
+    if (incidentes.length === 0) diagnostico_geral = diag.none;
+    else if (edgeData.severidade_global === 'critical') diagnostico_geral = diag.critical(incidentes.length);
+    else if (edgeData.severidade_global === 'major') diagnostico_geral = diag.major(incidentes.length);
+    else if (edgeData.severidade_global === 'minor') diagnostico_geral = diag.minor(incidentes.length);
+  }
+
+  return {
+    fonte: edgeData.fonte ?? ENDPOINT,
+    verificado_em: edgeData.verificado_em ?? new Date().toISOString(),
+    latencia_ms: edgeData.latencia_ms ?? Math.round(performance.now() - started),
     total_incidentes: incidentes.length,
-    severidade_global,
+    severidade_global: edgeData.severidade_global ?? 'none',
     diagnostico_geral,
     incidentes,
   };
