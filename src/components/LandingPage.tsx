@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, Heart, ArrowRight, FileText } from "lucide-react";
+import { Shield, Heart, ArrowRight, FileText, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const LandingPage = () => {
