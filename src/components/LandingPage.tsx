@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Heart, ArrowRight, FileText, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
+import smartControlShield from "@/assets/smartcontrol-shield.png";
 
 export const LandingPage = () => {
   return (
@@ -13,38 +14,36 @@ export const LandingPage = () => {
           <div className="mx-auto max-w-screen-md px-6 py-12 sm:py-16 text-center min-h-[75vh] flex flex-col justify-center">
             {/* Brand Lockup */}
             <div className="mx-auto mb-6 flex flex-col items-center">
-              <picture className="mb-4">
-                <source
-                  srcSet="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414-optimized.webp"
-                  type="image/webp"
-                  sizes="80px"
-                />
-                <img
-                  src="/lovable-uploads/06559720-de1c-4fe7-b38e-fbe2407c1414.png"
-                  alt="RCorp — soluções corporativas"
-                  className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-2xl shadow-sm"
-                  width="80"
-                  height="80"
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="sync"
-                />
-              </picture>
+              <img
+                src={smartControlShield}
+                alt="SmartControl"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-contain mb-4 drop-shadow-lg"
+                width="96"
+                height="96"
+                loading="eager"
+                fetchPriority="high"
+                decoding="sync"
+              />
 
-              {/* H1 Brand Name with Gradient */}
+              {/* H1 Brand Name - Smart (white/foreground) + Control (blue gradient) */}
               <h1
-                className="font-condor font-bold tracking-tight bg-gradient-to-r from-prussian-blue to-prussian-blue/80 dark:from-primary-foreground dark:to-primary-foreground/80 bg-clip-text text-transparent leading-tight mb-2"
+                className="font-condor font-bold tracking-tight leading-tight mb-2"
                 style={{
                   fontSize: "clamp(40px, 6vw, 80px)",
                   lineHeight: "1.05",
                 }}
-                aria-label="RCorp"
+                aria-label="SmartControl"
               >
-                RCorp
+                <span className="text-foreground dark:text-white">Smart</span>
+                <span className="bg-gradient-to-r from-[hsl(200,100%,55%)] via-[hsl(220,100%,55%)] to-[hsl(260,90%,60%)] bg-clip-text text-transparent">
+                  Control
+                </span>
               </h1>
 
-              {/* Tagline */}
-              <p className="text-sm sm:text-base font-muli text-muted-foreground mb-6">Soluções corporativas inteligentes</p>
+              {/* Powered by */}
+              <p className="text-xs sm:text-sm font-muli text-muted-foreground mb-6">
+                powered by <span className="font-semibold text-foreground/80">RCorp</span> — soluções corporativas inteligentes
+              </p>
             </div>
 
             {/* H2 Secondary Title */}
