@@ -98,7 +98,7 @@ const AuthGuardContent = () => {
           
           <div className="space-y-2">
             <div className="flex items-center justify-center gap-2">
-              <h2 className="text-xl font-semibold text-gray-800">SmartApólice</h2>
+              <h2 className="text-xl font-semibold text-gray-800">SmartControl</h2>
               <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded tracking-wider">
                 BETA
               </span>

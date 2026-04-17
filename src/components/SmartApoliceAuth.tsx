@@ -3,7 +3,7 @@ import { AuthPage } from '@/components/AuthPage';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import smartapoliceShield from '@/assets/smartapolice-shield-transparent.png';
+import smartControlShield from '@/assets/smartcontrol-shield.png';
 
 const SmartApoliceAuthContent = () => {
   const { user, profile } = useAuth();
