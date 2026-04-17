@@ -245,30 +245,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data.user?.email
       });
 
-      // Sincronizar dados do perfil da API CorpNuvem após login bem-sucedido
-      if (data.user?.id) {
-        // Executar sincronização em background (não bloqueia o login)
-        setTimeout(async () => {
-          try {
-            // Verifica se já tem dados cadastrais
-            const hasPreviousData = await hasProfileData(data.user!.id);
-            
-            if (!hasPreviousData) {
-              console.log('🔄 [Auth] Sincronizando dados do perfil após login...');
-              const synced = await syncProfileFromCorpNuvem(data.user!.id);
-              
-              if (synced) {
-                console.log('✅ [Auth] Dados do perfil sincronizados com sucesso!');
-              }
-            } else {
-              console.log('ℹ️ [Auth] Dados do perfil já existem, pulando sincronização');
-            }
-          } catch (syncError) {
-            console.error('❌ [Auth] Erro ao sincronizar perfil:', syncError);
-            // Não bloqueia o login mesmo se a sincronização falhar
-          }
-        }, 1000); // Aguarda 1 segundo após o login para sincronizar
-      }
+      // Background profile sync removed from login flow to prevent
+      // dependency on external APIs (CorpNuvem) during sign-in.
+      // Profile data is loaded lazily by components that need it.
 
       // Don't set loading to false here - let the auth state change handle it
       return { error: null };
