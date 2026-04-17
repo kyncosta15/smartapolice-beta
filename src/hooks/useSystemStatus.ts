@@ -171,48 +171,62 @@ export function useSystemStatus(intervalMs: number = CHECK_INTERVAL_MS) {
   }, []);
 
   const checkStatus = useCallback(async () => {
-    if (inFlightRef.current) return;
-    inFlightRef.current = true;
-
-    // Sem internet do navegador
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      const offlineCheck: ServiceCheck = { status: 'offline', latencyMs: null, message: 'Sem internet' };
-      setState({
-        status: 'offline',
-        auth: offlineCheck,
-        database: offlineCheck,
-        edgeFunctions: offlineCheck,
-        lastCheck: new Date(),
-        latencyMs: null,
-        isOnline: false,
-        message: 'Sem conexão com a internet',
-      });
-      inFlightRef.current = false;
+    if (inFlightRef.current) {
+      console.log('[useSystemStatus] check já em andamento — ignorando');
       return;
     }
+    inFlightRef.current = true;
 
-    // Roda os 3 checks em paralelo
-    const [auth, database, edgeFunctions] = await Promise.all([
-      checkAuth(),
-      checkDatabase(),
-      checkEdgeFunctions(),
-    ]);
+    // Marca todos como "checking" para feedback visual imediato
+    setState((s) => ({
+      ...s,
+      auth: { ...s.auth, status: 'checking', message: 'Verificando...' },
+      database: { ...s.database, status: 'checking', message: 'Verificando...' },
+      edgeFunctions: { ...s.edgeFunctions, status: 'checking', message: 'Verificando...' },
+    }));
 
-    const aggregated = aggregate(auth.status, database.status, edgeFunctions.status);
-    const message = buildAggregatedMessage({ auth, database, edgeFunctions });
+    try {
+      // Sem internet do navegador
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        const offlineCheck: ServiceCheck = { status: 'offline', latencyMs: null, message: 'Sem internet' };
+        setState({
+          status: 'offline',
+          auth: offlineCheck,
+          database: offlineCheck,
+          edgeFunctions: offlineCheck,
+          lastCheck: new Date(),
+          latencyMs: null,
+          isOnline: false,
+          message: 'Sem conexão com a internet',
+        });
+        return;
+      }
 
-    setState({
-      status: aggregated,
-      auth,
-      database,
-      edgeFunctions,
-      lastCheck: new Date(),
-      latencyMs: auth.latencyMs,
-      isOnline: true,
-      message,
-    });
+      // Roda os 3 checks em paralelo
+      const [auth, database, edgeFunctions] = await Promise.all([
+        checkAuth(),
+        checkDatabase(),
+        checkEdgeFunctions(),
+      ]);
 
-    inFlightRef.current = false;
+      const aggregated = aggregate(auth.status, database.status, edgeFunctions.status);
+      const message = buildAggregatedMessage({ auth, database, edgeFunctions });
+
+      setState({
+        status: aggregated,
+        auth,
+        database,
+        edgeFunctions,
+        lastCheck: new Date(),
+        latencyMs: auth.latencyMs,
+        isOnline: true,
+        message,
+      });
+    } catch (err) {
+      console.error('[useSystemStatus] erro inesperado em checkStatus:', err);
+    } finally {
+      inFlightRef.current = false;
+    }
   }, [checkAuth, checkDatabase, checkEdgeFunctions]);
 
   useEffect(() => {
