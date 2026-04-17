@@ -103,35 +103,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async (userId: string) => (await fetchUserAndProfile(userId)).profile;
   const fetchExtendedUserData = async (userId: string) => (await fetchUserAndProfile(userId)).userData;
 
+  const applyUserAndProfile = (
+    sessionUser: User,
+    userData: any,
+    profileData: UserProfile | null,
+  ) => {
+    setProfile(profileData);
+    if (userData) {
+      setUser({
+        ...sessionUser,
+        name: userData.name,
+        role: userData.role,
+        company: userData.company,
+        phone: userData.phone,
+        avatar: userData.avatar_url || userData.avatar,
+      });
+    } else {
+      setUser({
+        ...sessionUser,
+        name: profileData?.full_name || sessionUser.email?.split('@')[0] || 'Usuário',
+        role: profileData?.role || 'cliente',
+        company: profileData?.company || '',
+        phone: profileData?.phone || '',
+        avatar: profileData?.avatar_url || '',
+      });
+    }
+  };
+
   const refreshProfile = async () => {
     if (user) {
       console.log('🔄 Atualizando perfil do usuário:', user.id);
-      
-      // Buscar dados atualizados de ambas as tabelas
-      const [profileData, extendedUserData] = await Promise.all([
-        fetchProfile(user.id),
-        fetchExtendedUserData(user.id)
-      ]);
-      
-      if (profileData) {
-        setProfile(profileData);
-        console.log('✅ Perfil atualizado:', profileData);
-      }
-      
-      if (extendedUserData) {
-        // Atualizar o estado do usuário com os dados mais recentes
-        const updatedUser: ExtendedUser = {
+      const { userData, profile: profileData } = await fetchUserAndProfile(user.id);
+      if (profileData) setProfile(profileData);
+      if (userData) {
+        setUser({
           ...user,
-          name: extendedUserData.name,
-          role: extendedUserData.role,
-          company: extendedUserData.company,
-          phone: extendedUserData.phone,
-          avatar: extendedUserData.avatar_url || extendedUserData.avatar,
-        };
-        setUser(updatedUser);
-        console.log('✅ Dados do usuário atualizados:', {
-          name: updatedUser.name,
-          avatar: updatedUser.avatar
+          name: userData.name,
+          role: userData.role,
+          company: userData.company,
+          phone: userData.phone,
+          avatar: userData.avatar_url || userData.avatar,
         });
       }
     }
@@ -141,103 +152,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('🔐 AuthProvider: Configurando autenticação');
     let mounted = true;
+    let lastFetchedUserId: string | null = null;
 
-    // Check for existing session FIRST
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
-        setSession(session);
-        
-        if (session?.user) {
-          // Fetch profile data
-          const profileData = await fetchProfile(session.user.id);
-          const extendedData = await fetchExtendedUserData(session.user.id);
-          
-          if (!mounted) return;
-          
-          setProfile(profileData);
-          
-          if (extendedData) {
-            setUser({
-              ...session.user,
-              name: extendedData.name,
-              role: extendedData.role,
-              company: extendedData.company,
-              phone: extendedData.phone,
-              avatar: extendedData.avatar_url || extendedData.avatar,
-            });
-          } else {
-            setUser({
-              ...session.user,
-              name: profileData?.full_name || session.user.email?.split('@')[0] || 'Usuário',
-              role: profileData?.role || 'cliente',
-              company: profileData?.company || '',
-              phone: profileData?.phone || '',
-              avatar: profileData?.avatar_url || ''
-            });
-          }
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('❌ Erro ao inicializar auth:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
+    const loadUser = async (sessionUser: User) => {
+      if (lastFetchedUserId === sessionUser.id) return;
+      lastFetchedUserId = sessionUser.id;
+      const { userData, profile: profileData } = await fetchUserAndProfile(sessionUser.id);
+      if (!mounted) return;
+      applyUserAndProfile(sessionUser, userData, profileData);
     };
 
-    initAuth();
-
-    // Set up auth state listener
+    // Set up auth state listener FIRST (synchronous handler)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('🔄 Auth state change:', event);
-        
         if (!mounted) return;
-        
+
         setSession(session);
-        
-        if (session?.user && event === 'SIGNED_IN') {
-          // Only fetch on sign in
-          setTimeout(() => {
-            if (!mounted) return;
-            
-            Promise.all([
-              fetchProfile(session.user.id),
-              fetchExtendedUserData(session.user.id)
-            ]).then(([profileData, extendedData]) => {
-              if (!mounted) return;
-              
-              setProfile(profileData);
-              
-              if (extendedData) {
-                setUser({
-                  ...session.user,
-                  name: extendedData.name,
-                  role: extendedData.role,
-                  company: extendedData.company,
-                  phone: extendedData.phone,
-                  avatar: extendedData.avatar_url || extendedData.avatar,
-                });
-              }
-            });
-          }, 100);
-        } else if (!session) {
+
+        if (!session) {
+          lastFetchedUserId = null;
           setUser(null);
           setProfile(null);
+          setLoading(false);
+          return;
         }
+
+        // Defer the DB fetch to avoid blocking the auth callback
+        setTimeout(() => {
+          if (!mounted) return;
+          loadUser(session.user).finally(() => {
+            if (mounted) setLoading(false);
+          });
+        }, 0);
       }
     );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      setSession(session);
+      if (session?.user) {
+        loadUser(session.user).finally(() => {
+          if (mounted) setLoading(false);
+        });
+      } else {
+        setLoading(false);
+      }
+    });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
+
 
   const signIn = async (email: string, password: string) => {
     console.log('🔑 Tentativa de login para:', email);
