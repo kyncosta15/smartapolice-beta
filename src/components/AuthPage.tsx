@@ -12,6 +12,9 @@ import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Spinner } from '@/components/ui/spinner';
 import { useClienteLookup } from '@/hooks/useClienteLookup';
+import { translateAuthError } from '@/lib/authErrorMessages';
+import { useSystemStatus } from '@/hooks/useSystemStatus';
+import { AlertTriangle, WifiOff } from 'lucide-react';
 
 export const AuthPage = () => {
   const { login, register, isLoading } = useAuth();
@@ -69,17 +72,24 @@ export const AuthPage = () => {
         });
       } else {
         toast({
-          title: "Erro",
-          description: result.error || "Erro no login",
+          title: "Não foi possível entrar",
+          description: translateAuthError(result.error || "Erro no login"),
           variant: "destructive"
         });
       }
+    } catch (err) {
+      toast({
+        title: "Não foi possível entrar",
+        description: translateAuthError(err),
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { status: systemStatus, message: systemMessage } = useSystemStatus();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
