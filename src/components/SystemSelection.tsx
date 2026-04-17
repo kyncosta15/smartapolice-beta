@@ -46,7 +46,7 @@ const SystemSelection = () => {
             </p>
           </div>
 
-          {/* SmartApólice Card */}
+          {/* SmartControl Card */}
           <div 
             className="group cursor-pointer"
             onClick={handleSystemSelect}
@@ -58,7 +58,7 @@ const SystemSelection = () => {
                   <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-primary/20 dark:to-primary/10 flex items-center justify-center shadow-inner">
                     <img 
                       src={smartControlShield} 
-                      alt="SmartApólice" 
+                      alt="SmartControl" 
                       className="h-16 w-16 object-contain group-hover:scale-110 transition-transform duration-300" 
                       loading="eager" 
                       fetchPriority="high" 
@@ -72,7 +72,7 @@ const SystemSelection = () => {
               {/* Title */}
               <h2 className="text-2xl font-bold text-center mb-3">
                 <span className="text-foreground">Smart</span>
-                <span className="text-primary">Apólice</span>
+                <span className="text-primary">Control</span>
               </h2>
 
               {/* Description */}
@@ -105,7 +105,7 @@ const SystemSelection = () => {
                 variant="default" 
                 className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300"
               >
-                Acessar SmartApólice
+                Acessar SmartControl
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
