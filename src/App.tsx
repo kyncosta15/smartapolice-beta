@@ -35,6 +35,7 @@ import CentralDeDadosPage from './pages/CentralDeDadosPage';
 import InserirVeiculosLotePage from './pages/InserirVeiculosLotePage';
 import AdminAccessLogsPage from './pages/AdminAccessLogsPage';
 import AdminPresencePage from './pages/admin/AdminPresencePage';
+import { SystemStatusBanner } from '@/components/SystemStatusBanner';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,6 +61,7 @@ const App = () => {
             <TenantProvider>
               <SessionTimeoutGuard>
                 <BrowserRouter>
+                  <SystemStatusBanner />
                   <Routes>
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />

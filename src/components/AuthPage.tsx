@@ -12,6 +12,9 @@ import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Spinner } from '@/components/ui/spinner';
 import { useClienteLookup } from '@/hooks/useClienteLookup';
+import { translateAuthError } from '@/lib/authErrorMessages';
+import { useSystemStatus } from '@/hooks/useSystemStatus';
+import { AlertTriangle, WifiOff } from 'lucide-react';
 
 export const AuthPage = () => {
   const { login, register, isLoading } = useAuth();
@@ -69,17 +72,24 @@ export const AuthPage = () => {
         });
       } else {
         toast({
-          title: "Erro",
-          description: result.error || "Erro no login",
+          title: "Não foi possível entrar",
+          description: translateAuthError(result.error || "Erro no login"),
           variant: "destructive"
         });
       }
+    } catch (err) {
+      toast({
+        title: "Não foi possível entrar",
+        description: translateAuthError(err),
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { status: systemStatus, message: systemMessage } = useSystemStatus();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,6 +218,27 @@ export const AuthPage = () => {
         {/* Login Tab */}
         <TabsContent value="login">
           <form onSubmit={handleLogin} className="space-y-5">
+            {(systemStatus === 'offline' || systemStatus === 'degraded') && (
+              <div
+                className={
+                  systemStatus === 'offline'
+                    ? 'flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive'
+                    : 'flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100'
+                }
+              >
+                {systemStatus === 'offline' ? (
+                  <WifiOff className="h-4 w-4 mt-0.5 shrink-0" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                )}
+                <div>
+                  <p className="font-medium">
+                    {systemStatus === 'offline' ? 'Servidor indisponível' : 'Sistema instável'}
+                  </p>
+                  <p className="opacity-90">{systemMessage}. O login pode falhar — tente novamente em instantes.</p>
+                </div>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="login-email" className="text-sm font-medium text-foreground">Email</Label>
               <div className="relative">
