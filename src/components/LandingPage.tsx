@@ -114,8 +114,17 @@ export const LandingPage = () => {
             </div>
 
             {/* Footer */}
-            <footer className="text-xs text-muted-foreground">
+            <footer className="text-xs text-muted-foreground space-y-1">
               <p>&copy; 2025 RCorp. Todos os direitos reservados.</p>
+              <p>
+                <a
+                  href="/status"
+                  className="inline-flex items-center gap-1 hover:text-foreground transition-colors underline-offset-2 hover:underline"
+                >
+                  <Activity className="h-3 w-3" />
+                  Status do sistema
+                </a>
+              </p>
             </footer>
           </div>
         </section>

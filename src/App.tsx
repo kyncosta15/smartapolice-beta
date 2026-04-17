@@ -35,6 +35,7 @@ import CentralDeDadosPage from './pages/CentralDeDadosPage';
 import InserirVeiculosLotePage from './pages/InserirVeiculosLotePage';
 import AdminAccessLogsPage from './pages/AdminAccessLogsPage';
 import AdminPresencePage from './pages/admin/AdminPresencePage';
+import SystemStatusPage from './pages/SystemStatusPage';
 import { SystemStatusBanner } from '@/components/SystemStatusBanner';
 import { SystemStatusIndicator } from '@/components/SystemStatusIndicator';
 
@@ -66,6 +67,7 @@ const App = () => {
                   <Routes>
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
+              <Route path="/status" element={<SystemStatusPage />} />
               <Route path="/system-selection" element={<SystemSelection />} />
               <Route path="/auth" element={<SystemSelection />} />
               <Route path="/auth/smartapolice" element={<SmartApoliceAuth />} />
