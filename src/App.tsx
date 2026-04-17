@@ -176,6 +176,10 @@ const App = () => {
               
               <Route path="*" element={<NotFound />} />
             </Routes>
+                  {/* Indicador discreto de status — sempre visível, expansível */}
+                  <div className="fixed bottom-3 right-3 z-40">
+                    <SystemStatusIndicator />
+                  </div>
                 </BrowserRouter>
               </SessionTimeoutGuard>
             </TenantProvider>
