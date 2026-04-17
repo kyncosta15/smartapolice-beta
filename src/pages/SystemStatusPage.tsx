@@ -6,6 +6,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { SupabaseStatusAgentCard } from '@/components/status/SupabaseStatusAgentCard';
 
 
 type NormalizedStatus = 'operational' | 'degraded' | 'major' | 'critical' | 'unknown';
@@ -246,6 +247,9 @@ export default function SystemStatusPage() {
             </div>
           )}
         </section>
+
+        {/* Agente Supabase — interpreta incidents/unresolved.json em PT-BR */}
+        <SupabaseStatusAgentCard />
 
         {/* Providers — lista limpa, sem cards pesados */}
         <section className="space-y-px rounded-xl border overflow-hidden bg-card">
