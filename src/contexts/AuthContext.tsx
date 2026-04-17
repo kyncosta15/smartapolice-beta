@@ -60,77 +60,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Function to fetch extended user data from our users table
-  const fetchExtendedUserData = async (userId: string) => {
+  // Fetch user data + profile in parallel (single source for both)
+  const fetchUserAndProfile = async (userId: string) => {
     try {
-      console.log('🔍 Buscando dados estendidos para usuário:', userId);
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      console.log('🔍 Buscando dados do usuário e perfil:', userId);
 
-      if (error) {
-        console.error('❌ Erro ao buscar dados do usuário:', error);
-        return null;
+      const [userResult, profileResult] = await Promise.all([
+        supabase.from('users').select('*').eq('id', userId).maybeSingle(),
+        supabase.from('user_profiles').select('is_admin').eq('id', userId).maybeSingle(),
+      ]);
+
+      const userData = userResult.data;
+      const profileRow = profileResult.data;
+
+      if (userResult.error && userResult.error.code !== 'PGRST116') {
+        console.error('Error fetching user:', userResult.error);
       }
 
-      console.log('✅ Dados do usuário encontrados:', userData);
-      return userData;
-    } catch (error) {
-      console.error('❌ Erro inesperado ao buscar dados do usuário:', error);
-      return null;
-    }
-  };
+      if (!userData) {
+        return { userData: null, profile: null };
+      }
 
-  // Fetch user profile from users table (not profiles table)
-  const fetchProfile = async (userId: string) => {
-    try {
-      console.log('🔍 Buscando perfil do usuário:', userId);
-      
-      // Buscar da tabela users que tem o campo role
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user:', error);
-        return null;
-      }
-      
-      if (!data) {
-        console.log('⚠️ Usuário não encontrado');
-        return null;
-      }
-      
-      // Buscar is_admin da tabela user_profiles
-      const { data: profileData } = await supabase
-        .from('user_profiles')
-        .select('is_admin')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      // Construir profile a partir dos dados da tabela users
       const userProfile: UserProfile = {
-        id: data.id,
-        email: data.email,
-        full_name: data.name || data.email,
-        role: (data.role || 'cliente') as UserProfile['role'],
-        company: data.company,
-        phone: data.phone,
-        is_active: data.status === 'active',
-        is_admin: profileData?.is_admin || false
+        id: userData.id,
+        email: userData.email,
+        full_name: userData.name || userData.email,
+        role: (userData.role || 'cliente') as UserProfile['role'],
+        company: userData.company,
+        phone: userData.phone,
+        is_active: userData.status === 'active',
+        is_admin: profileRow?.is_admin || false,
       };
-      
-      console.log('✅ Perfil encontrado:', userProfile);
-      return userProfile;
+
+      return { userData, profile: userProfile };
     } catch (error) {
-      console.error('💥 Erro ao buscar perfil:', error);
-      return null;
+      console.error('💥 Erro ao buscar usuário/perfil:', error);
+      return { userData: null, profile: null };
     }
   };
+
+  // Backwards-compat wrappers
+  const fetchProfile = async (userId: string) => (await fetchUserAndProfile(userId)).profile;
+  const fetchExtendedUserData = async (userId: string) => (await fetchUserAndProfile(userId)).userData;
 
   const refreshProfile = async () => {
     if (user) {
