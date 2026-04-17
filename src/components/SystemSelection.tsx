@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import smartapoliceShield from '@/assets/smartapolice-shield-transparent.png';
+import smartControlShield from '@/assets/smartcontrol-shield.png';
 import { useAuth } from '@/contexts/AuthContext';
 
 const SystemSelection = () => {
@@ -57,7 +57,7 @@ const SystemSelection = () => {
                 <div className="relative">
                   <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-primary/20 dark:to-primary/10 flex items-center justify-center shadow-inner">
                     <img 
-                      src={smartapoliceShield} 
+                      src={smartControlShield} 
                       alt="SmartApólice" 
                       className="h-16 w-16 object-contain group-hover:scale-110 transition-transform duration-300" 
                       loading="eager" 

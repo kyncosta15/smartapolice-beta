@@ -81,7 +81,7 @@ export const SmartBeneficiosAuth = () => {
               </Link>
               <Link to="/auth/smartapolice">
                 <Button variant="outline" className="w-full">
-                  Acessar SmartApólice
+                  Acessar SmartControl
                 </Button>
               </Link>
             </div>
