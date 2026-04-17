@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type Severidade = 'none' | 'minor' | 'major' | 'critical';
+type Lang = 'pt' | 'en';
 
 interface AffectedComponent {
   name: string;
@@ -31,14 +32,15 @@ interface RawIncident {
 interface IncidenteInterpretado {
   id: string;
   titulo: string;
-  status_pt: string;
-  impacto_pt: string;
+  status_label: string;
+  impacto_label: string;
   severidade: Severidade;
   duracao_humana: string;
   componentes_afetados: string[];
   link: string;
-  resumo_pt: string;
+  resumo: string;
   acao_recomendada: string;
+  ultima_nota: string;
 }
 
 interface AgentResponse {
@@ -49,7 +51,6 @@ interface AgentResponse {
   severidade_global: Severidade;
   diagnostico_geral: string;
   incidentes: IncidenteInterpretado[];
-  erro?: string;
 }
 
 const ENDPOINT = 'https://status.supabase.com/api/v2/incidents/unresolved.json';
@@ -68,24 +69,6 @@ const sevBg: Record<Severidade, string> = {
   critical: 'from-red-500/10 to-transparent border-red-500/20',
 };
 
-const STATUS_PT: Record<string, string> = {
-  investigating: 'Investigando',
-  identified: 'Causa identificada',
-  monitoring: 'Monitorando correção',
-  resolved: 'Resolvido',
-  scheduled: 'Programado',
-  in_progress: 'Em andamento',
-  verifying: 'Verificando',
-  completed: 'Concluído',
-};
-
-const IMPACT_PT: Record<string, string> = {
-  none: 'Sem impacto',
-  minor: 'Impacto baixo',
-  major: 'Impacto alto',
-  critical: 'Crítico',
-};
-
 const SEVERITY_RANK: Record<Severidade, number> = {
   none: 0,
   minor: 1,
@@ -93,67 +76,177 @@ const SEVERITY_RANK: Record<Severidade, number> = {
   critical: 3,
 };
 
-function fmtDuration(fromIso: string): string {
+// ---------------- i18n ----------------
+
+const STATUS_MAP: Record<Lang, Record<string, string>> = {
+  pt: {
+    investigating: 'Investigando',
+    identified: 'Causa identificada',
+    monitoring: 'Monitorando correção',
+    resolved: 'Resolvido',
+    scheduled: 'Programado',
+    in_progress: 'Em andamento',
+    verifying: 'Verificando',
+    completed: 'Concluído',
+  },
+  en: {
+    investigating: 'Investigating',
+    identified: 'Identified',
+    monitoring: 'Monitoring',
+    resolved: 'Resolved',
+    scheduled: 'Scheduled',
+    in_progress: 'In progress',
+    verifying: 'Verifying',
+    completed: 'Completed',
+  },
+};
+
+const IMPACT_MAP: Record<Lang, Record<string, string>> = {
+  pt: { none: 'Sem impacto', minor: 'Impacto baixo', major: 'Impacto alto', critical: 'Crítico' },
+  en: { none: 'No impact', minor: 'Minor', major: 'Major', critical: 'Critical' },
+};
+
+const T = {
+  pt: {
+    title: 'Agente Supabase',
+    subtitle: (
+      <>Lê <code className="text-[10px]">incidents/unresolved.json</code> e interpreta em português</>
+    ),
+    refresh: 'Verificar',
+    consulting: 'Consultando Supabase…',
+    fetchError: 'Não foi possível consultar o agente:',
+    verifiedNow: 'Verificado agora',
+    source: 'fonte',
+    none: 'Sem incidentes em aberto',
+    whatToDo: 'O que fazer:',
+    officialDetails: 'Detalhes oficiais',
+    ago: (d: string) => `há ${d}`,
+    lastNote: 'Última nota',
+    diag: {
+      none: 'Nenhum incidente em aberto no Supabase no momento. Tudo certo do lado deles.',
+      critical: (n: number) => `Há ${n} incidente(s) ativo(s) no Supabase, sendo pelo menos um crítico. Operação pode ser instável.`,
+      major: (n: number) => `Há ${n} incidente(s) ativo(s) no Supabase com impacto alto. Espere lentidão ou falhas pontuais.`,
+      minor: (n: number) => `Há ${n} incidente(s) ativo(s) no Supabase com impacto baixo.`,
+    },
+    summary: {
+      identified: (c: string, d: string) => `A causa foi identificada e o time do Supabase está aplicando a correção. Impacto em ${c} há ${d}.`,
+      investigating: (c: string, d: string) => `O Supabase ainda está investigando. Há ${d} de incidente afetando ${c}.`,
+      monitoring: (c: string) => `O Supabase aplicou uma correção e está monitorando a recuperação dos serviços ${c}.`,
+      generic: (s: string, i: string, c: string, d: string) => `Status ${s.toLowerCase()} no Supabase, com ${i.toLowerCase()} em ${c} há ${d}.`,
+      diverseServices: 'serviços diversos',
+    },
+    actions: {
+      majorOrCritical: 'Pode haver lentidão ou erros esporádicos no login, banco e funções. Tente novamente em alguns minutos se algo falhar.',
+      minor: 'Impacto pequeno. Operação normal, mas vale observar eventuais instabilidades.',
+      default: 'Acompanhar atualizações.',
+    },
+    duration: {
+      lessThanMinute: 'menos de 1 min',
+      min: (n: number) => `${n} min`,
+      h: (h: number, m: number) => (m ? `${h}h ${m}min` : `${h}h`),
+      d: (d: number, h: number) => (h ? `${d}d ${h}h` : `${d}d`),
+    },
+  },
+  en: {
+    title: 'Supabase Agent',
+    subtitle: (
+      <>Reads <code className="text-[10px]">incidents/unresolved.json</code> and interprets it in English</>
+    ),
+    refresh: 'Check',
+    consulting: 'Querying Supabase…',
+    fetchError: 'Could not query the agent:',
+    verifiedNow: 'Just checked',
+    source: 'source',
+    none: 'No open incidents',
+    whatToDo: 'What to do:',
+    officialDetails: 'Official details',
+    ago: (d: string) => `${d} ago`,
+    lastNote: 'Last note',
+    diag: {
+      none: 'No open incidents on Supabase right now. All clear on their side.',
+      critical: (n: number) => `There are ${n} active incident(s) on Supabase, including at least one critical. Operations may be unstable.`,
+      major: (n: number) => `There are ${n} active incident(s) on Supabase with major impact. Expect slowness or sporadic failures.`,
+      minor: (n: number) => `There are ${n} active incident(s) on Supabase with minor impact.`,
+    },
+    summary: {
+      identified: (c: string, d: string) => `The cause has been identified and Supabase's team is applying a fix. Impact on ${c} for ${d}.`,
+      investigating: (c: string, d: string) => `Supabase is still investigating. Incident has been affecting ${c} for ${d}.`,
+      monitoring: (c: string) => `Supabase applied a fix and is monitoring the recovery of ${c}.`,
+      generic: (s: string, i: string, c: string, d: string) => `Status ${s.toLowerCase()} on Supabase, with ${i.toLowerCase()} on ${c} for ${d}.`,
+      diverseServices: 'multiple services',
+    },
+    actions: {
+      majorOrCritical: 'Sporadic errors or slowness may happen on login, database and functions. Retry in a few minutes if something fails.',
+      minor: 'Minor impact. Operations should be normal, but watch for occasional instability.',
+      default: 'Keep an eye on updates.',
+    },
+    duration: {
+      lessThanMinute: 'less than 1 min',
+      min: (n: number) => `${n} min`,
+      h: (h: number, m: number) => (m ? `${h}h ${m}m` : `${h}h`),
+      d: (d: number, h: number) => (h ? `${d}d ${h}h` : `${d}d`),
+    },
+  },
+};
+
+// ---------------- helpers ----------------
+
+function fmtDuration(fromIso: string, lang: Lang): string {
+  const t = T[lang].duration;
   const ms = Date.now() - new Date(fromIso).getTime();
-  if (ms < 60_000) return 'menos de 1 min';
+  if (ms < 60_000) return t.lessThanMinute;
   const mins = Math.floor(ms / 60_000);
-  if (mins < 60) return `${mins} min`;
+  if (mins < 60) return t.min(mins);
   const hrs = Math.floor(mins / 60);
   const restMin = mins % 60;
-  if (hrs < 24) return restMin ? `${hrs}h ${restMin}min` : `${hrs}h`;
+  if (hrs < 24) return t.h(hrs, restMin);
   const dias = Math.floor(hrs / 24);
   const restHrs = hrs % 24;
-  return restHrs ? `${dias}d ${restHrs}h` : `${dias}d`;
+  return t.d(dias, restHrs);
 }
 
 function stripHtml(s: string): string {
   return (s ?? '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 }
 
-function interpretarIncidente(inc: RawIncident): IncidenteInterpretado {
+function interpretarIncidente(inc: RawIncident, lang: Lang): IncidenteInterpretado {
   const ultima = inc.incident_updates?.[0];
   const componentes = Array.from(new Set((ultima?.affected_components ?? []).map((c) => c.name)));
-  const status_pt = STATUS_PT[inc.status] ?? inc.status;
-  const impacto_pt = IMPACT_PT[inc.impact] ?? inc.impact;
-  const duracao = fmtDuration(inc.started_at ?? inc.created_at);
+  const status_label = STATUS_MAP[lang][inc.status] ?? inc.status;
+  const impacto_label = IMPACT_MAP[lang][inc.impact] ?? inc.impact;
+  const duracao = fmtDuration(inc.started_at ?? inc.created_at, lang);
   const ultimaMsg = stripHtml(ultima?.body ?? '');
+  const tt = T[lang].summary;
+  const componentesStr = componentes.join(', ') || tt.diverseServices;
 
-  let resumo = `Status ${status_pt.toLowerCase()} no Supabase, com ${impacto_pt.toLowerCase()} em ${componentes.join(', ') || 'serviços diversos'} há ${duracao}.`;
-  if (inc.status === 'identified') {
-    resumo = `A causa foi identificada e o time do Supabase está aplicando a correção. Impacto em ${componentes.join(', ') || 'serviços diversos'} há ${duracao}.`;
-  } else if (inc.status === 'investigating') {
-    resumo = `O Supabase ainda está investigando. Há ${duracao} de incidente afetando ${componentes.join(', ') || 'serviços diversos'}.`;
-  } else if (inc.status === 'monitoring') {
-    resumo = `O Supabase aplicou uma correção e está monitorando a recuperação dos serviços ${componentes.join(', ') || ''}.`;
-  }
+  let resumo: string;
+  if (inc.status === 'identified') resumo = tt.identified(componentesStr, duracao);
+  else if (inc.status === 'investigating') resumo = tt.investigating(componentesStr, duracao);
+  else if (inc.status === 'monitoring') resumo = tt.monitoring(componentesStr);
+  else resumo = tt.generic(status_label, impacto_label, componentesStr, duracao);
 
-  if (ultimaMsg) {
-    const trecho = ultimaMsg.length > 220 ? `${ultimaMsg.slice(0, 217)}…` : ultimaMsg;
-    resumo += ` Última nota: "${trecho}"`;
-  }
+  const trecho = ultimaMsg.length > 220 ? `${ultimaMsg.slice(0, 217)}…` : ultimaMsg;
 
-  let acao = 'Acompanhar atualizações.';
-  if (inc.impact === 'major' || inc.impact === 'critical') {
-    acao = 'Pode haver lentidão ou erros esporádicos no login, banco e funções. Tente novamente em alguns minutos se algo falhar.';
-  } else if (inc.impact === 'minor') {
-    acao = 'Impacto pequeno. Operação normal, mas vale observar eventuais instabilidades.';
-  }
+  let acao = T[lang].actions.default;
+  if (inc.impact === 'major' || inc.impact === 'critical') acao = T[lang].actions.majorOrCritical;
+  else if (inc.impact === 'minor') acao = T[lang].actions.minor;
 
   return {
     id: inc.id,
     titulo: inc.name,
-    status_pt,
-    impacto_pt,
+    status_label,
+    impacto_label,
     severidade: inc.impact,
     duracao_humana: duracao,
     componentes_afetados: componentes,
     link: inc.shortlink ?? 'https://status.supabase.com',
-    resumo_pt: resumo,
+    resumo,
     acao_recomendada: acao,
+    ultima_nota: trecho,
   };
 }
 
-async function fetchAgent(signal: AbortSignal): Promise<AgentResponse> {
+async function fetchAgent(signal: AbortSignal, lang: Lang): Promise<AgentResponse> {
   const started = performance.now();
   const res = await fetch(ENDPOINT, {
     method: 'GET',
@@ -165,19 +258,16 @@ async function fetchAgent(signal: AbortSignal): Promise<AgentResponse> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
   const rawIncidents = (json?.incidents ?? []) as RawIncident[];
-  const incidentes = rawIncidents.map(interpretarIncidente);
+  const incidentes = rawIncidents.map((i) => interpretarIncidente(i, lang));
   const severidade_global = incidentes.reduce<Severidade>((acc, inc) => {
     return SEVERITY_RANK[inc.severidade] > SEVERITY_RANK[acc] ? inc.severidade : acc;
   }, 'none');
 
-  let diagnostico_geral = 'Nenhum incidente em aberto no Supabase no momento. Tudo certo do lado deles.';
-  if (incidentes.length > 0 && severidade_global === 'critical') {
-    diagnostico_geral = `Há ${incidentes.length} incidente(s) ativo(s) no Supabase, sendo pelo menos um crítico. Operação pode ser instável.`;
-  } else if (incidentes.length > 0 && severidade_global === 'major') {
-    diagnostico_geral = `Há ${incidentes.length} incidente(s) ativo(s) no Supabase com impacto alto. Espere lentidão ou falhas pontuais.`;
-  } else if (incidentes.length > 0 && severidade_global === 'minor') {
-    diagnostico_geral = `Há ${incidentes.length} incidente(s) ativo(s) no Supabase com impacto baixo.`;
-  }
+  const diag = T[lang].diag;
+  let diagnostico_geral = diag.none;
+  if (incidentes.length > 0 && severidade_global === 'critical') diagnostico_geral = diag.critical(incidentes.length);
+  else if (incidentes.length > 0 && severidade_global === 'major') diagnostico_geral = diag.major(incidentes.length);
+  else if (incidentes.length > 0 && severidade_global === 'minor') diagnostico_geral = diag.minor(incidentes.length);
 
   return {
     fonte: ENDPOINT,
@@ -190,11 +280,21 @@ async function fetchAgent(signal: AbortSignal): Promise<AgentResponse> {
   };
 }
 
+// ---------------- component ----------------
+
+const LANG_STORAGE_KEY = 'rcorp:status-agent:lang';
+
 export function SupabaseStatusAgentCard() {
+  const [lang, setLang] = useState<Lang>(() => {
+    if (typeof window === 'undefined') return 'pt';
+    const stored = window.localStorage.getItem(LANG_STORAGE_KEY);
+    return stored === 'en' ? 'en' : 'pt';
+  });
   const [data, setData] = useState<AgentResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const t = T[lang];
 
   const load = useCallback(async () => {
     abortRef.current?.abort();
@@ -205,58 +305,104 @@ export function SupabaseStatusAgentCard() {
     setLoading(true);
     setError(null);
     try {
-      const json = await fetchAgent(controller.signal);
+      const json = await fetchAgent(controller.signal, lang);
       setData(json);
     } catch (e: any) {
-      setError(e?.name === 'AbortError' ? 'Tempo esgotado (12s)' : (e?.message ?? 'Falha'));
+      setError(e?.name === 'AbortError' ? 'Timeout (12s)' : (e?.message ?? 'Failed'));
       setData(null);
     } finally {
       clearTimeout(timeout);
       setLoading(false);
     }
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     load();
     return () => abortRef.current?.abort();
   }, [load]);
 
+  const changeLang = (next: Lang) => {
+    setLang(next);
+    try {
+      window.localStorage.setItem(LANG_STORAGE_KEY, next);
+    } catch {
+      /* ignore */
+    }
+  };
+
   const sev = data?.severidade_global ?? 'none';
-  const semIncidentes = !loading && data && data.total_incidentes === 0 && !data.erro;
+  const semIncidentes = !loading && data && data.total_incidentes === 0;
 
   return (
     <section>
-      <div className="flex items-end justify-between mb-4">
-        <div>
+      <div className="flex items-end justify-between mb-4 gap-3">
+        <div className="min-w-0">
           <h2 className="text-sm font-semibold flex items-center gap-2">
             <Bot className="h-3.5 w-3.5" />
-            Agente Supabase
+            {t.title}
             {data && data.total_incidentes > 0 && (
               <span className="text-[10px] font-medium text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
                 {data.total_incidentes}
               </span>
             )}
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Lê <code className="text-[10px]">incidents/unresolved.json</code> e interpreta em português
-          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">{t.subtitle}</p>
         </div>
-        <Button variant="ghost" size="sm" onClick={load} disabled={loading} className="text-muted-foreground hover:text-foreground">
-          <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
-          <span className="ml-1.5 hidden sm:inline">Verificar</span>
-        </Button>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Language switcher */}
+          <div className="inline-flex items-center rounded-md border bg-card p-0.5">
+            <button
+              type="button"
+              onClick={() => changeLang('pt')}
+              className={cn(
+                'px-2 py-1 rounded text-base leading-none transition-colors',
+                lang === 'pt' ? 'bg-muted' : 'opacity-50 hover:opacity-100',
+              )}
+              aria-label="Português"
+              aria-pressed={lang === 'pt'}
+              title="Português"
+            >
+              🇧🇷
+            </button>
+            <button
+              type="button"
+              onClick={() => changeLang('en')}
+              className={cn(
+                'px-2 py-1 rounded text-base leading-none transition-colors',
+                lang === 'en' ? 'bg-muted' : 'opacity-50 hover:opacity-100',
+              )}
+              aria-label="English"
+              aria-pressed={lang === 'en'}
+              title="English"
+            >
+              🇺🇸
+            </button>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={load}
+            disabled={loading}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
+            <span className="ml-1.5 hidden sm:inline">{t.refresh}</span>
+          </Button>
+        </div>
       </div>
 
       <div className={cn('rounded-xl border bg-gradient-to-br p-5', sevBg[sev])}>
         {loading && !data ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <RefreshCw className="h-4 w-4 animate-spin" />
-            Consultando Supabase…
+            {t.consulting}
           </div>
         ) : error ? (
           <div className="flex items-start gap-2 text-sm text-destructive">
             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-            <span>Não foi possível consultar o agente: {error}</span>
+            <span>{t.fetchError} {error}</span>
           </div>
         ) : data ? (
           <>
@@ -270,11 +416,11 @@ export function SupabaseStatusAgentCard() {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium leading-snug">{data.diagnostico_geral}</p>
                 <p className="text-[11px] text-muted-foreground mt-1.5">
-                  Verificado agora
+                  {t.verifiedNow}
                   {typeof data.latencia_ms === 'number' && <> · {data.latencia_ms}ms</>}
                   {' · '}
                   <a href={ENDPOINT} target="_blank" rel="noreferrer" className="hover:text-foreground inline-flex items-center gap-0.5">
-                    fonte <ExternalLink className="h-2.5 w-2.5" />
+                    {t.source} <ExternalLink className="h-2.5 w-2.5" />
                   </a>
                 </p>
               </div>
@@ -283,7 +429,7 @@ export function SupabaseStatusAgentCard() {
             {semIncidentes && (
               <div className="mt-4 inline-flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                Sem incidentes em aberto
+                {t.none}
               </div>
             )}
 
@@ -294,9 +440,9 @@ export function SupabaseStatusAgentCard() {
                     <div className="flex items-center gap-2 flex-wrap mb-2">
                       <span className={cn('h-1.5 w-1.5 rounded-full', sevColor[inc.severidade])} />
                       <span className="text-sm font-medium">{inc.titulo}</span>
-                      <Badge variant="secondary" className="text-[10px] font-normal">{inc.status_pt}</Badge>
-                      <Badge variant="outline" className="text-[10px] font-normal">{inc.impacto_pt}</Badge>
-                      <span className="text-[11px] text-muted-foreground">há {inc.duracao_humana}</span>
+                      <Badge variant="secondary" className="text-[10px] font-normal">{inc.status_label}</Badge>
+                      <Badge variant="outline" className="text-[10px] font-normal">{inc.impacto_label}</Badge>
+                      <span className="text-[11px] text-muted-foreground">{t.ago(inc.duracao_humana)}</span>
                     </div>
 
                     {inc.componentes_afetados.length > 0 && (
@@ -307,15 +453,21 @@ export function SupabaseStatusAgentCard() {
                       </div>
                     )}
 
-                    <p className="text-xs text-foreground/80 leading-relaxed">{inc.resumo_pt}</p>
+                    <p className="text-xs text-foreground/80 leading-relaxed">{inc.resumo}</p>
+
+                    {inc.ultima_nota && (
+                      <p className="text-[11px] text-muted-foreground mt-1.5 italic">
+                        <span className="font-medium not-italic">{t.lastNote}:</span> "{inc.ultima_nota}"
+                      </p>
+                    )}
 
                     <div className="mt-2.5 flex items-start gap-1.5 text-[11px] text-muted-foreground">
                       <Info className="h-3 w-3 mt-0.5 shrink-0" />
-                      <span><span className="font-medium text-foreground/70">O que fazer:</span> {inc.acao_recomendada}</span>
+                      <span><span className="font-medium text-foreground/70">{t.whatToDo}</span> {inc.acao_recomendada}</span>
                     </div>
 
                     <a href={inc.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground mt-2">
-                      Detalhes oficiais <ExternalLink className="h-3 w-3" />
+                      {t.officialDetails} <ExternalLink className="h-3 w-3" />
                     </a>
                   </div>
                 ))}
