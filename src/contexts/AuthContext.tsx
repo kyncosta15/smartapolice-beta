@@ -1,7 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { syncProfileFromCorpNuvem, hasProfileData } from '@/services/profileSync';
+
+// Helper: race a promise against a timeout to prevent hung queries from blocking auth
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 // Extended user interface with our custom properties
 export interface ExtendedUser extends User {
