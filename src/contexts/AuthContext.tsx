@@ -68,13 +68,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Fetch user data + profile in parallel (single source for both)
+  // Uses timeout to prevent slow/hung DB queries from blocking auth
   const fetchUserAndProfile = async (userId: string) => {
     try {
       console.log('🔍 Buscando dados do usuário e perfil:', userId);
 
+      const userPromise = supabase.from('users').select('*').eq('id', userId).maybeSingle();
+      const profilePromise = supabase.from('user_profiles').select('is_admin').eq('id', userId).maybeSingle();
+
+      // 4s timeout per query — if DB/network is slow we still complete auth
       const [userResult, profileResult] = await Promise.all([
-        supabase.from('users').select('*').eq('id', userId).maybeSingle(),
-        supabase.from('user_profiles').select('is_admin').eq('id', userId).maybeSingle(),
+        withTimeout(userPromise as any, 4000, { data: null, error: null } as any),
+        withTimeout(profilePromise as any, 4000, { data: null, error: null } as any),
       ]);
 
       const userData = userResult.data;
