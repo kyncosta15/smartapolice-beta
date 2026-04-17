@@ -187,7 +187,7 @@ const T = {
       d: (d: number, h: number) => (h ? `${d}d ${h}h` : `${d}d`),
     },
   },
-} as const;
+};
 
 // ---------------- helpers ----------------
 
