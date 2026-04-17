@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, Heart, ArrowRight, FileText } from "lucide-react";
+import { Shield, Heart, ArrowRight, FileText, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const LandingPage = () => {
@@ -114,8 +114,17 @@ export const LandingPage = () => {
             </div>
 
             {/* Footer */}
-            <footer className="text-xs text-muted-foreground">
+            <footer className="text-xs text-muted-foreground space-y-1">
               <p>&copy; 2025 RCorp. Todos os direitos reservados.</p>
+              <p>
+                <a
+                  href="/status"
+                  className="inline-flex items-center gap-1 hover:text-foreground transition-colors underline-offset-2 hover:underline"
+                >
+                  <Activity className="h-3 w-3" />
+                  Status do sistema
+                </a>
+              </p>
             </footer>
           </div>
         </section>
