@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { ProgressToaster } from "@/components/ui/progress-toaster";
@@ -178,10 +178,9 @@ const App = () => {
               
               <Route path="*" element={<NotFound />} />
             </Routes>
-                  {/* Indicador discreto de status — sempre visível, expansível */}
-                  <div className="fixed bottom-3 right-3 z-40">
-                    <SystemStatusIndicator />
-                  </div>
+                  {/* Indicador discreto de status — oculto em /status pois lá há o painel completo */}
+                  <SystemStatusIndicatorSlot />
+
                 </BrowserRouter>
               </SessionTimeoutGuard>
             </TenantProvider>
