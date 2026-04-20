@@ -105,6 +105,7 @@ function timeAgo(iso: string) {
 export default function SystemStatusPage() {
   const [data, setData] = useState<AggregatedResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -137,6 +138,7 @@ export default function SystemStatusPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json()) as AggregatedResponse;
       setData(json);
+      setHasLoadedOnce(true);
     } catch (e: any) {
       const msg =
         e?.name === 'AbortError'
@@ -144,6 +146,7 @@ export default function SystemStatusPage() {
           : e?.message ?? 'Falha ao carregar status';
       console.warn('[status] erro:', msg);
       setError(msg);
+      setHasLoadedOnce(true);
     } finally {
       clearTimeout(timeout);
       setLoading(false);
