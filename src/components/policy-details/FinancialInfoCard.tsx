@@ -115,19 +115,6 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
   const premiumValue = policy.valor_premio ?? policy.premium ?? 0;
   const monthlyValue = policy.custo_mensal ?? policy.valor_parcela ?? policy.monthlyAmount ?? 0;
   
-  console.log('💰 [FinancialInfoCard] Valores recebidos:', {
-    id: policy.id,
-    valor_premio: policy.valor_premio,
-    premium: policy.premium,
-    custo_mensal: policy.custo_mensal,
-    monthlyAmount: policy.monthlyAmount,
-    quantidade_parcelas: policy.quantidade_parcelas,
-    valor_parcela: policy.valor_parcela,
-    installments: policy.installments?.length,
-    parcelas: policy.parcelas?.length,
-    premiumValue,
-    monthlyValue
-  });
   
   // Calcular número de parcelas dos dados da apólice
   const getInstallmentsCount = () => {

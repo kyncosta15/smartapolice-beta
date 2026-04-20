@@ -13,8 +13,7 @@ import { EndossosCard } from './policy-details/EndossosCard';
 import { PolicySmartHeader } from './policy-details/PolicySmartHeader';
 import { PolicyActionCards } from './policy-details/PolicyActionCards';
 import { PolicyInsights } from './policy-details/PolicyInsights';
-import { PolicyInstallmentTimeline } from './policy-details/PolicyInstallmentTimeline';
-import { usePolicyInstallments } from './policy-details/usePolicyInstallments';
+// Timeline e hook de installments desativados — não são mais usados nesta visão
 
 import {
   AlertDialog,
@@ -37,7 +36,6 @@ interface PolicyDetailsModalProps {
 
 export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate }: PolicyDetailsModalProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const { installments, summary, loading, reload } = usePolicyInstallments(policy?.id || '');
 
   if (!policy) return null;
 
@@ -48,32 +46,6 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
     setShowDeleteConfirm(false);
     onClose();
   };
-
-  // Build action items from installments
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const actionItems = installments
-    .filter(inst => inst.status === 'vencido' || inst.status === 'a vencer')
-    .filter(inst => {
-      if (inst.status === 'vencido') return true;
-      // Upcoming: within 15 days
-      if (inst.vencimento) {
-        const d = new Date(inst.vencimento + 'T00:00:00');
-        const diff = (d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-        return diff <= 15 && diff >= 0;
-      }
-      return false;
-    })
-    .map(inst => ({
-      id: inst.id,
-      numero: inst.numero,
-      valor: inst.valor,
-      vencimento: inst.vencimento,
-      type: inst.status === 'vencido' ? 'overdue' as const : 'upcoming' as const,
-      apolice_parcela_id: inst.apolice_parcela_id,
-      policy_id: policy.id,
-    }));
 
   // Coverages
   let coverages = [];
@@ -120,7 +92,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
                 insurer={policy.seguradora || policy.insurer || 'Não informado'}
                 type={policy.tipo_seguro || policy.type || 'Não informado'}
               />
-              <FinancialInfoCard policy={policy} onInstallmentsUpdate={() => { reload(); onUpdate?.(); }} />
+              <FinancialInfoCard policy={policy} onInstallmentsUpdate={() => onUpdate?.()} />
               <ValidityInfoCard policy={policy} />
               <VehicleInfoCard policy={policy} onUpdate={() => onUpdate?.()} />
               {(policy.insuredName || policy.documento) && (
