@@ -79,7 +79,8 @@ export function VehicleDetailsModalNew({
     if (veiculo) {
       setFormData({ ...veiculo });
       setFipeUpdateInfo({ updated: false });
-      loadVehicleTickets(veiculo.id);
+      // Reset tickets quando trocar de veículo (lazy load somente ao abrir aba sinistros)
+      setTickets([]);
     }
   }, [veiculo]);
 
@@ -89,40 +90,45 @@ export function VehicleDetailsModalNew({
     }
   }, [open, defaultTab]);
 
-  const loadVehicleTickets = async (vehicleId: string) => {
-    console.log('🚗 Carregando tickets para veículo:', vehicleId);
-    setTicketsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('vehicle_id', vehicleId)
-        .order('created_at', { ascending: false });
+  // Lazy load: carregar tickets apenas quando aba sinistros estiver ativa
+  useEffect(() => {
+    if (!veiculo || activeTab !== 'sinistros') return;
 
-      if (error) {
-        console.error('❌ Erro na query de tickets:', error);
-        throw error;
+    let cancelled = false;
+    const vehicleId = veiculo.id;
+
+    (async () => {
+      setTicketsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('tickets')
+          .select('*')
+          .eq('vehicle_id', vehicleId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (cancelled) return;
+        if (error) throw error;
+
+        const mappedTickets = (data || []).map(ticket => {
+          const payload = ticket.payload as any;
+          return {
+            ...ticket,
+            descricao: payload?.descricao,
+            gravidade: payload?.gravidade,
+          };
+        }) as Ticket[];
+
+        if (!cancelled) setTickets(mappedTickets);
+      } catch (error) {
+        if (!cancelled) console.error('Erro ao carregar tickets do veículo:', error);
+      } finally {
+        if (!cancelled) setTicketsLoading(false);
       }
+    })();
 
-      console.log('📊 Tickets encontrados:', data?.length, data);
-
-      const mappedTickets = (data || []).map(ticket => {
-        const payload = ticket.payload as any;
-        return {
-          ...ticket,
-          descricao: payload?.descricao,
-          gravidade: payload?.gravidade,
-        };
-      }) as Ticket[];
-
-      console.log('✅ Tickets mapeados:', mappedTickets.length);
-      setTickets(mappedTickets);
-    } catch (error) {
-      console.error('❌ Erro ao carregar tickets do veículo:', error);
-    } finally {
-      setTicketsLoading(false);
-    }
-  };
+    return () => { cancelled = true; };
+  }, [veiculo?.id, activeTab]);
 
   const handleInputChange = (field: keyof FrotaVeiculo, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
