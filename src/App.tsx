@@ -37,16 +37,6 @@ const AdminAccessLogsPage = lazy(() => import('./pages/AdminAccessLogsPage'));
 const AdminPresencePage = lazy(() => import('./pages/admin/AdminPresencePage'));
 const SystemStatusPage = lazy(() => import('./pages/SystemStatusPage'));
 
-// Pré-carrega o chunk da página de status assim que o app monta —
-// elimina o "tela em branco" ao clicar no link de status.
-if (typeof window !== 'undefined') {
-  const prefetch = () => import('./pages/SystemStatusPage');
-  if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(prefetch, { timeout: 2000 });
-  } else {
-    setTimeout(prefetch, 1500);
-  }
-}
 
 const queryClient = new QueryClient({
   defaultOptions: {
