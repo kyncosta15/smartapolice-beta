@@ -105,11 +105,13 @@ function timeAgo(iso: string) {
 export default function SystemStatusPage() {
   const [data, setData] = useState<AggregatedResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
 
   const load = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+
     // Cancela request anterior se houver
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -137,19 +139,22 @@ export default function SystemStatusPage() {
       console.log('[status] http', res.status, `${Math.round(performance.now() - t0)}ms`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json()) as AggregatedResponse;
+      if (controller.signal.aborted || requestId !== requestIdRef.current) return;
       setData(json);
-      setHasLoadedOnce(true);
     } catch (e: any) {
+      if (e?.name === 'AbortError' || controller.signal.aborted || requestId !== requestIdRef.current) {
+        return;
+      }
+
       const msg =
-        e?.name === 'AbortError'
-          ? 'Tempo esgotado. Tente novamente.'
-          : e?.message ?? 'Falha ao carregar status';
+        e?.message ?? 'Falha ao carregar status';
       console.warn('[status] erro:', msg);
       setError(msg);
-      setHasLoadedOnce(true);
     } finally {
       clearTimeout(timeout);
-      setLoading(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
