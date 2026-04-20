@@ -110,13 +110,8 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
 
             {/* Action Cards e Insights desativados a pedido */}
 
-            {/* 4. Installment Timeline */}
-            {!loading && installments.length > 0 && (
-              <PolicyInstallmentTimeline installments={installments} />
-            )}
+            {/* Cronograma de parcelas desativado a pedido */}
 
-            {/* Separator */}
-            <div className="border-t border-border" />
 
             {/* 5. Detailed Cards - Clean grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
