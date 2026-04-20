@@ -103,6 +103,10 @@ export function useSystemStatus(intervalMs: number = CHECK_INTERVAL_MS) {
         method: 'GET',
         signal: controller.signal,
         cache: 'no-store',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
       });
       clearTimeout(timeoutId);
       const latency = Math.round(performance.now() - start);
