@@ -336,10 +336,12 @@ function ProviderRow({
   provider,
   loading,
   placeholderLabel,
+  extraContent,
 }: {
   provider?: Provider;
   loading: boolean;
   placeholderLabel: string;
+  extraContent?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
