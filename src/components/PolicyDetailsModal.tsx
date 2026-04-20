@@ -106,10 +106,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
           </DialogHeader>
 
           <div className="p-5 space-y-6">
-            {/* 1. Smart Header - Status + Progress */}
-            {!loading && (
-              <PolicySmartHeader policy={policy} installmentsSummary={summary} />
-            )}
+            {/* 1. Smart Header desativado a pedido — exibia "Resumo da apólice hoje" e progresso de pagamentos */}
 
             {/* 2. Action Cards */}
             {!loading && actionItems.length > 0 && (
