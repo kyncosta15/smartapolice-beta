@@ -39,6 +39,17 @@ const AdminAccessLogsPage = lazy(() => import('./pages/AdminAccessLogsPage'));
 const AdminPresencePage = lazy(() => import('./pages/admin/AdminPresencePage'));
 const SystemStatusPage = lazy(() => import('./pages/SystemStatusPage'));
 
+// Pré-carrega o chunk da página de status assim que o app monta —
+// elimina o "tela em branco" ao clicar no link de status.
+if (typeof window !== 'undefined') {
+  const prefetch = () => import('./pages/SystemStatusPage');
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(prefetch, { timeout: 2000 });
+  } else {
+    setTimeout(prefetch, 1500);
+  }
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -48,11 +59,54 @@ const queryClient = new QueryClient({
   },
 });
 
-const RouteFallback = () => (
-  <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-    <div className="text-sm text-muted-foreground">Carregando…</div>
-  </div>
-);
+const RouteFallback = () => {
+  const isStatusPage =
+    typeof window !== 'undefined' && window.location.pathname.startsWith('/status');
+
+  if (isStatusPage) {
+    return (
+      <div className="min-h-screen bg-background text-foreground animate-in fade-in duration-200">
+        <header className="border-b">
+          <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div className="h-4 w-16 rounded bg-muted animate-pulse" />
+            <div className="h-4 w-16 rounded bg-muted animate-pulse" />
+            <div className="h-4 w-20 rounded bg-muted animate-pulse" />
+          </div>
+        </header>
+        <main className="max-w-4xl mx-auto px-6 py-12 sm:py-16 space-y-8">
+          <div className="space-y-3">
+            <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+            <div className="h-9 w-2/3 rounded-lg bg-muted animate-pulse" />
+            <div className="h-3 w-80 max-w-full rounded bg-muted animate-pulse" />
+          </div>
+          <div className="rounded-xl border bg-card divide-y">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="px-5 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="h-2.5 w-2.5 rounded-full bg-muted animate-pulse" />
+                  <div className="space-y-1.5">
+                    <div className="h-3.5 w-24 rounded bg-muted animate-pulse" />
+                    <div className="h-2.5 w-40 rounded bg-muted/70 animate-pulse" />
+                  </div>
+                </div>
+                <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground animate-in fade-in duration-200">
+        <span className="h-3 w-3 rounded-full border-2 border-muted-foreground/30 border-t-foreground animate-spin" />
+        Carregando…
+      </div>
+    </div>
+  );
+};
 
 const App = () => {
   return (
