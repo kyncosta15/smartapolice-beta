@@ -110,15 +110,12 @@ const IMPACT_MAP: Record<Lang, Record<string, string>> = {
 const T = {
   pt: {
     title: 'Agente Supabase',
-    subtitle: (
-      <>Lê <code className="text-[10px]">incidents/unresolved.json</code> e interpreta em português</>
-    ),
     refresh: 'Verificar',
     consulting: 'Consultando Supabase…',
     fetchError: 'Não foi possível consultar o agente:',
     verifiedNow: 'Verificado agora',
     source: 'fonte',
-    none: 'Sem incidentes em aberto',
+    none: 'Tudo ok',
     whatToDo: 'O que fazer:',
     officialDetails: 'Detalhes oficiais',
     ago: (d: string) => `há ${d}`,
@@ -150,15 +147,12 @@ const T = {
   },
   en: {
     title: 'Supabase Agent',
-    subtitle: (
-      <>Reads <code className="text-[10px]">incidents/unresolved.json</code> and interprets it in English</>
-    ),
     refresh: 'Check',
     consulting: 'Querying Supabase…',
     fetchError: 'Could not query the agent:',
     verifiedNow: 'Just checked',
     source: 'source',
-    none: 'No open incidents',
+    none: 'All good',
     whatToDo: 'What to do:',
     officialDetails: 'Official details',
     ago: (d: string) => `${d} ago`,
@@ -412,7 +406,7 @@ export function SupabaseStatusAgentCard() {
     }
   };
 
-  const sev = data?.severidade_global ?? 'none';
+  const sev = data?.total_incidentes === 0 ? 'none' : (data?.severidade_global ?? 'none');
   const semIncidentes = !loading && data && data.total_incidentes === 0;
 
   return (
@@ -428,7 +422,6 @@ export function SupabaseStatusAgentCard() {
               </span>
             )}
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{t.subtitle}</p>
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
@@ -496,7 +489,9 @@ export function SupabaseStatusAgentCard() {
                 <span className={cn('relative inline-flex h-2.5 w-2.5 rounded-full', sevColor[sev])} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium leading-snug">{data.diagnostico_geral}</p>
+                <p className="text-sm font-medium leading-snug">
+                  {data.total_incidentes === 0 ? t.none : data.diagnostico_geral}
+                </p>
                 <p className="text-[11px] text-muted-foreground mt-1.5">
                   {t.verifiedNow}
                   {typeof data.latencia_ms === 'number' && <> · {data.latencia_ms}ms</>}
