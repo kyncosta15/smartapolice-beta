@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Upload, Trash2, Calendar } from 'lucide-react';
+import { FileText, Download, Upload, Trash2, Calendar, FileSpreadsheet, FileImage, FileArchive, File as FileIcon, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -309,22 +309,29 @@ export function VehicleDocumentsSection({
 
   const getStatusBadge = useCallback((origem: string) => {
     const config = {
-      upload: { color: 'bg-blue-100 text-blue-800', label: 'Upload Direto' },
-      import: { color: 'bg-green-100 text-green-800', label: 'Importado' },
-      external: { color: 'bg-purple-100 text-purple-800', label: 'Link Externo' },
+      upload: { label: 'Upload Direto' },
+      import: { label: 'Importado' },
+      external: { label: 'Link Externo' },
     };
-    
     const statusConfig = config[origem as keyof typeof config] || config.upload;
-    
     return (
-      <Badge className={statusConfig.color}>
+      <Badge variant="secondary" className="text-[10px] font-medium px-1.5 py-0 h-4 rounded">
         {statusConfig.label}
       </Badge>
     );
   }, []);
 
+  const getFileIcon = useCallback((fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) return FileImage;
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return FileSpreadsheet;
+    if (['zip', 'rar', '7z'].includes(ext)) return FileArchive;
+    if (['pdf', 'doc', 'docx', 'txt'].includes(ext)) return FileText;
+    return FileIcon;
+  }, []);
+
   const formatFileSize = useCallback((bytes?: number): string => {
-    if (!bytes) return 'Tamanho desconhecido';
+    if (!bytes) return '—';
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
@@ -383,16 +390,77 @@ export function VehicleDocumentsSection({
     );
   }
 
+  const renderDocRow = (doc: VehicleDocument, isExternal: boolean) => {
+    const Icon = getFileIcon(doc.nome_arquivo);
+    return (
+      <div
+        key={doc.id}
+        className="group flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/40 hover:border-primary/30 transition-colors"
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary flex-shrink-0">
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-0.5">
+            <p className="text-sm font-medium text-foreground truncate">{doc.nome_arquivo}</p>
+            {isExternal && <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+            <span className="font-medium text-foreground/70">{getDocumentTypeLabel(doc.tipo)}</span>
+            <span className="text-muted-foreground/40">•</span>
+            <span>{formatFileSize(doc.tamanho_arquivo)}</span>
+            <span className="text-muted-foreground/40">•</span>
+            <span className="inline-flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {formatDistanceToNow(new Date(doc.created_at), { addSuffix: true, locale: ptBR })}
+            </span>
+            {getStatusBadge(doc.origem)}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleDownload(doc)}
+            className="h-8 gap-1.5"
+            title="Baixar arquivo"
+          >
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Baixar</span>
+          </Button>
+          {!isExternal && mode === 'edit' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDelete(doc.id)}
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+              title="Remover documento"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4 md:space-y-6">
       <Card className="p-3 md:p-6">
         <CardHeader className="px-0 pt-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base md:text-lg font-semibold flex items-center gap-2">
-              <FileText className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+              <FileText className="h-4 w-4 md:h-5 md:w-5 text-primary" />
               Documentos do Veículo
+              {documents.length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[11px] font-medium">
+                  {documents.length}
+                </Badge>
+              )}
             </CardTitle>
-            
+
             {mode === 'edit' && (vehiclePlaca || vehicleChassi) && (
               <MigrateDocumentsButton
                 vehicleId={vehicleId}
@@ -404,26 +472,26 @@ export function VehicleDocumentsSection({
           </div>
         </CardHeader>
         <CardContent className="px-0 pb-0">
-          
+
           {/* Upload de novos documentos */}
           {mode === 'edit' && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center gap-2 mb-3">
-                <Upload className="h-5 w-5 text-blue-600" />
-                <h4 className="text-sm font-medium text-blue-900">Upload de Documentos</h4>
+            <div className="mb-6 p-4 bg-muted/30 border border-border rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Upload className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-medium text-foreground">Upload de Documentos</h4>
               </div>
-              <p className="text-xs text-blue-700 mb-3">
-                Adicione documentos relacionados a este veículo. Suportamos: PDF, DOC, DOCX, XLS, XLSX e imagens.
+              <p className="text-xs text-muted-foreground mb-3">
+                PDF, DOC, DOCX, XLS, XLSX e imagens — até 20 MB por arquivo.
               </p>
               <DragDropUpload
                 onFilesChange={handleFilesUploaded}
                 bucketName="frotas_docs"
                 maxFiles={10}
-                maxSize={20 * 1024 * 1024} // 20MB
+                maxSize={20 * 1024 * 1024}
                 acceptedTypes={[
                   'application/pdf',
                   'image/jpeg',
-                  'image/jpg', 
+                  'image/jpg',
                   'image/png',
                   'application/msword',
                   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -437,133 +505,35 @@ export function VehicleDocumentsSection({
           )}
 
           {/* Lista de documentos */}
-          <div className="space-y-3">
-              {documents.length === 0 ? (
-                showLinkedLoadingState ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-muted/40">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    </div>
-                    <p className="text-sm">Buscando documentos vinculados...</p>
-                    <p className="mt-1 text-xs text-muted-foreground/80">
-                      Os arquivos importados estão sendo localizados em segundo plano
-                    </p>
+          <div className="space-y-2">
+            {documents.length === 0 ? (
+              showLinkedLoadingState ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-muted/40">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
-                    <p className="text-sm">Nenhum documento encontrado</p>
-                    {mode === 'edit' && (
-                      <p className="mt-1 text-xs text-muted-foreground/80">
-                        Use a área de upload acima para adicionar documentos
-                      </p>
-                    )}
-                  </div>
-                )
+                  <p className="text-sm">Buscando documentos vinculados...</p>
+                  <p className="mt-1 text-xs text-muted-foreground/80">
+                    Os arquivos importados estão sendo localizados em segundo plano
+                  </p>
+                </div>
               ) : (
-                <div>
-                  {/* Seção de documentos externos */}
-                  {externalDocs.length > 0 && (
-                    <div className="mb-6">
-                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-purple-200">
-                        <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                        <h4 className="text-sm font-medium text-purple-900">Documentos do Link Externo</h4>
-                        <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-300">
-                          {externalDocs.length} arquivo(s)
-                        </Badge>
-                      </div>
-                      <div className="space-y-3">
-                        {externalDocs.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <FileText className="h-5 w-5 text-purple-600 flex-shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
-                                  {getStatusBadge(doc.origem)}
-                                </div>
-                                <div className="flex items-center gap-4 text-xs text-purple-600">
-                                  <span>{getDocumentTypeLabel(doc.tipo)}</span>
-                                  <span>{formatFileSize(doc.tamanho_arquivo)}</span>
-                                  <span className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    {formatDistanceToNow(new Date(doc.created_at), { 
-                                      addSuffix: true, 
-                                      locale: ptBR 
-                                    })}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDownload(doc)}
-                                className="gap-1 text-purple-700 hover:text-purple-800 hover:bg-purple-100"
-                              >
-                                <Download className="h-4 w-4" />
-                                Baixar
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Documentos locais (sem cabeçalho) */}
-                  {localDocs.length > 0 && (
-                    <div className="space-y-3">
-                      {localDocs.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
-                                {getStatusBadge(doc.origem)}
-                              </div>
-                              <div className="flex items-center gap-4 text-xs text-blue-600">
-                                <span>{getDocumentTypeLabel(doc.tipo)}</span>
-                                <span>{formatFileSize(doc.tamanho_arquivo)}</span>
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  {formatDistanceToNow(new Date(doc.created_at), {
-                                    addSuffix: true,
-                                    locale: ptBR
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDownload(doc)}
-                              className="gap-1 text-blue-700 hover:text-blue-800 hover:bg-blue-100"
-                            >
-                              <Download className="h-4 w-4" />
-                              Baixar
-                            </Button>
-                            {mode === 'edit' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDelete(doc.id)}
-                                className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                <div className="text-center py-10 text-muted-foreground">
+                  <FileText className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
+                  <p className="text-sm">Nenhum documento encontrado</p>
+                  {mode === 'edit' && (
+                    <p className="mt-1 text-xs text-muted-foreground/80">
+                      Use a área de upload acima para adicionar documentos
+                    </p>
                   )}
                 </div>
-              )}
+              )
+            ) : (
+              <>
+                {externalDocs.map((doc) => renderDocRow(doc, true))}
+                {localDocs.map((doc) => renderDocRow(doc, false))}
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
