@@ -250,13 +250,16 @@ export default function SystemStatusPage() {
           )}
         </section>
 
-        {/* Agente Supabase — interpreta incidents/unresolved.json em PT-BR */}
-        <SupabaseStatusAgentCard />
-
         {/* Providers — lista limpa, sem cards pesados */}
         <section className="space-y-px rounded-xl border overflow-hidden bg-card">
           {(['rcorp', 'lovable', 'supabase'] as const).map((key) => (
-            <ProviderRow key={key} provider={data?.providers[key]} loading={loading} placeholderLabel={defaultLabel(key)} />
+            <ProviderRow
+              key={key}
+              provider={data?.providers[key]}
+              loading={loading}
+              placeholderLabel={defaultLabel(key)}
+              extraContent={key === 'supabase' ? <SupabaseStatusAgentCard /> : undefined}
+            />
           ))}
         </section>
 
