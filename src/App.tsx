@@ -179,7 +179,7 @@ const App = () => {
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
-                  <SystemStatusIndicatorSlot />
+                  
                 </BrowserRouter>
               </SessionTimeoutGuard>
             </TenantProvider>
