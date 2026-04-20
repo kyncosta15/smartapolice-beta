@@ -76,16 +76,23 @@ export function VehicleDetailsModalNew({
     oldValue?: number;
     newValue?: number;
   }>({ updated: false });
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [ticketsLoading, setTicketsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Lazy + cached fetch de sinistros — só busca quando a aba "sinistros" é acessada,
+  // mas mantém os dados em cache (React Query, TTL 30s) para navegações futuras.
+  const {
+    data: tickets = [],
+    isLoading: ticketsLoading,
+  } = useVehicleTicketDetails(veiculo?.id, open && activeTab === 'sinistros');
+
+  // Prefetch das 2 abas mais prováveis após o modal abrir
+  // (Financeiro e Sinistros são as mais acessadas).
+  const prefetchTickets = usePrefetchVehicleTicketDetails();
 
   useEffect(() => {
     if (veiculo) {
       setFormData({ ...veiculo });
       setFipeUpdateInfo({ updated: false });
-      // Reset tickets quando trocar de veículo (lazy load somente ao abrir aba sinistros)
-      setTickets([]);
     }
   }, [veiculo]);
 
@@ -95,45 +102,15 @@ export function VehicleDetailsModalNew({
     }
   }, [open, defaultTab]);
 
-  // Lazy load: carregar tickets apenas quando aba sinistros estiver ativa
+  // Aquece o cache em background logo após abrir o modal (não bloqueia render).
   useEffect(() => {
-    if (!veiculo || activeTab !== 'sinistros') return;
-
-    let cancelled = false;
-    const vehicleId = veiculo.id;
-
-    (async () => {
-      setTicketsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('tickets')
-          .select('*')
-          .eq('vehicle_id', vehicleId)
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        if (cancelled) return;
-        if (error) throw error;
-
-        const mappedTickets = (data || []).map(ticket => {
-          const payload = ticket.payload as any;
-          return {
-            ...ticket,
-            descricao: payload?.descricao,
-            gravidade: payload?.gravidade,
-          };
-        }) as Ticket[];
-
-        if (!cancelled) setTickets(mappedTickets);
-      } catch (error) {
-        if (!cancelled) console.error('Erro ao carregar tickets do veículo:', error);
-      } finally {
-        if (!cancelled) setTicketsLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [veiculo?.id, activeTab]);
+    if (!open || !veiculo?.id) return;
+    const id = veiculo.id;
+    const timer = window.setTimeout(() => {
+      prefetchTickets(id);
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [open, veiculo?.id, prefetchTickets]);
 
   const handleInputChange = (field: keyof FrotaVeiculo, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
