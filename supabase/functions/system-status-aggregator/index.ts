@@ -10,6 +10,7 @@ const corsHeaders = {
 
 const FETCH_TIMEOUT_MS = 8000;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'https://jhvbfvqhuemuvwgqpskz.supabase.co';
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 
 /** Status normalizado, hierarquia: operational < degraded < major < critical */
 type NormalizedStatus = 'operational' | 'degraded' | 'major' | 'critical' | 'unknown';
