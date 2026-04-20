@@ -427,6 +427,7 @@ function ProviderRow({
           {provider.error && (
             <p className="text-[11px] text-destructive pt-2">⚠ {provider.error}</p>
           )}
+          {extraContent && <div className="pt-4">{extraContent}</div>}
         </div>
       )}
     </div>
