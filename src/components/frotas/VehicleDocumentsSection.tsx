@@ -309,22 +309,29 @@ export function VehicleDocumentsSection({
 
   const getStatusBadge = useCallback((origem: string) => {
     const config = {
-      upload: { color: 'bg-blue-100 text-blue-800', label: 'Upload Direto' },
-      import: { color: 'bg-green-100 text-green-800', label: 'Importado' },
-      external: { color: 'bg-purple-100 text-purple-800', label: 'Link Externo' },
+      upload: { label: 'Upload Direto' },
+      import: { label: 'Importado' },
+      external: { label: 'Link Externo' },
     };
-    
     const statusConfig = config[origem as keyof typeof config] || config.upload;
-    
     return (
-      <Badge className={statusConfig.color}>
+      <Badge variant="secondary" className="text-[10px] font-medium px-1.5 py-0 h-4 rounded">
         {statusConfig.label}
       </Badge>
     );
   }, []);
 
+  const getFileIcon = useCallback((fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) return FileImage;
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return FileSpreadsheet;
+    if (['zip', 'rar', '7z'].includes(ext)) return FileArchive;
+    if (['pdf', 'doc', 'docx', 'txt'].includes(ext)) return FileText;
+    return FileIcon;
+  }, []);
+
   const formatFileSize = useCallback((bytes?: number): string => {
-    if (!bytes) return 'Tamanho desconhecido';
+    if (!bytes) return '—';
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
