@@ -10,8 +10,6 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { TenantProvider } from '@/contexts/TenantContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import SessionTimeoutGuard from '@/components/SessionTimeoutGuard';
-import { SystemStatusBanner } from '@/components/SystemStatusBanner';
-import { SystemStatusIndicator } from '@/components/SystemStatusIndicator';
 
 const LandingPage = lazy(() => import('@/components/LandingPage').then((module) => ({ default: module.LandingPage })));
 const SystemSelection = lazy(() => import('@/components/SystemSelection'));
@@ -118,7 +116,6 @@ const App = () => {
             <TenantProvider>
               <SessionTimeoutGuard>
                 <BrowserRouter>
-                  {!window.location.pathname.startsWith('/status') && <SystemStatusBanner />}
                   <Suspense fallback={<RouteFallback />}>
                     <Routes>
                       <Route path="/" element={<LandingPage />} />
@@ -239,16 +236,6 @@ const App = () => {
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
-  );
-};
-
-const SystemStatusIndicatorSlot = () => {
-  const { pathname } = useLocation();
-  if (pathname.startsWith('/status')) return null;
-  return (
-    <div className="fixed bottom-3 right-3 z-40">
-      <SystemStatusIndicator />
-    </div>
   );
 };
 
