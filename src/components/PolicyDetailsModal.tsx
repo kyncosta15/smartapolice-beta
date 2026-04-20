@@ -108,15 +108,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
           <div className="p-5 space-y-6">
             {/* 1. Smart Header desativado a pedido — exibia "Resumo da apólice hoje" e progresso de pagamentos */}
 
-            {/* 2. Action Cards */}
-            {!loading && actionItems.length > 0 && (
-              <PolicyActionCards actions={actionItems} onStatusChange={reload} />
-            )}
-
-            {/* 3. Insights */}
-            {!loading && (
-              <PolicyInsights policy={policy} installmentsSummary={summary} />
-            )}
+            {/* Action Cards e Insights desativados a pedido */}
 
             {/* 4. Installment Timeline */}
             {!loading && installments.length > 0 && (
