@@ -39,11 +39,16 @@ import { VehicleTheftSection } from './VehicleTheftSection';
 import VehicleMaintenanceModule from './maintenance/VehicleMaintenanceModule';
 import TachographTab from './tachograph/TachographTab';
 import VehicleAssignmentTab from './VehicleAssignmentTab';
-import { Ticket } from '@/types/tickets';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { LazyTabContent } from '@/components/ui/lazy-tab-content';
+import {
+  useVehicleTicketDetails,
+  usePrefetchVehicleTicketDetails,
+} from '@/hooks/useVehicleTicketDetails';
+import { VehicleTicketsList } from './VehicleTicketsList';
 
 interface VehicleDetailsModalNewProps {
   veiculo: FrotaVeiculo | null;
