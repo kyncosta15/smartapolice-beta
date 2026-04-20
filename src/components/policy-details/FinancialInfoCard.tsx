@@ -558,55 +558,11 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                         className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            title={isPago ? 'Marcar como não pago' : 'Marcar como pago'}
-                            onClick={async () => {
-                              const newStatus = isPago ? 'Pendente' : 'Pago';
-                              const newInstallments = [...localInstallments];
-                              newInstallments[index] = {
-                                ...newInstallments[index],
-                                status_pagamento: newStatus
-                              };
-                              setLocalInstallments(newInstallments);
-                              setHoverSummary(null); // Reset para recarregar no próximo hover
-
-                              // Salvar imediatamente no banco
-                              const apId = installment.apolice_parcela_id;
-                              if (apId) {
-                                const { error } = await supabase
-                                  .from('apolice_parcelas')
-                                  .update({ status_pagamento: newStatus })
-                                  .eq('id', apId);
-                                if (error) {
-                                  console.error('❌ Erro ao salvar status:', error);
-                                  toast({ title: '❌ Erro ao salvar status', variant: 'destructive' });
-                                } else {
-                                  console.log('✅ Status salvo:', newStatus, 'parcela:', numero);
-                                }
-                              } else {
-                                // Upsert se não tem apolice_parcela_id
-                                const { error } = await supabase
-                                  .from('apolice_parcelas')
-                                  .upsert({
-                                    apolice_id: policy.id,
-                                    numero_parcela: numero,
-                                    valor: valor || 0,
-                                    vencimento: vencimento || new Date().toISOString().split('T')[0],
-                                    status_pagamento: newStatus
-                                  }, { onConflict: 'apolice_id,numero_parcela' });
-                                if (error) {
-                                  console.error('❌ Erro ao salvar status (upsert):', error);
-                                  toast({ title: '❌ Erro ao salvar status', variant: 'destructive' });
-                                } else {
-                                  console.log('✅ Status salvo (upsert):', newStatus, 'parcela:', numero);
-                                }
-                              }
-                            }}
-                            className={cn(circleColor, "rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0 hover:opacity-80 transition-opacity cursor-pointer")}
+                          <span
+                            className={cn(circleColor, "rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0")}
                           >
-                            {isPago ? <Check className="h-4 w-4" /> : numero}
-                          </button>
+                            {numero}
+                          </span>
                           <div className="flex flex-col gap-1">
                             {/* Valor - Editável */}
                             {editingIndex === index && editField === 'valor' ? (
