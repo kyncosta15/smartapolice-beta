@@ -98,14 +98,9 @@ const RouteFallback = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground animate-in fade-in duration-200">
-        <span className="h-3 w-3 rounded-full border-2 border-muted-foreground/30 border-t-foreground animate-spin" />
-        Carregando…
-      </div>
-    </div>
-  );
+  // Para outras rotas, não exibimos fallback global — mantém o comportamento
+  // anterior em que a navegação acontece sem uma tela intermediária de "Carregando…".
+  return null;
 };
 
 const App = () => {
