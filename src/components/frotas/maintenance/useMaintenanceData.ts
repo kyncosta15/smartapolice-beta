@@ -10,7 +10,7 @@ export function useMaintenanceData(vehicleId: string) {
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [filter, setFilter] = useState<MaintenanceType | 'ALL'>('ALL');
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     const [logsRes, rulesRes] = await Promise.all([
       supabase
@@ -26,13 +26,19 @@ export function useMaintenanceData(vehicleId: string) {
         .eq('vehicle_id', vehicleId),
     ]);
 
+    if (signal?.aborted) return;
+
     if (logsRes.data) setLogs(logsRes.data as MaintenanceLog[]);
     if (rulesRes.data) setRules(rulesRes.data as MaintenanceRule[]);
     setLoading(false);
     setInitialLoaded(true);
   }, [vehicleId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchData(controller.signal);
+    return () => controller.abort();
+  }, [fetchData]);
 
   const filteredLogs = filter === 'ALL' ? logs : logs.filter(l => l.type === filter);
 

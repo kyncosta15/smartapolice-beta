@@ -47,13 +47,15 @@ export default function VehicleReviewsTab({ vehicleId, empresaId }: VehicleRevie
   const [showForm, setShowForm] = useState(false);
   const [editingReview, setEditingReview] = useState<VehicleReview | null>(null);
 
-  const fetchReviews = useCallback(async () => {
-    setLoading(true);
+  const fetchReviews = useCallback(async (signal?: AbortSignal) => {
     const { data, error } = await supabase
       .from('vehicle_reviews')
-      .select('*')
+      .select('id, vehicle_id, empresa_id, tipo, data_revisao, km_atual, valor, realizada, observacoes')
       .eq('vehicle_id', vehicleId)
-      .order('data_revisao', { ascending: false });
+      .order('data_revisao', { ascending: false })
+      .limit(50);
+
+    if (signal?.aborted) return;
 
     if (error) {
       console.error('Erro ao buscar revisões:', error);
@@ -73,7 +75,12 @@ export default function VehicleReviewsTab({ vehicleId, empresaId }: VehicleRevie
     setLoading(false);
   }, [vehicleId]);
 
-  useEffect(() => { fetchReviews(); }, [fetchReviews]);
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    fetchReviews(controller.signal);
+    return () => controller.abort();
+  }, [fetchReviews]);
 
   const handleSave = async () => {
     if (!editingReview) return;
