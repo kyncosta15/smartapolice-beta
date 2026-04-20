@@ -114,8 +114,8 @@ export default function SystemStatusPage() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // Timeout de 12s — evita travar "Verificando..." pra sempre
-    const timeout = setTimeout(() => controller.abort(), 12_000);
+    // Timeout de 8s — evita travar "Verificando..." pra sempre
+    const timeout = setTimeout(() => controller.abort(), 8_000);
 
     setLoading(true);
     setError(null);
@@ -140,7 +140,7 @@ export default function SystemStatusPage() {
     } catch (e: any) {
       const msg =
         e?.name === 'AbortError'
-          ? 'Tempo esgotado (12s). Tente novamente.'
+          ? 'Tempo esgotado. Tente novamente.'
           : e?.message ?? 'Falha ao carregar status';
       console.warn('[status] erro:', msg);
       setError(msg);
@@ -159,7 +159,9 @@ export default function SystemStatusPage() {
     };
   }, [load]);
 
-  const overall = data?.overall ?? 'unknown';
+  // Enquanto carrega a primeira vez sem dados, mostra "operational" otimista
+  // pra evitar flash de "Interrupção parcial" quando o aggregator está demorando.
+  const overall: NormalizedStatus = data?.overall ?? (loading ? 'unknown' : 'unknown');
   const hero = heroCopy[overall];
 
   const allIncidents = useMemo(() => {
@@ -248,13 +250,16 @@ export default function SystemStatusPage() {
           )}
         </section>
 
-        {/* Agente Supabase — interpreta incidents/unresolved.json em PT-BR */}
-        <SupabaseStatusAgentCard />
-
         {/* Providers — lista limpa, sem cards pesados */}
         <section className="space-y-px rounded-xl border overflow-hidden bg-card">
           {(['rcorp', 'lovable', 'supabase'] as const).map((key) => (
-            <ProviderRow key={key} provider={data?.providers[key]} loading={loading} placeholderLabel={defaultLabel(key)} />
+            <ProviderRow
+              key={key}
+              provider={data?.providers[key]}
+              loading={loading}
+              placeholderLabel={defaultLabel(key)}
+              extraContent={key === 'supabase' ? <SupabaseStatusAgentCard /> : undefined}
+            />
           ))}
         </section>
 
@@ -331,10 +336,12 @@ function ProviderRow({
   provider,
   loading,
   placeholderLabel,
+  extraContent,
 }: {
   provider?: Provider;
   loading: boolean;
   placeholderLabel: string;
+  extraContent?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -420,6 +427,7 @@ function ProviderRow({
           {provider.error && (
             <p className="text-[11px] text-destructive pt-2">⚠ {provider.error}</p>
           )}
+          {extraContent && <div className="pt-4">{extraContent}</div>}
         </div>
       )}
     </div>
