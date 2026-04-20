@@ -80,22 +80,31 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
   const [snapshots, setSnapshots] = useState<FipeSnapshot[]>([]);
 
   useEffect(() => {
-    loadFinance();
-    loadSnapshots();
-  }, [vehicleId]);
+    let cancelled = false;
 
-  const loadFinance = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('vehicle_finance')
-        .select('*')
-        .eq('vehicle_id', vehicleId)
-        .maybeSingle();
+    const loadAll = async () => {
+      setLoading(true);
+      // Roda em paralelo — não bloqueia a tela esperando snapshots
+      const [financeRes, snapshotsRes] = await Promise.all([
+        supabase
+          .from('vehicle_finance')
+          .select('*')
+          .eq('vehicle_id', vehicleId)
+          .maybeSingle(),
+        supabase
+          .from('vehicle_fipe_snapshots')
+          .select('id, fipe_value, reference_month, created_at')
+          .eq('vehicle_id', vehicleId)
+          .order('reference_month', { ascending: false })
+          .limit(12),
+      ]);
 
-      if (error) throw error;
+      if (cancelled) return;
 
-      if (data) {
+      const { data, error } = financeRes;
+      if (error) {
+        console.error('Erro ao carregar financeiro:', error);
+      } else if (data) {
         setFinance({
           id: data.id,
           vehicle_id: data.vehicle_id,
@@ -118,10 +127,45 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
         setHasRecord(false);
         setShowForm(false);
       }
+
+      setSnapshots((snapshotsRes.data || []) as FipeSnapshot[]);
+      setLoading(false);
+    };
+
+    loadAll();
+    return () => { cancelled = true; };
+  }, [vehicleId]);
+
+  const loadFinance = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vehicle_finance')
+        .select('*')
+        .eq('vehicle_id', vehicleId)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) {
+        setFinance({
+          id: data.id,
+          vehicle_id: data.vehicle_id,
+          empresa_id: data.empresa_id,
+          type: data.type,
+          bank_name: data.bank_name || '',
+          direct_payment: data.direct_payment,
+          status: data.status,
+          start_date: data.start_date || '',
+          term_months: data.term_months,
+          installment_value: Number(data.installment_value),
+          installments_paid: data.installments_paid,
+          down_payment: Number(data.down_payment || 0),
+          end_date: data.end_date || '',
+          notes: data.notes || '',
+        });
+        setHasRecord(true);
+        setShowForm(true);
+      }
     } catch (err) {
       console.error('Erro ao carregar financeiro:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -129,11 +173,10 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
     try {
       const { data } = await supabase
         .from('vehicle_fipe_snapshots')
-        .select('*')
+        .select('id, fipe_value, reference_month, created_at')
         .eq('vehicle_id', vehicleId)
         .order('reference_month', { ascending: false })
         .limit(12);
-
       setSnapshots((data || []) as FipeSnapshot[]);
     } catch (err) {
       console.error('Erro ao carregar snapshots FIPE:', err);
