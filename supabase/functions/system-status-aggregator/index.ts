@@ -181,10 +181,20 @@ async function pingRcorp(): Promise<ProviderResult> {
   const components: ProviderComponent[] = [];
   const incidents: ProviderIncident[] = [];
 
-  // 1) Auth health
+  const authHeaders = SUPABASE_ANON_KEY
+    ? { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    : {};
+
+  // 1) Auth health (precisa de apikey para não retornar 401)
   const authStart = performance.now();
   try {
-    const r = await fetchWithTimeout(`${SUPABASE_URL}/auth/v1/health`, 5000);
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 5000);
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/health`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json', ...authHeaders },
+    });
+    clearTimeout(id);
     const ms = Math.round(performance.now() - authStart);
     components.push({
       name: 'Autenticação',
@@ -202,7 +212,13 @@ async function pingRcorp(): Promise<ProviderResult> {
   // 2) Edge runtime via health-ping
   const edgeStart = performance.now();
   try {
-    const r = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/health-ping`, 5000);
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 5000);
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/health-ping`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json', ...authHeaders },
+    });
+    clearTimeout(id);
     const ms = Math.round(performance.now() - edgeStart);
     components.push({
       name: 'Funções do Servidor',
@@ -217,14 +233,21 @@ async function pingRcorp(): Promise<ProviderResult> {
     });
   }
 
-  // 3) REST/PostgREST
+  // 3) REST/PostgREST (401 sem apikey é "esperado", indica que o serviço está vivo)
   const restStart = performance.now();
   try {
-    const r = await fetchWithTimeout(`${SUPABASE_URL}/rest/v1/`, 5000);
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 5000);
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json', ...authHeaders },
+    });
+    clearTimeout(id);
     const ms = Math.round(performance.now() - restStart);
+    const alive = r.ok || r.status === 401 || r.status === 404;
     components.push({
       name: 'API / Banco de Dados',
-      status: r.ok || r.status === 401 ? (ms > 2500 ? 'degraded' : 'operational') : 'major',
+      status: alive ? (ms > 2500 ? 'degraded' : 'operational') : 'major',
       description: `${ms}ms`,
     });
   } catch (err: any) {
