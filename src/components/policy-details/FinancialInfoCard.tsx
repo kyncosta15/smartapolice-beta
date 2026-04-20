@@ -548,18 +548,9 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                     const vencimento = installment.vencimento;
                     const numero = installment.numero || index + 1;
                     
-                    // Determine status color for the circle
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
+                    // Status visual neutro — sem semáforo de cores
                     const isPago = installment.status_pagamento === 'Pago';
-                    const vencDate = vencimento ? new Date(vencimento + 'T00:00:00') : null;
-                    const isOverdue = !isPago && vencDate && vencDate < today;
-                    
-                    const circleColor = isPago
-                      ? 'bg-green-500'
-                      : isOverdue
-                        ? 'bg-red-500'
-                        : 'bg-blue-600';
+                    const circleColor = 'bg-muted text-foreground';
                     
                     return (
                       <div 
@@ -612,7 +603,7 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
                                 }
                               }
                             }}
-                            className={cn(circleColor, "text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0 hover:opacity-80 transition-opacity cursor-pointer")}
+                            className={cn(circleColor, "rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shrink-0 hover:opacity-80 transition-opacity cursor-pointer")}
                           >
                             {isPago ? <Check className="h-4 w-4" /> : numero}
                           </button>
@@ -758,53 +749,30 @@ export const FinancialInfoCard = ({ policy, onInstallmentsUpdate }: FinancialInf
               </h4>
               {hoverSummary ? (
                 <>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="bg-green-50 rounded-lg p-2 border border-green-100">
-                      <p className="text-lg font-bold text-green-700">{hoverSummary.pagas}</p>
-                      <p className="text-[10px] text-green-600 font-medium">Pagas</p>
-                    </div>
-                    <div className="bg-red-50 rounded-lg p-2 border border-red-100">
-                      <p className="text-lg font-bold text-red-700">{hoverSummary.atrasadas}</p>
-                      <p className="text-[10px] text-red-600 font-medium">Atrasadas</p>
-                    </div>
-                    <div className="bg-blue-50 rounded-lg p-2 border border-blue-100">
-                      <p className="text-lg font-bold text-blue-700">{hoverSummary.pendentes}</p>
-                      <p className="text-[10px] text-blue-600 font-medium">Pendentes</p>
-                    </div>
-                  </div>
                   <div className="bg-muted/50 rounded-lg p-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-muted-foreground">Total:</span>
+                      <span className="text-xs text-muted-foreground">Total ({hoverSummary.total} parcelas):</span>
                       <span className="text-sm font-bold text-foreground">
                         R$ {hoverSummary.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
                   <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {hoverSummary.parcelas.map((p) => {
-                      const today = new Date(); today.setHours(0, 0, 0, 0);
-                      const isPago = p.status === 'Pago';
-                      const vd = p.vencimento ? new Date(p.vencimento + 'T00:00:00') : null;
-                      const isOverdue = !isPago && vd && vd < today;
-                      return (
-                        <div key={p.numero} className="flex items-center justify-between text-xs py-1 border-b border-muted last:border-0">
-                          <div className="flex items-center gap-2">
-                            <span className={cn(
-                              "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white",
-                              isPago ? 'bg-green-500' : isOverdue ? 'bg-red-500' : 'bg-blue-600'
-                            )}>
-                              {isPago ? '✓' : p.numero}
-                            </span>
-                            <span className="text-muted-foreground">
-                              {p.vencimento ? formatDatePtBr(p.vencimento) : '—'}
-                            </span>
-                          </div>
-                          <span className="font-medium text-foreground">
-                            R$ {p.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {hoverSummary.parcelas.map((p) => (
+                      <div key={p.numero} className="flex items-center justify-between text-xs py-1 border-b border-muted last:border-0">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-muted-foreground bg-muted">
+                            {p.numero}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {p.vencimento ? formatDatePtBr(p.vencimento) : '—'}
                           </span>
                         </div>
-                      );
-                    })}
+                        <span className="font-medium text-foreground">
+                          R$ {p.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </>
               ) : (
