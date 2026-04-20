@@ -39,11 +39,16 @@ import { VehicleTheftSection } from './VehicleTheftSection';
 import VehicleMaintenanceModule from './maintenance/VehicleMaintenanceModule';
 import TachographTab from './tachograph/TachographTab';
 import VehicleAssignmentTab from './VehicleAssignmentTab';
-import { Ticket } from '@/types/tickets';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { LazyTabContent } from '@/components/ui/lazy-tab-content';
+import {
+  useVehicleTicketDetails,
+  usePrefetchVehicleTicketDetails,
+} from '@/hooks/useVehicleTicketDetails';
+import { VehicleTicketsList } from './VehicleTicketsList';
 
 interface VehicleDetailsModalNewProps {
   veiculo: FrotaVeiculo | null;
@@ -71,16 +76,23 @@ export function VehicleDetailsModalNew({
     oldValue?: number;
     newValue?: number;
   }>({ updated: false });
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [ticketsLoading, setTicketsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Lazy + cached fetch de sinistros — só busca quando a aba "sinistros" é acessada,
+  // mas mantém os dados em cache (React Query, TTL 30s) para navegações futuras.
+  const {
+    data: tickets = [],
+    isLoading: ticketsLoading,
+  } = useVehicleTicketDetails(veiculo?.id, open && activeTab === 'sinistros');
+
+  // Prefetch das 2 abas mais prováveis após o modal abrir
+  // (Financeiro e Sinistros são as mais acessadas).
+  const prefetchTickets = usePrefetchVehicleTicketDetails();
 
   useEffect(() => {
     if (veiculo) {
       setFormData({ ...veiculo });
       setFipeUpdateInfo({ updated: false });
-      // Reset tickets quando trocar de veículo (lazy load somente ao abrir aba sinistros)
-      setTickets([]);
     }
   }, [veiculo]);
 
@@ -90,45 +102,15 @@ export function VehicleDetailsModalNew({
     }
   }, [open, defaultTab]);
 
-  // Lazy load: carregar tickets apenas quando aba sinistros estiver ativa
+  // Aquece o cache em background logo após abrir o modal (não bloqueia render).
   useEffect(() => {
-    if (!veiculo || activeTab !== 'sinistros') return;
-
-    let cancelled = false;
-    const vehicleId = veiculo.id;
-
-    (async () => {
-      setTicketsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('tickets')
-          .select('*')
-          .eq('vehicle_id', vehicleId)
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        if (cancelled) return;
-        if (error) throw error;
-
-        const mappedTickets = (data || []).map(ticket => {
-          const payload = ticket.payload as any;
-          return {
-            ...ticket,
-            descricao: payload?.descricao,
-            gravidade: payload?.gravidade,
-          };
-        }) as Ticket[];
-
-        if (!cancelled) setTickets(mappedTickets);
-      } catch (error) {
-        if (!cancelled) console.error('Erro ao carregar tickets do veículo:', error);
-      } finally {
-        if (!cancelled) setTicketsLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [veiculo?.id, activeTab]);
+    if (!open || !veiculo?.id) return;
+    const id = veiculo.id;
+    const timer = window.setTimeout(() => {
+      prefetchTickets(id);
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [open, veiculo?.id, prefetchTickets]);
 
   const handleInputChange = (field: keyof FrotaVeiculo, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -371,7 +353,7 @@ export function VehicleDetailsModalNew({
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5 bg-muted/20">
-              <TabsContent value="veiculo" className="mt-0 space-y-5">
+              <LazyTabContent activeValue={activeTab} value="veiculo" className="mt-0 space-y-5">
                 {/* Bloco: Identificação */}
                 <div className="bg-card rounded-2xl border border-border/60 p-5 md:p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-5">
@@ -571,9 +553,9 @@ export function VehicleDetailsModalNew({
                     </div>
                   </div>
                 </details>
-              </TabsContent>
+              </LazyTabContent>
 
-              <TabsContent value="proprietario" className="mt-0 space-y-4 md:space-y-6">
+              <LazyTabContent activeValue={activeTab} value="proprietario" className="mt-0 space-y-4 md:space-y-6">
                 <Card className="p-3 md:p-6">
                   <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
                     <User className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
@@ -618,9 +600,9 @@ export function VehicleDetailsModalNew({
                     </div>
                   </div>
                 </Card>
-              </TabsContent>
+              </LazyTabContent>
 
-              <TabsContent value="emplacamento" className="mt-0 space-y-4 md:space-y-6">
+              <LazyTabContent activeValue={activeTab} value="emplacamento" className="mt-0 space-y-4 md:space-y-6">
                 <VehicleDocumentsSection
                   vehicleId={veiculo?.id || formData.id || ''}
                   mode={mode}
@@ -628,9 +610,9 @@ export function VehicleDetailsModalNew({
                   vehicleChassi={veiculo?.chassi || formData.chassi}
                   initialDocuments={veiculo?.documentos || formData.documentos || []}
                 />
-              </TabsContent>
+              </LazyTabContent>
 
-              <TabsContent value="seguro" className="mt-0 space-y-4 md:space-y-6">
+              <LazyTabContent activeValue={activeTab} value="seguro" className="mt-0 space-y-4 md:space-y-6">
                 <Card className="p-3 md:p-6">
                   <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
                     <Shield className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
@@ -697,9 +679,9 @@ export function VehicleDetailsModalNew({
                     )}
                   </div>
                 </Card>
-              </TabsContent>
+              </LazyTabContent>
 
-              <TabsContent value="operacao" className="mt-0 space-y-4 md:space-y-6">
+              <LazyTabContent activeValue={activeTab} value="operacao" className="mt-0 space-y-4 md:space-y-6">
                 <Card className="p-3 md:p-6">
                   <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
                     <Settings className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
@@ -725,9 +707,9 @@ export function VehicleDetailsModalNew({
                     vehicleId={veiculo.id}
                   />
                 )}
-              </TabsContent>
+              </LazyTabContent>
 
-              <TabsContent value="valores" className="mt-0 space-y-4 md:space-y-6">
+              <LazyTabContent activeValue={activeTab} value="valores" className="mt-0 space-y-4 md:space-y-6">
                 <Card className="p-3 md:p-6">
                   <div className="flex items-center justify-between mb-3 md:mb-4">
                     <h3 className="text-base md:text-lg font-semibold flex items-center gap-2">
@@ -812,153 +794,24 @@ export function VehicleDetailsModalNew({
                     </div>
                   </Card>
                 )}
-              </TabsContent>
+              </LazyTabContent>
 
-              <TabsContent value="financeiro" className="mt-0 space-y-4 md:space-y-6">
+              <LazyTabContent activeValue={activeTab} value="financeiro" className="mt-0 space-y-4 md:space-y-6">
                 <VehicleFinanceTab
                   vehicleId={veiculo.id}
                   empresaId={veiculo.empresa_id}
                   fipeAtual={formData.preco_fipe}
                   mode={mode}
                 />
-              </TabsContent>
+              </LazyTabContent>
 
-              <TabsContent value="sinistros" className="mt-0 space-y-4 md:space-y-6">
+              <LazyTabContent activeValue={activeTab} value="sinistros" className="mt-0 space-y-4 md:space-y-6">
                 <div className="p-3 md:p-6">
-                  {ticketsLoading ? (
-                    <Card className="p-6">
-                      <div className="flex items-center justify-center py-8">
-                        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-                        <span className="ml-2 text-muted-foreground">Carregando...</span>
-                      </div>
-                    </Card>
-                  ) : tickets.length === 0 ? (
-                    <Card className="p-6">
-                      <div className="text-center py-8">
-                        <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">
-                          Nenhum registro encontrado
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Este veículo não possui sinistros ou assistências registrados.
-                        </p>
-                      </div>
-                    </Card>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold">
-                          Histórico de Ocorrências
-                        </h3>
-                        <Badge variant="secondary">
-                          {tickets.length} registro(s)
-                        </Badge>
-                      </div>
-
-                      {tickets.map((ticket) => (
-                        <Card key={ticket.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-3">
-                              <div className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                                ticket.tipo === 'sinistro' 
-                                  ? "bg-red-100 text-red-600" 
-                                  : "bg-blue-100 text-blue-600"
-                              )}>
-                                {ticket.tipo === 'sinistro' ? (
-                                  <AlertTriangle className="h-5 w-5" />
-                                ) : (
-                                  <Wrench className="h-5 w-5" />
-                                )}
-                              </div>
-
-                              <div className="flex-1 min-w-0 pr-8">
-                                <div className="flex items-start justify-between gap-2 mb-2">
-                                  <div>
-                                    <h4 className="font-semibold text-sm md:text-base capitalize">
-                                      {ticket.tipo === 'sinistro' ? 'Sinistro' : 'Assistência'}
-                                      {ticket.subtipo && ` - ${ticket.subtipo.replace('_', ' ')}`}
-                                      {ticket.protocol_code && (
-                                        <span className="text-xs text-muted-foreground font-normal ml-2">
-                                          • {ticket.protocol_code}
-                                        </span>
-                                      )}
-                                    </h4>
-                                  </div>
-                                  <Badge 
-                                    variant={
-                                      ticket.status === 'finalizado' ? 'default' :
-                                      ticket.status === 'cancelado' ? 'destructive' :
-                                      ticket.status === 'em_analise' ? 'secondary' :
-                                      'outline'
-                                    }
-                                    className="shrink-0"
-                                  >
-                                    {ticket.status.replace('_', ' ')}
-                                  </Badge>
-                                </div>
-
-                                {ticket.descricao && (
-                                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                                    {ticket.descricao}
-                                  </p>
-                                )}
-
-                                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                                  {ticket.data_evento && (
-                                    <div className="flex items-center gap-1">
-                                      <Calendar className="h-3 w-3" />
-                                      {format(new Date(ticket.data_evento), 'dd/MM/yyyy', { locale: ptBR })}
-                                    </div>
-                                  )}
-                                  {ticket.valor_estimado && (
-                                    <div className="flex items-center gap-1">
-                                      <DollarSign className="h-3 w-3" />
-                                      {new Intl.NumberFormat('pt-BR', {
-                                        style: 'currency',
-                                        currency: 'BRL'
-                                      }).format(ticket.valor_estimado)}
-                                    </div>
-                                  )}
-                                  {ticket.localizacao && (
-                                    <div className="flex items-center gap-1 truncate">
-                                      📍 {ticket.localizacao}
-                                    </div>
-                                  )}
-                                </div>
-
-                                {ticket.gravidade && ticket.tipo === 'sinistro' && (
-                                  <div className="mt-2">
-                                    <Badge 
-                                      variant="outline"
-                                      className={cn(
-                                        "text-xs",
-                                        ticket.gravidade === 'critica' && "border-red-500 text-red-700",
-                                        ticket.gravidade === 'alta' && "border-orange-500 text-orange-700",
-                                        ticket.gravidade === 'media' && "border-yellow-500 text-yellow-700",
-                                        ticket.gravidade === 'baixa' && "border-green-500 text-green-700"
-                                      )}
-                                    >
-                                      Gravidade: {ticket.gravidade}
-                                    </Badge>
-                                  </div>
-                                )}
-
-                                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
-                                  <Clock className="h-3 w-3" />
-                                  Criado em {format(new Date(ticket.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
+                  <VehicleTicketsList tickets={tickets} loading={ticketsLoading} />
                 </div>
-              </TabsContent>
+              </LazyTabContent>
 
-              <TabsContent value="roubo" className="mt-0 space-y-4 md:space-y-6">
+              <LazyTabContent activeValue={activeTab} value="roubo" className="mt-0 space-y-4 md:space-y-6">
                 <VehicleTheftSection
                   vehicleId={veiculo.id}
                   empresaId={veiculo.empresa_id}
@@ -967,9 +820,9 @@ export function VehicleDetailsModalNew({
                   mode={mode}
                   onUpdate={() => window.dispatchEvent(new Event('frota-data-updated'))}
                 />
-              </TabsContent>
+              </LazyTabContent>
 
-              <TabsContent value="alocacao" className="mt-0 space-y-4 md:space-y-6">
+              <LazyTabContent activeValue={activeTab} value="alocacao" className="mt-0 space-y-4 md:space-y-6">
                 <VehicleAssignmentTab
                   vehicleId={veiculo.id}
                   currentResponsible={(veiculo as any).current_responsible_name}
@@ -978,7 +831,7 @@ export function VehicleDetailsModalNew({
                   mode={mode}
                   onAssignmentSaved={() => window.dispatchEvent(new Event('frota-data-updated'))}
                 />
-              </TabsContent>
+              </LazyTabContent>
 
               {isTruck && activeTab === 'tacografo' && (
                 <TabsContent value="tacografo" className="mt-0 space-y-4 md:space-y-6" forceMount>
