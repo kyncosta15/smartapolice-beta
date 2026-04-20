@@ -512,65 +512,6 @@ export function VehicleDocumentsSection({
                     </div>
                   )}
 
-                  {/* Seção de documentos locais */}
-                  {localDocs.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-200">
-                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                        <h4 className="text-sm font-medium text-blue-900">Documentos Locais</h4>
-                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-300">
-                          {localDocs.length} arquivo(s)
-                        </Badge>
-                      </div>
-                      <div className="space-y-3">
-                        {localDocs.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <p className="text-sm font-medium truncate">{doc.nome_arquivo}</p>
-                                  {getStatusBadge(doc.origem)}
-                                </div>
-                                <div className="flex items-center gap-4 text-xs text-blue-600">
-                                  <span>{getDocumentTypeLabel(doc.tipo)}</span>
-                                  <span>{formatFileSize(doc.tamanho_arquivo)}</span>
-                                  <span className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    {formatDistanceToNow(new Date(doc.created_at), { 
-                                      addSuffix: true, 
-                                      locale: ptBR 
-                                    })}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDownload(doc)}
-                                className="gap-1 text-blue-700 hover:text-blue-800 hover:bg-blue-100"
-                              >
-                                <Download className="h-4 w-4" />
-                                Baixar
-                              </Button>
-                              {mode === 'edit' && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDelete(doc.id)}
-                                  className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
           </div>
