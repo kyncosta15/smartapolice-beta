@@ -6,7 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { HardHat, User, MapPin, Calendar, Plus, History, Clock, X } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { HardHat, User, MapPin, Calendar, Plus, History, Clock, X, Trash2, StopCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -47,6 +57,10 @@ export default function VehicleAssignmentTab({
   const [history, setHistory] = useState<AssignmentRecord[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmEndCurrent, setConfirmEndCurrent] = useState(false);
+  const [endingCurrent, setEndingCurrent] = useState(false);
 
   // Local state for current assignment (updated optimistically after save)
   const [localResponsible, setLocalResponsible] = useState<string | null | undefined>(currentResponsible);
@@ -185,6 +199,91 @@ export default function VehicleAssignmentTab({
     }
   };
 
+  // Delete a single assignment record from history
+  const handleDelete = async (recordId: string) => {
+    setDeleting(recordId);
+    try {
+      const target = history.find(h => h.id === recordId);
+      const wasCurrent = target && !target.end_date;
+
+      const { error } = await withRetry(() =>
+        supabase.from('vehicle_assignment_history').delete().eq('id', recordId)
+      );
+      if (error) throw error;
+
+      setHistory(prev => prev.filter(h => h.id !== recordId));
+
+      if (wasCurrent) {
+        setLocalResponsible(null);
+        setLocalWorksite(null);
+        setLocalStartDate(null);
+
+        withRetry(() =>
+          supabase
+            .from('frota_veiculos')
+            .update({
+              current_responsible_name: null,
+              current_worksite_name: null,
+              current_worksite_start_date: null,
+              has_assignment_info: false,
+            })
+            .eq('id', vehicleId)
+        ).catch((e) => console.warn('Falha ao limpar veículo:', e));
+      }
+
+      toast.success('Alocação removida');
+      onAssignmentSaved?.();
+    } catch (err: any) {
+      console.error('Erro ao deletar:', err);
+      toast.error('Erro ao remover: ' + (err?.message || 'Tente novamente'));
+    } finally {
+      setDeleting(null);
+      setConfirmDeleteId(null);
+    }
+  };
+
+  // End the current assignment (sets end_date = today, clears current vehicle assignment)
+  const handleEndCurrent = async () => {
+    setEndingCurrent(true);
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+
+      const { error: closeErr } = await withRetry(() =>
+        supabase
+          .from('vehicle_assignment_history')
+          .update({ end_date: today })
+          .eq('vehicle_id', vehicleId)
+          .is('end_date', null)
+      );
+      if (closeErr) throw closeErr;
+
+      setLocalResponsible(null);
+      setLocalWorksite(null);
+      setLocalStartDate(null);
+
+      withRetry(() =>
+        supabase
+          .from('frota_veiculos')
+          .update({
+            current_responsible_name: null,
+            current_worksite_name: null,
+            current_worksite_start_date: null,
+            has_assignment_info: false,
+          })
+          .eq('id', vehicleId)
+      ).catch((e) => console.warn('Falha ao limpar veículo:', e));
+
+      toast.success('Alocação encerrada');
+      onAssignmentSaved?.();
+    } catch (err: any) {
+      console.error('Erro ao encerrar:', err);
+      toast.error('Erro ao encerrar: ' + (err?.message || 'Tente novamente'));
+    } finally {
+      setEndingCurrent(false);
+      setConfirmEndCurrent(false);
+    }
+  };
+
   const openEdit = () => {
     setFormData({
       responsible_name: localResponsible || '',
@@ -219,11 +318,22 @@ export default function VehicleAssignmentTab({
             <HardHat className="h-4 w-4 md:h-5 md:w-5 text-amber-600" />
             Responsável & Obra
           </h3>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={openHistory}>
               <History className="h-3.5 w-3.5 mr-1.5" />
               Histórico
             </Button>
+            {(localResponsible || localWorksite) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmEndCurrent(true)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+              >
+                <StopCircle className="h-3.5 w-3.5 mr-1.5" />
+                Encerrar
+              </Button>
+            )}
             <Button size="sm" onClick={openEdit} className="bg-primary hover:bg-primary/90">
               <Plus className="h-3.5 w-3.5 mr-1.5" />
               Nova Alocação
@@ -372,8 +482,8 @@ export default function VehicleAssignmentTab({
                     }`} />
 
                     <div className="rounded-lg border p-3 bg-card">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between mb-2 gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant={record.end_date ? 'secondary' : 'default'} className="text-xs">
                             {record.end_date ? 'Encerrado' : 'Atual'}
                           </Badge>
@@ -381,6 +491,16 @@ export default function VehicleAssignmentTab({
                             {formatDate(record.start_date)} — {record.end_date ? formatDate(record.end_date) : 'Presente'}
                           </span>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                          onClick={() => setConfirmDeleteId(record.id)}
+                          disabled={deleting === record.id}
+                          title="Excluir registro"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
@@ -409,6 +529,50 @@ export default function VehicleAssignmentTab({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Delete Record */}
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(o) => !o && setConfirmDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir alocação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação removerá permanentemente o registro do histórico. Se for a alocação atual, o veículo ficará sem responsável e obra. Não é possível desfazer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+              disabled={!!deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm End Current Assignment */}
+      <AlertDialog open={confirmEndCurrent} onOpenChange={setConfirmEndCurrent}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Encerrar alocação atual?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A alocação será marcada como encerrada hoje e o veículo ficará sem responsável e obra ativos. O histórico será preservado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={endingCurrent}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleEndCurrent}
+              disabled={endingCurrent}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {endingCurrent ? 'Encerrando...' : 'Encerrar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
