@@ -529,6 +529,50 @@ export default function VehicleAssignmentTab({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Delete Record */}
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(o) => !o && setConfirmDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir alocação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação removerá permanentemente o registro do histórico. Se for a alocação atual, o veículo ficará sem responsável e obra. Não é possível desfazer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+              disabled={!!deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm End Current Assignment */}
+      <AlertDialog open={confirmEndCurrent} onOpenChange={setConfirmEndCurrent}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Encerrar alocação atual?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A alocação será marcada como encerrada hoje e o veículo ficará sem responsável e obra ativos. O histórico será preservado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={endingCurrent}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleEndCurrent}
+              disabled={endingCurrent}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {endingCurrent ? 'Encerrando...' : 'Encerrar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
