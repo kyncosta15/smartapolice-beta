@@ -96,10 +96,15 @@ export function VehicleDetailsModalNew({
     }
   }, [veiculo]);
 
+  // Só reseta a aba quando o modal abre (transição false -> true).
+  // Não reseta em re-renders disparados por refetch / atualização de dados,
+  // pois isso fazia a aba voltar para "Info" após salvar/encerrar alocação.
+  const wasOpenRef = useRef(false);
   useEffect(() => {
-    if (open) {
+    if (open && !wasOpenRef.current) {
       setActiveTab(defaultTab);
     }
+    wasOpenRef.current = open;
   }, [open, defaultTab]);
 
   // Aquece o cache em background logo após abrir o modal (não bloqueia render).
