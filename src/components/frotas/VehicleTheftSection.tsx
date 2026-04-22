@@ -108,17 +108,23 @@ export function VehicleTheftSection({ vehicleId, empresaId, isStolen, stolenDate
   return (
     <div className="space-y-4">
       {/* Current Status */}
-      <Card className={isStolen ? 'border-destructive/50 bg-destructive/5' : 'border-green-200 bg-green-50'}>
+      <Card
+        className={
+          isStolen
+            ? 'border-destructive/50 bg-destructive/5'
+            : 'border-emerald-500/30 bg-emerald-500/10 dark:border-emerald-400/30 dark:bg-emerald-400/10'
+        }
+      >
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isStolen ? (
                 <AlertTriangle className="h-6 w-6 text-destructive" />
               ) : (
-                <ShieldCheck className="h-6 w-6 text-green-600" />
+                <ShieldCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
               )}
               <div>
-                <p className="font-semibold">
+                <p className="font-semibold text-foreground">
                   {isStolen ? 'Veículo Roubado' : 'Veículo Regular'}
                 </p>
                 {isStolen && stolenDate && (
