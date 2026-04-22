@@ -75,60 +75,96 @@ export default function VehicleAssignmentTab({
     }
   }, [vehicleId]);
 
+  // Helper: retry network operations to mitigate transient "Failed to fetch" from preview proxy
+  const withRetry = async <T,>(fn: () => Promise<T>, attempts = 3, baseDelay = 400): Promise<T> => {
+    let lastErr: any;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        lastErr = err;
+        const msg = String(err?.message || err || '').toLowerCase();
+        const isNetwork = msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('load failed');
+        if (!isNetwork || i === attempts - 1) throw err;
+        await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, i)));
+      }
+    }
+    throw lastErr;
+  };
+
   const handleSave = async () => {
-    if (!formData.responsible_name.trim() || !formData.worksite_name.trim() || !formData.start_date) {
+    const responsible = formData.responsible_name.trim();
+    const worksite = formData.worksite_name.trim();
+    const contact = formData.responsible_contact.trim();
+    const code = formData.worksite_code.trim();
+    const notes = formData.notes.trim();
+    const startDate = formData.start_date;
+
+    if (!responsible || !worksite || !startDate) {
       toast.error('Preencha os campos obrigatórios: Responsável, Obra e Data de início');
       return;
     }
 
     setSaving(true);
     try {
-      // Close any existing open assignment
-      const { error: closeError } = await supabase
-        .from('vehicle_assignment_history')
-        .update({ end_date: formData.start_date })
-        .eq('vehicle_id', vehicleId)
-        .is('end_date', null);
+      // Get user from current session (no network call) — much faster than auth.getUser()
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
 
-      if (closeError) throw closeError;
+      // Close any existing open assignment (with retry)
+      const closeRes = await withRetry(() =>
+        supabase
+          .from('vehicle_assignment_history')
+          .update({ end_date: startDate })
+          .eq('vehicle_id', vehicleId)
+          .is('end_date', null)
+      );
+      if (closeRes.error) throw closeRes.error;
 
-      // Insert new assignment
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error: insertError } = await supabase
-        .from('vehicle_assignment_history')
-        .insert({
-          vehicle_id: vehicleId,
-          responsible_name: formData.responsible_name.trim(),
-          responsible_contact: formData.responsible_contact.trim() || null,
-          worksite_name: formData.worksite_name.trim(),
-          worksite_code: formData.worksite_code.trim() || null,
-          start_date: formData.start_date,
-          notes: formData.notes.trim() || null,
-          created_by: user?.id,
-        });
+      // Insert new assignment (with retry)
+      const insertRes = await withRetry(() =>
+        supabase
+          .from('vehicle_assignment_history')
+          .insert({
+            vehicle_id: vehicleId,
+            responsible_name: responsible,
+            responsible_contact: contact || null,
+            worksite_name: worksite,
+            worksite_code: code || null,
+            start_date: startDate,
+            notes: notes || null,
+            created_by: userId,
+          })
+      );
+      if (insertRes.error) throw insertRes.error;
 
-      if (insertError) throw insertError;
-
-      // Update current assignment on vehicle
-      const hasInfo = !!(formData.responsible_name.trim() && formData.worksite_name.trim());
-      const { error: updateError } = await supabase
-        .from('frota_veiculos')
-        .update({
-          current_responsible_name: formData.responsible_name.trim(),
-          current_worksite_name: formData.worksite_name.trim(),
-          current_worksite_start_date: formData.start_date,
-          has_assignment_info: hasInfo,
-        })
-        .eq('id', vehicleId);
-
-      if (updateError) throw updateError;
+      // Update current assignment on vehicle (best-effort: don't block success)
+      const hasInfo = !!(responsible && worksite);
+      withRetry(() =>
+        supabase
+          .from('frota_veiculos')
+          .update({
+            current_responsible_name: responsible,
+            current_worksite_name: worksite,
+            current_worksite_start_date: startDate,
+            has_assignment_info: hasInfo,
+          })
+          .eq('id', vehicleId)
+      ).catch((err) => {
+        console.warn('Falha ao atualizar veículo (não-crítico):', err);
+      });
 
       toast.success('Responsável e Obra atualizados com sucesso!');
       setEditOpen(false);
       onAssignmentSaved?.();
     } catch (err: any) {
       console.error('Erro ao salvar:', err);
-      toast.error('Erro ao salvar: ' + (err.message || 'Tente novamente'));
+      const msg = String(err?.message || '').toLowerCase();
+      if (msg.includes('failed to fetch')) {
+        toast.error('Falha de conexão. Verifique sua internet e tente novamente. Se persistir no preview, teste na URL publicada.');
+      } else {
+        toast.error('Erro ao salvar: ' + (err.message || 'Tente novamente'));
+      }
     } finally {
       setSaving(false);
     }
