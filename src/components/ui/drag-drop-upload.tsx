@@ -53,52 +53,66 @@ export function DragDropUpload({
       throw new Error('Usuário não autenticado');
     }
 
-    try {
-      // Criar path único para o arquivo
-      const fileExt = fileWithPreview.file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-      
-      // Para modo público, usar publicPath; senão usar user.id
-      const filePath = publicMode 
-        ? `${publicPath}/${fileName}` 
-        : `${user?.id}/${fileName}`;
+    // Criar path único para o arquivo
+    const fileExt = fileWithPreview.file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
 
-      // Upload para o Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, fileWithPreview.file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+    // Para modo público, usar publicPath; senão usar user.id
+    const filePath = publicMode
+      ? `${publicPath}/${fileName}`
+      : `${user?.id}/${fileName}`;
 
-      if (error) {
-        console.error('❌ Erro no upload:', error);
-        throw error;
+    // Tentar upload com retry simples (até 3 tentativas) — o ambiente de preview do Lovable
+    // ocasionalmente intercepta o fetch e gera "Failed to fetch" transitório.
+    const maxAttempts = 3;
+    let lastError: any = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const { error } = await supabase.storage
+          .from(bucketName)
+          .upload(filePath, fileWithPreview.file, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: fileWithPreview.file.type || undefined,
+          });
+
+        if (error) throw error;
+
+        console.log('✅ Upload realizado:', filePath, attempt > 1 ? `(tentativa ${attempt})` : '');
+
+        const { data: urlData } = supabase.storage
+          .from(bucketName)
+          .getPublicUrl(filePath);
+
+        return {
+          ...fileWithPreview,
+          uploadProgress: 100,
+          uploaded: true,
+          url: urlData.publicUrl,
+          error: undefined,
+        };
+      } catch (error: any) {
+        lastError = error;
+        const msg = String(error?.message || error || '');
+        const isTransient = /failed to fetch|network|timeout|fetch/i.test(msg);
+        console.warn(`⚠️ Upload falhou (tentativa ${attempt}/${maxAttempts}):`, msg);
+
+        if (attempt < maxAttempts && isTransient) {
+          await new Promise((r) => setTimeout(r, 400 * attempt));
+          continue;
+        }
+        break;
       }
-
-      console.log('✅ Upload realizado:', filePath);
-
-      // Obter URL do arquivo
-      const { data: urlData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
-
-      return {
-        ...fileWithPreview,
-        uploadProgress: 100,
-        uploaded: true,
-        url: urlData.publicUrl,
-        error: undefined,
-      };
-    } catch (error: any) {
-      console.error('💥 Erro no uploadFile:', error);
-      return {
-        ...fileWithPreview,
-        uploadProgress: 0,
-        uploaded: false,
-        error: error.message,
-      };
     }
+
+    console.error('💥 Erro no uploadFile (após retries):', lastError);
+    return {
+      ...fileWithPreview,
+      uploadProgress: 0,
+      uploaded: false,
+      error: lastError?.message || 'Falha ao enviar arquivo',
+    };
   }, [user?.id, bucketName, publicMode, publicPath]);
 
   const processFiles = useCallback(async (acceptedFiles: File[]) => {
@@ -237,10 +251,14 @@ export function DragDropUpload({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Notificar parent component sobre mudanças nos arquivos
+  // Notificar parent component sobre mudanças nos arquivos — apenas quando não estiver
+  // em meio a um upload, para evitar que o parent processe arquivos ainda não enviados
+  // (o que gerava aparência de "Failed to fetch" intermediária).
   React.useEffect(() => {
-    onFilesChange(files);
-  }, [files, onFilesChange]);
+    if (!uploading) {
+      onFilesChange(files);
+    }
+  }, [files, uploading, onFilesChange]);
 
   // Notificar parent sobre estado de upload
   React.useEffect(() => {
