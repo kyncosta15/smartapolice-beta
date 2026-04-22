@@ -57,6 +57,10 @@ export default function VehicleAssignmentTab({
   const [history, setHistory] = useState<AssignmentRecord[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmEndCurrent, setConfirmEndCurrent] = useState(false);
+  const [endingCurrent, setEndingCurrent] = useState(false);
 
   // Local state for current assignment (updated optimistically after save)
   const [localResponsible, setLocalResponsible] = useState<string | null | undefined>(currentResponsible);
