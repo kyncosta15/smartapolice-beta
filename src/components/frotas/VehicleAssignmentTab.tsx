@@ -231,27 +231,27 @@ export default function VehicleAssignmentTab({
           </div>
         </div>
 
-        {currentResponsible || currentWorksite ? (
+        {localResponsible || localWorksite ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <User className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Responsável Atual</p>
-                <p className="font-semibold text-foreground">{currentResponsible || '-'}</p>
+                <p className="font-semibold text-foreground">{localResponsible || '-'}</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <MapPin className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Obra Atual</p>
-                <p className="font-semibold text-foreground">{currentWorksite || '-'}</p>
+                <p className="font-semibold text-foreground">{localWorksite || '-'}</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <Calendar className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Desde</p>
-                <p className="font-semibold text-foreground">{formatDate(currentWorksiteStartDate || null)}</p>
+                <p className="font-semibold text-foreground">{formatDate(localStartDate || null)}</p>
               </div>
             </div>
           </div>
