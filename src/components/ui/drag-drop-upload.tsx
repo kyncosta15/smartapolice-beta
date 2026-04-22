@@ -251,10 +251,14 @@ export function DragDropUpload({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Notificar parent component sobre mudanças nos arquivos
+  // Notificar parent component sobre mudanças nos arquivos — apenas quando não estiver
+  // em meio a um upload, para evitar que o parent processe arquivos ainda não enviados
+  // (o que gerava aparência de "Failed to fetch" intermediária).
   React.useEffect(() => {
-    onFilesChange(files);
-  }, [files, onFilesChange]);
+    if (!uploading) {
+      onFilesChange(files);
+    }
+  }, [files, uploading, onFilesChange]);
 
   // Notificar parent sobre estado de upload
   React.useEffect(() => {
