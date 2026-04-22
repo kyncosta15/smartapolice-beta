@@ -274,6 +274,9 @@ export function VehicleDocumentsSection({
             errors.push(`${fileItem.file.name}: ${error.message}`);
           } else {
             savedCount++;
+            // Marcar como processado para não tentar inserir novamente em
+            // notificações subsequentes do DragDropUpload.
+            processedFileIdsRef.current.add(fileItem.id);
           }
         } catch (fileError: any) {
           console.error('Erro ao processar arquivo:', fileItem.file.name, fileError);
