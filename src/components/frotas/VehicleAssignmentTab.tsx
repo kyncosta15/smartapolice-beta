@@ -48,6 +48,16 @@ export default function VehicleAssignmentTab({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Local state for current assignment (updated optimistically after save)
+  const [localResponsible, setLocalResponsible] = useState<string | null | undefined>(currentResponsible);
+  const [localWorksite, setLocalWorksite] = useState<string | null | undefined>(currentWorksite);
+  const [localStartDate, setLocalStartDate] = useState<string | null | undefined>(currentWorksiteStartDate);
+
+  // Sync with props when they change (e.g., parent refetches)
+  useEffect(() => { setLocalResponsible(currentResponsible); }, [currentResponsible]);
+  useEffect(() => { setLocalWorksite(currentWorksite); }, [currentWorksite]);
+  useEffect(() => { setLocalStartDate(currentWorksiteStartDate); }, [currentWorksiteStartDate]);
+
   const [formData, setFormData] = useState({
     responsible_name: '',
     responsible_contact: '',
@@ -154,6 +164,11 @@ export default function VehicleAssignmentTab({
         console.warn('Falha ao atualizar veículo (não-crítico):', err);
       });
 
+      // Optimistic UI update — reflect new assignment immediately without waiting for parent refetch
+      setLocalResponsible(responsible);
+      setLocalWorksite(worksite);
+      setLocalStartDate(startDate);
+
       toast.success('Responsável e Obra atualizados com sucesso!');
       setEditOpen(false);
       onAssignmentSaved?.();
@@ -172,9 +187,9 @@ export default function VehicleAssignmentTab({
 
   const openEdit = () => {
     setFormData({
-      responsible_name: currentResponsible || '',
+      responsible_name: localResponsible || '',
       responsible_contact: '',
-      worksite_name: currentWorksite || '',
+      worksite_name: localWorksite || '',
       worksite_code: '',
       start_date: format(new Date(), 'yyyy-MM-dd'),
       notes: '',
@@ -216,27 +231,27 @@ export default function VehicleAssignmentTab({
           </div>
         </div>
 
-        {currentResponsible || currentWorksite ? (
+        {localResponsible || localWorksite ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <User className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Responsável Atual</p>
-                <p className="font-semibold text-foreground">{currentResponsible || '-'}</p>
+                <p className="font-semibold text-foreground">{localResponsible || '-'}</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <MapPin className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Obra Atual</p>
-                <p className="font-semibold text-foreground">{currentWorksite || '-'}</p>
+                <p className="font-semibold text-foreground">{localWorksite || '-'}</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <Calendar className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Desde</p>
-                <p className="font-semibold text-foreground">{formatDate(currentWorksiteStartDate || null)}</p>
+                <p className="font-semibold text-foreground">{formatDate(localStartDate || null)}</p>
               </div>
             </div>
           </div>
