@@ -318,11 +318,22 @@ export default function VehicleAssignmentTab({
             <HardHat className="h-4 w-4 md:h-5 md:w-5 text-amber-600" />
             Responsável & Obra
           </h3>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={openHistory}>
               <History className="h-3.5 w-3.5 mr-1.5" />
               Histórico
             </Button>
+            {(localResponsible || localWorksite) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmEndCurrent(true)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+              >
+                <StopCircle className="h-3.5 w-3.5 mr-1.5" />
+                Encerrar
+              </Button>
+            )}
             <Button size="sm" onClick={openEdit} className="bg-primary hover:bg-primary/90">
               <Plus className="h-3.5 w-3.5 mr-1.5" />
               Nova Alocação
