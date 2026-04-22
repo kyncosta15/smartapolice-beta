@@ -49,6 +49,7 @@ export function VehicleDocumentsSection({
   const [searchingLinkedDocs, setSearchingLinkedDocs] = useState(false);
   const [uploading, setUploading] = useState(false);
   const isFetchingRef = useRef(false);
+  const processedFileIdsRef = useRef<Set<string>>(new Set());
 
   const getDocumentType = useCallback((fileName: string): string => {
     const lowerFileName = fileName.toLowerCase();
