@@ -231,22 +231,25 @@ export function VehicleDocumentsSection({
   const handleFilesUploaded = useCallback(async (files: Array<{ file: File; id: string; url?: string; uploaded?: boolean; error?: string }>) => {
     if (!vehicleId || files.length === 0) return;
 
+    // Filtrar apenas arquivos enviados com sucesso E que ainda não foram processados
+    const successfulFiles = files.filter(
+      (f) => f.url && f.uploaded !== false && !f.error && !processedFileIdsRef.current.has(f.id)
+    );
+    const failedFiles = files.filter((f) => !f.url || f.error);
+
+    console.log('🔍 Arquivos para processar:', {
+      total: files.length,
+      successful: successfulFiles.length,
+      failed: failedFiles.length,
+      jaProcessados: files.length - successfulFiles.length - failedFiles.length,
+    });
+
+    // Se não houver arquivos novos para processar, sair sem efeitos colaterais
+    if (successfulFiles.length === 0) return;
+
     setUploading(true);
     let savedCount = 0;
     const errors: string[] = [];
-    
-    // Aguardar um pouco para garantir que o DragDropUpload terminou o processamento
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Filtrar apenas arquivos que foram realmente enviados com sucesso
-    const successfulFiles = files.filter(f => f.url && f.uploaded !== false && !f.error);
-    const failedFiles = files.filter(f => !f.url || f.error);
-    
-    console.log('🔍 Arquivos para processar:', { 
-      total: files.length, 
-      successful: successfulFiles.length, 
-      failed: failedFiles.length 
-    });
     
     try {
       // Processar apenas arquivos que foram enviados com sucesso para o storage
