@@ -164,6 +164,11 @@ export default function VehicleAssignmentTab({
         console.warn('Falha ao atualizar veículo (não-crítico):', err);
       });
 
+      // Optimistic UI update — reflect new assignment immediately without waiting for parent refetch
+      setLocalResponsible(responsible);
+      setLocalWorksite(worksite);
+      setLocalStartDate(startDate);
+
       toast.success('Responsável e Obra atualizados com sucesso!');
       setEditOpen(false);
       onAssignmentSaved?.();
