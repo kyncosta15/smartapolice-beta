@@ -76,7 +76,7 @@ export default function VehicleAssignmentTab({
   }, [vehicleId]);
 
   // Helper: retry network operations to mitigate transient "Failed to fetch" from preview proxy
-  const withRetry = async <T,>(fn: () => Promise<T>, attempts = 3, baseDelay = 400): Promise<T> => {
+  const withRetry = async <T,>(fn: () => PromiseLike<T>, attempts = 3, baseDelay = 400): Promise<T> => {
     let lastErr: any;
     for (let i = 0; i < attempts; i++) {
       try {
