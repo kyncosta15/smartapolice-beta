@@ -199,6 +199,91 @@ export default function VehicleAssignmentTab({
     }
   };
 
+  // Delete a single assignment record from history
+  const handleDelete = async (recordId: string) => {
+    setDeleting(recordId);
+    try {
+      const target = history.find(h => h.id === recordId);
+      const wasCurrent = target && !target.end_date;
+
+      const { error } = await withRetry(() =>
+        supabase.from('vehicle_assignment_history').delete().eq('id', recordId)
+      );
+      if (error) throw error;
+
+      setHistory(prev => prev.filter(h => h.id !== recordId));
+
+      if (wasCurrent) {
+        setLocalResponsible(null);
+        setLocalWorksite(null);
+        setLocalStartDate(null);
+
+        withRetry(() =>
+          supabase
+            .from('frota_veiculos')
+            .update({
+              current_responsible_name: null,
+              current_worksite_name: null,
+              current_worksite_start_date: null,
+              has_assignment_info: false,
+            })
+            .eq('id', vehicleId)
+        ).catch((e) => console.warn('Falha ao limpar veículo:', e));
+      }
+
+      toast.success('Alocação removida');
+      onAssignmentSaved?.();
+    } catch (err: any) {
+      console.error('Erro ao deletar:', err);
+      toast.error('Erro ao remover: ' + (err?.message || 'Tente novamente'));
+    } finally {
+      setDeleting(null);
+      setConfirmDeleteId(null);
+    }
+  };
+
+  // End the current assignment (sets end_date = today, clears current vehicle assignment)
+  const handleEndCurrent = async () => {
+    setEndingCurrent(true);
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+
+      const { error: closeErr } = await withRetry(() =>
+        supabase
+          .from('vehicle_assignment_history')
+          .update({ end_date: today })
+          .eq('vehicle_id', vehicleId)
+          .is('end_date', null)
+      );
+      if (closeErr) throw closeErr;
+
+      setLocalResponsible(null);
+      setLocalWorksite(null);
+      setLocalStartDate(null);
+
+      withRetry(() =>
+        supabase
+          .from('frota_veiculos')
+          .update({
+            current_responsible_name: null,
+            current_worksite_name: null,
+            current_worksite_start_date: null,
+            has_assignment_info: false,
+          })
+          .eq('id', vehicleId)
+      ).catch((e) => console.warn('Falha ao limpar veículo:', e));
+
+      toast.success('Alocação encerrada');
+      onAssignmentSaved?.();
+    } catch (err: any) {
+      console.error('Erro ao encerrar:', err);
+      toast.error('Erro ao encerrar: ' + (err?.message || 'Tente novamente'));
+    } finally {
+      setEndingCurrent(false);
+      setConfirmEndCurrent(false);
+    }
+  };
+
   const openEdit = () => {
     setFormData({
       responsible_name: localResponsible || '',
