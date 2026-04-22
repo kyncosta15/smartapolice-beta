@@ -482,8 +482,8 @@ export default function VehicleAssignmentTab({
                     }`} />
 
                     <div className="rounded-lg border p-3 bg-card">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between mb-2 gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant={record.end_date ? 'secondary' : 'default'} className="text-xs">
                             {record.end_date ? 'Encerrado' : 'Atual'}
                           </Badge>
@@ -491,6 +491,16 @@ export default function VehicleAssignmentTab({
                             {formatDate(record.start_date)} — {record.end_date ? formatDate(record.end_date) : 'Presente'}
                           </span>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                          onClick={() => setConfirmDeleteId(record.id)}
+                          disabled={deleting === record.id}
+                          title="Excluir registro"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
