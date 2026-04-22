@@ -129,6 +129,51 @@ export function FrotasDashboard({ kpis, veiculos, allVeiculos, loading, searchLo
           <CardTitle className="flex items-center gap-2 text-base md:text-lg dark:text-foreground">
             <Car className="h-5 w-5" />
             Lista de Veículos ({displayVeiculos.length})
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  aria-label="Sobre indicadores e regras"
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="right" align="start" className="w-80">
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <Gauge className="h-4 w-4 text-primary" />
+                    Tacógrafo — exclusivo para Caminhões
+                  </div>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    O ícone de tacógrafo aparece <strong>apenas em veículos da
+                    categoria "Caminhão"</strong>, sinalizando o status da
+                    vistoria bienal obrigatória (validade automática de 2 anos
+                    a partir da data da última vistoria).
+                  </p>
+                  <div className="space-y-1.5 pt-1 border-t border-border">
+                    <div className="flex items-center gap-2 text-xs">
+                      <Gauge className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span><strong>OK</strong> — mais de 30 dias para vencer</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <Gauge className="h-3.5 w-3.5 text-yellow-500" />
+                      <span><strong>Atenção</strong> — vence em 30 dias ou menos</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <Gauge className="h-3.5 w-3.5 text-destructive" />
+                      <span><strong>Vencido</strong> — validade expirada</span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground pt-1 border-t border-border">
+                    Caminhões sem vistoria registrada não exibem o ícone.
+                    Acesse a aba <strong>Tacógrafo</strong> no detalhe do
+                    veículo para registrar vistorias.
+                  </p>
+                </div>
+              </PopoverContent>
+            </Popover>
             {noResultsFound && (
               <Badge variant="secondary" className="ml-2">
                 Mostrando todos - busca sem resultados
