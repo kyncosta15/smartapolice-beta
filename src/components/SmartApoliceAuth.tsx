@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { AuthPage } from '@/components/AuthPage';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import smartControlShield from '@/assets/smartcontrol-shield.png';
 
 const SmartApoliceAuthContent = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,8 +21,14 @@ const SmartApoliceAuthContent = () => {
     }
   }, [user, profile, navigate]);
 
+  // Overlay de loading aparece após login bem-sucedido (carregando perfil/redirecionando)
+  // ou durante verificação inicial de sessão
+  const showLoadingOverlay = !!user;
+
+  const loadingMessage = !profile ? 'Carregando seu perfil...' : 'Redirecionando...';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 dark:from-background dark:via-background dark:to-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 dark:from-background dark:via-background dark:to-background flex flex-col relative">
       {/* Header */}
       <header className="p-6">
         <Link
@@ -59,6 +65,19 @@ const SmartApoliceAuthContent = () => {
           </div>
         </div>
       </main>
+
+      {/* Loading Overlay — aparece após autenticação bem-sucedida */}
+      {showLoadingOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card px-8 py-6 shadow-lg">
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+            <div className="text-center">
+              <p className="text-sm font-medium text-foreground">{loadingMessage}</p>
+              <p className="text-xs text-muted-foreground mt-1">Aguarde um instante...</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
