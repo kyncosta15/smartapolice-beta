@@ -47,6 +47,16 @@ import {
 } from '@/components/ui/select';
 import { ManageCPFVinculosModal } from './ManageCPFVinculosModal';
 import { supabase } from '@/integrations/supabase/client';
+import { usePolicyAttachedDocs } from '@/hooks/usePolicyAttachedDocs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ChevronDown, FileText as FileTextIcon } from 'lucide-react';
 
 // Formatar data ISO p/ pt-BR sem bug de timezone UTC
 const formatDatePtBrSafe = (isoDate?: string | null): string => {
