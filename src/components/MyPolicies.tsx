@@ -679,6 +679,13 @@ export function MyPolicies({
     ? filteredPolicies.slice(startIndex, endIndex)
     : filteredPolicies;
 
+  // Buscar documentos vinculados (Central de Documentos) para as apólices visíveis
+  const visiblePolicyIds = React.useMemo(
+    () => currentPolicies.map(p => p.id),
+    [currentPolicies]
+  );
+  const { getDocsForPolicy, downloadAttachedDoc } = usePolicyAttachedDocs(visiblePolicyIds);
+
   return (
     <div className="space-y-4 md:space-y-6 p-3 sm:p-4 md:p-0">
       <div className="flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
