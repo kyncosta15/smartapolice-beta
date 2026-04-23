@@ -47,6 +47,16 @@ import {
 } from '@/components/ui/select';
 import { ManageCPFVinculosModal } from './ManageCPFVinculosModal';
 import { supabase } from '@/integrations/supabase/client';
+import { usePolicyAttachedDocs } from '@/hooks/usePolicyAttachedDocs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ChevronDown, FileText as FileTextIcon } from 'lucide-react';
 
 // Formatar data ISO p/ pt-BR sem bug de timezone UTC
 const formatDatePtBrSafe = (isoDate?: string | null): string => {
@@ -679,6 +689,13 @@ export function MyPolicies({
     ? filteredPolicies.slice(startIndex, endIndex)
     : filteredPolicies;
 
+  // Buscar documentos vinculados (Central de Documentos) para as apólices visíveis
+  const visiblePolicyIds = React.useMemo(
+    () => currentPolicies.map(p => p.id),
+    [currentPolicies]
+  );
+  const { getDocsForPolicy, downloadAttachedDoc } = usePolicyAttachedDocs(visiblePolicyIds);
+
   return (
     <div className="space-y-4 md:space-y-6 p-3 sm:p-4 md:p-0">
       <div className="flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
@@ -1003,15 +1020,57 @@ export function MyPolicies({
                     >
                       <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDownloadPolicy(policy)}
-                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10 dark:hover:bg-primary/20"
-                      title="Baixar apólice"
-                    >
-                      <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </Button>
+                    {(() => {
+                      const attached = getDocsForPolicy(policy.id);
+                      if (attached.length === 0) {
+                        return (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownloadPolicy(policy)}
+                            className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10 dark:hover:bg-primary/20"
+                            title="Baixar apólice"
+                          >
+                            <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </Button>
+                        );
+                      }
+                      return (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 sm:h-9 px-1.5 sm:px-2 hover:bg-primary/10 dark:hover:bg-primary/20 gap-0.5"
+                              title={`Baixar apólice (${attached.length + 1} arquivos)`}
+                            >
+                              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-64">
+                            <DropdownMenuLabel className="text-xs">
+                              {attached.length + 1} arquivo(s) disponível(is)
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDownloadPolicy(policy)}>
+                              <FileTextIcon className="h-4 w-4 mr-2 text-primary" />
+                              <span className="truncate">Apólice (PDF original)</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {attached.map(doc => (
+                              <DropdownMenuItem
+                                key={doc.id}
+                                onClick={() => downloadAttachedDoc(doc)}
+                              >
+                                <FileTextIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                                <span className="truncate">{doc.title}</span>
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    })()}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -1124,15 +1183,57 @@ export function MyPolicies({
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownloadPolicy(policy)}
-                          className="h-8 w-8 p-0"
-                          title="Baixar"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
+                        {(() => {
+                          const attached = getDocsForPolicy(policy.id);
+                          if (attached.length === 0) {
+                            return (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownloadPolicy(policy)}
+                                className="h-8 w-8 p-0"
+                                title="Baixar"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            );
+                          }
+                          return (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-1.5 gap-0.5"
+                                  title={`Baixar (${attached.length + 1} arquivos)`}
+                                >
+                                  <Download className="h-4 w-4" />
+                                  <ChevronDown className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-64">
+                                <DropdownMenuLabel className="text-xs">
+                                  {attached.length + 1} arquivo(s) disponível(is)
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleDownloadPolicy(policy)}>
+                                  <FileTextIcon className="h-4 w-4 mr-2 text-primary" />
+                                  <span className="truncate">Apólice (PDF original)</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                {attached.map(doc => (
+                                  <DropdownMenuItem
+                                    key={doc.id}
+                                    onClick={() => downloadAttachedDoc(doc)}
+                                  >
+                                    <FileTextIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                                    <span className="truncate">{doc.title}</span>
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          );
+                        })()}
                         <Button
                           variant="ghost"
                           size="sm"
