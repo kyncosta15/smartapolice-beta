@@ -79,6 +79,7 @@ export function DocumentUploadModal({ open, onOpenChange, onUpload }: Props) {
       description: '',
       documentDate: '',
       tagsInput: '',
+      policyId: '',
       status: 'pending',
     }));
     setItems(prev => [...prev, ...newItems]);
