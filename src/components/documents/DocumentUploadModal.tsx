@@ -37,6 +37,7 @@ interface FileMeta {
   description: string;
   documentDate: string;
   tagsInput: string;
+  policyId: string;
   status: 'pending' | 'uploading' | 'done' | 'error';
   errorMessage?: string;
 }
@@ -61,6 +62,8 @@ export function DocumentUploadModal({ open, onOpenChange, onUpload }: Props) {
   const { toast } = useToast();
   const [items, setItems] = useState<FileMeta[]>([]);
   const [uploading, setUploading] = useState(false);
+  const { policies: userPolicies, loading: loadingPolicies } = useUserPoliciesLite();
+  const [openPolicyPickerFor, setOpenPolicyPickerFor] = useState<string | null>(null);
 
   const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
