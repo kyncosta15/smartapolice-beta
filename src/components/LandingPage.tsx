@@ -42,7 +42,7 @@ export const LandingPage = () => {
 
             {/* Tagline - Primary hierarchy */}
               <p
-                className="font-muli font-semibold tracking-tight mb-3 bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent drop-shadow-sm"
+                className="font-muli font-semibold tracking-tight mb-3 bg-gradient-to-r from-foreground via-foreground/70 to-muted-foreground bg-clip-text text-transparent dark:from-white dark:via-slate-200 dark:to-slate-400"
                 style={{ fontSize: "clamp(20px, 2.4vw, 28px)", lineHeight: "1.2" }}
               >
                 Gestão de Ativos Inteligente
