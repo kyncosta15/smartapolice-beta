@@ -86,9 +86,19 @@ const RouteFallback = () => {
     );
   }
 
-  // Para outras rotas, não exibimos fallback global — mantém o comportamento
-  // anterior em que a navegação acontece sem uma tela intermediária de "Carregando…".
-  return null;
+  // Fallback genérico para demais rotas — evita "tela em branco" durante
+  // o carregamento dos chunks lazy (ex.: pós-login indo para /dashboard).
+  return (
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center animate-in fade-in duration-200">
+      <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card px-8 py-6 shadow-lg">
+        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <div className="text-center">
+          <p className="text-sm font-medium text-foreground">Carregando...</p>
+          <p className="text-xs text-muted-foreground mt-1">Aguarde um instante</p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const App = () => {
