@@ -40,6 +40,11 @@ export const LandingPage = () => {
                 </span>
               </h1>
 
+              {/* Tagline */}
+              <p className="text-sm sm:text-base font-muli font-medium text-foreground/90 mb-2">
+                Gestão de Ativos Inteligente
+              </p>
+
               {/* Powered by */}
               <p className="text-xs sm:text-sm font-muli text-muted-foreground mb-6">
                 powered by <span className="font-semibold text-foreground/80">RCorp</span> — soluções corporativas inteligentes
