@@ -40,14 +40,17 @@ export const LandingPage = () => {
                 </span>
               </h1>
 
-              {/* Tagline */}
-              <p className="text-sm sm:text-base font-muli font-medium text-foreground/90 mb-2">
+            {/* Tagline - Primary hierarchy */}
+              <p
+                className="font-muli font-semibold tracking-tight mb-3 bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent drop-shadow-sm"
+                style={{ fontSize: "clamp(20px, 2.4vw, 28px)", lineHeight: "1.2" }}
+              >
                 Gestão de Ativos Inteligente
               </p>
 
-              {/* Powered by */}
-              <p className="text-xs sm:text-sm font-muli text-muted-foreground mb-6">
-                powered by <span className="font-semibold text-foreground/80">RCorp</span> — soluções corporativas inteligentes
+              {/* Powered by - Tertiary hierarchy */}
+              <p className="text-[11px] sm:text-xs font-muli uppercase tracking-[0.15em] text-muted-foreground/70 mb-6">
+                powered by <span className="font-semibold text-foreground/70 normal-case tracking-normal">RCorp</span> · soluções corporativas inteligentes
               </p>
             </div>
 
