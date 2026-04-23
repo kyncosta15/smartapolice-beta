@@ -133,6 +133,15 @@ export function DocumentUploadModal({ open, onOpenChange, onUpload }: Props) {
       toast({ title: 'Preencha o título de todos os arquivos', variant: 'destructive' });
       return;
     }
+    const missingPolicy = items.find(it => it.entityType === 'APOLICE' && !it.policyId);
+    if (missingPolicy) {
+      toast({
+        title: 'Selecione a apólice vinculada',
+        description: `O arquivo "${missingPolicy.file.name}" está marcado como vínculo Apólice mas nenhuma foi escolhida.`,
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setUploading(true);
     let okCount = 0;
