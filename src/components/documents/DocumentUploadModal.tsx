@@ -312,7 +312,11 @@ export function DocumentUploadModal({ open, onOpenChange, onUpload }: Props) {
                       <Label className="text-xs font-medium">Vínculo</Label>
                       <Select
                         value={it.entityType}
-                        onValueChange={v => updateItem(it.id, { entityType: v as EntityType })}
+                        onValueChange={v => updateItem(it.id, {
+                          entityType: v as EntityType,
+                          // limpa policyId se sair de APOLICE
+                          policyId: v === 'APOLICE' ? it.policyId : '',
+                        })}
                         disabled={it.status === 'done'}
                       >
                         <SelectTrigger><SelectValue /></SelectTrigger>
@@ -323,6 +327,115 @@ export function DocumentUploadModal({ open, onOpenChange, onUpload }: Props) {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Seletor de Apólice (somente se vínculo = APOLICE) */}
+                    {it.entityType === 'APOLICE' && (
+                      <div className="space-y-1 md:col-span-2">
+                        <Label className="text-xs font-medium">
+                          Apólice vinculada *
+                          {loadingPolicies && (
+                            <span className="ml-2 text-muted-foreground">
+                              <Loader2 className="inline h-3 w-3 animate-spin" />
+                            </span>
+                          )}
+                        </Label>
+                        <Popover
+                          open={openPolicyPickerFor === it.id}
+                          onOpenChange={(open) => setOpenPolicyPickerFor(open ? it.id : null)}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              role="combobox"
+                              disabled={it.status === 'done' || loadingPolicies}
+                              className={cn(
+                                'w-full justify-between font-normal',
+                                !it.policyId && 'text-muted-foreground'
+                              )}
+                            >
+                              {it.policyId ? (() => {
+                                const p = userPolicies.find(pp => pp.id === it.policyId);
+                                if (!p) return 'Apólice selecionada';
+                                return (
+                                  <span className="truncate">
+                                    {p.numero_apolice || 'Sem número'}
+                                    {p.segurado ? ` — ${p.segurado}` : ''}
+                                    {p.seguradora ? ` (${p.seguradora})` : ''}
+                                  </span>
+                                );
+                              })() : (
+                                <span className="flex items-center gap-1">
+                                  <Search className="h-3.5 w-3.5" />
+                                  Selecionar apólice…
+                                </span>
+                              )}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-[--radix-popover-trigger-width] p-0"
+                            align="start"
+                          >
+                            <Command>
+                              <CommandInput placeholder="Buscar por número, segurado ou seguradora..." />
+                              <CommandList>
+                                <CommandEmpty>
+                                  {loadingPolicies
+                                    ? 'Carregando…'
+                                    : userPolicies.length === 0
+                                      ? 'Nenhuma apólice no seu cadastro'
+                                      : 'Nenhuma apólice encontrada'}
+                                </CommandEmpty>
+                                <CommandGroup>
+                                  {userPolicies.map(p => {
+                                    const value = `${p.numero_apolice || ''} ${p.segurado || ''} ${p.seguradora || ''}`.trim();
+                                    return (
+                                      <CommandItem
+                                        key={p.id}
+                                        value={`${value} ${p.id}`}
+                                        onSelect={() => {
+                                          updateItem(it.id, {
+                                            policyId: p.id,
+                                            insurer: it.insurer || p.seguradora || '',
+                                          });
+                                          setOpenPolicyPickerFor(null);
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            'mr-2 h-4 w-4',
+                                            it.policyId === p.id ? 'opacity-100' : 'opacity-0'
+                                          )}
+                                        />
+                                        <div className="flex flex-col min-w-0">
+                                          <span className="text-sm font-medium truncate">
+                                            {p.numero_apolice || 'Sem número'}
+                                            {p.seguradora && (
+                                              <span className="text-muted-foreground font-normal"> — {p.seguradora}</span>
+                                            )}
+                                          </span>
+                                          {p.segurado && (
+                                            <span className="text-xs text-muted-foreground truncate">
+                                              {p.segurado}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </CommandItem>
+                                    );
+                                  })}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {!it.policyId && (
+                          <p className="text-[11px] text-muted-foreground">
+                            Selecione uma apólice para vincular este documento.
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     <div className="space-y-1">
                       <Label className="text-xs font-medium">Seguradora</Label>
