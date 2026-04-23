@@ -118,6 +118,7 @@ export function DocumentUploadModal({ open, onOpenChange, onUpload }: Props) {
       insurer: source.insurer,
       documentDate: source.documentDate,
       tagsInput: source.tagsInput,
+      policyId: source.policyId,
     })));
     toast({ title: '✅ Aplicado a todos os arquivos' });
   };
@@ -149,6 +150,7 @@ export function DocumentUploadModal({ open, onOpenChange, onUpload }: Props) {
           description: it.description.trim() || undefined,
           document_date: it.documentDate || undefined,
           tags: it.tagsInput ? it.tagsInput.split(',').map(t => t.trim()).filter(Boolean) : undefined,
+          policy_id: it.entityType === 'APOLICE' && it.policyId ? it.policyId : undefined,
         });
         updateItem(it.id, { status: 'done' });
         okCount++;
