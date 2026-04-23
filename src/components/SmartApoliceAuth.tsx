@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { AuthPage } from '@/components/AuthPage';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import smartControlShield from '@/assets/smartcontrol-shield.png';
 
 const SmartApoliceAuthContent = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,6 +20,14 @@ const SmartApoliceAuthContent = () => {
       }
     }
   }, [user, profile, navigate]);
+
+  // Mostrar overlay de loading enquanto autentica/carrega perfil ou redireciona
+  const showLoadingOverlay = loading || (!!user && !profile) || (!!user && !!profile);
+  const loadingMessage = !user
+    ? 'Verificando sessão...'
+    : !profile
+    ? 'Carregando seu perfil...'
+    : 'Redirecionando...';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 dark:from-background dark:via-background dark:to-background flex flex-col">
