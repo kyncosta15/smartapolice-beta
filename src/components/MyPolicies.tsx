@@ -1183,15 +1183,57 @@ export function MyPolicies({
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownloadPolicy(policy)}
-                          className="h-8 w-8 p-0"
-                          title="Baixar"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
+                        {(() => {
+                          const attached = getDocsForPolicy(policy.id);
+                          if (attached.length === 0) {
+                            return (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownloadPolicy(policy)}
+                                className="h-8 w-8 p-0"
+                                title="Baixar"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            );
+                          }
+                          return (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-1.5 gap-0.5"
+                                  title={`Baixar (${attached.length + 1} arquivos)`}
+                                >
+                                  <Download className="h-4 w-4" />
+                                  <ChevronDown className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-64">
+                                <DropdownMenuLabel className="text-xs">
+                                  {attached.length + 1} arquivo(s) disponível(is)
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleDownloadPolicy(policy)}>
+                                  <FileTextIcon className="h-4 w-4 mr-2 text-primary" />
+                                  <span className="truncate">Apólice (PDF original)</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                {attached.map(doc => (
+                                  <DropdownMenuItem
+                                    key={doc.id}
+                                    onClick={() => downloadAttachedDoc(doc)}
+                                  >
+                                    <FileTextIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                                    <span className="truncate">{doc.title}</span>
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          );
+                        })()}
                         <Button
                           variant="ghost"
                           size="sm"
