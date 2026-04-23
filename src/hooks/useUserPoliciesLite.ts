@@ -5,9 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface PolicyLite {
   id: string;
   numero_apolice: string | null;
-  segurado_nome: string | null;
+  segurado: string | null;
   seguradora: string | null;
-  tipo: string | null;
+  tipo_seguro: string | null;
 }
 
 /**
@@ -31,7 +31,7 @@ export function useUserPoliciesLite() {
       try {
         const { data, error } = await supabase
           .from('policies')
-          .select('id, numero_apolice, segurado_nome, seguradora, tipo')
+          .select('id, numero_apolice, segurado, seguradora, tipo_seguro')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(500);
