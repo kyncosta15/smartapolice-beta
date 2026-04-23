@@ -81,6 +81,9 @@ export const LandingPage = () => {
               <li className="rounded-full bg-background/80 backdrop-blur-sm px-3 py-1 border border-border/50">
                 Centralize documentos
               </li>
+              <li className="rounded-full bg-background/80 backdrop-blur-sm px-3 py-1 border border-border/50">
+                Gerencie seus ativos
+              </li>
             </ul>
 
             {/* Single CTA */}
