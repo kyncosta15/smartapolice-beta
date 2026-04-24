@@ -94,6 +94,7 @@ export function useSystemStatus(intervalMs: number = CHECK_INTERVAL_MS) {
   });
 
   const inFlightRef = useRef(false);
+  const consecutiveFailuresRef = useRef({ auth: 0, database: 0, edge: 0 });
 
   const checkAuth = useCallback(async (): Promise<ServiceCheck> => {
     const start = performance.now();
