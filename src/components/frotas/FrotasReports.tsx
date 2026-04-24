@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, FileSpreadsheet, Filter, Search, CheckSquare, Square, Loader2 } from 'lucide-react';
+import { FileText, FileSpreadsheet, Filter, Search, CheckSquare, Square, Loader2, HardHat } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { useTenant } from '@/contexts/TenantContext';
@@ -129,7 +129,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
     new Set(ALL_COLUMNS.filter(c => c.default).map(c => String(c.key)))
   );
   const [reportTitle, setReportTitle] = useState('Relatório de Frotas');
-  const [generating, setGenerating] = useState<'pdf' | 'xlsx' | null>(null);
+  const [generating, setGenerating] = useState<'pdf' | 'xlsx' | 'pdf-obra' | 'xlsx-obra' | null>(null);
 
   const categorias = useMemo(() => {
     return Array.from(new Set(veiculos.map(v => v.categoria).filter(Boolean))) as string[];
@@ -379,6 +379,300 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
     }
   };
 
+  // ============== POR OBRA ==============
+  // Agrupa: Obra → Responsável → Veículos
+  const SEM_OBRA = 'Sem obra atribuída';
+  const SEM_RESP = 'Sem responsável';
+
+  const groupByObraResponsavel = () => {
+    const groups: Record<string, Record<string, FrotaVeiculo[]>> = {};
+    veiculosToExport.forEach(v => {
+      const obra = (v.current_worksite_name && v.current_worksite_name.trim()) || SEM_OBRA;
+      const resp = (v.current_responsible_name && v.current_responsible_name.trim()) || SEM_RESP;
+      if (!groups[obra]) groups[obra] = {};
+      if (!groups[obra][resp]) groups[obra][resp] = [];
+      groups[obra][resp].push(v);
+    });
+    // Ordenar: obras com nome primeiro (alfabético), "Sem obra" por último
+    const sortedObras = Object.keys(groups).sort((a, b) => {
+      if (a === SEM_OBRA) return 1;
+      if (b === SEM_OBRA) return -1;
+      return a.localeCompare(b, 'pt-BR');
+    });
+    return { groups, sortedObras };
+  };
+
+  // Colunas fixas para o relatório por obra (básico + data de alocação)
+  const OBRA_COLUMNS: { label: string; get: (v: FrotaVeiculo) => string }[] = [
+    { label: 'Placa', get: (v) => v.placa || '-' },
+    { label: 'Marca', get: (v) => v.marca || '-' },
+    { label: 'Modelo', get: (v) => v.modelo || '-' },
+    { label: 'Ano', get: (v) => v.ano_modelo ? String(v.ano_modelo) : '-' },
+    { label: 'Categoria', get: (v) => v.categoria || '-' },
+    { label: 'Desde', get: (v) => formatDate(v.current_worksite_start_date) },
+  ];
+
+  const handleExportPDFObra = async () => {
+    if (veiculosToExport.length === 0) {
+      toast({ title: 'Nenhum veículo', description: 'Selecione ao menos um veículo.', variant: 'destructive' });
+      return;
+    }
+
+    setGenerating('pdf-obra');
+    try {
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      const rawEmpresa = clienteNome || activeEmpresaName || 'Empresa';
+      const empresa = rawEmpresa.replace(/^Cliente\s*-\s*/i, '').trim() || 'Empresa';
+      const tituloRel = reportTitle && reportTitle !== 'Relatório de Frotas'
+        ? reportTitle
+        : 'Relatório de Frotas por Obra';
+
+      const drawHeader = async () => {
+        // Brand bar
+        doc.setFillColor(12, 21, 57);
+        doc.rect(0, 0, pageWidth, 26, 'F');
+        doc.setFillColor(59, 130, 246);
+        doc.rect(0, 26, pageWidth, 1.2, 'F');
+
+        const logo = await loadImageAsDataURL(logoSrc);
+        if (logo) {
+          const targetH = 14;
+          const ratio = logo.w / logo.h;
+          const targetW = targetH * ratio;
+          try { doc.addImage(logo.data, 'PNG', 8, 6, targetW, targetH); } catch {}
+        }
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(15);
+        doc.text(tituloRel, pageWidth / 2, 12, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(200, 215, 240);
+        const now = new Date().toLocaleString('pt-BR');
+        doc.text(`Gerado em ${now}  •  ${veiculosToExport.length} veículo(s)`, pageWidth / 2, 18, { align: 'center' });
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('SmartControl', pageWidth - 8, 11, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(200, 215, 240);
+        doc.text('Gestão Inteligente de Frotas', pageWidth - 8, 16, { align: 'right' });
+
+        // Empresa bar
+        doc.setFillColor(245, 247, 250);
+        doc.rect(0, 27.2, pageWidth, 9, 'F');
+        doc.setTextColor(80, 90, 110);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text('EMPRESA', 8, 33);
+        const empresaLabelWidth = doc.getTextWidth('EMPRESA');
+        doc.setTextColor(12, 21, 57);
+        doc.text(empresa.toUpperCase(), 8 + empresaLabelWidth + 4, 33);
+      };
+
+      await drawHeader();
+
+      const drawFooter = () => {
+        const pageCount = doc.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(7);
+          doc.setTextColor(120, 120, 120);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`${empresa}  •  ${tituloRel}`, 8, pageHeight - 6);
+          doc.text(`Página ${i} de ${pageCount}`, pageWidth - 8, pageHeight - 6, { align: 'right' });
+        }
+      };
+
+      const { groups, sortedObras } = groupByObraResponsavel();
+      const headers = OBRA_COLUMNS.map(c => c.label);
+
+      let cursorY = 41;
+
+      sortedObras.forEach((obra) => {
+        const respGroups = groups[obra];
+        const sortedResps = Object.keys(respGroups).sort((a, b) => {
+          if (a === SEM_RESP) return 1;
+          if (b === SEM_RESP) return -1;
+          return a.localeCompare(b, 'pt-BR');
+        });
+        const totalVeicObra = sortedResps.reduce((acc, r) => acc + respGroups[r].length, 0);
+
+        // Section header (Obra)
+        if (cursorY + 14 > pageHeight - 15) {
+          doc.addPage();
+          cursorY = 41;
+        }
+        doc.setFillColor(12, 21, 57);
+        doc.rect(6, cursorY, pageWidth - 12, 8, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text(`🏗  OBRA: ${obra}`, 9, cursorY + 5.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.text(`${totalVeicObra} veículo(s)`, pageWidth - 9, cursorY + 5.5, { align: 'right' });
+        cursorY += 10;
+
+        sortedResps.forEach((resp) => {
+          const veics = respGroups[resp];
+
+          // Sub-header (Responsável)
+          if (cursorY + 8 > pageHeight - 15) {
+            doc.addPage();
+            cursorY = 41;
+          }
+          doc.setFillColor(225, 232, 245);
+          doc.rect(6, cursorY, pageWidth - 12, 6.5, 'F');
+          doc.setTextColor(12, 21, 57);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.text(`Responsável: ${resp}`, 9, cursorY + 4.5);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`${veics.length} veículo(s)`, pageWidth - 9, cursorY + 4.5, { align: 'right' });
+          cursorY += 7.5;
+
+          const rows = veics.map(v => OBRA_COLUMNS.map(c => c.get(v)));
+
+          autoTable(doc, {
+            head: [headers],
+            body: rows,
+            startY: cursorY,
+            styles: { fontSize: 8, cellPadding: 1.8, textColor: [40, 40, 40] },
+            headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+            alternateRowStyles: { fillColor: [248, 250, 253] },
+            margin: { left: 6, right: 6, top: 41 },
+          });
+
+          cursorY = (doc as any).lastAutoTable.finalY + 4;
+        });
+
+        cursorY += 2;
+      });
+
+      drawFooter();
+
+      const fileName = `relatorio_frotas_por_obra_${Date.now()}.pdf`;
+      doc.save(fileName);
+
+      toast({ title: '✅ PDF por obra gerado', description: `${veiculosToExport.length} veículos agrupados por obra.` });
+    } catch (err: any) {
+      console.error('Erro ao gerar PDF por obra:', err);
+      toast({ title: 'Erro ao gerar PDF', description: err.message, variant: 'destructive' });
+    } finally {
+      setGenerating(null);
+    }
+  };
+
+  const handleExportXLSXObra = async () => {
+    if (veiculosToExport.length === 0) {
+      toast({ title: 'Nenhum veículo', description: 'Selecione ao menos um veículo.', variant: 'destructive' });
+      return;
+    }
+
+    setGenerating('xlsx-obra');
+    try {
+      const { groups, sortedObras } = groupByObraResponsavel();
+
+      // Aba consolidada com coluna "Obra" e "Responsável"
+      const consolidatedRows: Record<string, string>[] = [];
+      sortedObras.forEach(obra => {
+        const respGroups = groups[obra];
+        const sortedResps = Object.keys(respGroups).sort((a, b) => {
+          if (a === SEM_RESP) return 1;
+          if (b === SEM_RESP) return -1;
+          return a.localeCompare(b, 'pt-BR');
+        });
+        sortedResps.forEach(resp => {
+          respGroups[resp].forEach(v => {
+            const row: Record<string, string> = {
+              'Obra': obra,
+              'Responsável': resp,
+              'Desde': formatDate(v.current_worksite_start_date),
+            };
+            OBRA_COLUMNS.filter(c => c.label !== 'Desde').forEach(col => {
+              row[col.label] = col.get(v);
+            });
+            consolidatedRows.push(row);
+          });
+        });
+      });
+
+      const wb = XLSX.utils.book_new();
+
+      // Aba 1: Consolidado
+      const wsConsolidated = XLSX.utils.json_to_sheet(consolidatedRows);
+      const consolidatedHeaders = ['Obra', 'Responsável', 'Placa', 'Marca', 'Modelo', 'Ano', 'Categoria', 'Desde'];
+      wsConsolidated['!cols'] = consolidatedHeaders.map(h => {
+        const maxLen = Math.max(h.length, ...consolidatedRows.map(r => (r[h] || '').length));
+        return { wch: Math.min(maxLen + 2, 40) };
+      });
+      XLSX.utils.book_append_sheet(wb, wsConsolidated, 'Consolidado');
+
+      // Aba 2: Resumo por obra
+      const resumoRows = sortedObras.map(obra => {
+        const respGroups = groups[obra];
+        const totalVeic = Object.values(respGroups).reduce((acc, arr) => acc + arr.length, 0);
+        const responsaveis = Object.keys(respGroups).filter(r => r !== SEM_RESP);
+        return {
+          'Obra': obra,
+          'Veículos': totalVeic,
+          'Responsáveis': responsaveis.length,
+          'Lista de Responsáveis': responsaveis.join(', ') || '-',
+        };
+      });
+      const wsResumo = XLSX.utils.json_to_sheet(resumoRows);
+      wsResumo['!cols'] = [{ wch: 35 }, { wch: 12 }, { wch: 14 }, { wch: 50 }];
+      XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo por Obra');
+
+      // Uma aba por obra (limite de 28 chars no nome)
+      sortedObras.forEach(obra => {
+        const respGroups = groups[obra];
+        const sortedResps = Object.keys(respGroups).sort((a, b) => {
+          if (a === SEM_RESP) return 1;
+          if (b === SEM_RESP) return -1;
+          return a.localeCompare(b, 'pt-BR');
+        });
+        const obraRows: Record<string, string>[] = [];
+        sortedResps.forEach(resp => {
+          respGroups[resp].forEach(v => {
+            obraRows.push({
+              'Responsável': resp,
+              'Placa': v.placa || '-',
+              'Marca': v.marca || '-',
+              'Modelo': v.modelo || '-',
+              'Ano': v.ano_modelo ? String(v.ano_modelo) : '-',
+              'Categoria': v.categoria || '-',
+              'Desde': formatDate(v.current_worksite_start_date),
+            });
+          });
+        });
+        const ws = XLSX.utils.json_to_sheet(obraRows);
+        ws['!cols'] = [{ wch: 25 }, { wch: 12 }, { wch: 15 }, { wch: 20 }, { wch: 8 }, { wch: 15 }, { wch: 12 }];
+        // Sanitize sheet name (Excel: max 31 chars, no : \ / ? * [ ])
+        const safeName = obra.replace(/[:\\\/\?\*\[\]]/g, '-').substring(0, 28) || 'Obra';
+        XLSX.utils.book_append_sheet(wb, ws, safeName);
+      });
+
+      const fileName = `relatorio_frotas_por_obra_${Date.now()}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      toast({ title: '✅ Planilha por obra gerada', description: `${sortedObras.length} obra(s) exportada(s).` });
+    } catch (err: any) {
+      console.error('Erro ao gerar XLSX por obra:', err);
+      toast({ title: 'Erro ao gerar planilha', description: err.message, variant: 'destructive' });
+    } finally {
+      setGenerating(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -554,32 +848,78 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
           <Separator />
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={handleExportXLSX}
-              disabled={generating !== null || filteredVeiculos.length === 0}
-              className="gap-2"
-            >
-              {generating === 'xlsx' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <FileSpreadsheet className="h-4 w-4" />
-              )}
-              Gerar Planilha (XLSX)
-            </Button>
-            <Button
-              onClick={handleExportPDF}
-              disabled={generating !== null || filteredVeiculos.length === 0}
-              className="gap-2"
-            >
-              {generating === 'pdf' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4" />
-              )}
-              Gerar PDF
-            </Button>
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={handleExportXLSX}
+                disabled={generating !== null || filteredVeiculos.length === 0}
+                className="gap-2"
+              >
+                {generating === 'xlsx' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="h-4 w-4" />
+                )}
+                Gerar Planilha (XLSX)
+              </Button>
+              <Button
+                onClick={handleExportPDF}
+                disabled={generating !== null || filteredVeiculos.length === 0}
+                className="gap-2"
+              >
+                {generating === 'pdf' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileText className="h-4 w-4" />
+                )}
+                Gerar PDF
+              </Button>
+            </div>
+
+            {/* Por Obra */}
+            <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+              <div className="flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row">
+                <div className="flex items-center gap-2">
+                  <HardHat className="h-5 w-5 text-amber-500" />
+                  <div>
+                    <p className="text-sm font-semibold">Relatório por Obra</p>
+                    <p className="text-xs text-muted-foreground">
+                      Agrupa os veículos filtrados por obra → responsável.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    onClick={handleExportXLSXObra}
+                    disabled={generating !== null || filteredVeiculos.length === 0}
+                    className="gap-2"
+                    size="sm"
+                  >
+                    {generating === 'xlsx-obra' ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileSpreadsheet className="h-4 w-4" />
+                    )}
+                    XLSX por Obra
+                  </Button>
+                  <Button
+                    onClick={handleExportPDFObra}
+                    disabled={generating !== null || filteredVeiculos.length === 0}
+                    className="gap-2"
+                    size="sm"
+                  >
+                    {generating === 'pdf-obra' ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileText className="h-4 w-4" />
+                    )}
+                    PDF por Obra
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
