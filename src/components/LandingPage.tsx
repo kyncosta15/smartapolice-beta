@@ -17,9 +17,9 @@ export const LandingPage = () => {
               <img
                 src={smartControlShield}
                 alt="SmartControl"
-                className="w-16 h-16 sm:w-20 sm:h-20 object-contain mb-3 drop-shadow-lg"
-                width="80"
-                height="80"
+                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain mb-5 drop-shadow-lg"
+                width="192"
+                height="192"
                 loading="eager"
                 fetchPriority="high"
                 decoding="sync"
