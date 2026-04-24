@@ -41,29 +41,29 @@ const SmartApoliceAuthContent = () => {
       {/* Back link - floating */}
       <Link
         to="/"
-        className="absolute top-6 left-6 z-20 inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Voltar
       </Link>
 
       {/* Split layout */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
-        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-3xl overflow-hidden border border-border/60 bg-card/40 backdrop-blur-md shadow-2xl">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-3 sm:p-6 pt-14 sm:pt-6">
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl sm:rounded-3xl overflow-hidden border border-border/60 bg-card/40 backdrop-blur-md shadow-2xl">
           {/* LEFT — Brand & features */}
-          <div className="relative p-10 lg:p-12 flex flex-col justify-between bg-gradient-to-br from-card/80 to-card/40 border-b lg:border-b-0 lg:border-r border-border/60">
+          <div className="relative p-6 sm:p-10 lg:p-12 flex flex-col justify-between bg-gradient-to-br from-card/80 to-card/40 border-b lg:border-b-0 lg:border-r border-border/60">
             {/* Brand row */}
             <div>
-              <div className="flex items-center gap-3 mb-10">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-[hsl(280,100%,55%)]/20 flex items-center justify-center border border-border/60">
+              <div className="flex items-center gap-3 mb-6 sm:mb-10">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-[hsl(280,100%,55%)]/20 flex items-center justify-center border border-border/60">
                   <img
                     src={smartControlShield}
                     alt="SmartControl"
-                    className="h-8 w-8 object-contain"
+                    className="h-6 w-6 sm:h-8 sm:w-8 object-contain"
                     loading="eager"
                   />
                 </div>
-                <h1 className="text-xl font-semibold tracking-tight">
+                <h1 className="text-lg sm:text-xl font-semibold tracking-tight">
                   <span className="text-foreground">Smart</span>
                   <span className="bg-gradient-to-r from-[hsl(190,100%,50%)] via-[hsl(230,100%,55%)] to-[hsl(280,100%,55%)] bg-clip-text text-transparent">
                     Control
@@ -72,28 +72,28 @@ const SmartApoliceAuthContent = () => {
               </div>
 
               {/* Eyebrow */}
-              <p className="text-[11px] font-muli uppercase tracking-[0.22em] text-primary/80 mb-4">
+              <p className="text-[10px] sm:text-[11px] font-muli uppercase tracking-[0.2em] sm:tracking-[0.22em] text-primary/80 mb-3 sm:mb-4">
                 Gestão de Ativos Inteligente
               </p>
 
               {/* Headline */}
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-[1.05] mb-5">
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-[1.1] sm:leading-[1.05] mb-3 sm:mb-5">
                 Controle total
                 <br />
                 dos seus ativos.
               </h2>
 
               {/* Subhead */}
-              <p className="text-base text-muted-foreground leading-relaxed mb-8 max-w-md">
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-5 sm:mb-8 max-w-md">
                 Gerencie apólices, frotas e colaboradores em um painel unificado.
               </p>
 
               {/* Features */}
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {features.map((feature) => (
                   <li
                     key={feature}
-                    className="flex items-center gap-3 text-sm text-foreground/85"
+                    className="flex items-center gap-3 text-[13px] sm:text-sm text-foreground/85"
                   >
                     <div className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
                       <Check className="h-3 w-3 text-primary" strokeWidth={3} />
@@ -129,24 +129,24 @@ const SmartApoliceAuthContent = () => {
           </div>
 
           {/* RIGHT — Auth form */}
-          <div className="relative p-8 lg:p-12 flex flex-col justify-center bg-card/30">
+          <div className="relative p-6 sm:p-8 lg:p-12 flex flex-col justify-center bg-card/30">
             {/* Secure badge */}
-            <div className="inline-flex items-center gap-2 self-start px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6">
+            <div className="inline-flex items-center gap-2 self-start px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-4 sm:mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                 Ambiente seguro
               </span>
             </div>
 
-            <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-2">
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground tracking-tight mb-1 sm:mb-2">
               Acesse sua conta
             </h3>
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
               Entre com suas credenciais corporativas
             </p>
 
             {/* Existing AuthPage form (login/register tabs) */}
-            <div className="-mx-2">
+            <div className="-mx-1 sm:-mx-2">
               <AuthPage />
             </div>
           </div>
