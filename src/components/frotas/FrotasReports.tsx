@@ -515,7 +515,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.text(`🏗  OBRA: ${obra}`, 9, cursorY + 5.5);
+        doc.text(`OBRA: ${obra}`, 9, cursorY + 5.5);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.text(`${totalVeicObra} veículo(s)`, pageWidth - 9, cursorY + 5.5, { align: 'right' });
