@@ -225,7 +225,9 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
       const pageHeight = doc.internal.pageSize.getHeight();
 
       // ========== MODERN HEADER ==========
-      const empresa = activeEmpresaName || 'Empresa';
+      const rawEmpresa = clienteNome || activeEmpresaName || 'Empresa';
+      // Se o nome vier como "Cliente - email@x.com", limpa o prefixo
+      const empresa = rawEmpresa.replace(/^Cliente\s*-\s*/i, '').trim() || 'Empresa';
 
       // Brand bar (Prussian Blue)
       doc.setFillColor(12, 21, 57);
