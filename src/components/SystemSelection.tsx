@@ -89,8 +89,8 @@ const SystemSelection = () => {
               {/* Divider */}
               <div className="h-px bg-border/60 mb-6" />
 
-              {/* Features List - minimal with check icons */}
-              <ul className="space-y-3 mb-8">
+              {/* Features List - centered */}
+              <ul className="space-y-3 mb-8 mx-auto w-fit">
                 {[
                   'Apólices e renovações',
                   'Gestão de frotas e veículos',
