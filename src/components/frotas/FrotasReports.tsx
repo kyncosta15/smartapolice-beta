@@ -447,13 +447,31 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
                 </SelectContent>
               </Select>
 
-              <Select value={filterMarca} onValueChange={setFilterMarca}>
+              <Select
+                value={filterMarca}
+                onValueChange={(v) => {
+                  setFilterMarca(v);
+                  setFilterModelo('all');
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Marca" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas as marcas</SelectItem>
                   {marcas.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filterModelo} onValueChange={setFilterModelo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Modelo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os modelos</SelectItem>
+                  {modelos.map(m => (
                     <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
                 </SelectContent>
