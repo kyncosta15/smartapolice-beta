@@ -110,7 +110,7 @@ const SmartBeneficiosAuthContent = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
       {/* Header */}
       <header className="p-6 flex items-center justify-between">
-        <Link to="/system-selection" className="flex items-center text-muted-foreground hover:text-primary transition-colors">
+        <Link to="/auth/smartapolice" className="flex items-center text-muted-foreground hover:text-primary transition-colors">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Link>

@@ -50,8 +50,8 @@ export const AuthPage = () => {
           navigate('/dashboard');
         }
       } else {
-        // If no user, redirect to system selection to choose login type
-        navigate('/system-selection');
+        // If no user, redirect directly to login
+        navigate('/auth/smartapolice');
       }
     }
   }, [user, navigate, loading]);
