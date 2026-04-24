@@ -73,17 +73,28 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
   } = useFrotaStatusFix();
 
   useEffect(() => {
-    // Buscar marcas disponíveis no banco de dados
+    // Buscar marcas e modelos disponíveis no banco de dados
     const fetchMarcas = async () => {
       try {
         const { data: veiculos } = await supabase
           .from('frota_veiculos')
-          .select('marca')
+          .select('marca, modelo')
           .not('marca', 'is', null);
         
         if (veiculos) {
           const marcasUnicas = [...new Set(veiculos.map(v => v.marca))].filter(Boolean);
           setMarcaOptions(marcasUnicas.map(marca => ({ value: marca!, label: marca! })));
+
+          const modelosMap = new Map<string, { value: string; label: string; marca: string }>();
+          veiculos.forEach(v => {
+            if (v.modelo) {
+              const key = `${v.marca}|${v.modelo}`;
+              if (!modelosMap.has(key)) {
+                modelosMap.set(key, { value: v.modelo, label: v.modelo, marca: v.marca || '' });
+              }
+            }
+          });
+          setModeloOptions(Array.from(modelosMap.values()).sort((a, b) => a.label.localeCompare(b.label)));
         }
       } catch (error) {
         console.error('Erro ao buscar marcas:', error);
