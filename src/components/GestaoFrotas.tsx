@@ -18,9 +18,11 @@ import {
   Database,
   RefreshCw,
   Settings,
-  Link
+  Link,
+  FileBarChart
 } from 'lucide-react';
 import { FrotasDashboard } from './frotas/FrotasDashboard';
+import { FrotasReports } from './frotas/FrotasReports';
 import { FrotasTable } from './frotas/FrotasTable';
 import { FrotasKPICards } from './frotas/FrotasKPICards';
 import { FrotasFipeNew } from './frotas/FrotasFipeNew';
@@ -233,6 +235,13 @@ export function GestaoFrotas() {
                     <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                     <span>Solicitações/Tickets</span>
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="relatorios" 
+                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
+                  >
+                    <FileBarChart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span>Relatórios</span>
+                  </TabsTrigger>
                 </TabsList>
               </nav>
             </div>
@@ -308,6 +317,10 @@ export function GestaoFrotas() {
 
             <TabsContent value="solicitacoes" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
               <FleetRequestsList />
+            </TabsContent>
+
+            <TabsContent value="relatorios" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
+              <FrotasReports veiculos={allVeiculos} loading={loading} />
             </TabsContent>
           </div>
         </Tabs>
