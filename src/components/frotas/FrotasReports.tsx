@@ -123,6 +123,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
   const [filterCategoria, setFilterCategoria] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterMarca, setFilterMarca] = useState<string>('all');
+  const [filterModelo, setFilterModelo] = useState<string>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedColumns, setSelectedColumns] = useState<Set<string>>(
     new Set(ALL_COLUMNS.filter(c => c.default).map(c => String(c.key)))
