@@ -400,6 +400,7 @@ export class FipePDFGenerator {
     const empresa = (data.empresa || 'Empresa').replace(/^Cliente\s*-\s*/i, '').trim() || 'Empresa';
     await this.addHeader(empresa, data.proprietario);
     this.addDashboardKPIs(data.stats);
+    if (data.valorizacao) this.addValorizacaoKPIs(data.valorizacao);
     this.addVehiclesTable(data.veiculos, empresa);
 
     this.doc.save(filename);
@@ -409,6 +410,7 @@ export class FipePDFGenerator {
     const empresa = (data.empresa || 'Empresa').replace(/^Cliente\s*-\s*/i, '').trim() || 'Empresa';
     await this.addHeader(empresa, data.proprietario);
     this.addDashboardKPIs(data.stats);
+    if (data.valorizacao) this.addValorizacaoKPIs(data.valorizacao);
     this.addVehiclesTable(data.veiculos, empresa);
 
     const arrayBuffer = this.doc.output('arraybuffer');
