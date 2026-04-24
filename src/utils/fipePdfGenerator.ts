@@ -255,7 +255,77 @@ export class FipePDFGenerator {
     }
   }
 
-  private addVehiclesTable(veiculos: FrotaVeiculo[], empresa: string) {
+  private addValorizacaoKPIs(v: NonNullable<FipePDFData['valorizacao']>) {
+    const positivo = v.valorizacaoTotal >= 0;
+    const positivoPct = v.percentualMedio >= 0;
+
+    const kpiData = [
+      {
+        label: 'Valorização Total',
+        value: `${positivo ? '' : '-'}R$ ${Math.abs(v.valorizacaoTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        valueColor: positivo ? [22, 163, 74] : [220, 38, 38],
+        accent: positivo ? [22, 163, 74] : [220, 38, 38],
+      },
+      {
+        label: 'Média de Diferença',
+        value: `${positivoPct ? '' : ''}${v.percentualMedio.toFixed(2)}%`,
+        valueColor: positivoPct ? [22, 163, 74] : [220, 38, 38],
+        accent: positivoPct ? [22, 163, 74] : [220, 38, 38],
+      },
+      {
+        label: 'Valorizados',
+        value: String(v.veiculosValorizados),
+        valueColor: [22, 163, 74],
+        accent: [22, 163, 74],
+      },
+      {
+        label: 'Desvalorizados',
+        value: String(v.veiculosDesvalorizados),
+        valueColor: [220, 38, 38],
+        accent: [220, 38, 38],
+      },
+    ];
+
+    const gap = 5;
+    const cardWidth = (this.pageWidth - (this.margin * 2) - gap * 3) / 4;
+    const cardHeight = 22;
+    let xPos = this.margin;
+
+    kpiData.forEach((kpi) => {
+      // Card background
+      this.doc.setFillColor(255, 255, 255);
+      this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 2.5, 2.5, 'F');
+
+      // Subtle border
+      this.doc.setDrawColor(225, 230, 240);
+      this.doc.setLineWidth(0.3);
+      this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 2.5, 2.5, 'S');
+
+      // Left accent strip
+      this.doc.setFillColor(kpi.accent[0], kpi.accent[1], kpi.accent[2]);
+      this.doc.roundedRect(xPos, this.currentY, 1.5, cardHeight, 0.75, 0.75, 'F');
+
+      const textX = xPos + 6;
+
+      // Label
+      this.doc.setTextColor(110, 120, 140);
+      this.doc.setFontSize(8);
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.text(kpi.label, textX, this.currentY + 8);
+
+      // Value (colored)
+      this.doc.setTextColor(kpi.valueColor[0], kpi.valueColor[1], kpi.valueColor[2]);
+      this.doc.setFontSize(14);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(kpi.value, textX, this.currentY + 17);
+
+      xPos += cardWidth + gap;
+    });
+
+    this.currentY += cardHeight + 10;
+  }
+
+
     this.doc.setTextColor(12, 21, 57);
     this.doc.setFontSize(13);
     this.doc.setFont('helvetica', 'bold');
