@@ -127,72 +127,126 @@ export class FipePDFGenerator {
         label: 'Valor Total FIPE',
         value: this.formatCurrency(stats.totalFipeValue),
         count: stats.carros.count + stats.caminhoes.count + stats.motos.count + stats.outros.count,
-        color: [59, 130, 246]
+        color: [59, 130, 246],
+        icon: 'dollar' as const,
       },
       {
         label: 'Carros',
         value: this.formatCurrency(stats.carros.valor),
         count: stats.carros.count,
-        color: [99, 102, 241]
+        color: [99, 102, 241],
+        icon: 'car' as const,
       },
       {
         label: 'Caminhões',
         value: this.formatCurrency(stats.caminhoes.valor),
         count: stats.caminhoes.count,
-        color: [251, 146, 60]
+        color: [251, 146, 60],
+        icon: 'truck' as const,
       },
       {
         label: 'Motos',
         value: this.formatCurrency(stats.motos.valor),
         count: stats.motos.count,
-        color: [16, 185, 129]
+        color: [16, 185, 129],
+        icon: 'bike' as const,
       }
     ];
 
-    const cardWidth = (this.pageWidth - (this.margin * 2) - 15) / 4;
-    const cardHeight = 30;
+    const gap = 5;
+    const cardWidth = (this.pageWidth - (this.margin * 2) - gap * 3) / 4;
+    const cardHeight = 26;
     let xPos = this.margin;
 
     kpiData.forEach((kpi) => {
-      // Card background — white/very light for high contrast text
+      // Card background — white for high contrast text
       this.doc.setFillColor(255, 255, 255);
-      this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 3, 3, 'F');
+      this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 2.5, 2.5, 'F');
 
-      // Border in the accent color
+      // Subtle border
+      this.doc.setDrawColor(225, 230, 240);
+      this.doc.setLineWidth(0.3);
+      this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 2.5, 2.5, 'S');
+
+      // Left accent strip (slim)
+      this.doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2]);
+      this.doc.roundedRect(xPos, this.currentY, 1.5, cardHeight, 0.75, 0.75, 'F');
+
+      // Simple line icon (no background swatch)
+      const iconCx = xPos + 8;
+      const iconCy = this.currentY + 7;
       this.doc.setDrawColor(kpi.color[0], kpi.color[1], kpi.color[2]);
-      this.doc.setLineWidth(0.6);
-      this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 3, 3, 'S');
+      this.doc.setLineWidth(0.45);
+      this.drawSimpleIcon(kpi.icon, iconCx, iconCy);
 
-      // Left accent strip
-      this.doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2]);
-      this.doc.rect(xPos, this.currentY, 2.2, cardHeight, 'F');
+      const textX = xPos + 14;
 
-      // Icon swatch
-      this.doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2]);
-      this.doc.roundedRect(xPos + 5, this.currentY + 3, 10, 10, 2, 2, 'F');
-
-      // Label (dark gray)
-      this.doc.setTextColor(80, 90, 110);
-      this.doc.setFontSize(9);
+      // Label (uppercase, gray)
+      this.doc.setTextColor(110, 120, 140);
+      this.doc.setFontSize(7.5);
       this.doc.setFont('helvetica', 'bold');
-      this.doc.text(kpi.label.toUpperCase(), xPos + 18, this.currentY + 9);
+      this.doc.text(kpi.label.toUpperCase(), textX, this.currentY + 8);
 
       // Value (Prussian blue, big)
       this.doc.setTextColor(12, 21, 57);
-      this.doc.setFontSize(13);
+      this.doc.setFontSize(12);
       this.doc.setFont('helvetica', 'bold');
-      this.doc.text(kpi.value, xPos + 18, this.currentY + 18);
+      this.doc.text(kpi.value, textX, this.currentY + 16);
 
       // Count
-      this.doc.setTextColor(120, 130, 150);
-      this.doc.setFontSize(8);
+      this.doc.setTextColor(140, 150, 170);
+      this.doc.setFontSize(7.5);
       this.doc.setFont('helvetica', 'normal');
-      this.doc.text(`${kpi.count} veículo${kpi.count !== 1 ? 's' : ''}`, xPos + 18, this.currentY + 25);
+      this.doc.text(`${kpi.count} veículo${kpi.count !== 1 ? 's' : ''}`, textX, this.currentY + 22);
 
-      xPos += cardWidth + 5;
+      xPos += cardWidth + gap;
     });
 
     this.currentY += cardHeight + 10;
+  }
+
+  // Desenha ícones de linha simples (estilo Lucide) centralizados em (cx, cy), tamanho ~7mm
+  private drawSimpleIcon(icon: 'dollar' | 'car' | 'truck' | 'bike', cx: number, cy: number) {
+    const d = this.doc;
+    if (icon === 'dollar') {
+      // Círculo + cifrão
+      d.circle(cx, cy, 3.2, 'S');
+      d.setFontSize(8);
+      d.setFont('helvetica', 'bold');
+      // Reaproveita a cor do traço para o texto
+      const stroke = (d as any).getDrawColor?.() || '';
+      // Pega cor atual do desenho via re-set: já está setada antes da chamada
+      d.text('$', cx, cy + 1.4, { align: 'center' });
+    } else if (icon === 'car') {
+      // Carro: corpo (retângulo arredondado) + janelas + duas rodas
+      d.roundedRect(cx - 3.2, cy - 0.6, 6.4, 2.6, 0.6, 0.6, 'S');
+      // teto/janelas
+      d.line(cx - 2.2, cy - 0.6, cx - 1.4, cy - 2.2);
+      d.line(cx - 1.4, cy - 2.2, cx + 1.4, cy - 2.2);
+      d.line(cx + 1.4, cy - 2.2, cx + 2.2, cy - 0.6);
+      // rodas
+      d.circle(cx - 2, cy + 2, 0.6, 'S');
+      d.circle(cx + 2, cy + 2, 0.6, 'S');
+    } else if (icon === 'truck') {
+      // Caminhão: cabine + baú + rodas
+      d.roundedRect(cx - 3.4, cy - 0.4, 3.8, 2.6, 0.4, 0.4, 'S'); // baú
+      d.roundedRect(cx + 0.4, cy + 0.4, 2.6, 1.8, 0.3, 0.3, 'S'); // cabine
+      d.line(cx + 0.6, cy + 0.4, cx + 0.6, cy - 0.6); // janela superior
+      d.line(cx + 0.6, cy - 0.6, cx + 2.6, cy - 0.6);
+      d.line(cx + 2.6, cy - 0.6, cx + 3.0, cy + 0.4);
+      // rodas
+      d.circle(cx - 2.2, cy + 2.6, 0.6, 'S');
+      d.circle(cx + 1.8, cy + 2.6, 0.6, 'S');
+    } else if (icon === 'bike') {
+      // Moto: duas rodas + barra
+      d.circle(cx - 2.2, cy + 1.5, 1.2, 'S');
+      d.circle(cx + 2.2, cy + 1.5, 1.2, 'S');
+      d.line(cx - 2.2, cy + 1.5, cx, cy - 1.2);
+      d.line(cx, cy - 1.2, cx + 2.2, cy + 1.5);
+      d.line(cx - 0.4, cy - 1.2, cx + 1.4, cy - 1.2);
+      // guidão
+      d.line(cx + 1.6, cy - 1.6, cx + 2.6, cy - 1.6);
+    }
   }
 
   private addVehiclesTable(veiculos: FrotaVeiculo[], empresa: string) {
