@@ -103,6 +103,7 @@ function formatStatusSeguro(v: any): string {
 
 export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
   const { toast } = useToast();
+  const { activeEmpresaName } = useTenant();
   const [search, setSearch] = useState('');
   const [filterCategoria, setFilterCategoria] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
