@@ -286,6 +286,11 @@ export function useFrotasData(filters: FrotaFilters) {
       result = result.filter(v => filters.marcaModelo.includes(v.marca || ''));
     }
 
+    // Model filter
+    if (filters.modelo && filters.modelo.length > 0) {
+      result = result.filter(v => filters.modelo.includes(v.modelo || ''));
+    }
+
     // Quitado filter
     if (filters.quitado) {
       result = result.filter(v => {
