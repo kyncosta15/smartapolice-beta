@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import smartControlShield from '@/assets/smartcontrol-shield.png';
 import { useAuth } from '@/contexts/AuthContext';
