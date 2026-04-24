@@ -58,9 +58,10 @@ const statusOptions = [
 
 export function FrotasFilters({ filters, onFilterChange, loading, searchLoading = false }: FrotasFiltersProps) {
   const [marcaOptions, setMarcaOptions] = useState<{ value: string; label: string }[]>([]);
+  const [modeloOptions, setModeloOptions] = useState<{ value: string; label: string; marca: string }[]>([]);
   const [bancoOptions, setBancoOptions] = useState<string[]>([]);
-  const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0 || !!filters.quitado || !!filters.banco || !!filters.revisao;
-  const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length + (filters.quitado ? 1 : 0) + (filters.banco ? 1 : 0) + (filters.revisao ? 1 : 0);
+  const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0 || (filters.modelo?.length || 0) > 0 || !!filters.quitado || !!filters.banco || !!filters.revisao;
+  const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length + (filters.modelo?.length || 0) + (filters.quitado ? 1 : 0) + (filters.banco ? 1 : 0) + (filters.revisao ? 1 : 0);
 
   // Hook para correção automática de status
   const { 
