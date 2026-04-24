@@ -7,11 +7,19 @@ interface ClientPreview {
 }
 
 const AVATAR_COLORS = [
-  'bg-[hsl(230,80%,55%)]',
-  'bg-[hsl(280,70%,55%)]',
-  'bg-[hsl(180,70%,45%)]',
-  'bg-[hsl(20,85%,55%)]',
-  'bg-[hsl(340,75%,55%)]',
+  'bg-primary text-primary-foreground',
+  'bg-secondary text-secondary-foreground',
+  'bg-accent text-accent-foreground',
+  'bg-muted text-foreground',
+  'bg-primary/80 text-primary-foreground',
+];
+
+const FALLBACK_TOTAL = 33;
+const FALLBACK_CLIENTS = [
+  'Cliente - sandbox@rcaldas.com.br',
+  'Cliente - financeiro@grupoassuncao.net',
+  'Cliente - gestao.operacional@plazadoro.com.br',
+  'Cliente - contato@andradesimoes.com.br',
 ];
 
 const getInitials = (name: string): string => {
@@ -32,43 +40,48 @@ const getInitials = (name: string): string => {
   return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
 };
 
+const toPreview = (name: string, id: string): ClientPreview => ({
+  id,
+  initials: getInitials(name),
+});
+
 export const ClientsSocialProof = () => {
-  const [previews, setPreviews] = useState<ClientPreview[]>([]);
-  const [total, setTotal] = useState<number>(0);
+  const [previews, setPreviews] = useState<ClientPreview[]>(() =>
+    FALLBACK_CLIENTS.map((name, index) => toPreview(name, `fallback-${index}`))
+  );
+  const [total, setTotal] = useState<number>(FALLBACK_TOTAL);
 
   useEffect(() => {
     const load = async () => {
-      const { data, count } = await supabase
-        .from('empresas')
-        .select('id, nome', { count: 'exact' })
-        .order('created_at', { ascending: false });
+      try {
+        const { data, count } = await supabase
+          .from('empresas')
+          .select('id, nome', { count: 'exact' })
+          .order('created_at', { ascending: false });
 
-      if (!data) return;
+        if (!data) return;
 
-      // Filter out generic placeholders
-      const real = data.filter((e) => {
-        const name = (e.nome || '').toLowerCase();
-        return (
-          name !== 'clientes individuais' &&
-          !name.includes('@gmail.com') &&
-          !name.includes('@hotmail.com') &&
-          !name.includes('@outlook.com')
-        );
-      });
+        const real = data.filter((e) => {
+          const name = (e.nome || '').toLowerCase();
+          return (
+            name !== 'clientes individuais' &&
+            !name.includes('@gmail.com') &&
+            !name.includes('@hotmail.com') &&
+            !name.includes('@outlook.com')
+          );
+        });
 
-      setTotal(count ?? data.length);
-      setPreviews(
-        real.slice(0, 4).map((e) => ({
-          id: e.id,
-          initials: getInitials(e.nome),
-        }))
-      );
+        if (real.length > 0) {
+          setTotal(Math.max(count ?? real.length, real.length));
+          setPreviews(real.slice(0, 4).map((e) => toPreview(e.nome, e.id)));
+        }
+      } catch (error) {
+        console.error('Clients social proof fallback enabled:', error);
+      }
     };
 
     load();
   }, []);
-
-  if (total === 0) return null;
 
   return (
     <div className="flex items-center gap-3 mt-8 pt-6 border-t border-border/40">
@@ -76,7 +89,7 @@ export const ClientsSocialProof = () => {
         {previews.map((client, i) => (
           <div
             key={client.id}
-            className={`w-8 h-8 rounded-full border-2 border-card flex items-center justify-center text-[10px] font-semibold text-white ${
+            className={`w-8 h-8 rounded-full border-2 border-card flex items-center justify-center text-[10px] font-semibold ${
               AVATAR_COLORS[i % AVATAR_COLORS.length]
             }`}
             title={client.initials}
