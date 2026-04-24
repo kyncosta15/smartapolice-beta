@@ -273,11 +273,11 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
       autoTable(doc, {
         head: [headers],
         body: rows,
-        startY: 36,
+        startY: 41,
         styles: { fontSize: 7, cellPadding: 2, textColor: [40, 40, 40] },
         headStyles: { fillColor: [12, 21, 57], textColor: 255, fontStyle: 'bold', fontSize: 8 },
         alternateRowStyles: { fillColor: [245, 247, 250] },
-        margin: { left: 6, right: 6, top: 36 },
+        margin: { left: 6, right: 6, top: 41 },
         didDrawPage: (data) => {
           // Footer on every page
           const pageCount = doc.getNumberOfPages();
