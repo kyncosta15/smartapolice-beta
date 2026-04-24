@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import smartControlShield from '@/assets/smartcontrol-shield.png';
+import { ClientsSocialProof } from '@/components/auth/ClientsSocialProof';
 
 const features = [
   'Apólices e renovações',
@@ -105,27 +106,7 @@ const SmartApoliceAuthContent = () => {
             </div>
 
             {/* Footer / social proof */}
-            <div className="hidden lg:flex items-center gap-3 mt-10 pt-6 border-t border-border/40">
-              <div className="flex -space-x-2">
-                {['JR', 'AM', 'FS'].map((initials, i) => (
-                  <div
-                    key={initials}
-                    className={`w-8 h-8 rounded-full border-2 border-card flex items-center justify-center text-[10px] font-semibold text-white ${
-                      i === 0
-                        ? 'bg-[hsl(230,80%,55%)]'
-                        : i === 1
-                        ? 'bg-[hsl(280,70%,55%)]'
-                        : 'bg-[hsl(180,70%,45%)]'
-                    }`}
-                  >
-                    {initials}
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">+240 gestores</span> ativos hoje
-              </p>
-            </div>
+            <ClientsSocialProof />
           </div>
 
           {/* RIGHT — Auth form */}
