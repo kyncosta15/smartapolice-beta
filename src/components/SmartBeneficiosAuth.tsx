@@ -12,7 +12,7 @@ export const SmartBeneficiosAuth = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
       {/* Header */}
       <header className="p-6 flex items-center justify-between">
-        <Link to="/system-selection" className="flex items-center text-muted-foreground hover:text-primary transition-colors">
+        <Link to="/auth/smartapolice" className="flex items-center text-muted-foreground hover:text-primary transition-colors">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Link>
@@ -74,7 +74,7 @@ export const SmartBeneficiosAuth = () => {
                   Portal do Colaborador
                 </Button>
               </Link>
-              <Link to="/system-selection">
+              <Link to="/auth/smartapolice">
                 <Button variant="outline" className="w-full">
                   Voltar à seleção
                 </Button>

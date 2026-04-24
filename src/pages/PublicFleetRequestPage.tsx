@@ -95,7 +95,7 @@ export default function PublicFleetRequestPage() {
 
   useEffect(() => {
     if (!token) {
-      navigate('/system-selection');
+      navigate('/auth/smartapolice');
       return;
     }
 
@@ -288,7 +288,7 @@ export default function PublicFleetRequestPage() {
               <p className="text-gray-500 mb-4">
                 O link que você acessou não é válido ou já expirou.
               </p>
-              <Button onClick={() => navigate('/system-selection')} variant="outline">
+              <Button onClick={() => navigate('/auth/smartapolice')} variant="outline">
                 Voltar ao Início
               </Button>
             </div>
