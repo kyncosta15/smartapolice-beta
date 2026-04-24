@@ -103,10 +103,10 @@ const SmartApoliceAuthContent = () => {
                   </li>
                 ))}
               </ul>
-            </div>
 
-            {/* Footer / social proof */}
-            <ClientsSocialProof />
+              {/* Social proof */}
+              <ClientsSocialProof />
+            </div>
           </div>
 
           {/* RIGHT — Auth form */}
