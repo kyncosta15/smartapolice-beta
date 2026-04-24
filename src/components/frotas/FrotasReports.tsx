@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,6 +105,20 @@ function formatStatusSeguro(v: any): string {
 export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
   const { toast } = useToast();
   const { activeEmpresaName } = useTenant();
+  const [clienteNome, setClienteNome] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (data?.name) setClienteNome(data.name);
+    })();
+  }, []);
   const [search, setSearch] = useState('');
   const [filterCategoria, setFilterCategoria] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -210,7 +225,9 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
       const pageHeight = doc.internal.pageSize.getHeight();
 
       // ========== MODERN HEADER ==========
-      const empresa = activeEmpresaName || 'Empresa';
+      const rawEmpresa = clienteNome || activeEmpresaName || 'Empresa';
+      // Se o nome vier como "Cliente - email@x.com", limpa o prefixo
+      const empresa = rawEmpresa.replace(/^Cliente\s*-\s*/i, '').trim() || 'Empresa';
 
       // Brand bar (Prussian Blue)
       doc.setFillColor(12, 21, 57);
