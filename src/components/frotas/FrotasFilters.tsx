@@ -506,6 +506,24 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
             );
           })}
 
+          {(filters.modelo || []).map((modelo) => (
+            <Badge 
+              key={modelo} 
+              variant="secondary" 
+              className="flex items-center gap-1 px-2 py-1"
+            >
+              <Car className="h-3 w-3" />
+              {modelo}
+              <button
+                onClick={() => removeModeloFilter(modelo)}
+                className="ml-1 hover:bg-muted rounded-full p-0.5"
+                aria-label={`Remover filtro ${modelo}`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+
           {filters.quitado && (
             <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
               <CheckCircle2 className="h-3 w-3" />
