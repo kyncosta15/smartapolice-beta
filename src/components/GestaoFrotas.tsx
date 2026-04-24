@@ -68,6 +68,7 @@ export function GestaoFrotas() {
   const [filters, setFilters] = useState<FrotaFilters>({
     search: '',
     marcaModelo: [],
+    modelo: [],
     categoria: [],
     status: [],
     ordenacao: 'padrao'
