@@ -50,6 +50,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface FrotaFilters {
   search: string;
   marcaModelo: string[];
+  modelo: string[];
   categoria: string[];
   status: string[];
   ordenacao: string;
