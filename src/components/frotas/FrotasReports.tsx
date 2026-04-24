@@ -258,13 +258,14 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
       doc.setFillColor(245, 247, 250);
       doc.rect(0, 27.2, pageWidth, 9, 'F');
       doc.setTextColor(80, 90, 110);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.5);
-      doc.text('EMPRESA', 8, 31.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('EMPRESA', 8, 33);
+      const empresaLabelWidth = doc.getTextWidth('EMPRESA');
       doc.setTextColor(12, 21, 57);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
-      doc.text(empresa.toUpperCase(), 24, 33.2);
+      doc.text(empresa.toUpperCase(), 8 + empresaLabelWidth + 4, 33);
 
 
       const headers = columnsToExport.map(c => c.label);
