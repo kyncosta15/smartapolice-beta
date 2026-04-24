@@ -13,13 +13,13 @@ export const LandingPage = () => {
         <section className="isolate">
           <div className="mx-auto max-w-screen-md px-6 py-12 sm:py-16 text-center min-h-[75vh] flex flex-col justify-center">
             {/* Brand Lockup */}
-            <div className="mx-auto mb-6 flex flex-col items-center">
+            <div className="mx-auto mb-10 flex flex-col items-center">
               <img
                 src={smartControlShield}
                 alt="SmartControl"
-                className="w-20 h-20 sm:w-24 sm:h-24 object-contain mb-4 drop-shadow-lg"
-                width="96"
-                height="96"
+                className="w-16 h-16 sm:w-20 sm:h-20 object-contain mb-3 drop-shadow-lg"
+                width="80"
+                height="80"
                 loading="eager"
                 fetchPriority="high"
                 decoding="sync"
@@ -27,10 +27,9 @@ export const LandingPage = () => {
 
               {/* H1 Brand Name - Smart (white/foreground) + Control (blue gradient) */}
               <h1
-                className="font-condor font-bold tracking-tight leading-tight mb-2"
+                className="font-condor font-bold tracking-tight leading-[0.95] mb-3"
                 style={{
-                  fontSize: "clamp(40px, 6vw, 80px)",
-                  lineHeight: "1.05",
+                  fontSize: "clamp(36px, 5.2vw, 68px)",
                 }}
                 aria-label="SmartControl"
               >
@@ -40,35 +39,35 @@ export const LandingPage = () => {
                 </span>
               </h1>
 
-            {/* Tagline - Primary hierarchy */}
+              {/* Tagline - Secondary hierarchy (smaller, refined) */}
               <p
-                className="font-muli font-semibold tracking-tight mb-3 bg-gradient-to-r from-foreground via-foreground/70 to-muted-foreground bg-clip-text text-transparent dark:from-white dark:via-slate-200 dark:to-slate-400"
-                style={{ fontSize: "clamp(20px, 2.4vw, 28px)", lineHeight: "1.2" }}
+                className="font-muli font-medium tracking-tight mb-3 text-muted-foreground dark:text-slate-300"
+                style={{ fontSize: "clamp(15px, 1.5vw, 18px)", lineHeight: "1.3" }}
               >
                 Gestão de Ativos Inteligente
               </p>
 
               {/* Powered by - Tertiary hierarchy */}
-              <p className="text-[11px] sm:text-xs font-muli uppercase tracking-[0.15em] text-muted-foreground/70 mb-6">
+              <p className="text-[10px] sm:text-[11px] font-muli uppercase tracking-[0.18em] text-muted-foreground/60">
                 powered by <span className="font-semibold text-foreground/70 normal-case tracking-normal">RCorp</span> · soluções corporativas inteligentes
               </p>
             </div>
 
-            {/* H2 Secondary Title */}
+            {/* H2 PRIMARY HEADLINE - Largest, dominant */}
             <h2
-              className="font-muli font-semibold tracking-tight text-foreground dark:text-foreground mb-3"
+              className="font-muli font-bold tracking-tight text-foreground dark:text-foreground mb-5 leading-[1.05]"
               style={{
                 textWrap: "balance" as any,
-                fontSize: "clamp(28px, 4.2vw, 54px)",
+                fontSize: "clamp(36px, 5.5vw, 64px)",
               }}
             >
               Transforme a gestão da sua empresa
             </h2>
 
-            {/* Description - Single sentence */}
+            {/* Description - Supporting text */}
             <p
-              className="mx-auto max-w-prose font-muli text-muted-foreground mb-4"
-              style={{ fontSize: "clamp(16px, 1.6vw, 20px)" }}
+              className="mx-auto max-w-prose font-muli text-muted-foreground mb-6"
+              style={{ fontSize: "clamp(15px, 1.5vw, 18px)", lineHeight: "1.5" }}
             >
               Otimize processos, centralize documentos e acompanhe tudo em um único painel.
             </p>
