@@ -18,9 +18,11 @@ import {
   Database,
   RefreshCw,
   Settings,
-  Link
+  Link,
+  FileBarChart
 } from 'lucide-react';
 import { FrotasDashboard } from './frotas/FrotasDashboard';
+import { FrotasReports } from './frotas/FrotasReports';
 import { FrotasTable } from './frotas/FrotasTable';
 import { FrotasKPICards } from './frotas/FrotasKPICards';
 import { FrotasFipeNew } from './frotas/FrotasFipeNew';
