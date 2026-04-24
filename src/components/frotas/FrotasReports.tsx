@@ -9,7 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, FileSpreadsheet, Filter, Search, CheckSquare, Square, Loader2 } from 'lucide-react';
+import { FileText, FileSpreadsheet, Filter, Search, CheckSquare, Square, Loader2, Building2, ChevronDown } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { useTenant } from '@/contexts/TenantContext';
@@ -849,7 +851,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
 
           {/* Actions */}
           <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row gap-2 justify-end">
+            <div className="flex flex-col sm:flex-row gap-2 justify-end items-stretch sm:items-center">
               <Button
                 variant="outline"
                 onClick={handleExportXLSX}
@@ -875,52 +877,61 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
                 )}
                 Gerar PDF
               </Button>
-            </div>
 
-            {/* Relatório por Obra */}
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mt-1">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
-                      Agrupado
-                    </span>
-                    <p className="text-sm font-semibold text-foreground">Relatório por Obra</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Agrupa os veículos filtrados por obra e responsável.
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    onClick={handleExportXLSXObra}
-                    disabled={generating !== null || filteredVeiculos.length === 0}
-                    className="gap-2"
-                    size="sm"
-                  >
-                    {generating === 'xlsx-obra' ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <FileSpreadsheet className="h-4 w-4" />
-                    )}
-                    XLSX por Obra
-                  </Button>
-                  <Button
-                    onClick={handleExportPDFObra}
-                    disabled={generating !== null || filteredVeiculos.length === 0}
-                    className="gap-2"
-                    size="sm"
-                  >
-                    {generating === 'pdf-obra' ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
+              {/* Botão minimalista: Relatório por Obra */}
+              <TooltipProvider delayDuration={200}>
+                <DropdownMenu>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          disabled={generating !== null || filteredVeiculos.length === 0}
+                          aria-label="Relatório por obra"
+                        >
+                          {generating === 'xlsx-obra' || generating === 'pdf-obra' ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Building2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p className="text-xs">Relatório por obra</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="text-xs">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-3.5 w-3.5 text-primary" />
+                        <span>Agrupado por obra</span>
+                      </div>
+                      <p className="text-[10px] font-normal text-muted-foreground mt-0.5">
+                        Obra → responsável
+                      </p>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleExportPDFObra}
+                      disabled={generating !== null}
+                      className="gap-2 text-sm"
+                    >
                       <FileText className="h-4 w-4" />
-                    )}
-                    PDF por Obra
-                  </Button>
-                </div>
-              </div>
+                      Gerar PDF por obra
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleExportXLSXObra}
+                      disabled={generating !== null}
+                      className="gap-2 text-sm"
+                    >
+                      <FileSpreadsheet className="h-4 w-4" />
+                      Gerar XLSX por obra
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TooltipProvider>
             </div>
           </div>
         </CardContent>
