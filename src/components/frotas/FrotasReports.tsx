@@ -11,9 +11,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FileText, FileSpreadsheet, Filter, Search, CheckSquare, Square, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
+import { useTenant } from '@/contexts/TenantContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import logoSrc from '@/assets/smartapolice-logo-new.png';
+
+async function loadImageAsDataURL(src: string): Promise<{ data: string; w: number; h: number } | null> {
+  try {
+    const res = await fetch(src);
+    const blob = await res.blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    const dims = await new Promise<{ w: number; h: number }>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ w: img.width, h: img.height });
+      img.onerror = () => resolve({ w: 1, h: 1 });
+      img.src = dataUrl;
+    });
+    return { data: dataUrl, w: dims.w, h: dims.h };
+  } catch {
+    return null;
+  }
+}
 
 interface FrotasReportsProps {
   veiculos: FrotaVeiculo[];
@@ -79,6 +103,7 @@ function formatStatusSeguro(v: any): string {
 
 export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
   const { toast } = useToast();
+  const { activeEmpresaName } = useTenant();
   const [search, setSearch] = useState('');
   const [filterCategoria, setFilterCategoria] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -182,17 +207,54 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
     try {
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
-      // Header
-      doc.setFontSize(16);
+      // ========== MODERN HEADER ==========
+      // Brand bar (Prussian Blue)
+      doc.setFillColor(12, 21, 57);
+      doc.rect(0, 0, pageWidth, 28, 'F');
+
+      // Accent stripe
+      doc.setFillColor(59, 130, 246);
+      doc.rect(0, 28, pageWidth, 1.2, 'F');
+
+      // Logo (left)
+      const logo = await loadImageAsDataURL(logoSrc);
+      if (logo) {
+        const targetH = 14;
+        const ratio = logo.w / logo.h;
+        const targetW = targetH * ratio;
+        try {
+          doc.addImage(logo.data, 'PNG', 8, 7, targetW, targetH);
+        } catch {}
+      }
+
+      // Title (center)
+      doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
-      doc.text(reportTitle, pageWidth / 2, 15, { align: 'center' });
+      doc.setFontSize(16);
+      doc.text(reportTitle, pageWidth / 2, 13, { align: 'center' });
 
-      doc.setFontSize(9);
+      // Company name + meta (center, smaller)
       doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const empresa = activeEmpresaName || 'Empresa';
+      doc.text(empresa, pageWidth / 2, 19, { align: 'center' });
+
       const now = new Date().toLocaleString('pt-BR');
-      doc.text(`Gerado em: ${now}`, pageWidth / 2, 21, { align: 'center' });
-      doc.text(`Total de veículos: ${veiculosToExport.length}`, pageWidth / 2, 26, { align: 'center' });
+      doc.setFontSize(8);
+      doc.setTextColor(200, 215, 240);
+      doc.text(`Gerado em ${now}  •  ${veiculosToExport.length} veículo(s)`, pageWidth / 2, 24, { align: 'center' });
+
+      // System brand (right)
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('R Corp', pageWidth - 8, 13, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(200, 215, 240);
+      doc.text('Gestão Inteligente de Frotas', pageWidth - 8, 18, { align: 'right' });
 
       const headers = columnsToExport.map(c => c.label);
       const rows = buildRows().map(r => headers.map(h => r[h]));
@@ -200,11 +262,30 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
       autoTable(doc, {
         head: [headers],
         body: rows,
-        startY: 32,
-        styles: { fontSize: 7, cellPadding: 1.5 },
-        headStyles: { fillColor: [12, 21, 57], textColor: 255, fontStyle: 'bold' },
+        startY: 36,
+        styles: { fontSize: 7, cellPadding: 2, textColor: [40, 40, 40] },
+        headStyles: { fillColor: [12, 21, 57], textColor: 255, fontStyle: 'bold', fontSize: 8 },
         alternateRowStyles: { fillColor: [245, 247, 250] },
-        margin: { left: 6, right: 6 },
+        margin: { left: 6, right: 6, top: 36 },
+        didDrawPage: (data) => {
+          // Footer on every page
+          const pageCount = doc.getNumberOfPages();
+          const currentPage = data.pageNumber;
+          doc.setFontSize(7);
+          doc.setTextColor(120, 120, 120);
+          doc.setFont('helvetica', 'normal');
+          doc.text(
+            `${empresa}  •  Relatório de Frotas`,
+            8,
+            pageHeight - 6
+          );
+          doc.text(
+            `Página ${currentPage} de ${pageCount}`,
+            pageWidth - 8,
+            pageHeight - 6,
+            { align: 'right' }
+          );
+        },
       });
 
       const fileName = `${reportTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${Date.now()}.pdf`;
