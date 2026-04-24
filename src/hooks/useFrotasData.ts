@@ -329,7 +329,7 @@ export function useFrotasData(filters: FrotaFilters) {
     }
 
     return result;
-  }, [allVeiculos, financeMap, reviewedVehicleIds, filters.search, filters.categoria, filters.status, filters.marcaModelo, filters.quitado, filters.banco, filters.revisao, filters.ordenacao]);
+  }, [allVeiculos, financeMap, reviewedVehicleIds, filters.search, filters.categoria, filters.status, filters.marcaModelo, filters.modelo, filters.quitado, filters.banco, filters.revisao, filters.ordenacao]);
 
   // KPIs based on all vehicles (unfiltered)
   const kpis = useMemo((): FrotaKPIs => {
