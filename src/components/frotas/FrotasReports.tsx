@@ -105,6 +105,20 @@ function formatStatusSeguro(v: any): string {
 export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
   const { toast } = useToast();
   const { activeEmpresaName } = useTenant();
+  const [clienteNome, setClienteNome] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (data?.name) setClienteNome(data.name);
+    })();
+  }, []);
   const [search, setSearch] = useState('');
   const [filterCategoria, setFilterCategoria] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
