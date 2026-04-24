@@ -127,6 +127,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
       categoria: [],
       status: [],
       marcaModelo: [],
+      modelo: [],
       ordenacao: 'padrao',
       quitado: undefined,
       revisao: undefined,
@@ -162,6 +163,14 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
     onFilterChange({ marcaModelo: newMarcas });
   };
 
+  const handleModeloChange = (modelo: string, checked: boolean) => {
+    const current = filters.modelo || [];
+    const newModelos = checked
+      ? [...current, modelo]
+      : current.filter(m => m !== modelo);
+    onFilterChange({ modelo: newModelos });
+  };
+
   const removeCategoriaFilter = (categoria: string) => {
     onFilterChange({ 
       categoria: filters.categoria.filter(c => c !== categoria) 
@@ -179,6 +188,17 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
       marcaModelo: filters.marcaModelo.filter(m => m !== marca) 
     });
   };
+
+  const removeModeloFilter = (modelo: string) => {
+    onFilterChange({ 
+      modelo: (filters.modelo || []).filter(m => m !== modelo) 
+    });
+  };
+
+  // Modelos visíveis: filtra pelas marcas selecionadas se houver
+  const visibleModelos = filters.marcaModelo.length > 0
+    ? modeloOptions.filter(m => filters.marcaModelo.includes(m.marca))
+    : modeloOptions;
 
   const handleAutoFix = async () => {
     await executeAutoFix();
