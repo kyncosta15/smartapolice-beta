@@ -36,6 +36,21 @@ interface FrotasFipeProps {
 export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onVehicleUpdate }: FrotasFipeProps) {
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { activeEmpresaName } = useTenant();
+  const [clienteNome, setClienteNome] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (data?.name) setClienteNome(data.name);
+    })();
+  }, []);
   const [selectedVehicle, setSelectedVehicle] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
