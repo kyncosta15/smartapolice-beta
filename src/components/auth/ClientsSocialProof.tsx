@@ -71,7 +71,7 @@ export const ClientsSocialProof = () => {
   if (total === 0) return null;
 
   return (
-    <div className="hidden lg:flex items-center gap-3 mt-10 pt-6 border-t border-border/40">
+    <div className="flex items-center gap-3 mt-8 pt-6 border-t border-border/40">
       <div className="flex -space-x-2">
         {previews.map((client, i) => (
           <div
