@@ -356,7 +356,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     }
   };
 
-  const handleGeneratePDF = () => {
+  const handleGeneratePDF = async () => {
     try {
       const pdfGenerator = new FipePDFGenerator();
       
@@ -391,14 +391,17 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
         }
       };
 
+      const empresa = clienteNome || activeEmpresaName || 'Empresa';
+
       const pdfData = {
         veiculos: veiculosFiltrados,
         stats,
-        proprietario: filterProprietario !== 'all' ? filterProprietario : undefined
+        proprietario: filterProprietario !== 'all' ? filterProprietario : undefined,
+        empresa,
       };
 
       const filename = `relatorio-fipe-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
-      pdfGenerator.download(pdfData, filename);
+      await pdfGenerator.download(pdfData, filename);
 
       toast({
         title: "PDF gerado com sucesso",
