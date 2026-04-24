@@ -318,6 +318,10 @@ export function GestaoFrotas() {
             <TabsContent value="solicitacoes" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
               <FleetRequestsList />
             </TabsContent>
+
+            <TabsContent value="relatorios" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
+              <FrotasReports veiculos={allVeiculos} loading={loading} />
+            </TabsContent>
           </div>
         </Tabs>
       </div>
