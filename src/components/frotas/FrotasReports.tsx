@@ -15,7 +15,7 @@ import { useTenant } from '@/contexts/TenantContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import logoSrc from '@/assets/smartapolice-logo-new.png';
+import logoSrc from '@/assets/smartcontrol-logo-shield.png';
 
 async function loadImageAsDataURL(src: string): Promise<{ data: string; w: number; h: number } | null> {
   try {
