@@ -895,30 +895,10 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
 
           <Separator />
 
-          {/* Actions com categorias (Geral / Por Obra) */}
-          <Tabs defaultValue="geral" className="w-full">
-            <TabsList className="bg-transparent border-b border-border rounded-none p-0 h-auto w-full justify-start gap-1">
-              <TabsTrigger
-                value="geral"
-                className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Visão Geral
-              </TabsTrigger>
-              <TabsTrigger
-                value="obra"
-                className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
-              >
-                <HardHat className="h-4 w-4" />
-                Por Obra
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="geral" className="mt-4 space-y-3">
-              <p className="text-xs text-muted-foreground">
-                Relatório completo com todos os veículos selecionados.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2 justify-end">
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-2 justify-end">
+            {reportMode === 'geral' ? (
+              <>
                 <Button
                   variant="outline"
                   onClick={handleExportXLSX}
@@ -944,22 +924,9 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
                   )}
                   Gerar PDF
                 </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="obra" className="mt-4 space-y-3">
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
-                <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <HardHat className="h-5 w-5 text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">Relatório agrupado por Obra</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Os veículos serão organizados por obra (canteiro) e, dentro de cada obra, agrupados por responsável.
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 justify-end">
+              </>
+            ) : (
+              <>
                 <Button
                   variant="outline"
                   onClick={handleExportXLSXObra}
@@ -985,9 +952,10 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
                   )}
                   Gerar PDF
                 </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
+              </>
+            )}
+          </div>
+
 
         </CardContent>
       </Card>
