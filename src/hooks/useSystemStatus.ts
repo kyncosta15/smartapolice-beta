@@ -26,9 +26,10 @@ const SUPABASE_URL = 'https://jhvbfvqhuemuvwgqpskz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpodmJmdnFodWVtdXZ3Z3Fwc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTI2MDEsImV4cCI6MjA2Njg4ODYwMX0.V8I0byW7xs0iMBEBc6C3h0lvPhgPZ4mGwjfm31XkEQg';
 const SUPABASE_HEALTH_URL = `${SUPABASE_URL}/auth/v1/health`;
 const CHECK_INTERVAL_MS = 60_000; // 60s — background, não bloqueia
-const SLOW_THRESHOLD_MS = 2500;
-const TIMEOUT_MS = 6000;
-const EDGE_TIMEOUT_MS = 4000;
+const SLOW_THRESHOLD_MS = 5000; // só considera lento acima de 5s
+const TIMEOUT_MS = 8000;
+const EDGE_TIMEOUT_MS = 8000; // edge functions podem ter cold start de ~3-5s
+const FAILURE_THRESHOLD = 2; // exige 2 falhas consecutivas antes de degradar
 
 const initialCheck = (): ServiceCheck => ({
   status: 'checking',
