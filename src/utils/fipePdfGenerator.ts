@@ -325,7 +325,7 @@ export class FipePDFGenerator {
     this.currentY += cardHeight + 10;
   }
 
-
+  private addVehiclesTable(veiculos: FrotaVeiculo[], empresa: string) {
     this.doc.setTextColor(12, 21, 57);
     this.doc.setFontSize(13);
     this.doc.setFont('helvetica', 'bold');
