@@ -393,9 +393,19 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
 
       const empresa = clienteNome || activeEmpresaName || 'Empresa';
 
+      // Valorização (NF vs FIPE) — somente veículos com ambos os preços
+      const comAmbos = veiculosFiltrados.filter(v => v.preco_fipe && v.preco_nf);
+      const valorizacao = comAmbos.length > 0 ? {
+        valorizacaoTotal: comAmbos.reduce((acc, v) => acc + (v.preco_fipe! - v.preco_nf!), 0),
+        percentualMedio: comAmbos.reduce((acc, v) => acc + (((v.preco_fipe! - v.preco_nf!) / v.preco_nf!) * 100), 0) / comAmbos.length,
+        veiculosValorizados: comAmbos.filter(v => v.preco_fipe! > v.preco_nf!).length,
+        veiculosDesvalorizados: comAmbos.filter(v => v.preco_fipe! < v.preco_nf!).length,
+      } : undefined;
+
       const pdfData = {
         veiculos: veiculosFiltrados,
         stats,
+        valorizacao,
         proprietario: filterProprietario !== 'all' ? filterProprietario : undefined,
         empresa,
       };
