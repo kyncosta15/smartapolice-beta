@@ -210,13 +210,15 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
       const pageHeight = doc.internal.pageSize.getHeight();
 
       // ========== MODERN HEADER ==========
+      const empresa = activeEmpresaName || 'Empresa';
+
       // Brand bar (Prussian Blue)
       doc.setFillColor(12, 21, 57);
-      doc.rect(0, 0, pageWidth, 28, 'F');
+      doc.rect(0, 0, pageWidth, 26, 'F');
 
       // Accent stripe
       doc.setFillColor(59, 130, 246);
-      doc.rect(0, 28, pageWidth, 1.2, 'F');
+      doc.rect(0, 26, pageWidth, 1.2, 'F');
 
       // Logo (left)
       const logo = await loadImageAsDataURL(logoSrc);
@@ -225,36 +227,45 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
         const ratio = logo.w / logo.h;
         const targetW = targetH * ratio;
         try {
-          doc.addImage(logo.data, 'PNG', 8, 7, targetW, targetH);
+          doc.addImage(logo.data, 'PNG', 8, 6, targetW, targetH);
         } catch {}
       }
 
       // Title (center)
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text(reportTitle, pageWidth / 2, 13, { align: 'center' });
+      doc.setFontSize(15);
+      doc.text(reportTitle, pageWidth / 2, 12, { align: 'center' });
 
-      // Company name + meta (center, smaller)
+      // Date/total meta (center, smaller)
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      const empresa = activeEmpresaName || 'Empresa';
-      doc.text(empresa, pageWidth / 2, 19, { align: 'center' });
-
-      const now = new Date().toLocaleString('pt-BR');
       doc.setFontSize(8);
       doc.setTextColor(200, 215, 240);
-      doc.text(`Gerado em ${now}  •  ${veiculosToExport.length} veículo(s)`, pageWidth / 2, 24, { align: 'center' });
+      const now = new Date().toLocaleString('pt-BR');
+      doc.text(`Gerado em ${now}  •  ${veiculosToExport.length} veículo(s)`, pageWidth / 2, 18, { align: 'center' });
 
       // System brand (right)
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
-      doc.text('SmartControl', pageWidth - 8, 13, { align: 'right' });
+      doc.text('SmartControl', pageWidth - 8, 11, { align: 'right' });
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
       doc.setTextColor(200, 215, 240);
-      doc.text('Gestão Inteligente de Frotas', pageWidth - 8, 18, { align: 'right' });
+      doc.text('Gestão Inteligente de Frotas', pageWidth - 8, 16, { align: 'right' });
+
+      // ========== COMPANY BAR (light, prominent) ==========
+      doc.setFillColor(245, 247, 250);
+      doc.rect(0, 27.2, pageWidth, 9, 'F');
+      doc.setTextColor(80, 90, 110);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.text('EMPRESA', 8, 31.5);
+      doc.setTextColor(12, 21, 57);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text(empresa.toUpperCase(), 24, 33.2);
+
 
       const headers = columnsToExport.map(c => c.label);
       const rows = buildRows().map(r => headers.map(h => r[h]));
