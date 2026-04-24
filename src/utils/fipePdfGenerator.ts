@@ -12,6 +12,12 @@ interface FipePDFData {
     motos: { valor: number; count: number };
     outros: { valor: number; count: number };
   };
+  valorizacao?: {
+    valorizacaoTotal: number;
+    percentualMedio: number;
+    veiculosValorizados: number;
+    veiculosDesvalorizados: number;
+  };
   proprietario?: string;
   empresa?: string;
 }
