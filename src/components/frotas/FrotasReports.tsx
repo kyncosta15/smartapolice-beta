@@ -702,6 +702,50 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
             />
           </div>
 
+          {/* Modo de relatório (Geral / Por Obra) */}
+          <div>
+            <Label className="mb-2 block">Modo do relatório</Label>
+            <div className="flex flex-wrap gap-2 border-b border-border">
+              <button
+                type="button"
+                onClick={() => setReportMode('geral')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  reportMode === 'geral'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Visão Geral
+              </button>
+              <button
+                type="button"
+                onClick={() => setReportMode('obra')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  reportMode === 'obra'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <HardHat className="h-4 w-4" />
+                Por Obra
+              </button>
+            </div>
+            {reportMode === 'obra' && (
+              <div className="mt-3 flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="flex-shrink-0 h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <HardHat className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">Relatório agrupado por Obra</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Os veículos serão organizados por obra (canteiro) e, dentro de cada obra, agrupados por responsável.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           <Separator />
 
           {/* Filters */}
