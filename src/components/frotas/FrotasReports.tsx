@@ -250,7 +250,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
-      doc.text('R Corp', pageWidth - 8, 13, { align: 'right' });
+      doc.text('SmartControl', pageWidth - 8, 13, { align: 'right' });
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
       doc.setTextColor(200, 215, 240);
