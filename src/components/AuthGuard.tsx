@@ -24,7 +24,7 @@ const AuthGuardContent = () => {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      navigate('/system-selection');
+      navigate('/auth/smartapolice');
     }
   }, [user, isLoading, navigate]);
 
