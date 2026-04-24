@@ -87,7 +87,7 @@ export const LandingPage = () => {
 
             {/* Single CTA */}
             <div className="flex justify-center mb-8">
-              <Link to="/system-selection" className="group/glow relative">
+              <Link to="/auth/smartapolice" className="group/glow relative">
                 {/* Outer glow border container - intensified for light mode */}
                 <div className="absolute -inset-[3px] rounded-lg bg-gradient-to-r from-prussian-blue/70 via-prussian-blue/90 to-prussian-blue/70 opacity-0 group-hover/glow:opacity-100 blur-[6px] transition-opacity duration-500" />
                 <div className="absolute -inset-[1px] rounded-lg bg-gradient-to-r from-prussian-blue/50 via-prussian-blue/80 to-prussian-blue/50 opacity-0 group-hover/glow:opacity-100 transition-opacity duration-300 overflow-hidden">
