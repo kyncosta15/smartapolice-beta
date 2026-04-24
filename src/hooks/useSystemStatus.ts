@@ -26,9 +26,10 @@ const SUPABASE_URL = 'https://jhvbfvqhuemuvwgqpskz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpodmJmdnFodWVtdXZ3Z3Fwc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTI2MDEsImV4cCI6MjA2Njg4ODYwMX0.V8I0byW7xs0iMBEBc6C3h0lvPhgPZ4mGwjfm31XkEQg';
 const SUPABASE_HEALTH_URL = `${SUPABASE_URL}/auth/v1/health`;
 const CHECK_INTERVAL_MS = 60_000; // 60s — background, não bloqueia
-const SLOW_THRESHOLD_MS = 2500;
-const TIMEOUT_MS = 6000;
-const EDGE_TIMEOUT_MS = 4000;
+const SLOW_THRESHOLD_MS = 5000; // só considera lento acima de 5s
+const TIMEOUT_MS = 8000;
+const EDGE_TIMEOUT_MS = 8000; // edge functions podem ter cold start de ~3-5s
+const FAILURE_THRESHOLD = 2; // exige 2 falhas consecutivas antes de degradar
 
 const initialCheck = (): ServiceCheck => ({
   status: 'checking',
@@ -93,6 +94,7 @@ export function useSystemStatus(intervalMs: number = CHECK_INTERVAL_MS) {
   });
 
   const inFlightRef = useRef(false);
+  const consecutiveFailuresRef = useRef({ auth: 0, database: 0, edge: 0 });
 
   const checkAuth = useCallback(async (): Promise<ServiceCheck> => {
     const start = performance.now();
@@ -209,11 +211,32 @@ export function useSystemStatus(intervalMs: number = CHECK_INTERVAL_MS) {
       }
 
       // Roda os 3 checks em paralelo
-      const [auth, database, edgeFunctions] = await Promise.all([
+      const [authRaw, databaseRaw, edgeFunctionsRaw] = await Promise.all([
         checkAuth(),
         checkDatabase(),
         checkEdgeFunctions(),
       ]);
+
+      // Aplica tolerância a falhas consecutivas — evita ruído de cold start
+      const smooth = (
+        key: 'auth' | 'database' | 'edge',
+        check: ServiceCheck,
+      ): ServiceCheck => {
+        if (check.status === 'operational') {
+          consecutiveFailuresRef.current[key] = 0;
+          return check;
+        }
+        consecutiveFailuresRef.current[key] += 1;
+        if (consecutiveFailuresRef.current[key] < FAILURE_THRESHOLD) {
+          // Ainda não bateu o limiar — trata como operacional silenciosamente
+          return { status: 'operational', latencyMs: check.latencyMs, message: 'OK' };
+        }
+        return check;
+      };
+
+      const auth = smooth('auth', authRaw);
+      const database = smooth('database', databaseRaw);
+      const edgeFunctions = smooth('edge', edgeFunctionsRaw);
 
       const aggregated = aggregate(auth.status, database.status, edgeFunctions.status);
       const message = buildAggregatedMessage({ auth, database, edgeFunctions });
