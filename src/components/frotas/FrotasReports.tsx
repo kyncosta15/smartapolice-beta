@@ -848,32 +848,78 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
           <Separator />
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={handleExportXLSX}
-              disabled={generating !== null || filteredVeiculos.length === 0}
-              className="gap-2"
-            >
-              {generating === 'xlsx' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <FileSpreadsheet className="h-4 w-4" />
-              )}
-              Gerar Planilha (XLSX)
-            </Button>
-            <Button
-              onClick={handleExportPDF}
-              disabled={generating !== null || filteredVeiculos.length === 0}
-              className="gap-2"
-            >
-              {generating === 'pdf' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4" />
-              )}
-              Gerar PDF
-            </Button>
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={handleExportXLSX}
+                disabled={generating !== null || filteredVeiculos.length === 0}
+                className="gap-2"
+              >
+                {generating === 'xlsx' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="h-4 w-4" />
+                )}
+                Gerar Planilha (XLSX)
+              </Button>
+              <Button
+                onClick={handleExportPDF}
+                disabled={generating !== null || filteredVeiculos.length === 0}
+                className="gap-2"
+              >
+                {generating === 'pdf' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileText className="h-4 w-4" />
+                )}
+                Gerar PDF
+              </Button>
+            </div>
+
+            {/* Por Obra */}
+            <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+              <div className="flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row">
+                <div className="flex items-center gap-2">
+                  <HardHat className="h-5 w-5 text-amber-500" />
+                  <div>
+                    <p className="text-sm font-semibold">Relatório por Obra</p>
+                    <p className="text-xs text-muted-foreground">
+                      Agrupa os veículos filtrados por obra → responsável.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    onClick={handleExportXLSXObra}
+                    disabled={generating !== null || filteredVeiculos.length === 0}
+                    className="gap-2"
+                    size="sm"
+                  >
+                    {generating === 'xlsx-obra' ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileSpreadsheet className="h-4 w-4" />
+                    )}
+                    XLSX por Obra
+                  </Button>
+                  <Button
+                    onClick={handleExportPDFObra}
+                    disabled={generating !== null || filteredVeiculos.length === 0}
+                    className="gap-2"
+                    size="sm"
+                  >
+                    {generating === 'pdf-obra' ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileText className="h-4 w-4" />
+                    )}
+                    PDF por Obra
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
