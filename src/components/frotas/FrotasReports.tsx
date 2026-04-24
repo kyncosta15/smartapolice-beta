@@ -9,9 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, FileSpreadsheet, Filter, Search, CheckSquare, Square, Loader2, Building2, ChevronDown } from 'lucide-react';
+import { FileText, FileSpreadsheet, Filter, Search, CheckSquare, Square, Loader2, Building2, ChevronDown, HardHat, LayoutGrid } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
 import { useTenant } from '@/contexts/TenantContext';
@@ -849,91 +850,100 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
 
           <Separator />
 
-          {/* Actions */}
-          <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row gap-2 justify-end items-stretch sm:items-center">
-              <Button
-                variant="outline"
-                onClick={handleExportXLSX}
-                disabled={generating !== null || filteredVeiculos.length === 0}
-                className="gap-2"
+          {/* Actions com categorias (Geral / Por Obra) */}
+          <Tabs defaultValue="geral" className="w-full">
+            <TabsList className="bg-transparent border-b border-border rounded-none p-0 h-auto w-full justify-start gap-1">
+              <TabsTrigger
+                value="geral"
+                className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
               >
-                {generating === 'xlsx' ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <FileSpreadsheet className="h-4 w-4" />
-                )}
-                Gerar Planilha (XLSX)
-              </Button>
-              <Button
-                onClick={handleExportPDF}
-                disabled={generating !== null || filteredVeiculos.length === 0}
-                className="gap-2"
+                <LayoutGrid className="h-4 w-4" />
+                Visão Geral
+              </TabsTrigger>
+              <TabsTrigger
+                value="obra"
+                className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
               >
-                {generating === 'pdf' ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <FileText className="h-4 w-4" />
-                )}
-                Gerar PDF
-              </Button>
+                <HardHat className="h-4 w-4" />
+                Por Obra
+              </TabsTrigger>
+            </TabsList>
 
-              {/* Botão minimalista: Relatório por Obra */}
-              <TooltipProvider delayDuration={200}>
-                <DropdownMenu>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          disabled={generating !== null || filteredVeiculos.length === 0}
-                          aria-label="Relatório por obra"
-                        >
-                          {generating === 'xlsx-obra' || generating === 'pdf-obra' ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Building2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p className="text-xs">Relatório por obra</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel className="text-xs">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-3.5 w-3.5 text-primary" />
-                        <span>Agrupado por obra</span>
-                      </div>
-                      <p className="text-[10px] font-normal text-muted-foreground mt-0.5">
-                        Obra → responsável
-                      </p>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={handleExportPDFObra}
-                      disabled={generating !== null}
-                      className="gap-2 text-sm"
-                    >
-                      <FileText className="h-4 w-4" />
-                      Gerar PDF por obra
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleExportXLSXObra}
-                      disabled={generating !== null}
-                      className="gap-2 text-sm"
-                    >
-                      <FileSpreadsheet className="h-4 w-4" />
-                      Gerar XLSX por obra
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TooltipProvider>
-            </div>
-          </div>
+            <TabsContent value="geral" className="mt-4 space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Relatório completo com todos os veículos selecionados.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={handleExportXLSX}
+                  disabled={generating !== null || filteredVeiculos.length === 0}
+                  className="gap-2"
+                >
+                  {generating === 'xlsx' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileSpreadsheet className="h-4 w-4" />
+                  )}
+                  Exportar Excel
+                </Button>
+                <Button
+                  onClick={handleExportPDF}
+                  disabled={generating !== null || filteredVeiculos.length === 0}
+                  className="gap-2"
+                >
+                  {generating === 'pdf' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4" />
+                  )}
+                  Gerar PDF
+                </Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="obra" className="mt-4 space-y-3">
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <HardHat className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">Relatório agrupado por Obra</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Os veículos serão organizados por obra (canteiro) e, dentro de cada obra, agrupados por responsável.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={handleExportXLSXObra}
+                  disabled={generating !== null || filteredVeiculos.length === 0}
+                  className="gap-2"
+                >
+                  {generating === 'xlsx-obra' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileSpreadsheet className="h-4 w-4" />
+                  )}
+                  Exportar Excel
+                </Button>
+                <Button
+                  onClick={handleExportPDFObra}
+                  disabled={generating !== null || filteredVeiculos.length === 0}
+                  className="gap-2"
+                >
+                  {generating === 'pdf-obra' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4" />
+                  )}
+                  Gerar PDF
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+
         </CardContent>
       </Card>
     </div>
