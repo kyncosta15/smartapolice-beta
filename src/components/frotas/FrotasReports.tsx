@@ -877,17 +877,19 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
               </Button>
             </div>
 
-            {/* Por Obra */}
-            <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
-              <div className="flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row">
-                <div className="flex items-center gap-2">
-                  <HardHat className="h-5 w-5 text-amber-500" />
-                  <div>
-                    <p className="text-sm font-semibold">Relatório por Obra</p>
-                    <p className="text-xs text-muted-foreground">
-                      Agrupa os veículos filtrados por obra → responsável.
-                    </p>
+            {/* Relatório por Obra */}
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mt-1">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+                      Agrupado
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">Relatório por Obra</p>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Agrupa os veículos filtrados por obra e responsável.
+                  </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button
