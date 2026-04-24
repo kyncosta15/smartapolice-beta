@@ -11,9 +11,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FileText, FileSpreadsheet, Filter, Search, CheckSquare, Square, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
+import { useTenant } from '@/contexts/TenantContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import logoSrc from '@/assets/smartapolice-logo-new.png';
+
+async function loadImageAsDataURL(src: string): Promise<{ data: string; w: number; h: number } | null> {
+  try {
+    const res = await fetch(src);
+    const blob = await res.blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    const dims = await new Promise<{ w: number; h: number }>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ w: img.width, h: img.height });
+      img.onerror = () => resolve({ w: 1, h: 1 });
+      img.src = dataUrl;
+    });
+    return { data: dataUrl, w: dims.w, h: dims.h };
+  } catch {
+    return null;
+  }
+}
 
 interface FrotasReportsProps {
   veiculos: FrotaVeiculo[];
