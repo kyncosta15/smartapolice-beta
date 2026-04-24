@@ -330,6 +330,34 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
                   </div>
                 </>
               )}
+
+              {visibleModelos.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+
+                  {/* Modelo Section */}
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Car className="h-4 w-4" />
+                    Modelos
+                    {filters.marcaModelo.length > 0 && (
+                      <span className="text-xs text-muted-foreground font-normal">
+                        (filtrado por marca)
+                      </span>
+                    )}
+                  </DropdownMenuLabel>
+                  <div className="max-h-32 overflow-y-auto">
+                    {visibleModelos.slice(0, 30).map((option) => (
+                      <DropdownMenuCheckboxItem
+                        key={`${option.marca}-${option.value}`}
+                        checked={(filters.modelo || []).includes(option.value)}
+                        onCheckedChange={(checked) => handleModeloChange(option.value, checked)}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </div>
+                </>
+              )}
               
               <DropdownMenuSeparator />
               
