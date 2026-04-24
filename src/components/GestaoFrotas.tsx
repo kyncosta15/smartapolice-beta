@@ -50,6 +50,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface FrotaFilters {
   search: string;
   marcaModelo: string[];
+  modelo: string[];
   categoria: string[];
   status: string[];
   ordenacao: string;
@@ -67,6 +68,7 @@ export function GestaoFrotas() {
   const [filters, setFilters] = useState<FrotaFilters>({
     search: '',
     marcaModelo: [],
+    modelo: [],
     categoria: [],
     status: [],
     ordenacao: 'padrao'

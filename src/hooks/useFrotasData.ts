@@ -97,6 +97,7 @@ export interface FrotaDocumento {
 export interface FrotaFilters {
   search: string;
   marcaModelo: string[];
+  modelo: string[];
   categoria: string[];
   status: string[];
   ordenacao: string;
@@ -285,6 +286,11 @@ export function useFrotasData(filters: FrotaFilters) {
       result = result.filter(v => filters.marcaModelo.includes(v.marca || ''));
     }
 
+    // Model filter
+    if (filters.modelo && filters.modelo.length > 0) {
+      result = result.filter(v => filters.modelo.includes(v.modelo || ''));
+    }
+
     // Quitado filter
     if (filters.quitado) {
       result = result.filter(v => {
@@ -323,7 +329,7 @@ export function useFrotasData(filters: FrotaFilters) {
     }
 
     return result;
-  }, [allVeiculos, financeMap, reviewedVehicleIds, filters.search, filters.categoria, filters.status, filters.marcaModelo, filters.quitado, filters.banco, filters.revisao, filters.ordenacao]);
+  }, [allVeiculos, financeMap, reviewedVehicleIds, filters.search, filters.categoria, filters.status, filters.marcaModelo, filters.modelo, filters.quitado, filters.banco, filters.revisao, filters.ordenacao]);
 
   // KPIs based on all vehicles (unfiltered)
   const kpis = useMemo((): FrotaKPIs => {

@@ -58,9 +58,10 @@ const statusOptions = [
 
 export function FrotasFilters({ filters, onFilterChange, loading, searchLoading = false }: FrotasFiltersProps) {
   const [marcaOptions, setMarcaOptions] = useState<{ value: string; label: string }[]>([]);
+  const [modeloOptions, setModeloOptions] = useState<{ value: string; label: string; marca: string }[]>([]);
   const [bancoOptions, setBancoOptions] = useState<string[]>([]);
-  const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0 || !!filters.quitado || !!filters.banco || !!filters.revisao;
-  const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length + (filters.quitado ? 1 : 0) + (filters.banco ? 1 : 0) + (filters.revisao ? 1 : 0);
+  const hasActiveFilters = filters.categoria.length > 0 || filters.status.length > 0 || filters.search.length > 0 || filters.marcaModelo.length > 0 || (filters.modelo?.length || 0) > 0 || !!filters.quitado || !!filters.banco || !!filters.revisao;
+  const totalActiveFilters = filters.categoria.length + filters.status.length + filters.marcaModelo.length + (filters.modelo?.length || 0) + (filters.quitado ? 1 : 0) + (filters.banco ? 1 : 0) + (filters.revisao ? 1 : 0);
 
   // Hook para correção automática de status
   const { 
@@ -72,17 +73,28 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
   } = useFrotaStatusFix();
 
   useEffect(() => {
-    // Buscar marcas disponíveis no banco de dados
+    // Buscar marcas e modelos disponíveis no banco de dados
     const fetchMarcas = async () => {
       try {
         const { data: veiculos } = await supabase
           .from('frota_veiculos')
-          .select('marca')
+          .select('marca, modelo')
           .not('marca', 'is', null);
         
         if (veiculos) {
           const marcasUnicas = [...new Set(veiculos.map(v => v.marca))].filter(Boolean);
           setMarcaOptions(marcasUnicas.map(marca => ({ value: marca!, label: marca! })));
+
+          const modelosMap = new Map<string, { value: string; label: string; marca: string }>();
+          veiculos.forEach(v => {
+            if (v.modelo) {
+              const key = `${v.marca}|${v.modelo}`;
+              if (!modelosMap.has(key)) {
+                modelosMap.set(key, { value: v.modelo, label: v.modelo, marca: v.marca || '' });
+              }
+            }
+          });
+          setModeloOptions(Array.from(modelosMap.values()).sort((a, b) => a.label.localeCompare(b.label)));
         }
       } catch (error) {
         console.error('Erro ao buscar marcas:', error);
@@ -115,6 +127,7 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
       categoria: [],
       status: [],
       marcaModelo: [],
+      modelo: [],
       ordenacao: 'padrao',
       quitado: undefined,
       revisao: undefined,
@@ -150,6 +163,14 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
     onFilterChange({ marcaModelo: newMarcas });
   };
 
+  const handleModeloChange = (modelo: string, checked: boolean) => {
+    const current = filters.modelo || [];
+    const newModelos = checked
+      ? [...current, modelo]
+      : current.filter(m => m !== modelo);
+    onFilterChange({ modelo: newModelos });
+  };
+
   const removeCategoriaFilter = (categoria: string) => {
     onFilterChange({ 
       categoria: filters.categoria.filter(c => c !== categoria) 
@@ -167,6 +188,17 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
       marcaModelo: filters.marcaModelo.filter(m => m !== marca) 
     });
   };
+
+  const removeModeloFilter = (modelo: string) => {
+    onFilterChange({ 
+      modelo: (filters.modelo || []).filter(m => m !== modelo) 
+    });
+  };
+
+  // Modelos visíveis: filtra pelas marcas selecionadas se houver
+  const visibleModelos = filters.marcaModelo.length > 0
+    ? modeloOptions.filter(m => filters.marcaModelo.includes(m.marca))
+    : modeloOptions;
 
   const handleAutoFix = async () => {
     await executeAutoFix();
@@ -291,6 +323,34 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
                         key={option.value}
                         checked={filters.marcaModelo.includes(option.value)}
                         onCheckedChange={(checked) => handleMarcaChange(option.value, checked)}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {visibleModelos.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+
+                  {/* Modelo Section */}
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Car className="h-4 w-4" />
+                    Modelos
+                    {filters.marcaModelo.length > 0 && (
+                      <span className="text-xs text-muted-foreground font-normal">
+                        (filtrado por marca)
+                      </span>
+                    )}
+                  </DropdownMenuLabel>
+                  <div className="max-h-32 overflow-y-auto">
+                    {visibleModelos.slice(0, 30).map((option) => (
+                      <DropdownMenuCheckboxItem
+                        key={`${option.marca}-${option.value}`}
+                        checked={(filters.modelo || []).includes(option.value)}
+                        onCheckedChange={(checked) => handleModeloChange(option.value, checked)}
                       >
                         {option.label}
                       </DropdownMenuCheckboxItem>
@@ -445,6 +505,24 @@ export function FrotasFilters({ filters, onFilterChange, loading, searchLoading 
               </Badge>
             );
           })}
+
+          {(filters.modelo || []).map((modelo) => (
+            <Badge 
+              key={modelo} 
+              variant="secondary" 
+              className="flex items-center gap-1 px-2 py-1"
+            >
+              <Car className="h-3 w-3" />
+              {modelo}
+              <button
+                onClick={() => removeModeloFilter(modelo)}
+                className="ml-1 hover:bg-muted rounded-full p-0.5"
+                aria-label={`Remover filtro ${modelo}`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
 
           {filters.quitado && (
             <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">

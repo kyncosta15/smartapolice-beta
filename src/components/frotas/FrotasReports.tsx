@@ -123,6 +123,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
   const [filterCategoria, setFilterCategoria] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterMarca, setFilterMarca] = useState<string>('all');
+  const [filterModelo, setFilterModelo] = useState<string>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedColumns, setSelectedColumns] = useState<Set<string>>(
     new Set(ALL_COLUMNS.filter(c => c.default).map(c => String(c.key)))
@@ -137,6 +138,13 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
   const marcas = useMemo(() => {
     return Array.from(new Set(veiculos.map(v => v.marca).filter(Boolean))) as string[];
   }, [veiculos]);
+
+  const modelos = useMemo(() => {
+    const source = filterMarca !== 'all'
+      ? veiculos.filter(v => v.marca === filterMarca)
+      : veiculos;
+    return Array.from(new Set(source.map(v => v.modelo).filter(Boolean))).sort() as string[];
+  }, [veiculos, filterMarca]);
 
   const statuses = useMemo(() => {
     return Array.from(new Set(veiculos.map(v => v.status_seguro).filter(Boolean))) as string[];
@@ -156,9 +164,10 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
       if (filterCategoria !== 'all' && v.categoria !== filterCategoria) return false;
       if (filterStatus !== 'all' && v.status_seguro !== filterStatus) return false;
       if (filterMarca !== 'all' && v.marca !== filterMarca) return false;
+      if (filterModelo !== 'all' && v.modelo !== filterModelo) return false;
       return true;
     });
-  }, [veiculos, search, filterCategoria, filterStatus, filterMarca]);
+  }, [veiculos, search, filterCategoria, filterStatus, filterMarca, filterModelo]);
 
   const allFilteredSelected = filteredVeiculos.length > 0 && filteredVeiculos.every(v => selectedIds.has(v.id));
 
@@ -438,13 +447,31 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
                 </SelectContent>
               </Select>
 
-              <Select value={filterMarca} onValueChange={setFilterMarca}>
+              <Select
+                value={filterMarca}
+                onValueChange={(v) => {
+                  setFilterMarca(v);
+                  setFilterModelo('all');
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Marca" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas as marcas</SelectItem>
                   {marcas.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filterModelo} onValueChange={setFilterModelo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Modelo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os modelos</SelectItem>
+                  {modelos.map(m => (
                     <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
                 </SelectContent>
