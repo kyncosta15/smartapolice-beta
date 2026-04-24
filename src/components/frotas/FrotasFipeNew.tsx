@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { FipePDFGenerator } from '@/utils/fipePdfGenerator';
 import { FrotasFipeDashboard } from './FrotasFipeDashboard';
+import { useTenant } from '@/contexts/TenantContext';
 
 interface FrotasFipeProps {
   veiculos: FrotaVeiculo[];
