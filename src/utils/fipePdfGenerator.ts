@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { FrotaVeiculo } from '@/hooks/useFrotasData';
+import logoSrc from '@/assets/smartcontrol-logo-shield.png';
 
 interface FipePDFData {
   veiculos: FrotaVeiculo[];
@@ -12,13 +13,36 @@ interface FipePDFData {
     outros: { valor: number; count: number };
   };
   proprietario?: string;
+  empresa?: string;
+}
+
+async function loadImageAsDataURL(src: string): Promise<{ data: string; w: number; h: number } | null> {
+  try {
+    const res = await fetch(src);
+    const blob = await res.blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    const dims = await new Promise<{ w: number; h: number }>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ w: img.width, h: img.height });
+      img.onerror = () => resolve({ w: 1, h: 1 });
+      img.src = dataUrl;
+    });
+    return { data: dataUrl, w: dims.w, h: dims.h };
+  } catch {
+    return null;
+  }
 }
 
 export class FipePDFGenerator {
   private doc: jsPDF;
   private pageWidth: number;
   private pageHeight: number;
-  private margin: number = 20;
+  private margin: number = 8;
   private currentY: number = 20;
 
   constructor() {
@@ -35,27 +59,66 @@ export class FipePDFGenerator {
     return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
-  private addHeader(proprietario?: string) {
+  private async addHeader(empresa: string, proprietario?: string) {
+    // Brand bar (Prussian Blue)
+    this.doc.setFillColor(12, 21, 57);
+    this.doc.rect(0, 0, this.pageWidth, 26, 'F');
+
+    // Accent stripe
     this.doc.setFillColor(59, 130, 246);
-    this.doc.rect(0, 0, this.pageWidth, proprietario ? 32 : 25, 'F');
-    
-    this.doc.setTextColor(255, 255, 255);
-    this.doc.setFontSize(18);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Relatório FIPE - Gestão de Frotas', this.pageWidth / 2, 12, { align: 'center' });
-    
-    this.doc.setFontSize(10);
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, this.pageWidth / 2, 19, { align: 'center' });
-    
-    if (proprietario) {
-      this.doc.setFontSize(11);
-      this.doc.setFont('helvetica', 'bold');
-      this.doc.text(`Proprietário: ${proprietario}`, this.pageWidth / 2, 27, { align: 'center' });
-      this.currentY = 42;
-    } else {
-      this.currentY = 35;
+    this.doc.rect(0, 26, this.pageWidth, 1.2, 'F');
+
+    // Logo (left)
+    const logo = await loadImageAsDataURL(logoSrc);
+    if (logo) {
+      const targetH = 14;
+      const ratio = logo.w / logo.h;
+      const targetW = targetH * ratio;
+      try {
+        this.doc.addImage(logo.data, 'PNG', 8, 6, targetW, targetH);
+      } catch {}
     }
+
+    // Title (center)
+    this.doc.setTextColor(255, 255, 255);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setFontSize(15);
+    this.doc.text('Relatório FIPE - Gestão de Frotas', this.pageWidth / 2, 12, { align: 'center' });
+
+    // Date meta (center, smaller)
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(8);
+    this.doc.setTextColor(200, 215, 240);
+    const now = new Date().toLocaleString('pt-BR');
+    const metaText = proprietario
+      ? `Gerado em ${now}  •  Proprietário: ${proprietario}`
+      : `Gerado em ${now}`;
+    this.doc.text(metaText, this.pageWidth / 2, 18, { align: 'center' });
+
+    // System brand (right)
+    this.doc.setTextColor(255, 255, 255);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setFontSize(10);
+    this.doc.text('SmartControl', this.pageWidth - 8, 11, { align: 'right' });
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(7);
+    this.doc.setTextColor(200, 215, 240);
+    this.doc.text('Gestão Inteligente de Frotas', this.pageWidth - 8, 16, { align: 'right' });
+
+    // ========== COMPANY BAR (light, prominent) ==========
+    this.doc.setFillColor(245, 247, 250);
+    this.doc.rect(0, 27.2, this.pageWidth, 9, 'F');
+    this.doc.setTextColor(80, 90, 110);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setFontSize(11);
+    this.doc.text('EMPRESA', 8, 33);
+    const empresaLabelWidth = this.doc.getTextWidth('EMPRESA');
+    this.doc.setTextColor(12, 21, 57);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setFontSize(11);
+    this.doc.text((empresa || 'Empresa').toUpperCase(), 8 + empresaLabelWidth + 4, 33);
+
+    this.currentY = 42;
   }
 
   private addDashboardKPIs(stats: FipePDFData['stats']) {
@@ -91,50 +154,54 @@ export class FipePDFGenerator {
     let xPos = this.margin;
 
     kpiData.forEach((kpi) => {
-      // Card background with darker color for better visibility
-      this.doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2], 0.2);
+      // Card background — white/very light for high contrast text
+      this.doc.setFillColor(255, 255, 255);
       this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 3, 3, 'F');
-      
-      // Border
+
+      // Border in the accent color
       this.doc.setDrawColor(kpi.color[0], kpi.color[1], kpi.color[2]);
-      this.doc.setLineWidth(0.5);
+      this.doc.setLineWidth(0.6);
       this.doc.roundedRect(xPos, this.currentY, cardWidth, cardHeight, 3, 3, 'S');
-      
-      // Icon background with solid color
+
+      // Left accent strip
       this.doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2]);
-      this.doc.roundedRect(xPos + 3, this.currentY + 3, 12, 12, 2, 2, 'F');
-      
-      // Label
-      this.doc.setTextColor(60, 60, 60);
-      this.doc.setFontSize(10);
-      this.doc.setFont('helvetica', 'bold');
-      this.doc.text(kpi.label, xPos + 18, this.currentY + 10);
-      
-      // Value with better contrast
-      this.doc.setTextColor(0, 0, 0);
-      this.doc.setFontSize(14);
-      this.doc.setFont('helvetica', 'bold');
-      this.doc.text(kpi.value, xPos + 18, this.currentY + 19);
-      
-      // Count
-      this.doc.setTextColor(80, 80, 80);
+      this.doc.rect(xPos, this.currentY, 2.2, cardHeight, 'F');
+
+      // Icon swatch
+      this.doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2]);
+      this.doc.roundedRect(xPos + 5, this.currentY + 3, 10, 10, 2, 2, 'F');
+
+      // Label (dark gray)
+      this.doc.setTextColor(80, 90, 110);
       this.doc.setFontSize(9);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(kpi.label.toUpperCase(), xPos + 18, this.currentY + 9);
+
+      // Value (Prussian blue, big)
+      this.doc.setTextColor(12, 21, 57);
+      this.doc.setFontSize(13);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(kpi.value, xPos + 18, this.currentY + 18);
+
+      // Count
+      this.doc.setTextColor(120, 130, 150);
+      this.doc.setFontSize(8);
       this.doc.setFont('helvetica', 'normal');
       this.doc.text(`${kpi.count} veículo${kpi.count !== 1 ? 's' : ''}`, xPos + 18, this.currentY + 25);
-      
+
       xPos += cardWidth + 5;
     });
 
-    this.currentY += cardHeight + 15;
+    this.currentY += cardHeight + 10;
   }
 
-  private addVehiclesTable(veiculos: FrotaVeiculo[]) {
-    this.doc.setTextColor(0, 0, 0);
-    this.doc.setFontSize(14);
+  private addVehiclesTable(veiculos: FrotaVeiculo[], empresa: string) {
+    this.doc.setTextColor(12, 21, 57);
+    this.doc.setFontSize(13);
     this.doc.setFont('helvetica', 'bold');
     this.doc.text('Lista de Veículos - Tabela FIPE', this.margin, this.currentY);
-    
-    this.currentY += 8;
+
+    this.currentY += 6;
 
     const tableData = veiculos.map(v => [
       `${v.marca || ''} ${v.modelo || ''}`.trim() || 'N/A',
@@ -152,14 +219,14 @@ export class FipePDFGenerator {
       body: tableData,
       theme: 'grid',
       headStyles: {
-        fillColor: [59, 130, 246],
+        fillColor: [12, 21, 57],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 9,
       },
       bodyStyles: {
         fontSize: 8,
-        textColor: [0, 0, 0],
+        textColor: [40, 40, 40],
       },
       alternateRowStyles: {
         fillColor: [245, 247, 250],
@@ -170,50 +237,51 @@ export class FipePDFGenerator {
         overflow: 'linebreak',
       },
       columnStyles: {
-        0: { cellWidth: 45 },
+        0: { cellWidth: 55 },
         1: { cellWidth: 25 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 20 },
+        2: { cellWidth: 28 },
+        3: { cellWidth: 18 },
         4: { cellWidth: 25 },
-        5: { cellWidth: 30 },
-        6: { cellWidth: 30 },
+        5: { cellWidth: 32 },
+        6: { cellWidth: 32 },
+      },
+      didDrawPage: () => {
+        const pageCount = this.doc.getNumberOfPages();
+        const currentPage = this.doc.getCurrentPageInfo().pageNumber;
+        this.doc.setFontSize(7);
+        this.doc.setTextColor(120, 120, 120);
+        this.doc.setFont('helvetica', 'normal');
+        this.doc.text(
+          `${empresa}  •  Relatório FIPE`,
+          8,
+          this.pageHeight - 6
+        );
+        this.doc.text(
+          `Página ${currentPage} de ${pageCount}`,
+          this.pageWidth - 8,
+          this.pageHeight - 6,
+          { align: 'right' }
+        );
       },
     });
   }
 
-  private addFooter() {
-    const pageCount = this.doc.getNumberOfPages();
-    
-    for (let i = 1; i <= pageCount; i++) {
-      this.doc.setPage(i);
-      this.doc.setFontSize(8);
-      this.doc.setTextColor(150, 150, 150);
-      this.doc.setFont('helvetica', 'normal');
-      this.doc.text(
-        `Página ${i} de ${pageCount}`,
-        this.pageWidth / 2,
-        this.pageHeight - 10,
-        { align: 'center' }
-      );
-    }
+  async download(data: FipePDFData, filename: string = 'relatorio-fipe.pdf') {
+    const empresa = (data.empresa || 'Empresa').replace(/^Cliente\s*-\s*/i, '').trim() || 'Empresa';
+    await this.addHeader(empresa, data.proprietario);
+    this.addDashboardKPIs(data.stats);
+    this.addVehiclesTable(data.veiculos, empresa);
+
+    this.doc.save(filename);
   }
 
-  generate(data: FipePDFData): Uint8Array {
-    this.addHeader(data.proprietario);
+  async generate(data: FipePDFData): Promise<Uint8Array> {
+    const empresa = (data.empresa || 'Empresa').replace(/^Cliente\s*-\s*/i, '').trim() || 'Empresa';
+    await this.addHeader(empresa, data.proprietario);
     this.addDashboardKPIs(data.stats);
-    this.addVehiclesTable(data.veiculos);
-    this.addFooter();
+    this.addVehiclesTable(data.veiculos, empresa);
 
     const arrayBuffer = this.doc.output('arraybuffer');
     return new Uint8Array(arrayBuffer);
-  }
-
-  download(data: FipePDFData, filename: string = 'relatorio-fipe.pdf') {
-    this.addHeader(data.proprietario);
-    this.addDashboardKPIs(data.stats);
-    this.addVehiclesTable(data.veiculos);
-    this.addFooter();
-
-    this.doc.save(filename);
   }
 }

@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { FipePDFGenerator } from '@/utils/fipePdfGenerator';
 import { FrotasFipeDashboard } from './FrotasFipeDashboard';
+import { useTenant } from '@/contexts/TenantContext';
 
 interface FrotasFipeProps {
   veiculos: FrotaVeiculo[];
@@ -35,6 +36,21 @@ interface FrotasFipeProps {
 export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onVehicleUpdate }: FrotasFipeProps) {
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { activeEmpresaName } = useTenant();
+  const [clienteNome, setClienteNome] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (data?.name) setClienteNome(data.name);
+    })();
+  }, []);
   const [selectedVehicle, setSelectedVehicle] = useState<FrotaVeiculo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -340,7 +356,7 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
     }
   };
 
-  const handleGeneratePDF = () => {
+  const handleGeneratePDF = async () => {
     try {
       const pdfGenerator = new FipePDFGenerator();
       
@@ -375,14 +391,17 @@ export function FrotasFipeNew({ veiculos, loading, hasActiveFilters = false, onV
         }
       };
 
+      const empresa = clienteNome || activeEmpresaName || 'Empresa';
+
       const pdfData = {
         veiculos: veiculosFiltrados,
         stats,
-        proprietario: filterProprietario !== 'all' ? filterProprietario : undefined
+        proprietario: filterProprietario !== 'all' ? filterProprietario : undefined,
+        empresa,
       };
 
       const filename = `relatorio-fipe-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
-      pdfGenerator.download(pdfData, filename);
+      await pdfGenerator.download(pdfData, filename);
 
       toast({
         title: "PDF gerado com sucesso",
