@@ -211,11 +211,32 @@ export function useSystemStatus(intervalMs: number = CHECK_INTERVAL_MS) {
       }
 
       // Roda os 3 checks em paralelo
-      const [auth, database, edgeFunctions] = await Promise.all([
+      const [authRaw, databaseRaw, edgeFunctionsRaw] = await Promise.all([
         checkAuth(),
         checkDatabase(),
         checkEdgeFunctions(),
       ]);
+
+      // Aplica tolerância a falhas consecutivas — evita ruído de cold start
+      const smooth = (
+        key: 'auth' | 'database' | 'edge',
+        check: ServiceCheck,
+      ): ServiceCheck => {
+        if (check.status === 'operational') {
+          consecutiveFailuresRef.current[key] = 0;
+          return check;
+        }
+        consecutiveFailuresRef.current[key] += 1;
+        if (consecutiveFailuresRef.current[key] < FAILURE_THRESHOLD) {
+          // Ainda não bateu o limiar — trata como operacional silenciosamente
+          return { status: 'operational', latencyMs: check.latencyMs, message: 'OK' };
+        }
+        return check;
+      };
+
+      const auth = smooth('auth', authRaw);
+      const database = smooth('database', databaseRaw);
+      const edgeFunctions = smooth('edge', edgeFunctionsRaw);
 
       const aggregated = aggregate(auth.status, database.status, edgeFunctions.status);
       const message = buildAggregatedMessage({ auth, database, edgeFunctions });
