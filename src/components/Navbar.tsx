@@ -16,6 +16,9 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { useTheme } from '@/components/ThemeProvider';
+import { NotificationsBell } from '@/components/header/NotificationsBell';
+import { GlobalSearch } from '@/components/header/GlobalSearch';
+import { HeaderBreadcrumb } from '@/components/header/HeaderBreadcrumb';
 
 interface NavbarProps {
   onMobileMenuToggle: () => void;
@@ -23,9 +26,11 @@ interface NavbarProps {
   onRefresh?: () => void;
   isRefreshing?: boolean;
   onNavigateSection?: (section: string) => void;
+  /** Seção ativa atual — usada pelo breadcrumb e pode ser usada por busca futura. */
+  activeSection?: string;
 }
 
-export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false, onRefresh, isRefreshing = false, onNavigateSection }: NavbarProps) {
+export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false, onRefresh, isRefreshing = false, onNavigateSection, activeSection = 'dashboard' }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { logout, user } = useAuth();
   const { profile: userProfile, memberships, activeEmpresa } = useUserProfile();
