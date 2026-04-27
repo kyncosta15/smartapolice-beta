@@ -64,6 +64,9 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
   // Hook para buscar parcelas do mês atual
   const { data: currentMonthData, isLoading: isLoadingInstallments } = useCurrentMonthInstallments();
   
+  // Histórico mensal (6m) para sparklines + variação % nos KPIs principais
+  const { data: kpiHistory } = useDashboardKpiHistory(6);
+
   // Sempre usar valores calculados a partir das parcelas (evita "média")
   const valorMensalReal = currentMonthData.totalMesAtual;
   const valorAnualReal = currentMonthData.totalAnualReal;
