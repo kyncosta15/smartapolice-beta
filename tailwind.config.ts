@@ -74,6 +74,24 @@ export default {
 			success: {
 				DEFAULT: 'hsl(var(--success))',
 				foreground: 'hsl(var(--success-foreground))'
+			},
+			pf: {
+				DEFAULT: 'hsl(var(--pf-primary))',
+				bg: 'hsl(var(--pf-bg))',
+				'bg-hover': 'hsl(var(--pf-bg-hover))',
+				border: 'hsl(var(--pf-border))',
+				foreground: 'hsl(var(--pf-foreground))',
+			},
+			pj: {
+				DEFAULT: 'hsl(var(--pj-primary))',
+				bg: 'hsl(var(--pj-bg))',
+				'bg-hover': 'hsl(var(--pj-bg-hover))',
+				border: 'hsl(var(--pj-border))',
+				foreground: 'hsl(var(--pj-foreground))',
+			},
+			'accent-icon': {
+				DEFAULT: 'hsl(var(--accent-icon))',
+				bg: 'hsl(var(--accent-icon-bg))',
 			}
 			},
 			borderRadius: {
