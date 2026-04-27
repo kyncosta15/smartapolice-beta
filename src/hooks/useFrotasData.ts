@@ -185,12 +185,12 @@ export function useFrotasData(filters: FrotaFilters) {
         );
       }
 
-      // Lista enxuta: só campos usados na listagem/filtros.
-      // Sub-relacionamentos (responsáveis, pagamentos, documentos) são carregados
-      // sob demanda quando o modal de detalhes do veículo é aberto.
+      // Lista enxuta: campos do veículo + apenas responsáveis (usado na listagem).
+      // Pagamentos e documentos são carregados sob demanda quando o modal de
+      // detalhes é aberto (evita payload gigante e travamento na busca).
       const { data, error: fetchError } = await supabase
         .from('frota_veiculos')
-        .select('*')
+        .select('*, responsaveis:frota_responsaveis(id, veiculo_id, nome, telefone)')
         .eq('empresa_id', empresaId)
         .order('created_at', { ascending: false });
 
