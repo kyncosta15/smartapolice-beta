@@ -7,7 +7,9 @@ import {
   AlertTriangle, 
   CheckCircle,
   Clock,
-  Calendar
+  Calendar,
+  HelpCircle,
+  CalendarClock
 } from 'lucide-react';
 import { useCurrentMonthInstallments } from '@/hooks/useCurrentMonthInstallments';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -23,6 +25,8 @@ interface DashboardCardsProps {
     totalInsuredValue: number;
     renovadas?: number;
     naoRenovadas?: number;
+    /** Data ISO (YYYY-MM-DD) da próxima apólice a vencer — usada como fallback informativo no card "Vencendo Xd" quando o valor é 0 */
+    nextExpirationDate?: string;
   };
   isLoading?: boolean;
   onSectionChange?: (section: string) => void;
