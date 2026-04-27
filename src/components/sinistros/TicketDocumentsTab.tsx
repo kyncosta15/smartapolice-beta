@@ -267,39 +267,38 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
           <span>Adicionar Documento</span>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="document-type">Tipo de Documento *</Label>
-            <Input
-              id="document-type"
-              placeholder="Ex: BO, Orçamento, Fotos"
-              value={documentType}
-              onChange={(e) => setDocumentType(e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="file-upload">Arquivo *</Label>
-            <Input
-              id="file-upload"
-              type="file"
-              onChange={handleFileSelect}
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="file-upload">Arquivos *</Label>
+          <Input
+            id="file-upload"
+            type="file"
+            multiple
+            onChange={handleFileSelect}
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+          />
+          <p className="text-xs text-muted-foreground">
+            Selecione um ou mais arquivos. O nome de cada arquivo será usado como identificação no sistema.
+          </p>
         </div>
 
-        {selectedFile && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-background rounded p-3 border">
-            <Paperclip className="h-4 w-4" />
-            <span className="font-medium">{selectedFile.name}</span>
-            <span className="text-xs">({formatFileSize(selectedFile.size)})</span>
+        {selectedFiles.length > 0 && (
+          <div className="space-y-2">
+            {selectedFiles.map((file, idx) => (
+              <div
+                key={`${file.name}-${idx}`}
+                className="flex items-center gap-2 text-sm text-muted-foreground bg-background rounded p-3 border"
+              >
+                <Paperclip className="h-4 w-4 shrink-0" />
+                <span className="font-medium truncate">{file.name}</span>
+                <span className="text-xs shrink-0">({formatFileSize(file.size)})</span>
+              </div>
+            ))}
           </div>
         )}
 
-        <Button 
-          onClick={handleUpload} 
-          disabled={uploading || !selectedFile || !documentType}
+        <Button
+          onClick={handleUpload}
+          disabled={uploading || selectedFiles.length === 0}
           className="w-full md:w-auto"
         >
           {uploading ? (
@@ -310,7 +309,9 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
           ) : (
             <>
               <Upload className="mr-2 h-4 w-4" />
-              Enviar Documento
+              {selectedFiles.length > 1
+                ? `Enviar ${selectedFiles.length} Documentos`
+                : 'Enviar Documento'}
             </>
           )}
         </Button>
