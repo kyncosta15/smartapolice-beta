@@ -196,7 +196,7 @@ export function useFrotasData(filters: FrotaFilters) {
 
       if (fetchError) throw fetchError;
 
-      setAllVeiculos(Array.isArray(data) ? data : []);
+      setAllVeiculos(Array.isArray(data) ? (data as any as FrotaVeiculo[]) : []);
 
       // Load finance data for filtering
       if (empresaId) {
