@@ -69,7 +69,12 @@ const columns: TableColumn[] = [
   {
     key: 'veiculo',
     name: 'Veículo',
-    width: 300,
+    width: 260,
+  },
+  {
+    key: 'subtipo',
+    name: 'Tipo de Sinistro',
+    width: 170,
   },
   {
     key: 'status',
