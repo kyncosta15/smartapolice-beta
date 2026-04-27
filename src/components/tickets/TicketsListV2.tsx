@@ -485,6 +485,24 @@ export function TicketsListV2({
           </div>
         );
         
+      case 'subtipo': {
+        const subtipo = (item as any).subtipo as string | undefined;
+        if (!subtipo) {
+          return <span className="text-xs text-muted-foreground italic">—</span>;
+        }
+        const label = subtipo
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        return (
+          <Badge
+            variant="outline"
+            className="font-medium text-xs border-primary/30 bg-primary/5 text-foreground"
+          >
+            {label}
+          </Badge>
+        );
+      }
+
       case 'status':
         const statusColors: Record<string, string> = {
           'aberto': 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
