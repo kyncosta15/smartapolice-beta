@@ -247,13 +247,16 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                       <IconComponent className="size-3" />
                       {card.title}
                     </span>
+                    {card.infoTooltip && (
+                      <InfoTip text={card.infoTooltip} />
+                    )}
                   </div>
                   
                   <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1">
                     {card.value}
                   </div>
                   
-                  <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
+                  <div className="text-[12px] font-medium text-gray-500 dark:text-muted-foreground">
                     {card.subtitle}
                   </div>
                 </CardContent>
