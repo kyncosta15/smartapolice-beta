@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FileText, Users, Building2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { VinculoModal } from './VinculoModal';
+import type { ParsedPolicyData } from '@/utils/policyDataParser';
 
 interface VinculoSegmentProps {
   count: number;
@@ -12,6 +14,8 @@ interface VinculoSegmentProps {
 export interface VinculoProps {
   pessoaFisica: VinculoSegmentProps;
   pessoaJuridica: VinculoSegmentProps;
+  /** Opcional: quando fornecido, clicar em "Ver" abre um modal com a lista filtrada. */
+  policies?: ParsedPolicyData[];
   className?: string;
 }
 
