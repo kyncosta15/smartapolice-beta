@@ -35,6 +35,7 @@ import { TicketDocumentsTab } from '@/components/sinistros/TicketDocumentsTab';
 import { Ticket } from '@/types/tickets';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TicketDetailsDrawerProps {
   open: boolean;
@@ -56,12 +57,23 @@ export function TicketDetailsDrawer({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [statusStepperOpen, setStatusStepperOpen] = useState(false);
+  const [docsCount, setDocsCount] = useState(0);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const refreshDocsCount = async () => {
+    if (!ticketId) return;
+    const { count } = await supabase
+      .from('ticket_attachments')
+      .select('id', { count: 'exact', head: true })
+      .eq('ticket_id', ticketId);
+    setDocsCount(count ?? 0);
+  };
 
   useEffect(() => {
     if (open && ticketId) {
       loadTicketDetails();
+      refreshDocsCount();
     }
   }, [open, ticketId]);
 
