@@ -4665,6 +4665,14 @@ export type Database = {
       }
       get_current_empresa: { Args: never; Returns: string }
       get_current_user_role: { Args: never; Returns: string }
+      get_dashboard_kpi_history: {
+        Args: { _months?: number }
+        Returns: {
+          month_start: string
+          monthly_premium: number
+          total_policies: number
+        }[]
+      }
       get_dashboard_kpis: { Args: { p_user_id: string }; Returns: Json }
       get_user_empresa_id: { Args: never; Returns: string }
       get_user_role: {
