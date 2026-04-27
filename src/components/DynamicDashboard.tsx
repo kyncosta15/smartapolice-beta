@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { ParsedPolicyData } from '@/utils/policyDataParser';
 import { KPICards } from './dashboard/KPICards';
 import { ClassificationCharts } from './dashboard/ClassificationCharts';
-import { PersonTypeDistribution } from './dashboard/PersonTypeDistribution';  
+import { Vinculo } from './Vinculo';  
 import { StatusEvolutionCharts } from './dashboard/StatusEvolutionCharts';
 import { EmptyState } from './dashboard/EmptyState';
 import { useDashboardCalculations } from './dashboard/useDashboardCalculations';
@@ -122,8 +122,9 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
 
         {/* Vínculo - Pessoa Física/Jurídica */}
         <div className="w-full overflow-hidden">
-          <PersonTypeDistribution
-            personTypeDistribution={dashboardData.personTypeDistribution}
+          <Vinculo
+            pessoaFisica={{ count: dashboardData.personTypeDistribution.pessoaFisica }}
+            pessoaJuridica={{ count: dashboardData.personTypeDistribution.pessoaJuridica }}
           />
         </div>
 
