@@ -120,11 +120,23 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen = false, onRefresh
           </Button>
         </div>
 
-        {/* Spacer to push user menu to the right */}
-        <div className="flex-1"></div>
+        {/* Centro: Breadcrumb dinâmico (esquerda) + busca global (direita do centro) */}
+        <div className="flex-1 flex items-center gap-4 min-w-0 px-2 md:px-4">
+          <HeaderBreadcrumb
+            activeSection={activeSection}
+            onNavigateSection={onNavigateSection}
+            className="flex-1"
+          />
+          <div className={cn(activeSection !== 'dashboard' ? 'shrink-0' : 'flex-1 flex justify-end')}>
+            <GlobalSearch onNavigateSection={onNavigateSection} />
+          </div>
+        </div>
 
-        {/* Right side - Refresh, Dark Mode Toggle and User Menu */}
+        {/* Right side - Notifications, Refresh, Dark Mode Toggle and User Menu */}
         <div className="flex items-center gap-3">
+          {/* Notifications bell */}
+          <NotificationsBell onNavigateSection={onNavigateSection} />
+
           {/* Refresh button */}
           {onRefresh && (
             <Button
