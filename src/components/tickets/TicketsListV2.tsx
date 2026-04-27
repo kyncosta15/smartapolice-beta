@@ -622,7 +622,8 @@ export function TicketsListV2({
         
       case 'observacoes': {
         const attachments = (item as any).attachments || [];
-        const docCount = Array.isArray(attachments) ? attachments.length : 0;
+        const fallbackCount = Array.isArray(attachments) ? attachments.length : 0;
+        const docCount = attachmentCounts[item.id] ?? fallbackCount;
 
         return (
           <TooltipProvider delayDuration={150}>
