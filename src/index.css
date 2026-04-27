@@ -56,6 +56,24 @@
     --brand-grad-end: var(--primary);
     --floral-white: 50 61% 95%;
     --prussian-blue: 227 65% 13%;
+
+    /* Vínculo — Pessoa Física (azul) */
+    --pf-primary: 213 73% 54%;
+    --pf-bg: 213 73% 96%;
+    --pf-bg-hover: 213 73% 92%;
+    --pf-border: 213 73% 85%;
+    --pf-foreground: 213 73% 30%;
+
+    /* Vínculo — Pessoa Jurídica (roxo) */
+    --pj-primary: 245 58% 60%;
+    --pj-bg: 245 58% 96%;
+    --pj-bg-hover: 245 58% 92%;
+    --pj-border: 245 58% 85%;
+    --pj-foreground: 245 58% 35%;
+
+    /* Accent icon (âmbar suave) */
+    --accent-icon: 35 90% 55%;
+    --accent-icon-bg: 35 90% 95%;
   }
 
   .dark {
