@@ -96,20 +96,9 @@ export function Sparkline({
     };
   }, [data, deltaPct, invertColor, width, height]);
 
-  // Renderiza placeholder "histórico insuficiente" quando não dá pra mostrar tendência
+  // Sem histórico suficiente → não renderiza nada (esconde sparkline e badge)
   if (!hasShape || deltaStatus !== 'ok') {
-    return (
-      <div
-        className={cn(
-          'flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground',
-          className
-        )}
-        title="Sem histórico suficiente para calcular variação"
-      >
-        <Minus className="size-3" aria-hidden />
-        <span>Histórico insuficiente</span>
-      </div>
-    );
+    return null;
   }
 
   // Badge de variação
