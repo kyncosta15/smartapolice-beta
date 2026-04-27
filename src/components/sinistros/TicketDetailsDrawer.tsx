@@ -226,6 +226,11 @@ export function TicketDetailsDrawer({
               <TabsTrigger value="documentos" className="gap-2">
                 <Paperclip className="h-4 w-4" />
                 Documentos
+                {docsCount > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none tabular-nums">
+                    {docsCount > 99 ? '99+' : docsCount}
+                  </span>
+                )}
               </TabsTrigger>
             </TabsList>
 
