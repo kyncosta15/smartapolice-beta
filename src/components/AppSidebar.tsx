@@ -91,20 +91,32 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   useEffect(() => {
     if (!user) return;
     const fetchSinistrosCount = async () => {
-      const { count: openCount } = await supabase
-        .from('tickets')
-        .select('id', { count: 'exact', head: true })
-        .eq('tipo', 'sinistro')
-        .not('status', 'eq', 'finalizado')
-        .not('status_indenizacao', 'in', '("indenizado","negado")');
-      setSinistrosCount(openCount ?? 0);
+      // Busca todos os tickets de sinistro e classifica no client para alinhar
+      // com a lógica do dashboard (useClaimsStats). Filtros .not('in', ...) do
+      // PostgREST excluem NULLs, o que causava divergência no badge.
+      const OPEN_STATUSES = ['aberto', 'em_analise', 'em_andamento', 'open'];
+      const CLOSED_STATUSES = ['finalizado', 'finalizado_inatividade', 'encerrado', 'pago', 'closed', 'indenizado', 'negado'];
 
-      const { count: closedCount } = await supabase
+      const { data } = await supabase
         .from('tickets')
-        .select('id', { count: 'exact', head: true })
-        .eq('tipo', 'sinistro')
-        .or('status.eq.finalizado,status_indenizacao.eq.indenizado,status_indenizacao.eq.negado');
-      setSinistrosFinalizados(closedCount ?? 0);
+        .select('status, status_indenizacao')
+        .eq('tipo', 'sinistro');
+
+      const rows = data ?? [];
+      let open = 0;
+      let closed = 0;
+      for (const r of rows) {
+        const s = (r.status ?? '').toLowerCase();
+        const si = (r.status_indenizacao ?? '').toLowerCase();
+        const isClosed = CLOSED_STATUSES.includes(s) || (si && CLOSED_STATUSES.includes(si));
+        if (isClosed) {
+          closed++;
+        } else if (OPEN_STATUSES.includes(s)) {
+          open++;
+        }
+      }
+      setSinistrosCount(open);
+      setSinistrosFinalizados(closed);
     };
     fetchSinistrosCount();
 
