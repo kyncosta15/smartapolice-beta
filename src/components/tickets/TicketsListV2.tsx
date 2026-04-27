@@ -16,7 +16,8 @@ import { ClaimsService } from '@/services/claims';
 import { useToast } from '@/hooks/use-toast';
 import { EditTicketModal } from '@/components/tickets/EditTicketModal';
 import { StatusStepperModal } from '@/components/sinistros/StatusStepperModal';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import type { Ticket } from '@/types/tickets';
 
 interface TicketsListV2Props {
