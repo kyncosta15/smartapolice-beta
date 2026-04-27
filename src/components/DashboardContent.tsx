@@ -474,6 +474,7 @@ export function DashboardContent() {
                   totalInsuredValue: enhancedDashboardStats.totalInsuredValue || 0,
                   renovadas: enhancedDashboardStats.renovadas || 0,
                   naoRenovadas: enhancedDashboardStats.naoRenovadas || 0,
+                  nextExpirationDate: enhancedDashboardStats.nextExpirationDate,
                 }} 
                 isLoading={false}
                 onSectionChange={setActiveSection}
