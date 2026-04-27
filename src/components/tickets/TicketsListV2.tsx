@@ -73,6 +73,11 @@ const columns: TableColumn[] = [
     width: 260,
   },
   {
+    key: 'subsidiaria',
+    name: 'Sub',
+    width: 130,
+  },
+  {
     key: 'subtipo',
     name: 'Tipo de Sinistro',
     width: 170,
@@ -486,6 +491,21 @@ export function TicketsListV2({
           </div>
         );
         
+      case 'subsidiaria': {
+        const sub = (item as any).subsidiaria as string | undefined;
+        if (!sub) {
+          return <span className="text-xs text-muted-foreground italic">—</span>;
+        }
+        return (
+          <Badge
+            variant="outline"
+            className="font-medium text-xs border-primary/30 bg-primary/5 text-foreground"
+          >
+            {sub}
+          </Badge>
+        );
+      }
+
       case 'subtipo': {
         const subtipo = (item as any).subtipo as string | undefined;
         if (!subtipo) {
