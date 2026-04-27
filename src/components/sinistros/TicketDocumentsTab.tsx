@@ -40,8 +40,7 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
   const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -72,26 +71,61 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
+    const files = Array.from(e.target.files ?? []);
+    if (files.length > 0) {
+      setSelectedFiles(files);
     }
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      toast({
-        title: 'Atenção',
-        description: 'Selecione um arquivo',
-        variant: 'destructive',
-      });
-      return;
-    }
+  /** Sanitiza nome para uso seguro como path no Supabase Storage. */
+  const sanitizeFileName = (name: string): string => {
+    return name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .replace(/_+/g, '_');
+  };
 
-    if (!documentType.trim()) {
+  const uploadSingleFile = async (file: File) => {
+    const safeName = sanitizeFileName(file.name);
+    // Caminho isolado por ticket (sinistro). Ex: tickets/<id>/<timestamp>-<arquivo>
+    const filePath = `tickets/${ticketId}/${Date.now()}-${safeName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || 'application/octet-stream',
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabase.storage
+      .from('documents')
+      .getPublicUrl(filePath);
+
+    const { error: dbError } = await supabase
+      .from('ticket_attachments')
+      .insert({
+        ticket_id: ticketId,
+        // Nome do arquivo é o "tipo" no sistema (legado da coluna obrigatória).
+        tipo: file.name,
+        nome_arquivo: file.name,
+        file_path: filePath,
+        file_url: urlData.publicUrl,
+        tamanho_arquivo: file.size,
+        tipo_mime: file.type || 'application/octet-stream',
+      });
+
+    if (dbError) throw dbError;
+  };
+
+  const handleUpload = async () => {
+    if (selectedFiles.length === 0) {
       toast({
         title: 'Atenção',
-        description: 'Informe o tipo do documento',
+        description: 'Selecione ao menos um arquivo',
         variant: 'destructive',
       });
       return;
@@ -99,67 +133,33 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
 
     setUploading(true);
     try {
-      // Upload do arquivo para o storage
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${ticketId}-${Date.now()}.${fileExt}`;
-      const filePath = `tickets/${fileName}`;
+      // Uploads em paralelo (rápido para múltiplos anexos).
+      const results = await Promise.allSettled(selectedFiles.map(uploadSingleFile));
+      const failed = results.filter(r => r.status === 'rejected');
 
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, selectedFile);
-
-      if (uploadError) {
-        console.error('Erro no upload:', uploadError);
-        throw uploadError;
-      }
-
-      // Obter URL pública
-      const { data: urlData } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
-      console.log('🔍 DEBUG - Upload realizado:', {
-        filePath,
-        documentType: documentType.trim(),
-        fileSize: selectedFile.size,
-        fileName: selectedFile.name
-      });
-
-      // Salvar registro no banco
-      const { error: dbError } = await supabase
-        .from('ticket_attachments')
-        .insert({
-          ticket_id: ticketId,
-          tipo: documentType.trim(),
-          nome_arquivo: selectedFile.name,
-          file_path: filePath,
-          file_url: urlData.publicUrl,
-          tamanho_arquivo: selectedFile.size,
-          tipo_mime: selectedFile.type || 'application/octet-stream',
+      if (failed.length === 0) {
+        toast({
+          title: 'Sucesso',
+          description: `${selectedFiles.length} documento(s) enviado(s)`,
         });
-
-      if (dbError) {
-        console.error('Erro ao salvar no banco:', dbError);
-        throw dbError;
+      } else {
+        toast({
+          title: failed.length === selectedFiles.length ? 'Erro' : 'Parcialmente concluído',
+          description: `${selectedFiles.length - failed.length} enviado(s), ${failed.length} falharam`,
+          variant: failed.length === selectedFiles.length ? 'destructive' : 'default',
+        });
       }
 
-      toast({
-        title: 'Sucesso',
-        description: 'Documento enviado com sucesso!',
-      });
-
-      // Limpar form e recarregar
-      setSelectedFile(null);
-      setDocumentType('');
+      setSelectedFiles([]);
       const fileInput = document.getElementById('file-upload') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
-      
+
       await loadAttachments();
     } catch (error: any) {
       console.error('Erro ao fazer upload:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível enviar o documento',
+        description: error.message || 'Não foi possível enviar os documentos',
         variant: 'destructive',
       });
     } finally {
@@ -171,7 +171,6 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
     if (!confirm('Tem certeza que deseja excluir este documento?')) return;
 
     try {
-      // Remover do storage
       if (filePath) {
         await supabase.storage.from('documents').remove([filePath]);
       }
@@ -268,39 +267,38 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
           <span>Adicionar Documento</span>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="document-type">Tipo de Documento *</Label>
-            <Input
-              id="document-type"
-              placeholder="Ex: BO, Orçamento, Fotos"
-              value={documentType}
-              onChange={(e) => setDocumentType(e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="file-upload">Arquivo *</Label>
-            <Input
-              id="file-upload"
-              type="file"
-              onChange={handleFileSelect}
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="file-upload">Arquivos *</Label>
+          <Input
+            id="file-upload"
+            type="file"
+            multiple
+            onChange={handleFileSelect}
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+          />
+          <p className="text-xs text-muted-foreground">
+            Selecione um ou mais arquivos. O nome de cada arquivo será usado como identificação no sistema.
+          </p>
         </div>
 
-        {selectedFile && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-background rounded p-3 border">
-            <Paperclip className="h-4 w-4" />
-            <span className="font-medium">{selectedFile.name}</span>
-            <span className="text-xs">({formatFileSize(selectedFile.size)})</span>
+        {selectedFiles.length > 0 && (
+          <div className="space-y-2">
+            {selectedFiles.map((file, idx) => (
+              <div
+                key={`${file.name}-${idx}`}
+                className="flex items-center gap-2 text-sm text-muted-foreground bg-background rounded p-3 border"
+              >
+                <Paperclip className="h-4 w-4 shrink-0" />
+                <span className="font-medium truncate">{file.name}</span>
+                <span className="text-xs shrink-0">({formatFileSize(file.size)})</span>
+              </div>
+            ))}
           </div>
         )}
 
-        <Button 
-          onClick={handleUpload} 
-          disabled={uploading || !selectedFile || !documentType}
+        <Button
+          onClick={handleUpload}
+          disabled={uploading || selectedFiles.length === 0}
           className="w-full md:w-auto"
         >
           {uploading ? (
@@ -311,7 +309,9 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
           ) : (
             <>
               <Upload className="mr-2 h-4 w-4" />
-              Enviar Documento
+              {selectedFiles.length > 1
+                ? `Enviar ${selectedFiles.length} Documentos`
+                : 'Enviar Documento'}
             </>
           )}
         </Button>
@@ -359,8 +359,6 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
                       {attachment.nome_arquivo}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                      <span className="font-semibold text-primary">{attachment.tipo}</span>
-                      <span>•</span>
                       <span>{formatFileSize(attachment.tamanho_arquivo)}</span>
                       <span>•</span>
                       <span>
