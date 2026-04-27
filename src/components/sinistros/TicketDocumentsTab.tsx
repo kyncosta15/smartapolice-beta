@@ -359,8 +359,6 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
                       {attachment.nome_arquivo}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                      <span className="font-semibold text-primary">{attachment.tipo}</span>
-                      <span>•</span>
                       <span>{formatFileSize(attachment.tamanho_arquivo)}</span>
                       <span>•</span>
                       <span>
