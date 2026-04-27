@@ -168,6 +168,27 @@ export function TicketsListV2({
     return result;
   }, [claims, assistances]);
 
+  // Buscar contagem real de anexos para todos os tickets visíveis
+  const ticketIds = useMemo(() => allItems.map(i => i.id).filter(Boolean) as string[], [allItems]);
+  const { data: attachmentCounts = {} } = useQuery({
+    queryKey: ['ticket-attachment-counts', ticketIds],
+    queryFn: async () => {
+      if (ticketIds.length === 0) return {} as Record<string, number>;
+      const { data, error } = await supabase
+        .from('ticket_attachments')
+        .select('ticket_id')
+        .in('ticket_id', ticketIds);
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      (data || []).forEach((row: any) => {
+        if (row.ticket_id) counts[row.ticket_id] = (counts[row.ticket_id] || 0) + 1;
+      });
+      return counts;
+    },
+    enabled: ticketIds.length > 0,
+    staleTime: 30_000,
+  });
+
   // Filter and search
   const filteredItems = useMemo(() => {
     return allItems.filter(item => {
