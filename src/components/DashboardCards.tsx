@@ -79,7 +79,8 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       icon: FileText,
       badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
       iconColor: 'text-blue-600',
-      clickable: true
+      clickable: true,
+      infoTooltip: 'Total de apólices cadastradas no sistema, considerando todos os status (vigentes, vencidas, etc.). Clique para ver a listagem completa.'
     },
     {
       id: 'premium',
@@ -91,7 +92,8 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       icon: DollarSign,
       badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
       iconColor: 'text-emerald-600',
-      tooltipData: currentMonthData.parcelas.length > 0 ? currentMonthData.parcelas : null
+      tooltipData: currentMonthData.parcelas.length > 0 ? currentMonthData.parcelas : null,
+      infoTooltip: 'Soma das parcelas com vencimento no mês corrente. Passe o mouse sobre o card para ver o detalhe das parcelas.'
     },
     {
       id: 'coverage',
@@ -100,7 +102,8 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       subtitle: 'Soma das parcelas',
       icon: Shield,
       badgeColor: 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300',
-      iconColor: 'text-purple-600'
+      iconColor: 'text-purple-600',
+      infoTooltip: 'Soma de todas as parcelas das apólices ativas projetadas para os próximos 12 meses.'
     }
   ];
 
