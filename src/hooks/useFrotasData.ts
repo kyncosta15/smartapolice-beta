@@ -261,14 +261,22 @@ export function useFrotasData(filters: FrotaFilters) {
     // Search filter
     if (filters.search) {
       const term = filters.search.toLowerCase();
-      result = result.filter(v =>
-        (v.placa || '').toLowerCase().includes(term) ||
-        (v.proprietario_doc || '').toLowerCase().includes(term) ||
-        (v.proprietario_nome || '').toLowerCase().includes(term) ||
-        (v.marca || '').toLowerCase().includes(term) ||
-        (v.modelo || '').toLowerCase().includes(term) ||
-        (v.chassi || '').toLowerCase().includes(term)
-      );
+      const termDigits = term.replace(/\D/g, '');
+      result = result.filter(v => {
+        const anyV = v as any;
+        return (
+          (v.placa || '').toLowerCase().includes(term) ||
+          (v.proprietario_doc || '').toLowerCase().includes(term) ||
+          (v.proprietario_nome || '').toLowerCase().includes(term) ||
+          (v.marca || '').toLowerCase().includes(term) ||
+          (v.modelo || '').toLowerCase().includes(term) ||
+          (v.chassi || '').toLowerCase().includes(term) ||
+          (anyV.renavam || '').toString().toLowerCase().includes(term) ||
+          (termDigits && (anyV.renavam || '').toString().replace(/\D/g, '').includes(termDigits)) ||
+          (anyV.current_responsible_name || '').toLowerCase().includes(term) ||
+          (anyV.current_worksite_name || '').toLowerCase().includes(term)
+        );
+      });
     }
 
     // Category filter
