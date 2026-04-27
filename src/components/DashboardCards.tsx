@@ -332,15 +332,39 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
               </div>
             </div>
             
-            <div className="text-2xl md:text-3xl font-bold tracking-tight mb-1 text-white">
-              {expiringPeriod === 30 
-                ? dashboardStats.duingNext30Days 
-                : dashboardStats.duingNext60Days}
-            </div>
-            
-            <div className="text-[12px] text-white opacity-80">
-              Próximos {expiringPeriod} dias
-            </div>
+            {(() => {
+              const expiringCount = expiringPeriod === 30
+                ? dashboardStats.duingNext30Days
+                : dashboardStats.duingNext60Days;
+
+              // Fallback útil: se não há nada vencendo no período, mostra a próxima apólice a vencer
+              if (expiringCount === 0 && dashboardStats.nextExpirationDate) {
+                return (
+                  <>
+                    <div className="text-2xl md:text-3xl font-bold tracking-tight mb-1 text-white">
+                      0
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[12px] text-white/95 font-medium">
+                      <CalendarClock className="size-3.5 shrink-0" />
+                      <span>
+                        Próximo vencimento: <span className="font-semibold">{formatDatePtBrSafe(dashboardStats.nextExpirationDate)}</span>
+                      </span>
+                    </div>
+                  </>
+                );
+              }
+
+              return (
+                <>
+                  <div className="text-2xl md:text-3xl font-bold tracking-tight mb-1 text-white">
+                    {expiringCount}
+                  </div>
+                  <div className="text-[12px] text-white/95 font-medium">
+                    Próximos {expiringPeriod} dias
+                  </div>
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>
