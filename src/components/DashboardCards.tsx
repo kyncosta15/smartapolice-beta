@@ -233,8 +233,17 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                           {card.value}
                         </div>
                         
-                        <div className="text-[12px] font-medium text-gray-500 dark:text-muted-foreground">
-                          {card.subtitle}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-[12px] font-medium text-gray-500 dark:text-muted-foreground truncate">
+                            {card.subtitle}
+                          </div>
+                          {card.sparkline && card.sparkline.points.length >= 2 && (
+                            <Sparkline
+                              data={card.sparkline.points}
+                              deltaPct={card.sparkline.deltaPct}
+                              invertColor={card.sparklineInvertColor}
+                            />
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -293,8 +302,17 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                     {card.value}
                   </div>
                   
-                  <div className="text-[12px] font-medium text-gray-500 dark:text-muted-foreground">
-                    {card.subtitle}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-[12px] font-medium text-gray-500 dark:text-muted-foreground truncate">
+                      {card.subtitle}
+                    </div>
+                    {card.sparkline && card.sparkline.points.length >= 2 && (
+                      <Sparkline
+                        data={card.sparkline.points}
+                        deltaPct={card.sparkline.deltaPct}
+                        invertColor={card.sparklineInvertColor}
+                      />
+                    )}
                   </div>
                 </CardContent>
               </Card>
