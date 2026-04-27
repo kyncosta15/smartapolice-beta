@@ -288,7 +288,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                   {card.value}
                 </div>
                 
-                <div className={`text-[12px] ${card.textColor} opacity-80`}>
+                <div className={`text-[12px] ${card.textColor}/95 font-medium`}>
                   {card.subtitle}
                 </div>
               </CardContent>
