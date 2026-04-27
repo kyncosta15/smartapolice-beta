@@ -12,6 +12,8 @@ import {
   CalendarClock
 } from 'lucide-react';
 import { useCurrentMonthInstallments } from '@/hooks/useCurrentMonthInstallments';
+import { useDashboardKpiHistory } from '@/hooks/useDashboardKpiHistory';
+import { Sparkline } from '@/components/dashboard/Sparkline';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatCurrency } from '@/utils/currencyFormatter';
 
