@@ -227,6 +227,15 @@ export function Vinculo({ pessoaFisica, pessoaJuridica, policies, className }: V
           onClick={handlePj}
         />
       </div>
+
+      {policies && (
+        <VinculoModal
+          open={modalTipo !== null}
+          onOpenChange={(o) => !o && setModalTipo(null)}
+          tipo={modalTipo ?? 'pf'}
+          policies={policies}
+        />
+      )}
     </div>
   );
 }
