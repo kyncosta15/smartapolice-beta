@@ -152,7 +152,18 @@ function SegmentCard({ variant, label, sublabel, Icon, count, percent, onClick }
   );
 }
 
-export function Vinculo({ pessoaFisica, pessoaJuridica, className }: VinculoProps) {
+export function Vinculo({ pessoaFisica, pessoaJuridica, policies, className }: VinculoProps) {
+  const [modalTipo, setModalTipo] = useState<'pf' | 'pj' | null>(null);
+
+  const handlePf = () => {
+    if (policies) setModalTipo('pf');
+    else pessoaFisica.onClick?.();
+  };
+  const handlePj = () => {
+    if (policies) setModalTipo('pj');
+    else pessoaJuridica.onClick?.();
+  };
+
   const total = pessoaFisica.count + pessoaJuridica.count;
   const pfPercent = total > 0 ? (pessoaFisica.count / total) * 100 : 0;
   const pjPercent = total > 0 ? (pessoaJuridica.count / total) * 100 : 0;
@@ -204,7 +215,7 @@ export function Vinculo({ pessoaFisica, pessoaJuridica, className }: VinculoProp
           Icon={Users}
           count={pessoaFisica.count}
           percent={pfPercent}
-          onClick={pessoaFisica.onClick}
+          onClick={handlePf}
         />
         <SegmentCard
           variant="pj"
@@ -213,7 +224,7 @@ export function Vinculo({ pessoaFisica, pessoaJuridica, className }: VinculoProp
           Icon={Building2}
           count={pessoaJuridica.count}
           percent={pjPercent}
-          onClick={pessoaJuridica.onClick}
+          onClick={handlePj}
         />
       </div>
     </div>
