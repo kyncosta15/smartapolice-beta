@@ -15,12 +15,20 @@ export interface KpiHistoryRow {
  * Calcula a variação percentual entre o último ponto e o anterior.
  * Retorna `null` quando não há base válida para comparação (ex.: anterior = 0).
  */
-function pctDelta(series: number[]): number | null {
-  if (series.length < 2) return null;
+function computeDelta(series: number[]): { deltaPct: number | null; deltaStatus: 'ok' | 'insufficient' | 'baseline-zero' } {
+  // Considera "histórico real" apenas pontos com valor > 0 — assim um KPI que só
+  // começou a ter dados no mês corrente é tratado como insuficiente, e não como
+  // um pico de +infinito%.
+  const nonZero = series.filter((v) => v > 0);
+  if (series.length < 2 || nonZero.length < 2) {
+    return { deltaPct: null, deltaStatus: 'insufficient' };
+  }
   const last = series[series.length - 1];
   const prev = series[series.length - 2];
-  if (prev === 0) return last === 0 ? 0 : null;
-  return ((last - prev) / prev) * 100;
+  if (prev === 0) {
+    return { deltaPct: null, deltaStatus: 'baseline-zero' };
+  }
+  return { deltaPct: ((last - prev) / prev) * 100, deltaStatus: 'ok' };
 }
 
 export interface KpiHistorySeries {
@@ -28,6 +36,13 @@ export interface KpiHistorySeries {
   points: number[];
   /** Variação percentual mês atual vs. mês anterior. Pode ser null. */
   deltaPct: number | null;
+  /**
+   * Motivo pelo qual o delta é insuficiente/inútil (quando aplicável).
+   * - 'ok': delta é confiável
+   * - 'insufficient': menos de 2 meses com dado real (>0)
+   * - 'baseline-zero': mês anterior era 0 — variação % matematicamente infinita/inútil
+   */
+  deltaStatus: 'ok' | 'insufficient' | 'baseline-zero';
 }
 
 export interface KpiHistoryData {
@@ -59,11 +74,12 @@ export function useDashboardKpiHistory(months: number = 6) {
       if (error) {
         // Erro silencioso: dashboard segue funcionando sem sparkline
         console.warn('[useDashboardKpiHistory] RPC failed:', error.message);
+        const empty = { points: [], deltaPct: null, deltaStatus: 'insufficient' as const };
         return {
           rows: [],
-          totalPolicies: { points: [], deltaPct: null },
-          monthlyPremium: { points: [], deltaPct: null },
-          annualCost: { points: [], deltaPct: null },
+          totalPolicies: empty,
+          monthlyPremium: empty,
+          annualCost: empty,
         };
       }
 
@@ -80,9 +96,9 @@ export function useDashboardKpiHistory(months: number = 6) {
 
       return {
         rows,
-        totalPolicies: { points: totalSeries, deltaPct: pctDelta(totalSeries) },
-        monthlyPremium: { points: premiumSeries, deltaPct: pctDelta(premiumSeries) },
-        annualCost: { points: annualSeries, deltaPct: pctDelta(annualSeries) },
+        totalPolicies: { points: totalSeries, ...computeDelta(totalSeries) },
+        monthlyPremium: { points: premiumSeries, ...computeDelta(premiumSeries) },
+        annualCost: { points: annualSeries, ...computeDelta(annualSeries) },
       };
     },
   });
