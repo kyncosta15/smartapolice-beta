@@ -185,20 +185,18 @@ export function useFrotasData(filters: FrotaFilters) {
         );
       }
 
+      // Lista enxuta: campos do veículo + apenas responsáveis (usado na listagem).
+      // Pagamentos e documentos são carregados sob demanda quando o modal de
+      // detalhes é aberto (evita payload gigante e travamento na busca).
       const { data, error: fetchError } = await supabase
         .from('frota_veiculos')
-        .select(`
-          *,
-          responsaveis:frota_responsaveis(*),
-          pagamentos:frota_pagamentos(*),
-          documentos:frota_documentos(*)
-        `)
+        .select('*, responsaveis:frota_responsaveis(id, veiculo_id, nome, telefone)')
         .eq('empresa_id', empresaId)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      setAllVeiculos(Array.isArray(data) ? data : []);
+      setAllVeiculos(Array.isArray(data) ? (data as any as FrotaVeiculo[]) : []);
 
       // Load finance data for filtering
       if (empresaId) {
