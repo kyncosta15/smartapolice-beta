@@ -237,10 +237,11 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                           <div className="text-[12px] font-medium text-gray-500 dark:text-muted-foreground truncate">
                             {card.subtitle}
                           </div>
-                          {card.sparkline && card.sparkline.points.length >= 2 && (
+                          {card.sparkline && (
                             <Sparkline
                               data={card.sparkline.points}
                               deltaPct={card.sparkline.deltaPct}
+                              deltaStatus={card.sparkline.deltaStatus}
                               invertColor={card.sparklineInvertColor}
                             />
                           )}
@@ -306,10 +307,11 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                     <div className="text-[12px] font-medium text-gray-500 dark:text-muted-foreground truncate">
                       {card.subtitle}
                     </div>
-                    {card.sparkline && card.sparkline.points.length >= 2 && (
+                    {card.sparkline && (
                       <Sparkline
                         data={card.sparkline.points}
                         deltaPct={card.sparkline.deltaPct}
+                        deltaStatus={card.sparkline.deltaStatus}
                         invertColor={card.sparklineInvertColor}
                       />
                     )}
