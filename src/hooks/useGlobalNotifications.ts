@@ -3,19 +3,18 @@ import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Item de notificação exibido no popover do sino global.
- * Tipos suportados (cada um navega para uma seção diferente):
- *  - 'policy_expiring' → seção 'policies'
- *  - 'claim_open'      → seção 'claims'
+ * Hoje suportamos apenas 'policy_expiring' (apólices próximas do vencimento).
+ * O design permite estender para outros tipos no futuro sem quebrar o consumidor.
  */
 export interface NotificationItem {
   id: string;
-  type: 'policy_expiring' | 'claim_open';
+  type: 'policy_expiring';
   title: string;
   description: string;
-  /** Data ISO YYYY-MM-DD (string original do banco), para evitar timezone shift. */
+  /** Data ISO YYYY-MM-DD (string original do banco), sem conversão para Date. */
   isoDate?: string;
   /** Seção de destino para o `onNavigateSection` do dashboard. */
-  section: 'policies' | 'claims';
+  section: 'policies';
 }
 
 export interface NotificationsData {
@@ -30,10 +29,10 @@ const EMPTY: NotificationsData = { items: [], total: 0 };
  * Hook que reúne notificações leves para o sino global do header.
  *
  * Estratégia consciente de custo:
- *  - Busca apenas as 5 apólices próximas do vencimento (≤30d) — colunas mínimas
- *  - Busca apenas os 5 sinistros abertos (status != finalizado/indenizado/negado) — colunas mínimas
- *  - Sem dependência de RPC nova; usa RLS existente (filtro automático por usuário)
+ *  - Busca apenas até 5 apólices próximas do vencimento (≤30d) — colunas mínimas
+ *  - Sem dependência de RPC nova; usa RLS existente (filtro por user_id)
  *  - Cache de 2 minutos para reduzir chamadas durante navegação
+ *  - Erro silencioso (popover fica vazio em vez de quebrar o header)
  */
 export function useGlobalNotifications() {
   return useQuery<NotificationsData>({
@@ -50,70 +49,34 @@ export function useGlobalNotifications() {
       in30.setDate(in30.getDate() + 30);
       const in30Iso = in30.toISOString().slice(0, 10);
 
-      // Apólices vencendo nos próximos 30 dias (cap em 5 itens)
-      const expiringPromise = supabase
+      // Apólices vencendo nos próximos 30 dias (≤5 itens)
+      // Usa expiration_date como referência primária; fim_vigencia como fallback é
+      // intencionalmente omitido aqui para manter a query rápida e a lista enxuta.
+      const { data, error } = await supabase
         .from('policies')
-        .select('id, segurado, numero_apolice, expiration_date, fim_vigencia')
+        .select('id, segurado, numero_apolice, expiration_date')
         .eq('user_id', auth.user.id)
-        .or(`expiration_date.gte.${todayIso},fim_vigencia.gte.${todayIso}`)
-        .or(`expiration_date.lte.${in30Iso},fim_vigencia.lte.${in30Iso}`)
-        .order('expiration_date', { ascending: true, nullsFirst: false })
+        .gte('expiration_date', todayIso)
+        .lte('expiration_date', in30Iso)
+        .order('expiration_date', { ascending: true })
         .limit(5);
 
-      // Sinistros abertos (não finalizados)
-      const claimsPromise = supabase
-        .from('tickets')
-        .select('id, numero_ticket, descricao, status, created_at')
-        .eq('user_id', auth.user.id)
-        .not('status', 'in', '("finalizado","indenizado","negado")')
-        .order('created_at', { ascending: false })
-        .limit(5);
+      if (error) {
+        console.warn('[useGlobalNotifications] policies query failed:', error.message);
+        return EMPTY;
+      }
 
-      const [expiringRes, claimsRes] = await Promise.all([
-        expiringPromise,
-        claimsPromise,
-      ]);
-
-      const expiringRows = (expiringRes.data ?? []) as Array<{
-        id: string;
-        segurado?: string | null;
-        numero_apolice?: string | null;
-        expiration_date?: string | null;
-        fim_vigencia?: string | null;
-      }>;
-
-      const claimRows = (claimsRes.data ?? []) as Array<{
-        id: string;
-        numero_ticket?: string | null;
-        descricao?: string | null;
-        status?: string | null;
-        created_at?: string | null;
-      }>;
-
-      const expiringItems: NotificationItem[] = expiringRows.map((p) => {
-        const date = p.expiration_date ?? p.fim_vigencia ?? undefined;
-        return {
-          id: `pol-${p.id}`,
-          type: 'policy_expiring' as const,
-          title: p.segurado || 'Apólice sem nome',
-          description: p.numero_apolice
-            ? `Vence em ${formatBr(date)} · ${p.numero_apolice}`
-            : `Vence em ${formatBr(date)}`,
-          isoDate: date ?? undefined,
-          section: 'policies' as const,
-        };
-      });
-
-      const claimItems: NotificationItem[] = claimRows.map((t) => ({
-        id: `tic-${t.id}`,
-        type: 'claim_open' as const,
-        title: t.numero_ticket || 'Sinistro em aberto',
-        description: (t.descricao || 'Sinistro aguardando tratativa').slice(0, 80),
-        isoDate: t.created_at?.slice(0, 10),
-        section: 'claims' as const,
+      const items: NotificationItem[] = (data ?? []).map((p) => ({
+        id: `pol-${p.id}`,
+        type: 'policy_expiring' as const,
+        title: p.segurado || 'Apólice sem segurado',
+        description: p.numero_apolice
+          ? `Vence em ${formatBr(p.expiration_date)} · ${p.numero_apolice}`
+          : `Vence em ${formatBr(p.expiration_date)}`,
+        isoDate: p.expiration_date ?? undefined,
+        section: 'policies' as const,
       }));
 
-      const items = [...expiringItems, ...claimItems];
       return { items, total: items.length };
     },
   });
