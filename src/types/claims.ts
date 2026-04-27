@@ -73,6 +73,7 @@ export type AssistanceType = 'guincho' | 'vidro' | 'residencia' | 'outro';
 export type Assistance = {
   id: string;
   tipo: AssistanceType;
+  subtipo?: string;
   veiculo: Vehicle;
   status: 'aberto' | 'finalizado';
   localizacao?: string;
