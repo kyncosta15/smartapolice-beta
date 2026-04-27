@@ -131,6 +131,25 @@ export function DashboardContent() {
     return expirationDate >= today && expirationDate <= in60Days;
   }).length;
 
+  // Próxima apólice a vencer (entre as vigentes, futura mais próxima)
+  // Usado como fallback informativo quando "Vencendo 30d" = 0
+  const nextExpirationDate: string | undefined = (() => {
+    const futureDates = allPolicies
+      .filter(p => {
+        const s = p.status?.toLowerCase();
+        if (s !== 'vigente' && s !== 'ativa' && s !== 'vencendo') return false;
+        const raw = p.expirationDate || p.endDate;
+        if (!raw) return false;
+        const d = new Date(raw);
+        d.setHours(0, 0, 0, 0);
+        return d >= today;
+      })
+      .map(p => String(p.expirationDate || p.endDate).slice(0, 10))
+      .filter(Boolean)
+      .sort();
+    return futureDates[0];
+  })();
+
   // Criar estatísticas atualizadas para o dashboard
   const enhancedDashboardStats = {
     ...dashboardData,
@@ -138,7 +157,8 @@ export function DashboardContent() {
     duingNext30Days: policiesExpiring30Days,
     duingNext60Days: policiesExpiring60Days,
     renovadas: dashboardData.renewalDistribution?.renovadas ?? 0,
-    naoRenovadas: dashboardData.renewalDistribution?.naoRenovadas ?? 0
+    naoRenovadas: dashboardData.renewalDistribution?.naoRenovadas ?? 0,
+    nextExpirationDate,
   };
 
   // Navigation items - role-based visibility per specifications
