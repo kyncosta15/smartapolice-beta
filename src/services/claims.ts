@@ -450,6 +450,7 @@ export class ClaimsService {
         return {
           id: ticket.id,
           tipo,
+          subtipo: ticket.subtipo || undefined,
           veiculo: ticket.vehicle ? {
             id: ticket.vehicle.id,
             placa: ticket.vehicle.placa,
