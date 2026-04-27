@@ -32,6 +32,30 @@ interface DashboardCardsProps {
   onSectionChange?: (section: string) => void;
 }
 
+/**
+ * Pequeno ícone (?) com tooltip explicativo, usado nos KPIs do dashboard.
+ * Mantém o layout enxuto e atende a11y (focus-visible + aria-label).
+ */
+function InfoTip({ text }: { text: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label="Mais informações"
+          className="ml-auto inline-flex items-center justify-center rounded-full p-0.5 text-gray-400 hover:text-gray-600 dark:text-muted-foreground dark:hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <HelpCircle className="size-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function DashboardCards({ dashboardStats, isLoading = false, onSectionChange }: DashboardCardsProps) {
   const [expiringPeriod, setExpiringPeriod] = useState<30 | 60>(30);
   
