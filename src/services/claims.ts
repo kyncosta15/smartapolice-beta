@@ -102,6 +102,7 @@ export class ClaimsService {
             placa: 'N/A'
           },
           status: mappedStatus as 'aberto' | 'em_regulacao' | 'finalizado',
+          subtipo: ticket.subtipo || undefined,
           valor_estimado: ticket.valor_estimado ? Number(ticket.valor_estimado) : undefined,
           localizacao: ticket.localizacao || undefined,
           descricao: payload?.descricao || undefined,
