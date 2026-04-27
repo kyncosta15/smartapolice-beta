@@ -179,7 +179,8 @@ export function TicketsListV2({
           item.veiculo.marca?.toLowerCase().includes(query) ||
           item.veiculo.modelo?.toLowerCase().includes(query) ||
           item.veiculo.proprietario_nome?.toLowerCase().includes(query) ||
-          item.segurado_nome?.toLowerCase().includes(query);
+          item.segurado_nome?.toLowerCase().includes(query) ||
+          (item as any).subsidiaria?.toLowerCase().includes(query);
         
         if (!matchesSearch) return false;
       }
