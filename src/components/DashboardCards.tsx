@@ -7,7 +7,9 @@ import {
   AlertTriangle, 
   CheckCircle,
   Clock,
-  Calendar
+  Calendar,
+  HelpCircle,
+  CalendarClock
 } from 'lucide-react';
 import { useCurrentMonthInstallments } from '@/hooks/useCurrentMonthInstallments';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -23,9 +25,35 @@ interface DashboardCardsProps {
     totalInsuredValue: number;
     renovadas?: number;
     naoRenovadas?: number;
+    /** Data ISO (YYYY-MM-DD) da próxima apólice a vencer — usada como fallback informativo no card "Vencendo Xd" quando o valor é 0 */
+    nextExpirationDate?: string;
   };
   isLoading?: boolean;
   onSectionChange?: (section: string) => void;
+}
+
+/**
+ * Pequeno ícone (?) com tooltip explicativo, usado nos KPIs do dashboard.
+ * Mantém o layout enxuto e atende a11y (focus-visible + aria-label).
+ */
+function InfoTip({ text }: { text: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label="Mais informações"
+          className="ml-auto inline-flex items-center justify-center rounded-full p-0.5 text-gray-400 hover:text-gray-600 dark:text-muted-foreground dark:hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <HelpCircle className="size-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 export function DashboardCards({ dashboardStats, isLoading = false, onSectionChange }: DashboardCardsProps) {
@@ -75,7 +103,8 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       icon: FileText,
       badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
       iconColor: 'text-blue-600',
-      clickable: true
+      clickable: true,
+      infoTooltip: 'Total de apólices cadastradas no sistema, considerando todos os status (vigentes, vencidas, etc.). Clique para ver a listagem completa.'
     },
     {
       id: 'premium',
@@ -87,7 +116,8 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       icon: DollarSign,
       badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
       iconColor: 'text-emerald-600',
-      tooltipData: currentMonthData.parcelas.length > 0 ? currentMonthData.parcelas : null
+      tooltipData: currentMonthData.parcelas.length > 0 ? currentMonthData.parcelas : null,
+      infoTooltip: 'Soma das parcelas com vencimento no mês corrente. Passe o mouse sobre o card para ver o detalhe das parcelas.'
     },
     {
       id: 'coverage',
@@ -96,7 +126,8 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
       subtitle: 'Soma das parcelas',
       icon: Shield,
       badgeColor: 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300',
-      iconColor: 'text-purple-600'
+      iconColor: 'text-purple-600',
+      infoTooltip: 'Soma de todas as parcelas das apólices ativas projetadas para os próximos 12 meses.'
     }
   ];
 
@@ -180,13 +211,16 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                             {card.title}
                           </span>
                           <Calendar className="size-3 text-emerald-500" />
+                          {card.infoTooltip && (
+                            <InfoTip text={card.infoTooltip} />
+                          )}
                         </div>
                         
                         <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1">
                           {card.value}
                         </div>
                         
-                        <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
+                        <div className="text-[12px] font-medium text-gray-500 dark:text-muted-foreground">
                           {card.subtitle}
                         </div>
                       </CardContent>
@@ -237,13 +271,16 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                       <IconComponent className="size-3" />
                       {card.title}
                     </span>
+                    {card.infoTooltip && (
+                      <InfoTip text={card.infoTooltip} />
+                    )}
                   </div>
                   
                   <div className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-1">
                     {card.value}
                   </div>
                   
-                  <div className="text-[12px] text-gray-400 dark:text-muted-foreground">
+                  <div className="text-[12px] font-medium text-gray-500 dark:text-muted-foreground">
                     {card.subtitle}
                   </div>
                 </CardContent>
@@ -275,7 +312,7 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
                   {card.value}
                 </div>
                 
-                <div className={`text-[12px] ${card.textColor} opacity-80`}>
+                <div className="text-[12px] text-white/95 font-medium">
                   {card.subtitle}
                 </div>
               </CardContent>
@@ -319,15 +356,39 @@ export function DashboardCards({ dashboardStats, isLoading = false, onSectionCha
               </div>
             </div>
             
-            <div className="text-2xl md:text-3xl font-bold tracking-tight mb-1 text-white">
-              {expiringPeriod === 30 
-                ? dashboardStats.duingNext30Days 
-                : dashboardStats.duingNext60Days}
-            </div>
-            
-            <div className="text-[12px] text-white opacity-80">
-              Próximos {expiringPeriod} dias
-            </div>
+            {(() => {
+              const expiringCount = expiringPeriod === 30
+                ? dashboardStats.duingNext30Days
+                : dashboardStats.duingNext60Days;
+
+              // Fallback útil: se não há nada vencendo no período, mostra a próxima apólice a vencer
+              if (expiringCount === 0 && dashboardStats.nextExpirationDate) {
+                return (
+                  <>
+                    <div className="text-2xl md:text-3xl font-bold tracking-tight mb-1 text-white">
+                      0
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[12px] text-white/95 font-medium">
+                      <CalendarClock className="size-3.5 shrink-0" />
+                      <span>
+                        Próximo vencimento: <span className="font-semibold">{formatDatePtBrSafe(dashboardStats.nextExpirationDate)}</span>
+                      </span>
+                    </div>
+                  </>
+                );
+              }
+
+              return (
+                <>
+                  <div className="text-2xl md:text-3xl font-bold tracking-tight mb-1 text-white">
+                    {expiringCount}
+                  </div>
+                  <div className="text-[12px] text-white/95 font-medium">
+                    Próximos {expiringPeriod} dias
+                  </div>
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>
