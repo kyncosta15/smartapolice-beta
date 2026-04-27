@@ -125,6 +125,7 @@ export function DynamicDashboard({ policies, viewMode = 'client', onSectionChang
           <Vinculo
             pessoaFisica={{ count: dashboardData.personTypeDistribution.pessoaFisica }}
             pessoaJuridica={{ count: dashboardData.personTypeDistribution.pessoaJuridica }}
+            policies={policies}
           />
         </div>
 

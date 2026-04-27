@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FileText, Users, Building2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { VinculoModal } from './VinculoModal';
+import type { ParsedPolicyData } from '@/utils/policyDataParser';
 
 interface VinculoSegmentProps {
   count: number;
@@ -12,6 +14,8 @@ interface VinculoSegmentProps {
 export interface VinculoProps {
   pessoaFisica: VinculoSegmentProps;
   pessoaJuridica: VinculoSegmentProps;
+  /** Opcional: quando fornecido, clicar em "Ver" abre um modal com a lista filtrada. */
+  policies?: ParsedPolicyData[];
   className?: string;
 }
 
@@ -148,7 +152,18 @@ function SegmentCard({ variant, label, sublabel, Icon, count, percent, onClick }
   );
 }
 
-export function Vinculo({ pessoaFisica, pessoaJuridica, className }: VinculoProps) {
+export function Vinculo({ pessoaFisica, pessoaJuridica, policies, className }: VinculoProps) {
+  const [modalTipo, setModalTipo] = useState<'pf' | 'pj' | null>(null);
+
+  const handlePf = () => {
+    if (policies) setModalTipo('pf');
+    else pessoaFisica.onClick?.();
+  };
+  const handlePj = () => {
+    if (policies) setModalTipo('pj');
+    else pessoaJuridica.onClick?.();
+  };
+
   const total = pessoaFisica.count + pessoaJuridica.count;
   const pfPercent = total > 0 ? (pessoaFisica.count / total) * 100 : 0;
   const pjPercent = total > 0 ? (pessoaJuridica.count / total) * 100 : 0;
@@ -200,7 +215,7 @@ export function Vinculo({ pessoaFisica, pessoaJuridica, className }: VinculoProp
           Icon={Users}
           count={pessoaFisica.count}
           percent={pfPercent}
-          onClick={pessoaFisica.onClick}
+          onClick={handlePf}
         />
         <SegmentCard
           variant="pj"
@@ -209,9 +224,18 @@ export function Vinculo({ pessoaFisica, pessoaJuridica, className }: VinculoProp
           Icon={Building2}
           count={pessoaJuridica.count}
           percent={pjPercent}
-          onClick={pessoaJuridica.onClick}
+          onClick={handlePj}
         />
       </div>
+
+      {policies && (
+        <VinculoModal
+          open={modalTipo !== null}
+          onOpenChange={(o) => !o && setModalTipo(null)}
+          tipo={modalTipo ?? 'pf'}
+          policies={policies}
+        />
+      )}
     </div>
   );
 }
