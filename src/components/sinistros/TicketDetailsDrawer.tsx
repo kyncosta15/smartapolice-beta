@@ -35,6 +35,7 @@ import { TicketDocumentsTab } from '@/components/sinistros/TicketDocumentsTab';
 import { Ticket } from '@/types/tickets';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TicketDetailsDrawerProps {
   open: boolean;
@@ -56,12 +57,23 @@ export function TicketDetailsDrawer({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [statusStepperOpen, setStatusStepperOpen] = useState(false);
+  const [docsCount, setDocsCount] = useState(0);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const refreshDocsCount = async () => {
+    if (!ticketId) return;
+    const { count } = await supabase
+      .from('ticket_attachments')
+      .select('id', { count: 'exact', head: true })
+      .eq('ticket_id', ticketId);
+    setDocsCount(count ?? 0);
+  };
 
   useEffect(() => {
     if (open && ticketId) {
       loadTicketDetails();
+      refreshDocsCount();
     }
   }, [open, ticketId]);
 
@@ -214,6 +226,11 @@ export function TicketDetailsDrawer({
               <TabsTrigger value="documentos" className="gap-2">
                 <Paperclip className="h-4 w-4" />
                 Documentos
+                {docsCount > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none tabular-nums">
+                    {docsCount > 99 ? '99+' : docsCount}
+                  </span>
+                )}
               </TabsTrigger>
             </TabsList>
 

@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, FileText, AlertTriangle, Wrench, Clock, Trash2, User, Car } from 'lucide-react';
+import { Search, Filter, FileText, AlertTriangle, Wrench, Clock, Trash2, User, Car, Paperclip } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -576,22 +577,47 @@ export function TicketsListV2({
         }
         return <span className="text-muted-foreground text-xs">—</span>;
         
-      case 'observacoes':
+      case 'observacoes': {
         const attachments = (item as any).attachments || [];
         const docCount = Array.isArray(attachments) ? attachments.length : 0;
-        
+
         return (
-          <div className="space-y-1">
-            {docCount > 0 ? (
-              <div className="flex items-center gap-1.5">
-                <FileText className="h-3.5 w-3.5 text-blue-500" />
-                <span className="text-sm font-medium text-blue-600">{docCount} doc{docCount > 1 ? 's' : ''}</span>
-              </div>
-            ) : (
-              <span className="text-muted-foreground text-xs">Sem anexos</span>
-            )}
-          </div>
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center">
+                  <div className="relative inline-flex">
+                    <Paperclip
+                      className={cn(
+                        'h-5 w-5',
+                        docCount > 0 ? 'text-primary' : 'text-muted-foreground/60'
+                      )}
+                    />
+                    {docCount > 0 && (
+                      <span
+                        className={cn(
+                          'absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1',
+                          'flex items-center justify-center rounded-full',
+                          'bg-destructive text-destructive-foreground',
+                          'text-[10px] font-bold leading-none tabular-nums',
+                          'ring-2 ring-background'
+                        )}
+                      >
+                        {docCount > 99 ? '99+' : docCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {docCount === 0
+                  ? 'Sem anexos'
+                  : `${docCount} documento${docCount > 1 ? 's' : ''} anexado${docCount > 1 ? 's' : ''}`}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         );
+      }
         
       case 'created_at':
         return (
