@@ -109,6 +109,24 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217 33% 20%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Vínculo — Pessoa Física (dark) */
+    --pf-primary: 213 73% 60%;
+    --pf-bg: 213 50% 12%;
+    --pf-bg-hover: 213 50% 16%;
+    --pf-border: 213 73% 25%;
+    --pf-foreground: 213 73% 75%;
+
+    /* Vínculo — Pessoa Jurídica (dark) */
+    --pj-primary: 245 58% 70%;
+    --pj-bg: 245 40% 14%;
+    --pj-bg-hover: 245 40% 18%;
+    --pj-border: 245 58% 35%;
+    --pj-foreground: 245 58% 80%;
+
+    /* Accent icon (dark) */
+    --accent-icon: 35 90% 60%;
+    --accent-icon-bg: 35 50% 15%;
   }
 }
 
