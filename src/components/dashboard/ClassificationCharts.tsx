@@ -192,8 +192,8 @@ export function ClassificationCharts({
                         maximumFractionDigits: 0 
                       });
                     }}
-                    strokeWidth={3}
-                    stroke="white"
+                    strokeWidth={2}
+                    stroke="hsl(var(--card))"
                   >
                     {typeDistributionWithColors.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
