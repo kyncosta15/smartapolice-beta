@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/integrations/supabase/client';
+import smartControlShield from '@/assets/smartcontrol-shield.png';
 
 // (prop legada `navigation` é ignorada — sections agora são construídas internamente
 // para manter paridade visual com a AppSidebar desktop)
