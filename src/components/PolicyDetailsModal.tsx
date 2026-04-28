@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { GeneralInfoCard } from './policy-details/GeneralInfoCard';
-import { InsurerInfoCard } from './policy-details/InsurerInfoCard';
-import { FinancialInfoCard } from './policy-details/FinancialInfoCard';
 import { CoveragesCard } from './policy-details/CoveragesCard';
-
-import { VehicleInfoCard } from './policy-details/VehicleInfoCard';
-import { ResponsiblePersonCard } from './policy-details/ResponsiblePersonCard';
 import { EndossosCard } from './policy-details/EndossosCard';
 import { PolicyOverviewHeader } from './policy-details/PolicyOverviewHeader';
+import { GeneralInfoCardV2 } from './policy-details/v2/GeneralInfoCardV2';
+import { FinancialCardV2 } from './policy-details/v2/FinancialCardV2';
+import { VehicleCardV2 } from './policy-details/v2/VehicleCardV2';
+import { ResponsibleCardV2 } from './policy-details/v2/ResponsibleCardV2';
 // Timeline e hook de installments desativados — não são mais usados nesta visão
 
 import {
@@ -60,20 +58,13 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
             <PolicyOverviewHeader policy={policy} onDelete={handleDelete} />
           </div>
 
-          <div className="p-5 space-y-6">
-
-            {/* 5. Detailed Cards - Clean grid */}
+          <div className="p-5 space-y-4 sm:space-y-5">
+            {/* Cards de detalhes em 2 colunas — visual minimalista light/dark */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <GeneralInfoCard policy={policy} />
-              <InsurerInfoCard 
-                insurer={policy.seguradora || policy.insurer || 'Não informado'}
-                type={policy.tipo_seguro || policy.type || 'Não informado'}
-              />
-              <FinancialInfoCard policy={policy} onInstallmentsUpdate={() => onUpdate?.()} />
-              <VehicleInfoCard policy={policy} onUpdate={() => onUpdate?.()} />
-              {(policy.insuredName || policy.documento) && (
-                <ResponsiblePersonCard policy={policy} />
-              )}
+              <GeneralInfoCardV2 policy={policy} />
+              <FinancialCardV2 policy={policy} />
+              <VehicleCardV2 policy={policy} onEdit={() => onUpdate?.()} />
+              <ResponsibleCardV2 policy={policy} />
             </div>
 
             {/* 6. Coverages - Full width */}
