@@ -981,17 +981,39 @@ export function MyPolicies({
               allKeys: originalPolicy ? Object.keys(originalPolicy) : []
             });
             
+            const statusKey = (policy.status || '').toLowerCase();
+            const isVigenteCard = ['vigente', 'ativa', 'vencendo'].includes(statusKey);
+            const isVencidaCard = ['vencida', 'nao_renovada'].includes(statusKey);
+            const stripeColor = isVigenteCard
+              ? 'bg-emerald-500'
+              : isVencidaCard
+                ? 'bg-destructive'
+                : 'bg-amber-500';
+            const dotColor = isVigenteCard
+              ? 'bg-emerald-500'
+              : isVencidaCard
+                ? 'bg-destructive'
+                : 'bg-amber-500';
+            const pillTone = isVigenteCard
+              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+              : isVencidaCard
+                ? 'bg-destructive/15 text-destructive border-destructive/30'
+                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
+
             return (
               <Card
                 key={policy.id}
                 id={`policy-card-${policy.id}`}
-                className={`overflow-hidden dark:bg-card dark:border-border transition-all ${
+                className={`relative overflow-hidden bg-card border-border transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 ${
                   policy.id === activeHighlightId
                     ? 'ring-2 ring-primary shadow-lg shadow-primary/20'
-                    : 'hover:shadow-lg'
+                    : ''
                 }`}
               >
-                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6 space-y-1.5 sm:space-y-2">
+                {/* Faixa de status no topo */}
+                <div className={`absolute top-0 left-0 right-0 h-1 ${stripeColor}`} />
+
+                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-4 sm:pt-6 space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between items-start gap-2 sm:gap-3">
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -1011,7 +1033,11 @@ export function MyPolicies({
                         </CardTitle>
                       </div>
                     </div>
-                    <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} shrink-0 text-[10px] sm:text-xs whitespace-nowrap px-1.5 sm:px-2 py-0.5`}>
+                    <Badge
+                      variant="outline"
+                      className={`${pillTone} shrink-0 gap-1.5 text-[10px] sm:text-xs whitespace-nowrap px-2 py-0.5 rounded-full font-medium`}
+                    >
+                      <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
                       {formatStatusText(policy.status)}
                     </Badge>
                   </div>
