@@ -34,6 +34,7 @@ export const GeneralInfoCardV2: React.FC<Props> = ({ policy, onEdit }) => {
             <Button
               size="sm"
               variant="outline"
+              onClick={onEdit}
               className="h-7 px-2.5 text-xs border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
             >
               Completar
