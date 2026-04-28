@@ -16,7 +16,6 @@ import {
   BarChart3,
   Heart,
   Shield,
-  Shield,
   LogOut,
   Users2,
   CheckSquare,
