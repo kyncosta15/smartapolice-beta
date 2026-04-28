@@ -365,9 +365,11 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 <p className="text-sm font-semibold text-foreground truncate tracking-wide">
                   {accountLabel}
                 </p>
-                <p className="text-[11px] font-normal text-muted-foreground truncate">
-                  {userName}
-                </p>
+                {secondaryLabel && (
+                  <p className="text-[11px] font-normal text-muted-foreground truncate">
+                    {secondaryLabel}
+                  </p>
+                )}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
