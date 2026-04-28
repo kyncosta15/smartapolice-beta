@@ -62,7 +62,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
           <div className="p-5 space-y-4 sm:space-y-5">
             {/* Cards de detalhes em 2 colunas — visual minimalista light/dark */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <GeneralInfoCardV2 policy={policy} />
+              <GeneralInfoCardV2 policy={policy} onEdit={onEdit} />
               <FinancialCardV2 policy={policy} />
               <VehicleCardV2 policy={policy} onUpdated={() => onUpdate?.()} />
               <ResponsibleCardV2 policy={policy} />
