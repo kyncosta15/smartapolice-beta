@@ -133,8 +133,8 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
     new Set(ALL_COLUMNS.filter(c => c.default).map(c => String(c.key)))
   );
   const [reportTitle, setReportTitle] = useState('Relatório de Frotas');
-  const [generating, setGenerating] = useState<'pdf' | 'xlsx' | 'pdf-obra' | 'xlsx-obra' | null>(null);
-  const [reportMode, setReportMode] = useState<'geral' | 'obra'>('geral');
+  const [generating, setGenerating] = useState<'pdf' | 'xlsx' | 'pdf-obra' | 'xlsx-obra' | 'pdf-rev' | 'xlsx-rev' | null>(null);
+  const [reportMode, setReportMode] = useState<'geral' | 'obra' | 'revisoes'>('geral');
 
   const categorias = useMemo(() => {
     return Array.from(new Set(veiculos.map(v => v.categoria).filter(Boolean))) as string[];
