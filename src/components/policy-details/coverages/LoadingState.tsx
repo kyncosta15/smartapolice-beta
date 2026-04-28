@@ -1,20 +1,19 @@
-
 import { Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const LoadingState = () => {
   return (
-    <Card className="flex flex-col h-full border-0 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
-      <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-blue-200 pb-4">
-        <CardTitle className="flex items-center text-xl font-bold text-blue-900 font-sf-pro">
-          <Shield className="h-6 w-6 mr-3 text-blue-600" />
+    <Card className="border border-border shadow-sm rounded-xl bg-card overflow-hidden">
+      <CardHeader className="bg-muted/50 border-b border-border pb-3 px-4 sm:px-6 pt-4">
+        <CardTitle className="flex items-center text-base sm:text-lg font-semibold text-foreground">
+          <Shield className="h-5 w-5 mr-2 text-primary" />
           Coberturas
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <div className="text-center py-8">
-          <Shield className="h-12 w-12 text-blue-300 mx-auto mb-3 animate-pulse" />
-          <p className="text-blue-600 font-medium">Carregando coberturas...</p>
+          <Shield className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3 animate-pulse" />
+          <p className="text-muted-foreground text-sm">Carregando coberturas...</p>
         </div>
       </CardContent>
     </Card>
