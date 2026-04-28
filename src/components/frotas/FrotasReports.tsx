@@ -1104,14 +1104,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
     <div className="bg-background -mx-3 -my-3 sm:-mx-4 md:-mx-6 sm:-my-4 md:-my-6">
       {/* ===== Sticky top bar: breadcrumb + CTAs ===== */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
-        <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3">
-          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs min-w-0">
-            <span className="text-muted-foreground truncate">Relatórios</span>
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
-            <span className="text-muted-foreground truncate">Frotas</span>
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
-            <span className="text-foreground font-medium truncate">Gerar</span>
-          </nav>
+        <div className="flex items-center justify-end gap-3 px-4 sm:px-6 py-3">
           <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               variant="outline"
@@ -1147,31 +1140,6 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
             <p className="text-[13px] text-muted-foreground mt-0.5">
               {modeDescription}
             </p>
-          </div>
-          <div
-            role="status"
-            aria-live="polite"
-            className="inline-flex items-center gap-2 self-start px-3 py-1.5 rounded-full bg-primary-bg border border-primary-border"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-            </span>
-            <span className="text-[11px] font-medium text-foreground">
-              {reportMode === 'obra' ? (
-                <>
-                  {obraStats.totalObras} {obraStats.totalObras === 1 ? 'obra' : 'obras'}
-                  {' · '}
-                  {obraStats.alocados} {obraStats.alocados === 1 ? 'veículo alocado' : 'veículos alocados'}
-                </>
-              ) : (
-                <>
-                  {totalVeiculos === 1 ? '1 veículo' : `${totalVeiculos} veículos`}
-                  {' · '}
-                  {totalRegistros === 1 ? '1 registro' : `${totalRegistros} registros`}
-                </>
-              )}
-            </span>
           </div>
         </div>
 
