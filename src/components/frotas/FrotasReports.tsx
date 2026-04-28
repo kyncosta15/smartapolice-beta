@@ -1173,13 +1173,13 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
               <div
                 role="tablist"
                 aria-label="Modo do relatório"
-                className="mt-2 inline-flex p-1 rounded-lg bg-surface-2 border border-border"
+                className="mt-2 inline-flex p-1 rounded-xl bg-surface-2/60 border border-border"
               >
                 {([
-                  { key: 'geral', label: 'Visão Geral', icon: LayoutGrid },
-                  { key: 'obra', label: 'Por Obra', icon: HardHat },
-                  { key: 'revisoes', label: 'Revisões / Manutenções', icon: Wrench },
-                ] as const).map(({ key, label, icon: Icon }) => {
+                  { key: 'geral', label: 'Visão Geral' },
+                  { key: 'obra', label: 'Por Obra' },
+                  { key: 'revisoes', label: 'Revisões / Manutenções' },
+                ] as const).map(({ key, label }) => {
                   const active = reportMode === key;
                   return (
                     <button
@@ -1188,13 +1188,12 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
                       role="tab"
                       aria-selected={active}
                       onClick={() => setReportMode(key)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all ${
+                      className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-[13px] font-medium transition-all ${
                         active
-                          ? 'bg-card text-foreground shadow-sm'
+                          ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      <Icon className="h-3.5 w-3.5" />
                       {label}
                     </button>
                   );
