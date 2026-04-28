@@ -70,7 +70,6 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
                 type={policy.tipo_seguro || policy.type || 'Não informado'}
               />
               <FinancialInfoCard policy={policy} onInstallmentsUpdate={() => onUpdate?.()} />
-              <ValidityInfoCard policy={policy} />
               <VehicleInfoCard policy={policy} onUpdate={() => onUpdate?.()} />
               {(policy.insuredName || policy.documento) && (
                 <ResponsiblePersonCard policy={policy} />
