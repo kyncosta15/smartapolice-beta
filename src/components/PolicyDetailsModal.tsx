@@ -63,7 +63,7 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <GeneralInfoCardV2 policy={policy} />
               <FinancialCardV2 policy={policy} />
-              <VehicleCardV2 policy={policy} onEdit={() => onUpdate?.()} />
+              <VehicleCardV2 policy={policy} onUpdated={() => onUpdate?.()} />
               <ResponsibleCardV2 policy={policy} />
             </div>
 
