@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LabelList, Label } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NewPolicyModal } from '../NewPolicyModal';
-import { FileText, Calendar, DollarSign, Clock } from 'lucide-react';
+import { FileText, Calendar, DollarSign, Clock, Eye, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface ClassificationChartsProps {
   typeDistribution: Array<{ name: string; value: number; color: string }>;
