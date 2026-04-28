@@ -361,8 +361,6 @@
 .print-chart-card {
   page-break-inside: avoid;
   break-inside: avoid;
-  border: 1px solid #e5e7eb !important;
-  background: white !important;
   margin-bottom: 16px !important;
 }
 
@@ -375,18 +373,23 @@
   page-break-inside: avoid;
 }
 
-/* Garantir que gráficos sejam renderizados corretamente */
-.recharts-wrapper {
+/* Garantir que gráficos sejam renderizados corretamente no PDF */
+.print-container .recharts-wrapper {
   font-size: 12px !important;
 }
 
-.recharts-cartesian-axis-tick text {
+.print-container .recharts-cartesian-axis-tick text {
   font-size: 11px !important;
   fill: #374151 !important;
 }
 
-.recharts-legend-item-text {
+.print-container .recharts-legend-item-text {
   font-size: 12px !important;
+}
+
+.print-container .print-chart-card {
+  border: 1px solid #e5e7eb !important;
+  background: white !important;
 }
 
 .print-container .recharts-wrapper,
