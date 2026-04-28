@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/integrations/supabase/client';
+import smartControlShield from '@/assets/smartcontrol-shield.png';
 
 // (prop legada `navigation` é ignorada — sections agora são construídas internamente
 // para manter paridade visual com a AppSidebar desktop)
@@ -236,12 +237,14 @@ export function MobileDrawer({
         {/* ===== Header: Logo SmartControl + close ===== */}
         <div className="flex items-center justify-between border-b border-sidebar-border px-3 py-4 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary shadow-sm shrink-0">
-              <Shield className="h-5 w-5 text-primary-foreground" strokeWidth={2.2} />
-            </div>
-            <div className="flex items-baseline gap-0.5 leading-none">
-              <span className="text-base font-bold text-sidebar-foreground">Smart</span>
-              <span className="text-base font-bold text-primary">Control</span>
+            <img
+              src={smartControlShield}
+              alt="SmartControl"
+              className="w-9 h-9 object-contain shrink-0"
+            />
+            <div className="flex items-baseline leading-none">
+              <span className="text-lg font-normal text-sidebar-foreground tracking-tight">Smart</span>
+              <span className="text-lg font-bold text-sidebar-foreground tracking-tight">Control</span>
             </div>
           </div>
           <Button

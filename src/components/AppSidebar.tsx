@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/TenantContext';
+import smartControlShield from '@/assets/smartcontrol-shield.png';
 import {
   LayoutDashboard,
   FileText,
@@ -198,13 +199,15 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       {/* ===== Header: Logo SmartControl ===== */}
       <SidebarHeader className="border-b border-sidebar-border px-3 py-4">
         <div className={cn("flex items-center gap-2.5", !open && "justify-center")}>
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary shadow-sm shrink-0">
-            <Shield className="h-5 w-5 text-primary-foreground" strokeWidth={2.2} />
-          </div>
+          <img
+            src={smartControlShield}
+            alt="SmartControl"
+            className="w-9 h-9 object-contain shrink-0"
+          />
           {open && (
-            <div className="flex items-baseline gap-0.5 leading-none">
-              <span className="text-base font-bold text-sidebar-foreground">Smart</span>
-              <span className="text-base font-bold text-primary">Control</span>
+            <div className="flex items-baseline leading-none">
+              <span className="text-lg font-normal text-sidebar-foreground tracking-tight">Smart</span>
+              <span className="text-lg font-bold text-sidebar-foreground tracking-tight">Control</span>
             </div>
           )}
         </div>
