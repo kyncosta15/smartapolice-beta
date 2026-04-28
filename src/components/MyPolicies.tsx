@@ -102,6 +102,7 @@ export function MyPolicies({
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>(initialStatusFilter);
   const [detailedStatusFilter, setDetailedStatusFilter] = useState<'todas' | 'ativa' | 'pendente_analise' | 'vencida'>('todas');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showManageCPFModal, setShowManageCPFModal] = useState(false);
   const [cpfVinculos, setCpfVinculos] = useState<Array<{ cpf: string; tipo: string }>>([]);
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(highlightPolicyId);
