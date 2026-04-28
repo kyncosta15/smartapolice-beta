@@ -200,6 +200,9 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
             <ul className="divide-y divide-border">
               {filtered.map((p) => {
                 const doc = extractDocumento(p);
+                const lifecycle = lifecycleMap.get(p.id) || 'antiga';
+                const meta = LIFECYCLE_META[lifecycle];
+                const LIcon = meta.Icon;
                 return (
                   <li
                     key={p.id}
@@ -207,8 +210,20 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-foreground truncate">
-                          {p.name || 'Sem nome'}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium text-foreground truncate">
+                            {p.name || 'Sem nome'}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'shrink-0 text-[10px] gap-1 px-1.5 py-0 h-5 font-medium',
+                              meta.className
+                            )}
+                          >
+                            <LIcon className="h-3 w-3" />
+                            {meta.label}
+                          </Badge>
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
                           {doc && <span className="font-mono">{formatDoc(doc, tipo)}</span>}
