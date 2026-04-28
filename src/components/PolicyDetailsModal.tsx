@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { GeneralInfoCard } from './policy-details/GeneralInfoCard';
-import { InsurerInfoCard } from './policy-details/InsurerInfoCard';
-import { FinancialInfoCard } from './policy-details/FinancialInfoCard';
 import { CoveragesCard } from './policy-details/CoveragesCard';
-
-import { VehicleInfoCard } from './policy-details/VehicleInfoCard';
-import { ResponsiblePersonCard } from './policy-details/ResponsiblePersonCard';
 import { EndossosCard } from './policy-details/EndossosCard';
 import { PolicyOverviewHeader } from './policy-details/PolicyOverviewHeader';
+import { GeneralInfoCardV2 } from './policy-details/v2/GeneralInfoCardV2';
+import { FinancialCardV2 } from './policy-details/v2/FinancialCardV2';
+import { VehicleCardV2 } from './policy-details/v2/VehicleCardV2';
+import { ResponsibleCardV2 } from './policy-details/v2/ResponsibleCardV2';
 // Timeline e hook de installments desativados — não são mais usados nesta visão
 
 import {
