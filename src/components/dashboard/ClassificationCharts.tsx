@@ -202,7 +202,7 @@ export function ClassificationCharts({
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-48 text-gray-500">
+              <div className="flex items-center justify-center h-48 text-muted-foreground">
                 <p className="text-sm">Nenhum dado disponível</p>
               </div>
             )}
