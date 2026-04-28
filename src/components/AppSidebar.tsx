@@ -218,6 +218,10 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     .map((w) => w[0])
     .join('')
     .toUpperCase() || 'US';
+  const companyLabel = (cleanCompanyName || '').toUpperCase();
+  const secondaryLabel = companyLabel && companyLabel !== displayName.toUpperCase()
+    ? companyLabel
+    : null;
 
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-sidebar-border">
