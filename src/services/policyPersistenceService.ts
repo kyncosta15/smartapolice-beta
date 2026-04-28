@@ -484,6 +484,12 @@ export class PolicyPersistenceService {
           nome_embarcacao: safeString(policy.nome_embarcacao),
           
           nome_plano_saude: policy.nome_plano_saude || null,
+
+          // Campos de renovação (necessários p/ tooltip de relação entre apólices)
+          renovado_nosnum: (policy as any).renovado_nosnum ?? null,
+          renovado_codfil: (policy as any).renovado_codfil ?? null,
+          sit_renovacao: (policy as any).sit_renovacao ?? null,
+          sit_renovacao_txt: (policy as any).sit_renovacao_txt ?? null,
         };
 
         return convertedPolicy;
