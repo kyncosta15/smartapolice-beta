@@ -34,5 +34,9 @@ export interface PolicyWithStatus {
   vehicleModel?: string;
   // Campo específico saúde
   nome_plano_saude?: string;
+  // Campos de renovação (vindos do banco)
+  renovado_nosnum?: number | null;
+  renovado_codfil?: number | null;
+  sit_renovacao_txt?: string | null;
   // ... outros campos existentes
 }
