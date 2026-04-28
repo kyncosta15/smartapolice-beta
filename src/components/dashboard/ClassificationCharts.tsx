@@ -225,7 +225,7 @@ export function ClassificationCharts({
                   margin={{ top: 5, right: isMobile ? 70 : 100, left: 10, bottom: 5 }}
                   barSize={isMobile ? 20 : 28}
                 >
-                  <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
                   <XAxis type="number" hide />
                   <YAxis 
                     dataKey="name" 
