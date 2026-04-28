@@ -205,7 +205,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   const userName = profile?.full_name || (user as any)?.email?.split('@')[0] || 'Usuário';
   const userInitials = userName.slice(0, 2).toUpperCase();
-  const userRole = isAdmin ? 'Admin' : (profile?.role ? capitalize(profile.role) : 'Usuário');
+  const userRole = isAdmin ? 'Admin' : (profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'Usuário');
 
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-sidebar-border">
