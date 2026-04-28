@@ -1213,7 +1213,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-2 justify-end">
-            {reportMode === 'geral' ? (
+            {reportMode === 'geral' && (
               <>
                 <Button
                   variant="outline"
@@ -1241,7 +1241,8 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
                   Gerar PDF
                 </Button>
               </>
-            ) : (
+            )}
+            {reportMode === 'obra' && (
               <>
                 <Button
                   variant="outline"
@@ -1262,6 +1263,35 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
                   className="gap-2"
                 >
                   {generating === 'pdf-obra' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4" />
+                  )}
+                  Gerar PDF
+                </Button>
+              </>
+            )}
+            {reportMode === 'revisoes' && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleExportXLSXRevisoes}
+                  disabled={generating !== null || filteredVeiculos.length === 0}
+                  className="gap-2"
+                >
+                  {generating === 'xlsx-rev' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileSpreadsheet className="h-4 w-4" />
+                  )}
+                  Exportar Excel
+                </Button>
+                <Button
+                  onClick={handleExportPDFRevisoes}
+                  disabled={generating !== null || filteredVeiculos.length === 0}
+                  className="gap-2"
+                >
+                  {generating === 'pdf-rev' ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <FileText className="h-4 w-4" />
