@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Users, Building2, FileText } from 'lucide-react';
+import { Search, Users, Building2, FileText, CheckCircle2, RefreshCw, Archive } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedPolicyData } from '@/utils/policyDataParser';
 
