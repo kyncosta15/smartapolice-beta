@@ -32,7 +32,14 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					bg: 'hsl(var(--primary-bg))',
+					'bg-strong': 'hsl(var(--primary-bg-strong))',
+					border: 'hsl(var(--primary-border))',
+				},
+				surface: {
+					'1': 'hsl(var(--surface-1))',
+					'2': 'hsl(var(--surface-2))',
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',

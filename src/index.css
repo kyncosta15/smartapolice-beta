@@ -74,6 +74,13 @@
     /* Accent icon (âmbar suave) */
     --accent-icon: 35 90% 55%;
     --accent-icon-bg: 35 90% 95%;
+
+    /* Report panel surfaces & primary tints (derived from Prussian Blue) */
+    --primary-bg: 227 50% 96%;
+    --primary-bg-strong: 227 50% 90%;
+    --primary-border: 227 50% 80%;
+    --surface-1: 210 40% 98%;
+    --surface-2: 210 40% 95%;
   }
 
   .dark {
@@ -127,6 +134,13 @@
     /* Accent icon (dark) */
     --accent-icon: 35 90% 60%;
     --accent-icon-bg: 35 50% 15%;
+
+    /* Report panel surfaces & primary tints (dark) */
+    --primary-bg: 222 47% 14%;
+    --primary-bg-strong: 222 47% 19%;
+    --primary-border: 217 33% 28%;
+    --surface-1: 222 47% 9%;
+    --surface-2: 222 47% 13%;
   }
 }
 
