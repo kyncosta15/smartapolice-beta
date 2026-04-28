@@ -200,16 +200,28 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   // (busca global removida da sidebar)
 
   // activeEmpresaName já vem de useTenant() no topo
-  const userName = profile?.full_name || (user as any)?.email?.split('@')[0] || 'Usuário';
-  const accountLabel = (activeEmpresaName || userName).toUpperCase();
-  const accountInitials = accountLabel
+  // Limpa prefixos tipo "Cliente - foo@bar" → "foo@bar"
+  const cleanCompanyName = (activeEmpresaName || '')
+    .replace(/^\s*cliente\s*[-–—:]\s*/i, '')
+    .trim();
+  const rawUserName = profile?.full_name || (user as any)?.email?.split('@')[0] || 'Usuário';
+  // Prioriza nome real do cliente (perfil/empresa); evita usar email como label
+  const displayName = (profile?.full_name && profile.full_name.trim())
+    || cleanCompanyName
+    || rawUserName;
+  const accountLabel = displayName;
+  const userName = displayName;
+  const accountInitials = displayName
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((w) => w[0])
     .join('')
-    .toUpperCase() || 'SA';
-  const userRole = isAdmin ? 'Admin' : (profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'Usuário');
+    .toUpperCase() || 'US';
+  const companyLabel = (cleanCompanyName || '').toUpperCase();
+  const secondaryLabel = companyLabel && companyLabel !== displayName.toUpperCase()
+    ? companyLabel
+    : null;
 
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-sidebar-border">
@@ -329,9 +341,11 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                     <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight tracking-wide">
                       {accountLabel}
                     </p>
-                    <p className="text-[11px] text-muted-foreground leading-tight truncate">
-                      {userName}
-                    </p>
+                    {secondaryLabel && (
+                      <p className="text-[11px] text-muted-foreground leading-tight truncate">
+                        {secondaryLabel}
+                      </p>
+                    )}
                   </div>
                   <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 </>
@@ -351,9 +365,11 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 <p className="text-sm font-semibold text-foreground truncate tracking-wide">
                   {accountLabel}
                 </p>
-                <p className="text-[11px] font-normal text-muted-foreground truncate">
-                  {userName}
-                </p>
+                {secondaryLabel && (
+                  <p className="text-[11px] font-normal text-muted-foreground truncate">
+                    {secondaryLabel}
+                  </p>
+                )}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
