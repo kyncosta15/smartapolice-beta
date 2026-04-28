@@ -681,8 +681,54 @@ export function MyPolicies({
       }
     }
     
+    // Filtro por busca textual
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const haystack = [
+        policy.name,
+        policy.policyNumber,
+        policy.insurer,
+        policy.marca,
+        policy.placa,
+        policy.modelo_veiculo,
+        policy.vehicleModel,
+        policy.nome_embarcacao,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+
     return true;
   });
+
+  // KPIs da carteira
+  const kpiData = React.useMemo(() => {
+    const isActive = (s?: string) => {
+      const x = s?.toLowerCase();
+      return x === 'vigente' || x === 'ativa' || x === 'vencendo';
+    };
+    const vigentesArr = policiesWithStatus.filter((p) => isActive(p.status));
+    const premioMensalTotal = vigentesArr.reduce((sum, p) => sum + (p.monthlyAmount || 0), 0);
+
+    const todayISO = (() => {
+      const t = new Date();
+      return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    })();
+
+    const upcoming = vigentesArr
+      .map((p) => ({ name: p.name, date: String(p.expirationDate || p.endDate || '').slice(0, 10) }))
+      .filter((p) => p.date && p.date >= todayISO)
+      .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+    return {
+      total: policiesWithStatus.length,
+      vigentes: vigentesArr.length,
+      premioMensalTotal,
+      proximoVencimento: upcoming || null,
+    };
+  }, [policiesWithStatus]);
 
   // Paginação
   const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
