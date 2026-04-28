@@ -112,21 +112,22 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution }: 
             {statusDistribution.map((entry) => (
               <div
                 key={`legend-${entry.name}`}
-                className={`flex items-center ${isMobile ? 'text-xs' : 'text-sm justify-between'}`}
+                className={`flex items-center gap-2 ${isMobile ? 'text-xs justify-between' : 'text-sm justify-between'}`}
               >
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
                   <div
                     className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'} rounded-full flex-shrink-0`}
                     style={{ background: getStatusColor(entry.name) }}
                   />
                   <span className="font-medium text-foreground truncate">{entry.name}</span>
                 </div>
-                {!isMobile && (
-                  <span className="font-semibold text-foreground bg-muted px-2 py-0.5 rounded-md text-xs">
+                {!isMobile ? (
+                  <span className="font-semibold text-foreground bg-muted px-2 py-0.5 rounded-md text-xs flex-shrink-0">
                     {entry.value}
                   </span>
+                ) : (
+                  <span className="text-xs font-semibold text-foreground flex-shrink-0 ml-1">{entry.value}</span>
                 )}
-                {isMobile && <span className="text-xs font-semibold text-foreground">{entry.value}</span>}
               </div>
             ))}
           </div>
