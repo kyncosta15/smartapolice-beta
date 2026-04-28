@@ -69,6 +69,7 @@ export class PolicyPersistenceService {
       'ativa': 'vigente',
       'aguardando_emissao': 'aguardando_emissao',
       'nao_renovada': 'nao_renovada',
+      'renovada': 'renovada',
       'vencida': 'vencida',
       'pendente_analise': 'pendente_analise',
       'vencendo': 'vencendo',
