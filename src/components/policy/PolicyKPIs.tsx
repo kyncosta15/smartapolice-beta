@@ -39,24 +39,27 @@ const toneMap: Record<KpiProps['tone'], string> = {
 };
 
 const Kpi: React.FC<KpiProps> = ({ label, value, hint, icon: Icon, tone }) => (
-  <div className="rounded-xl border border-border bg-card p-4 flex items-start gap-3 hover:border-primary/30 transition-colors">
+  <div className="rounded-xl border border-border bg-card p-2.5 sm:p-4 flex items-start gap-2 sm:gap-3 hover:border-primary/30 transition-colors min-w-0">
     <div
       className={cn(
-        'h-9 w-9 rounded-lg flex items-center justify-center shrink-0',
+        'h-7 w-7 sm:h-9 sm:w-9 rounded-lg flex items-center justify-center shrink-0',
         toneMap[tone],
       )}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
     </div>
     <div className="min-w-0 flex-1">
-      <div className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+      <div className="text-[10px] sm:text-[11px] font-medium tracking-wider text-muted-foreground uppercase leading-tight">
         {label}
       </div>
-      <div className="text-lg sm:text-xl font-bold text-foreground tabular-nums truncate">
+      <div
+        className="text-sm sm:text-xl font-bold text-foreground tabular-nums leading-tight break-words"
+        title={typeof value === 'string' || typeof value === 'number' ? String(value) : undefined}
+      >
         {value}
       </div>
       {hint && (
-        <div className="text-xs text-muted-foreground truncate" title={hint}>
+        <div className="text-[10px] sm:text-xs text-muted-foreground truncate" title={hint}>
           {hint}
         </div>
       )}
