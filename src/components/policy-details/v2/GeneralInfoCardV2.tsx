@@ -5,9 +5,10 @@ import { InfoCardV2 } from './InfoCardV2';
 
 interface Props {
   policy: any;
+  onEdit?: () => void;
 }
 
-export const GeneralInfoCardV2: React.FC<Props> = ({ policy }) => {
+export const GeneralInfoCardV2: React.FC<Props> = ({ policy, onEdit }) => {
   const tipo = policy?.tipo_seguro || policy?.type || '—';
   const seguradora = policy?.seguradora || policy?.insurer || '—';
   const numero = policy?.policyNumber || policy?.numero_apolice || '—';
