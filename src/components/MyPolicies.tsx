@@ -1539,6 +1539,10 @@ export function MyPolicies({
           }
         }}
         onUpdate={refreshPolicies}
+        onEdit={() => {
+          setShowDetailsModal(false);
+          setShowEditModal(true);
+        }}
       />
 
       <PolicyEditModal
