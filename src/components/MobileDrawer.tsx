@@ -21,6 +21,14 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
@@ -326,35 +334,42 @@ export function MobileDrawer({
           ))}
         </nav>
 
-        {/* ===== Footer: Avatar + nome + role + Sair ===== */}
-        <div className="border-t border-sidebar-border p-2 gap-1 shrink-0">
-          <div className="flex items-center gap-2.5 rounded-lg px-2 py-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground text-xs font-bold shrink-0">
-              {userInitials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
-                {userName}
-              </p>
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                {userRole}
-              </p>
-            </div>
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          </div>
-
-          <button
-            onClick={() => { logout(); onClose(); }}
-            className={cn(
-              'flex items-center gap-2.5 text-sm w-full font-medium',
-              'text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/60',
-              'transition-colors duration-150 rounded-lg px-3 py-2 h-9'
-            )}
-          >
-            <LogOut className="size-[18px] shrink-0" />
-            <span className="truncate">Sair</span>
-          </button>
+        {/* ===== Footer: Avatar + nome + role com Dropdown ===== */}
+        <div className="border-t border-sidebar-border p-2 shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center gap-2.5 rounded-lg px-2 py-2 w-full hover:bg-sidebar-accent/60 transition-colors"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                  {userInitials}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
+                    {userName}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-tight truncate">
+                    {userRole}
+                  </p>
+                </div>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="top" className="w-56 z-[60]">
+              <DropdownMenuItem onClick={() => handleNavigate('settings')}>
+                <Settings className="h-4 w-4 mr-2" />
+                Configurações
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => { logout(); onClose(); }} className="text-destructive focus:text-destructive">
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+
       </aside>
     </>
   );
