@@ -617,6 +617,78 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ===== PÓS-PROCESSAMENTO: Marcar apólices renovadas =====
+    // Uma apólice está "renovada" quando existe outra apólice (do mesmo user)
+    // que aponta para ela via renovado_nosnum/renovado_codfil
+    // OU quando o sit_renovacao_txt da nova menciona "RENOVAÇÃO DO DOCUMENTO [nnn]"
+    try {
+      console.log('🔁 Iniciando pós-processamento de renovações...');
+
+      const { data: userPolicies } = await supabaseClient
+        .from('policies')
+        .select('id, nosnum, codfil, renovado_nosnum, renovado_codfil, sit_renovacao_txt, status')
+        .eq('user_id', user.id);
+
+      if (userPolicies && userPolicies.length > 0) {
+        // Construir mapa "nosnum-codfil" -> id
+        const policyMap = new Map<string, string>();
+        for (const p of userPolicies) {
+          if (p.nosnum != null && p.codfil != null) {
+            policyMap.set(`${p.codfil}-${p.nosnum}`, p.id);
+          }
+        }
+
+        const renewedIds = new Set<string>();
+
+        for (const p of userPolicies) {
+          // Caso 1: outra apólice declarou explicitamente que renovou esta
+          // (esta apólice tem renovado_nosnum apontando p/ a nova)
+          if (p.renovado_nosnum && p.renovado_codfil) {
+            // Esta apólice (p) FOI renovada pela apolice (renovado_codfil-renovado_nosnum)
+            // Verificar se a nova existe na base do user
+            const newKey = `${p.renovado_codfil}-${p.renovado_nosnum}`;
+            if (policyMap.has(newKey)) {
+              renewedIds.add(p.id);
+              console.log(`✅ Apólice ${p.codfil}-${p.nosnum} foi renovada por ${newKey}`);
+            }
+          }
+
+          // Caso 2: sit_renovacao_txt menciona "DOCUMENTO [nnnn]" → essa nnnn FOI renovada por p
+          if (p.sit_renovacao_txt) {
+            const match = String(p.sit_renovacao_txt).match(/DOCUMENTO\s*\[(\d+)\]/i);
+            if (match) {
+              const oldNosnum = parseInt(match[1]);
+              // Procurar essa apólice antiga no mesmo codfil
+              const oldKey = `${p.codfil}-${oldNosnum}`;
+              const oldId = policyMap.get(oldKey);
+              if (oldId) {
+                renewedIds.add(oldId);
+                console.log(`✅ Apólice ${oldKey} marcada como renovada (renovada por ${p.codfil}-${p.nosnum})`);
+              }
+            }
+          }
+        }
+
+        if (renewedIds.size > 0) {
+          const ids = Array.from(renewedIds);
+          const { error: updErr } = await supabaseClient
+            .from('policies')
+            .update({ status: 'renovada' })
+            .in('id', ids);
+
+          if (updErr) {
+            console.error('❌ Erro ao marcar apólices como renovadas:', updErr);
+          } else {
+            console.log(`🎯 ${ids.length} apólice(s) marcadas como RENOVADA`);
+          }
+        } else {
+          console.log('ℹ️ Nenhuma apólice precisa ser marcada como renovada');
+        }
+      }
+    } catch (postErr) {
+      console.error('⚠️ Erro no pós-processamento de renovações:', postErr);
+    }
+
     console.log(`\n🎉 SINCRONIZAÇÃO TOTAL CONCLUÍDA: ${totalApolicesSincronizadas} apólices processadas`);
 
     return new Response(
