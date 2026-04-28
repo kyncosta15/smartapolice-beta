@@ -1039,6 +1039,24 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
     ? maintenancePreviewCost
     : veiculosToExport.reduce((acc, v) => acc + (Number(v.preco_fipe) || 0), 0);
 
+  // Métricas específicas para o modo "Por Obra"
+  const obraStats = useMemo(() => {
+    if (reportMode !== 'obra') return { totalObras: 0, alocados: 0, semObra: 0 };
+    const obras = new Set<string>();
+    let alocados = 0;
+    let semObra = 0;
+    veiculosToExport.forEach(v => {
+      const nome = (v.current_worksite_name || '').trim();
+      if (nome) {
+        obras.add(nome.toLowerCase());
+        alocados++;
+      } else {
+        semObra++;
+      }
+    });
+    return { totalObras: obras.size, alocados, semObra };
+  }, [reportMode, veiculosToExport]);
+
   const activeFilters: { key: string; label: string; clear: () => void }[] = [];
   if (search) activeFilters.push({ key: 'search', label: `Busca: ${search}`, clear: () => setSearch('') });
   if (filterCategoria !== 'all') activeFilters.push({ key: 'cat', label: `Categoria: ${filterCategoria}`, clear: () => setFilterCategoria('all') });
@@ -1140,9 +1158,19 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
             <span className="text-[11px] font-medium text-foreground">
-              {totalVeiculos === 1 ? '1 veículo' : `${totalVeiculos} veículos`}
-              {' · '}
-              {totalRegistros === 1 ? '1 registro' : `${totalRegistros} registros`}
+              {reportMode === 'obra' ? (
+                <>
+                  {obraStats.totalObras} {obraStats.totalObras === 1 ? 'obra' : 'obras'}
+                  {' · '}
+                  {obraStats.alocados} {obraStats.alocados === 1 ? 'veículo alocado' : 'veículos alocados'}
+                </>
+              ) : (
+                <>
+                  {totalVeiculos === 1 ? '1 veículo' : `${totalVeiculos} veículos`}
+                  {' · '}
+                  {totalRegistros === 1 ? '1 registro' : `${totalRegistros} registros`}
+                </>
+              )}
             </span>
           </div>
         </div>
@@ -1428,28 +1456,52 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
 
                 {/* Metric cards */}
                 <div className="grid grid-cols-2 gap-3 mt-4">
-                  <div className="rounded-lg border border-border bg-surface-1 p-3">
-                    <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Veículos</div>
-                    <div className="text-2xl font-semibold text-foreground mt-1 tabular-nums">{totalVeiculos}</div>
-                  </div>
-                  <div className="rounded-lg border border-border bg-surface-1 p-3">
-                    <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Registros</div>
-                    <div className="text-2xl font-semibold text-foreground mt-1 tabular-nums">
-                      {reportMode === 'revisoes' && maintenancePreviewCount === null
-                        ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                        : totalRegistros}
-                    </div>
-                  </div>
+                  {reportMode === 'obra' ? (
+                    <>
+                      <div className="rounded-lg border border-border bg-surface-1 p-3">
+                        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Obras</div>
+                        <div className="text-2xl font-semibold text-foreground mt-1 tabular-nums">{obraStats.totalObras}</div>
+                      </div>
+                      <div className="rounded-lg border border-border bg-surface-1 p-3">
+                        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Alocados</div>
+                        <div className="text-2xl font-semibold text-foreground mt-1 tabular-nums">{obraStats.alocados}</div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="rounded-lg border border-border bg-surface-1 p-3">
+                        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Veículos</div>
+                        <div className="text-2xl font-semibold text-foreground mt-1 tabular-nums">{totalVeiculos}</div>
+                      </div>
+                      <div className="rounded-lg border border-border bg-surface-1 p-3">
+                        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Registros</div>
+                        <div className="text-2xl font-semibold text-foreground mt-1 tabular-nums">
+                          {reportMode === 'revisoes' && maintenancePreviewCount === null
+                            ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                            : totalRegistros}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                <div className="rounded-lg border border-border bg-surface-1 p-3 mt-3 flex items-center justify-between">
-                  <span className="text-[12px] font-medium text-muted-foreground">
-                    {reportMode === 'revisoes' ? 'Custo total' : 'Soma FIPE'}
-                  </span>
-                  <span className="text-[14px] font-semibold text-foreground tabular-nums">
-                    {formatBRL(custoEstimado)}
-                  </span>
-                </div>
+                {reportMode === 'obra' ? (
+                  <div className="rounded-lg border border-border bg-surface-1 p-3 mt-3 flex items-center justify-between">
+                    <span className="text-[12px] font-medium text-muted-foreground">Sem obra</span>
+                    <span className="text-[14px] font-semibold text-foreground tabular-nums">
+                      {obraStats.semObra}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-border bg-surface-1 p-3 mt-3 flex items-center justify-between">
+                    <span className="text-[12px] font-medium text-muted-foreground">
+                      {reportMode === 'revisoes' ? 'Custo total' : 'Soma FIPE'}
+                    </span>
+                    <span className="text-[14px] font-semibold text-foreground tabular-nums">
+                      {formatBRL(custoEstimado)}
+                    </span>
+                  </div>
+                )}
 
                 <Button
                   variant="outline"
