@@ -412,6 +412,50 @@ export function DashboardContent() {
       }
     }
   }, [activeSection]);
+
+  // Listener: abrir PolicyDetailsModal a partir de qualquer lugar (ex.: NewPolicyModal do dashboard)
+  useEffect(() => {
+    const handleOpenDetails = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { name?: string; insurer?: string; policyNumber?: string } | undefined;
+      if (!detail) return;
+
+      const norm = (s: unknown) => String(s ?? '').trim().toLowerCase();
+      const targetName = norm(detail.name);
+      const targetInsurer = norm(detail.insurer);
+      const targetNumber = norm(detail.policyNumber);
+
+      // 1) match por número de apólice (mais confiável)
+      let match = targetNumber
+        ? normalizedPolicies.find(p => norm((p as any).policyNumber) === targetNumber)
+        : undefined;
+
+      // 2) fallback: nome + seguradora
+      if (!match && targetName) {
+        match = normalizedPolicies.find(
+          p => norm(p.name) === targetName && (!targetInsurer || norm((p as any).insurer).includes(targetInsurer) || targetInsurer.includes(norm((p as any).insurer)))
+        );
+      }
+
+      // 3) fallback final: só pelo nome
+      if (!match && targetName) {
+        match = normalizedPolicies.find(p => norm(p.name) === targetName);
+      }
+
+      if (match) {
+        setSelectedPolicy(match as any);
+        setIsDetailsModalOpen(true);
+      } else {
+        toast({
+          title: 'Apólice não encontrada',
+          description: 'Não foi possível localizar os detalhes desta apólice.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    window.addEventListener('lovable:open-policy-details', handleOpenDetails as EventListener);
+    return () => window.removeEventListener('lovable:open-policy-details', handleOpenDetails as EventListener);
+  }, [normalizedPolicies, toast]);
   
   // Verificação crítica de autenticação
   if (!user?.id) {
