@@ -1102,9 +1102,18 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
 
   return (
     <div className="bg-background -mx-3 -my-3 sm:-mx-4 md:-mx-6 sm:-my-4 md:-my-6">
-      {/* ===== Sticky top bar: breadcrumb + CTAs ===== */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
-        <div className="flex items-center justify-end gap-3 px-4 sm:px-6 py-3">
+      {/* ===== Page body ===== */}
+      <div className="px-4 sm:px-6 py-6">
+        {/* Section header with CTAs */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div className="min-w-0">
+            <h1 className="text-xl font-medium text-foreground tracking-tight">
+              Gerar Relatório de Frotas
+            </h1>
+            <p className="text-[13px] text-muted-foreground mt-0.5">
+              {modeDescription}
+            </p>
+          </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               variant="outline"
@@ -1125,21 +1134,6 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
               {ctas.xlsx.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               Gerar Excel
             </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* ===== Page body ===== */}
-      <div className="px-4 sm:px-6 py-6">
-        {/* Section header */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
-          <div className="min-w-0">
-            <h1 className="text-xl font-medium text-foreground tracking-tight">
-              Gerar Relatório de Frotas
-            </h1>
-            <p className="text-[13px] text-muted-foreground mt-0.5">
-              {modeDescription}
-            </p>
           </div>
         </div>
 
