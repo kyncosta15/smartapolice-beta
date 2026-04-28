@@ -865,7 +865,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
           l.odometer_km != null ? new Intl.NumberFormat('pt-BR').format(Number(l.odometer_km)) + ' km' : '-',
           l.cost != null ? formatBRL(l.cost) : '-',
           l.realizada ? 'Sim' : 'Pendente',
-          l.notes ? String(l.notes).slice(0, 200) : '-',
+          (() => { const t = formatMaintNotes(l.notes); return t ? t.slice(0, 240) : '-'; })(),
         ]);
 
         autoTable(doc, {
@@ -951,7 +951,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
             'KM': l.odometer_km != null ? Number(l.odometer_km) : ('' as any),
             'Custo (R$)': l.cost != null ? Number(l.cost) : ('' as any),
             'Realizada': l.realizada ? 'Sim' : 'Pendente',
-            'Observações': l.notes || '',
+            'Observações': formatMaintNotes(l.notes),
           });
         });
       });
