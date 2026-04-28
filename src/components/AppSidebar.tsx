@@ -203,9 +203,9 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const userName = profile?.display_name || (user as any)?.email?.split('@')[0] || 'Usuário';
+  const userName = profile?.full_name || (user as any)?.email?.split('@')[0] || 'Usuário';
   const userInitials = userName.slice(0, 2).toUpperCase();
-  const userRole = isAdmin ? 'Admin' : (profile?.role || 'Usuário');
+  const userRole = isAdmin ? 'Admin' : (profile?.role ? capitalize(profile.role) : 'Usuário');
 
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-sidebar-border">
