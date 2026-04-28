@@ -256,11 +256,11 @@ export function ClassificationCharts({
                       dataKey="value"
                       position="right"
                       offset={12}
-                      style={{ 
-                        fontSize: isMobile ? 11 : 14, 
-                        fontWeight: 700, 
-                        fill: '#1f2937',
-                        letterSpacing: '0.02em'
+                      style={{
+                        fontSize: isMobile ? 11 : 14,
+                        fontWeight: 700,
+                        fill: 'hsl(var(--foreground))',
+                        letterSpacing: '0.02em',
                       }}
                       formatter={(value: number) => {
                         return value.toLocaleString('pt-BR', { 
