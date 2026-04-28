@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { GeneralInfoCard } from './policy-details/GeneralInfoCard';
 import { InsurerInfoCard } from './policy-details/InsurerInfoCard';
 import { FinancialInfoCard } from './policy-details/FinancialInfoCard';
 import { CoveragesCard } from './policy-details/CoveragesCard';
-import { ValidityInfoCard } from './policy-details/ValidityInfoCard';
+
 import { VehicleInfoCard } from './policy-details/VehicleInfoCard';
 import { ResponsiblePersonCard } from './policy-details/ResponsiblePersonCard';
 import { EndossosCard } from './policy-details/EndossosCard';
-import { PolicySmartHeader } from './policy-details/PolicySmartHeader';
-import { PolicyActionCards } from './policy-details/PolicyActionCards';
-import { PolicyInsights } from './policy-details/PolicyInsights';
+import { PolicyOverviewHeader } from './policy-details/PolicyOverviewHeader';
 // Timeline e hook de installments desativados — não são mais usados nesta visão
 
 import {
@@ -59,31 +55,12 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto bg-background p-0 gap-0">
-          {/* Sticky Header */}
-          <DialogHeader className="border-b border-border pb-4 px-5 pt-5 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-            <div className="flex items-center justify-between gap-2">
-              <DialogTitle className="text-xl font-bold text-foreground">
-                Detalhes da Apólice
-              </DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDelete}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-              >
-                <Trash2 className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Excluir</span>
-              </Button>
-            </div>
-          </DialogHeader>
+          {/* Hero Header — visão geral da apólice */}
+          <div className="px-5 pt-5 pb-5 sm:px-6 sm:pt-6 sm:pb-6 border-b border-border bg-gradient-to-b from-muted/30 to-transparent">
+            <PolicyOverviewHeader policy={policy} onDelete={handleDelete} />
+          </div>
 
           <div className="p-5 space-y-6">
-            {/* 1. Smart Header desativado a pedido — exibia "Resumo da apólice hoje" e progresso de pagamentos */}
-
-            {/* Action Cards e Insights desativados a pedido */}
-
-            {/* Cronograma de parcelas desativado a pedido */}
-
 
             {/* 5. Detailed Cards - Clean grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -93,7 +70,6 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
                 type={policy.tipo_seguro || policy.type || 'Não informado'}
               />
               <FinancialInfoCard policy={policy} onInstallmentsUpdate={() => onUpdate?.()} />
-              <ValidityInfoCard policy={policy} />
               <VehicleInfoCard policy={policy} onUpdate={() => onUpdate?.()} />
               {(policy.insuredName || policy.documento) && (
                 <ResponsiblePersonCard policy={policy} />
