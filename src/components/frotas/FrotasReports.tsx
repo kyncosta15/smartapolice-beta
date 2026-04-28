@@ -1039,6 +1039,24 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
     ? maintenancePreviewCost
     : veiculosToExport.reduce((acc, v) => acc + (Number(v.preco_fipe) || 0), 0);
 
+  // Métricas específicas para o modo "Por Obra"
+  const obraStats = useMemo(() => {
+    if (reportMode !== 'obra') return { totalObras: 0, alocados: 0, semObra: 0 };
+    const obras = new Set<string>();
+    let alocados = 0;
+    let semObra = 0;
+    veiculosToExport.forEach(v => {
+      const nome = (v.current_worksite_name || '').trim();
+      if (nome) {
+        obras.add(nome.toLowerCase());
+        alocados++;
+      } else {
+        semObra++;
+      }
+    });
+    return { totalObras: obras.size, alocados, semObra };
+  }, [reportMode, veiculosToExport]);
+
   const activeFilters: { key: string; label: string; clear: () => void }[] = [];
   if (search) activeFilters.push({ key: 'search', label: `Busca: ${search}`, clear: () => setSearch('') });
   if (filterCategoria !== 'all') activeFilters.push({ key: 'cat', label: `Categoria: ${filterCategoria}`, clear: () => setFilterCategoria('all') });
