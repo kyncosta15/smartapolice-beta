@@ -85,10 +85,21 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution }: 
                   label={
                     isMobile
                       ? false
-                      : ({ name, percent, value }: { name: string; percent: number; value: number }) =>
-                          `${name}: ${value} (${(percent * 100).toFixed(1)}%)`
+                      : ({ name, percent, value, x, y, cx }: any) => (
+                          <text
+                            x={x}
+                            y={y}
+                            fill="hsl(var(--foreground))"
+                            textAnchor={x > cx ? 'start' : 'end'}
+                            dominantBaseline="central"
+                            fontSize={12}
+                            fontWeight={500}
+                          >
+                            {`${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
+                          </text>
+                        )
                   }
-                  labelLine={false}
+                  labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeOpacity: 0.5 }}
                   fontSize={isMobile ? 8 : 12}
                 >
                   {statusDistribution.map((entry, index) => (
