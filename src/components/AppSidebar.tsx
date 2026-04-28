@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/TenantContext';
+import smartControlShield from '@/assets/smartcontrol-shield.png';
 import {
   LayoutDashboard,
   FileText,
