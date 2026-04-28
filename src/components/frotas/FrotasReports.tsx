@@ -678,6 +678,296 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
     }
   };
 
+  // ============== REVISÕES / MANUTENÇÕES ==============
+  type MaintLog = {
+    id: string;
+    vehicle_id: string;
+    type: MaintenanceType;
+    performed_date: string;
+    odometer_km: number;
+    cost: number;
+    notes: string | null;
+    realizada: boolean;
+  };
+
+  const fetchMaintenanceLogs = async (vehicleIds: string[]): Promise<Record<string, MaintLog[]>> => {
+    if (vehicleIds.length === 0) return {};
+    const map: Record<string, MaintLog[]> = {};
+    // Chunk to avoid overly long IN clauses
+    const chunkSize = 200;
+    for (let i = 0; i < vehicleIds.length; i += chunkSize) {
+      const chunk = vehicleIds.slice(i, i + chunkSize);
+      const { data, error } = await supabase
+        .from('vehicle_maintenance_logs')
+        .select('id, vehicle_id, type, performed_date, odometer_km, cost, notes, realizada')
+        .in('vehicle_id', chunk)
+        .order('performed_date', { ascending: false });
+      if (error) throw error;
+      (data || []).forEach((row: any) => {
+        if (!map[row.vehicle_id]) map[row.vehicle_id] = [];
+        map[row.vehicle_id].push(row as MaintLog);
+      });
+    }
+    return map;
+  };
+
+  const formatMaintType = (t: string) =>
+    (MAINTENANCE_TYPE_LABELS as Record<string, string>)[t] || t || '-';
+
+  const handleExportPDFRevisoes = async () => {
+    if (veiculosToExport.length === 0) {
+      toast({ title: 'Nenhum veículo', description: 'Selecione ao menos um veículo.', variant: 'destructive' });
+      return;
+    }
+
+    setGenerating('pdf-rev');
+    try {
+      const logsByVehicle = await fetchMaintenanceLogs(veiculosToExport.map(v => v.id));
+
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      const rawEmpresa = clienteNome || activeEmpresaName || 'Empresa';
+      const empresa = rawEmpresa.replace(/^Cliente\s*-\s*/i, '').trim() || 'Empresa';
+      const tituloRel = reportTitle && reportTitle !== 'Relatório de Frotas'
+        ? reportTitle
+        : 'Relatório de Revisões e Manutenções';
+
+      // ===== Header =====
+      doc.setFillColor(12, 21, 57);
+      doc.rect(0, 0, pageWidth, 26, 'F');
+      doc.setFillColor(59, 130, 246);
+      doc.rect(0, 26, pageWidth, 1.2, 'F');
+
+      const logo = await loadImageAsDataURL(logoSrc);
+      if (logo) {
+        const targetH = 14;
+        const ratio = logo.w / logo.h;
+        const targetW = targetH * ratio;
+        try { doc.addImage(logo.data, 'PNG', 8, 6, targetW, targetH); } catch {}
+      }
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.text(tituloRel, pageWidth / 2, 12, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(200, 215, 240);
+      const now = new Date().toLocaleString('pt-BR');
+      const totalLogs = Object.values(logsByVehicle).reduce((acc, l) => acc + l.length, 0);
+      doc.text(
+        `Gerado em ${now}  •  ${veiculosToExport.length} veículo(s)  •  ${totalLogs} registro(s)`,
+        pageWidth / 2, 18, { align: 'center' }
+      );
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('SmartControl', pageWidth - 8, 11, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(200, 215, 240);
+      doc.text('Gestão Inteligente de Frotas', pageWidth - 8, 16, { align: 'right' });
+
+      // Empresa bar
+      doc.setFillColor(245, 247, 250);
+      doc.rect(0, 27.2, pageWidth, 9, 'F');
+      doc.setTextColor(80, 90, 110);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('EMPRESA', 8, 33);
+      const empresaLabelWidth = doc.getTextWidth('EMPRESA');
+      doc.setTextColor(12, 21, 57);
+      doc.text(empresa.toUpperCase(), 8 + empresaLabelWidth + 4, 33);
+
+      const headers = ['Data', 'Tipo', 'KM', 'Custo', 'Realizada', 'Observações'];
+
+      let cursorY = 41;
+
+      // Sort vehicles: with logs first
+      const sortedVeics = [...veiculosToExport].sort((a, b) => {
+        const la = (logsByVehicle[a.id] || []).length;
+        const lb = (logsByVehicle[b.id] || []).length;
+        if (la !== lb) return lb - la;
+        return (a.placa || '').localeCompare(b.placa || '', 'pt-BR');
+      });
+
+      sortedVeics.forEach((v) => {
+        const logs = logsByVehicle[v.id] || [];
+
+        // Vehicle section header
+        if (cursorY + 14 > pageHeight - 15) {
+          doc.addPage();
+          cursorY = 41;
+        }
+
+        doc.setFillColor(12, 21, 57);
+        doc.rect(6, cursorY, pageWidth - 12, 8, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        const vehTitle = `${v.placa || '-'}  •  ${[v.marca, v.modelo].filter(Boolean).join(' ') || '-'}${v.ano_modelo ? `  •  ${v.ano_modelo}` : ''}`;
+        doc.text(vehTitle, 9, cursorY + 5.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.text(`${logs.length} registro(s)`, pageWidth - 9, cursorY + 5.5, { align: 'right' });
+        cursorY += 10;
+
+        if (logs.length === 0) {
+          doc.setFillColor(248, 250, 253);
+          doc.rect(6, cursorY, pageWidth - 12, 7, 'F');
+          doc.setTextColor(120, 120, 120);
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(8);
+          doc.text('Sem revisões/manutenções registradas para este veículo.', 9, cursorY + 4.8);
+          cursorY += 9;
+          return;
+        }
+
+        const totalCost = logs.reduce((acc, l) => acc + (Number(l.cost) || 0), 0);
+
+        const rows = logs.map(l => [
+          formatDate(l.performed_date),
+          formatMaintType(l.type),
+          l.odometer_km != null ? new Intl.NumberFormat('pt-BR').format(Number(l.odometer_km)) + ' km' : '-',
+          l.cost != null ? formatBRL(l.cost) : '-',
+          l.realizada ? 'Sim' : 'Pendente',
+          l.notes ? String(l.notes).slice(0, 200) : '-',
+        ]);
+
+        autoTable(doc, {
+          head: [headers],
+          body: rows,
+          startY: cursorY,
+          styles: { fontSize: 8, cellPadding: 1.8, textColor: [40, 40, 40] },
+          headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+          alternateRowStyles: { fillColor: [248, 250, 253] },
+          columnStyles: {
+            0: { cellWidth: 24 },
+            1: { cellWidth: 42 },
+            2: { cellWidth: 28, halign: 'right' },
+            3: { cellWidth: 28, halign: 'right' },
+            4: { cellWidth: 22, halign: 'center' },
+          },
+          margin: { left: 6, right: 6, top: 41 },
+        });
+
+        cursorY = (doc as any).lastAutoTable.finalY + 2;
+
+        // Total bar
+        if (cursorY + 7 > pageHeight - 15) {
+          doc.addPage();
+          cursorY = 41;
+        }
+        doc.setFillColor(225, 232, 245);
+        doc.rect(6, cursorY, pageWidth - 12, 6.5, 'F');
+        doc.setTextColor(12, 21, 57);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.text(`Custo total: ${formatBRL(totalCost)}`, pageWidth - 9, cursorY + 4.5, { align: 'right' });
+        cursorY += 9;
+      });
+
+      // Footer
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7);
+        doc.setTextColor(120, 120, 120);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${empresa}  •  ${tituloRel}`, 8, pageHeight - 6);
+        doc.text(`Página ${i} de ${pageCount}`, pageWidth - 8, pageHeight - 6, { align: 'right' });
+      }
+
+      const fileName = `relatorio_revisoes_${Date.now()}.pdf`;
+      doc.save(fileName);
+
+      toast({ title: '✅ PDF de revisões gerado', description: `${totalLogs} registro(s) em ${veiculosToExport.length} veículo(s).` });
+    } catch (err: any) {
+      console.error('Erro ao gerar PDF de revisões:', err);
+      toast({ title: 'Erro ao gerar PDF', description: err.message, variant: 'destructive' });
+    } finally {
+      setGenerating(null);
+    }
+  };
+
+  const handleExportXLSXRevisoes = async () => {
+    if (veiculosToExport.length === 0) {
+      toast({ title: 'Nenhum veículo', description: 'Selecione ao menos um veículo.', variant: 'destructive' });
+      return;
+    }
+
+    setGenerating('xlsx-rev');
+    try {
+      const logsByVehicle = await fetchMaintenanceLogs(veiculosToExport.map(v => v.id));
+
+      const wb = XLSX.utils.book_new();
+
+      // Aba 1: Consolidado (todos os logs)
+      const consolidated: Record<string, string | number>[] = [];
+      veiculosToExport.forEach(v => {
+        const logs = logsByVehicle[v.id] || [];
+        logs.forEach(l => {
+          consolidated.push({
+            'Placa': v.placa || '-',
+            'Marca': v.marca || '-',
+            'Modelo': v.modelo || '-',
+            'Ano': v.ano_modelo ? String(v.ano_modelo) : '-',
+            'Data': formatDate(l.performed_date),
+            'Tipo': formatMaintType(l.type),
+            'KM': l.odometer_km != null ? Number(l.odometer_km) : ('' as any),
+            'Custo (R$)': l.cost != null ? Number(l.cost) : ('' as any),
+            'Realizada': l.realizada ? 'Sim' : 'Pendente',
+            'Observações': l.notes || '',
+          });
+        });
+      });
+
+      const wsCons = XLSX.utils.json_to_sheet(consolidated);
+      wsCons['!cols'] = [
+        { wch: 10 }, { wch: 14 }, { wch: 18 }, { wch: 6 },
+        { wch: 12 }, { wch: 22 }, { wch: 12 }, { wch: 14 },
+        { wch: 12 }, { wch: 50 },
+      ];
+      XLSX.utils.book_append_sheet(wb, wsCons, 'Revisões');
+
+      // Aba 2: Resumo por veículo
+      const resumo = veiculosToExport.map(v => {
+        const logs = logsByVehicle[v.id] || [];
+        const totalCost = logs.reduce((acc, l) => acc + (Number(l.cost) || 0), 0);
+        const lastLog = logs[0]; // já vem ordenada desc
+        return {
+          'Placa': v.placa || '-',
+          'Marca': v.marca || '-',
+          'Modelo': v.modelo || '-',
+          'Total de Registros': logs.length,
+          'Custo Total (R$)': totalCost,
+          'Última Manutenção': lastLog ? formatDate(lastLog.performed_date) : '-',
+          'Último Tipo': lastLog ? formatMaintType(lastLog.type) : '-',
+        };
+      });
+      const wsResumo = XLSX.utils.json_to_sheet(resumo);
+      wsResumo['!cols'] = [{ wch: 10 }, { wch: 14 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 22 }];
+      XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo por Veículo');
+
+      const fileName = `relatorio_revisoes_${Date.now()}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      toast({
+        title: '✅ Planilha de revisões gerada',
+        description: `${consolidated.length} registro(s) em ${veiculosToExport.length} veículo(s).`,
+      });
+    } catch (err: any) {
+      console.error('Erro ao gerar XLSX de revisões:', err);
+      toast({ title: 'Erro ao gerar planilha', description: err.message, variant: 'destructive' });
+    } finally {
+      setGenerating(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Card>
