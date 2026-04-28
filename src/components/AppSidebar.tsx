@@ -199,8 +199,16 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   // (busca global removida da sidebar)
 
+  const { activeEmpresaName } = useTenant();
   const userName = profile?.full_name || (user as any)?.email?.split('@')[0] || 'Usuário';
-  const userInitials = userName.slice(0, 2).toUpperCase();
+  const accountLabel = (activeEmpresaName || userName).toUpperCase();
+  const accountInitials = accountLabel
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase() || 'SA';
   const userRole = isAdmin ? 'Admin' : (profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'Usuário');
 
   return (
