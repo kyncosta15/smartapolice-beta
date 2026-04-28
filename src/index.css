@@ -378,7 +378,6 @@
 /* Garantir que gráficos sejam renderizados corretamente */
 .recharts-wrapper {
   font-size: 12px !important;
-  background: white !important;
 }
 
 .recharts-cartesian-axis-tick text {
@@ -390,7 +389,8 @@
   font-size: 12px !important;
 }
 
-.recharts-surface {
+.print-container .recharts-wrapper,
+.print-container .recharts-surface {
   background: white !important;
 }
 
@@ -408,7 +408,8 @@
     box-shadow: none !important;
   }
   
-  .recharts-surface {
+  .print-container .recharts-surface,
+  .print-container .recharts-wrapper {
     background: white !important;
   }
   
