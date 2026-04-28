@@ -26,9 +26,10 @@ interface PolicyDetailsModalProps {
   policy: any;
   onDelete: (policyId: string) => void;
   onUpdate?: () => void;
+  onEdit?: () => void;
 }
 
-export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate }: PolicyDetailsModalProps) {
+export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate, onEdit }: PolicyDetailsModalProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (!policy) return null;
