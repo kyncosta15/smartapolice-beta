@@ -200,7 +200,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
       <SidebarHeader className="border-b border-sidebar-border px-3 py-4">
         <div className={cn("flex items-center gap-2.5", !open && "justify-center")}>
           <img
-            src="/src/assets/smartcontrol-shield.png"
+            src={smartControlShield}
             alt="SmartControl"
             className="w-9 h-9 object-contain shrink-0"
           />
