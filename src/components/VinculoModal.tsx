@@ -35,15 +35,89 @@ function formatDoc(doc: string, tipo: Tipo): string {
   return doc;
 }
 
+type LifecycleStatus = 'vigente' | 'renovada' | 'antiga';
+
+function getEndTime(p: any): number {
+  const raw = p?.endDate || p?.end_date;
+  if (!raw) return 0;
+  if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}/.test(raw)) {
+    const [y, m, d] = raw.slice(0, 10).split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1).getTime();
+  }
+  const t = new Date(raw).getTime();
+  return Number.isFinite(t) ? t : 0;
+}
+
+function classifyPolicies(list: ParsedPolicyData[]): Map<string, LifecycleStatus> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayMs = today.getTime();
+
+  // Agrupa por segurado(doc) + seguradora + tipo (ramo)
+  const groups = new Map<string, ParsedPolicyData[]>();
+  list.forEach((p) => {
+    const doc = extractDocumento(p).replace(/\D/g, '');
+    const insurer = (p.insurer || '').toLowerCase().trim();
+    const ramo = (p.type || '').toLowerCase().trim();
+    const key = `${doc}|${insurer}|${ramo}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(p);
+  });
+
+  const result = new Map<string, LifecycleStatus>();
+  groups.forEach((items) => {
+    // Ordena por endDate desc
+    const sorted = [...items].sort((a, b) => getEndTime(b) - getEndTime(a));
+    const newestEnd = getEndTime(sorted[0]);
+    sorted.forEach((p, idx) => {
+      const end = getEndTime(p);
+      if (end >= todayMs) {
+        // Vigente
+        result.set(p.id, 'vigente');
+      } else if (idx === 0 || end === newestEnd) {
+        // É a mais recente do grupo, mas já venceu => antiga
+        result.set(p.id, 'antiga');
+      } else {
+        // Existe versão mais nova => renovada
+        result.set(p.id, 'renovada');
+      }
+    });
+  });
+
+  return result;
+}
+
+const LIFECYCLE_META: Record<LifecycleStatus, { label: string; Icon: typeof CheckCircle2; className: string }> = {
+  vigente: {
+    label: 'Vigente',
+    Icon: CheckCircle2,
+    className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+  },
+  renovada: {
+    label: 'Renovada',
+    Icon: RefreshCw,
+    className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+  },
+  antiga: {
+    label: 'Antiga',
+    Icon: Archive,
+    className: 'bg-muted text-muted-foreground border-border',
+  },
+};
+
 export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModalProps) {
   const [query, setQuery] = useState('');
 
+  const expectedLen = tipo === 'pf' ? 11 : 14;
+
+  const subset = useMemo(() => policies.filter((p) => {
+    const d = extractDocumento(p).replace(/\D/g, '');
+    return d.length === expectedLen;
+  }), [policies, expectedLen]);
+
+  const lifecycleMap = useMemo(() => classifyPolicies(subset), [subset]);
+
   const filtered = useMemo(() => {
-    const expectedLen = tipo === 'pf' ? 11 : 14;
-    const subset = policies.filter((p) => {
-      const d = extractDocumento(p).replace(/\D/g, '');
-      return d.length === expectedLen;
-    });
     if (!query.trim()) return subset;
     const q = query.toLowerCase().trim();
     return subset.filter((p) => {
@@ -55,7 +129,7 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
         doc.includes(q)
       );
     });
-  }, [policies, tipo, query]);
+  }, [subset, query]);
 
   const config = tipo === 'pf'
     ? { Icon: Users, title: 'Pessoa Física', sublabel: 'Apólices vinculadas a CPF', tone: 'pf' as const }
