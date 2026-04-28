@@ -1082,13 +1082,15 @@ export function MyPolicies({
                     {(() => {
                       const renewalInfo = getRenewalInfo(policy);
                       const badge = (
-                        <Badge
-                          variant="outline"
-                          className={`${pillTone} shrink-0 gap-1.5 text-[10px] sm:text-xs whitespace-nowrap px-2 py-0.5 rounded-full font-medium ${renewalInfo ? 'cursor-help' : ''}`}
-                        >
-                          <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
-                          {formatStatusText(policy.status)}
-                        </Badge>
+                        <span className="inline-flex shrink-0">
+                          <Badge
+                            variant="outline"
+                            className={`${pillTone} gap-1.5 text-[10px] sm:text-xs whitespace-nowrap px-2 py-0.5 rounded-full font-medium ${renewalInfo ? 'cursor-help' : ''}`}
+                          >
+                            <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+                            {formatStatusText(policy.status)}
+                          </Badge>
+                        </span>
                       );
                       if (!renewalInfo) return badge;
                       return (
@@ -1356,9 +1358,11 @@ export function MyPolicies({
                       {(() => {
                         const renewalInfo = getRenewalInfo(policy);
                         const badge = (
-                          <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} text-xs ${renewalInfo ? 'cursor-help' : ''}`}>
-                            {formatStatusText(policy.status)}
-                          </Badge>
+                          <span className="inline-flex">
+                            <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} text-xs ${renewalInfo ? 'cursor-help' : ''}`}>
+                              {formatStatusText(policy.status)}
+                            </Badge>
+                          </span>
                         );
                         if (!renewalInfo) return badge;
                         return (
