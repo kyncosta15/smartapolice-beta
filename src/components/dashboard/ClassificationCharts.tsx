@@ -133,9 +133,9 @@ export function ClassificationCharts({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm font-medium text-gray-900">{`${label}`}</p>
-          <p className="text-sm text-blue-600">{`Valor: ${payload[0].value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}</p>
+        <div className="bg-popover text-popover-foreground p-3 border border-border rounded-lg shadow-lg">
+          <p className="text-sm font-medium">{`${label}`}</p>
+          <p className="text-sm text-primary">{`Valor: ${payload[0].value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}</p>
         </div>
       );
     }
@@ -145,14 +145,14 @@ export function ClassificationCharts({
   const PieTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg min-w-[160px]">
-          <p className="text-sm font-semibold text-gray-900 mb-1">{payload[0].name}</p>
-          <p className="text-base font-bold text-blue-600">
-            {`Valor: ${payload[0].value.toLocaleString('pt-BR', { 
-              style: 'currency', 
+        <div className="bg-popover text-popover-foreground p-3 border border-border rounded-lg shadow-lg min-w-[160px]">
+          <p className="text-sm font-semibold mb-1">{payload[0].name}</p>
+          <p className="text-base font-bold text-primary">
+            {`Valor: ${payload[0].value.toLocaleString('pt-BR', {
+              style: 'currency',
               currency: 'BRL',
               minimumFractionDigits: 2,
-              maximumFractionDigits: 2 
+              maximumFractionDigits: 2,
             })}`}
           </p>
         </div>
@@ -165,9 +165,9 @@ export function ClassificationCharts({
     <>
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-1 lg:grid-cols-2 gap-6'}`}>
         {/* Distribuição por Tipo */}
-        <Card className="bg-white border border-gray-200 shadow-sm" data-chart="type-distribution">
+        <Card className="bg-card border border-border shadow-sm" data-chart="type-distribution">
           <CardHeader className={`${isMobile ? 'p-3 pb-1' : 'p-6 pb-2'}`}>
-            <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold text-gray-900`}>
+            <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold text-foreground`}>
               Distribuição por Tipo
             </CardTitle>
           </CardHeader>
@@ -192,8 +192,8 @@ export function ClassificationCharts({
                         maximumFractionDigits: 0 
                       });
                     }}
-                    strokeWidth={3}
-                    stroke="white"
+                    strokeWidth={2}
+                    stroke="hsl(var(--card))"
                   >
                     {typeDistributionWithColors.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -202,7 +202,7 @@ export function ClassificationCharts({
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-48 text-gray-500">
+              <div className="flex items-center justify-center h-48 text-muted-foreground">
                 <p className="text-sm">Nenhum dado disponível</p>
               </div>
             )}
@@ -210,9 +210,9 @@ export function ClassificationCharts({
         </Card>
 
         {/* Distribuição por Seguradora */}
-        <Card className="bg-white border border-gray-200 shadow-sm" data-chart="insurer-distribution">
+        <Card className="bg-card border border-border shadow-sm" data-chart="insurer-distribution">
           <CardHeader className={`${isMobile ? 'p-3 pb-1' : 'p-6 pb-2'}`}>
-            <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold text-gray-900`}>
+            <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold text-foreground`}>
               Distribuição por Seguradora
             </CardTitle>
           </CardHeader>
@@ -225,7 +225,7 @@ export function ClassificationCharts({
                   margin={{ top: 5, right: isMobile ? 70 : 100, left: 10, bottom: 5 }}
                   barSize={isMobile ? 20 : 28}
                 >
-                  <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
                   <XAxis type="number" hide />
                   <YAxis 
                     dataKey="name" 
@@ -256,11 +256,11 @@ export function ClassificationCharts({
                       dataKey="value"
                       position="right"
                       offset={12}
-                      style={{ 
-                        fontSize: isMobile ? 11 : 14, 
-                        fontWeight: 700, 
-                        fill: '#1f2937',
-                        letterSpacing: '0.02em'
+                      style={{
+                        fontSize: isMobile ? 11 : 14,
+                        fontWeight: 700,
+                        fill: 'hsl(var(--foreground))',
+                        letterSpacing: '0.02em',
                       }}
                       formatter={(value: number) => {
                         return value.toLocaleString('pt-BR', { 
@@ -278,7 +278,7 @@ export function ClassificationCharts({
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-48 text-gray-500">
+              <div className="flex items-center justify-center h-48 text-muted-foreground">
                 <p className="text-sm">Nenhum dado disponível</p>
               </div>
             )}
