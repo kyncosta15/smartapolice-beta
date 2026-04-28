@@ -136,7 +136,7 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution }: 
             {statusDistribution.map((entry) => (
               <div
                 key={`legend-${entry.name}`}
-                className={`flex items-center gap-2 ${isMobile ? 'text-xs justify-between' : 'text-sm justify-between'}`}
+                className={`flex items-center gap-1.5 ${isMobile ? 'text-xs' : 'text-sm justify-between'}`}
               >
                 <div className="flex items-center gap-1.5 min-w-0">
                   <div
@@ -150,7 +150,7 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution }: 
                     {entry.value}
                   </span>
                 ) : (
-                  <span className="text-xs font-semibold text-foreground flex-shrink-0 ml-1">{entry.value}</span>
+                  <span className="text-xs font-semibold text-foreground flex-shrink-0">{entry.value}</span>
                 )}
               </div>
             ))}
