@@ -245,11 +245,18 @@ export function ClassificationCharts({
                       offset={10}
                       style={{ fill: 'white', fontSize: isMobile ? 9 : 11, fontWeight: 600 }}
                       formatter={(value: string) => {
-                        // Truncar nomes muito longos para melhor visualização
-                        if (value.length > 20) {
-                          return value.substring(0, 18) + '...';
+                        if (!value) return '';
+                        const maxLen = isMobile ? 12 : 18;
+                        // Remove sufixos comuns que ocupam espaço
+                        let clean = value
+                          .replace(/\s+S\.?\s?A\.?$/i, '')
+                          .replace(/\s+SEGUROS?$/i, '')
+                          .replace(/\s+DO\s+BRASIL$/i, ' BR')
+                          .trim();
+                        if (clean.length > maxLen) {
+                          clean = clean.substring(0, maxLen - 1) + '…';
                         }
-                        return value;
+                        return clean;
                       }}
                     />
                     <LabelList
