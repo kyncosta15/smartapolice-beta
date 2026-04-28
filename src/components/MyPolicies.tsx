@@ -806,7 +806,39 @@ export function MyPolicies({
         </div>
       </div>
 
-      {/* Filtro de Período */}
+      {/* KPIs da carteira */}
+      <PolicyKPIs
+        total={kpiData.total}
+        vigentes={kpiData.vigentes}
+        premioMensalTotal={kpiData.premioMensalTotal}
+        proximoVencimento={kpiData.proximoVencimento}
+      />
+
+      {/* Barra de busca */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
+          placeholder="Buscar por nome, número, segurado, placa..."
+          className="pl-9 pr-9 h-10 bg-card border-border"
+        />
+        {searchQuery && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSearchQuery('')}
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+            title="Limpar busca"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        )}
+      </div>
+
       <div className="flex gap-2 flex-wrap items-center">
         <span className="text-sm text-muted-foreground font-medium">Período:</span>
         <Button
