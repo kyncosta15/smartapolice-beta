@@ -18,6 +18,7 @@ import {
   Heart,
   Shield,
   LogOut,
+  Settings,
   Users2,
   CheckSquare,
   Crown,
