@@ -188,20 +188,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   const sections = isAdmin ? adminSections : clientSections;
 
-  // Atalho de busca: ⌘K / Ctrl+K
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setSearchOpen(true);
-        // Foca no input de busca global se existir
-        const input = document.querySelector<HTMLInputElement>('[data-global-search-input]');
-        input?.focus();
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
+  // (busca global removida da sidebar)
 
   const userName = profile?.full_name || (user as any)?.email?.split('@')[0] || 'Usuário';
   const userInitials = userName.slice(0, 2).toUpperCase();
