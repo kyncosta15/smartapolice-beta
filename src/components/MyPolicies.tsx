@@ -48,6 +48,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ManageCPFVinculosModal } from './ManageCPFVinculosModal';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { RefreshCw as RefreshCwIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePolicyAttachedDocs } from '@/hooks/usePolicyAttachedDocs';
 import {
