@@ -202,7 +202,21 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
           <Button variant="outline" onClick={onClose}>
             Fechar
           </Button>
-          <Button onClick={onClose}>
+          <Button
+            onClick={() => {
+              // Solicita ao DashboardContent abrir o PolicyDetailsModal completo
+              window.dispatchEvent(
+                new CustomEvent('lovable:open-policy-details', {
+                  detail: {
+                    name: policy.name,
+                    insurer: renderValueAsString(policy.insurer),
+                    policyNumber: policy.policyNumber,
+                  },
+                })
+              );
+              onClose();
+            }}
+          >
             Ver detalhes completos
           </Button>
         </div>
