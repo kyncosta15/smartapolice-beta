@@ -4,7 +4,7 @@ import { GeneralInfoCard } from './policy-details/GeneralInfoCard';
 import { InsurerInfoCard } from './policy-details/InsurerInfoCard';
 import { FinancialInfoCard } from './policy-details/FinancialInfoCard';
 import { CoveragesCard } from './policy-details/CoveragesCard';
-import { ValidityInfoCard } from './policy-details/ValidityInfoCard';
+
 import { VehicleInfoCard } from './policy-details/VehicleInfoCard';
 import { ResponsiblePersonCard } from './policy-details/ResponsiblePersonCard';
 import { EndossosCard } from './policy-details/EndossosCard';
