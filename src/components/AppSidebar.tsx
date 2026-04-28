@@ -330,7 +330,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                       {accountLabel}
                     </p>
                     <p className="text-[11px] text-muted-foreground leading-tight truncate">
-                      {userRole}
+                      {userName}
                     </p>
                   </div>
                   <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -352,7 +352,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                   {accountLabel}
                 </p>
                 <p className="text-[11px] font-normal text-muted-foreground truncate">
-                  {userRole}
+                  {userName}
                 </p>
               </div>
             </DropdownMenuLabel>
