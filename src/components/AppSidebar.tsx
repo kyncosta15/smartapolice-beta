@@ -206,8 +206,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
           />
           {open && (
             <div className="flex items-baseline leading-none">
-              <span className="text-lg font-normal text-sidebar-foreground tracking-tight">Smart</span>
-              <span className="text-lg font-bold text-sidebar-foreground tracking-tight">Control</span>
+              <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Smart</span>
+              <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-[hsl(190,100%,50%)] via-[hsl(220,100%,60%)] to-[hsl(260,100%,60%)] bg-clip-text text-transparent">Control</span>
             </div>
           )}
         </div>
