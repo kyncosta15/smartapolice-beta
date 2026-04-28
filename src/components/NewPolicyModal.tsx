@@ -58,22 +58,28 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
   const insertDateFmt = formatDate(policy.insertDate);
   const dueDateFmt = formatDate(policy.dueDate);
 
+  // Normalizações de exibição
+  const insurerRaw = renderValueAsString(policy.insurer);
+  const displayName = toTitleCase(policy.name);
+  const displayInsurer = toTitleCase(insurerRaw);
+  const displayType = policy.type ? capitalize(policy.type) : '';
+  const hasPolicyNumber = !!(policy.policyNumber && String(policy.policyNumber).trim());
+
+  // Cor da faixa de status (3px no topo)
+  const statusBarClass = isExpired
+    ? 'bg-red-500'
+    : isExpiring
+    ? 'bg-amber-500'
+    : 'bg-green-500';
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg p-0 overflow-hidden border-border bg-card">
-        {/* Header */}
-        <div className="relative px-6 pt-6 pb-5 border-b border-border">
-          {/* Linha decorativa de status no topo */}
-          <div
-            className={`absolute top-0 left-0 right-0 h-0.5 ${
-              isExpired
-                ? 'bg-destructive'
-                : isExpiring
-                ? 'bg-amber-500'
-                : 'bg-emerald-500'
-            }`}
-          />
+        {/* Faixa de status (3px) */}
+        <div className={`h-[3px] w-full ${statusBarClass}`} />
 
+        {/* Header */}
+        <div className="relative px-6 pt-5 pb-5 border-b border-border bg-card">
           <div className="flex items-center gap-2 mb-2">
             {isExpired ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-destructive/15 text-destructive text-[11px] font-semibold">
@@ -97,20 +103,20 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
           </div>
 
           <h2 className="text-xl font-bold text-foreground leading-tight">
-            {policy.name}
+            {displayName}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {renderValueAsString(policy.insurer)}
-            {policy.type && (
+            {displayInsurer}
+            {displayType && (
               <>
                 <span className="mx-1.5 opacity-50">·</span>
-                <span className="capitalize">{policy.type}</span>
+                <span>{displayType}</span>
               </>
             )}
           </p>
         </div>
 
-        <div className="px-6 py-5 space-y-5">
+        <div className="px-6 py-5 space-y-5 bg-card">
           {/* Banner de alerta para vencidas / vencendo */}
           {(isExpired || isExpiring) && (
             <div
@@ -152,14 +158,52 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
 
           {/* Grid 2x3 de campos */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-            <Field icon={Building} label="Seguradora" value={renderValueAsString(policy.insurer) || '—'} />
-            <Field icon={FileText} label="Número" value={policy.policyNumber || '—'} />
+            <Field icon={Building} label="Seguradora" value={displayInsurer || 'Não informado'} muted={!displayInsurer} />
+
+            {/* Número - tratamento especial para vazio */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <FileText className="h-3.5 w-3.5" />
+                <span>Número</span>
+              </div>
+              {hasPolicyNumber ? (
+                <p className="mt-1 text-sm font-semibold text-foreground truncate" title={String(policy.policyNumber)}>
+                  {policy.policyNumber}
+                </p>
+              ) : (
+                <div className="mt-1 flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-medium">
+                    Não informado
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Abrir detalhes completos para completar o número
+                      window.dispatchEvent(
+                        new CustomEvent('lovable:open-policy-details', {
+                          detail: {
+                            name: policy.name,
+                            insurer: insurerRaw,
+                            policyNumber: policy.policyNumber,
+                          },
+                        })
+                      );
+                      onClose();
+                    }}
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    Completar
+                  </button>
+                </div>
+              )}
+            </div>
+
             <Field
               icon={DollarSign}
               label="Valor Total"
               value={formatCurrency(policy.value)}
             />
-            <Field icon={Tag} label="Tipo" value={policy.type ? capitalize(policy.type) : '—'} />
+            <Field icon={Tag} label="Tipo" value={displayType || 'Não informado'} muted={!displayType} />
             <Field icon={Calendar} label="Inserida" value={insertDateFmt} />
             <Field
               icon={Calendar}
@@ -198,18 +242,20 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/20">
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-card">
           <Button variant="outline" onClick={onClose}>
             Fechar
           </Button>
           <Button
+            variant="default"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => {
               // Solicita ao DashboardContent abrir o PolicyDetailsModal completo
               window.dispatchEvent(
                 new CustomEvent('lovable:open-policy-details', {
                   detail: {
                     name: policy.name,
-                    insurer: renderValueAsString(policy.insurer),
+                    insurer: insurerRaw,
                     policyNumber: policy.policyNumber,
                   },
                 })
