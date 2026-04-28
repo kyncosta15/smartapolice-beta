@@ -15,7 +15,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, Users, Link, Car, Heart, Activity, Home, Building2, ShieldAlert, Ship, Shield, Anchor } from 'lucide-react';
+import { Trash2, Plus, Eye, Download, Edit, LayoutGrid, List, RefreshCw, Filter, Users, Link, Car, Heart, Activity, Home, Building2, ShieldAlert, Ship, Shield, Anchor, Search, MoreHorizontal, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { PolicyKPIs } from './policy/PolicyKPIs';
 import { MonthlyValueEditor } from './policy/MonthlyValueEditor';
 import { NewPolicyManualModal } from './NewPolicyManualModal';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
@@ -100,6 +102,7 @@ export function MyPolicies({
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<'todas' | 'vigentes' | 'antigas'>(initialStatusFilter);
   const [detailedStatusFilter, setDetailedStatusFilter] = useState<'todas' | 'ativa' | 'pendente_analise' | 'vencida'>('todas');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showManageCPFModal, setShowManageCPFModal] = useState(false);
   const [cpfVinculos, setCpfVinculos] = useState<Array<{ cpf: string; tipo: string }>>([]);
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(highlightPolicyId);
@@ -678,8 +681,54 @@ export function MyPolicies({
       }
     }
     
+    // Filtro por busca textual
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const haystack = [
+        policy.name,
+        policy.policyNumber,
+        policy.insurer,
+        policy.marca,
+        policy.placa,
+        policy.modelo_veiculo,
+        policy.vehicleModel,
+        policy.nome_embarcacao,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+
     return true;
   });
+
+  // KPIs da carteira
+  const kpiData = React.useMemo(() => {
+    const isActive = (s?: string) => {
+      const x = s?.toLowerCase();
+      return x === 'vigente' || x === 'ativa' || x === 'vencendo';
+    };
+    const vigentesArr = policiesWithStatus.filter((p) => isActive(p.status));
+    const premioMensalTotal = vigentesArr.reduce((sum, p) => sum + (p.monthlyAmount || 0), 0);
+
+    const todayISO = (() => {
+      const t = new Date();
+      return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    })();
+
+    const upcoming = vigentesArr
+      .map((p) => ({ name: p.name, date: String(p.expirationDate || p.endDate || '').slice(0, 10) }))
+      .filter((p) => p.date && p.date >= todayISO)
+      .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+    return {
+      total: policiesWithStatus.length,
+      vigentes: vigentesArr.length,
+      premioMensalTotal,
+      proximoVencimento: upcoming || null,
+    };
+  }, [policiesWithStatus]);
 
   // Paginação
   const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
@@ -757,7 +806,39 @@ export function MyPolicies({
         </div>
       </div>
 
-      {/* Filtro de Período */}
+      {/* KPIs da carteira */}
+      <PolicyKPIs
+        total={kpiData.total}
+        vigentes={kpiData.vigentes}
+        premioMensalTotal={kpiData.premioMensalTotal}
+        proximoVencimento={kpiData.proximoVencimento}
+      />
+
+      {/* Barra de busca */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
+          placeholder="Buscar por nome, número, segurado, placa..."
+          className="pl-9 pr-9 h-10 bg-card border-border"
+        />
+        {searchQuery && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSearchQuery('')}
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+            title="Limpar busca"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        )}
+      </div>
+
       <div className="flex gap-2 flex-wrap items-center">
         <span className="text-sm text-muted-foreground font-medium">Período:</span>
         <Button
@@ -900,17 +981,39 @@ export function MyPolicies({
               allKeys: originalPolicy ? Object.keys(originalPolicy) : []
             });
             
+            const statusKey = (policy.status || '').toLowerCase();
+            const isVigenteCard = ['vigente', 'ativa', 'vencendo'].includes(statusKey);
+            const isVencidaCard = ['vencida', 'nao_renovada'].includes(statusKey);
+            const stripeColor = isVigenteCard
+              ? 'bg-emerald-500'
+              : isVencidaCard
+                ? 'bg-destructive'
+                : 'bg-amber-500';
+            const dotColor = isVigenteCard
+              ? 'bg-emerald-500'
+              : isVencidaCard
+                ? 'bg-destructive'
+                : 'bg-amber-500';
+            const pillTone = isVigenteCard
+              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+              : isVencidaCard
+                ? 'bg-destructive/15 text-destructive border-destructive/30'
+                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
+
             return (
               <Card
                 key={policy.id}
                 id={`policy-card-${policy.id}`}
-                className={`overflow-hidden dark:bg-card dark:border-border transition-all ${
+                className={`relative overflow-hidden bg-card border-border transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 ${
                   policy.id === activeHighlightId
                     ? 'ring-2 ring-primary shadow-lg shadow-primary/20'
-                    : 'hover:shadow-lg'
+                    : ''
                 }`}
               >
-                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6 space-y-1.5 sm:space-y-2">
+                {/* Faixa de status no topo */}
+                <div className={`absolute top-0 left-0 right-0 h-1 ${stripeColor}`} />
+
+                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-4 sm:pt-6 space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between items-start gap-2 sm:gap-3">
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -930,7 +1033,11 @@ export function MyPolicies({
                         </CardTitle>
                       </div>
                     </div>
-                    <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} shrink-0 text-[10px] sm:text-xs whitespace-nowrap px-1.5 sm:px-2 py-0.5`}>
+                    <Badge
+                      variant="outline"
+                      className={`${pillTone} shrink-0 gap-1.5 text-[10px] sm:text-xs whitespace-nowrap px-2 py-0.5 rounded-full font-medium`}
+                    >
+                      <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
                       {formatStatusText(policy.status)}
                     </Badge>
                   </div>
@@ -1010,86 +1117,75 @@ export function MyPolicies({
                     </div>
                   </div>
 
-                  <div className="flex gap-1 sm:gap-1.5 pt-2 sm:pt-3 border-t dark:border-border justify-end">
+                  <div className="flex gap-2 pt-3 border-t border-border">
+                    {/* Ação primária: Ver detalhes */}
                     <Button
-                      variant="ghost"
-                      size="sm"
                       onClick={() => handleViewPolicy(policy)}
-                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10 dark:hover:bg-primary/20"
-                      title="Visualizar apólice"
+                      size="sm"
+                      className="flex-1 h-9 gap-1.5"
                     >
-                      <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <Eye className="h-3.5 w-3.5" />
+                      Ver detalhes
                     </Button>
-                    {(() => {
-                      const attached = getDocsForPolicy(policy.id);
-                      if (attached.length === 0) {
-                        return (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownloadPolicy(policy)}
-                            className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10 dark:hover:bg-primary/20"
-                            title="Baixar apólice"
-                          >
-                            <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          </Button>
-                        );
-                      }
-                      return (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 sm:h-9 px-1.5 sm:px-2 hover:bg-primary/10 dark:hover:bg-primary/20 gap-0.5"
-                              title={`Baixar apólice (${attached.length + 1} arquivos)`}
-                            >
-                              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-64">
-                            <DropdownMenuLabel className="text-xs">
-                              {attached.length + 1} arquivo(s) disponível(is)
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleDownloadPolicy(policy)}>
-                              <FileTextIcon className="h-4 w-4 mr-2 text-primary" />
-                              <span className="truncate">Apólice (PDF original)</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {attached.map(doc => (
-                              <DropdownMenuItem
-                                key={doc.id}
-                                onClick={() => downloadAttachedDoc(doc)}
-                              >
-                                <FileTextIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-                                <span className="truncate">{doc.title}</span>
+
+                    {/* Menu de ações secundárias */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 w-9 p-0 shrink-0"
+                          title="Mais ações"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel className="text-xs">Ações</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleEditPolicy(policy)}>
+                          <Edit className="h-4 w-4 mr-2 text-muted-foreground" />
+                          Editar apólice
+                        </DropdownMenuItem>
+                        {(() => {
+                          const attached = getDocsForPolicy(policy.id);
+                          return (
+                            <>
+                              <DropdownMenuItem onClick={() => handleDownloadPolicy(policy)}>
+                                <Download className="h-4 w-4 mr-2 text-muted-foreground" />
+                                Baixar PDF original
                               </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      );
-                    })()}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditPolicy(policy)}
-                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-primary/10 dark:hover:bg-primary/20"
-                      title="Editar apólice"
-                    >
-                      <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => handleDeleteClick(e, policy)}
-                      className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400"
-                      title="Deletar apólice"
-                      disabled={isDeleting}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </Button>
+                              {attached.length > 0 && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                    Documentos anexos ({attached.length})
+                                  </DropdownMenuLabel>
+                                  {attached.map((doc) => (
+                                    <DropdownMenuItem
+                                      key={doc.id}
+                                      onClick={() => downloadAttachedDoc(doc)}
+                                    >
+                                      <FileTextIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                                      <span className="truncate">{doc.title}</span>
+                                    </DropdownMenuItem>
+                                  ))}
+                                </>
+                              )}
+                            </>
+                          );
+                        })()}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={(e) => handleDeleteClick(e as any, policy)}
+                          disabled={isDeleting}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Excluir apólice
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>
