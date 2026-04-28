@@ -23,10 +23,10 @@ export const AddCoverageForm = ({
   onUpdate
 }: AddCoverageFormProps) => {
   return (
-    <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-200 border-dashed">
+    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <div className="space-y-3">
         <div className="flex items-center gap-3">
-          <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+          <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
           <Input
             value={newCoverage.descricao}
             onChange={(e) => onUpdate('descricao', e.target.value)}
@@ -35,20 +35,19 @@ export const AddCoverageForm = ({
           />
         </div>
         <div className="flex items-center gap-3 ml-8">
-          <span className="text-sm text-gray-600 min-w-0">LMI:</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">LMI:</span>
           <Input
             type="number"
             value={newCoverage.lmi || ''}
             onChange={(e) => onUpdate('lmi', parseFloat(e.target.value) || 0)}
             placeholder="Valor do LMI"
-            className="w-32"
+            className="w-40"
           />
           <div className="flex gap-2">
             <Button
               onClick={onSave}
               size="sm"
-              variant="outline"
-              className="text-green-600 border-green-200 hover:bg-green-50"
+              className="bg-success text-success-foreground hover:bg-success/90"
             >
               <Save className="h-4 w-4" />
             </Button>
@@ -56,7 +55,6 @@ export const AddCoverageForm = ({
               onClick={onCancel}
               size="sm"
               variant="outline"
-              className="text-gray-600 border-gray-200 hover:bg-gray-50"
             >
               <X className="h-4 w-4" />
             </Button>
