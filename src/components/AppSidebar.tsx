@@ -341,9 +341,11 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                     <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight tracking-wide">
                       {accountLabel}
                     </p>
-                    <p className="text-[11px] text-muted-foreground leading-tight truncate">
-                      {userName}
-                    </p>
+                    {secondaryLabel && (
+                      <p className="text-[11px] text-muted-foreground leading-tight truncate">
+                        {secondaryLabel}
+                      </p>
+                    )}
                   </div>
                   <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 </>
