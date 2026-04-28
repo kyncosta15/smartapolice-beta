@@ -154,7 +154,7 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution }: 
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={monthlyEvolution}
-                margin={isMobile ? { top: 5, right: 5, left: 5, bottom: 15 } : { top: 20, right: 30, left: 20, bottom: 40 }}
+                margin={isMobile ? { top: 5, right: 10, left: 10, bottom: 15 } : { top: 20, right: 40, left: 10, bottom: 40 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} strokeWidth={1} />
                 <XAxis
