@@ -1158,9 +1158,19 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
             <span className="text-[11px] font-medium text-foreground">
-              {totalVeiculos === 1 ? '1 veículo' : `${totalVeiculos} veículos`}
-              {' · '}
-              {totalRegistros === 1 ? '1 registro' : `${totalRegistros} registros`}
+              {reportMode === 'obra' ? (
+                <>
+                  {obraStats.totalObras} {obraStats.totalObras === 1 ? 'obra' : 'obras'}
+                  {' · '}
+                  {obraStats.alocados} {obraStats.alocados === 1 ? 'veículo alocado' : 'veículos alocados'}
+                </>
+              ) : (
+                <>
+                  {totalVeiculos === 1 ? '1 veículo' : `${totalVeiculos} veículos`}
+                  {' · '}
+                  {totalRegistros === 1 ? '1 registro' : `${totalRegistros} registros`}
+                </>
+              )}
             </span>
           </div>
         </div>
