@@ -20,6 +20,7 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution }: 
       ATIVA: 'ativa',
       VIGENTE: 'vigente',
       VENCIDA: 'vencida',
+      'ANOS ANTERIORES': 'anos_anteriores',
       VENCENDO: 'vencendo',
       'A VENCER': 'vencendo',
       'NÃO RENOVADA': 'nao_renovada',
@@ -28,8 +29,20 @@ export function StatusEvolutionCharts({ statusDistribution, monthlyEvolution }: 
       'AGUARDANDO EMISSÃO': 'aguardando_emissao',
       RENOVADO: 'aguardando_emissao',
     };
-    const mappedStatus = statusMap[statusName.toUpperCase()] || statusName.toLowerCase();
-    return getChartColor(mappedStatus);
+    // Paleta refinada: usa cores próprias para o gráfico em vez do default
+    const customPalette: Record<string, string> = {
+      ativa: '#10b981',           // Emerald — vivo e legível em ambos modos
+      vigente: '#10b981',
+      vencendo: '#f59e0b',        // Âmbar — alerta sem ser agressivo
+      anos_anteriores: '#64748b', // Slate — neutro elegante
+      nao_renovada: '#ef4444',
+      vencida: '#ef4444',
+      renovada: '#3b82f6',
+      aguardando_emissao: '#6366f1',
+      pendente_analise: '#eab308',
+    };
+    const mappedStatus = statusMap[statusName.toUpperCase()] || statusName.toLowerCase().replace(/\s+/g, '_');
+    return customPalette[mappedStatus] || getChartColor(mappedStatus);
   };
 
   return (
