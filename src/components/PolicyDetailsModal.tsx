@@ -58,20 +58,13 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
             <PolicyOverviewHeader policy={policy} onDelete={handleDelete} />
           </div>
 
-          <div className="p-5 space-y-6">
-
-            {/* 5. Detailed Cards - Clean grid */}
+          <div className="p-5 space-y-4 sm:space-y-5">
+            {/* Cards de detalhes em 2 colunas — visual minimalista light/dark */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <GeneralInfoCard policy={policy} />
-              <InsurerInfoCard 
-                insurer={policy.seguradora || policy.insurer || 'Não informado'}
-                type={policy.tipo_seguro || policy.type || 'Não informado'}
-              />
-              <FinancialInfoCard policy={policy} onInstallmentsUpdate={() => onUpdate?.()} />
-              <VehicleInfoCard policy={policy} onUpdate={() => onUpdate?.()} />
-              {(policy.insuredName || policy.documento) && (
-                <ResponsiblePersonCard policy={policy} />
-              )}
+              <GeneralInfoCardV2 policy={policy} />
+              <FinancialCardV2 policy={policy} />
+              <VehicleCardV2 policy={policy} onEdit={() => onUpdate?.()} />
+              <ResponsibleCardV2 policy={policy} />
             </div>
 
             {/* 6. Coverages - Full width */}
