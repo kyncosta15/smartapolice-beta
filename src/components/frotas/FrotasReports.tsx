@@ -714,6 +714,36 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
   const formatMaintType = (t: string) =>
     (MAINTENANCE_TYPE_LABELS as Record<string, string>)[t] || t || '-';
 
+  // Notes podem vir como JSON com metadata (ex.: { observacoes, itens_verificados, local_revisao,
+  // proxima_revisao_data, proxima_revisao_km, _extra }). Extrai apenas texto legível.
+  const formatMaintNotes = (raw: string | null | undefined): string => {
+    if (!raw) return '';
+    const str = String(raw).trim();
+    if (!str) return '';
+    // Se não parece JSON, devolve como está
+    if (!(str.startsWith('{') || str.startsWith('['))) return str;
+    try {
+      const obj = JSON.parse(str);
+      if (!obj || typeof obj !== 'object') return str;
+      const parts: string[] = [];
+      const obs = (obj.observacoes ?? obj.observacao ?? '').toString().trim();
+      const itens = (obj.itens_verificados ?? '').toString().trim();
+      const local = (obj.local_revisao ?? obj.local ?? '').toString().trim();
+      const proxData = (obj.proxima_revisao_data ?? '').toString().trim();
+      const proxKm = (obj.proxima_revisao_km ?? '').toString().trim();
+      if (obs) parts.push(obs);
+      if (itens) parts.push(`Itens: ${itens}`);
+      if (local) parts.push(`Local: ${local}`);
+      if (proxData) parts.push(`Próx. revisão: ${formatDate(proxData)}`);
+      if (proxKm) parts.push(`Próx. km: ${proxKm}`);
+      const text = parts.join(' • ').trim();
+      // Se nada legível foi extraído, retorna vazio em vez do JSON cru
+      return text;
+    } catch {
+      return str;
+    }
+  };
+
   const handleExportPDFRevisoes = async () => {
     if (veiculosToExport.length === 0) {
       toast({ title: 'Nenhum veículo', description: 'Selecione ao menos um veículo.', variant: 'destructive' });
