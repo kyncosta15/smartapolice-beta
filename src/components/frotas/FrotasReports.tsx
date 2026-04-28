@@ -1167,7 +1167,7 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
 
             {/* Mode (segmented control) */}
             <div>
-              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <Label className="block mb-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Modo
               </Label>
               <div
