@@ -356,13 +356,13 @@ export function MobileDrawer({
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="top" className="w-56 z-[60]">
-              <DropdownMenuItem onClick={() => handleNavigate('settings')}>
+            <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-[260px] z-[100]">
+              <DropdownMenuItem onClick={() => handleNavigate('settings')} className="cursor-pointer">
                 <Settings className="h-4 w-4 mr-2" />
                 Configurações
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => { logout(); onClose(); }} className="text-destructive focus:text-destructive">
+              <DropdownMenuItem onClick={() => { logout(); onClose(); }} className="cursor-pointer text-destructive focus:text-destructive">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
               </DropdownMenuItem>
