@@ -5,6 +5,7 @@ export type PolicyStatus =
   | "ativa"
   | "aguardando_emissao" 
   | "nao_renovada"
+  | "renovada"
   | "vencida"
   | "pendente_analise"
   | "vencendo"

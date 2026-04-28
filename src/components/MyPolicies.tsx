@@ -945,6 +945,7 @@ export function MyPolicies({
                     <SelectItem value="pendente_analise">Em Análise</SelectItem>
                     <SelectItem value="aguardando_emissao">Aguardando Emissão</SelectItem>
                     <SelectItem value="nao_renovada">Não Renovada</SelectItem>
+                    <SelectItem value="renovada">Renovada</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button

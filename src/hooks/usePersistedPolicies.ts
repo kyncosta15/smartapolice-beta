@@ -33,6 +33,8 @@ export function usePersistedPolicies() {
       case 'nao_renovada':
       case 'não renovada':
         return 'nao_renovada';
+      case 'renovada':
+        return 'renovada';
       case 'pendente_analise':
       case 'pendente analise':
         return 'pendente_analise';
