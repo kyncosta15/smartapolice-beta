@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { GeneralInfoCard } from './policy-details/GeneralInfoCard';
 import { InsurerInfoCard } from './policy-details/InsurerInfoCard';
 import { FinancialInfoCard } from './policy-details/FinancialInfoCard';
@@ -10,9 +8,7 @@ import { ValidityInfoCard } from './policy-details/ValidityInfoCard';
 import { VehicleInfoCard } from './policy-details/VehicleInfoCard';
 import { ResponsiblePersonCard } from './policy-details/ResponsiblePersonCard';
 import { EndossosCard } from './policy-details/EndossosCard';
-import { PolicySmartHeader } from './policy-details/PolicySmartHeader';
-import { PolicyActionCards } from './policy-details/PolicyActionCards';
-import { PolicyInsights } from './policy-details/PolicyInsights';
+import { PolicyOverviewHeader } from './policy-details/PolicyOverviewHeader';
 // Timeline e hook de installments desativados — não são mais usados nesta visão
 
 import {
