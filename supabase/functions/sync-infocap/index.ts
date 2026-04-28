@@ -653,12 +653,15 @@ Deno.serve(async (req) => {
             }
           }
 
-          // Caso 2: sit_renovacao_txt menciona "DOCUMENTO [nnnn]" → essa nnnn FOI renovada por p
+          // Caso 2: sit_renovacao_txt da APÓLICE NOVA menciona "RENOVAÇÃO DO DOCUMENTO [X]"
+          // → significa que esta (p) renovou X, então X deve ser marcada como renovada.
+          // ATENÇÃO: "APÓLICE RENOVADA PELO DOCUMENTO [X]" tem significado OPOSTO
+          // (esta foi renovada por X) e já é tratado pelo Caso 1 via renovado_nosnum.
           if (p.sit_renovacao_txt) {
-            const match = String(p.sit_renovacao_txt).match(/DOCUMENTO\s*\[(\d+)\]/i);
+            const txt = String(p.sit_renovacao_txt).toUpperCase();
+            const match = txt.match(/RENOVA[ÇC][ÃA]O\s+DO\s+DOCUMENTO\s*\[(\d+)\]/i);
             if (match) {
               const oldNosnum = parseInt(match[1]);
-              // Procurar essa apólice antiga no mesmo codfil
               const oldKey = `${p.codfil}-${oldNosnum}`;
               const oldId = policyMap.get(oldKey);
               if (oldId) {
