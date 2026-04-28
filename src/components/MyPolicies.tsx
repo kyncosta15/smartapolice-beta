@@ -1079,13 +1079,29 @@ export function MyPolicies({
                         </CardTitle>
                       </div>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={`${pillTone} shrink-0 gap-1.5 text-[10px] sm:text-xs whitespace-nowrap px-2 py-0.5 rounded-full font-medium`}
-                    >
-                      <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
-                      {formatStatusText(policy.status)}
-                    </Badge>
+                    {(() => {
+                      const renewalInfo = getRenewalInfo(policy);
+                      const badge = (
+                        <Badge
+                          variant="outline"
+                          className={`${pillTone} shrink-0 gap-1.5 text-[10px] sm:text-xs whitespace-nowrap px-2 py-0.5 rounded-full font-medium ${renewalInfo ? 'cursor-help' : ''}`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+                          {formatStatusText(policy.status)}
+                        </Badge>
+                      );
+                      if (!renewalInfo) return badge;
+                      return (
+                        <TooltipProvider delayDuration={150}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>{badge}</TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs">
+                              <p className="text-xs font-medium">{renewalInfo.label}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      );
+                    })()}
                   </div>
                   <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground truncate">
                     {toText(policy.insurer)}
