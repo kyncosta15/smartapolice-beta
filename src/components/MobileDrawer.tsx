@@ -1,59 +1,119 @@
 import React, { useEffect, useState } from 'react';
-import { X, ChevronDown } from 'lucide-react';
+import {
+  X,
+  LayoutDashboard,
+  FileText,
+  Upload,
+  AlertTriangle,
+  Car,
+  ShieldCheck,
+  Building2,
+  FolderOpen,
+  Mail,
+  BarChart3,
+  Heart,
+  Shield,
+  LogOut,
+  Users2,
+  CheckSquare,
+  Crown,
+  ChevronDown,
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
+import { supabase } from '@/integrations/supabase/client';
+
+// (prop legada `navigation` é ignorada — sections agora são construídas internamente
+// para manter paridade visual com a AppSidebar desktop)
+interface MobileDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  navigation?: unknown;
+  activeSection: string;
+  onSectionChange: (section: string) => void;
+}
 
 interface NavItem {
   id: string;
   title: string;
-  icon: React.ComponentType<any>;
-  isGroup?: boolean;
-  children?: Array<{ id: string; title: string; icon: React.ComponentType<any> }>;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: 'docs' | 'sinistros';
 }
 
-interface MobileDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  navigation: NavItem[];
-  activeSection: string;
-  onSectionChange: (section: string) => void;
+interface NavSection {
+  label?: string;
+  items: NavItem[];
 }
 
 export function MobileDrawer({
   isOpen,
   onClose,
-  navigation,
   activeSection,
   onSectionChange,
 }: MobileDrawerProps) {
-  // Track which groups are open. Auto-open the group containing the active section.
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const { user, profile, logout } = useAuth();
+  const { activeEmpresaId } = useTenant();
+  const navigate = useNavigate();
+  const [docCount, setDocCount] = useState<number>(0);
+  const [sinistrosCount, setSinistrosCount] = useState<number>(0);
+
+  // ===== Counters (mesma lógica da AppSidebar) =====
+  useEffect(() => {
+    if (!user) return;
+    const fetchCount = async () => {
+      let query = supabase
+        .from('documents')
+        .select('id', { count: 'exact', head: true })
+        .is('deleted_at', null);
+      if (activeEmpresaId) query = query.eq('account_id', activeEmpresaId);
+      const { count } = await query;
+      setDocCount(count ?? 0);
+    };
+    fetchCount();
+    const channel = supabase
+      .channel('mobile-doc-count-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, fetchCount)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, activeEmpresaId]);
 
   useEffect(() => {
-    const next: Record<string, boolean> = {};
-    navigation.forEach((item) => {
-      if (item.isGroup && item.children?.some((c) => c.id === activeSection)) {
-        next[item.id] = true;
+    if (!user) return;
+    const fetchSinistrosCount = async () => {
+      const OPEN_STATUSES = ['aberto', 'em_analise', 'em_andamento', 'open'];
+      const CLOSED_STATUSES = ['finalizado', 'finalizado_inatividade', 'encerrado', 'pago', 'closed', 'indenizado', 'negado'];
+      const { data } = await supabase
+        .from('tickets')
+        .select('status, status_indenizacao')
+        .eq('tipo', 'sinistro');
+      const rows = data ?? [];
+      let openN = 0;
+      for (const r of rows) {
+        const s = (r.status ?? '').toLowerCase();
+        const si = (r.status_indenizacao ?? '').toLowerCase();
+        const isClosed = CLOSED_STATUSES.includes(s) || (si && CLOSED_STATUSES.includes(si));
+        if (!isClosed && OPEN_STATUSES.includes(s)) openN++;
       }
-    });
-    setOpenGroups((prev) => ({ ...prev, ...next }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSection, isOpen]);
+      setSinistrosCount(openN);
+    };
+    fetchSinistrosCount();
+    const channel = supabase
+      .channel('mobile-sinistros-count-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, fetchSinistrosCount)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   // Body scroll lock
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = isOpen ? 'hidden' : 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
-  // ESC to close
+  // ESC para fechar
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) onClose();
@@ -62,148 +122,236 @@ export function MobileDrawer({
     return () => document.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
-  const handleNavigation = (sectionId: string) => {
+  const isAdmin = profile?.is_admin === true;
+
+  const handleNavigate = (sectionId: string) => {
     onSectionChange(sectionId);
     onClose();
   };
 
-  const toggleGroup = (id: string) => {
-    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  const clientSections: NavSection[] = [
+    { items: [{ id: 'dashboard', title: 'Dashboard', icon: LayoutDashboard }] },
+    {
+      label: 'Apólices',
+      items: [
+        { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+        { id: 'upload', title: 'Upload', icon: Upload },
+      ],
+    },
+    {
+      label: 'Gestão',
+      items: [
+        { id: 'claims', title: 'Sinistros', icon: AlertTriangle, badge: 'sinistros' },
+        { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+      ],
+    },
+    {
+      label: 'Seguros',
+      items: [
+        { id: 'seguro-garantia', title: 'Seguro Garantia', icon: ShieldCheck },
+        { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: Building2 },
+      ],
+    },
+    {
+      label: 'Conteúdo',
+      items: [
+        { id: 'documentos', title: 'Documentos', icon: FolderOpen, badge: 'docs' },
+        { id: 'contatos', title: 'Contatos', icon: Mail },
+        { id: 'export', title: 'Relatórios', icon: BarChart3 },
+        { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
+      ],
+    },
+  ];
+
+  const adminSections: NavSection[] = [
+    { items: [{ id: 'dashboard', title: 'Dashboard', icon: LayoutDashboard }] },
+    {
+      label: 'Apólices',
+      items: [
+        { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+        { id: 'upload', title: 'Upload', icon: Upload },
+      ],
+    },
+    {
+      label: 'Gestão',
+      items: [
+        { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
+        { id: 'claims', title: 'Sinistros', icon: AlertTriangle, badge: 'sinistros' },
+        { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+        { id: 'aprovacoes', title: 'Aprovações', icon: CheckSquare },
+      ],
+    },
+    {
+      label: 'Seguros',
+      items: [
+        { id: 'seguro-garantia', title: 'Seguro Garantia', icon: ShieldCheck },
+        { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: Building2 },
+      ],
+    },
+    {
+      label: 'Conteúdo',
+      items: [
+        { id: 'documentos', title: 'Documentos', icon: FolderOpen, badge: 'docs' },
+        { id: 'contatos', title: 'Contatos', icon: Mail },
+        { id: 'export', title: 'Relatórios', icon: BarChart3 },
+        { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
+      ],
+    },
+  ];
+
+  const sections = isAdmin ? adminSections : clientSections;
+
+  const userName = profile?.full_name || (user as any)?.email?.split('@')[0] || 'Usuário';
+  const userInitials = userName.slice(0, 2).toUpperCase();
+  const userRole = isAdmin
+    ? 'Admin'
+    : (profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'Usuário');
 
   if (!isOpen) return null;
 
-  const itemBaseClasses = cn(
-    'group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm w-full text-left',
-    'transition-all duration-200 ease-out font-medium relative overflow-hidden',
-    'text-foreground/80 hover:bg-accent hover:text-foreground',
-    'focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-1'
-  );
-
-  const activeClasses = [
-    'bg-gradient-to-r from-primary/20 to-primary/5 text-foreground shadow-sm border border-primary/20',
-    'hover:from-primary/25 hover:to-primary/10',
-    'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-gradient-to-b before:from-primary before:to-primary/80 before:rounded-r-full',
-  ];
-
   return (
     <>
+      {/* Overlay */}
       <div
         className={cn(
-          'fixed inset-0 z-40 lg:hidden transition-opacity duration-300 ease-out',
-          isOpen ? 'bg-black/40 opacity-100' : 'bg-black/0 opacity-0 pointer-events-none'
+          'fixed inset-0 z-40 lg:hidden transition-opacity duration-300',
+          isOpen ? 'bg-black/50 opacity-100' : 'bg-black/0 opacity-0 pointer-events-none'
         )}
         onClick={onClose}
         aria-hidden="true"
       />
 
+      {/* Drawer (mesmo visual da AppSidebar) */}
       <aside
         role="dialog"
         aria-modal="true"
         aria-label="Menu de navegação"
         className={cn(
-          'fixed inset-y-0 left-0 w-[85%] max-w-[320px] bg-background border-r border-border/50 z-50 shadow-xl transition-all duration-300 ease-out overflow-y-auto',
+          'fixed inset-y-0 left-0 w-[85%] max-w-[300px] z-50 shadow-2xl flex flex-col',
+          'bg-sidebar text-sidebar-foreground border-r border-sidebar-border',
+          'transition-transform duration-300 ease-out',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border/30 bg-gradient-to-b from-sidebar-background to-sidebar-accent/10 dark:from-background dark:to-muted/5 sticky top-0 z-10">
-          <SmartApóliceLogo size="sm" showText={true} />
+        {/* ===== Header: Logo SmartControl + close ===== */}
+        <div className="flex items-center justify-between border-b border-sidebar-border px-3 py-4 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary shadow-sm shrink-0">
+              <Shield className="h-5 w-5 text-primary-foreground" strokeWidth={2.2} />
+            </div>
+            <div className="flex items-baseline gap-0.5 leading-none">
+              <span className="text-base font-bold text-sidebar-foreground">Smart</span>
+              <span className="text-base font-bold text-primary">Control</span>
+            </div>
+          </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
             aria-label="Fechar menu"
-            className="p-2 hover:bg-accent/50 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+            className="p-2 hover:bg-sidebar-accent/60 rounded-md h-8 w-8"
           >
-            <X className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+            <X className="h-5 w-5 text-muted-foreground" />
           </Button>
         </div>
 
-        <nav className="p-4 space-y-1.5">
-          {navigation.map((item) => {
-            if (item.isGroup && item.children) {
-              const isOpenGroup = !!openGroups[item.id];
-              const hasActiveChild = item.children.some((c) => c.id === activeSection);
-              return (
-                <div key={item.id} className="space-y-1">
-                  <button
-                    onClick={() => toggleGroup(item.id)}
-                    aria-expanded={isOpenGroup}
-                    className={cn(itemBaseClasses, hasActiveChild && activeClasses)}
-                  >
-                    <item.icon
-                      className={cn(
-                        'size-4 transition-all duration-200 flex-shrink-0',
-                        hasActiveChild ? 'text-foreground' : 'text-muted-foreground'
-                      )}
-                    />
-                    <span className="truncate flex-1">{item.title}</span>
-                    <ChevronDown
-                      className={cn(
-                        'ml-auto size-4 text-muted-foreground transition-transform duration-200',
-                        isOpenGroup && 'rotate-180'
-                      )}
-                    />
-                  </button>
-                  {isOpenGroup && (
-                    <div className="ml-3 pl-3 border-l border-border/50 space-y-1">
-                      {item.children.map((sub) => (
-                        <button
-                          key={sub.id}
-                          onClick={() => handleNavigation(sub.id)}
-                          aria-current={activeSection === sub.id ? 'page' : undefined}
-                          className={cn(
-                            'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm w-full text-left',
-                            'transition-all duration-200 ease-out',
-                            'text-foreground/70 hover:bg-accent hover:text-foreground',
-                            activeSection === sub.id &&
-                              'bg-primary/15 text-foreground font-medium'
-                          )}
-                        >
-                          <sub.icon
-                            className={cn(
-                              'size-3.5 flex-shrink-0',
-                              activeSection === sub.id
-                                ? 'text-primary'
-                                : 'text-muted-foreground'
-                            )}
-                          />
-                          <span className="truncate">{sub.title}</span>
-                          {activeSection === sub.id && (
-                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavigation(item.id)}
-                aria-current={activeSection === item.id ? 'page' : undefined}
-                className={cn(itemBaseClasses, activeSection === item.id && activeClasses)}
+        {/* ===== Navigation ===== */}
+        <nav className="flex-1 overflow-y-auto px-2 py-2">
+          {/* Botão Painel Admin */}
+          {isAdmin && (
+            <div className="mb-2 px-1">
+              <Button
+                onClick={() => { navigate('/admin'); onClose(); }}
+                className="w-full justify-start gap-2 font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm rounded-lg px-3 py-2 h-9"
               >
-                <item.icon
-                  className={cn(
-                    'size-4 transition-all duration-200 flex-shrink-0',
-                    activeSection === item.id
-                      ? 'text-foreground'
-                      : 'text-muted-foreground group-hover:text-foreground'
-                  )}
-                />
-                <span className="truncate">{item.title}</span>
-                {activeSection === item.id && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                )}
-              </button>
-            );
-          })}
+                <Crown className="size-4 shrink-0" />
+                <span>Painel Admin</span>
+              </Button>
+            </div>
+          )}
+
+          {sections.map((section, idx) => (
+            <div key={section.label ?? `section-${idx}`} className={cn(idx > 0 && 'mt-4')}>
+              {section.label && (
+                <div className="px-3 pb-1.5">
+                  <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                    {section.label}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-0.5">
+                {section.items.map((item) => {
+                  const isActive = activeSection === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNavigate(item.id)}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={cn(
+                        'group flex items-center gap-2.5 w-full text-sm font-medium text-left',
+                        'rounded-lg px-3 py-2 h-9 transition-colors duration-150',
+                        isActive
+                          ? 'bg-primary/15 text-foreground hover:bg-primary/20 dark:bg-primary/25 dark:text-primary-foreground'
+                          : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground'
+                      )}
+                    >
+                      <item.icon
+                        className={cn(
+                          'size-[18px] shrink-0 transition-colors',
+                          isActive
+                            ? 'text-primary dark:text-primary-foreground'
+                            : 'text-muted-foreground group-hover:text-sidebar-foreground'
+                        )}
+                      />
+                      <span className="truncate flex-1">{item.title}</span>
+                      {item.badge === 'docs' && docCount > 0 && (
+                        <span className="text-[10px] font-semibold bg-sidebar-accent/80 text-muted-foreground rounded-md px-1.5 py-0.5 min-w-[20px] text-center">
+                          {docCount}
+                        </span>
+                      )}
+                      {item.badge === 'sinistros' && sinistrosCount > 0 && (
+                        <span className="text-[10px] font-semibold bg-destructive text-destructive-foreground rounded-md px-1.5 py-0.5 min-w-[20px] text-center">
+                          {sinistrosCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
+
+        {/* ===== Footer: Avatar + nome + role + Sair ===== */}
+        <div className="border-t border-sidebar-border p-2 gap-1 shrink-0">
+          <div className="flex items-center gap-2.5 rounded-lg px-2 py-2">
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground text-xs font-bold shrink-0">
+              {userInitials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
+                {userName}
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-tight">
+                {userRole}
+              </p>
+            </div>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          </div>
+
+          <button
+            onClick={() => { logout(); onClose(); }}
+            className={cn(
+              'flex items-center gap-2.5 text-sm w-full font-medium',
+              'text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/60',
+              'transition-colors duration-150 rounded-lg px-3 py-2 h-9'
+            )}
+          >
+            <LogOut className="size-[18px] shrink-0" />
+            <span className="truncate">Sair</span>
+          </button>
+        </div>
       </aside>
     </>
   );
