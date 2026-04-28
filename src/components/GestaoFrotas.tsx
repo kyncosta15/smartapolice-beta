@@ -19,7 +19,9 @@ import {
   RefreshCw,
   Settings,
   Link,
-  FileBarChart
+  FileBarChart,
+  MapPin,
+  MessageSquare
 } from 'lucide-react';
 import { FrotasDashboard } from './frotas/FrotasDashboard';
 import { FrotasReports } from './frotas/FrotasReports';
@@ -192,61 +194,59 @@ export function GestaoFrotas() {
       <div className="flex-1 min-h-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col min-h-0">
           <div className="flex-none border-b border-border bg-background">
-            <div className="overflow-x-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300">
-              <nav className="inline-flex gap-1 px-3 sm:px-4 lg:px-6 py-2">
-                <TabsList className="h-10 sm:h-12 p-1 bg-muted rounded-lg flex-shrink-0">
-                  <TabsTrigger 
-                    value="frotas" 
-                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
-                  >
-                    <Car className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span>Frotas</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="fipe" 
-                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
-                  >
-                    <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span>FIPE</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="documentos" 
-                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
-                  >
-                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span>Docs</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="upload" 
-                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
-                  >
-                    <Upload className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span>Upload</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="risco" 
-                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
-                  >
-                    <Shield className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span>Risco e Roubos</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="solicitacoes" 
-                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
-                  >
-                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span>Solicitações/Tickets</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="relatorios" 
-                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap"
-                  >
-                    <FileBarChart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span>Relatórios</span>
-                  </TabsTrigger>
-                </TabsList>
-              </nav>
-            </div>
+            <nav className="px-3 sm:px-4 lg:px-6 py-2">
+              <TabsList className="h-11 p-1 bg-muted rounded-lg w-full grid grid-cols-7 gap-0.5">
+                <TabsTrigger
+                  value="frotas"
+                  className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs sm:text-sm whitespace-nowrap min-w-0"
+                >
+                  <Car className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate hidden sm:inline">Frotas</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="fipe"
+                  className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs sm:text-sm whitespace-nowrap min-w-0"
+                >
+                  <TrendingUp className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate hidden sm:inline">FIPE</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="sinistros"
+                  className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs sm:text-sm whitespace-nowrap min-w-0"
+                >
+                  <MapPin className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate hidden sm:inline">Sinistros</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="solicitacoes"
+                  className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs sm:text-sm whitespace-nowrap min-w-0"
+                >
+                  <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate hidden sm:inline">Tickets</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="documentos"
+                  className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs sm:text-sm whitespace-nowrap min-w-0"
+                >
+                  <FileText className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate hidden sm:inline">Documentos</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="upload"
+                  className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs sm:text-sm whitespace-nowrap min-w-0"
+                >
+                  <Upload className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate hidden sm:inline">Upload</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="relatorios"
+                  className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs sm:text-sm whitespace-nowrap min-w-0"
+                >
+                  <FileBarChart className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate hidden sm:inline">Relatórios</span>
+                </TabsTrigger>
+              </TabsList>
+            </nav>
           </div>
 
           {/* Tab Content */}
