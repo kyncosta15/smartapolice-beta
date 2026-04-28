@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, FileSpreadsheet, Filter, Search, CheckSquare, Square, Loader2, Building2, ChevronDown, HardHat, LayoutGrid, Wrench } from 'lucide-react';
+import { FileText, FileSpreadsheet, Filter, Search, CheckSquare, Square, Loader2, Building2, ChevronDown, ChevronRight, HardHat, LayoutGrid, Wrench, Download, X, Pencil } from 'lucide-react';
 import { MAINTENANCE_TYPE_LABELS, MaintenanceType } from './maintenance/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -998,343 +998,635 @@ export function FrotasReports({ veiculos, loading }: FrotasReportsProps) {
     }
   };
 
+  // ============== UI HELPERS ==============
+  const [columnsModalOpen, setColumnsModalOpen] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [maintenancePreviewCount, setMaintenancePreviewCount] = useState<number | null>(null);
+  const [maintenancePreviewCost, setMaintenancePreviewCost] = useState<number>(0);
+
+  // Pré-carrega contagem/custo de manutenções para o painel de prévia (somente no modo revisões)
+  useEffect(() => {
+    let cancelled = false;
+    if (reportMode !== 'revisoes' || veiculosToExport.length === 0) {
+      setMaintenancePreviewCount(null);
+      setMaintenancePreviewCost(0);
+      return;
+    }
+    const ids = veiculosToExport.map(v => v.id);
+    (async () => {
+      try {
+        const map = await fetchMaintenanceLogs(ids);
+        if (cancelled) return;
+        const all = Object.values(map).flat();
+        setMaintenancePreviewCount(all.length);
+        setMaintenancePreviewCost(all.reduce((acc, l) => acc + (Number(l.cost) || 0), 0));
+      } catch {
+        if (!cancelled) {
+          setMaintenancePreviewCount(0);
+          setMaintenancePreviewCost(0);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportMode, veiculosToExport.map(v => v.id).join(',')]);
+
+  const totalVeiculos = veiculosToExport.length;
+  const totalRegistros = reportMode === 'revisoes'
+    ? (maintenancePreviewCount ?? 0)
+    : veiculosToExport.length;
+  const custoEstimado = reportMode === 'revisoes'
+    ? maintenancePreviewCost
+    : veiculosToExport.reduce((acc, v) => acc + (Number(v.preco_fipe) || 0), 0);
+
+  const activeFilters: { key: string; label: string; clear: () => void }[] = [];
+  if (search) activeFilters.push({ key: 'search', label: `Busca: ${search}`, clear: () => setSearch('') });
+  if (filterCategoria !== 'all') activeFilters.push({ key: 'cat', label: `Categoria: ${filterCategoria}`, clear: () => setFilterCategoria('all') });
+  if (filterStatus !== 'all') activeFilters.push({ key: 'st', label: `Status: ${formatStatusSeguro(filterStatus)}`, clear: () => setFilterStatus('all') });
+  if (filterMarca !== 'all') activeFilters.push({ key: 'mc', label: `Marca: ${filterMarca}`, clear: () => { setFilterMarca('all'); setFilterModelo('all'); } });
+  if (filterModelo !== 'all') activeFilters.push({ key: 'mo', label: `Modelo: ${filterModelo}`, clear: () => setFilterModelo('all') });
+
+  const clearAllFilters = () => {
+    setSearch('');
+    setFilterCategoria('all');
+    setFilterStatus('all');
+    setFilterMarca('all');
+    setFilterModelo('all');
+  };
+
+  // CTA wiring por modo
+  const isGenerating = generating !== null;
+  const ctas = (() => {
+    if (reportMode === 'obra') {
+      return {
+        pdf: { onClick: handleExportPDFObra, loading: generating === 'pdf-obra' },
+        xlsx: { onClick: handleExportXLSXObra, loading: generating === 'xlsx-obra' },
+      };
+    }
+    if (reportMode === 'revisoes') {
+      return {
+        pdf: { onClick: handleExportPDFRevisoes, loading: generating === 'pdf-rev' },
+        xlsx: { onClick: handleExportXLSXRevisoes, loading: generating === 'xlsx-rev' },
+      };
+    }
+    return {
+      pdf: { onClick: handleExportPDF, loading: generating === 'pdf' },
+      xlsx: { onClick: handleExportXLSX, loading: generating === 'xlsx' },
+    };
+  })();
+
+  const modeDescription =
+    reportMode === 'geral' ? 'Configure filtros e colunas para exportar.' :
+    reportMode === 'obra' ? 'Veículos agrupados por obra (canteiro) e por responsável.' :
+    'Lista revisões e manutenções por veículo com data, tipo, KM, custo e observações.';
+
+  const canExport = !isGenerating && filteredVeiculos.length > 0;
+
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <FileText className="h-5 w-5 text-primary" />
-            Gerar Relatório de Frotas
-          </CardTitle>
-          <CardDescription>
-            Selecione filtros, veículos e colunas para gerar relatórios em PDF ou planilha Excel.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Title */}
-          <div>
-            <Label htmlFor="report-title">Título do relatório</Label>
-            <Input
-              id="report-title"
-              value={reportTitle}
-              onChange={e => setReportTitle(e.target.value)}
-              placeholder="Relatório de Frotas"
-              className="mt-1.5"
-            />
+    <div className="bg-background -mx-3 -my-3 sm:-mx-4 md:-mx-6 sm:-my-4 md:-my-6">
+      {/* ===== Sticky top bar: breadcrumb + CTAs ===== */}
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs min-w-0">
+            <span className="text-muted-foreground truncate">Relatórios</span>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
+            <span className="text-muted-foreground truncate">Frotas</span>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
+            <span className="text-foreground font-medium truncate">Gerar</span>
+          </nav>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={ctas.pdf.onClick}
+              disabled={!canExport}
+              className="gap-2 h-9"
+            >
+              {ctas.pdf.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              PDF
+            </Button>
+            <Button
+              size="sm"
+              onClick={ctas.xlsx.onClick}
+              disabled={!canExport}
+              className="gap-2 h-9"
+            >
+              {ctas.xlsx.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Gerar Excel
+            </Button>
           </div>
+        </div>
+      </div>
 
-          {/* Modo de relatório (Geral / Por Obra) */}
-          <div>
-            <Label className="mb-2 block">Modo do relatório</Label>
-            <div className="flex flex-wrap gap-2 border-b border-border">
-              <button
-                type="button"
-                onClick={() => setReportMode('geral')}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  reportMode === 'geral'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Visão Geral
-              </button>
-              <button
-                type="button"
-                onClick={() => setReportMode('obra')}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  reportMode === 'obra'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <HardHat className="h-4 w-4" />
-                Por Obra
-              </button>
-              <button
-                type="button"
-                onClick={() => setReportMode('revisoes')}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  reportMode === 'revisoes'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Wrench className="h-4 w-4" />
-                Revisões / Manutenções
-              </button>
-            </div>
-            {reportMode === 'obra' && (
-              <div className="mt-3 flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <div className="flex-shrink-0 h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <HardHat className="h-4 w-4 text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">Relatório agrupado por Obra</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Os veículos serão organizados por obra (canteiro) e, dentro de cada obra, agrupados por responsável.
-                  </p>
-                </div>
-              </div>
-            )}
-            {reportMode === 'revisoes' && (
-              <div className="mt-3 flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <div className="flex-shrink-0 h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Wrench className="h-4 w-4 text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">Relatório de Revisões e Manutenções</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Lista todas as revisões e manutenções registradas para cada veículo selecionado, com data, tipo, KM, custo e observações. As colunas configuradas acima não se aplicam a este modo.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* Filters */}
-          <div>
-            <Label className="flex items-center gap-2 mb-3">
-              <Filter className="h-4 w-4" />
-              Filtros
-            </Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar placa, marca, modelo..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-
-              <Select value={filterCategoria} onValueChange={setFilterCategoria}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as categorias</SelectItem>
-                  {categorias.map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status seguro" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  {statuses.map(s => (
-                    <SelectItem key={s} value={s}>{formatStatusSeguro(s)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filterMarca}
-                onValueChange={(v) => {
-                  setFilterMarca(v);
-                  setFilterModelo('all');
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Marca" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as marcas</SelectItem>
-                  {marcas.map(m => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={filterModelo} onValueChange={setFilterModelo}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Modelo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os modelos</SelectItem>
-                  {modelos.map(m => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Columns */}
-          <div>
-            <Label className="mb-3 block">
-              Colunas do relatório
-              <Badge variant="secondary" className="ml-2">{selectedColumns.size} selecionadas</Badge>
-            </Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-3 border rounded-lg bg-muted/30">
-              {ALL_COLUMNS.map(col => (
-                <label
-                  key={String(col.key)}
-                  className="flex items-center gap-2 cursor-pointer text-sm hover:bg-background rounded px-2 py-1"
-                >
-                  <Checkbox
-                    checked={selectedColumns.has(String(col.key))}
-                    onCheckedChange={() => toggleColumn(String(col.key))}
-                  />
-                  <span>{col.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Vehicle selection */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <Label>
-                Veículos
-                <Badge variant="secondary" className="ml-2">
-                  {selectedIds.size === 0 ? `Todos os ${filteredVeiculos.length} filtrados` : `${selectedIds.size} selecionados`}
-                </Badge>
-              </Label>
-              <Button variant="outline" size="sm" onClick={toggleSelectAll} disabled={filteredVeiculos.length === 0}>
-                {allFilteredSelected ? <CheckSquare className="h-4 w-4 mr-1" /> : <Square className="h-4 w-4 mr-1" />}
-                {allFilteredSelected ? 'Desmarcar todos' : 'Selecionar todos filtrados'}
-              </Button>
-            </div>
-
-            <ScrollArea className="h-64 border rounded-lg">
-              <div className="p-2 space-y-1">
-                {loading ? (
-                  <div className="text-center py-8 text-sm text-muted-foreground">Carregando veículos...</div>
-                ) : filteredVeiculos.length === 0 ? (
-                  <div className="text-center py-8 text-sm text-muted-foreground">Nenhum veículo encontrado.</div>
-                ) : (
-                  filteredVeiculos.map(v => (
-                    <label
-                      key={v.id}
-                      className="flex items-center gap-3 p-2 rounded hover:bg-muted cursor-pointer text-sm"
-                    >
-                      <Checkbox
-                        checked={selectedIds.has(v.id)}
-                        onCheckedChange={() => toggleSelectOne(v.id)}
-                      />
-                      <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3">
-                        <span className="font-mono font-medium">{v.placa || '-'}</span>
-                        <span className="text-muted-foreground truncate">{v.marca} {v.modelo}</span>
-                        <span className="text-xs text-muted-foreground">{v.categoria || '-'}</span>
-                      </div>
-                    </label>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-            <p className="text-xs text-muted-foreground mt-2">
-              Dica: deixe vazio para incluir todos os veículos filtrados no relatório.
+      {/* ===== Page body ===== */}
+      <div className="px-4 sm:px-6 py-6">
+        {/* Section header */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+          <div className="min-w-0">
+            <h1 className="text-xl font-medium text-foreground tracking-tight">
+              Gerar Relatório de Frotas
+            </h1>
+            <p className="text-[13px] text-muted-foreground mt-0.5">
+              {modeDescription}
             </p>
           </div>
+          <div
+            role="status"
+            aria-live="polite"
+            className="inline-flex items-center gap-2 self-start px-3 py-1.5 rounded-full bg-primary-bg border border-primary-border"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
+            <span className="text-[11px] font-medium text-foreground">
+              {totalVeiculos === 1 ? '1 veículo' : `${totalVeiculos} veículos`}
+              {' · '}
+              {totalRegistros === 1 ? '1 registro' : `${totalRegistros} registros`}
+            </span>
+          </div>
+        </div>
 
-          <Separator />
+        {/* Main grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-5 items-start">
+          {/* ===== LEFT: form ===== */}
+          <div className="space-y-6 min-w-0">
+            {/* Title */}
+            <div>
+              <Label htmlFor="report-title" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Título
+              </Label>
+              <Input
+                id="report-title"
+                value={reportTitle}
+                onChange={e => setReportTitle(e.target.value)}
+                placeholder="Relatório de Frotas"
+                className="mt-2 h-10 bg-surface-1 border-border"
+              />
+            </div>
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-2 justify-end">
+            {/* Mode (segmented control) */}
+            <div>
+              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Modo
+              </Label>
+              <div
+                role="tablist"
+                aria-label="Modo do relatório"
+                className="mt-2 inline-flex p-1 rounded-lg bg-surface-2 border border-border"
+              >
+                {([
+                  { key: 'geral', label: 'Visão Geral', icon: LayoutGrid },
+                  { key: 'obra', label: 'Por Obra', icon: HardHat },
+                  { key: 'revisoes', label: 'Revisões / Manutenções', icon: Wrench },
+                ] as const).map(({ key, label, icon: Icon }) => {
+                  const active = reportMode === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setReportMode(key)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all ${
+                        active
+                          ? 'bg-card text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[12px] text-muted-foreground mt-2">
+                {modeDescription}
+              </p>
+            </div>
+
+            {/* Filters */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Filtros
+                  </Label>
+                  {activeFilters.length > 0 && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-primary-bg text-foreground border border-primary-border">
+                      {activeFilters.length} {activeFilters.length === 1 ? 'ativo' : 'ativos'}
+                    </span>
+                  )}
+                </div>
+                {activeFilters.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearAllFilters}
+                    className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Placa ou marca"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="pl-9 h-10 bg-surface-1 border-border text-[13px]"
+                  />
+                </div>
+
+                <Select value={filterCategoria} onValueChange={setFilterCategoria}>
+                  <SelectTrigger className="h-10 bg-surface-1 border-border text-[13px]">
+                    <SelectValue placeholder="Todas as categorias" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as categorias</SelectItem>
+                    {categorias.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="h-10 bg-surface-1 border-border text-[13px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    {statuses.map(s => (
+                      <SelectItem key={s} value={s}>{formatStatusSeguro(s)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={filterMarca}
+                  onValueChange={(v) => { setFilterMarca(v); setFilterModelo('all'); }}
+                >
+                  <SelectTrigger className="h-10 bg-surface-1 border-border text-[13px]">
+                    <SelectValue placeholder="Marca" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as marcas</SelectItem>
+                    {marcas.map(m => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={filterModelo} onValueChange={setFilterModelo}>
+                  <SelectTrigger className="h-10 bg-surface-1 border-border text-[13px] sm:col-span-2">
+                    <SelectValue placeholder="Modelo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os modelos</SelectItem>
+                    {modelos.map(m => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Columns (pills) */}
             {reportMode === 'geral' && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={handleExportXLSX}
-                  disabled={generating !== null || filteredVeiculos.length === 0}
-                  className="gap-2"
-                >
-                  {generating === 'xlsx' ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileSpreadsheet className="h-4 w-4" />
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Colunas
+                    </Label>
+                    <span className="text-[11px] text-muted-foreground">
+                      {selectedColumns.size} {selectedColumns.size === 1 ? 'selecionada' : 'selecionadas'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setColumnsModalOpen(true)}
+                    className="inline-flex items-center gap-1 text-[12px] text-primary hover:opacity-80 transition-opacity"
+                  >
+                    Editar <ChevronRight className="h-3 w-3" />
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALL_COLUMNS.filter(c => selectedColumns.has(String(c.key))).map(col => (
+                    <button
+                      key={String(col.key)}
+                      type="button"
+                      onClick={() => toggleColumn(String(col.key))}
+                      className="group inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-2 hover:bg-primary-bg border border-border hover:border-primary-border text-[12px] text-foreground transition-colors"
+                      title="Clique para remover"
+                    >
+                      {col.label}
+                      <X className="h-3 w-3 text-muted-foreground group-hover:text-foreground" />
+                    </button>
+                  ))}
+                  {selectedColumns.size === 0 && (
+                    <span className="text-[12px] text-muted-foreground italic">Nenhuma coluna selecionada — abra "Editar" para escolher.</span>
                   )}
-                  Exportar Excel
-                </Button>
-                <Button
-                  onClick={handleExportPDF}
-                  disabled={generating !== null || filteredVeiculos.length === 0}
-                  className="gap-2"
-                >
-                  {generating === 'pdf' ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText className="h-4 w-4" />
-                  )}
-                  Gerar PDF
-                </Button>
-              </>
+                </div>
+              </div>
             )}
-            {reportMode === 'obra' && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={handleExportXLSXObra}
-                  disabled={generating !== null || filteredVeiculos.length === 0}
-                  className="gap-2"
-                >
-                  {generating === 'xlsx-obra' ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileSpreadsheet className="h-4 w-4" />
-                  )}
-                  Exportar Excel
-                </Button>
-                <Button
-                  onClick={handleExportPDFObra}
-                  disabled={generating !== null || filteredVeiculos.length === 0}
-                  className="gap-2"
-                >
-                  {generating === 'pdf-obra' ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText className="h-4 w-4" />
-                  )}
-                  Gerar PDF
-                </Button>
-              </>
-            )}
-            {reportMode === 'revisoes' && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={handleExportXLSXRevisoes}
-                  disabled={generating !== null || filteredVeiculos.length === 0}
-                  className="gap-2"
-                >
-                  {generating === 'xlsx-rev' ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileSpreadsheet className="h-4 w-4" />
-                  )}
-                  Exportar Excel
-                </Button>
-                <Button
-                  onClick={handleExportPDFRevisoes}
-                  disabled={generating !== null || filteredVeiculos.length === 0}
-                  className="gap-2"
-                >
-                  {generating === 'pdf-rev' ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText className="h-4 w-4" />
-                  )}
-                  Gerar PDF
-                </Button>
-              </>
-            )}
+
+            {/* Vehicle selection (collapsible-ish list) */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Veículos
+                </Label>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] text-muted-foreground">
+                    {selectedIds.size === 0
+                      ? `Todos os ${filteredVeiculos.length} filtrados`
+                      : `${selectedIds.size} selecionados`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    disabled={filteredVeiculos.length === 0}
+                    className="text-[12px] text-primary hover:opacity-80 disabled:opacity-40 transition-opacity"
+                  >
+                    {allFilteredSelected ? 'Desmarcar todos' : 'Selecionar todos'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-surface-1 overflow-hidden">
+                <ScrollArea className="h-56">
+                  <div className="p-1">
+                    {loading ? (
+                      <div className="text-center py-8 text-[13px] text-muted-foreground">Carregando veículos…</div>
+                    ) : filteredVeiculos.length === 0 ? (
+                      <div className="text-center py-8 text-[13px] text-muted-foreground">Nenhum veículo encontrado.</div>
+                    ) : (
+                      filteredVeiculos.map(v => (
+                        <label
+                          key={v.id}
+                          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-surface-2 cursor-pointer text-[13px] transition-colors"
+                        >
+                          <Checkbox
+                            checked={selectedIds.has(v.id)}
+                            onCheckedChange={() => toggleSelectOne(v.id)}
+                          />
+                          <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3">
+                            <span className="font-mono font-medium text-foreground">{v.placa || '-'}</span>
+                            <span className="text-muted-foreground truncate">{v.marca} {v.modelo}</span>
+                            <span className="text-[11px] text-muted-foreground">{v.categoria || '-'}</span>
+                          </div>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1.5">
+                Deixe vazio para incluir todos os veículos filtrados.
+              </p>
+            </div>
           </div>
 
+          {/* ===== RIGHT: preview panel (sticky) ===== */}
+          <aside className="lg:sticky lg:top-[72px] space-y-3">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              {/* Preview header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Prévia</span>
+                <span className="text-[11px] text-muted-foreground">atualizado agora</span>
+              </div>
 
-        </CardContent>
-      </Card>
+              {/* Skeleton-like preview of the report layout */}
+              <div className="p-4">
+                <div className="rounded-lg bg-surface-2 border border-border p-4">
+                  <div className="text-[12px] font-semibold text-foreground mb-3 truncate">
+                    {reportTitle || 'Relatório de Frotas'}
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex gap-1.5">
+                      <div className="h-2 rounded-sm bg-muted flex-1" />
+                      <div className="h-2 rounded-sm bg-muted flex-1" />
+                      <div className="h-2 rounded-sm bg-muted flex-1" />
+                      <div className="h-2 rounded-sm bg-muted flex-1" />
+                    </div>
+                    <div className="flex gap-1.5 opacity-70">
+                      <div className="h-2 rounded-sm bg-muted/70 flex-1" />
+                      <div className="h-2 rounded-sm bg-muted/70 flex-1" />
+                      <div className="h-2 rounded-sm bg-muted/70 flex-1" />
+                      <div className="h-2 rounded-sm bg-muted/70 flex-1" />
+                    </div>
+                    <div className="flex gap-1.5 opacity-50">
+                      <div className="h-2 rounded-sm bg-muted/50 flex-1" />
+                      <div className="h-2 rounded-sm bg-muted/50 flex-1" />
+                      <div className="h-2 rounded-sm bg-muted/50 flex-1" />
+                      <div className="h-2 rounded-sm bg-muted/50 flex-1" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metric cards */}
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="rounded-lg border border-border bg-surface-1 p-3">
+                    <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Veículos</div>
+                    <div className="text-2xl font-semibold text-foreground mt-1 tabular-nums">{totalVeiculos}</div>
+                  </div>
+                  <div className="rounded-lg border border-border bg-surface-1 p-3">
+                    <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Registros</div>
+                    <div className="text-2xl font-semibold text-foreground mt-1 tabular-nums">
+                      {reportMode === 'revisoes' && maintenancePreviewCount === null
+                        ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        : totalRegistros}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-border bg-surface-1 p-3 mt-3 flex items-center justify-between">
+                  <span className="text-[12px] font-medium text-muted-foreground">
+                    {reportMode === 'revisoes' ? 'Custo total' : 'Soma FIPE'}
+                  </span>
+                  <span className="text-[14px] font-semibold text-foreground tabular-nums">
+                    {formatBRL(custoEstimado)}
+                  </span>
+                </div>
+
+                <Button
+                  variant="outline"
+                  className="w-full mt-3 h-9 text-[13px]"
+                  onClick={() => setPreviewModalOpen(true)}
+                  disabled={!canExport}
+                >
+                  Visualizar completo
+                </Button>
+              </div>
+            </div>
+
+            {/* Active filter chips */}
+            {activeFilters.length > 0 && (
+              <div className="rounded-xl border border-border bg-card p-3">
+                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Filtros ativos
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {activeFilters.map(f => (
+                    <button
+                      key={f.key}
+                      type="button"
+                      onClick={f.clear}
+                      className="group inline-flex items-center gap-1 px-2 py-1 rounded-md bg-primary-bg border border-primary-border text-[11px] text-foreground hover:bg-primary-bg-strong transition-colors"
+                    >
+                      {f.label}
+                      <X className="h-3 w-3 text-muted-foreground group-hover:text-foreground" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
+      </div>
+
+      {/* ===== Columns edit modal ===== */}
+      {columnsModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+          onClick={() => setColumnsModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-2xl rounded-xl border border-border bg-card shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div>
+                <h3 className="text-[15px] font-semibold text-foreground">Editar colunas</h3>
+                <p className="text-[12px] text-muted-foreground mt-0.5">Selecione as colunas que aparecerão no relatório.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setColumnsModalOpen(false)}
+                className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-surface-2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 max-h-[60vh] overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+                {ALL_COLUMNS.map(col => (
+                  <label
+                    key={String(col.key)}
+                    className="flex items-center gap-2 cursor-pointer text-[13px] hover:bg-surface-2 rounded-md px-2.5 py-2 transition-colors"
+                  >
+                    <Checkbox
+                      checked={selectedColumns.has(String(col.key))}
+                      onCheckedChange={() => toggleColumn(String(col.key))}
+                    />
+                    <span className="text-foreground">{col.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-border bg-surface-1">
+              <span className="text-[12px] text-muted-foreground">
+                {selectedColumns.size} {selectedColumns.size === 1 ? 'coluna selecionada' : 'colunas selecionadas'}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedColumns(new Set(ALL_COLUMNS.filter(c => c.default).map(c => String(c.key))))}
+                >
+                  Padrão
+                </Button>
+                <Button size="sm" onClick={() => setColumnsModalOpen(false)}>
+                  Pronto
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== Preview modal (read-only sample) ===== */}
+      {previewModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+          onClick={() => setPreviewModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-4xl rounded-xl border border-border bg-card shadow-2xl flex flex-col max-h-[85vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div>
+                <h3 className="text-[15px] font-semibold text-foreground">{reportTitle || 'Relatório de Frotas'}</h3>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  Prévia • {totalVeiculos} {totalVeiculos === 1 ? 'veículo' : 'veículos'}
+                  {' · '}
+                  {totalRegistros} {totalRegistros === 1 ? 'registro' : 'registros'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewModalOpen(false)}
+                className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-surface-2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-5">
+              {reportMode === 'geral' ? (
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <table className="w-full text-[12px]">
+                    <thead>
+                      <tr className="bg-surface-2">
+                        {columnsToExport.map(c => (
+                          <th key={String(c.key)} className="text-left px-3 py-2 font-semibold text-foreground border-b border-border">{c.label}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {veiculosToExport.slice(0, 30).map((v, idx) => (
+                        <tr key={v.id} className={idx % 2 === 0 ? 'bg-card' : 'bg-surface-1'}>
+                          {columnsToExport.map(c => {
+                            const raw = (v as any)[c.key];
+                            const val = c.format ? c.format(raw, v) : (raw == null || raw === '' ? '-' : String(raw));
+                            return (
+                              <td key={String(c.key)} className="px-3 py-2 text-foreground border-b border-border/50">{val}</td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {veiculosToExport.length > 30 && (
+                    <div className="text-center py-2 text-[11px] text-muted-foreground bg-surface-1">
+                      … e mais {veiculosToExport.length - 30} linha(s) no arquivo final
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-[13px] text-muted-foreground">
+                  Prévia tabular não disponível neste modo. Gere o PDF ou Excel para visualizar o resultado completo.
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border bg-surface-1">
+              <Button variant="outline" size="sm" onClick={ctas.pdf.onClick} disabled={!canExport} className="gap-2">
+                {ctas.pdf.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                PDF
+              </Button>
+              <Button size="sm" onClick={ctas.xlsx.onClick} disabled={!canExport} className="gap-2">
+                {ctas.xlsx.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                Gerar Excel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
