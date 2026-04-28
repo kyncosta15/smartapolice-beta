@@ -224,26 +224,6 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         </div>
       </SidebarHeader>
 
-      {/* ===== Search bar ===== */}
-      {open && (
-        <div className="px-3 pt-3 pb-1">
-          <button
-            type="button"
-            onClick={() => {
-              const input = document.querySelector<HTMLInputElement>('[data-global-search-input]');
-              input?.focus();
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent/40 hover:bg-sidebar-accent/60 border border-sidebar-border/60 text-xs text-muted-foreground transition-colors"
-          >
-            <Search className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-left">Buscar...</span>
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-sidebar-background border border-sidebar-border text-[10px] font-mono text-muted-foreground">
-              ⌘K
-            </kbd>
-          </button>
-        </div>
-      )}
-
       {/* ===== Navigation ===== */}
       <SidebarContent className="px-2 py-2">
         {/* Botão Painel Admin (só admin) */}
