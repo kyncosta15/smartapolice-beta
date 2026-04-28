@@ -681,17 +681,17 @@ export function UserProfile() {
       {/* Additional Profile Data Card */}
       <Card className="mt-6">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              Dados Cadastrais
+              <Building2 className="w-5 h-5 shrink-0" />
+              <span>Dados Cadastrais</span>
             </CardTitle>
             <Button
               onClick={loadFromCorpNuvemAPI}
               disabled={isLoadingFromAPI}
               variant="outline"
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 self-start sm:self-auto"
             >
               <RefreshCw className={`w-4 h-4 ${isLoadingFromAPI ? 'animate-spin' : ''}`} />
               {isLoadingFromAPI ? 'Atualizando...' : 'Re-sincronizar'}
