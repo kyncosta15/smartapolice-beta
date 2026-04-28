@@ -7,6 +7,7 @@ export const STATUS_COLORS: Record<string, string> = {
   ativa: "bg-success/20 text-success-foreground border-success/30 hover:bg-success/10 dark:bg-blue-400/20 dark:text-white dark:border-blue-400/30",
   aguardando_emissao: "bg-primary/10 text-primary border-primary/20 hover:bg-primary/5", 
   nao_renovada: "bg-red-100 text-red-800 border-red-200 hover:bg-red-50",
+  renovada: "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-50 dark:bg-blue-500/20 dark:text-blue-200 dark:border-blue-500/30",
   vencida: "bg-red-100 text-red-800 border-red-200 hover:bg-red-50",
   pendente_analise: "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-50",
   vencendo: "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-50",
@@ -20,6 +21,7 @@ export const formatStatusText = (status: PolicyStatus | string): string => {
     ativa: "ATIVA", 
     aguardando_emissao: "EM RENOVAÇÃO",
     nao_renovada: "ANTIGA",
+    renovada: "RENOVADA",
     antiga: "ANTIGA",
     vencida: "ANOS ANTERIORES",
     pendente_analise: "EM ANÁLISE",
@@ -37,6 +39,7 @@ export const getChartColor = (status: PolicyStatus | string): string => {
     ativa: "#c4a574",      // Soft Fawn (success)
     aguardando_emissao: "#0c1539",  // Prussian Blue (primary)
     nao_renovada: "#ef4444",        // Vermelho
+    renovada: "#3b82f6",            // Azul
     vencida: "#dc2626",             // Vermelho mais escuro
     pendente_analise: "#f59e0b",    // Amarelo/Laranja
     vencendo: "#f97316",            // Laranja
