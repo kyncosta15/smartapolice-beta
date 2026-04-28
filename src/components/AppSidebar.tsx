@@ -15,7 +15,7 @@ import {
   Mail,
   BarChart3,
   Heart,
-  Search,
+  Shield,
   Shield,
   LogOut,
   Users2,
