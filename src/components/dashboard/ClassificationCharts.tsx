@@ -133,9 +133,9 @@ export function ClassificationCharts({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm font-medium text-gray-900">{`${label}`}</p>
-          <p className="text-sm text-blue-600">{`Valor: ${payload[0].value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}</p>
+        <div className="bg-popover text-popover-foreground p-3 border border-border rounded-lg shadow-lg">
+          <p className="text-sm font-medium">{`${label}`}</p>
+          <p className="text-sm text-primary">{`Valor: ${payload[0].value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}</p>
         </div>
       );
     }
@@ -145,14 +145,14 @@ export function ClassificationCharts({
   const PieTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg min-w-[160px]">
-          <p className="text-sm font-semibold text-gray-900 mb-1">{payload[0].name}</p>
-          <p className="text-base font-bold text-blue-600">
-            {`Valor: ${payload[0].value.toLocaleString('pt-BR', { 
-              style: 'currency', 
+        <div className="bg-popover text-popover-foreground p-3 border border-border rounded-lg shadow-lg min-w-[160px]">
+          <p className="text-sm font-semibold mb-1">{payload[0].name}</p>
+          <p className="text-base font-bold text-primary">
+            {`Valor: ${payload[0].value.toLocaleString('pt-BR', {
+              style: 'currency',
               currency: 'BRL',
               minimumFractionDigits: 2,
-              maximumFractionDigits: 2 
+              maximumFractionDigits: 2,
             })}`}
           </p>
         </div>
