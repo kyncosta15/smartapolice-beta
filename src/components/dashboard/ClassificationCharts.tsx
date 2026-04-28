@@ -210,9 +210,9 @@ export function ClassificationCharts({
         </Card>
 
         {/* Distribuição por Seguradora */}
-        <Card className="bg-white border border-gray-200 shadow-sm" data-chart="insurer-distribution">
+        <Card className="bg-card border border-border shadow-sm" data-chart="insurer-distribution">
           <CardHeader className={`${isMobile ? 'p-3 pb-1' : 'p-6 pb-2'}`}>
-            <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold text-gray-900`}>
+            <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold text-foreground`}>
               Distribuição por Seguradora
             </CardTitle>
           </CardHeader>
