@@ -1353,9 +1353,25 @@ export function MyPolicies({
                       {moedaBR(policy.monthlyAmount)}
                     </TableCell>
                     <TableCell>
-                      <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} text-xs`}>
-                        {formatStatusText(policy.status)}
-                      </Badge>
+                      {(() => {
+                        const renewalInfo = getRenewalInfo(policy);
+                        const badge = (
+                          <Badge className={`${STATUS_COLORS[policy.status] || STATUS_COLORS.vigente} text-xs ${renewalInfo ? 'cursor-help' : ''}`}>
+                            {formatStatusText(policy.status)}
+                          </Badge>
+                        );
+                        if (!renewalInfo) return badge;
+                        return (
+                          <TooltipProvider delayDuration={150}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>{badge}</TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs">
+                                <p className="text-xs font-medium">{renewalInfo.label}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       <span className={
