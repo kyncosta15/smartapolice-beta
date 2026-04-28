@@ -2542,12 +2542,16 @@ export type Database = {
           policy_status: Database["public"]["Enums"]["policy_status"] | null
           quantidade_parcelas: number | null
           renovada: boolean | null
+          renovado_codfil: number | null
+          renovado_nosnum: number | null
           responsavel_nome: string | null
           responsavel_user_id: string | null
           segurado: string | null
           seguradora: string | null
           seguradora_empresa: string | null
           seguradora_entidade: string | null
+          sit_renovacao: number | null
+          sit_renovacao_txt: string | null
           status: string | null
           telefone: string | null
           tipo_categoria: string | null
@@ -2596,12 +2600,16 @@ export type Database = {
           policy_status?: Database["public"]["Enums"]["policy_status"] | null
           quantidade_parcelas?: number | null
           renovada?: boolean | null
+          renovado_codfil?: number | null
+          renovado_nosnum?: number | null
           responsavel_nome?: string | null
           responsavel_user_id?: string | null
           segurado?: string | null
           seguradora?: string | null
           seguradora_empresa?: string | null
           seguradora_entidade?: string | null
+          sit_renovacao?: number | null
+          sit_renovacao_txt?: string | null
           status?: string | null
           telefone?: string | null
           tipo_categoria?: string | null
@@ -2650,12 +2658,16 @@ export type Database = {
           policy_status?: Database["public"]["Enums"]["policy_status"] | null
           quantidade_parcelas?: number | null
           renovada?: boolean | null
+          renovado_codfil?: number | null
+          renovado_nosnum?: number | null
           responsavel_nome?: string | null
           responsavel_user_id?: string | null
           segurado?: string | null
           seguradora?: string | null
           seguradora_empresa?: string | null
           seguradora_entidade?: string | null
+          sit_renovacao?: number | null
+          sit_renovacao_txt?: string | null
           status?: string | null
           telefone?: string | null
           tipo_categoria?: string | null
