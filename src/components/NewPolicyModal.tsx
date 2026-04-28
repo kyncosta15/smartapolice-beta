@@ -58,22 +58,28 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
   const insertDateFmt = formatDate(policy.insertDate);
   const dueDateFmt = formatDate(policy.dueDate);
 
+  // Normalizações de exibição
+  const insurerRaw = renderValueAsString(policy.insurer);
+  const displayName = toTitleCase(policy.name);
+  const displayInsurer = toTitleCase(insurerRaw);
+  const displayType = policy.type ? capitalize(policy.type) : '';
+  const hasPolicyNumber = !!(policy.policyNumber && String(policy.policyNumber).trim());
+
+  // Cor da faixa de status (3px no topo)
+  const statusBarClass = isExpired
+    ? 'bg-red-500'
+    : isExpiring
+    ? 'bg-amber-500'
+    : 'bg-green-500';
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg p-0 overflow-hidden border-border bg-card">
-        {/* Header */}
-        <div className="relative px-6 pt-6 pb-5 border-b border-border">
-          {/* Linha decorativa de status no topo */}
-          <div
-            className={`absolute top-0 left-0 right-0 h-0.5 ${
-              isExpired
-                ? 'bg-destructive'
-                : isExpiring
-                ? 'bg-amber-500'
-                : 'bg-emerald-500'
-            }`}
-          />
+        {/* Faixa de status (3px) */}
+        <div className={`h-[3px] w-full ${statusBarClass}`} />
 
+        {/* Header */}
+        <div className="relative px-6 pt-5 pb-5 border-b border-border bg-card">
           <div className="flex items-center gap-2 mb-2">
             {isExpired ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-destructive/15 text-destructive text-[11px] font-semibold">
@@ -97,20 +103,20 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
           </div>
 
           <h2 className="text-xl font-bold text-foreground leading-tight">
-            {policy.name}
+            {displayName}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {renderValueAsString(policy.insurer)}
-            {policy.type && (
+            {displayInsurer}
+            {displayType && (
               <>
                 <span className="mx-1.5 opacity-50">·</span>
-                <span className="capitalize">{policy.type}</span>
+                <span>{displayType}</span>
               </>
             )}
           </p>
         </div>
 
-        <div className="px-6 py-5 space-y-5">
+        <div className="px-6 py-5 space-y-5 bg-card">
           {/* Banner de alerta para vencidas / vencendo */}
           {(isExpired || isExpiring) && (
             <div
@@ -152,14 +158,52 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
 
           {/* Grid 2x3 de campos */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-            <Field icon={Building} label="Seguradora" value={renderValueAsString(policy.insurer) || '—'} />
-            <Field icon={FileText} label="Número" value={policy.policyNumber || '—'} />
+            <Field icon={Building} label="Seguradora" value={displayInsurer || 'Não informado'} muted={!displayInsurer} />
+
+            {/* Número - tratamento especial para vazio */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <FileText className="h-3.5 w-3.5" />
+                <span>Número</span>
+              </div>
+              {hasPolicyNumber ? (
+                <p className="mt-1 text-sm font-semibold text-foreground truncate" title={String(policy.policyNumber)}>
+                  {policy.policyNumber}
+                </p>
+              ) : (
+                <div className="mt-1 flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-medium">
+                    Não informado
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Abrir detalhes completos para completar o número
+                      window.dispatchEvent(
+                        new CustomEvent('lovable:open-policy-details', {
+                          detail: {
+                            name: policy.name,
+                            insurer: insurerRaw,
+                            policyNumber: policy.policyNumber,
+                          },
+                        })
+                      );
+                      onClose();
+                    }}
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    Completar
+                  </button>
+                </div>
+              )}
+            </div>
+
             <Field
               icon={DollarSign}
               label="Valor Total"
               value={formatCurrency(policy.value)}
             />
-            <Field icon={Tag} label="Tipo" value={policy.type ? capitalize(policy.type) : '—'} />
+            <Field icon={Tag} label="Tipo" value={displayType || 'Não informado'} muted={!displayType} />
             <Field icon={Calendar} label="Inserida" value={insertDateFmt} />
             <Field
               icon={Calendar}
@@ -198,18 +242,20 @@ export function NewPolicyModal({ isOpen, onClose, policy }: NewPolicyModalProps)
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/20">
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-card">
           <Button variant="outline" onClick={onClose}>
             Fechar
           </Button>
           <Button
+            variant="default"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => {
               // Solicita ao DashboardContent abrir o PolicyDetailsModal completo
               window.dispatchEvent(
                 new CustomEvent('lovable:open-policy-details', {
                   detail: {
                     name: policy.name,
-                    insurer: renderValueAsString(policy.insurer),
+                    insurer: insurerRaw,
                     policyNumber: policy.policyNumber,
                   },
                 })
@@ -233,16 +279,22 @@ interface FieldProps {
   value: string;
   valueClassName?: string;
   labelClassName?: string;
+  muted?: boolean;
 }
 
-function Field({ icon: Icon, label, value, valueClassName, labelClassName }: FieldProps) {
+function Field({ icon: Icon, label, value, valueClassName, labelClassName, muted }: FieldProps) {
   return (
     <div className="min-w-0">
       <div className={`flex items-center gap-1.5 text-xs ${labelClassName ?? 'text-muted-foreground'}`}>
         <Icon className="h-3.5 w-3.5" />
         <span>{label}</span>
       </div>
-      <p className={`mt-1 text-sm font-semibold truncate ${valueClassName ?? 'text-foreground'}`} title={value}>
+      <p
+        className={`mt-1 text-sm font-semibold truncate ${
+          valueClassName ?? (muted ? 'text-muted-foreground italic font-normal' : 'text-foreground')
+        }`}
+        title={value}
+      >
         {value}
       </p>
     </div>
@@ -252,4 +304,42 @@ function Field({ icon: Icon, label, value, valueClassName, labelClassName }: Fie
 function capitalize(s: string) {
   if (!s) return s;
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+// Converte texto em CAIXA-ALTA para "Title Case" preservando siglas comuns e mantendo
+// preposições/artigos curtos em minúsculas (de, da, do, das, dos, e).
+const TITLE_CASE_LOWER = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para', 'com', 'a', 'o']);
+const TITLE_CASE_UPPER = new Set(['S.A.', 'S/A', 'SA', 'LTDA', 'ME', 'EPP', 'CIA', 'BR', 'EUA', 'EAD', 'BB', 'HDI', 'AIG', 'XL']);
+
+function toTitleCase(input: string | null | undefined): string {
+  if (!input) return '';
+  const text = String(input).trim();
+  if (!text) return '';
+
+  // Se não está em caixa alta, retorna como está (preserva input já formatado)
+  const hasLower = /[a-zà-ÿ]/.test(text);
+  if (hasLower) return text;
+
+  return text
+    .toLowerCase()
+    .split(/(\s+)/) // mantém espaços
+    .map((token, idx) => {
+      if (/^\s+$/.test(token)) return token;
+      const upper = token.toUpperCase();
+      if (TITLE_CASE_UPPER.has(upper)) return upper;
+      // primeira palavra sempre capitalizada
+      if (idx === 0) return capitalizeWord(token);
+      if (TITLE_CASE_LOWER.has(token)) return token;
+      return capitalizeWord(token);
+    })
+    .join('');
+}
+
+function capitalizeWord(word: string): string {
+  if (!word) return word;
+  // tratar hífen e apóstrofo (ex.: "anne-marie" → "Anne-Marie")
+  return word
+    .split(/([-'])/)
+    .map(part => (part === '-' || part === "'" ? part : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join('');
 }
