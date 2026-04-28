@@ -293,62 +293,111 @@ export function ClassificationCharts({
         </Card>
 
         {/* Novas Apólices (30 dias) - Span completo */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              Novas Apólices (30 dias)
+        <Card className="lg:col-span-2 overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
+                <FileText className="h-4 w-4 text-primary" />
+              </div>
+              <span className="font-semibold">Novas Apólices</span>
+              <span className="text-xs font-normal text-muted-foreground">últimos 30 dias</span>
+              <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-primary/15 text-primary text-[11px] font-semibold">
+                {recentPolicies.length}
+              </span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {recentPolicies.length > 0 ? (
-              <div className="space-y-2">
-                {recentPolicies.slice(0, 5).map((policy, index) => (
-                  <div 
-                    key={index}
-                    className="group flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 cursor-pointer transition-all"
-                    onClick={() => handlePolicyClick(policy)}
-                  >
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <p className="font-medium text-sm truncate">
-                        {policy.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {safeRenderInsurer(policy.insurer)}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center gap-6 ml-4">
-                      <div className="text-right">
-                        <p className="text-lg font-semibold text-primary">
-                          {policy.value.toLocaleString('pt-BR', { 
-                            style: 'currency', 
+              <div className="divide-y divide-border/60 -mx-2">
+                {recentPolicies.slice(0, 5).map((policy, index) => {
+                  // Determinar status baseado em dueDate
+                  const isExpired = (() => {
+                    if (!policy.dueDate) return false;
+                    const clean = String(policy.dueDate).split('T')[0];
+                    const [y, m, d] = clean.split('-').map(Number);
+                    if (!y || !m || !d) return false;
+                    const due = new Date(y, m - 1, d);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return due.getTime() < today.getTime();
+                  })();
+
+                  return (
+                    <div
+                      key={index}
+                      className="group flex items-center justify-between gap-3 px-2 py-3 hover:bg-accent/40 cursor-pointer transition-colors"
+                      onClick={() => handlePolicyClick(policy)}
+                    >
+                      {/* Nome + seguradora + tipo + badge status */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-sm text-foreground truncate">
+                            {policy.name}
+                          </p>
+                          {isExpired ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/15 text-destructive text-[10px] font-semibold">
+                              <AlertCircle className="h-3 w-3" />
+                              Vencida
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Vigente
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          {safeRenderInsurer(policy.insurer)}
+                          {policy.type && (
+                            <>
+                              <span className="mx-1.5 opacity-50">•</span>
+                              <span className="capitalize">{policy.type}</span>
+                            </>
+                          )}
+                        </p>
+                      </div>
+
+                      {/* Valor */}
+                      <div className="text-right shrink-0 hidden sm:block">
+                        <p className="text-sm font-bold text-foreground tabular-nums">
+                          {policy.value.toLocaleString('pt-BR', {
+                            style: 'currency',
                             currency: 'BRL',
                             minimumFractionDigits: 2,
-                            maximumFractionDigits: 2 
+                            maximumFractionDigits: 2
                           })}
                         </p>
-                        <p className="text-xs text-muted-foreground">Prêmio Total</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">prêmio total</p>
                       </div>
-                      
-                      <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground">
+
+                      {/* Datas */}
+                      <div className="hidden md:flex items-center gap-5 text-xs shrink-0">
                         <div className="text-right">
-                          <p className="font-medium text-foreground">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Inserida</p>
+                          <p className="font-semibold text-foreground tabular-nums mt-0.5">
                             {formatCalendarDatePtBr(policy.insertDate)}
                           </p>
-                          <p>Inserida</p>
                         </div>
-                        
                         <div className="text-right">
-                          <p className="font-medium text-foreground">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Vencimento</p>
+                          <p className={`font-semibold tabular-nums mt-0.5 ${isExpired ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`}>
                             {formatCalendarDatePtBr(policy.dueDate)}
                           </p>
-                          <p>Vencimento</p>
                         </div>
                       </div>
+
+                      {/* Ação: ver detalhes */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handlePolicyClick(policy); }}
+                        className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-md border border-border bg-background hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Ver detalhes da apólice"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
