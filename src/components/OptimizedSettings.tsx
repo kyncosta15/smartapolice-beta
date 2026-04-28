@@ -572,18 +572,18 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">Configurações</h1>
-              <p className="text-gray-600 dark:text-muted-foreground mt-1">Gerencie suas preferências e configurações do sistema</p>
+        <div className="mb-4 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-foreground">Configurações</h1>
+              <p className="text-sm text-gray-600 dark:text-muted-foreground mt-1">Gerencie suas preferências e configurações do sistema</p>
             </div>
             {onBackToHome && (
-              <Button variant="ghost" onClick={onBackToHome} className="gap-2">
+              <Button variant="ghost" onClick={onBackToHome} className="gap-2 self-start sm:self-auto h-9 px-2 sm:px-3">
                 <ArrowLeft className="h-4 w-4" />
-                Voltar ao Dashboard
+                <span className="text-sm">Voltar ao Dashboard</span>
               </Button>
             )}
           </div>
@@ -591,22 +591,24 @@ export function OptimizedSettings({ onBackToHome }: OptimizedSettingsProps) {
 
         {/* Tabs */}
         <Tabs value={activeSection} onValueChange={setActiveSection} className="w-full">
-          <TabsList className="h-10 p-1 mb-8 dark:bg-muted inline-flex">
-            {sections.map((section) => (
-              <TabsTrigger 
-                key={section.value} 
-                value={section.value}
-                className="flex items-center justify-center gap-2 px-4 text-sm dark:data-[state=active]:bg-background"
-              >
-                <section.icon className="h-4 w-4" />
-                <span>{section.label}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="-mx-3 sm:mx-0 px-3 sm:px-0 mb-4 sm:mb-8 overflow-x-auto scrollbar-none">
+            <TabsList className="h-10 p-1 dark:bg-muted inline-flex w-max">
+              {sections.map((section) => (
+                <TabsTrigger
+                  key={section.value}
+                  value={section.value}
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap dark:data-[state=active]:bg-background"
+                >
+                  <section.icon className="h-4 w-4" />
+                  <span>{section.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
-          <div className="bg-white dark:bg-card rounded-lg shadow-sm border dark:border-border min-h-[600px]">
+          <div className="bg-white dark:bg-card rounded-lg shadow-sm border dark:border-border min-h-[400px] sm:min-h-[600px]">
             {sections.map((section) => (
-              <TabsContent key={section.value} value={section.value} className="p-6 sm:p-8">
+              <TabsContent key={section.value} value={section.value} className="p-3 sm:p-6 lg:p-8 mt-0">
                 {renderContent()}
               </TabsContent>
             ))}
