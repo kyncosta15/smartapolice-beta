@@ -165,9 +165,9 @@ export function ClassificationCharts({
     <>
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-1 lg:grid-cols-2 gap-6'}`}>
         {/* Distribuição por Tipo */}
-        <Card className="bg-white border border-gray-200 shadow-sm" data-chart="type-distribution">
+        <Card className="bg-card border border-border shadow-sm" data-chart="type-distribution">
           <CardHeader className={`${isMobile ? 'p-3 pb-1' : 'p-6 pb-2'}`}>
-            <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold text-gray-900`}>
+            <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold text-foreground`}>
               Distribuição por Tipo
             </CardTitle>
           </CardHeader>
