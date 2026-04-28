@@ -66,7 +66,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const { user, profile, logout } = useAuth();
   const { open } = useSidebar();
   const navigate = useNavigate();
-  const { activeEmpresaId } = useTenant();
+  const { activeEmpresaId, activeEmpresaName } = useTenant();
   const [docCount, setDocCount] = useState<number>(0);
   const [sinistrosCount, setSinistrosCount] = useState<number>(0);
   
