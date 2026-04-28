@@ -3,35 +3,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/TenantContext';
-import { 
-  Home,
-  FileText, 
-  FileSpreadsheet,
-  BarChart3, 
-  Users2,
-  User,
-  Car,
-  ShieldAlert,
-  ShieldCheck,
-  Settings,
+import {
+  LayoutDashboard,
+  FileText,
   Upload,
+  AlertTriangle,
+  Car,
+  ShieldCheck,
+  Building2,
+  FolderOpen,
   Mail,
+  BarChart3,
+  Heart,
+  Search,
+  Shield,
   LogOut,
+  Users2,
   CheckSquare,
   Crown,
-  Heart,
-  FolderOpen,
-  Shield,
   ChevronDown,
-  Landmark,
-  Building2
-} from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,15 +33,24 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
   useSidebar,
 } from '@/components/ui/sidebar';
 
 interface AppSidebarProps {
   onSectionChange: (section: string) => void;
   activeSection: string;
+}
+
+interface NavItem {
+  id: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: 'docs' | 'sinistros';
+}
+
+interface NavSection {
+  label?: string; // Sem label = sem header de seção (ex: Dashboard)
+  items: NavItem[];
 }
 
 export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) {
@@ -60,9 +60,9 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const { activeEmpresaId } = useTenant();
   const [docCount, setDocCount] = useState<number>(0);
   const [sinistrosCount, setSinistrosCount] = useState<number>(0);
-  const [sinistrosFinalizados, setSinistrosFinalizados] = useState<number>(0);
-  const [drivingItemId, setDrivingItemId] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
 
+  // ===== Counters =====
   useEffect(() => {
     if (!user) return;
     const fetchCount = async () => {
@@ -70,307 +70,293 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         .from('documents')
         .select('id', { count: 'exact', head: true })
         .is('deleted_at', null);
-      if (activeEmpresaId) {
-        query = query.eq('account_id', activeEmpresaId);
-      }
+      if (activeEmpresaId) query = query.eq('account_id', activeEmpresaId);
       const { count } = await query;
       setDocCount(count ?? 0);
     };
     fetchCount();
-
     const channel = supabase
       .channel('doc-count-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, () => {
-        fetchCount();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, fetchCount)
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [user, activeEmpresaId]);
 
   useEffect(() => {
     if (!user) return;
     const fetchSinistrosCount = async () => {
-      // Busca todos os tickets de sinistro e classifica no client para alinhar
-      // com a lógica do dashboard (useClaimsStats). Filtros .not('in', ...) do
-      // PostgREST excluem NULLs, o que causava divergência no badge.
       const OPEN_STATUSES = ['aberto', 'em_analise', 'em_andamento', 'open'];
       const CLOSED_STATUSES = ['finalizado', 'finalizado_inatividade', 'encerrado', 'pago', 'closed', 'indenizado', 'negado'];
-
       const { data } = await supabase
         .from('tickets')
         .select('status, status_indenizacao')
         .eq('tipo', 'sinistro');
-
       const rows = data ?? [];
       let open = 0;
-      let closed = 0;
       for (const r of rows) {
         const s = (r.status ?? '').toLowerCase();
         const si = (r.status_indenizacao ?? '').toLowerCase();
         const isClosed = CLOSED_STATUSES.includes(s) || (si && CLOSED_STATUSES.includes(si));
-        if (isClosed) {
-          closed++;
-        } else if (OPEN_STATUSES.includes(s)) {
-          open++;
-        }
+        if (!isClosed && OPEN_STATUSES.includes(s)) open++;
       }
       setSinistrosCount(open);
-      setSinistrosFinalizados(closed);
     };
     fetchSinistrosCount();
-
     const channel = supabase
       .channel('sinistros-count-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => {
-        fetchSinistrosCount();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, fetchSinistrosCount)
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [user]);
-  // Verificar se é admin pelo is_admin flag
+
   const isAdmin = profile?.is_admin === true;
 
-  const centralApolicesSubItems = [
-    { id: 'policies', title: 'Minhas Apólices', icon: FileSpreadsheet },
-    { id: 'upload', title: 'Upload', icon: Upload },
-  ];
-  const centralSegurosSubItems = [
-    { id: 'seguro-garantia', title: 'Seguro Garantia', icon: Shield },
-    { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: Building2 },
-  ];
-
-  const [centralApolicesOpen, setCentralApolicesOpen] = useState(
-    centralApolicesSubItems.some(s => s.id === activeSection)
-  );
-  const [centralSegurosOpen, setCentralSegurosOpen] = useState(
-    centralSegurosSubItems.some(s => s.id === activeSection)
-  );
-
-  const groupConfig: Record<string, { items: typeof centralApolicesSubItems; open: boolean; setOpen: (v: boolean) => void }> = {
-    'central-apolices': { items: centralApolicesSubItems, open: centralApolicesOpen, setOpen: setCentralApolicesOpen },
-    'central-seguros': { items: centralSegurosSubItems, open: centralSegurosOpen, setOpen: setCentralSegurosOpen },
-  };
-
-  const clientNavigation = [
-    { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'central-apolices', title: 'Central de Apólices', icon: ShieldCheck, isGroup: true },
-    { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
-    { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
-    { id: 'central-seguros', title: 'Central de Seguros', icon: Landmark, isGroup: true },
-    { id: 'documentos', title: 'Documentos', icon: FolderOpen },
-    { id: 'contatos', title: 'Contatos', icon: Mail },
-    { id: 'export', title: 'Relatórios', icon: BarChart3 },
-    { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
-  ];
-
-  const adminNavigation = [
-    { id: 'dashboard', title: 'Dashboard', icon: Home },
-    { id: 'central-apolices', title: 'Central de Apólices', icon: ShieldCheck, isGroup: true },
-    { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
-    { id: 'claims', title: 'Sinistros', icon: ShieldAlert },
-    { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
-    { id: 'central-seguros', title: 'Central de Seguros', icon: Landmark, isGroup: true },
-    { id: 'documentos', title: 'Documentos', icon: FolderOpen },
-    { id: 'aprovacoes', title: 'Aprovações', icon: CheckSquare },
-    { id: 'contatos', title: 'Contatos', icon: Mail },
-    { id: 'export', title: 'Relatórios', icon: BarChart3 },
-    { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
+  // ===== Navigation organizada em seções (estilo do print) =====
+  const clientSections: NavSection[] = [
+    {
+      items: [{ id: 'dashboard', title: 'Dashboard', icon: LayoutDashboard }],
+    },
+    {
+      label: 'Apólices',
+      items: [
+        { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+        { id: 'upload', title: 'Upload', icon: Upload },
+      ],
+    },
+    {
+      label: 'Gestão',
+      items: [
+        { id: 'claims', title: 'Sinistros', icon: AlertTriangle, badge: 'sinistros' },
+        { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+      ],
+    },
+    {
+      label: 'Seguros',
+      items: [
+        { id: 'seguro-garantia', title: 'Seguro Garantia', icon: ShieldCheck },
+        { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: Building2 },
+      ],
+    },
+    {
+      label: 'Conteúdo',
+      items: [
+        { id: 'documentos', title: 'Documentos', icon: FolderOpen, badge: 'docs' },
+        { id: 'contatos', title: 'Contatos', icon: Mail },
+        { id: 'export', title: 'Relatórios', icon: BarChart3 },
+        { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
+      ],
+    },
   ];
 
-  const navigation = isAdmin 
-    ? [] 
-    : clientNavigation;
+  const adminSections: NavSection[] = [
+    {
+      items: [{ id: 'dashboard', title: 'Dashboard', icon: LayoutDashboard }],
+    },
+    {
+      label: 'Apólices',
+      items: [
+        { id: 'policies', title: 'Minhas Apólices', icon: FileText },
+        { id: 'upload', title: 'Upload', icon: Upload },
+      ],
+    },
+    {
+      label: 'Gestão',
+      items: [
+        { id: 'users', title: 'Vidas e Beneficiários', icon: Users2 },
+        { id: 'claims', title: 'Sinistros', icon: AlertTriangle, badge: 'sinistros' },
+        { id: 'frotas', title: 'Gestão de Frotas', icon: Car },
+        { id: 'aprovacoes', title: 'Aprovações', icon: CheckSquare },
+      ],
+    },
+    {
+      label: 'Seguros',
+      items: [
+        { id: 'seguro-garantia', title: 'Seguro Garantia', icon: ShieldCheck },
+        { id: 'fianca-locaticia', title: 'Fiança Locatícia', icon: Building2 },
+      ],
+    },
+    {
+      label: 'Conteúdo',
+      items: [
+        { id: 'documentos', title: 'Documentos', icon: FolderOpen, badge: 'docs' },
+        { id: 'contatos', title: 'Contatos', icon: Mail },
+        { id: 'export', title: 'Relatórios', icon: BarChart3 },
+        { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
+      ],
+    },
+  ];
+
+  const sections = isAdmin ? adminSections : clientSections;
+
+  // Atalho de busca: ⌘K / Ctrl+K
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+        // Foca no input de busca global se existir
+        const input = document.querySelector<HTMLInputElement>('[data-global-search-input]');
+        input?.focus();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const userName = profile?.full_name || (user as any)?.email?.split('@')[0] || 'Usuário';
+  const userInitials = userName.slice(0, 2).toUpperCase();
+  const userRole = isAdmin ? 'Admin' : (profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'Usuário');
 
   return (
-    <Sidebar collapsible="icon" className="hidden lg:flex border-r border-border/50">
-      {/* Header */}
-      <SidebarHeader className="border-b border-border/30 bg-gradient-to-b from-sidebar-background to-sidebar-accent/10 dark:from-sidebar-background dark:to-sidebar-accent/5">
-        <div className="flex items-center justify-center p-4">
-          {open ? (
-            <SmartApóliceLogo size="sm" showText={true} />
-          ) : (
-            <SmartApóliceLogo size="sm" showText={false} />
+    <Sidebar collapsible="icon" className="hidden lg:flex border-r border-sidebar-border">
+      {/* ===== Header: Logo SmartControl ===== */}
+      <SidebarHeader className="border-b border-sidebar-border px-3 py-4">
+        <div className={cn("flex items-center gap-2.5", !open && "justify-center")}>
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary shadow-sm shrink-0">
+            <Shield className="h-5 w-5 text-primary-foreground" strokeWidth={2.2} />
+          </div>
+          {open && (
+            <div className="flex items-baseline gap-0.5 leading-none">
+              <span className="text-base font-bold text-sidebar-foreground">Smart</span>
+              <span className="text-base font-bold text-primary">Control</span>
+            </div>
           )}
         </div>
       </SidebarHeader>
 
-      {/* Navigation */}
-      <SidebarContent className={cn("px-2", open ? "py-4" : "py-6")}>
-        {/* Admin Panel Button */}
+      {/* ===== Search bar ===== */}
+      {open && (
+        <div className="px-3 pt-3 pb-1">
+          <button
+            type="button"
+            onClick={() => {
+              const input = document.querySelector<HTMLInputElement>('[data-global-search-input]');
+              input?.focus();
+            }}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent/40 hover:bg-sidebar-accent/60 border border-sidebar-border/60 text-xs text-muted-foreground transition-colors"
+          >
+            <Search className="h-3.5 w-3.5 shrink-0" />
+            <span className="flex-1 text-left">Buscar...</span>
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-sidebar-background border border-sidebar-border text-[10px] font-mono text-muted-foreground">
+              ⌘K
+            </kbd>
+          </button>
+        </div>
+      )}
+
+      {/* ===== Navigation ===== */}
+      <SidebarContent className="px-2 py-2">
+        {/* Botão Painel Admin (só admin) */}
         {isAdmin && (
-          <div className={cn("mb-4", open ? "px-2" : "px-0")}>
+          <div className={cn("mb-2", open ? "px-1" : "px-0 flex justify-center")}>
             <Button
               onClick={() => navigate('/admin')}
               className={cn(
-                "w-full justify-start gap-3 font-medium",
-                "bg-gradient-to-r from-primary to-primary/80",
-                "hover:from-primary/90 hover:to-primary/70",
-                "text-primary-foreground shadow-lg",
-                "transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
-                open ? "rounded-xl px-3 py-2.5" : "rounded-full w-10 h-10 p-0 justify-center"
+                "gap-2 font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm",
+                open ? "w-full justify-start rounded-lg px-3 py-2 h-9" : "rounded-full w-9 h-9 p-0 justify-center"
               )}
             >
-              <Crown className="size-4" />
+              <Crown className="size-4 shrink-0" />
               {open && <span>Painel Admin</span>}
             </Button>
           </div>
         )}
-        
-        <SidebarMenu className={cn(open ? "space-y-1" : "space-y-4")}>
-          {navigation.map((item) => {
-            if ((item as any).isGroup && groupConfig[item.id]) {
-              const cfg = groupConfig[item.id];
-              const isSubActive = cfg.items.some(sub => sub.id === activeSection);
-              return (
-                <Collapsible
-                  key={item.id}
-                  open={cfg.open}
-                  onOpenChange={cfg.setOpen}
-                  className="group/collapsible"
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton
-                        tooltip={item.title}
-                        className={cn(
-                          "group flex items-center gap-3 text-sm w-full",
-                          "transition-all duration-200 ease-out font-medium relative overflow-hidden",
-                          "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                          "hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]",
-                          "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
-                          open ? "rounded-xl px-3 py-2.5" : "rounded-full w-10 h-10 p-0 justify-center",
-                          isSubActive && [
-                            "bg-gradient-to-r from-primary/15 to-primary/5 text-foreground shadow-sm border border-primary/10",
-                          ]
-                        )}
-                      >
-                        <item.icon className={cn(
-                          "size-4 transition-all duration-200 flex-shrink-0",
-                          isSubActive
-                            ? "text-foreground drop-shadow-sm"
-                            : "text-muted-foreground group-hover:text-accent-foreground group-hover:scale-110"
-                        )} />
-                        {open && <span className="truncate">{item.title}</span>}
-                        {open && (
-                          <ChevronDown className={cn(
-                            "ml-auto size-4 text-muted-foreground transition-transform duration-200",
-                            cfg.open && "rotate-180"
-                          )} />
-                        )}
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    {open && (
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {cfg.items.map((sub) => (
-                            <SidebarMenuSubItem key={sub.id}>
-                              <SidebarMenuSubButton
-                                onClick={() => onSectionChange(sub.id)}
-                                isActive={activeSection === sub.id}
-                                className={cn(
-                                  "cursor-pointer transition-all duration-200",
-                                  activeSection === sub.id && "text-foreground font-medium bg-primary/10"
-                                )}
-                              >
-                                <sub.icon className="size-3.5 mr-2 flex-shrink-0" />
-                                <span>{sub.title}</span>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    )}
-                  </SidebarMenuItem>
-                </Collapsible>
-              );
-            }
 
-            return (
-            <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton
-                onClick={() => {
-                  if (item.id === 'frotas') {
-                    setDrivingItemId('frotas');
-                    window.setTimeout(() => setDrivingItemId(null), 1200);
-                  }
-                  onSectionChange(item.id);
-                }}
-                isActive={activeSection === item.id}
-                tooltip={item.title}
-                className={cn(
-                  "group flex items-center gap-3 text-sm w-full",
-                  "transition-all duration-200 ease-out font-medium relative overflow-hidden",
-                  "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                  "hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]",
-                  "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
-                  open ? "rounded-xl px-3 py-2.5" : "rounded-full w-10 h-10 p-0 justify-center",
-                  activeSection === item.id && [
-                    "bg-gradient-to-r from-primary/15 to-primary/5 text-foreground shadow-sm border border-primary/10",
-                    "hover:from-primary/20 hover:to-primary/8",
-                    open && "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-gradient-to-b before:from-primary before:to-primary/80 before:rounded-r-full"
-                  ]
-                )}
-              >
-                <item.icon className={cn(
-                  "size-4 transition-all duration-200 flex-shrink-0",
-                  activeSection === item.id 
-                    ? "text-foreground drop-shadow-sm" 
-                    : "text-muted-foreground group-hover:text-accent-foreground group-hover:scale-110",
-                  drivingItemId === item.id && "car-drive-animation"
-                )} />
-                {open && (
-                  <span className={cn(
-                    "truncate transition-opacity duration-200",
-                    drivingItemId === item.id && "opacity-0"
-                  )}>{item.title}</span>
-                )}
-                {open && item.id === 'documentos' && docCount > 0 && (
-                  <span className="ml-auto text-[10px] font-semibold bg-primary/15 text-primary rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-                    {docCount}
-                  </span>
-                )}
-                {open && item.id === 'claims' && sinistrosCount > 0 && (
-                  <div className="ml-auto flex items-center gap-1">
-                    <span className="text-[10px] font-semibold bg-destructive/15 text-destructive rounded-full px-1.5 py-0.5 min-w-[20px] text-center" title="Em Aberto">
-                      {sinistrosCount}
-                    </span>
-                    {sinistrosFinalizados > 0 && (
-                      <span className="text-[10px] font-semibold bg-green-500/15 text-green-600 rounded-full px-1.5 py-0.5 min-w-[20px] text-center" title="Finalizados">
-                        {sinistrosFinalizados}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {activeSection === item.id && open && item.id !== 'documentos' && item.id !== 'claims' && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                )}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
+        {sections.map((section, idx) => (
+          <div key={section.label ?? `section-${idx}`} className={cn(idx > 0 && "mt-4")}>
+            {/* Section label (uppercase) */}
+            {section.label && open && (
+              <div className="px-3 pb-1.5">
+                <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  {section.label}
+                </span>
+              </div>
+            )}
+
+            <SidebarMenu className="gap-0.5">
+              {section.items.map((item) => {
+                const isActive = activeSection === item.id;
+                return (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      onClick={() => onSectionChange(item.id)}
+                      isActive={isActive}
+                      tooltip={item.title}
+                      className={cn(
+                        "group flex items-center gap-2.5 text-sm w-full font-medium",
+                        "transition-colors duration-150",
+                        open ? "rounded-lg px-3 py-2 h-9" : "rounded-lg w-9 h-9 p-0 justify-center mx-auto",
+                        isActive
+                          ? "bg-primary/15 text-foreground hover:bg-primary/20 dark:bg-primary/25 dark:text-primary-foreground"
+                          : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                      )}
+                    >
+                      <item.icon className={cn(
+                        "size-[18px] shrink-0 transition-colors",
+                        isActive ? "text-primary dark:text-primary-foreground" : "text-muted-foreground group-hover:text-sidebar-foreground"
+                      )} />
+                      {open && (
+                        <>
+                          <span className="truncate flex-1 text-left">{item.title}</span>
+                          {/* Badges */}
+                          {item.badge === 'docs' && docCount > 0 && (
+                            <span className="text-[10px] font-semibold bg-sidebar-accent/80 text-muted-foreground rounded-md px-1.5 py-0.5 min-w-[20px] text-center">
+                              {docCount}
+                            </span>
+                          )}
+                          {item.badge === 'sinistros' && sinistrosCount > 0 && (
+                            <span className="text-[10px] font-semibold bg-destructive text-destructive-foreground rounded-md px-1.5 py-0.5 min-w-[20px] text-center">
+                              {sinistrosCount}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </div>
+        ))}
       </SidebarContent>
 
-      {/* Footer - Logout Button */}
-      <SidebarFooter className="border-t border-border/30 bg-gradient-to-t from-sidebar-background to-sidebar-accent/10 dark:from-sidebar-background dark:to-sidebar-accent/5 p-2">
+      {/* ===== Footer: Avatar + nome + role + Sair ===== */}
+      <SidebarFooter className="border-t border-sidebar-border p-2 gap-1">
+        <div className={cn(
+          "flex items-center gap-2.5 rounded-lg px-2 py-2",
+          open ? "" : "justify-center"
+        )}>
+          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground text-xs font-bold shrink-0">
+            {userInitials}
+          </div>
+          {open && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
+                {userName}
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-tight">
+                {userRole}
+              </p>
+            </div>
+          )}
+          {open && (
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          )}
+        </div>
+
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={logout}
               tooltip="Sair do sistema"
               className={cn(
-                "flex items-center gap-3 text-sm w-full",
-                "text-muted-foreground hover:text-accent-foreground hover:bg-accent",
-                "transition-all duration-200 ease-out font-medium",
-                "hover:scale-[1.01] active:scale-[0.99] hover:shadow-sm",
-                "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1",
-                // Quando colapsado: circular, caso contrário: rounded-xl
-                open ? "rounded-xl px-3 py-2.5" : "rounded-full w-10 h-10 p-0 justify-center"
+                "flex items-center gap-2.5 text-sm w-full font-medium",
+                "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/60",
+                "transition-colors duration-150",
+                open ? "rounded-lg px-3 py-2 h-9" : "rounded-lg w-9 h-9 p-0 justify-center mx-auto"
               )}
             >
-              <LogOut className="size-4 transition-transform duration-200 flex-shrink-0" />
+              <LogOut className="size-[18px] shrink-0" />
               {open && <span className="truncate">Sair</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
