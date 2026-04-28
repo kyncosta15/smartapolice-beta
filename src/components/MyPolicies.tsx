@@ -294,8 +294,52 @@ export function MyPolicies({
       vehicleModel: policy.vehicleModel || (policy as any).modelo_veiculo,
       // Campo específico saúde
       nome_plano_saude: policy.nome_plano_saude,
+      // Campos de renovação
+      renovado_nosnum: (policy as any).renovado_nosnum ?? null,
+      renovado_codfil: (policy as any).renovado_codfil ?? null,
+      sit_renovacao_txt: (policy as any).sit_renovacao_txt ?? null,
     };
   });
+
+  // Mapa para resolver relações de renovação: "codfil-nosnum" -> { policyNumber, id, endDate }
+  const renewalLookup = React.useMemo(() => {
+    const byKey = new Map<string, { policyNumber: string; id: string; endDate?: string }>();
+    const renewedBy = new Map<string, { policyNumber: string; id: string; endDate?: string }>();
+    policiesWithStatus.forEach(p => {
+      if (p.codfil != null && p.nosnum != null) {
+        byKey.set(`${p.codfil}-${p.nosnum}`, { policyNumber: p.policyNumber, id: p.id, endDate: p.endDate });
+      }
+    });
+    // renewedBy: para cada apólice antiga (que tem renovado_nosnum apontando para a nova),
+    // mapeamos antiga -> nova. Inverso: nova -> antiga (quem renovou)
+    policiesWithStatus.forEach(p => {
+      if (p.renovado_nosnum != null && p.renovado_codfil != null) {
+        const newKey = `${p.renovado_codfil}-${p.renovado_nosnum}`;
+        // p é a antiga, newKey aponta para a nova
+        renewedBy.set(newKey, { policyNumber: p.policyNumber, id: p.id, endDate: p.endDate });
+      }
+    });
+    return { byKey, renewedBy };
+  }, [policiesWithStatus]);
+
+  const getRenewalInfo = (policy: PolicyWithStatus): { label: string; targetNumber: string } | null => {
+    // Caso 1: esta apólice foi RENOVADA → encontrar a nova
+    if (policy.status === 'renovada' && policy.renovado_nosnum != null && policy.renovado_codfil != null) {
+      const target = renewalLookup.byKey.get(`${policy.renovado_codfil}-${policy.renovado_nosnum}`);
+      if (target) {
+        return { label: `Renovada pela apólice ${target.policyNumber}`, targetNumber: target.policyNumber };
+      }
+      return { label: `Renovada pela apólice nº ${policy.renovado_nosnum}`, targetNumber: String(policy.renovado_nosnum) };
+    }
+    // Caso 2: esta é uma apólice NOVA que renovou outra → encontrar a antiga
+    if (policy.codfil != null && policy.nosnum != null) {
+      const old = renewalLookup.renewedBy.get(`${policy.codfil}-${policy.nosnum}`);
+      if (old) {
+        return { label: `Renovação da apólice ${old.policyNumber}`, targetNumber: old.policyNumber };
+      }
+    }
+    return null;
+  };
 
   const handleDeleteClick = (e: React.MouseEvent, policy: PolicyWithStatus) => {
     e.preventDefault();
