@@ -199,7 +199,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   // (busca global removida da sidebar)
 
-  const { activeEmpresaName } = useTenant();
+  // activeEmpresaName já vem de useTenant() no topo
   const userName = profile?.full_name || (user as any)?.email?.split('@')[0] || 'Usuário';
   const accountLabel = (activeEmpresaName || userName).toUpperCase();
   const accountInitials = accountLabel
