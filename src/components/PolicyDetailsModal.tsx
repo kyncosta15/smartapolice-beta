@@ -55,31 +55,12 @@ export function PolicyDetailsModal({ isOpen, onClose, policy, onDelete, onUpdate
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto bg-background p-0 gap-0">
-          {/* Sticky Header */}
-          <DialogHeader className="border-b border-border pb-4 px-5 pt-5 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-            <div className="flex items-center justify-between gap-2">
-              <DialogTitle className="text-xl font-bold text-foreground">
-                Detalhes da Apólice
-              </DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDelete}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-              >
-                <Trash2 className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Excluir</span>
-              </Button>
-            </div>
-          </DialogHeader>
+          {/* Hero Header — visão geral da apólice */}
+          <div className="px-5 pt-5 pb-5 sm:px-6 sm:pt-6 sm:pb-6 border-b border-border bg-gradient-to-b from-muted/30 to-transparent">
+            <PolicyOverviewHeader policy={policy} onDelete={handleDelete} />
+          </div>
 
           <div className="p-5 space-y-6">
-            {/* 1. Smart Header desativado a pedido — exibia "Resumo da apólice hoje" e progresso de pagamentos */}
-
-            {/* Action Cards e Insights desativados a pedido */}
-
-            {/* Cronograma de parcelas desativado a pedido */}
-
 
             {/* 5. Detailed Cards - Clean grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
