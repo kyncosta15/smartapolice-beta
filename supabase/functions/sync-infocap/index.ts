@@ -510,6 +510,20 @@ Deno.serve(async (req) => {
         const nomeClienteApolice = ap.cliente || detalhesApolice?.cliente || detalhesApolice?.nome_cliente || nomeCliente;
         console.log(`🏢 Nome do cliente da apólice ${ap.nosnum}: "${nomeClienteApolice}" (ap.cliente: "${ap.cliente}", detalhes: "${detalhesApolice?.cliente}")`);
           
+        // Capturar dados de renovação detalhados da API
+        // renovado_nosnum/renovado_codfil: apontam para a apólice NOVA que SUBSTITUIU esta
+        const renovadoNosnumRaw = detalhesApolice?.renovado_nosnum ?? ap.renovado_nosnum ?? null;
+        const renovadoCodfilRaw = detalhesApolice?.renovado_codfil ?? ap.renovado_codfil ?? null;
+        const renovadoNosnum = renovadoNosnumRaw ? parseInt(String(renovadoNosnumRaw)) || null : null;
+        const renovadoCodfil = renovadoCodfilRaw ? parseInt(String(renovadoCodfilRaw)) || null : null;
+        const sitRenovacaoNum = sitRenovacao ? parseInt(String(sitRenovacao)) || null : null;
+        const sitRenovacaoTxt = detalhesApolice?.sit_renovacao_txt
+          || detalhesApolice?.sitRenovacaoTxt
+          || ap.sit_renovacao_txt
+          || null;
+
+        console.log(`🔁 Renovação detalhada - sit:${sitRenovacaoNum} txt:${sitRenovacaoTxt} | renovado_por: codfil=${renovadoCodfil}, nosnum=${renovadoNosnum}`);
+
         const policyData = {
           user_id: user.id,
           documento: cleanDocument,
@@ -525,6 +539,10 @@ Deno.serve(async (req) => {
           quantidade_parcelas: numParcelas,
           status: statusPolicy,
           renovada: foiRenovada,
+          renovado_nosnum: renovadoNosnum,
+          renovado_codfil: renovadoCodfil,
+          sit_renovacao: sitRenovacaoNum,
+          sit_renovacao_txt: sitRenovacaoTxt,
           corretora: 'RCaldas Corretora de Seguros',
           extraction_timestamp: new Date().toISOString(),
           created_by_extraction: true,
