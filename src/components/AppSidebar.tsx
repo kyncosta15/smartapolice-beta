@@ -18,6 +18,7 @@ import {
   Heart,
   Shield,
   LogOut,
+  Settings,
   Users2,
   CheckSquare,
   Crown,
@@ -25,6 +26,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Sidebar,
   SidebarContent,
@@ -57,7 +66,7 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
   const { user, profile, logout } = useAuth();
   const { open } = useSidebar();
   const navigate = useNavigate();
-  const { activeEmpresaId } = useTenant();
+  const { activeEmpresaId, activeEmpresaName } = useTenant();
   const [docCount, setDocCount] = useState<number>(0);
   const [sinistrosCount, setSinistrosCount] = useState<number>(0);
   
@@ -190,8 +199,16 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
 
   // (busca global removida da sidebar)
 
+  // activeEmpresaName já vem de useTenant() no topo
   const userName = profile?.full_name || (user as any)?.email?.split('@')[0] || 'Usuário';
-  const userInitials = userName.slice(0, 2).toUpperCase();
+  const accountLabel = (activeEmpresaName || userName).toUpperCase();
+  const accountInitials = accountLabel
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase() || 'SA';
   const userRole = isAdmin ? 'Admin' : (profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'Usuário');
 
   return (
@@ -289,47 +306,73 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         ))}
       </SidebarContent>
 
-      {/* ===== Footer: Avatar + nome + role + Sair ===== */}
-      <SidebarFooter className="border-t border-sidebar-border p-2 gap-1">
-        <div className={cn(
-          "flex items-center gap-2.5 rounded-lg px-2 py-2",
-          open ? "" : "justify-center"
-        )}>
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground text-xs font-bold shrink-0">
-            {userInitials}
-          </div>
-          {open && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
-                {userName}
-              </p>
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                {userRole}
-              </p>
-            </div>
-          )}
-          {open && (
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          )}
-        </div>
-
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={logout}
-              tooltip="Sair do sistema"
+      {/* ===== Footer: Account dropdown (estilo SANDBOX ACCOUNT) ===== */}
+      <SidebarFooter className="border-t border-sidebar-border p-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
               className={cn(
-                "flex items-center gap-2.5 text-sm w-full font-medium",
-                "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/60",
-                "transition-colors duration-150",
-                open ? "rounded-lg px-3 py-2 h-9" : "rounded-lg w-9 h-9 p-0 justify-center mx-auto"
+                "flex items-center gap-2.5 rounded-lg px-2 py-2 w-full",
+                "hover:bg-sidebar-accent/60 transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                !open && "justify-center"
               )}
+              aria-label="Menu da conta"
             >
-              <LogOut className="size-[18px] shrink-0" />
-              {open && <span className="truncate">Sair</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                {accountInitials}
+              </div>
+              {open && (
+                <>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight tracking-wide">
+                      {accountLabel}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground leading-tight truncate">
+                      {userRole}
+                    </p>
+                  </div>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                </>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="top"
+            align="start"
+            className="w-60 bg-card border-border z-[9999]"
+          >
+            <DropdownMenuLabel className="flex items-center gap-2.5 py-2">
+              <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                {accountInitials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate tracking-wide">
+                  {accountLabel}
+                </p>
+                <p className="text-[11px] font-normal text-muted-foreground truncate">
+                  {userRole}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onSectionChange('settings')}
+              className="cursor-pointer gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              <span>Configurações</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={logout}
+              className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sair</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
