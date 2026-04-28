@@ -279,16 +279,22 @@ interface FieldProps {
   value: string;
   valueClassName?: string;
   labelClassName?: string;
+  muted?: boolean;
 }
 
-function Field({ icon: Icon, label, value, valueClassName, labelClassName }: FieldProps) {
+function Field({ icon: Icon, label, value, valueClassName, labelClassName, muted }: FieldProps) {
   return (
     <div className="min-w-0">
       <div className={`flex items-center gap-1.5 text-xs ${labelClassName ?? 'text-muted-foreground'}`}>
         <Icon className="h-3.5 w-3.5" />
         <span>{label}</span>
       </div>
-      <p className={`mt-1 text-sm font-semibold truncate ${valueClassName ?? 'text-foreground'}`} title={value}>
+      <p
+        className={`mt-1 text-sm font-semibold truncate ${
+          valueClassName ?? (muted ? 'text-muted-foreground italic font-normal' : 'text-foreground')
+        }`}
+        title={value}
+      >
         {value}
       </p>
     </div>
@@ -298,4 +304,42 @@ function Field({ icon: Icon, label, value, valueClassName, labelClassName }: Fie
 function capitalize(s: string) {
   if (!s) return s;
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+// Converte texto em CAIXA-ALTA para "Title Case" preservando siglas comuns e mantendo
+// preposições/artigos curtos em minúsculas (de, da, do, das, dos, e).
+const TITLE_CASE_LOWER = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para', 'com', 'a', 'o']);
+const TITLE_CASE_UPPER = new Set(['S.A.', 'S/A', 'SA', 'LTDA', 'ME', 'EPP', 'CIA', 'BR', 'EUA', 'EAD', 'BB', 'HDI', 'AIG', 'XL']);
+
+function toTitleCase(input: string | null | undefined): string {
+  if (!input) return '';
+  const text = String(input).trim();
+  if (!text) return '';
+
+  // Se não está em caixa alta, retorna como está (preserva input já formatado)
+  const hasLower = /[a-zà-ÿ]/.test(text);
+  if (hasLower) return text;
+
+  return text
+    .toLowerCase()
+    .split(/(\s+)/) // mantém espaços
+    .map((token, idx) => {
+      if (/^\s+$/.test(token)) return token;
+      const upper = token.toUpperCase();
+      if (TITLE_CASE_UPPER.has(upper)) return upper;
+      // primeira palavra sempre capitalizada
+      if (idx === 0) return capitalizeWord(token);
+      if (TITLE_CASE_LOWER.has(token)) return token;
+      return capitalizeWord(token);
+    })
+    .join('');
+}
+
+function capitalizeWord(word: string): string {
+  if (!word) return word;
+  // tratar hífen e apóstrofo (ex.: "anne-marie" → "Anne-Marie")
+  return word
+    .split(/([-'])/)
+    .map(part => (part === '-' || part === "'" ? part : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join('');
 }
