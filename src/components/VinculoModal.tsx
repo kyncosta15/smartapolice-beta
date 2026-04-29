@@ -107,6 +107,7 @@ const LIFECYCLE_META: Record<LifecycleStatus, { label: string; Icon: typeof Chec
 
 export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModalProps) {
   const [query, setQuery] = useState('');
+  const [showAll, setShowAll] = useState(false);
 
   const expectedLen = tipo === 'pf' ? 11 : 14;
 
@@ -117,10 +118,17 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
 
   const lifecycleMap = useMemo(() => classifyPolicies(subset), [subset]);
 
+  const visibleSubset = useMemo(() => {
+    if (showAll) return subset;
+    return subset.filter((p) => lifecycleMap.get(p.id) === 'vigente');
+  }, [subset, lifecycleMap, showAll]);
+
+  const hiddenCount = subset.length - visibleSubset.length;
+
   const filtered = useMemo(() => {
-    if (!query.trim()) return subset;
+    if (!query.trim()) return visibleSubset;
     const q = query.toLowerCase().trim();
-    return subset.filter((p) => {
+    return visibleSubset.filter((p) => {
       const doc = extractDocumento(p).toLowerCase();
       return (
         p.name?.toLowerCase().includes(q) ||
@@ -129,7 +137,7 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
         doc.includes(q)
       );
     });
-  }, [subset, query]);
+  }, [visibleSubset, query]);
 
   const config = tipo === 'pf'
     ? { Icon: Users, title: 'Pessoa Física', sublabel: 'Apólices vinculadas a CPF', tone: 'pf' as const }
@@ -182,6 +190,25 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
               className="pl-9 h-9 text-sm"
             />
           </div>
+          {hiddenCount > 0 && (
+            <div className="mt-2.5 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-muted-foreground">
+                {showAll
+                  ? 'Mostrando todas as apólices (vigentes, renovadas e antigas).'
+                  : `Mostrando apenas vigentes. ${hiddenCount} ${hiddenCount === 1 ? 'apólice oculta' : 'apólices ocultas'}.`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAll((v) => !v)}
+                className={cn(
+                  'text-[11px] font-medium underline-offset-2 hover:underline transition-colors',
+                  config.tone === 'pf' ? 'text-pf' : 'text-pj'
+                )}
+              >
+                {showAll ? 'Mostrar só vigentes' : 'Mostrar todas'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Lista */}
