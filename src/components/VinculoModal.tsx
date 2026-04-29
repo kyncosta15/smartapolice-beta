@@ -190,6 +190,25 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
               className="pl-9 h-9 text-sm"
             />
           </div>
+          {hiddenCount > 0 && (
+            <div className="mt-2.5 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-muted-foreground">
+                {showAll
+                  ? 'Mostrando todas as apólices (vigentes, renovadas e antigas).'
+                  : `Mostrando apenas vigentes. ${hiddenCount} ${hiddenCount === 1 ? 'apólice oculta' : 'apólices ocultas'}.`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAll((v) => !v)}
+                className={cn(
+                  'text-[11px] font-medium underline-offset-2 hover:underline transition-colors',
+                  config.tone === 'pf' ? 'text-pf' : 'text-pj'
+                )}
+              >
+                {showAll ? 'Mostrar só vigentes' : 'Mostrar todas'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Lista */}
