@@ -326,10 +326,14 @@ export class FipePDFGenerator {
   }
 
   private addVehiclesTable(veiculos: FrotaVeiculo[], empresa: string) {
+    // Calcular margens para centralizar a tabela
+    const tableWidth = 55 + 25 + 28 + 18 + 25 + 32 + 32; // 215mm
+    const sideMargin = Math.max(this.margin, (this.pageWidth - tableWidth) / 2);
+
     this.doc.setTextColor(12, 21, 57);
     this.doc.setFontSize(13);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Lista de Veículos - Tabela FIPE', this.margin, this.currentY);
+    this.doc.text('Lista de Veículos - Tabela FIPE', this.pageWidth / 2, this.currentY, { align: 'center' });
 
     this.currentY += 6;
 
@@ -361,7 +365,7 @@ export class FipePDFGenerator {
       alternateRowStyles: {
         fillColor: [245, 247, 250],
       },
-      margin: { left: this.margin, right: this.margin },
+      margin: { left: sideMargin, right: sideMargin },
       styles: {
         cellPadding: 3,
         overflow: 'linebreak',
