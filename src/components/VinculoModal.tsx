@@ -107,6 +107,7 @@ const LIFECYCLE_META: Record<LifecycleStatus, { label: string; Icon: typeof Chec
 
 export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModalProps) {
   const [query, setQuery] = useState('');
+  const [showAll, setShowAll] = useState(false);
 
   const expectedLen = tipo === 'pf' ? 11 : 14;
 
@@ -117,10 +118,17 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
 
   const lifecycleMap = useMemo(() => classifyPolicies(subset), [subset]);
 
+  const visibleSubset = useMemo(() => {
+    if (showAll) return subset;
+    return subset.filter((p) => lifecycleMap.get(p.id) === 'vigente');
+  }, [subset, lifecycleMap, showAll]);
+
+  const hiddenCount = subset.length - visibleSubset.length;
+
   const filtered = useMemo(() => {
-    if (!query.trim()) return subset;
+    if (!query.trim()) return visibleSubset;
     const q = query.toLowerCase().trim();
-    return subset.filter((p) => {
+    return visibleSubset.filter((p) => {
       const doc = extractDocumento(p).toLowerCase();
       return (
         p.name?.toLowerCase().includes(q) ||
