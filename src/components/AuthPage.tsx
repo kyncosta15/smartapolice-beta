@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Shield, Mail, Lock, User, Building, Phone, FileText, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { progressToast } from '@/hooks/use-progress-toast';
 import { Spinner } from '@/components/ui/spinner';
 import { useClienteLookup } from '@/hooks/useClienteLookup';
 import { translateAuthError } from '@/lib/authErrorMessages';
@@ -66,9 +67,11 @@ export const AuthPage = () => {
       const result = await login(loginData.email, loginData.password);
       
       if (result.success) {
-        toast({
-          title: "Sucesso",
-          description: "Login realizado com sucesso!",
+        progressToast({
+          title: "Login realizado com sucesso!",
+          variant: "success",
+          duration: 2000,
+          showProgress: true,
         });
       } else {
         toast({
