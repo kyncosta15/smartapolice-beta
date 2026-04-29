@@ -326,10 +326,6 @@ export class FipePDFGenerator {
   }
 
   private addVehiclesTable(veiculos: FrotaVeiculo[], empresa: string) {
-    // Calcular margens para centralizar a tabela
-    const tableWidth = 55 + 25 + 28 + 18 + 25 + 32 + 32; // 215mm
-    const sideMargin = Math.max(this.margin, (this.pageWidth - tableWidth) / 2);
-
     this.doc.setTextColor(12, 21, 57);
     this.doc.setFontSize(13);
     this.doc.setFont('helvetica', 'bold');
@@ -365,19 +361,20 @@ export class FipePDFGenerator {
       alternateRowStyles: {
         fillColor: [245, 247, 250],
       },
-      margin: { left: sideMargin, right: sideMargin },
+      margin: { left: this.margin, right: this.margin },
+      tableWidth: 'auto',
       styles: {
         cellPadding: 3,
         overflow: 'linebreak',
       },
       columnStyles: {
-        0: { cellWidth: 55 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 28 },
-        3: { cellWidth: 18 },
-        4: { cellWidth: 25 },
-        5: { cellWidth: 32 },
-        6: { cellWidth: 32 },
+        0: { cellWidth: 75 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 32 },
+        5: { cellWidth: 44 },
+        6: { cellWidth: 45 },
       },
       didDrawPage: () => {
         const pageCount = this.doc.getNumberOfPages();
