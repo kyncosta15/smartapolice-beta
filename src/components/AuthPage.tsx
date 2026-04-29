@@ -67,9 +67,11 @@ export const AuthPage = () => {
       const result = await login(loginData.email, loginData.password);
       
       if (result.success) {
-        toast({
-          title: "Sucesso",
-          description: "Login realizado com sucesso!",
+        progressToast({
+          title: "Login realizado com sucesso!",
+          variant: "success",
+          duration: 2000,
+          showProgress: true,
         });
       } else {
         toast({
