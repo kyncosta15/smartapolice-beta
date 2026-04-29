@@ -123,7 +123,13 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
     return subset.filter((p) => lifecycleMap.get(p.id) === 'vigente');
   }, [subset, lifecycleMap, showAll]);
 
-  const hiddenCount = subset.length - visibleSubset.length;
+  const vigentesCount = useMemo(
+    () => subset.filter((p) => lifecycleMap.get(p.id) === 'vigente').length,
+    [subset, lifecycleMap]
+  );
+  const naoVigentesCount = subset.length - vigentesCount;
+  const hiddenCount = showAll ? 0 : naoVigentesCount;
+  const hasToggle = naoVigentesCount > 0;
 
   const filtered = useMemo(() => {
     if (!query.trim()) return visibleSubset;
@@ -190,18 +196,18 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
               className="pl-9 h-9 text-sm"
             />
           </div>
-          {hiddenCount > 0 && (
+          {hasToggle && (
             <div className="mt-2.5 flex items-center justify-between gap-2">
               <span className="text-[11px] text-muted-foreground">
                 {showAll
-                  ? 'Mostrando todas as apólices (vigentes, renovadas e antigas).'
-                  : `Mostrando apenas vigentes. ${hiddenCount} ${hiddenCount === 1 ? 'apólice oculta' : 'apólices ocultas'}.`}
+                  ? `Mostrando todas (${subset.length}). Inclui ${naoVigentesCount} não vigente(s).`
+                  : `Mostrando apenas vigentes. ${naoVigentesCount} ${naoVigentesCount === 1 ? 'apólice oculta' : 'apólices ocultas'}.`}
               </span>
               <button
                 type="button"
                 onClick={() => setShowAll((v) => !v)}
                 className={cn(
-                  'text-[11px] font-medium underline-offset-2 hover:underline transition-colors',
+                  'text-[11px] font-medium underline-offset-2 hover:underline transition-colors shrink-0',
                   config.tone === 'pf' ? 'text-pf' : 'text-pj'
                 )}
               >
