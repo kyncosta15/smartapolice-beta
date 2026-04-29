@@ -123,7 +123,13 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
     return subset.filter((p) => lifecycleMap.get(p.id) === 'vigente');
   }, [subset, lifecycleMap, showAll]);
 
-  const hiddenCount = subset.length - visibleSubset.length;
+  const vigentesCount = useMemo(
+    () => subset.filter((p) => lifecycleMap.get(p.id) === 'vigente').length,
+    [subset, lifecycleMap]
+  );
+  const naoVigentesCount = subset.length - vigentesCount;
+  const hiddenCount = showAll ? 0 : naoVigentesCount;
+  const hasToggle = naoVigentesCount > 0;
 
   const filtered = useMemo(() => {
     if (!query.trim()) return visibleSubset;
