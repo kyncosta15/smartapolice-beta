@@ -137,7 +137,7 @@ export function VinculoModal({ open, onOpenChange, tipo, policies }: VinculoModa
         doc.includes(q)
       );
     });
-  }, [subset, query]);
+  }, [visibleSubset, query]);
 
   const config = tipo === 'pf'
     ? { Icon: Users, title: 'Pessoa Física', sublabel: 'Apólices vinculadas a CPF', tone: 'pf' as const }
