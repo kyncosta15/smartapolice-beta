@@ -17,6 +17,8 @@ import {
   useConsultoriaDocumentos,
   useUploadDocumento,
   useDeleteDocumento,
+  useConsultoriaPareceres,
+  useGerarParecer,
   STATUS_LABELS,
   TIPO_CASO_LABELS,
 } from '@/hooks/useConsultoria';
