@@ -750,6 +750,11 @@ export type Database = {
           empresa_id: string
           id: string
           modelo_parecer: string
+          premium_ativado_em: string | null
+          premium_ativado_por: string | null
+          premium_ativo: boolean
+          premium_expira_em: string | null
+          premium_observacao: string | null
           prompt_mestre: string
           tom_voz: string
           updated_at: string
@@ -760,6 +765,11 @@ export type Database = {
           empresa_id: string
           id?: string
           modelo_parecer?: string
+          premium_ativado_em?: string | null
+          premium_ativado_por?: string | null
+          premium_ativo?: boolean
+          premium_expira_em?: string | null
+          premium_observacao?: string | null
           prompt_mestre?: string
           tom_voz?: string
           updated_at?: string
@@ -770,6 +780,11 @@ export type Database = {
           empresa_id?: string
           id?: string
           modelo_parecer?: string
+          premium_ativado_em?: string | null
+          premium_ativado_por?: string | null
+          premium_ativo?: boolean
+          premium_expira_em?: string | null
+          premium_observacao?: string | null
           prompt_mestre?: string
           tom_voz?: string
           updated_at?: string
@@ -5009,6 +5024,10 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_company_admin: { Args: { check_empresa_id: string }; Returns: boolean }
+      is_consultoria_premium_active: {
+        Args: { _empresa_id: string }
+        Returns: boolean
+      }
       is_member_of: { Args: { record_empresa_id: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       limpar_dados_usuario_teste: { Args: never; Returns: Json }
