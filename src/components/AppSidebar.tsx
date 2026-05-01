@@ -201,6 +201,8 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
     },
   ];
 
+  const sections = isAdmin ? adminSections : clientSections;
+
   // (busca global removida da sidebar)
 
   // activeEmpresaName já vem de useTenant() no topo
