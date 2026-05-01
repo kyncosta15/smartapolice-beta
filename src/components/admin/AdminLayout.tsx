@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Button } from '@/components/ui/button';
-import { Crown, LogOut, CheckCircle, User, Mail, DatabaseZap, Webhook, Globe, Radio, LayoutDashboard } from 'lucide-react';
+import { Crown, LogOut, CheckCircle, User, Mail, DatabaseZap, Webhook, Globe, Radio, LayoutDashboard, Sparkles } from 'lucide-react';
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import adminLogo from '@/assets/admin-sidebar-logo.png';
