@@ -42,6 +42,7 @@ function AdminSidebar() {
   const menuItems = [
     { title: 'Dashboard', url: '/admin', icon: Crown },
     { title: 'Aprovações', url: '/admin/aprovacoes', icon: CheckCircle },
+    { title: 'Consultoria Premium', url: '/consultoria-premium', icon: Sparkles },
     { title: 'Meu Perfil', url: '/admin/perfil', icon: User },
   ];
 
