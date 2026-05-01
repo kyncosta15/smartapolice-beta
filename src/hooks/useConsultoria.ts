@@ -3,6 +3,34 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/TenantContext';
 import { toast } from 'sonner';
 
+export interface ConsultoriaParecer {
+  id: string;
+  caso_id: string;
+  empresa_id: string;
+  versao: number;
+  status: string;
+  resumo_executivo: string | null;
+  economia_anual_estimada: number | null;
+  oportunidade_capitalizacao_total: number | null;
+  estrutura: any;
+  ia_modelo: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConsultoriaLacuna {
+  id: string;
+  parecer_id: string;
+  titulo: string;
+  categoria: string;
+  severidade: string;
+  descricao: string | null;
+  recomendacao: string | null;
+  valor_estimado: number | null;
+  cnpj_referencia: string | null;
+  ordem: number | null;
+}
+
 export type CasoStatus = 'rascunho' | 'em_analise' | 'em_revisao' | 'entregue' | 'arquivado';
 
 export interface ConsultoriaCaso {
