@@ -40,8 +40,10 @@ export default function ConsultoriaCasoDetailPage() {
 
   const { data: caso, isLoading } = useConsultoriaCaso(casoId);
   const { data: documentos = [] } = useConsultoriaDocumentos(casoId);
+  const { data: pareceres = [] } = useConsultoriaPareceres(casoId);
   const upload = useUploadDocumento();
   const remove = useDeleteDocumento();
+  const gerar = useGerarParecer();
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || !casoId) return;
