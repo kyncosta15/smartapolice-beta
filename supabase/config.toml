@@ -148,3 +148,6 @@ verify_jwt = false
 verify_jwt = false
 
 
+
+[functions.gerar-parecer-consultoria]
+verify_jwt = true
