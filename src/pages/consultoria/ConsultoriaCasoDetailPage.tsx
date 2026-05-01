@@ -226,7 +226,7 @@ export default function ConsultoriaCasoDetailPage() {
           )}
         </Card>
 
-        {/* IA - placeholder Fase 2 */}
+        {/* IA - geração de parecer */}
         <Card className="p-5 bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -235,16 +235,62 @@ export default function ConsultoriaCasoDetailPage() {
             <div className="flex-1">
               <h3 className="font-semibold text-sm mb-1">Geração do parecer pela IA</h3>
               <p className="text-sm text-muted-foreground mb-3">
-                Após enviar os documentos, a IA irá ler cada PDF, identificar as lacunas com base
-                nos critérios da consultoria e gerar o parecer no padrão Rcaldas.
+                A IA lerá cada PDF anexo, identificará as lacunas com base nos critérios da
+                consultoria e gerará um parecer no padrão Rcaldas. Pode levar 30–90 segundos.
               </p>
-              <Button disabled className="opacity-60">
+              <Button
+                onClick={() => casoId && gerar.mutate(casoId)}
+                disabled={gerar.isPending || documentos.length === 0}
+              >
                 <Sparkles className="size-4 mr-2" />
-                Gerar parecer (em breve — Fase 2)
+                {gerar.isPending
+                  ? 'Analisando documentos...'
+                  : pareceres.length > 0
+                  ? 'Gerar nova versão'
+                  : 'Gerar parecer'}
               </Button>
+              {documentos.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Envie ao menos 1 PDF para liberar a geração.
+                </p>
+              )}
             </div>
           </div>
         </Card>
+
+        {/* Pareceres existentes */}
+        {pareceres.length > 0 && (
+          <Card className="p-5">
+            <h3 className="font-semibold text-base mb-3">Pareceres gerados</h3>
+            <div className="space-y-2">
+              {pareceres.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => navigate(`/consultoria-premium/parecer/${p.id}`)}
+                  className="w-full flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-muted/30 transition-colors text-left"
+                >
+                  <div>
+                    <div className="text-sm font-medium">Versão {p.versao}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(p.created_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                      {' · '}
+                      {p.ia_modelo}
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="capitalize">
+                    {p.status.replace('_', ' ')}
+                  </Badge>
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
       </main>
     </div>
   );
