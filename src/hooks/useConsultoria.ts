@@ -3,6 +3,34 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/TenantContext';
 import { toast } from 'sonner';
 
+export interface ConsultoriaParecer {
+  id: string;
+  caso_id: string;
+  empresa_id: string;
+  versao: number;
+  status: string;
+  resumo_executivo: string | null;
+  economia_anual_estimada: number | null;
+  oportunidade_capitalizacao_total: number | null;
+  estrutura: any;
+  ia_modelo: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConsultoriaLacuna {
+  id: string;
+  parecer_id: string;
+  titulo: string;
+  categoria: string;
+  severidade: string;
+  descricao: string | null;
+  recomendacao: string | null;
+  valor_estimado: number | null;
+  cnpj_referencia: string | null;
+  ordem: number | null;
+}
+
 export type CasoStatus = 'rascunho' | 'em_analise' | 'em_revisao' | 'entregue' | 'arquivado';
 
 export interface ConsultoriaCaso {
@@ -279,3 +307,81 @@ export function useUpdateCasoStatus() {
     },
   });
 }
+
+export function useConsultoriaPareceres(casoId: string | undefined) {
+  return useQuery({
+    queryKey: ['consultoria_pareceres', casoId],
+    queryFn: async () => {
+      if (!casoId) return [] as ConsultoriaParecer[];
+      const { data, error } = await supabase
+        .from('consultoria_pareceres')
+        .select('*')
+        .eq('caso_id', casoId)
+        .order('versao', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as ConsultoriaParecer[];
+    },
+    enabled: !!casoId,
+  });
+}
+
+export function useConsultoriaParecer(parecerId: string | undefined) {
+  return useQuery({
+    queryKey: ['consultoria_parecer', parecerId],
+    queryFn: async () => {
+      if (!parecerId) return null;
+      const [{ data: parecer, error: e1 }, { data: lacunas, error: e2 }] = await Promise.all([
+        supabase.from('consultoria_pareceres').select('*').eq('id', parecerId).maybeSingle(),
+        supabase
+          .from('consultoria_lacunas')
+          .select('*')
+          .eq('parecer_id', parecerId)
+          .order('ordem', { ascending: true }),
+      ]);
+      if (e1) throw e1;
+      if (e2) throw e2;
+      return {
+        parecer: parecer as ConsultoriaParecer | null,
+        lacunas: (lacunas ?? []) as ConsultoriaLacuna[],
+      };
+    },
+    enabled: !!parecerId,
+  });
+}
+
+export function useGerarParecer() {
+  const qc = useQueryClient();
+  const { activeEmpresaId } = useTenant();
+  return useMutation({
+    mutationFn: async (casoId: string) => {
+      const { data, error } = await supabase.functions.invoke('gerar-parecer-consultoria', {
+        body: { casoId },
+      });
+      if (error) {
+        // tenta extrair erro estruturado do contexto
+        const ctx: any = (error as any).context;
+        let msg = error.message;
+        try {
+          const j = await ctx?.json?.();
+          if (j?.error) msg = j.error;
+        } catch {}
+        throw new Error(msg);
+      }
+      return data;
+    },
+    onSuccess: (_d, casoId) => {
+      qc.invalidateQueries({ queryKey: ['consultoria_caso', casoId] });
+      qc.invalidateQueries({ queryKey: ['consultoria_pareceres', casoId] });
+      qc.invalidateQueries({ queryKey: ['consultoria_casos', activeEmpresaId] });
+      toast.success('Parecer gerado com sucesso', { position: 'top-right' });
+    },
+    onError: (err: any) => {
+      toast.error('Falha ao gerar parecer', {
+        description: err?.message,
+        position: 'top-right',
+        duration: 8000,
+      });
+    },
+  });
+}
+

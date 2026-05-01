@@ -41,6 +41,7 @@ const ConsultoriaListPage = lazy(() => import('./pages/consultoria/ConsultoriaLi
 const ConsultoriaNovoCasoPage = lazy(() => import('./pages/consultoria/ConsultoriaNovoCasoPage'));
 const ConsultoriaCasoDetailPage = lazy(() => import('./pages/consultoria/ConsultoriaCasoDetailPage'));
 const ConsultoriaConfigPage = lazy(() => import('./pages/consultoria/ConsultoriaConfigPage'));
+const ConsultoriaParecerPage = lazy(() => import('./pages/consultoria/ConsultoriaParecerPage'));
 
 
 const queryClient = new QueryClient({
@@ -254,6 +255,14 @@ const App = () => {
                         element={
                           <ProtectedRoute requiredRoles={['admin', 'administrador', 'corretora_admin']}>
                             <ConsultoriaConfigPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/consultoria-premium/parecer/:parecerId"
+                        element={
+                          <ProtectedRoute requiredRoles={['admin', 'administrador', 'corretora_admin']}>
+                            <ConsultoriaParecerPage />
                           </ProtectedRoute>
                         }
                       />
