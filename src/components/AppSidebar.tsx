@@ -193,9 +193,13 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
       ],
     },
+    {
+      label: 'Consultoria',
+      items: [
+        { id: '__route:/consultoria-premium', title: 'Consultoria Premium', icon: Crown },
+      ],
+    },
   ];
-
-  const sections = isAdmin ? adminSections : clientSections;
 
   // (busca global removida da sidebar)
 
