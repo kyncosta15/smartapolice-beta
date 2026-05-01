@@ -260,6 +260,14 @@ const App = () => {
                         }
                       />
                       <Route
+                        path="/consultoria-premium/clientes"
+                        element={
+                          <ProtectedRoute requiredRoles={['admin', 'administrador', 'corretora_admin']}>
+                            <ConsultoriaClientesPremiumPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="/consultoria-premium/parecer/:parecerId"
                         element={
                           <ProtectedRoute requiredRoles={['admin', 'administrador', 'corretora_admin']}>
