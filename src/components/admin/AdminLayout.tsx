@@ -43,6 +43,7 @@ function AdminSidebar() {
     { title: 'Dashboard', url: '/admin', icon: Crown },
     { title: 'Aprovações', url: '/admin/aprovacoes', icon: CheckCircle },
     { title: 'Consultoria Premium', url: '/consultoria-premium', icon: Sparkles },
+    { title: 'Clientes Premium', url: '/consultoria-premium/clientes', icon: Sparkles },
     { title: 'Meu Perfil', url: '/admin/perfil', icon: User },
   ];
 
