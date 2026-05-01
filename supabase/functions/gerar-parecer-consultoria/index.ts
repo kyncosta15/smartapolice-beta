@@ -168,15 +168,25 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Caso não encontrado" }, 404);
     }
 
-    // Verificar se usuário pertence à empresa do caso
-    const { data: membership } = await admin
-      .from("user_memberships")
-      .select("user_id")
+    // Verificar se usuário é admin OU pertence à empresa do caso
+    const { data: roleRow } = await admin
+      .from("user_roles")
+      .select("role")
       .eq("user_id", user.id)
-      .eq("empresa_id", caso.empresa_id)
+      .eq("role", "admin")
       .maybeSingle();
-    if (!membership) {
-      return jsonResponse({ error: "Sem acesso a este caso" }, 403);
+    const isAdmin = !!roleRow;
+
+    if (!isAdmin) {
+      const { data: membership } = await admin
+        .from("user_memberships")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .eq("empresa_id", caso.empresa_id)
+        .maybeSingle();
+      if (!membership) {
+        return jsonResponse({ error: "Sem acesso a este caso" }, 403);
+      }
     }
 
     // Carregar config da empresa
