@@ -36,6 +36,13 @@ export default function ConsultoriaListPage() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => navigate('/consultoria-premium/clientes')}
+            >
+              <Users className="size-4 mr-2" /> Clientes Premium
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => navigate('/consultoria-premium/configuracoes')}
             >
               <Settings className="size-4 mr-2" /> Configurações
