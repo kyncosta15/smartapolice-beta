@@ -46,7 +46,7 @@ export default function ConsultoriaCasoDetailPage() {
   const gerar = useGerarParecer();
 
   const handleFiles = async (files: FileList | null) => {
-    if (!files || !casoId) return;
+    if (!files || !casoId || !caso?.empresa_id) return;
     const arr = Array.from(files);
     if (arr.length > 10) {
       toast.error('Máximo 10 arquivos por vez', { position: 'top-right' });
@@ -57,7 +57,12 @@ export default function ConsultoriaCasoDetailPage() {
         toast.error(`${file.name} excede 20MB`, { position: 'top-right' });
         continue;
       }
-      await upload.mutateAsync({ casoId, file, tipoDocumento: tipoUpload });
+      await upload.mutateAsync({
+        casoId,
+        empresaId: caso.empresa_id,
+        file,
+        tipoDocumento: tipoUpload,
+      });
     }
     toast.success('Upload concluído', { position: 'top-right' });
   };
