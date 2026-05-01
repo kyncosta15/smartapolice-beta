@@ -78,7 +78,31 @@ export default function ConsultoriaConfigPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-6 space-y-5">
-        {isLoading ? (
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <Building2 className="size-4 text-muted-foreground" />
+            <Label className="text-sm font-medium shrink-0">Configurar para empresa:</Label>
+            <Select value={empresaId} onValueChange={setEmpresaId}>
+              <SelectTrigger className="max-w-sm">
+                <SelectValue placeholder="Selecione uma empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                {empresas.map((e) => (
+                  <SelectItem key={e.empresa_id} value={e.empresa_id}>
+                    {e.empresa_nome}
+                    {e.premium_ativo ? ' · Premium' : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+
+        {!empresaId ? (
+          <Card className="p-10 text-center text-sm text-muted-foreground">
+            Selecione uma empresa acima para configurar a consultoria.
+          </Card>
+        ) : isLoading ? (
           <Skeleton className="h-96" />
         ) : (
           <>
