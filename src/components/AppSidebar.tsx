@@ -283,7 +283,13 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
-                      onClick={() => onSectionChange(item.id)}
+                      onClick={() => {
+                        if (item.id.startsWith('__route:')) {
+                          navigate(item.id.replace('__route:', ''));
+                        } else {
+                          onSectionChange(item.id);
+                        }
+                      }}
                       isActive={isActive}
                       tooltip={item.title}
                       className={cn(
