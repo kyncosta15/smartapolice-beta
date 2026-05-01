@@ -19,14 +19,19 @@ export function CasoCard({ caso }: { caso: ConsultoriaCaso }) {
       </div>
 
       <div className="space-y-1.5 text-xs text-muted-foreground">
+        {caso.empresa_nome && (
+          <div className="flex items-center gap-1.5 text-foreground/80 font-medium">
+            <Building2 className="size-3" />
+            <span className="truncate">{caso.empresa_nome}</span>
+          </div>
+        )}
         <div className="flex items-center gap-1.5">
           <FileText className="size-3" />
           <span>{TIPO_CASO_LABELS[caso.tipo_caso] ?? caso.tipo_caso}</span>
         </div>
         {caso.cnpjs && caso.cnpjs.length > 0 && (
           <div className="flex items-center gap-1.5">
-            <Building2 className="size-3" />
-            <span>
+            <span className="text-[10px]">
               {caso.cnpjs.length} {caso.cnpjs.length === 1 ? 'CNPJ' : 'CNPJs'}
             </span>
           </div>

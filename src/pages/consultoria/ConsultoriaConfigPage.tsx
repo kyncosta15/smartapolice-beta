@@ -1,18 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Crown, Save, Sparkles } from 'lucide-react';
+import { ArrowLeft, Crown, Save, Sparkles, Building2 } from 'lucide-react';
 import { useConsultoriaConfig, useUpdateConsultoriaConfig } from '@/hooks/useConsultoria';
+import { usePremiumClients } from '@/hooks/usePremiumClients';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ConsultoriaConfigPage() {
   const navigate = useNavigate();
-  const { data: config, isLoading } = useConsultoriaConfig();
-  const update = useUpdateConsultoriaConfig();
+  const { data: empresas = [] } = usePremiumClients();
+  const [empresaId, setEmpresaId] = useState<string>('');
+
+  // Default: primeira empresa premium ativa
+  useEffect(() => {
+    if (!empresaId && empresas.length > 0) {
+      const primeira = empresas.find((e) => e.premium_ativo) || empresas[0];
+      setEmpresaId(primeira.empresa_id);
+    }
+  }, [empresas, empresaId]);
+
+  const { data: config, isLoading } = useConsultoriaConfig(empresaId);
+  const update = useUpdateConsultoriaConfig(empresaId);
 
   const [promptMestre, setPromptMestre] = useState('');
   const [tomVoz, setTomVoz] = useState('consultivo-tecnico');
@@ -65,7 +78,31 @@ export default function ConsultoriaConfigPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-6 space-y-5">
-        {isLoading ? (
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <Building2 className="size-4 text-muted-foreground" />
+            <Label className="text-sm font-medium shrink-0">Configurar para empresa:</Label>
+            <Select value={empresaId} onValueChange={setEmpresaId}>
+              <SelectTrigger className="max-w-sm">
+                <SelectValue placeholder="Selecione uma empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                {empresas.map((e) => (
+                  <SelectItem key={e.empresa_id} value={e.empresa_id}>
+                    {e.empresa_nome}
+                    {e.premium_ativo ? ' · Premium' : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+
+        {!empresaId ? (
+          <Card className="p-10 text-center text-sm text-muted-foreground">
+            Selecione uma empresa acima para configurar a consultoria.
+          </Card>
+        ) : isLoading ? (
           <Skeleton className="h-96" />
         ) : (
           <>

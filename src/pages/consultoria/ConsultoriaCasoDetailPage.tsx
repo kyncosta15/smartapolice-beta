@@ -46,7 +46,7 @@ export default function ConsultoriaCasoDetailPage() {
   const gerar = useGerarParecer();
 
   const handleFiles = async (files: FileList | null) => {
-    if (!files || !casoId) return;
+    if (!files || !casoId || !caso?.empresa_id) return;
     const arr = Array.from(files);
     if (arr.length > 10) {
       toast.error('Máximo 10 arquivos por vez', { position: 'top-right' });
@@ -57,7 +57,12 @@ export default function ConsultoriaCasoDetailPage() {
         toast.error(`${file.name} excede 20MB`, { position: 'top-right' });
         continue;
       }
-      await upload.mutateAsync({ casoId, file, tipoDocumento: tipoUpload });
+      await upload.mutateAsync({
+        casoId,
+        empresaId: caso.empresa_id,
+        file,
+        tipoDocumento: tipoUpload,
+      });
     }
     toast.success('Upload concluído', { position: 'top-right' });
   };
@@ -94,11 +99,16 @@ export default function ConsultoriaCasoDetailPage() {
           <Crown className="size-5 text-primary shrink-0" />
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-semibold tracking-tight truncate">{caso.titulo}</h1>
-            <div className="flex items-center gap-2 mt-0.5">
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               <Badge className={`${status.color} border-0`}>{status.label}</Badge>
               <span className="text-xs text-muted-foreground">
                 {TIPO_CASO_LABELS[caso.tipo_caso] ?? caso.tipo_caso}
               </span>
+              {caso.empresa_nome && (
+                <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                  · <Building2 className="size-3" /> {caso.empresa_nome}
+                </span>
+              )}
             </div>
           </div>
         </div>
