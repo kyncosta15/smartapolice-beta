@@ -42,6 +42,7 @@ const ConsultoriaNovoCasoPage = lazy(() => import('./pages/consultoria/Consultor
 const ConsultoriaCasoDetailPage = lazy(() => import('./pages/consultoria/ConsultoriaCasoDetailPage'));
 const ConsultoriaConfigPage = lazy(() => import('./pages/consultoria/ConsultoriaConfigPage'));
 const ConsultoriaParecerPage = lazy(() => import('./pages/consultoria/ConsultoriaParecerPage'));
+const ConsultoriaClientesPremiumPage = lazy(() => import('./pages/consultoria/ConsultoriaClientesPremiumPage'));
 
 
 const queryClient = new QueryClient({
