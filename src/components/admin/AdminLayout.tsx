@@ -45,8 +45,9 @@ function AdminSidebar() {
     { title: 'Meu Perfil', url: '/admin/perfil', icon: User },
   ];
 
-  // Adicionar itens especiais apenas para admin@rcaldas.com.br
-  if (user?.email === 'admin@rcaldas.com.br') {
+  // Itens especiais para super-admins (admin@rcaldas.com.br e master rcaldas@rcaldas.com.br)
+  const SUPER_ADMINS = ['admin@rcaldas.com.br', 'rcaldas@rcaldas.com.br'];
+  if (user?.email && SUPER_ADMINS.includes(user.email)) {
     menuItems.push({ title: 'Central Admin', url: '/admin/central', icon: LayoutDashboard });
     menuItems.push({ title: 'Presença', url: '/admin/presenca', icon: Radio });
     menuItems.push({ title: 'Acessos', url: '/admin/acessos', icon: Globe });
