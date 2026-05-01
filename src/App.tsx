@@ -35,6 +35,7 @@ const CentralDeDadosPage = lazy(() => import('./pages/CentralDeDadosPage'));
 const InserirVeiculosLotePage = lazy(() => import('./pages/InserirVeiculosLotePage'));
 const AdminAccessLogsPage = lazy(() => import('./pages/AdminAccessLogsPage'));
 const AdminPresencePage = lazy(() => import('./pages/admin/AdminPresencePage'));
+const AdminCentralPage = lazy(() => import('./pages/admin/AdminCentralPage'));
 const SystemStatusPage = lazy(() => import('./pages/SystemStatusPage'));
 
 
@@ -208,6 +209,14 @@ const App = () => {
                         element={
                           <ProtectedRoute requiredRoles={['admin', 'administrador']}>
                             <AdminPresencePage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin/central"
+                        element={
+                          <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                            <AdminCentralPage />
                           </ProtectedRoute>
                         }
                       />
