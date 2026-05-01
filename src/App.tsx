@@ -37,6 +37,10 @@ const AdminAccessLogsPage = lazy(() => import('./pages/AdminAccessLogsPage'));
 const AdminPresencePage = lazy(() => import('./pages/admin/AdminPresencePage'));
 const AdminCentralPage = lazy(() => import('./pages/admin/AdminCentralPage'));
 const SystemStatusPage = lazy(() => import('./pages/SystemStatusPage'));
+const ConsultoriaListPage = lazy(() => import('./pages/consultoria/ConsultoriaListPage'));
+const ConsultoriaNovoCasoPage = lazy(() => import('./pages/consultoria/ConsultoriaNovoCasoPage'));
+const ConsultoriaCasoDetailPage = lazy(() => import('./pages/consultoria/ConsultoriaCasoDetailPage'));
+const ConsultoriaConfigPage = lazy(() => import('./pages/consultoria/ConsultoriaConfigPage'));
 
 
 const queryClient = new QueryClient({
@@ -225,6 +229,39 @@ const App = () => {
                         element={
                           <ProtectedRoute requiredRoles={['admin', 'administrador', 'rh', 'corretora_admin']}>
                             <InserirVeiculosLotePage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="/consultoria-premium"
+                        element={
+                          <ProtectedRoute requiredRoles={['admin', 'administrador', 'corretora_admin']}>
+                            <ConsultoriaListPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/consultoria-premium/novo"
+                        element={
+                          <ProtectedRoute requiredRoles={['admin', 'administrador', 'corretora_admin']}>
+                            <ConsultoriaNovoCasoPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/consultoria-premium/configuracoes"
+                        element={
+                          <ProtectedRoute requiredRoles={['admin', 'administrador', 'corretora_admin']}>
+                            <ConsultoriaConfigPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/consultoria-premium/:casoId"
+                        element={
+                          <ProtectedRoute requiredRoles={['admin', 'administrador', 'corretora_admin']}>
+                            <ConsultoriaCasoDetailPage />
                           </ProtectedRoute>
                         }
                       />

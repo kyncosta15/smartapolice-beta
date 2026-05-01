@@ -193,6 +193,12 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
         { id: 'smartbeneficios', title: 'SmartBenefícios', icon: Heart },
       ],
     },
+    {
+      label: 'Consultoria',
+      items: [
+        { id: '__route:/consultoria-premium', title: 'Consultoria Premium', icon: Crown },
+      ],
+    },
   ];
 
   const sections = isAdmin ? adminSections : clientSections;
@@ -277,7 +283,13 @@ export function AppSidebar({ onSectionChange, activeSection }: AppSidebarProps) 
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
-                      onClick={() => onSectionChange(item.id)}
+                      onClick={() => {
+                        if (item.id.startsWith('__route:')) {
+                          navigate(item.id.replace('__route:', ''));
+                        } else {
+                          onSectionChange(item.id);
+                        }
+                      }}
                       isActive={isActive}
                       tooltip={item.title}
                       className={cn(
