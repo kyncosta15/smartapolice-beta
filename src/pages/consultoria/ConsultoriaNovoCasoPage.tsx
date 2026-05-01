@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,8 +14,9 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ArrowRight, Crown, X, Plus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Crown, X, Plus, Search, Building2 } from 'lucide-react';
 import { useCreateCaso, TIPO_CASO_LABELS } from '@/hooks/useConsultoria';
+import { usePremiumClients } from '@/hooks/usePremiumClients';
 
 type Step = 1 | 2 | 3;
 
@@ -23,8 +24,11 @@ export default function ConsultoriaNovoCasoPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
   const createCaso = useCreateCaso();
+  const { data: empresas = [], isLoading: loadingEmpresas } = usePremiumClients();
 
   // Step 1
+  const [empresaId, setEmpresaId] = useState<string>('');
+  const [empresaSearch, setEmpresaSearch] = useState('');
   const [titulo, setTitulo] = useState('');
   const [tipoCaso, setTipoCaso] = useState('todos');
   const [cnpjs, setCnpjs] = useState<string[]>([]);
@@ -40,6 +44,14 @@ export default function ConsultoriaNovoCasoPage() {
   const [modoLayout, setModoLayout] = useState<'completo' | 'enxuto'>('completo');
   const [revisaoObrigatoria, setRevisaoObrigatoria] = useState(true);
 
+  const empresasFiltradas = useMemo(() => {
+    const q = empresaSearch.trim().toLowerCase();
+    if (!q) return empresas;
+    return empresas.filter((e) => e.empresa_nome.toLowerCase().includes(q));
+  }, [empresas, empresaSearch]);
+
+  const empresaSelecionada = empresas.find((e) => e.empresa_id === empresaId);
+
   const addCnpj = () => {
     const v = cnpjInput.trim();
     if (v && !cnpjs.includes(v)) {
@@ -50,6 +62,7 @@ export default function ConsultoriaNovoCasoPage() {
 
   const handleCreate = async () => {
     const caso = await createCaso.mutateAsync({
+      empresa_id: empresaId,
       titulo: titulo.trim(),
       tipo_caso: tipoCaso,
       modo_layout: modoLayout,
@@ -65,8 +78,8 @@ export default function ConsultoriaNovoCasoPage() {
     navigate(`/consultoria-premium/${caso.id}`);
   };
 
-  const canNext1 = titulo.trim().length >= 3;
-  const canNext2 = true; // perfil é opcional
+  const canNext1 = !!empresaId && titulo.trim().length >= 3;
+  const canNext2 = true;
 
   return (
     <div className="min-h-screen bg-background">
@@ -107,10 +120,74 @@ export default function ConsultoriaNovoCasoPage() {
           {step === 1 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-base font-semibold mb-1">Identificação</h2>
+                <h2 className="text-base font-semibold mb-1">Empresa cliente e identificação</h2>
                 <p className="text-sm text-muted-foreground">
-                  Título do caso e CNPJs envolvidos.
+                  Selecione para qual cliente este parecer será produzido.
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Empresa cliente *</Label>
+                {empresaSelecionada ? (
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-primary/40 bg-primary/5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Building2 className="size-4 text-primary shrink-0" />
+                      <span className="text-sm font-medium truncate">
+                        {empresaSelecionada.empresa_nome}
+                      </span>
+                      {empresaSelecionada.premium_ativo && (
+                        <Badge variant="secondary" className="text-xs">Premium</Badge>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEmpresaId('')}
+                    >
+                      Trocar
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar empresa..."
+                        value={empresaSearch}
+                        onChange={(e) => setEmpresaSearch(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    <div className="max-h-60 overflow-y-auto border border-border rounded-lg divide-y divide-border">
+                      {loadingEmpresas ? (
+                        <div className="p-4 text-sm text-muted-foreground text-center">
+                          Carregando empresas...
+                        </div>
+                      ) : empresasFiltradas.length === 0 ? (
+                        <div className="p-4 text-sm text-muted-foreground text-center">
+                          Nenhuma empresa encontrada.
+                        </div>
+                      ) : (
+                        empresasFiltradas.slice(0, 50).map((e) => (
+                          <button
+                            key={e.empresa_id}
+                            type="button"
+                            onClick={() => setEmpresaId(e.empresa_id)}
+                            className="w-full flex items-center justify-between p-3 hover:bg-muted/40 text-left"
+                          >
+                            <span className="text-sm truncate">{e.empresa_nome}</span>
+                            {e.premium_ativo && (
+                              <Badge variant="secondary" className="text-xs shrink-0 ml-2">
+                                Premium
+                              </Badge>
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -160,11 +237,7 @@ export default function ConsultoriaNovoCasoPage() {
                 {cnpjs.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {cnpjs.map((c) => (
-                      <Badge
-                        key={c}
-                        variant="secondary"
-                        className="gap-1 pr-1"
-                      >
+                      <Badge key={c} variant="secondary" className="gap-1 pr-1">
                         {c}
                         <button
                           onClick={() => setCnpjs(cnpjs.filter((x) => x !== c))}
@@ -285,6 +358,16 @@ export default function ConsultoriaNovoCasoPage() {
                   onCheckedChange={setRevisaoObrigatoria}
                 />
               </div>
+
+              {empresaSelecionada && (
+                <div className="rounded-lg border border-border p-4 bg-muted/30 text-sm">
+                  <div className="text-xs text-muted-foreground mb-1">Resumo</div>
+                  <div className="font-medium">{titulo}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Cliente: {empresaSelecionada.empresa_nome} · Tipo: {TIPO_CASO_LABELS[tipoCaso]}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -307,7 +390,7 @@ export default function ConsultoriaNovoCasoPage() {
                 Avançar <ArrowRight className="size-4 ml-1.5" />
               </Button>
             ) : (
-              <Button onClick={handleCreate} disabled={createCaso.isPending}>
+              <Button onClick={handleCreate} disabled={createCaso.isPending || !empresaId}>
                 {createCaso.isPending ? 'Criando...' : 'Criar caso'}
               </Button>
             )}
