@@ -147,3 +147,6 @@ verify_jwt = false
 [functions.supabase-status-agent]
 verify_jwt = false
 
+
+[functions.admin-bootstrap-master]
+verify_jwt = false
