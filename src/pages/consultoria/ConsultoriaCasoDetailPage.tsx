@@ -99,11 +99,16 @@ export default function ConsultoriaCasoDetailPage() {
           <Crown className="size-5 text-primary shrink-0" />
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-semibold tracking-tight truncate">{caso.titulo}</h1>
-            <div className="flex items-center gap-2 mt-0.5">
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               <Badge className={`${status.color} border-0`}>{status.label}</Badge>
               <span className="text-xs text-muted-foreground">
                 {TIPO_CASO_LABELS[caso.tipo_caso] ?? caso.tipo_caso}
               </span>
+              {caso.empresa_nome && (
+                <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                  · <Building2 className="size-3" /> {caso.empresa_nome}
+                </span>
+              )}
             </div>
           </div>
         </div>
