@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Crown, Plus, Settings, ArrowLeft } from 'lucide-react';
+import { Crown, Plus, Settings, ArrowLeft, Users } from 'lucide-react';
 import { useConsultoriaCasos, STATUS_LABELS, CasoStatus } from '@/hooks/useConsultoria';
 import { CasoCard } from '@/components/consultoria/CasoCard';
 import { Skeleton } from '@/components/ui/skeleton';
