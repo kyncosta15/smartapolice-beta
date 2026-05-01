@@ -49,6 +49,7 @@ export interface ConsultoriaCaso {
   created_at: string;
   updated_at: string;
   created_by: string | null;
+  empresa_nome?: string | null;
 }
 
 export interface ConsultoriaConfig {
@@ -76,22 +77,55 @@ export const TIPO_CASO_LABELS: Record<string, string> = {
   todos: 'Análise completa',
 };
 
+/**
+ * Verifica se o usuário logado é admin global (consultor RCaldas).
+ */
+export function useIsConsultoriaAdmin() {
+  return useQuery({
+    queryKey: ['is-consultoria-admin'],
+    queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return false;
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userData.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      return !!data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Lista casos. Admin vê todos; cliente vê só os da empresa ativa.
+ */
 export function useConsultoriaCasos() {
   const { activeEmpresaId } = useTenant();
+  const { data: isAdmin = false } = useIsConsultoriaAdmin();
 
   return useQuery({
-    queryKey: ['consultoria_casos', activeEmpresaId],
+    queryKey: ['consultoria_casos', { isAdmin, activeEmpresaId }],
     queryFn: async () => {
-      if (!activeEmpresaId) return [] as ConsultoriaCaso[];
-      const { data, error } = await supabase
+      let q = supabase
         .from('consultoria_casos')
-        .select('*')
-        .eq('empresa_id', activeEmpresaId)
+        .select('*, empresas(nome)')
         .order('updated_at', { ascending: false });
+
+      if (!isAdmin) {
+        if (!activeEmpresaId) return [] as ConsultoriaCaso[];
+        q = q.eq('empresa_id', activeEmpresaId);
+      }
+
+      const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as ConsultoriaCaso[];
+      return (data ?? []).map((c: any) => ({
+        ...c,
+        empresa_nome: c.empresas?.nome ?? null,
+      })) as ConsultoriaCaso[];
     },
-    enabled: !!activeEmpresaId,
+    enabled: isAdmin || !!activeEmpresaId,
   });
 }
 
@@ -102,11 +136,12 @@ export function useConsultoriaCaso(casoId: string | undefined) {
       if (!casoId) return null;
       const { data, error } = await supabase
         .from('consultoria_casos')
-        .select('*')
+        .select('*, empresas(nome)')
         .eq('id', casoId)
         .maybeSingle();
       if (error) throw error;
-      return data as ConsultoriaCaso | null;
+      if (!data) return null;
+      return { ...data, empresa_nome: (data as any).empresas?.nome ?? null } as ConsultoriaCaso;
     },
     enabled: !!casoId,
   });
@@ -129,35 +164,37 @@ export function useConsultoriaDocumentos(casoId: string | undefined) {
   });
 }
 
-export function useConsultoriaConfig() {
+export function useConsultoriaConfig(empresaIdOverride?: string | null) {
   const { activeEmpresaId } = useTenant();
+  const empresaId = empresaIdOverride ?? activeEmpresaId;
   return useQuery({
-    queryKey: ['consultoria_config', activeEmpresaId],
+    queryKey: ['consultoria_config', empresaId],
     queryFn: async () => {
-      if (!activeEmpresaId) return null;
+      if (!empresaId) return null;
       const { data, error } = await supabase
         .from('consultoria_config')
         .select('*')
-        .eq('empresa_id', activeEmpresaId)
+        .eq('empresa_id', empresaId)
         .maybeSingle();
       if (error) throw error;
       return data as ConsultoriaConfig | null;
     },
-    enabled: !!activeEmpresaId,
+    enabled: !!empresaId,
   });
 }
 
-export function useUpdateConsultoriaConfig() {
+export function useUpdateConsultoriaConfig(empresaIdOverride?: string | null) {
   const { activeEmpresaId } = useTenant();
+  const empresaId = empresaIdOverride ?? activeEmpresaId;
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (payload: Partial<ConsultoriaConfig>) => {
-      if (!activeEmpresaId) throw new Error('Empresa não selecionada');
+      if (!empresaId) throw new Error('Empresa não selecionada');
       const { data, error } = await supabase
         .from('consultoria_config')
         .upsert(
           {
-            empresa_id: activeEmpresaId,
+            empresa_id: empresaId,
             prompt_mestre: payload.prompt_mestre ?? '',
             tom_voz: payload.tom_voz ?? 'consultivo-tecnico',
             modelo_parecer: payload.modelo_parecer ?? 'rcaldas-padrao-v1',
@@ -171,7 +208,7 @@ export function useUpdateConsultoriaConfig() {
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['consultoria_config', activeEmpresaId] });
+      qc.invalidateQueries({ queryKey: ['consultoria_config', empresaId] });
       toast.success('Configurações salvas', { position: 'top-right' });
     },
     onError: (err: any) => {
@@ -181,10 +218,10 @@ export function useUpdateConsultoriaConfig() {
 }
 
 export function useCreateCaso() {
-  const { activeEmpresaId } = useTenant();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (payload: {
+      empresa_id: string;
       titulo: string;
       tipo_caso: string;
       modo_layout: string;
@@ -192,12 +229,12 @@ export function useCreateCaso() {
       revisao_obrigatoria: boolean;
       perfil: any;
     }) => {
-      if (!activeEmpresaId) throw new Error('Empresa não selecionada');
+      if (!payload.empresa_id) throw new Error('Empresa cliente não selecionada');
       const { data: userData } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from('consultoria_casos')
         .insert({
-          empresa_id: activeEmpresaId,
+          empresa_id: payload.empresa_id,
           titulo: payload.titulo,
           tipo_caso: payload.tipo_caso,
           modo_layout: payload.modo_layout,
@@ -213,7 +250,7 @@ export function useCreateCaso() {
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['consultoria_casos', activeEmpresaId] });
+      qc.invalidateQueries({ queryKey: ['consultoria_casos'] });
       toast.success('Caso criado', { position: 'top-right' });
     },
     onError: (err: any) => {
@@ -222,24 +259,29 @@ export function useCreateCaso() {
   });
 }
 
+/**
+ * Upload usa empresa_id do próprio caso (passado explicitamente),
+ * não depende mais do TenantContext — funciona para admin sem membership.
+ */
 export function useUploadDocumento() {
-  const { activeEmpresaId } = useTenant();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
       casoId,
+      empresaId,
       file,
       tipoDocumento,
       cnpjReferencia,
     }: {
       casoId: string;
+      empresaId: string;
       file: File;
       tipoDocumento: string;
       cnpjReferencia?: string;
     }) => {
-      if (!activeEmpresaId) throw new Error('Empresa não selecionada');
+      if (!empresaId) throw new Error('Empresa do caso desconhecida');
       const safeName = file.name.replace(/[^\w.\-]+/g, '_');
-      const path = `${activeEmpresaId}/${casoId}/${Date.now()}_${safeName}`;
+      const path = `${empresaId}/${casoId}/${Date.now()}_${safeName}`;
       const { error: upErr } = await supabase.storage
         .from('consultoria-documentos')
         .upload(path, file, { contentType: file.type, upsert: false });
@@ -249,7 +291,7 @@ export function useUploadDocumento() {
       const { data, error } = await supabase
         .from('consultoria_documentos')
         .insert({
-          empresa_id: activeEmpresaId,
+          empresa_id: empresaId,
           caso_id: casoId,
           nome_original: file.name,
           storage_path: path,
@@ -293,7 +335,6 @@ export function useDeleteDocumento() {
 
 export function useUpdateCasoStatus() {
   const qc = useQueryClient();
-  const { activeEmpresaId } = useTenant();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: CasoStatus }) => {
       const { error } = await supabase
@@ -303,7 +344,7 @@ export function useUpdateCasoStatus() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['consultoria_casos', activeEmpresaId] });
+      qc.invalidateQueries({ queryKey: ['consultoria_casos'] });
     },
   });
 }
@@ -351,14 +392,12 @@ export function useConsultoriaParecer(parecerId: string | undefined) {
 
 export function useGerarParecer() {
   const qc = useQueryClient();
-  const { activeEmpresaId } = useTenant();
   return useMutation({
     mutationFn: async (casoId: string) => {
       const { data, error } = await supabase.functions.invoke('gerar-parecer-consultoria', {
         body: { casoId },
       });
       if (error) {
-        // tenta extrair erro estruturado do contexto
         const ctx: any = (error as any).context;
         let msg = error.message;
         try {
@@ -367,12 +406,13 @@ export function useGerarParecer() {
         } catch {}
         throw new Error(msg);
       }
+      if (data?.error) throw new Error(data.error);
       return data;
     },
     onSuccess: (_d, casoId) => {
       qc.invalidateQueries({ queryKey: ['consultoria_caso', casoId] });
       qc.invalidateQueries({ queryKey: ['consultoria_pareceres', casoId] });
-      qc.invalidateQueries({ queryKey: ['consultoria_casos', activeEmpresaId] });
+      qc.invalidateQueries({ queryKey: ['consultoria_casos'] });
       toast.success('Parecer gerado com sucesso', { position: 'top-right' });
     },
     onError: (err: any) => {
@@ -384,4 +424,3 @@ export function useGerarParecer() {
     },
   });
 }
-
