@@ -674,6 +674,315 @@ export type Database = {
         }
         Relationships: []
       }
+      consultoria_casos: {
+        Row: {
+          client_id: string | null
+          cnpjs: string[] | null
+          created_at: string
+          created_by: string | null
+          delivered_at: string | null
+          empresa_id: string
+          id: string
+          modo_layout: string
+          perfil: Json
+          responsaveis: string[] | null
+          revisao_obrigatoria: boolean
+          status: string
+          tipo_caso: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          cnpjs?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          delivered_at?: string | null
+          empresa_id: string
+          id?: string
+          modo_layout?: string
+          perfil?: Json
+          responsaveis?: string[] | null
+          revisao_obrigatoria?: boolean
+          status?: string
+          tipo_caso?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          cnpjs?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          delivered_at?: string | null
+          empresa_id?: string
+          id?: string
+          modo_layout?: string
+          perfil?: Json
+          responsaveis?: string[] | null
+          revisao_obrigatoria?: boolean
+          status?: string
+          tipo_caso?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultoria_casos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultoria_casos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultoria_config: {
+        Row: {
+          created_at: string
+          criterios: Json
+          empresa_id: string
+          id: string
+          modelo_parecer: string
+          prompt_mestre: string
+          tom_voz: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criterios?: Json
+          empresa_id: string
+          id?: string
+          modelo_parecer?: string
+          prompt_mestre?: string
+          tom_voz?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criterios?: Json
+          empresa_id?: string
+          id?: string
+          modelo_parecer?: string
+          prompt_mestre?: string
+          tom_voz?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultoria_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: true
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultoria_documentos: {
+        Row: {
+          caso_id: string
+          cnpj_referencia: string | null
+          created_at: string
+          empresa_id: string
+          id: string
+          metadados_extraidos: Json | null
+          nome_original: string
+          storage_path: string
+          tamanho_bytes: number | null
+          tipo_documento: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caso_id: string
+          cnpj_referencia?: string | null
+          created_at?: string
+          empresa_id: string
+          id?: string
+          metadados_extraidos?: Json | null
+          nome_original: string
+          storage_path: string
+          tamanho_bytes?: number | null
+          tipo_documento: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caso_id?: string
+          cnpj_referencia?: string | null
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          metadados_extraidos?: Json | null
+          nome_original?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+          tipo_documento?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultoria_documentos_caso_id_fkey"
+            columns: ["caso_id"]
+            isOneToOne: false
+            referencedRelation: "consultoria_casos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultoria_documentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultoria_lacunas: {
+        Row: {
+          categoria: string
+          cnpj_referencia: string | null
+          created_at: string
+          descricao: string | null
+          documento_origem_id: string | null
+          empresa_id: string
+          id: string
+          ordem: number | null
+          parecer_id: string
+          recomendacao: string | null
+          severidade: string
+          titulo: string
+          valor_estimado: number | null
+        }
+        Insert: {
+          categoria: string
+          cnpj_referencia?: string | null
+          created_at?: string
+          descricao?: string | null
+          documento_origem_id?: string | null
+          empresa_id: string
+          id?: string
+          ordem?: number | null
+          parecer_id: string
+          recomendacao?: string | null
+          severidade?: string
+          titulo: string
+          valor_estimado?: number | null
+        }
+        Update: {
+          categoria?: string
+          cnpj_referencia?: string | null
+          created_at?: string
+          descricao?: string | null
+          documento_origem_id?: string | null
+          empresa_id?: string
+          id?: string
+          ordem?: number | null
+          parecer_id?: string
+          recomendacao?: string | null
+          severidade?: string
+          titulo?: string
+          valor_estimado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultoria_lacunas_documento_origem_id_fkey"
+            columns: ["documento_origem_id"]
+            isOneToOne: false
+            referencedRelation: "consultoria_documentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultoria_lacunas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultoria_lacunas_parecer_id_fkey"
+            columns: ["parecer_id"]
+            isOneToOne: false
+            referencedRelation: "consultoria_pareceres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultoria_pareceres: {
+        Row: {
+          caso_id: string
+          created_at: string
+          economia_anual_estimada: number | null
+          empresa_id: string
+          estrutura: Json
+          ia_modelo: string | null
+          ia_tokens_uso: Json | null
+          id: string
+          oportunidade_capitalizacao_total: number | null
+          pdf_storage_path: string | null
+          resumo_executivo: string | null
+          revisado_em: string | null
+          revisado_por: string | null
+          status: string
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          caso_id: string
+          created_at?: string
+          economia_anual_estimada?: number | null
+          empresa_id: string
+          estrutura?: Json
+          ia_modelo?: string | null
+          ia_tokens_uso?: Json | null
+          id?: string
+          oportunidade_capitalizacao_total?: number | null
+          pdf_storage_path?: string | null
+          resumo_executivo?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          status?: string
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          caso_id?: string
+          created_at?: string
+          economia_anual_estimada?: number | null
+          empresa_id?: string
+          estrutura?: Json
+          ia_modelo?: string | null
+          ia_tokens_uso?: Json | null
+          id?: string
+          oportunidade_capitalizacao_total?: number | null
+          pdf_storage_path?: string | null
+          resumo_executivo?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          status?: string
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultoria_pareceres_caso_id_fkey"
+            columns: ["caso_id"]
+            isOneToOne: false
+            referencedRelation: "consultoria_casos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultoria_pareceres_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboard_exports: {
         Row: {
           created_at: string
@@ -4727,6 +5036,10 @@ export type Database = {
       }
       test_get_user_empresa: { Args: never; Returns: Json }
       trigger_sinistro_sheet_sync: { Args: never; Returns: undefined }
+      user_belongs_to_empresa: {
+        Args: { _empresa_id: string }
+        Returns: boolean
+      }
       validate_session_token: {
         Args: { p_token: string }
         Returns: {
