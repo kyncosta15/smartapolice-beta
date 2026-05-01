@@ -1,18 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Crown, Save, Sparkles } from 'lucide-react';
+import { ArrowLeft, Crown, Save, Sparkles, Building2 } from 'lucide-react';
 import { useConsultoriaConfig, useUpdateConsultoriaConfig } from '@/hooks/useConsultoria';
+import { usePremiumClients } from '@/hooks/usePremiumClients';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ConsultoriaConfigPage() {
   const navigate = useNavigate();
-  const { data: config, isLoading } = useConsultoriaConfig();
-  const update = useUpdateConsultoriaConfig();
+  const { data: empresas = [] } = usePremiumClients();
+  const [empresaId, setEmpresaId] = useState<string>('');
+
+  // Default: primeira empresa premium ativa
+  useEffect(() => {
+    if (!empresaId && empresas.length > 0) {
+      const primeira = empresas.find((e) => e.premium_ativo) || empresas[0];
+      setEmpresaId(primeira.empresa_id);
+    }
+  }, [empresas, empresaId]);
+
+  const { data: config, isLoading } = useConsultoriaConfig(empresaId);
+  const update = useUpdateConsultoriaConfig(empresaId);
 
   const [promptMestre, setPromptMestre] = useState('');
   const [tomVoz, setTomVoz] = useState('consultivo-tecnico');
