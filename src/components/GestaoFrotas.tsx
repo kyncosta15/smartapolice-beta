@@ -69,6 +69,7 @@ export function GestaoFrotas() {
   const [activeTab, setActiveTab] = useState('frotas');
   
   const [publicLinkModalOpen, setPublicLinkModalOpen] = useState(false);
+  const [opImportOpen, setOpImportOpen] = useState(false);
   const [filters, setFilters] = useState<FrotaFilters>({
     search: '',
     marcaModelo: [],
