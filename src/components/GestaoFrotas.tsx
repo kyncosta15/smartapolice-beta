@@ -43,6 +43,8 @@ import { FleetRequestsList } from './fleet-requests/FleetRequestsList';
 import { PublicLinkGenerator } from './fleet-requests/PublicLinkGenerator';
 import { FleetTemplateDownload } from './frotas/FleetTemplateDownload';
 import { TheftRiskDashboard } from './frotas/TheftRiskDashboard';
+import OperationalDataImportDialog from './frotas/OperationalDataImportDialog';
+import { ClipboardList } from 'lucide-react';
 
 import { useFrotasData } from '@/hooks/useFrotasData';
 import { useToast } from '@/hooks/use-toast';
