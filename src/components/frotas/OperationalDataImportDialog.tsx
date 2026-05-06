@@ -240,7 +240,7 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
           if (existingFin?.id) {
             await supabase.from('vehicle_finance').update(finPayload).eq('id', existingFin.id);
           } else {
-            await supabase.from('vehicle_finance').insert(finPayload);
+            await supabase.from('vehicle_finance').insert(finPayload as any);
           }
         }
 
