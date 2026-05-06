@@ -1,0 +1,1 @@
+ALTER TABLE public.frota_veiculos ADD COLUMN IF NOT EXISTS tem_rastreador boolean NOT NULL DEFAULT false;

@@ -43,6 +43,8 @@ import { FleetRequestsList } from './fleet-requests/FleetRequestsList';
 import { PublicLinkGenerator } from './fleet-requests/PublicLinkGenerator';
 import { FleetTemplateDownload } from './frotas/FleetTemplateDownload';
 import { TheftRiskDashboard } from './frotas/TheftRiskDashboard';
+import OperationalDataImportDialog from './frotas/OperationalDataImportDialog';
+import { ClipboardList } from 'lucide-react';
 
 import { useFrotasData } from '@/hooks/useFrotasData';
 import { useToast } from '@/hooks/use-toast';
@@ -67,6 +69,7 @@ export function GestaoFrotas() {
   const [activeTab, setActiveTab] = useState('frotas');
   
   const [publicLinkModalOpen, setPublicLinkModalOpen] = useState(false);
+  const [opImportOpen, setOpImportOpen] = useState(false);
   const [filters, setFilters] = useState<FrotaFilters>({
     search: '',
     marcaModelo: [],
@@ -303,7 +306,11 @@ export function GestaoFrotas() {
             </TabsContent>
 
             <TabsContent value="upload" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
-              <div className="mb-4 flex justify-end">
+              <div className="mb-4 flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => setOpImportOpen(true)}>
+                  <ClipboardList className="h-4 w-4 mr-1.5" />
+                  Importar Dados Operacionais
+                </Button>
                 <FleetTemplateDownload variant="secondary" />
               </div>
               <FrotasUpload onSuccess={refetch} />
@@ -328,6 +335,12 @@ export function GestaoFrotas() {
         </Tabs>
       </div>
 
+
+      <OperationalDataImportDialog
+        open={opImportOpen}
+        onOpenChange={setOpImportOpen}
+        onSuccess={refetch}
+      />
 
       {/* Public Link Generator Modal */}
       <PublicLinkGenerator 
