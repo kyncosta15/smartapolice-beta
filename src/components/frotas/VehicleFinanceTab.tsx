@@ -189,7 +189,14 @@ export function VehicleFinanceTab({ vehicleId, empresaId, fipeAtual }: VehicleFi
     try {
       // Auto-set status
       const autoStatus = finance.installments_paid >= finance.term_months ? 'QUITADO' : finance.status;
-      const payload = { ...finance, status: autoStatus };
+      const payload: any = {
+        ...finance,
+        status: autoStatus,
+        start_date: finance.start_date || null,
+        end_date: finance.end_date || null,
+        bank_name: finance.bank_name || null,
+        notes: finance.notes || null,
+      };
 
       if (hasRecord && finance.id) {
         const { error } = await supabase
