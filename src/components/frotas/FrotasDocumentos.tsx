@@ -723,6 +723,12 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <BulkDocumentUploadDialog
+        open={isBulkOpen}
+        onOpenChange={setIsBulkOpen}
+        veiculos={veiculos}
+      />
     </div>
   );
 }
