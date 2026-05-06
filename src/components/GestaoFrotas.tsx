@@ -305,7 +305,11 @@ export function GestaoFrotas() {
             </TabsContent>
 
             <TabsContent value="upload" className="h-full p-3 sm:p-4 md:p-6 overflow-y-auto m-0">
-              <div className="mb-4 flex justify-end">
+              <div className="mb-4 flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => setOpImportOpen(true)}>
+                  <ClipboardList className="h-4 w-4 mr-1.5" />
+                  Importar Dados Operacionais
+                </Button>
                 <FleetTemplateDownload variant="secondary" />
               </div>
               <FrotasUpload onSuccess={refetch} />
