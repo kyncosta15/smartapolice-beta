@@ -168,19 +168,35 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
 
     for (const row of toProcess) {
       try {
-        // 1) Atualizar veículo: rastreador, modalidade_compra, observações
+        // 1) Atualizar veículo: rastreador, modalidade_compra, observações,
+        //    + cache de alocação atual (campos lidos pela aba Obra)
         const updates: Record<string, any> = {
           tem_rastreador: row.rastreador,
         };
-        if (row.situacaoFinanceira) {
-          const sit = row.situacaoFinanceira.toUpperCase();
-          if (sit.includes('QUITADO') || sit.includes('AVISTA') || sit.includes('À VISTA')) {
+        const sitUpper = (row.situacaoFinanceira || '').toUpperCase();
+        let financeStatus: 'QUITADO' | 'EM_ANDAMENTO' | null = null;
+        let financeType: 'AVISTA' | 'FINANCIAMENTO' | 'CONSORCIO' | null = null;
+        if (sitUpper) {
+          if (sitUpper.includes('QUITADO') || sitUpper.includes('AVISTA') || sitUpper.includes('À VISTA') || sitUpper.includes('A VISTA')) {
             updates.modalidade_compra = 'avista';
-          } else if (sit.includes('FINANC')) {
+            financeType = 'AVISTA';
+            financeStatus = 'QUITADO';
+          } else if (sitUpper.includes('FINANC')) {
             updates.modalidade_compra = 'financiado';
-          } else if (sit.includes('CONSORCIO') || sit.includes('CONSÓRCIO')) {
+            financeType = 'FINANCIAMENTO';
+            financeStatus = 'EM_ANDAMENTO';
+          } else if (sitUpper.includes('CONSORCIO') || sitUpper.includes('CONSÓRCIO')) {
             updates.modalidade_compra = 'consorcio';
+            financeType = 'CONSORCIO';
+            financeStatus = 'EM_ANDAMENTO';
           }
+        }
+        // Cache de alocação no próprio veículo (a aba "Obra" lê daqui)
+        if (row.obra || row.responsavel) {
+          updates.current_responsible_name = row.responsavel || 'Não informado';
+          updates.current_worksite_name = row.obra || 'Não informado';
+          updates.current_worksite_start_date = today;
+          updates.has_assignment_info = true;
         }
         if (row.empresa) {
           // Anexa empresa responsável às observações sem perder o que já existe
@@ -201,6 +217,32 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
           .update(updates)
           .eq('id', row.veiculoId!);
         if (updErr) throw updErr;
+
+        // 1b) Criar/atualizar registro em vehicle_finance (a aba Financeiro lê daqui)
+        if (financeType) {
+          const { data: existingFin } = await supabase
+            .from('vehicle_finance')
+            .select('id')
+            .eq('vehicle_id', row.veiculoId!)
+            .maybeSingle();
+          const finPayload: Record<string, any> = {
+            vehicle_id: row.veiculoId!,
+            empresa_id: activeEmpresaId,
+            type: financeType,
+            status: financeStatus || 'EM_ANDAMENTO',
+            direct_payment: financeType === 'AVISTA',
+            term_months: financeType === 'AVISTA' ? 1 : 1,
+            installment_value: 0,
+            installments_paid: financeType === 'AVISTA' ? 1 : 0,
+            down_payment: 0,
+            notes: `Importado via planilha — ${row.situacaoFinanceira}`,
+          };
+          if (existingFin?.id) {
+            await supabase.from('vehicle_finance').update(finPayload).eq('id', existingFin.id);
+          } else {
+            await supabase.from('vehicle_finance').insert(finPayload as any);
+          }
+        }
 
         // 2) Alocação (obra + responsável) — encerra a anterior e cria nova
         if (row.obra || row.responsavel) {
