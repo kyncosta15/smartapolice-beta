@@ -1828,6 +1828,7 @@ export type Database = {
           status_seguro: string | null
           status_veiculo: string | null
           stolen_current_date: string | null
+          tem_rastreador: boolean
           tipo_veiculo: number | null
           uf_emplacamento: string | null
           updated_at: string
@@ -1873,6 +1874,7 @@ export type Database = {
           status_seguro?: string | null
           status_veiculo?: string | null
           stolen_current_date?: string | null
+          tem_rastreador?: boolean
           tipo_veiculo?: number | null
           uf_emplacamento?: string | null
           updated_at?: string
@@ -1918,6 +1920,7 @@ export type Database = {
           status_seguro?: string | null
           status_veiculo?: string | null
           stolen_current_date?: string | null
+          tem_rastreador?: boolean
           tipo_veiculo?: number | null
           uf_emplacamento?: string | null
           updated_at?: string
