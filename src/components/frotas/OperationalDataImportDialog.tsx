@@ -218,6 +218,32 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
           .eq('id', row.veiculoId!);
         if (updErr) throw updErr;
 
+        // 1b) Criar/atualizar registro em vehicle_finance (a aba Financeiro lê daqui)
+        if (financeType) {
+          const { data: existingFin } = await supabase
+            .from('vehicle_finance')
+            .select('id')
+            .eq('vehicle_id', row.veiculoId!)
+            .maybeSingle();
+          const finPayload: Record<string, any> = {
+            vehicle_id: row.veiculoId!,
+            empresa_id: activeEmpresaId,
+            type: financeType,
+            status: financeStatus || 'EM_ANDAMENTO',
+            direct_payment: financeType === 'AVISTA',
+            term_months: financeType === 'AVISTA' ? 1 : 1,
+            installment_value: 0,
+            installments_paid: financeType === 'AVISTA' ? 1 : 0,
+            down_payment: 0,
+            notes: `Importado via planilha — ${row.situacaoFinanceira}`,
+          };
+          if (existingFin?.id) {
+            await supabase.from('vehicle_finance').update(finPayload).eq('id', existingFin.id);
+          } else {
+            await supabase.from('vehicle_finance').insert(finPayload);
+          }
+        }
+
         // 2) Alocação (obra + responsável) — encerra a anterior e cria nova
         if (row.obra || row.responsavel) {
           // Encerra ativa anterior
