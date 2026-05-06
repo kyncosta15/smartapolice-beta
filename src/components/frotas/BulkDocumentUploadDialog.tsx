@@ -50,17 +50,24 @@ interface FileItem {
   error?: string;
 }
 
-/** Extrai a placa (padrão Mercosul ou antigo) de um nome de arquivo. */
+/** Extrai a placa (Mercosul ABC1D23 ou antiga ABC1234) do nome de arquivo.
+ *  Aceita separadores opcionais entre as 3 letras e os caracteres seguintes
+ *  (hífen, espaço ou underline). Ex.: "SJS-5G90.pdf", "ABC 1234.pdf",
+ *  "CRLV_TMU6H64.pdf", "TMU-6H64.pdf".
+ */
 function extractPlacaFromFilename(name: string): string | null {
-  const upper = name.toUpperCase().replace(/\.[^.]+$/, ''); // sem extensão
-  // Mercosul: ABC1D23  | Antigo: ABC1234. Aceita separadores opcionais.
-  const regex = /([A-Z]{3})[-\s_]?([0-9])([A-Z0-9])([0-9]{2})/g;
-  let match: RegExpExecArray | null;
-  while ((match = regex.exec(upper)) !== null) {
-    const placa = `${match[1]}${match[2]}${match[3]}${match[4]}`;
-    if (/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(placa)) {
-      return placa;
-    }
+  const upper = name.toUpperCase().replace(/\.[^.]+$/, '');
+  // 1) Tenta Mercosul: 3 letras + dígito + alfanumérico + 2 dígitos.
+  const mercosul = /([A-Z]{3})[-\s_]?([0-9])([A-Z0-9])([0-9]{2})/g;
+  let m: RegExpExecArray | null;
+  while ((m = mercosul.exec(upper)) !== null) {
+    const placa = `${m[1]}${m[2]}${m[3]}${m[4]}`;
+    if (/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(placa)) return placa;
+  }
+  // 2) Tenta formato antigo: 3 letras + 4 dígitos.
+  const antigo = /([A-Z]{3})[-\s_]?([0-9]{4})/g;
+  while ((m = antigo.exec(upper)) !== null) {
+    return `${m[1]}${m[2]}`;
   }
   return null;
 }
