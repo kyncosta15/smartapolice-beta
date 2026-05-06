@@ -85,9 +85,14 @@ export function VehicleDocumentsSection({
     return labelMap[tipo] || 'Documento';
   }, []);
 
+  // Reseta documentos APENAS quando o veículo muda. Não depender de
+  // `normalizedInitialDocuments` porque o pai recria a referência a cada render
+  // e isso apagava os documentos recém-buscados, deixando a UI presa em
+  // "Buscando documentos vinculados...".
   useEffect(() => {
     setDocuments(normalizedInitialDocuments);
-  }, [vehicleId, normalizedInitialDocuments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vehicleId]);
 
   const fetchDocuments = useCallback(async () => {
     if (!vehicleId || vehicleId.trim() === '') {
