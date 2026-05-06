@@ -14,8 +14,10 @@ import {
   Plus,
   File,
   FileImage,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Layers,
 } from 'lucide-react';
+import { BulkDocumentUploadDialog } from './BulkDocumentUploadDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useProgressToast } from '@/hooks/use-progress-toast';
 import {
@@ -63,6 +65,7 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
   const [tipoFilter, setTipoFilter] = useState<string>('all');
   const [selectedVeiculo, setSelectedVeiculo] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [uploadingVeiculoId, setUploadingVeiculoId] = useState<string>('');
   const [uploadingTipo, setUploadingTipo] = useState<string>('nf');
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
@@ -443,13 +446,23 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
           </p>
         </div>
         
-        <Button 
-          className="flex items-center justify-center gap-2 w-full sm:w-auto shrink-0"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          <span className="text-sm">Adicionar Documento</span>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto shrink-0"
+            onClick={() => setIsBulkOpen(true)}
+          >
+            <Layers className="h-4 w-4" />
+            <span className="text-sm">Upload em lote por placa</span>
+          </Button>
+          <Button
+            className="flex items-center justify-center gap-2 w-full sm:w-auto shrink-0"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            <span className="text-sm">Adicionar Documento</span>
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -710,6 +723,12 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <BulkDocumentUploadDialog
+        open={isBulkOpen}
+        onOpenChange={setIsBulkOpen}
+        veiculos={veiculos}
+      />
     </div>
   );
 }
