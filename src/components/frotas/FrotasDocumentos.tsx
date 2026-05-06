@@ -14,8 +14,10 @@ import {
   Plus,
   File,
   FileImage,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Layers,
 } from 'lucide-react';
+import { BulkDocumentUploadDialog } from './BulkDocumentUploadDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useProgressToast } from '@/hooks/use-progress-toast';
 import {
