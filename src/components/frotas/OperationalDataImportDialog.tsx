@@ -168,19 +168,35 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
 
     for (const row of toProcess) {
       try {
-        // 1) Atualizar veículo: rastreador, modalidade_compra, observações
+        // 1) Atualizar veículo: rastreador, modalidade_compra, observações,
+        //    + cache de alocação atual (campos lidos pela aba Obra)
         const updates: Record<string, any> = {
           tem_rastreador: row.rastreador,
         };
-        if (row.situacaoFinanceira) {
-          const sit = row.situacaoFinanceira.toUpperCase();
-          if (sit.includes('QUITADO') || sit.includes('AVISTA') || sit.includes('À VISTA')) {
+        const sitUpper = (row.situacaoFinanceira || '').toUpperCase();
+        let financeStatus: 'QUITADO' | 'EM_ANDAMENTO' | null = null;
+        let financeType: 'AVISTA' | 'FINANCIAMENTO' | 'CONSORCIO' | null = null;
+        if (sitUpper) {
+          if (sitUpper.includes('QUITADO') || sitUpper.includes('AVISTA') || sitUpper.includes('À VISTA') || sitUpper.includes('A VISTA')) {
             updates.modalidade_compra = 'avista';
-          } else if (sit.includes('FINANC')) {
+            financeType = 'AVISTA';
+            financeStatus = 'QUITADO';
+          } else if (sitUpper.includes('FINANC')) {
             updates.modalidade_compra = 'financiado';
-          } else if (sit.includes('CONSORCIO') || sit.includes('CONSÓRCIO')) {
+            financeType = 'FINANCIAMENTO';
+            financeStatus = 'EM_ANDAMENTO';
+          } else if (sitUpper.includes('CONSORCIO') || sitUpper.includes('CONSÓRCIO')) {
             updates.modalidade_compra = 'consorcio';
+            financeType = 'CONSORCIO';
+            financeStatus = 'EM_ANDAMENTO';
           }
+        }
+        // Cache de alocação no próprio veículo (a aba "Obra" lê daqui)
+        if (row.obra || row.responsavel) {
+          updates.current_responsible_name = row.responsavel || 'Não informado';
+          updates.current_worksite_name = row.obra || 'Não informado';
+          updates.current_worksite_start_date = today;
+          updates.has_assignment_info = true;
         }
         if (row.empresa) {
           // Anexa empresa responsável às observações sem perder o que já existe
