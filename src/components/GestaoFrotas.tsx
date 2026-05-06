@@ -336,6 +336,12 @@ export function GestaoFrotas() {
       </div>
 
 
+      <OperationalDataImportDialog
+        open={opImportOpen}
+        onOpenChange={setOpImportOpen}
+        onSuccess={refetch}
+      />
+
       {/* Public Link Generator Modal */}
       <PublicLinkGenerator 
         open={publicLinkModalOpen} 
