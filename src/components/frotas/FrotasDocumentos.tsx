@@ -65,6 +65,7 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
   const [tipoFilter, setTipoFilter] = useState<string>('all');
   const [selectedVeiculo, setSelectedVeiculo] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [uploadingVeiculoId, setUploadingVeiculoId] = useState<string>('');
   const [uploadingTipo, setUploadingTipo] = useState<string>('nf');
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
