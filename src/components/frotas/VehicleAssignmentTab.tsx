@@ -38,6 +38,7 @@ interface AssignmentRecord {
 interface VehicleAssignmentTabProps {
   vehicleId: string;
   currentResponsible?: string | null;
+  currentResponsibleContact?: string | null;
   currentWorksite?: string | null;
   currentWorksiteStartDate?: string | null;
   mode?: 'view' | 'edit';
@@ -47,6 +48,7 @@ interface VehicleAssignmentTabProps {
 export default function VehicleAssignmentTab({
   vehicleId,
   currentResponsible,
+  currentResponsibleContact,
   currentWorksite,
   currentWorksiteStartDate,
   mode = 'view',
@@ -64,11 +66,13 @@ export default function VehicleAssignmentTab({
 
   // Local state for current assignment (updated optimistically after save)
   const [localResponsible, setLocalResponsible] = useState<string | null | undefined>(currentResponsible);
+  const [localContact, setLocalContact] = useState<string | null | undefined>(currentResponsibleContact);
   const [localWorksite, setLocalWorksite] = useState<string | null | undefined>(currentWorksite);
   const [localStartDate, setLocalStartDate] = useState<string | null | undefined>(currentWorksiteStartDate);
 
   // Sync with props when they change (e.g., parent refetches)
   useEffect(() => { setLocalResponsible(currentResponsible); }, [currentResponsible]);
+  useEffect(() => { setLocalContact(currentResponsibleContact); }, [currentResponsibleContact]);
   useEffect(() => { setLocalWorksite(currentWorksite); }, [currentWorksite]);
   useEffect(() => { setLocalStartDate(currentWorksiteStartDate); }, [currentWorksiteStartDate]);
 
