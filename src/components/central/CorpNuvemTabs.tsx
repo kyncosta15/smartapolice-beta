@@ -202,32 +202,30 @@ export function CorpNuvemTabs() {
     }
   };
 
-  const handleVisualizarAnexo = (anexo: any) => {
-    if (anexo.url || anexo.arquivo_url) {
-      window.open(anexo.url || anexo.arquivo_url, '_blank');
+  const handleVisualizarAnexo = async (anexo: any) => {
+    const raw = anexo.url || anexo.arquivo_url;
+    if (raw) {
+      const { getSignedDocumentUrl } = await import('@/lib/storageUrl');
+      const signedUrl = await getSignedDocumentUrl(raw);
+      window.open(signedUrl, '_blank');
     } else {
-      toast({
-        title: 'Aviso',
-        description: 'URL do documento não disponível',
-        variant: 'destructive',
-      });
+      toast({ title: 'Aviso', description: 'URL do documento não disponível', variant: 'destructive' });
     }
   };
 
-  const handleBaixarAnexo = (anexo: any) => {
-    if (anexo.url || anexo.arquivo_url) {
+  const handleBaixarAnexo = async (anexo: any) => {
+    const raw = anexo.url || anexo.arquivo_url;
+    if (raw) {
+      const { getSignedDocumentUrl } = await import('@/lib/storageUrl');
+      const signedUrl = await getSignedDocumentUrl(raw);
       const link = document.createElement('a');
-      link.href = anexo.url || anexo.arquivo_url;
+      link.href = signedUrl;
       link.download = anexo.nome || anexo.descricao || 'documento.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } else {
-      toast({
-        title: 'Aviso',
-        description: 'URL do documento não disponível',
-        variant: 'destructive',
-      });
+      toast({ title: 'Aviso', description: 'URL do documento não disponível', variant: 'destructive' });
     }
   };
 
