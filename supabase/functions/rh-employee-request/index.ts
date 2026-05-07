@@ -1,16 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { z } from 'https://esm.sh/zod@3.23.8';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface RequestBody {
-  kind: 'inclusao' | 'exclusao';
-  employee_data: any;
-  observacoes?: string;
-}
+const RequestBodySchema = z.object({
+  kind: z.enum(['inclusao', 'exclusao']),
+  employee_data: z.record(z.unknown()),
+  observacoes: z.string().max(2000).optional().nullable(),
+});
+type RequestBody = z.infer<typeof RequestBodySchema>;
 
 serve(async (req) => {
   // Handle CORS
