@@ -168,8 +168,10 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
 
   const handleViewDocument = async (documento: any) => {
     try {
-      // Fazer download e usar Web Share API em mobile
-      const response = await fetch(documento.url);
+      // Bucket privado: gerar signed URL antes do fetch
+      const { getSignedDocumentUrl } = await import('@/lib/storageUrl');
+      const signedUrl = await getSignedDocumentUrl(documento.url, 'frotas_docs');
+      const response = await fetch(signedUrl);
       if (!response.ok) throw new Error('Falha ao carregar documento');
       
       const blob = await response.blob();
