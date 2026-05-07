@@ -168,8 +168,10 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
 
   const handleViewDocument = async (documento: any) => {
     try {
-      // Fazer download e usar Web Share API em mobile
-      const response = await fetch(documento.url);
+      // Bucket privado: gerar signed URL antes do fetch
+      const { getSignedDocumentUrl } = await import('@/lib/storageUrl');
+      const signedUrl = await getSignedDocumentUrl(documento.url, 'frotas_docs');
+      const response = await fetch(signedUrl);
       if (!response.ok) throw new Error('Falha ao carregar documento');
       
       const blob = await response.blob();
@@ -219,31 +221,12 @@ export function FrotasDocumentos({ veiculos, loading }: FrotasDocumentosProps) {
         variant: 'info'
       });
 
-      let downloadData: Blob;
-      
-      // Tentar diferentes métodos de download baseado na URL
-      if (documento.url.includes('supabase.co/storage/v1/object/public/')) {
-        // Para URLs públicas do Supabase Storage
-        const response = await fetch(documento.url);
-        if (!response.ok) throw new Error('Falha ao baixar arquivo');
-        downloadData = await response.blob();
-      } else {
-        // Tentar baixar do bucket frotas_docs
-        const fileName = documento.url.split('/').pop() || documento.nome_arquivo;
-        const { data, error } = await supabase.storage
-          .from('frotas_docs')
-          .download(fileName);
-
-        if (error) {
-          // Fallback: tentar download direto da URL
-          console.log('Fallback para download direto da URL:', documento.url);
-          const response = await fetch(documento.url);
-          if (!response.ok) throw new Error('Falha ao baixar arquivo');
-          downloadData = await response.blob();
-        } else {
-          downloadData = data;
-        }
-      }
+      // Bucket privado: usa signed URL p/ baixar
+      const { getSignedDocumentUrl } = await import('@/lib/storageUrl');
+      const signedUrl = await getSignedDocumentUrl(documento.url, 'frotas_docs');
+      const response = await fetch(signedUrl);
+      if (!response.ok) throw new Error('Falha ao baixar arquivo');
+      const downloadData: Blob = await response.blob();
 
       // Criar blob com MIME type explícito
       const pdfBlob = new Blob([downloadData], { type: 'application/pdf' });
