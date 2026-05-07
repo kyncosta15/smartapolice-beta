@@ -45,18 +45,21 @@ serve(async (req) => {
       );
     }
 
-    // Processar requisição
-    const { kind, employee_data, observacoes }: RequestBody = await req.json();
-
-    console.log('📝 Criando solicitação RH:', { kind, employee_data, user_id: user.id });
-
-    // Validar dados obrigatórios
-    if (!kind || !employee_data) {
+    // Processar requisição com validação
+    const rawBody = await req.json();
+    const parsed = RequestBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ ok: false, error: { code: 'INVALID_REQUEST', message: 'Campos obrigatórios: kind, employee_data' } }),
+        JSON.stringify({
+          ok: false,
+          error: { code: 'INVALID_REQUEST', message: 'Dados inválidos', details: parsed.error.flatten().fieldErrors },
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+    const { kind, employee_data, observacoes }: RequestBody = parsed.data;
+
+    console.log('📝 Criando solicitação RH:', { kind, user_id: user.id });
 
     // Buscar perfil do usuário para obter a empresa
     const { data: userProfile, error: profileError } = await supabase
