@@ -354,6 +354,9 @@ export default function VehicleAssignmentTab({
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Responsável Atual</p>
                 <p className="font-semibold text-foreground">{localResponsible || '-'}</p>
+                {localContact && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{localContact}</p>
+                )}
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
