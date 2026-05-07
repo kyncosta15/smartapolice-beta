@@ -266,6 +266,7 @@ export default function VehicleAssignmentTab({
       if (closeErr) throw closeErr;
 
       setLocalResponsible(null);
+      setLocalContact(null);
       setLocalWorksite(null);
       setLocalStartDate(null);
 
@@ -274,6 +275,7 @@ export default function VehicleAssignmentTab({
           .from('frota_veiculos')
           .update({
             current_responsible_name: null,
+            current_responsible_contact: null,
             current_worksite_name: null,
             current_worksite_start_date: null,
             has_assignment_info: false,
