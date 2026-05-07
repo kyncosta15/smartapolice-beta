@@ -5075,7 +5075,17 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "rh" | "corretora" | "master"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "rh"
+        | "corretora"
+        | "master"
+        | "administrador"
+        | "corretora_admin"
+        | "gestor_rh"
+        | "cliente"
       colaborador_status: "ativo" | "inativo" | "pendente"
       grau_parentesco: "conjuge" | "filho" | "filha" | "mae" | "pai" | "outros"
       policy_status:
@@ -5223,7 +5233,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "rh", "corretora", "master"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "rh",
+        "corretora",
+        "master",
+        "administrador",
+        "corretora_admin",
+        "gestor_rh",
+        "cliente",
+      ],
       colaborador_status: ["ativo", "inativo", "pendente"],
       grau_parentesco: ["conjuge", "filho", "filha", "mae", "pai", "outros"],
       policy_status: [
