@@ -175,11 +175,11 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
         };
         const sitUpper = (row.situacaoFinanceira || '').toUpperCase();
         let financeStatus: 'QUITADO' | 'EM_ANDAMENTO' | null = null;
-        let financeType: 'AVISTA' | 'FINANCIAMENTO' | 'CONSORCIO' | null = null;
+        let financeType: 'A_VISTA' | 'FINANCIAMENTO' | 'CONSORCIO' | null = null;
         if (sitUpper) {
           if (sitUpper.includes('QUITADO') || sitUpper.includes('AVISTA') || sitUpper.includes('À VISTA') || sitUpper.includes('A VISTA')) {
             updates.modalidade_compra = 'avista';
-            financeType = 'AVISTA';
+            financeType = 'A_VISTA';
             financeStatus = 'QUITADO';
           } else if (sitUpper.includes('FINANC')) {
             updates.modalidade_compra = 'financiado';
@@ -192,8 +192,9 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
           }
         }
         // Cache de alocação no próprio veículo (a aba "Obra" lê daqui)
-        if (row.obra || row.responsavel) {
+        if (row.obra || row.responsavel || row.contato) {
           updates.current_responsible_name = row.responsavel || 'Não informado';
+          updates.current_responsible_contact = row.contato || null;
           updates.current_worksite_name = row.obra || 'Não informado';
           updates.current_worksite_start_date = today;
           updates.has_assignment_info = true;
@@ -230,10 +231,10 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
             empresa_id: activeEmpresaId,
             type: financeType,
             status: financeStatus || 'EM_ANDAMENTO',
-            direct_payment: financeType === 'AVISTA',
-            term_months: financeType === 'AVISTA' ? 1 : 1,
+            direct_payment: financeType === 'A_VISTA',
+            term_months: 1,
             installment_value: 0,
-            installments_paid: financeType === 'AVISTA' ? 1 : 0,
+            installments_paid: financeType === 'A_VISTA' ? 1 : 0,
             down_payment: 0,
             notes: `Importado via planilha — ${row.situacaoFinanceira}`,
           };

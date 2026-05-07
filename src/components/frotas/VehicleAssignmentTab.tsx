@@ -38,6 +38,7 @@ interface AssignmentRecord {
 interface VehicleAssignmentTabProps {
   vehicleId: string;
   currentResponsible?: string | null;
+  currentResponsibleContact?: string | null;
   currentWorksite?: string | null;
   currentWorksiteStartDate?: string | null;
   mode?: 'view' | 'edit';
@@ -47,6 +48,7 @@ interface VehicleAssignmentTabProps {
 export default function VehicleAssignmentTab({
   vehicleId,
   currentResponsible,
+  currentResponsibleContact,
   currentWorksite,
   currentWorksiteStartDate,
   mode = 'view',
@@ -64,11 +66,13 @@ export default function VehicleAssignmentTab({
 
   // Local state for current assignment (updated optimistically after save)
   const [localResponsible, setLocalResponsible] = useState<string | null | undefined>(currentResponsible);
+  const [localContact, setLocalContact] = useState<string | null | undefined>(currentResponsibleContact);
   const [localWorksite, setLocalWorksite] = useState<string | null | undefined>(currentWorksite);
   const [localStartDate, setLocalStartDate] = useState<string | null | undefined>(currentWorksiteStartDate);
 
   // Sync with props when they change (e.g., parent refetches)
   useEffect(() => { setLocalResponsible(currentResponsible); }, [currentResponsible]);
+  useEffect(() => { setLocalContact(currentResponsibleContact); }, [currentResponsibleContact]);
   useEffect(() => { setLocalWorksite(currentWorksite); }, [currentWorksite]);
   useEffect(() => { setLocalStartDate(currentWorksiteStartDate); }, [currentWorksiteStartDate]);
 
@@ -169,6 +173,7 @@ export default function VehicleAssignmentTab({
           .from('frota_veiculos')
           .update({
             current_responsible_name: responsible,
+            current_responsible_contact: contact || null,
             current_worksite_name: worksite,
             current_worksite_start_date: startDate,
             has_assignment_info: hasInfo,
@@ -180,6 +185,7 @@ export default function VehicleAssignmentTab({
 
       // Optimistic UI update — reflect new assignment immediately without waiting for parent refetch
       setLocalResponsible(responsible);
+      setLocalContact(contact || null);
       setLocalWorksite(worksite);
       setLocalStartDate(startDate);
 
@@ -215,6 +221,7 @@ export default function VehicleAssignmentTab({
 
       if (wasCurrent) {
         setLocalResponsible(null);
+        setLocalContact(null);
         setLocalWorksite(null);
         setLocalStartDate(null);
 
@@ -223,6 +230,7 @@ export default function VehicleAssignmentTab({
             .from('frota_veiculos')
             .update({
               current_responsible_name: null,
+              current_responsible_contact: null,
               current_worksite_name: null,
               current_worksite_start_date: null,
               has_assignment_info: false,
@@ -258,6 +266,7 @@ export default function VehicleAssignmentTab({
       if (closeErr) throw closeErr;
 
       setLocalResponsible(null);
+      setLocalContact(null);
       setLocalWorksite(null);
       setLocalStartDate(null);
 
@@ -266,6 +275,7 @@ export default function VehicleAssignmentTab({
           .from('frota_veiculos')
           .update({
             current_responsible_name: null,
+            current_responsible_contact: null,
             current_worksite_name: null,
             current_worksite_start_date: null,
             has_assignment_info: false,
@@ -287,7 +297,7 @@ export default function VehicleAssignmentTab({
   const openEdit = () => {
     setFormData({
       responsible_name: localResponsible || '',
-      responsible_contact: '',
+      responsible_contact: localContact || '',
       worksite_name: localWorksite || '',
       worksite_code: '',
       start_date: format(new Date(), 'yyyy-MM-dd'),
@@ -348,6 +358,9 @@ export default function VehicleAssignmentTab({
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Responsável Atual</p>
                 <p className="font-semibold text-foreground">{localResponsible || '-'}</p>
+                {localContact && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{localContact}</p>
+                )}
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">

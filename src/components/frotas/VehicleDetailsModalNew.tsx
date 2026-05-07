@@ -831,6 +831,7 @@ export function VehicleDetailsModalNew({
                 <VehicleAssignmentTab
                   vehicleId={veiculo.id}
                   currentResponsible={(veiculo as any).current_responsible_name}
+                  currentResponsibleContact={(veiculo as any).current_responsible_contact}
                   currentWorksite={(veiculo as any).current_worksite_name}
                   currentWorksiteStartDate={(veiculo as any).current_worksite_start_date}
                   mode={mode}
