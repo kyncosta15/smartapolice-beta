@@ -1800,6 +1800,7 @@ export type Database = {
           consorcio_taxa_adm: number | null
           created_at: string
           created_by: string | null
+          current_responsible_contact: string | null
           current_responsible_name: string | null
           current_worksite_name: string | null
           current_worksite_start_date: string | null
@@ -1846,6 +1847,7 @@ export type Database = {
           consorcio_taxa_adm?: number | null
           created_at?: string
           created_by?: string | null
+          current_responsible_contact?: string | null
           current_responsible_name?: string | null
           current_worksite_name?: string | null
           current_worksite_start_date?: string | null
@@ -1892,6 +1894,7 @@ export type Database = {
           consorcio_taxa_adm?: number | null
           created_at?: string
           created_by?: string | null
+          current_responsible_contact?: string | null
           current_responsible_name?: string | null
           current_worksite_name?: string | null
           current_worksite_start_date?: string | null
