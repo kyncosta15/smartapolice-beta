@@ -173,6 +173,7 @@ export default function VehicleAssignmentTab({
           .from('frota_veiculos')
           .update({
             current_responsible_name: responsible,
+            current_responsible_contact: contact || null,
             current_worksite_name: worksite,
             current_worksite_start_date: startDate,
             has_assignment_info: hasInfo,
@@ -184,6 +185,7 @@ export default function VehicleAssignmentTab({
 
       // Optimistic UI update — reflect new assignment immediately without waiting for parent refetch
       setLocalResponsible(responsible);
+      setLocalContact(contact || null);
       setLocalWorksite(worksite);
       setLocalStartDate(startDate);
 
