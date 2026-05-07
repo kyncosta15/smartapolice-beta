@@ -33,15 +33,15 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId, requestId, token, payload } = await req.json();
-
-    // Validate input
-    if (!sessionId || !requestId || !token || !payload) {
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
       return Response.json({
         ok: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Dados incompletos' }
+        error: { code: 'VALIDATION_ERROR', message: 'Dados inválidos', details: parsed.error.flatten().fieldErrors }
       }, { headers: corsHeaders });
     }
+    const { sessionId, requestId, token, payload } = parsed.data;
 
     // Validate session token
     const { data: tokenValidation, error: tokenError } = await supabase
