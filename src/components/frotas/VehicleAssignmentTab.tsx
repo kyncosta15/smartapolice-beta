@@ -291,7 +291,7 @@ export default function VehicleAssignmentTab({
   const openEdit = () => {
     setFormData({
       responsible_name: localResponsible || '',
-      responsible_contact: '',
+      responsible_contact: localContact || '',
       worksite_name: localWorksite || '',
       worksite_code: '',
       start_date: format(new Date(), 'yyyy-MM-dd'),
