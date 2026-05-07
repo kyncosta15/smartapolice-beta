@@ -1,11 +1,30 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { z } from 'https://esm.sh/zod@3.23.8';
 import { corsHeaders } from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
+
+const ItemSchema = z.object({
+  target: z.string().max(120).optional().nullable(),
+  action: z.string().max(60).optional().nullable(),
+  dependentId: z.string().uuid().optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+}).passthrough();
+
+const BodySchema = z.object({
+  sessionId: z.string().uuid(),
+  requestId: z.string().uuid(),
+  token: z.string().min(8).max(256),
+  payload: z.object({
+    kind: z.string().max(64).optional(),
+    metadata: z.record(z.unknown()).optional(),
+    items: z.array(ItemSchema).max(200).optional(),
+  }).passthrough(),
+});
 
 serve(async (req) => {
   // Handle CORS preflight requests
