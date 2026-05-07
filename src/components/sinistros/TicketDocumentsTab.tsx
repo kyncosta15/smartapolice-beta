@@ -223,8 +223,10 @@ export function TicketDocumentsTab({ ticketId, ticketType }: TicketDocumentsTabP
         description: 'Preparando arquivo para download...',
       });
 
-      // Fazer fetch do arquivo
-      const response = await fetch(attachment.file_url || '');
+      // Bucket privado: gerar signed URL antes do fetch
+      const { getSignedDocumentUrl } = await import('@/lib/storageUrl');
+      const signedUrl = await getSignedDocumentUrl(attachment.file_url || '', 'documents');
+      const response = await fetch(signedUrl);
       if (!response.ok) throw new Error('Erro ao baixar arquivo');
       
       const blob = await response.blob();
