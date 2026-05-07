@@ -1,6 +1,13 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { z } from 'https://esm.sh/zod@3.23.8';
 import { corsHeaders } from "../_shared/cors.ts";
+
+const BodySchema = z.object({
+  sessionId: z.string().uuid(),
+  requestId: z.string().uuid(),
+  token: z.string().min(8).max(256),
+});
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -21,15 +28,15 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId, requestId, token } = await req.json();
-
-    // Validate input
-    if (!sessionId || !requestId || !token) {
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
       return Response.json({
         ok: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Dados incompletos' }
+        error: { code: 'VALIDATION_ERROR', message: 'Dados inválidos', details: parsed.error.flatten().fieldErrors }
       }, { headers: corsHeaders });
     }
+    const { sessionId, requestId, token } = parsed.data;
 
     // Validate session token
     const { data: tokenValidation, error: tokenError } = await supabase

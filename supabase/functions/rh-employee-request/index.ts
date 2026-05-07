@@ -1,16 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { z } from 'https://esm.sh/zod@3.23.8';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface RequestBody {
-  kind: 'inclusao' | 'exclusao';
-  employee_data: any;
-  observacoes?: string;
-}
+const RequestBodySchema = z.object({
+  kind: z.enum(['inclusao', 'exclusao']),
+  employee_data: z.record(z.unknown()),
+  observacoes: z.string().max(2000).optional().nullable(),
+});
+type RequestBody = z.infer<typeof RequestBodySchema>;
 
 serve(async (req) => {
   // Handle CORS
@@ -43,18 +45,21 @@ serve(async (req) => {
       );
     }
 
-    // Processar requisição
-    const { kind, employee_data, observacoes }: RequestBody = await req.json();
-
-    console.log('📝 Criando solicitação RH:', { kind, employee_data, user_id: user.id });
-
-    // Validar dados obrigatórios
-    if (!kind || !employee_data) {
+    // Processar requisição com validação
+    const rawBody = await req.json();
+    const parsed = RequestBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ ok: false, error: { code: 'INVALID_REQUEST', message: 'Campos obrigatórios: kind, employee_data' } }),
+        JSON.stringify({
+          ok: false,
+          error: { code: 'INVALID_REQUEST', message: 'Dados inválidos', details: parsed.error.flatten().fieldErrors },
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+    const { kind, employee_data, observacoes }: RequestBody = parsed.data;
+
+    console.log('📝 Criando solicitação RH:', { kind, user_id: user.id });
 
     // Buscar perfil do usuário para obter a empresa
     const { data: userProfile, error: profileError } = await supabase
