@@ -53,23 +53,19 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const body = await req.json();
-    console.log('Received public fleet request:', JSON.stringify(body, null, 2));
-
-    const { token, formData, anexos } = body;
-
-    if (!token || !formData) {
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Token e dados do formulário são obrigatórios' 
+        JSON.stringify({
+          success: false,
+          error: 'Dados inválidos',
+          details: parsed.error.flatten().fieldErrors,
         }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    const { token, formData, anexos } = parsed.data;
 
     // Validar token - aceita tokens permanentes (expires_at null) ou não expirados
     const { data: tokenData, error: tokenError } = await supabase
