@@ -231,10 +231,10 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
             empresa_id: activeEmpresaId,
             type: financeType,
             status: financeStatus || 'EM_ANDAMENTO',
-            direct_payment: financeType === 'AVISTA',
-            term_months: financeType === 'AVISTA' ? 1 : 1,
+            direct_payment: financeType === 'A_VISTA',
+            term_months: 1,
             installment_value: 0,
-            installments_paid: financeType === 'AVISTA' ? 1 : 0,
+            installments_paid: financeType === 'A_VISTA' ? 1 : 0,
             down_payment: 0,
             notes: `Importado via planilha — ${row.situacaoFinanceira}`,
           };
