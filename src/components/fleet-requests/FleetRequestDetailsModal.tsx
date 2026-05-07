@@ -304,9 +304,11 @@ export function FleetRequestDetailsModal({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
+                          onClick={async () => {
+                            const { getSignedDocumentUrl } = await import('@/lib/storageUrl');
+                            const signedUrl = await getSignedDocumentUrl(doc.file_url, 'fleet-documents');
                             const link = document.createElement('a');
-                            link.href = doc.file_url;
+                            link.href = signedUrl;
                             link.target = '_blank';
                             link.rel = 'noopener noreferrer';
                             link.download = doc.file_name;
