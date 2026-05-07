@@ -563,12 +563,12 @@ export function VehicleDetailsModalNew({
               <LazyTabContent activeValue={activeTab} value="proprietario" className="mt-0 space-y-4 md:space-y-6">
                 <Card className="p-3 md:p-6">
                   <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
-                    <User className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+                    <User className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                     Informações do Proprietário
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="proprietario_nome" className="text-sm font-medium text-gray-700">Nome do Proprietário</Label>
+                      <Label htmlFor="proprietario_nome" className="text-sm font-medium text-foreground">Nome do Proprietário</Label>
                       <Input
                         id="proprietario_nome"
                         value={formData.proprietario_nome || ''}
@@ -578,7 +578,7 @@ export function VehicleDetailsModalNew({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="proprietario_tipo" className="text-sm font-medium text-gray-700">Tipo</Label>
+                      <Label htmlFor="proprietario_tipo" className="text-sm font-medium text-foreground">Tipo</Label>
                       <Select 
                         value={formData.proprietario_tipo || ''} 
                         onValueChange={(value) => handleInputChange('proprietario_tipo', value)}
@@ -594,7 +594,7 @@ export function VehicleDetailsModalNew({
                       </Select>
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="proprietario_doc" className="text-sm font-medium text-gray-700">CPF/CNPJ</Label>
+                      <Label htmlFor="proprietario_doc" className="text-sm font-medium text-foreground">CPF/CNPJ</Label>
                       <Input
                         id="proprietario_doc"
                         value={formData.proprietario_doc || ''}
@@ -620,14 +620,14 @@ export function VehicleDetailsModalNew({
               <LazyTabContent activeValue={activeTab} value="seguro" className="mt-0 space-y-4 md:space-y-6">
                 <Card className="p-3 md:p-6">
                   <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
-                    <Shield className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+                    <Shield className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                     Status do Seguro
                   </h3>
                   <div className="grid grid-cols-1 gap-4 md:gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="status_seguro" className="text-sm font-medium text-gray-700">Status Atual</Label>
+                      <Label htmlFor="status_seguro" className="text-sm font-medium text-foreground">Status Atual</Label>
                       {mode === 'view' ? (
-                        <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                        <div className="p-3 md:p-4 bg-muted rounded-lg">
                           {getStatusBadge(formData.status_seguro || 'sem_seguro')}
                         </div>
                       ) : (
@@ -652,9 +652,9 @@ export function VehicleDetailsModalNew({
                     </div>
                     {formData.motivo_sem_seguro && (
                       <div className="space-y-2">
-                        <Label htmlFor="motivo_sem_seguro" className="text-sm font-medium text-gray-700">Motivo sem Seguro</Label>
+                        <Label htmlFor="motivo_sem_seguro" className="text-sm font-medium text-foreground">Motivo sem Seguro</Label>
                         {mode === 'view' ? (
-                          <p className="p-3 md:p-4 bg-yellow-50 rounded-lg text-yellow-800 text-sm">
+                          <p className="p-3 md:p-4 bg-yellow-500/10 rounded-lg text-yellow-700 dark:text-yellow-300 text-sm">
                             {formData.motivo_sem_seguro}
                           </p>
                         ) : (
@@ -671,7 +671,7 @@ export function VehicleDetailsModalNew({
                     )}
                     {mode === 'edit' && formData.status_seguro === 'sem_seguro' && !formData.motivo_sem_seguro && (
                       <div className="space-y-2">
-                        <Label htmlFor="motivo_sem_seguro" className="text-sm font-medium text-gray-700">Motivo sem Seguro</Label>
+                        <Label htmlFor="motivo_sem_seguro" className="text-sm font-medium text-foreground">Motivo sem Seguro</Label>
                         <Textarea
                           id="motivo_sem_seguro"
                           value={formData.motivo_sem_seguro || ''}
@@ -689,12 +689,12 @@ export function VehicleDetailsModalNew({
               <LazyTabContent activeValue={activeTab} value="operacao" className="mt-0 space-y-4 md:space-y-6">
                 <Card className="p-3 md:p-6">
                   <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
-                    <Settings className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+                    <Settings className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                     Informações Operacionais
                   </h3>
                   <div className="grid grid-cols-1 gap-4 md:gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="observacoes_operacao" className="text-sm font-medium text-gray-700">Observações Operacionais</Label>
+                      <Label htmlFor="observacoes_operacao" className="text-sm font-medium text-foreground">Observações Operacionais</Label>
                       <Textarea
                         id="observacoes_operacao"
                         value={formData.observacoes_operacao || ''}
@@ -718,7 +718,7 @@ export function VehicleDetailsModalNew({
                 <Card className="p-3 md:p-6">
                   <div className="flex items-center justify-between mb-3 md:mb-4">
                     <h3 className="text-base md:text-lg font-semibold flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+                      <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                       Informações Financeiras
                     </h3>
                     {mode === 'edit' && (
@@ -747,7 +747,7 @@ export function VehicleDetailsModalNew({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="preco_nf" className="text-sm font-medium text-gray-700">Valor da Nota Fiscal</Label>
+                      <Label htmlFor="preco_nf" className="text-sm font-medium text-foreground">Valor da Nota Fiscal</Label>
                       <Input
                         id="preco_nf"
                         type="number"
@@ -758,10 +758,10 @@ export function VehicleDetailsModalNew({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="preco_fipe" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="preco_fipe" className="text-sm font-medium text-foreground">
                         Valor FIPE
                         {fipeUpdateInfo.updated && (
-                          <span className="text-green-600 text-xs ml-2">Atualizado!</span>
+                          <span className="text-success dark:text-emerald-400 text-xs ml-2">Atualizado!</span>
                         )}
                       </Label>
                       <Input
@@ -777,7 +777,7 @@ export function VehicleDetailsModalNew({
                 </Card>
 
                 {formData.preco_fipe && formData.preco_nf && (
-                  <Card className="p-3 md:p-6 bg-gray-50">
+                  <Card className="p-3 md:p-6 bg-muted">
                     <h4 className="text-sm md:text-md font-semibold mb-3 md:mb-4">Análise FIPE vs Nota Fiscal</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 text-center">
                       <div>
@@ -786,7 +786,7 @@ export function VehicleDetailsModalNew({
                       </div>
                       <div>
                         <p className="text-xs md:text-sm text-muted-foreground">Diferença</p>
-                        <p className={`text-sm md:text-lg font-semibold ${formData.preco_fipe > formData.preco_nf ? 'text-green-600' : 'text-red-600'}`}>
+                        <p className={`text-sm md:text-lg font-semibold ${formData.preco_fipe > formData.preco_nf ? 'text-success dark:text-emerald-400' : 'text-destructive'}`}>
                           {formatCurrency(Math.abs(formData.preco_fipe - formData.preco_nf))}
                         </p>
                       </div>
