@@ -1,5 +1,39 @@
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { z } from 'https://esm.sh/zod@3.23.8';
+
+const FormDataSchema = z.object({
+  tipo: z.string().min(1).max(64),
+  motivo: z.string().max(2000).optional().nullable(),
+  placa: z.string().trim().max(10).optional().nullable(),
+  chassi: z.string().trim().max(32).optional().nullable(),
+  renavam: z.string().trim().max(20).optional().nullable(),
+  solicitante_nome: z.string().max(200).optional().nullable(),
+  solicitante_email: z.string().email().max(255).optional().nullable().or(z.literal('')),
+  solicitante_telefone: z.string().max(40).optional().nullable(),
+  solicitante_setor: z.string().max(120).optional().nullable(),
+  seguradora: z.string().max(160).optional().nullable(),
+  numero_apolice: z.string().max(80).optional().nullable(),
+  vigencia_inicio: z.string().max(40).optional().nullable(),
+  vigencia_fim: z.string().max(40).optional().nullable(),
+  cobertura: z.string().max(500).optional().nullable(),
+  responsavel_nome: z.string().max(200).optional().nullable(),
+  responsavel_telefone: z.string().max(40).optional().nullable(),
+  responsavel_email: z.string().email().max(255).optional().nullable().or(z.literal('')),
+}).passthrough();
+
+const AnexoSchema = z.object({
+  name: z.string().max(255),
+  url: z.string().url().max(2048),
+  size: z.number().int().nonnegative().max(50 * 1024 * 1024).optional(),
+  type: z.string().max(120).optional(),
+});
+
+const BodySchema = z.object({
+  token: z.string().min(8).max(256),
+  formData: FormDataSchema,
+  anexos: z.array(AnexoSchema).max(50).optional(),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
