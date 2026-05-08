@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -14,6 +14,10 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Webhook,
   Code2,
@@ -25,9 +29,39 @@ import {
   Loader2,
   XCircle,
   Database,
+  Save,
+  RotateCcw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+type SmartConfig = {
+  system_prompt: string;
+  openai_model: string;
+  temperature: number;
+  top_p: number;
+  max_tokens: number;
+  merge_pages: boolean;
+  max_pdf_mb: number;
+  save_default: boolean;
+  bucket_name: string;
+  policy_number_prefix: string;
+  default_status: string;
+};
+
+const DEFAULT_CONFIG: SmartConfig = {
+  system_prompt: '',
+  openai_model: 'gpt-4o',
+  temperature: 0.3,
+  top_p: 1,
+  max_tokens: 4000,
+  merge_pages: true,
+  max_pdf_mb: 15,
+  save_default: true,
+  bucket_name: 'pdfs',
+  policy_number_prefix: 'SA_',
+  default_status: 'vigente',
+};
 
 type StepStatus = 'idle' | 'running' | 'success' | 'error';
 type StepKey = 'webhook' | 'tratar' | 'extrair' | 'ai' | 'parametrizar' | 'salvar';
