@@ -285,7 +285,7 @@ Deno.serve(async (req) => {
       }
     }
     stepTimes.salvar = Date.now() - s;
-    stepOutputs.salvar = { policy_id: policyId, saved: !!save };
+    stepOutputs.salvar = { policy_id: policyId, saved: !!save, pdf_path: pdfPath };
 
     return new Response(
       JSON.stringify({
