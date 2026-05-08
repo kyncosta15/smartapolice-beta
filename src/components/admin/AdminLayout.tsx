@@ -55,6 +55,7 @@ function AdminSidebar() {
     menuItems.push({ title: 'Acessos', url: '/admin/acessos', icon: Globe });
     menuItems.push({ title: 'Central de Dados', url: '/admin/central-de-dados', icon: DatabaseZap });
     menuItems.push({ title: 'Webhooks N8N', url: '/admin/webhooks', icon: Webhook });
+    menuItems.push({ title: 'SmartApólice Workflow', url: '/admin/workflows/smart-apolice', icon: Workflow });
     menuItems.push({ title: 'Email Settings', url: '/admin/email-settings', icon: Mail });
   }
 
