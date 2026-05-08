@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -14,6 +14,10 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Webhook,
   Code2,
@@ -25,9 +29,39 @@ import {
   Loader2,
   XCircle,
   Database,
+  Save,
+  RotateCcw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+type SmartConfig = {
+  system_prompt: string;
+  openai_model: string;
+  temperature: number;
+  top_p: number;
+  max_tokens: number;
+  merge_pages: boolean;
+  max_pdf_mb: number;
+  save_default: boolean;
+  bucket_name: string;
+  policy_number_prefix: string;
+  default_status: string;
+};
+
+const DEFAULT_CONFIG: SmartConfig = {
+  system_prompt: '',
+  openai_model: 'gpt-4o',
+  temperature: 0.3,
+  top_p: 1,
+  max_tokens: 4000,
+  merge_pages: true,
+  max_pdf_mb: 15,
+  save_default: true,
+  bucket_name: 'pdfs',
+  policy_number_prefix: 'SA_',
+  default_status: 'vigente',
+};
 
 type StepStatus = 'idle' | 'running' | 'success' | 'error';
 type StepKey = 'webhook' | 'tratar' | 'extrair' | 'ai' | 'parametrizar' | 'salvar';
@@ -115,6 +149,74 @@ export default function SmartApoliceWorkflowPage() {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<any>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // ====== Config editável ======
+  const [config, setConfig] = useState<SmartConfig>(DEFAULT_CONFIG);
+  const [configDraft, setConfigDraft] = useState<SmartConfig>(DEFAULT_CONFIG);
+  const [configLoading, setConfigLoading] = useState(true);
+  const [configSaving, setConfigSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from('smart_apolice_config')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+      if (error) {
+        toast.error(`Erro carregando config: ${error.message}`);
+      } else if (data) {
+        const loaded: SmartConfig = {
+          system_prompt: data.system_prompt ?? '',
+          openai_model: data.openai_model ?? 'gpt-4o',
+          temperature: Number(data.temperature ?? 0.3),
+          top_p: Number(data.top_p ?? 1),
+          max_tokens: Number(data.max_tokens ?? 4000),
+          merge_pages: !!data.merge_pages,
+          max_pdf_mb: Number(data.max_pdf_mb ?? 15),
+          save_default: !!data.save_default,
+          bucket_name: data.bucket_name ?? 'pdfs',
+          policy_number_prefix: data.policy_number_prefix ?? 'SA_',
+          default_status: data.default_status ?? 'vigente',
+        };
+        setConfig(loaded);
+        setConfigDraft(loaded);
+      }
+      setConfigLoading(false);
+    })();
+  }, []);
+
+  const dirty = JSON.stringify(config) !== JSON.stringify(configDraft);
+
+  const saveConfig = async () => {
+    setConfigSaving(true);
+    const { error } = await supabase
+      .from('smart_apolice_config')
+      .update({
+        system_prompt: configDraft.system_prompt,
+        openai_model: configDraft.openai_model,
+        temperature: configDraft.temperature,
+        top_p: configDraft.top_p,
+        max_tokens: configDraft.max_tokens,
+        merge_pages: configDraft.merge_pages,
+        max_pdf_mb: configDraft.max_pdf_mb,
+        save_default: configDraft.save_default,
+        bucket_name: configDraft.bucket_name,
+        policy_number_prefix: configDraft.policy_number_prefix,
+        default_status: configDraft.default_status,
+      })
+      .eq('id', 1);
+    setConfigSaving(false);
+    if (error) {
+      toast.error(`Erro ao salvar: ${error.message}`);
+      return;
+    }
+    setConfig(configDraft);
+    toast.success('Configuração salva — passa a valer no próximo upload');
+  };
+
+  const updateDraft = <K extends keyof SmartConfig>(k: K, v: SmartConfig[K]) =>
+    setConfigDraft((p) => ({ ...p, [k]: v }));
 
   const initial = useMemo(() => {
     const nodes: Node[] = STEPS.map((key, i) => ({
@@ -326,21 +428,187 @@ export default function SmartApoliceWorkflowPage() {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold">Output do nó</h3>
-              {selectedStep && (
-                <Badge variant="outline">{STEP_LABELS[selectedStep]}</Badge>
-              )}
+          <Card className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Configuração do nó</h3>
+              <div className="flex items-center gap-2">
+                {selectedStep && <Badge variant="outline">{STEP_LABELS[selectedStep]}</Badge>}
+                {dirty && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setConfigDraft(config)}
+                      disabled={configSaving}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5 mr-1" /> Reverter
+                    </Button>
+                    <Button size="sm" onClick={saveConfig} disabled={configSaving}>
+                      {configSaving ? (
+                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                      ) : (
+                        <Save className="h-3.5 w-3.5 mr-1" />
+                      )}
+                      Salvar
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
-            {selectedStep ? (
-              <pre className="text-xs bg-muted/40 p-3 rounded max-h-96 overflow-auto whitespace-pre-wrap break-words">
-                {JSON.stringify(outputs[selectedStep] ?? null, null, 2)}
-              </pre>
-            ) : (
+
+            {configLoading ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" /> Carregando configuração…
+              </div>
+            ) : !selectedStep ? (
               <p className="text-sm text-muted-foreground">
-                Clique em um nó do workflow para ver seu output.
+                Clique em um nó do workflow para editar suas configurações.
               </p>
+            ) : (
+              <div className="space-y-3">
+                {selectedStep === 'webhook' && (
+                  <>
+                    <div>
+                      <Label className="text-xs">Tamanho máximo do PDF (MB)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={configDraft.max_pdf_mb}
+                        onChange={(e) => updateDraft('max_pdf_mb', Number(e.target.value))}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={configDraft.save_default}
+                        onCheckedChange={(v) => updateDraft('save_default', v)}
+                      />
+                      <Label className="text-xs">Salvar no banco por padrão</Label>
+                    </div>
+                  </>
+                )}
+
+                {selectedStep === 'tratar' && (
+                  <p className="text-xs text-muted-foreground">
+                    Decodificação base64 → bytes. Sem parâmetros configuráveis.
+                  </p>
+                )}
+
+                {selectedStep === 'extrair' && (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={configDraft.merge_pages}
+                      onCheckedChange={(v) => updateDraft('merge_pages', v)}
+                    />
+                    <Label className="text-xs">
+                      Mesclar páginas em um único bloco de texto (mergePages)
+                    </Label>
+                  </div>
+                )}
+
+                {selectedStep === 'ai' && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs">Modelo OpenAI</Label>
+                        <Input
+                          value={configDraft.openai_model}
+                          onChange={(e) => updateDraft('openai_model', e.target.value)}
+                          placeholder="gpt-4o"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Max tokens</Label>
+                        <Input
+                          type="number"
+                          value={configDraft.max_tokens}
+                          onChange={(e) => updateDraft('max_tokens', Number(e.target.value))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Temperature</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min={0}
+                          max={2}
+                          value={configDraft.temperature}
+                          onChange={(e) => updateDraft('temperature', Number(e.target.value))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Top P</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min={0}
+                          max={1}
+                          value={configDraft.top_p}
+                          onChange={(e) => updateDraft('top_p', Number(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs">System Prompt</Label>
+                      <Textarea
+                        rows={14}
+                        className="font-mono text-xs"
+                        value={configDraft.system_prompt}
+                        onChange={(e) => updateDraft('system_prompt', e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {selectedStep === 'parametrizar' && (
+                  <p className="text-xs text-muted-foreground">
+                    Parametrização determinística (safeNumber, inferirTipoPorTamanho, etc.).
+                    Sem parâmetros configuráveis.
+                  </p>
+                )}
+
+                {selectedStep === 'salvar' && (
+                  <>
+                    <div>
+                      <Label className="text-xs">Bucket de Storage para o PDF</Label>
+                      <Input
+                        value={configDraft.bucket_name}
+                        onChange={(e) => updateDraft('bucket_name', e.target.value)}
+                        placeholder="pdfs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Prefixo p/ número de apólice ausente</Label>
+                      <Input
+                        value={configDraft.policy_number_prefix}
+                        onChange={(e) =>
+                          updateDraft('policy_number_prefix', e.target.value)
+                        }
+                        placeholder="SA_"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Status padrão da apólice</Label>
+                      <Input
+                        value={configDraft.default_status}
+                        onChange={(e) => updateDraft('default_status', e.target.value)}
+                        placeholder="vigente"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {outputs[selectedStep] !== undefined && (
+                  <details className="mt-3">
+                    <summary className="text-xs text-muted-foreground cursor-pointer">
+                      Ver output do último teste
+                    </summary>
+                    <pre className="text-xs bg-muted/40 p-3 rounded mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words">
+                      {JSON.stringify(outputs[selectedStep] ?? null, null, 2)}
+                    </pre>
+                  </details>
+                )}
+              </div>
             )}
           </Card>
 

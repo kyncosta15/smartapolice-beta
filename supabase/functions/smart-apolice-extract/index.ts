@@ -130,17 +130,43 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ===== Carrega configuração editável =====
+    const { data: cfgRow } = await supabase
+      .from('smart_apolice_config')
+      .select('*')
+      .eq('id', 1)
+      .maybeSingle();
+    const cfg = {
+      system_prompt: cfgRow?.system_prompt ?? SYSTEM_PROMPT,
+      openai_model: cfgRow?.openai_model ?? 'gpt-4o',
+      temperature: Number(cfgRow?.temperature ?? 0.3),
+      top_p: Number(cfgRow?.top_p ?? 1),
+      max_tokens: Number(cfgRow?.max_tokens ?? 4000),
+      merge_pages: cfgRow?.merge_pages ?? true,
+      max_pdf_mb: Number(cfgRow?.max_pdf_mb ?? 15),
+      save_default: cfgRow?.save_default ?? true,
+      bucket_name: cfgRow?.bucket_name ?? 'pdfs',
+      policy_number_prefix: cfgRow?.policy_number_prefix ?? 'SA_',
+      default_status: cfgRow?.default_status ?? 'vigente',
+    };
+
     // ===== NÓ 1: Webhook (recebe PDF) =====
     let s = Date.now();
     const body = await req.json();
-    const { filename, base64, save = true } = body;
+    const { filename, base64, save = cfg.save_default } = body;
     if (!filename || !base64) {
       return new Response(JSON.stringify({ error: 'filename e base64 obrigatórios' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    const sizeBytes = Math.round((base64.length * 3) / 4);
+    if (sizeBytes > cfg.max_pdf_mb * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: `PDF excede ${cfg.max_pdf_mb}MB` }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     stepTimes.webhook = Date.now() - s;
-    stepOutputs.webhook = { filename, size_bytes: Math.round((base64.length * 3) / 4) };
+    stepOutputs.webhook = { filename, size_bytes: sizeBytes, max_mb: cfg.max_pdf_mb };
 
     // ===== NÓ 2: Tratar PDF (decode base64) =====
     s = Date.now();
@@ -152,11 +178,12 @@ Deno.serve(async (req) => {
     // ===== NÓ 3: Extrair texto =====
     s = Date.now();
     const pdf = await getDocumentProxy(binary);
-    const { text } = await extractText(pdf, { mergePages: true });
+    const { text } = await extractText(pdf, { mergePages: cfg.merge_pages });
     const fullText = Array.isArray(text) ? text.join('\n') : text;
     stepTimes.extrair = Date.now() - s;
     stepOutputs.extrair = {
       caracteres: fullText.length,
+      merge_pages: cfg.merge_pages,
       preview: fullText.slice(0, 500),
     };
 
@@ -164,7 +191,7 @@ Deno.serve(async (req) => {
       throw new Error('PDF sem texto extraível (provavelmente imagem/escaneado)');
     }
 
-    // ===== NÓ 4: AI Agent (OpenAI gpt-4o) =====
+    // ===== NÓ 4: AI Agent (OpenAI) =====
     s = Date.now();
     const aiResp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -173,12 +200,12 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
-        temperature: 0.3,
-        top_p: 1,
-        max_tokens: 4000,
+        model: cfg.openai_model,
+        temperature: cfg.temperature,
+        top_p: cfg.top_p,
+        max_tokens: cfg.max_tokens,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: cfg.system_prompt },
           { role: 'user', content: fullText },
         ],
       }),
@@ -191,7 +218,10 @@ Deno.serve(async (req) => {
     const aiContent = aiJson.choices?.[0]?.message?.content ?? '';
     stepTimes.ai = Date.now() - s;
     stepOutputs.ai = {
-      model: 'gpt-4o',
+      model: cfg.openai_model,
+      temperature: cfg.temperature,
+      top_p: cfg.top_p,
+      max_tokens: cfg.max_tokens,
       tokens: aiJson.usage,
       raw: aiContent.slice(0, 800),
     };
@@ -214,12 +244,12 @@ Deno.serve(async (req) => {
     let policyId: string | null = null;
     let pdfPath: string | null = null;
     if (save) {
-      // Upload PDF ao bucket "pdfs"
+      // Upload PDF ao bucket configurado
       try {
         const safeName = filename.replace(/[^\w.\-]+/g, '_');
         pdfPath = `${userId}/${Date.now()}_${safeName}`;
         const { error: upErr } = await supabase.storage
-          .from('pdfs')
+          .from(cfg.bucket_name)
           .upload(pdfPath, binary, { contentType: 'application/pdf', upsert: false });
         if (upErr) {
           console.error('[smart-apolice-extract] upload PDF erro:', upErr);
@@ -243,7 +273,7 @@ Deno.serve(async (req) => {
         documento: apolice.documento || null,
         documento_tipo: apolice.documento_tipo === 'DESCONHECIDO' ? null : apolice.documento_tipo,
         seguradora: apolice.seguradora,
-        numero_apolice: apolice.numero_apolice || `SA_${Date.now()}`,
+        numero_apolice: apolice.numero_apolice || `${cfg.policy_number_prefix}${Date.now()}`,
         tipo_seguro: apolice.tipo,
         inicio_vigencia: apolice.inicio,
         fim_vigencia: apolice.fim,
@@ -257,7 +287,7 @@ Deno.serve(async (req) => {
         uf: apolice.uf || null,
         franquia: apolice.franquia || null,
         corretora: apolice.corretora || null,
-        status: 'vigente',
+        status: cfg.default_status,
         created_by_extraction: true,
         arquivo_url: pdfPath,
       };
