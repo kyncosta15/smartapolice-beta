@@ -259,6 +259,7 @@ Deno.serve(async (req) => {
         corretora: apolice.corretora || null,
         status: 'vigente',
         created_by_extraction: true,
+        arquivo_url: pdfPath,
       };
 
       if (existing) {
