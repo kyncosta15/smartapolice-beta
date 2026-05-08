@@ -212,7 +212,23 @@ Deno.serve(async (req) => {
     // ===== NÓ 6: Retornar / Salvar =====
     s = Date.now();
     let policyId: string | null = null;
+    let pdfPath: string | null = null;
     if (save) {
+      // Upload PDF ao bucket "pdfs"
+      try {
+        const safeName = filename.replace(/[^\w.\-]+/g, '_');
+        pdfPath = `${userId}/${Date.now()}_${safeName}`;
+        const { error: upErr } = await supabase.storage
+          .from('pdfs')
+          .upload(pdfPath, binary, { contentType: 'application/pdf', upsert: false });
+        if (upErr) {
+          console.error('[smart-apolice-extract] upload PDF erro:', upErr);
+          pdfPath = null;
+        }
+      } catch (e) {
+        console.error('[smart-apolice-extract] upload PDF exception:', e);
+        pdfPath = null;
+      }
       // Verifica duplicata por user_id + numero_apolice
       const { data: existing } = await supabase
         .from('policies')
@@ -243,6 +259,7 @@ Deno.serve(async (req) => {
         corretora: apolice.corretora || null,
         status: 'vigente',
         created_by_extraction: true,
+        arquivo_url: pdfPath,
       };
 
       if (existing) {
@@ -268,7 +285,7 @@ Deno.serve(async (req) => {
       }
     }
     stepTimes.salvar = Date.now() - s;
-    stepOutputs.salvar = { policy_id: policyId, saved: !!save };
+    stepOutputs.salvar = { policy_id: policyId, saved: !!save, pdf_path: pdfPath };
 
     return new Response(
       JSON.stringify({
