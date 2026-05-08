@@ -267,6 +267,20 @@ export function MyPolicies({
     refreshPolicies();
   };
   
+  // Helper: vigente apenas se status compatível E vencimento >= hoje
+  const isPolicyVigente = React.useCallback((p: { status?: string; expirationDate?: string; endDate?: string }) => {
+    const status = p.status?.toLowerCase();
+    const statusOk = status === 'vigente' || status === 'ativa' || status === 'vencendo';
+    if (!statusOk) return false;
+    const dateStr = (p.expirationDate || p.endDate || '').toString().slice(0, 10);
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return statusOk; // sem data válida, confia no status
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const exp = new Date(y, m - 1, d).getTime();
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    return exp >= todayStart;
+  }, []);
+
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
     const finalStatus = policy.status as PolicyStatus;
     const normalizedPolicyType = normalizePolicyType(toText(policy.type)) || toText(policy.type);
@@ -698,19 +712,11 @@ export function MyPolicies({
   const currentYear = new Date().getFullYear();
   
   const filteredPolicies = policiesWithStatus.filter(policy => {
-    // Filtro por período (vigentes/antigas)
+    // Filtro por período (vigentes/antigas) — vigente = status ativo E vencimento >= hoje
     if (statusFilter !== 'todas') {
-      if (statusFilter === 'vigentes') {
-        // Vigentes: mostrar APENAS as ativas (status vigente, ativa ou vencendo)
-        const status = policy.status?.toLowerCase();
-        if (status !== 'vigente' && status !== 'ativa' && status !== 'vencendo') return false;
-      }
-      
-      if (statusFilter === 'antigas') {
-        // Antigas: mostrar APENAS as não vigentes (status diferente de vigente, ativa ou vencendo)
-        const status = policy.status?.toLowerCase();
-        if (status === 'vigente' || status === 'ativa' || status === 'vencendo') return false;
-      }
+      const vigente = isPolicyVigente(policy);
+      if (statusFilter === 'vigentes' && !vigente) return false;
+      if (statusFilter === 'antigas' && vigente) return false;
     }
     
     // Filtro por status detalhado
@@ -895,10 +901,7 @@ export function MyPolicies({
           }}
           className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
         >
-          Vigentes ({policiesWithStatus.filter(p => {
-            const status = p.status?.toLowerCase();
-            return status === 'vigente' || status === 'ativa' || status === 'vencendo';
-          }).length})
+          Vigentes ({policiesWithStatus.filter(p => isPolicyVigente(p)).length})
         </Button>
         <Button
           variant={statusFilter === 'antigas' ? 'default' : 'outline'}
@@ -909,10 +912,7 @@ export function MyPolicies({
           }}
           className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
         >
-          Antigas ({policiesWithStatus.filter(p => {
-            const status = p.status?.toLowerCase();
-            return status !== 'vigente' && status !== 'ativa' && status !== 'vencendo';
-          }).length})
+          Antigas ({policiesWithStatus.filter(p => !isPolicyVigente(p)).length})
         </Button>
         <Button
           variant={statusFilter === 'todas' ? 'default' : 'outline'}
