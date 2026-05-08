@@ -109,7 +109,7 @@ export default function SmartApoliceWorkflowPage() {
   const [statuses, setStatuses] = useState<Record<StepKey, StepStatus>>(
     Object.fromEntries(STEPS.map((s) => [s, 'idle'])) as any,
   );
-  const [times, setTimes] = useState<Record<StepKey, number | undefined>>({} as any);
+  const [times, setTimes] = useState<Partial<Record<StepKey, number>>>({});
   const [outputs, setOutputs] = useState<Record<string, any>>({});
   const [selectedStep, setSelectedStep] = useState<StepKey | null>(null);
   const [running, setRunning] = useState(false);
