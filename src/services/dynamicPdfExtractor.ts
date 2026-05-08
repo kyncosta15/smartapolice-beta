@@ -1,17 +1,55 @@
 import { getWebhookUrl, isWebhookActive } from '@/lib/webhookConfig';
+import { supabase } from '@/integrations/supabase/client';
+
+async function fileToBase64(file: File): Promise<string> {
+  const buf = await file.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let binary = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)) as any);
+  }
+  return btoa(binary);
+}
+
+async function extractViaSmartFallback(file: File, userId?: string | null): Promise<any> {
+  console.log(`🧠 [Fallback nativo] Processando ${file.name} via smart-apolice-extract`);
+  const base64 = await fileToBase64(file);
+  const { data, error } = await supabase.functions.invoke('smart-apolice-extract', {
+    body: { filename: file.name, base64, save: true },
+  });
+  if (error) {
+    console.error('❌ smart-apolice-extract erro:', error);
+    throw new Error(error.message || 'Falha na extração nativa (smart-apolice-extract)');
+  }
+  if (!data?.apolice) {
+    throw new Error('Extração nativa retornou sem apólice');
+  }
+  console.log(`✅ [Fallback nativo] ${file.name} processado:`, data.apolice);
+  return data.apolice;
+}
 
 export class DynamicPDFExtractor {
-  private static async getWebhookUrl(): Promise<string> {
+  private static async resolveMode(): Promise<'n8n' | 'native'> {
     const ativo = await isWebhookActive('apolices_pdf');
-    if (!ativo) {
-      throw new Error('O webhook de Apólices PDF está desativado nas configurações de Admin → Webhooks. Ative-o para processar apólices via N8N.');
-    }
+    return ativo ? 'n8n' : 'native';
+  }
+
+  private static async getWebhookUrl(): Promise<string> {
     return getWebhookUrl('apolices_pdf');
   }
   private static readonly TIMEOUT = 600000; // 10 minutos para múltiplos arquivos
   private static readonly MAX_FILES = 10; // Limite de arquivos por requisição
 
   static async extractFromPDF(file: File, userId?: string): Promise<any> {
+    const mode = await this.resolveMode();
+
+    if (mode === 'native') {
+      console.log(`🧠 Webhook desativado — usando extração nativa para ${file.name}`);
+      const apolice = await extractViaSmartFallback(file, userId);
+      return [apolice];
+    }
+
     const webhookUrl = await this.getWebhookUrl();
     console.log(`🔄 Enviando arquivo individual: ${file.name} (${file.size} bytes)`);
     console.log('📡 Webhook URL:', webhookUrl);
@@ -79,18 +117,6 @@ export class DynamicPDFExtractor {
       const isArray = Array.isArray(data);
       const resultArray = isArray ? data : [data];
       
-      console.log(`📊 Tipo de resposta do N8N: ${isArray ? 'ARRAY' : 'OBJETO ÚNICO'}`);
-      console.log(`📊 Total de apólices retornadas pelo N8N: ${resultArray.length}`);
-      
-      if (resultArray.length > 1) {
-        console.log(`🎉 MÚLTIPLAS APÓLICES DETECTADAS NO PDF "${file.name}"`);
-        resultArray.forEach((policy, idx) => {
-          console.log(`  ${idx + 1}. ${policy.segurado || 'Nome não identificado'} - ${policy.numero_apolice || 'Sem número'}`);
-        });
-      } else {
-        console.log(`ℹ️ Apenas UMA apólice detectada no PDF "${file.name}"`);
-      }
-      
       if (!data || (Array.isArray(data) && data.length === 0)) {
         throw new Error(`Dados vazios retornados para ${file.name}`);
       }
@@ -104,201 +130,85 @@ export class DynamicPDFExtractor {
   }
 
   static async extractFromMultiplePDFs(files: File[], userId?: string): Promise<any[]> {
+    const mode = await this.resolveMode();
+
+    if (mode === 'native') {
+      console.log(`🧠 Webhook desativado — usando extração nativa para ${files.length} arquivo(s)`);
+      const results: any[] = [];
+      for (const file of files) {
+        try {
+          const apolice = await extractViaSmartFallback(file, userId);
+          results.push(apolice);
+        } catch (err) {
+          console.error(`❌ Falha extração nativa em ${file.name}:`, err);
+          throw err;
+        }
+      }
+      return results;
+    }
+
     const webhookUrl = await this.getWebhookUrl();
-    console.log('🚀🚀🚀 ==========================================');
-    console.log('🚀🚀🚀 INICIANDO extractFromMultiplePDFs');
-    console.log('🚀🚀🚀 ==========================================');
+    console.log('🚀 INICIANDO extractFromMultiplePDFs (N8N)');
     
     if (files.length > this.MAX_FILES) {
       throw new Error(`Limite de ${this.MAX_FILES} arquivos por vez. Você selecionou ${files.length}.`);
     }
 
-    console.log(`🔄 Enviando ${files.length} arquivos em uma única requisição`);
-    console.log(`👤 userId recebido:`, userId);
-    console.log(`📡 Endpoint: ${webhookUrl}`);
-    
     try {
       const formData = new FormData();
-      
-      console.log('📦 Construindo FormData...');
-      
-      // Adicionar cada arquivo com um nome único (file1, file2, file3, etc)
       files.forEach((file, index) => {
-        const fieldName = `file${index + 1}`;
-        formData.append(fieldName, file);
-        console.log(`📎 Adicionado campo "${fieldName}": ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
+        formData.append(`file${index + 1}`, file);
       });
-      
-      // Adicionar metadados
-      const timestamp = new Date().toISOString();
-      formData.append('timestamp', timestamp);
+      formData.append('timestamp', new Date().toISOString());
       formData.append('totalFiles', files.length.toString());
-      console.log(`⏰ Timestamp: ${timestamp}`);
-      console.log(`📊 Total de arquivos: ${files.length}`);
-      
-      if (userId) {
-        formData.append('userId', userId);
-        console.log(`✅ userId ${userId} adicionado ao FormData`);
-      } else {
-        console.warn('⚠️ Nenhum userId fornecido');
-      }
-
-      console.log('📤📤📤 ENVIANDO REQUISIÇÃO PARA O N8N...');
-      console.log(`📤 URL: ${webhookUrl}`);
-      console.log(`📤 Método: POST`);
-      console.log(`📤 Timeout: ${this.TIMEOUT / 1000} segundos`);
+      if (userId) formData.append('userId', userId);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.error(`⏰❌ TIMEOUT! Requisição abortada após ${this.TIMEOUT / 1000} segundos`);
-        controller.abort();
-      }, this.TIMEOUT);
+      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT);
 
-      console.log('🌐 Executando fetch...');
-      const fetchStartTime = Date.now();
-      
       const response = await fetch(webhookUrl, {
         method: 'POST',
         body: formData,
         signal: controller.signal,
       });
-
-      const fetchDuration = Date.now() - fetchStartTime;
       clearTimeout(timeoutId);
-
-      console.log('✅✅✅ RESPOSTA RECEBIDA DO N8N!');
-      console.log(`📡 Status: ${response.status} ${response.statusText}`);
-      console.log(`⏱️ Duração: ${fetchDuration}ms`);
-      console.log(`📊 Headers:`, Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Erro HTTP:', response.status, errorText);
-        throw new Error(`Erro no servidor n8n: ${response.status} - ${response.statusText}`);
+        throw new Error(`Erro no servidor n8n: ${response.status} - ${response.statusText} ${errorText}`);
       }
 
       const responseText = await response.text();
-      console.log(`📝 Resposta bruta (primeiros 1000 chars):\n${responseText.substring(0, 1000)}`);
-
       if (!responseText.trim()) {
-        console.error('❌ N8N retornou resposta vazia - verifique se o workflow está ATIVO no painel N8N');
-        throw new Error('Resposta vazia do servidor N8N. Verifique se o workflow está ativo no painel do N8N.');
+        throw new Error('Resposta vazia do servidor N8N. Verifique se o workflow está ativo.');
       }
 
       let responseData;
       try {
         responseData = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error(`❌ Erro ao parsear JSON:`, parseError);
-        console.error(`Resposta completa:\n${responseText}`);
+      } catch {
         throw new Error('Resposta inválida do servidor n8n (não é JSON válido)');
       }
 
-      console.log(`✅ Resposta parseada com sucesso:`, responseData);
-      console.log(`📊 Tipo da resposta:`, typeof responseData);
-      console.log(`📊 É array?`, Array.isArray(responseData));
-      console.log(`📊 Chaves do objeto:`, Object.keys(responseData));
-      console.log(`📊 RESPOSTA COMPLETA DO N8N (JSON):`, JSON.stringify(responseData, null, 2));
-
-      // CORREÇÃO: Extrair apólices da resposta com verificação robusta
-      // O n8n pode retornar: { apolices: [...] } ou [...] diretamente
       let apolices;
-      
       if (responseData.apolices && Array.isArray(responseData.apolices)) {
-        console.log('✅ Encontrado campo "apolices" na resposta');
         apolices = responseData.apolices;
       } else if (Array.isArray(responseData)) {
-        console.log('✅ Resposta é um array direto');
         apolices = responseData;
       } else {
-        console.log('⚠️ Resposta não é array, convertendo para array único');
         apolices = [responseData];
       }
-      
-      console.log(`📊 Apólices extraídas:`, apolices);
-      console.log(`📊 Número de apólices:`, apolices.length);
-      
-      // Validar se tem dados
+
       if (!apolices || apolices.length === 0) {
-        console.error('❌ Nenhuma apólice encontrada na resposta!');
-        console.error('❌ Resposta completa:', JSON.stringify(responseData, null, 2));
         throw new Error('Nenhuma apólice foi retornada pelo N8N');
       }
 
-      console.log(`🎉 ${apolices.length} apólice(s) extraída(s) com sucesso!`);
-      
-      // Logar resumo de cada apólice COM TODOS OS CAMPOS POSSÍVEIS
-      apolices.forEach((apolice, idx) => {
-        console.log(`\n📋 APÓLICE ${idx + 1}:`, {
-          segurado: apolice.segurado,
-          num_segurado: apolice.num_segurado,
-          nome_segurado: apolice.nome_segurado,
-          seguradora: apolice.seguradora,
-          num_seguradora: apolice.num_seguradora,
-          numero_apolice: apolice.numero_apolice,
-          num_apolice: apolice.num_apolice,
-          todasChaves: Object.keys(apolice)
-        });
-      });
-
       return apolices;
-
     } catch (error) {
-      console.error(`❌ ERRO CRÍTICO ao processar arquivos:`, error);
-      
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new Error('Tempo esgotado! O processamento demorou mais de 10 minutos. Tente com menos arquivos.');
-        }
-        throw error;
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Tempo esgotado! O processamento demorou mais de 10 minutos.');
       }
-      
-      throw new Error('Erro desconhecido ao processar os arquivos');
+      throw error;
     }
-  }
-
-  private static createFallbackData(file: File, userId?: string): any[] {
-    console.log(`🔄 Criando dados de fallback para ${file.name}`);
-    
-    const premioAnual = 1200 + Math.random() * 2000;
-    const premioMensal = premioAnual / 12;
-    
-    const mockData = {
-      informacoes_gerais: {
-        nome_apolice: `Apólice ${file.name.replace('.pdf', '')}`,
-        tipo: "Auto",
-        status: "Ativa",
-        numero_apolice: `POL-${Date.now()}-${Math.floor(Math.random() * 1000)}`
-      },
-      seguradora: {
-        empresa: "Seguradora Simulada",
-        categoria: "Veicular",
-        cobertura: "Cobertura Básica",
-        entidade: "Corretora Simulada"
-      },
-      informacoes_financeiras: {
-        premio_anual: premioAnual,
-        premio_mensal: premioMensal
-      },
-      vigencia: {
-        inicio: new Date().toISOString().split('T')[0],
-        fim: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        extraido_em: new Date().toISOString().split('T')[0]
-      },
-      segurado: {
-        nome: `Cliente ${file.name.replace('.pdf', '').substring(0, 20)}`,
-        documento: `${Math.floor(10000000000 + Math.random() * 90000000000)}`,
-        tipo_pessoa: 'PF'
-      },
-      // Campos adicionais necessários para validação
-      premio: premioAnual,
-      premium: premioAnual,
-      user_id: userId,
-      documento: `${Math.floor(10000000000 + Math.random() * 90000000000)}`,
-      documento_tipo: 'CPF'
-    };
-
-    console.log(`✅ Dados simulados criados para ${file.name}`);
-    return [mockData];
   }
 }
