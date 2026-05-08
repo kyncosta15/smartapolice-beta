@@ -235,6 +235,14 @@ const App = () => {
                           </ProtectedRoute>
                         }
                       />
+                      <Route
+                        path="/admin/workflows/smart-apolice"
+                        element={
+                          <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                            <SmartApoliceWorkflowPage />
+                          </ProtectedRoute>
+                        }
+                      />
 
                       <Route
                         path="/consultoria-premium"
