@@ -3811,6 +3811,57 @@ export type Database = {
           },
         ]
       }
+      smart_apolice_config: {
+        Row: {
+          bucket_name: string
+          default_status: string
+          id: number
+          max_pdf_mb: number
+          max_tokens: number
+          merge_pages: boolean
+          openai_model: string
+          policy_number_prefix: string
+          save_default: boolean
+          system_prompt: string
+          temperature: number
+          top_p: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          bucket_name?: string
+          default_status?: string
+          id?: number
+          max_pdf_mb?: number
+          max_tokens?: number
+          merge_pages?: boolean
+          openai_model?: string
+          policy_number_prefix?: string
+          save_default?: boolean
+          system_prompt: string
+          temperature?: number
+          top_p?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          bucket_name?: string
+          default_status?: string
+          id?: number
+          max_pdf_mb?: number
+          max_tokens?: number
+          merge_pages?: boolean
+          openai_model?: string
+          policy_number_prefix?: string
+          save_default?: boolean
+          system_prompt?: string
+          temperature?: number
+          top_p?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       submission_rate_limits: {
         Row: {
           blocked_until: string | null
