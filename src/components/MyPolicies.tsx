@@ -712,19 +712,11 @@ export function MyPolicies({
   const currentYear = new Date().getFullYear();
   
   const filteredPolicies = policiesWithStatus.filter(policy => {
-    // Filtro por período (vigentes/antigas)
+    // Filtro por período (vigentes/antigas) — vigente = status ativo E vencimento >= hoje
     if (statusFilter !== 'todas') {
-      if (statusFilter === 'vigentes') {
-        // Vigentes: mostrar APENAS as ativas (status vigente, ativa ou vencendo)
-        const status = policy.status?.toLowerCase();
-        if (status !== 'vigente' && status !== 'ativa' && status !== 'vencendo') return false;
-      }
-      
-      if (statusFilter === 'antigas') {
-        // Antigas: mostrar APENAS as não vigentes (status diferente de vigente, ativa ou vencendo)
-        const status = policy.status?.toLowerCase();
-        if (status === 'vigente' || status === 'ativa' || status === 'vencendo') return false;
-      }
+      const vigente = isPolicyVigente(policy);
+      if (statusFilter === 'vigentes' && !vigente) return false;
+      if (statusFilter === 'antigas' && vigente) return false;
     }
     
     // Filtro por status detalhado
