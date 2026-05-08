@@ -20,7 +20,36 @@ async function extractViaSmartFallback(file: File, userId?: string | null): Prom
   });
   if (error) {
     console.error('❌ smart-apolice-extract erro:', error);
-    throw new Error(error.message || 'Falha na extração nativa (smart-apolice-extract)');
+    let errorMessage = error.message || 'Falha na extração nativa (smart-apolice-extract)';
+    const ctx = (error as any)?.context;
+
+    if (ctx && typeof ctx.clone === 'function' && typeof ctx.text === 'function') {
+      try {
+        const text = await ctx.clone().text();
+        if (text) {
+          try {
+            const parsed = JSON.parse(text);
+            errorMessage = parsed?.error || parsed?.message || errorMessage;
+          } catch {
+            errorMessage = text;
+          }
+        }
+      } catch {
+        // noop
+      }
+    } else if (ctx?.body) {
+      try {
+        const parsed = typeof ctx.body === 'string' ? JSON.parse(ctx.body) : ctx.body;
+        errorMessage = parsed?.error || parsed?.message || errorMessage;
+      } catch {
+        if (typeof ctx.body === 'string' && ctx.body.trim()) errorMessage = ctx.body;
+      }
+    }
+
+    throw new Error(errorMessage);
+  }
+  if (data?.error) {
+    throw new Error(data.error);
   }
   if (!data?.apolice) {
     throw new Error('Extração nativa retornou sem apólice');
