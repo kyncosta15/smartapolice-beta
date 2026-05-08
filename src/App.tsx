@@ -36,6 +36,7 @@ const InserirVeiculosLotePage = lazy(() => import('./pages/InserirVeiculosLotePa
 const AdminAccessLogsPage = lazy(() => import('./pages/AdminAccessLogsPage'));
 const AdminPresencePage = lazy(() => import('./pages/admin/AdminPresencePage'));
 const AdminCentralPage = lazy(() => import('./pages/admin/AdminCentralPage'));
+const SmartApoliceWorkflowPage = lazy(() => import('./pages/admin/SmartApoliceWorkflowPage'));
 const SystemStatusPage = lazy(() => import('./pages/SystemStatusPage'));
 const ConsultoriaListPage = lazy(() => import('./pages/consultoria/ConsultoriaListPage'));
 const ConsultoriaNovoCasoPage = lazy(() => import('./pages/consultoria/ConsultoriaNovoCasoPage'));
@@ -231,6 +232,14 @@ const App = () => {
                         element={
                           <ProtectedRoute requiredRoles={['admin', 'administrador', 'rh', 'corretora_admin']}>
                             <InserirVeiculosLotePage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin/workflows/smart-apolice"
+                        element={
+                          <ProtectedRoute requiredRoles={['admin', 'administrador']}>
+                            <SmartApoliceWorkflowPage />
                           </ProtectedRoute>
                         }
                       />

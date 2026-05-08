@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Button } from '@/components/ui/button';
-import { Crown, LogOut, CheckCircle, User, Mail, DatabaseZap, Webhook, Globe, Radio, LayoutDashboard, Sparkles } from 'lucide-react';
+import { Crown, LogOut, CheckCircle, User, Mail, DatabaseZap, Webhook, Globe, Radio, LayoutDashboard, Sparkles, Workflow } from 'lucide-react';
 import { SmartApóliceLogo } from '@/components/SmartApoliceLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import adminLogo from '@/assets/admin-sidebar-logo.png';
@@ -55,6 +55,7 @@ function AdminSidebar() {
     menuItems.push({ title: 'Acessos', url: '/admin/acessos', icon: Globe });
     menuItems.push({ title: 'Central de Dados', url: '/admin/central-de-dados', icon: DatabaseZap });
     menuItems.push({ title: 'Webhooks N8N', url: '/admin/webhooks', icon: Webhook });
+    menuItems.push({ title: 'SmartApólice Workflow', url: '/admin/workflows/smart-apolice', icon: Workflow });
     menuItems.push({ title: 'Email Settings', url: '/admin/email-settings', icon: Mail });
   }
 
