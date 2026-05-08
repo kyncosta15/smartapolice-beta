@@ -1,5 +1,5 @@
 import { DynamicPDFData } from '@/types/pdfUpload';
-import { getWebhookUrl } from '@/lib/webhookConfig';
+import { getWebhookUrl, isWebhookActive } from '@/lib/webhookConfig';
 
 interface N8NDirectResponse {
   segurado?: string;
@@ -35,6 +35,10 @@ interface N8NWebhookResponse {
 
 export class N8NWebhookService {
   private static async getWebhookUrl(): Promise<string> {
+    const ativo = await isWebhookActive('apolices_pdf');
+    if (!ativo) {
+      throw new Error('O webhook de Apólices PDF está desativado nas configurações de Admin → Webhooks. Ative-o para processar apólices via N8N.');
+    }
     return getWebhookUrl('apolices_pdf');
   }
   
