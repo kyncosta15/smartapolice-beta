@@ -273,7 +273,7 @@ Deno.serve(async (req) => {
         documento: apolice.documento || null,
         documento_tipo: apolice.documento_tipo === 'DESCONHECIDO' ? null : apolice.documento_tipo,
         seguradora: apolice.seguradora,
-        numero_apolice: apolice.numero_apolice || `SA_${Date.now()}`,
+        numero_apolice: apolice.numero_apolice || `${cfg.policy_number_prefix}${Date.now()}`,
         tipo_seguro: apolice.tipo,
         inicio_vigencia: apolice.inicio,
         fim_vigencia: apolice.fim,
@@ -287,7 +287,7 @@ Deno.serve(async (req) => {
         uf: apolice.uf || null,
         franquia: apolice.franquia || null,
         corretora: apolice.corretora || null,
-        status: 'vigente',
+        status: cfg.default_status,
         created_by_extraction: true,
         arquivo_url: pdfPath,
       };
