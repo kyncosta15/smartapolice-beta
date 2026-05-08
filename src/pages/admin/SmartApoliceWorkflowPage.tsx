@@ -428,11 +428,10 @@ export default function SmartApoliceWorkflowPage() {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card className="p-4 space-y-4">
+          <Card className="p-4 space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold">Configuração do nó</h3>
+              <h3 className="font-semibold">Configuração do workflow</h3>
               <div className="flex items-center gap-2">
-                {selectedStep && <Badge variant="outline">{STEP_LABELS[selectedStep]}</Badge>}
                 {dirty && (
                   <>
                     <Button
@@ -460,14 +459,15 @@ export default function SmartApoliceWorkflowPage() {
               <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
                 <Loader2 className="h-4 w-4 animate-spin mr-2" /> Carregando configuração…
               </div>
-            ) : !selectedStep ? (
-              <p className="text-sm text-muted-foreground">
-                Clique em um nó do workflow para editar suas configurações.
-              </p>
             ) : (
-              <div className="space-y-3">
-                {selectedStep === 'webhook' && (
-                  <>
+              <div className="space-y-6">
+                {/* Webhook */}
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Webhook className="h-4 w-4 text-muted-foreground" />
+                    <h4 className="text-sm font-semibold">Webhook (entrada)</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs">Tamanho máximo do PDF (MB)</Label>
                       <Input
@@ -478,99 +478,97 @@ export default function SmartApoliceWorkflowPage() {
                         onChange={(e) => updateDraft('max_pdf_mb', Number(e.target.value))}
                       />
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-5">
                       <Switch
                         checked={configDraft.save_default}
                         onCheckedChange={(v) => updateDraft('save_default', v)}
                       />
                       <Label className="text-xs">Salvar no banco por padrão</Label>
                     </div>
-                  </>
-                )}
+                  </div>
+                </section>
 
-                {selectedStep === 'tratar' && (
-                  <p className="text-xs text-muted-foreground">
-                    Decodificação base64 → bytes. Sem parâmetros configuráveis.
-                  </p>
-                )}
-
-                {selectedStep === 'extrair' && (
+                {/* Extrair */}
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <h4 className="text-sm font-semibold">Extrair texto de PDF</h4>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={configDraft.merge_pages}
                       onCheckedChange={(v) => updateDraft('merge_pages', v)}
                     />
-                    <Label className="text-xs">
-                      Mesclar páginas em um único bloco de texto (mergePages)
-                    </Label>
+                    <Label className="text-xs">Mesclar páginas em um único bloco (mergePages)</Label>
                   </div>
-                )}
+                </section>
 
-                {selectedStep === 'ai' && (
-                  <>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs">Modelo OpenAI</Label>
-                        <Input
-                          value={configDraft.openai_model}
-                          onChange={(e) => updateDraft('openai_model', e.target.value)}
-                          placeholder="gpt-4o"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Max tokens</Label>
-                        <Input
-                          type="number"
-                          value={configDraft.max_tokens}
-                          onChange={(e) => updateDraft('max_tokens', Number(e.target.value))}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Temperature</Label>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min={0}
-                          max={2}
-                          value={configDraft.temperature}
-                          onChange={(e) => updateDraft('temperature', Number(e.target.value))}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Top P</Label>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min={0}
-                          max={1}
-                          value={configDraft.top_p}
-                          onChange={(e) => updateDraft('top_p', Number(e.target.value))}
-                        />
-                      </div>
-                    </div>
+                {/* AI Agent */}
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4 text-muted-foreground" />
+                    <h4 className="text-sm font-semibold">AI Agent (OpenAI)</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs">System Prompt</Label>
-                      <Textarea
-                        rows={14}
-                        className="font-mono text-xs"
-                        value={configDraft.system_prompt}
-                        onChange={(e) => updateDraft('system_prompt', e.target.value)}
+                      <Label className="text-xs">Modelo OpenAI</Label>
+                      <Input
+                        value={configDraft.openai_model}
+                        onChange={(e) => updateDraft('openai_model', e.target.value)}
+                        placeholder="gpt-4o"
                       />
                     </div>
-                  </>
-                )}
-
-                {selectedStep === 'parametrizar' && (
-                  <p className="text-xs text-muted-foreground">
-                    Parametrização determinística (safeNumber, inferirTipoPorTamanho, etc.).
-                    Sem parâmetros configuráveis.
-                  </p>
-                )}
-
-                {selectedStep === 'salvar' && (
-                  <>
                     <div>
-                      <Label className="text-xs">Bucket de Storage para o PDF</Label>
+                      <Label className="text-xs">Max tokens</Label>
+                      <Input
+                        type="number"
+                        value={configDraft.max_tokens}
+                        onChange={(e) => updateDraft('max_tokens', Number(e.target.value))}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Temperature</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min={0}
+                        max={2}
+                        value={configDraft.temperature}
+                        onChange={(e) => updateDraft('temperature', Number(e.target.value))}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Top P</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min={0}
+                        max={1}
+                        value={configDraft.top_p}
+                        onChange={(e) => updateDraft('top_p', Number(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">System Prompt</Label>
+                    <Textarea
+                      rows={14}
+                      className="font-mono text-xs"
+                      value={configDraft.system_prompt}
+                      onChange={(e) => updateDraft('system_prompt', e.target.value)}
+                    />
+                  </div>
+                </section>
+
+                {/* Salvar */}
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-muted-foreground" />
+                    <h4 className="text-sm font-semibold">Salvar / Retornar</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label className="text-xs">Bucket de Storage</Label>
                       <Input
                         value={configDraft.bucket_name}
                         onChange={(e) => updateDraft('bucket_name', e.target.value)}
@@ -578,36 +576,27 @@ export default function SmartApoliceWorkflowPage() {
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Prefixo p/ número de apólice ausente</Label>
+                      <Label className="text-xs">Prefixo nº apólice</Label>
                       <Input
                         value={configDraft.policy_number_prefix}
-                        onChange={(e) =>
-                          updateDraft('policy_number_prefix', e.target.value)
-                        }
+                        onChange={(e) => updateDraft('policy_number_prefix', e.target.value)}
                         placeholder="SA_"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Status padrão da apólice</Label>
+                      <Label className="text-xs">Status padrão</Label>
                       <Input
                         value={configDraft.default_status}
                         onChange={(e) => updateDraft('default_status', e.target.value)}
                         placeholder="vigente"
                       />
                     </div>
-                  </>
-                )}
+                  </div>
+                </section>
 
-                {outputs[selectedStep] !== undefined && (
-                  <details className="mt-3">
-                    <summary className="text-xs text-muted-foreground cursor-pointer">
-                      Ver output do último teste
-                    </summary>
-                    <pre className="text-xs bg-muted/40 p-3 rounded mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words">
-                      {JSON.stringify(outputs[selectedStep] ?? null, null, 2)}
-                    </pre>
-                  </details>
-                )}
+                <p className="text-[11px] text-muted-foreground pt-2 border-t">
+                  Tratar PDF e Parametrização são determinísticos — sem parâmetros configuráveis.
+                </p>
               </div>
             )}
           </Card>
