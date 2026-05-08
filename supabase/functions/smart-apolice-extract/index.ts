@@ -249,7 +249,7 @@ Deno.serve(async (req) => {
         const safeName = filename.replace(/[^\w.\-]+/g, '_');
         pdfPath = `${userId}/${Date.now()}_${safeName}`;
         const { error: upErr } = await supabase.storage
-          .from('pdfs')
+          .from(cfg.bucket_name)
           .upload(pdfPath, binary, { contentType: 'application/pdf', upsert: false });
         if (upErr) {
           console.error('[smart-apolice-extract] upload PDF erro:', upErr);
