@@ -901,10 +901,7 @@ export function MyPolicies({
           }}
           className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
         >
-          Vigentes ({policiesWithStatus.filter(p => {
-            const status = p.status?.toLowerCase();
-            return status === 'vigente' || status === 'ativa' || status === 'vencendo';
-          }).length})
+          Vigentes ({policiesWithStatus.filter(p => isPolicyVigente(p)).length})
         </Button>
         <Button
           variant={statusFilter === 'antigas' ? 'default' : 'outline'}
@@ -915,10 +912,7 @@ export function MyPolicies({
           }}
           className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
         >
-          Antigas ({policiesWithStatus.filter(p => {
-            const status = p.status?.toLowerCase();
-            return status !== 'vigente' && status !== 'ativa' && status !== 'vencendo';
-          }).length})
+          Antigas ({policiesWithStatus.filter(p => !isPolicyVigente(p)).length})
         </Button>
         <Button
           variant={statusFilter === 'todas' ? 'default' : 'outline'}
