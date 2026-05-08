@@ -267,6 +267,20 @@ export function MyPolicies({
     refreshPolicies();
   };
   
+  // Helper: vigente apenas se status compatível E vencimento >= hoje
+  const isPolicyVigente = React.useCallback((p: { status?: string; expirationDate?: string; endDate?: string }) => {
+    const status = p.status?.toLowerCase();
+    const statusOk = status === 'vigente' || status === 'ativa' || status === 'vencendo';
+    if (!statusOk) return false;
+    const dateStr = (p.expirationDate || p.endDate || '').toString().slice(0, 10);
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return statusOk; // sem data válida, confia no status
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const exp = new Date(y, m - 1, d).getTime();
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    return exp >= todayStart;
+  }, []);
+
   const policiesWithStatus: PolicyWithStatus[] = policies.map(policy => {
     const finalStatus = policy.status as PolicyStatus;
     const normalizedPolicyType = normalizePolicyType(toText(policy.type)) || toText(policy.type);
