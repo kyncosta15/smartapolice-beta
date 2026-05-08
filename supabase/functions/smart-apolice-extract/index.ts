@@ -243,7 +243,6 @@ Deno.serve(async (req) => {
         corretora: apolice.corretora || null,
         status: 'vigente',
         created_by_extraction: true,
-        updated_at: new Date().toISOString(),
       };
 
       if (existing) {
