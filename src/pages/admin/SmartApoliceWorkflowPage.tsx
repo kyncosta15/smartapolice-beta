@@ -150,6 +150,74 @@ export default function SmartApoliceWorkflowPage() {
   const [result, setResult] = useState<any>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // ====== Config editável ======
+  const [config, setConfig] = useState<SmartConfig>(DEFAULT_CONFIG);
+  const [configDraft, setConfigDraft] = useState<SmartConfig>(DEFAULT_CONFIG);
+  const [configLoading, setConfigLoading] = useState(true);
+  const [configSaving, setConfigSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from('smart_apolice_config')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+      if (error) {
+        toast.error(`Erro carregando config: ${error.message}`);
+      } else if (data) {
+        const loaded: SmartConfig = {
+          system_prompt: data.system_prompt ?? '',
+          openai_model: data.openai_model ?? 'gpt-4o',
+          temperature: Number(data.temperature ?? 0.3),
+          top_p: Number(data.top_p ?? 1),
+          max_tokens: Number(data.max_tokens ?? 4000),
+          merge_pages: !!data.merge_pages,
+          max_pdf_mb: Number(data.max_pdf_mb ?? 15),
+          save_default: !!data.save_default,
+          bucket_name: data.bucket_name ?? 'pdfs',
+          policy_number_prefix: data.policy_number_prefix ?? 'SA_',
+          default_status: data.default_status ?? 'vigente',
+        };
+        setConfig(loaded);
+        setConfigDraft(loaded);
+      }
+      setConfigLoading(false);
+    })();
+  }, []);
+
+  const dirty = JSON.stringify(config) !== JSON.stringify(configDraft);
+
+  const saveConfig = async () => {
+    setConfigSaving(true);
+    const { error } = await supabase
+      .from('smart_apolice_config')
+      .update({
+        system_prompt: configDraft.system_prompt,
+        openai_model: configDraft.openai_model,
+        temperature: configDraft.temperature,
+        top_p: configDraft.top_p,
+        max_tokens: configDraft.max_tokens,
+        merge_pages: configDraft.merge_pages,
+        max_pdf_mb: configDraft.max_pdf_mb,
+        save_default: configDraft.save_default,
+        bucket_name: configDraft.bucket_name,
+        policy_number_prefix: configDraft.policy_number_prefix,
+        default_status: configDraft.default_status,
+      })
+      .eq('id', 1);
+    setConfigSaving(false);
+    if (error) {
+      toast.error(`Erro ao salvar: ${error.message}`);
+      return;
+    }
+    setConfig(configDraft);
+    toast.success('Configuração salva — passa a valer no próximo upload');
+  };
+
+  const updateDraft = <K extends keyof SmartConfig>(k: K, v: SmartConfig[K]) =>
+    setConfigDraft((p) => ({ ...p, [k]: v }));
+
   const initial = useMemo(() => {
     const nodes: Node[] = STEPS.map((key, i) => ({
       id: key,
