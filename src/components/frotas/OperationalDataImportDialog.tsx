@@ -92,31 +92,70 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
       const sheet = wb.Sheets[wb.SheetNames[0]];
       const aoa: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
-      // Heurística: pular linhas até achar uma que tenha placa no padrão
-      const parsed: ParsedRow[] = [];
-      aoa.forEach((row, idx) => {
-        // Por posição: col0=Modelo, col1=Placa, col2=Obra, col3=Resp, col4=Contato, col5=Rastreador, col6=Sit.Fin, col7=Empresa, col8=Tacógrafo
-        const placaRaw = (row[1] || '').toString().trim();
-        const placaNorm = normalizePlaca(placaRaw);
-        // Só considerar como linha de dados se a placa tem 7 chars e começa com 3 letras
-        if (placaNorm.length !== 7 || !/^[A-Z]{3}/.test(placaNorm)) return;
+      // 1) Localizar a linha de cabeçalho (procura célula PLACA nas primeiras 10 linhas)
+      const normHdr = (s: any) => (s ?? '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+      let headerIdx = -1;
+      for (let i = 0; i < Math.min(aoa.length, 10); i++) {
+        if (aoa[i].some((c: any) => normHdr(c) === 'PLACA')) { headerIdx = i; break; }
+      }
 
-        const tac = parseTacografo((row[8] || '').toString());
+      // 2) Mapear colunas pelo nome (com aliases) — funciona em layout de caminhões
+      //    (sem coluna MARCA) e de carros (com coluna MARCA).
+      const headers = headerIdx >= 0 ? aoa[headerIdx].map(normHdr) : [];
+      const findCol = (...aliases: string[]) => {
+        for (const a of aliases) {
+          const i = headers.findIndex(h => h === a || h.startsWith(a));
+          if (i >= 0) return i;
+        }
+        return -1;
+      };
+      const colVeiculo = findCol('VEICULO', 'VEÍCULO', 'MODELO');
+      const colMarca = findCol('MARCA', 'FABRICANTE');
+      const colPlaca = findCol('PLACA');
+      const colObra = findCol('LOCALIZAÇÃO DA OBRA', 'LOCALIZACAO DA OBRA', 'OBRA', 'LOCALIZAÇÃO', 'LOCALIZACAO');
+      const colResp = findCol('RESPONSÁVEL DA OBRA', 'RESPONSAVEL DA OBRA', 'RESPONSÁVEL', 'RESPONSAVEL');
+      const colContato = findCol('CONTATO - RESPONSÁVEL DA OBRA', 'CONTATO - RESPONSAVEL DA OBRA', 'CONTATO');
+      const colRastr = findCol('RASTREADOR?', 'RASTREADOR');
+      const colSitFin = findCol('SITUAÇÃO FINANCEIRA', 'SITUACAO FINANCEIRA', 'SIT. FINANCEIRA', 'SIT FINANCEIRA');
+      const colEmpresa = findCol('EMPRESA RESPONSÁVEL', 'EMPRESA RESPONSAVEL', 'EMPRESA');
+      const colTac = findCol('TACÓGRAFO', 'TACOGRAFO');
+
+      if (colPlaca < 0) {
+        toast.error('Não foi possível localizar a coluna "PLACA" no cabeçalho da planilha.');
+        setFile(null);
+        setParsing(false);
+        return;
+      }
+
+      const cell = (row: any[], i: number) => (i >= 0 ? (row[i] ?? '').toString().trim() : '');
+
+      const parsed: ParsedRow[] = [];
+      const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
+      for (let idx = startIdx; idx < aoa.length; idx++) {
+        const row = aoa[idx];
+        if (!row || row.length === 0) continue;
+        const placaRaw = cell(row, colPlaca);
+        const placaNorm = normalizePlaca(placaRaw);
+        if (placaNorm.length !== 7 || !/^[A-Z]{3}/.test(placaNorm)) continue;
+
+        const tac = parseTacografo(cell(row, colTac));
+        const veiculoLabel = [cell(row, colVeiculo), cell(row, colMarca)].filter(Boolean).join(' ').trim();
         parsed.push({
           rowIndex: idx + 1,
-          modelo: (row[0] || '').toString().trim(),
+          modelo: veiculoLabel || cell(row, colVeiculo),
           placa: placaRaw,
-          obra: (row[2] || '').toString().trim(),
-          responsavel: (row[3] || '').toString().trim(),
-          contato: (row[4] || '').toString().trim(),
-          rastreador: parseRastreador((row[5] || '').toString()),
-          situacaoFinanceira: (row[6] || '').toString().trim(),
-          empresa: (row[7] || '').toString().trim(),
-          tacografoRaw: (row[8] || '').toString().trim(),
+          obra: cell(row, colObra),
+          responsavel: cell(row, colResp),
+          contato: cell(row, colContato),
+          rastreador: parseRastreador(cell(row, colRastr)),
+          situacaoFinanceira: cell(row, colSitFin),
+          empresa: cell(row, colEmpresa),
+          tacografoRaw: cell(row, colTac),
           tacografoStatus: tac.status,
           tacografoVenc: tac.venc,
         });
-      });
+      }
+
 
       if (parsed.length === 0) {
         toast.error('Nenhuma linha válida encontrada na planilha');
