@@ -32,36 +32,42 @@ export default function MaintenanceStatusCards({ getStatusInfo, types }: Props) 
               <span className="text-sm font-semibold flex items-center gap-1.5">
                 {MAINTENANCE_TYPE_ICONS[type]} {MAINTENANCE_TYPE_LABELS[type]}
               </span>
-              {info.lastDate && (
+              {(info.lastDate || info.nextDueKm !== null || info.nextDueDate) && (
                 <Badge className={`text-[10px] px-1.5 py-0.5 ${STATUS_STYLES[info.status]}`}>
                   {STATUS_LABELS[info.status]}
                 </Badge>
               )}
             </div>
 
-            {info.lastDate ? (
+            {(info.lastDate || info.nextDueKm !== null || info.nextDueDate) ? (
               <div className="space-y-1 text-xs text-muted-foreground">
-                <p>
-                  Última: {format(parseISO(info.lastDate), 'dd/MM/yyyy')}
-                  {info.lastKm !== null && ` • ${info.lastKm.toLocaleString('pt-BR')} km`}
-                </p>
-                {info.nextDueKm !== null && info.remainingKm !== null && (
+                {info.lastDate && (
+                  <p>
+                    Última: {format(parseISO(info.lastDate), 'dd/MM/yyyy')}
+                    {info.lastKm !== null && ` • ${info.lastKm.toLocaleString('pt-BR')} km`}
+                  </p>
+                )}
+                {info.nextDueKm !== null && (
                   <p>
                     Próx. KM: {info.nextDueKm.toLocaleString('pt-BR')} km
-                    <span className={info.remainingKm <= 0 ? ' text-destructive font-medium' : ''}>
-                      {' '}({info.remainingKm > 0 ? `faltam ${info.remainingKm.toLocaleString('pt-BR')} km` : 'vencido'})
-                    </span>
+                    {info.remainingKm !== null && (
+                      <span className={info.remainingKm <= 0 ? ' text-destructive font-medium' : ''}>
+                        {' '}({info.remainingKm > 0 ? `faltam ${info.remainingKm.toLocaleString('pt-BR')} km` : 'vencido'})
+                      </span>
+                    )}
                   </p>
                 )}
-                {info.nextDueDate && info.remainingDays !== null && (
+                {info.nextDueDate && (
                   <p>
                     Próx. Data: {format(parseISO(info.nextDueDate), 'dd/MM/yyyy')}
-                    <span className={info.remainingDays <= 0 ? ' text-destructive font-medium' : ''}>
-                      {' '}({info.remainingDays > 0 ? `faltam ${info.remainingDays} dias` : 'vencido'})
-                    </span>
+                    {info.remainingDays !== null && (
+                      <span className={info.remainingDays <= 0 ? ' text-destructive font-medium' : ''}>
+                        {' '}({info.remainingDays > 0 ? `faltam ${info.remainingDays} dias` : 'vencido'})
+                      </span>
+                    )}
                   </p>
                 )}
-                {!info.hasRule && (
+                {!info.hasRule && !info.lastDate && (
                   <p className="text-muted-foreground/60 italic">Sem regra configurada</p>
                 )}
               </div>

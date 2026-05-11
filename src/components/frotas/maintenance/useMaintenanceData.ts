@@ -6,13 +6,14 @@ import { differenceInDays, addMonths, parseISO } from 'date-fns';
 export function useMaintenanceData(vehicleId: string) {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [rules, setRules] = useState<MaintenanceRule[]>([]);
+  const [vehicle, setVehicle] = useState<{ km_atual: number | null; revisao_proxima_km: number | null; revisao_proxima_data: string | null } | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [filter, setFilter] = useState<MaintenanceType | 'ALL'>('ALL');
 
   const fetchData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
-    const [logsRes, rulesRes] = await Promise.all([
+    const [logsRes, rulesRes, vehRes] = await Promise.all([
       supabase
         .from('vehicle_maintenance_logs')
         .select('*')
@@ -24,12 +25,18 @@ export function useMaintenanceData(vehicleId: string) {
         .from('vehicle_maintenance_rules')
         .select('*')
         .eq('vehicle_id', vehicleId),
+      supabase
+        .from('frota_veiculos')
+        .select('km_atual, revisao_proxima_km, revisao_proxima_data')
+        .eq('id', vehicleId)
+        .maybeSingle(),
     ]);
 
     if (signal?.aborted) return;
 
     if (logsRes.data) setLogs(logsRes.data as MaintenanceLog[]);
     if (rulesRes.data) setRules(rulesRes.data as MaintenanceRule[]);
+    if (vehRes.data) setVehicle(vehRes.data as any);
     setLoading(false);
     setInitialLoaded(true);
   }, [vehicleId]);
@@ -50,9 +57,11 @@ export function useMaintenanceData(vehicleId: string) {
     const lastDate = lastLog?.performed_date || null;
     const lastKm = lastLog?.odometer_km ?? null;
 
-    // Get current km from the most recent log across all types
+    // Get current km from the most recent log across all types or vehicle's km_atual
     const allKmValues = logs.map(l => l.odometer_km).filter(Boolean);
-    const currentKm = allKmValues.length > 0 ? Math.max(...allKmValues) : lastKm;
+    const currentKm = allKmValues.length > 0
+      ? Math.max(...allKmValues)
+      : (vehicle?.km_atual ?? lastKm);
 
     let nextDueKm: number | null = null;
     let remainingKm: number | null = null;
@@ -70,18 +79,33 @@ export function useMaintenanceData(vehicleId: string) {
         nextDueDate = nextDate.toISOString().split('T')[0];
         remainingDays = differenceInDays(nextDate, new Date());
       }
+    }
 
-      // Calculate status
-      const isOverdueKm = remainingKm !== null && remainingKm <= 0;
-      const isOverdueDate = remainingDays !== null && remainingDays <= 0;
-      const isAlertKm = remainingKm !== null && rule.alert_before_km !== null && remainingKm <= rule.alert_before_km;
-      const isAlertDate = remainingDays !== null && rule.alert_before_days !== null && remainingDays <= rule.alert_before_days;
-
-      if (isOverdueKm || isOverdueDate) {
-        status = 'VENCIDO';
-      } else if (isAlertKm || isAlertDate) {
-        status = 'ATENCAO';
+    // Fallback para REVISAO usando dados importados da planilha quando ainda não há log
+    if (type === 'REVISAO' && !lastLog && vehicle) {
+      if (nextDueKm === null && vehicle.revisao_proxima_km && vehicle.revisao_proxima_km > 0) {
+        nextDueKm = vehicle.revisao_proxima_km;
+        remainingKm = currentKm !== null ? nextDueKm - currentKm : null;
       }
+      if (nextDueDate === null && vehicle.revisao_proxima_data) {
+        nextDueDate = vehicle.revisao_proxima_data;
+        const [yy, mm, dd] = vehicle.revisao_proxima_data.split('-').map(Number);
+        remainingDays = differenceInDays(new Date(yy, mm - 1, dd), new Date());
+      }
+    }
+
+    // Calculate status
+    const alertKm = rule?.alert_before_km ?? 500;
+    const alertDays = rule?.alert_before_days ?? 15;
+    const isOverdueKm = remainingKm !== null && remainingKm <= 0;
+    const isOverdueDate = remainingDays !== null && remainingDays <= 0;
+    const isAlertKm = remainingKm !== null && remainingKm <= alertKm;
+    const isAlertDate = remainingDays !== null && remainingDays <= alertDays;
+
+    if (isOverdueKm || isOverdueDate) {
+      status = 'VENCIDO';
+    } else if (isAlertKm || isAlertDate) {
+      status = 'ATENCAO';
     }
 
     return {
@@ -93,9 +117,9 @@ export function useMaintenanceData(vehicleId: string) {
       nextDueDate,
       remainingDays,
       status,
-      hasRule: !!rule,
+      hasRule: !!rule || (type === 'REVISAO' && !!(vehicle?.revisao_proxima_km || vehicle?.revisao_proxima_data)),
     };
-  }, [logs, rules]);
+  }, [logs, rules, vehicle]);
 
   return { logs: filteredLogs, allLogs: logs, rules, loading, initialLoaded, filter, setFilter, fetchData, getStatusInfo };
 }
