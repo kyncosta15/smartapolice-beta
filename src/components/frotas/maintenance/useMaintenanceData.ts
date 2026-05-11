@@ -6,7 +6,7 @@ import { differenceInDays, addMonths, parseISO } from 'date-fns';
 export function useMaintenanceData(vehicleId: string) {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [rules, setRules] = useState<MaintenanceRule[]>([]);
-  const [vehicle, setVehicle] = useState<{ km_atual: number | null; revisao_proxima_km: number | null; revisao_proxima_data: string | null } | null>(null);
+  const [vehicle, setVehicle] = useState<{ revisao_proxima_km: number | null; revisao_proxima_data: string | null } | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [filter, setFilter] = useState<MaintenanceType | 'ALL'>('ALL');
@@ -27,7 +27,7 @@ export function useMaintenanceData(vehicleId: string) {
         .eq('vehicle_id', vehicleId),
       supabase
         .from('frota_veiculos')
-        .select('km_atual, revisao_proxima_km, revisao_proxima_data')
+        .select('revisao_proxima_km, revisao_proxima_data')
         .eq('id', vehicleId)
         .maybeSingle(),
     ]);
@@ -57,11 +57,11 @@ export function useMaintenanceData(vehicleId: string) {
     const lastDate = lastLog?.performed_date || null;
     const lastKm = lastLog?.odometer_km ?? null;
 
-    // Get current km from the most recent log across all types or vehicle's km_atual
+    // Get current km from the most recent maintenance log
     const allKmValues = logs.map(l => l.odometer_km).filter(Boolean);
     const currentKm = allKmValues.length > 0
       ? Math.max(...allKmValues)
-      : (vehicle?.km_atual ?? lastKm);
+      : lastKm;
 
     let nextDueKm: number | null = null;
     let remainingKm: number | null = null;
