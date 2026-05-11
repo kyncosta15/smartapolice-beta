@@ -521,6 +521,13 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
                         <td className="px-2 py-1.5 truncate max-w-[160px]">
                           {r.tacografoVenc ? `${r.tacografoStatus || ''} ${r.tacografoVenc.split('-').reverse().join('/')}` : '—'}
                         </td>
+                        <td className="px-2 py-1.5 truncate max-w-[120px]">
+                          {r.revisaoData
+                            ? r.revisaoData.split('-').reverse().join('/')
+                            : r.revisaoKm > 0
+                              ? `${r.revisaoKm.toLocaleString('pt-BR')} km`
+                              : '—'}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
