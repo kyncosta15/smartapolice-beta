@@ -62,6 +62,31 @@ const parseTacografo = (raw: string): { status: string | null; venc: string | nu
   return { status, venc };
 };
 
+// Parse coluna REVISÃO: pode ser um KM (ex.: "10000") ou uma data (ex.: "05/03/26", "05/03/2026")
+// Regra: se for KM, revisaoKm = N e revisaoData = null. Se for data, revisaoKm = 0 e revisaoData = YYYY-MM-DD.
+const parseRevisao = (raw: string): { km: number; data: string | null } => {
+  const text = (raw ?? '').toString().trim();
+  if (!text) return { km: 0, data: null };
+
+  // Data DD/MM/YY ou DD/MM/YYYY (também aceita - como separador)
+  const d = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (d) {
+    const dd = d[1].padStart(2, '0');
+    const mm = d[2].padStart(2, '0');
+    const yyyy = d[3].length === 2 ? `20${d[3]}` : d[3];
+    return { km: 0, data: `${yyyy}-${mm}-${dd}` };
+  }
+
+  // Número puro (KM) — remove separadores de milhar
+  const onlyDigits = text.replace(/[^\d]/g, '');
+  if (onlyDigits && /^\d+$/.test(onlyDigits)) {
+    const n = parseInt(onlyDigits, 10);
+    if (n > 0) return { km: n, data: null };
+  }
+  return { km: 0, data: null };
+};
+
+
 const parseRastreador = (raw: string): boolean => {
   const t = (raw || '').toString().trim().toLowerCase();
   if (!t) return false;
