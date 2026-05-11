@@ -29,6 +29,9 @@ interface ParsedRow {
   tacografoRaw: string;
   tacografoStatus: string | null; // APTO/INAPTO/null
   tacografoVenc: string | null;   // YYYY-MM-DD
+  revisaoRaw: string;
+  revisaoKm: number;              // 0 quando for por data
+  revisaoData: string | null;     // YYYY-MM-DD ou null
 }
 
 interface MatchedRow extends ParsedRow {
@@ -58,6 +61,31 @@ const parseTacografo = (raw: string): { status: string | null; venc: string | nu
   }
   return { status, venc };
 };
+
+// Parse coluna REVISÃO: pode ser um KM (ex.: "10000") ou uma data (ex.: "05/03/26", "05/03/2026")
+// Regra: se for KM, revisaoKm = N e revisaoData = null. Se for data, revisaoKm = 0 e revisaoData = YYYY-MM-DD.
+const parseRevisao = (raw: string): { km: number; data: string | null } => {
+  const text = (raw ?? '').toString().trim();
+  if (!text) return { km: 0, data: null };
+
+  // Data DD/MM/YY ou DD/MM/YYYY (também aceita - como separador)
+  const d = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (d) {
+    const dd = d[1].padStart(2, '0');
+    const mm = d[2].padStart(2, '0');
+    const yyyy = d[3].length === 2 ? `20${d[3]}` : d[3];
+    return { km: 0, data: `${yyyy}-${mm}-${dd}` };
+  }
+
+  // Número puro (KM) — remove separadores de milhar
+  const onlyDigits = text.replace(/[^\d]/g, '');
+  if (onlyDigits && /^\d+$/.test(onlyDigits)) {
+    const n = parseInt(onlyDigits, 10);
+    if (n > 0) return { km: n, data: null };
+  }
+  return { km: 0, data: null };
+};
+
 
 const parseRastreador = (raw: string): boolean => {
   const t = (raw || '').toString().trim().toLowerCase();
@@ -119,6 +147,7 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
       const colSitFin = findCol('SITUAÇÃO FINANCEIRA', 'SITUACAO FINANCEIRA', 'SIT. FINANCEIRA', 'SIT FINANCEIRA');
       const colEmpresa = findCol('EMPRESA RESPONSÁVEL', 'EMPRESA RESPONSAVEL', 'EMPRESA');
       const colTac = findCol('TACÓGRAFO', 'TACOGRAFO');
+      const colRev = findCol('REVISÃO', 'REVISAO', 'REVISÃO KM', 'REVISAO KM', 'PRÓXIMA REVISÃO', 'PROXIMA REVISAO');
 
       if (colPlaca < 0) {
         toast.error('Não foi possível localizar a coluna "PLACA" no cabeçalho da planilha.');
@@ -139,6 +168,7 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
         if (placaNorm.length !== 7 || !/^[A-Z]{3}/.test(placaNorm)) continue;
 
         const tac = parseTacografo(cell(row, colTac));
+        const rev = parseRevisao(cell(row, colRev));
         const veiculoLabel = [cell(row, colVeiculo), cell(row, colMarca)].filter(Boolean).join(' ').trim();
         parsed.push({
           rowIndex: idx + 1,
@@ -153,6 +183,9 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
           tacografoRaw: cell(row, colTac),
           tacografoStatus: tac.status,
           tacografoVenc: tac.venc,
+          revisaoRaw: cell(row, colRev),
+          revisaoKm: rev.km,
+          revisaoData: rev.data,
         });
       }
 
@@ -212,6 +245,11 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
         const updates: Record<string, any> = {
           tem_rastreador: row.rastreador,
         };
+        // Revisão: KM (intervalo) ou data específica. Se for data, KM fica em 0.
+        if (row.revisaoKm > 0 || row.revisaoData) {
+          updates.revisao_proxima_km = row.revisaoKm || 0;
+          updates.revisao_proxima_data = row.revisaoData; // null quando for por KM
+        }
         const sitUpper = (row.situacaoFinanceira || '').toUpperCase();
         let financeStatus: 'QUITADO' | 'EM_ANDAMENTO' | null = null;
         let financeType: 'A_VISTA' | 'FINANCIAMENTO' | 'CONSORCIO' | null = null;
@@ -329,6 +367,26 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
           }
         }
 
+        // 4) Revisão: cria/atualiza regra de manutenção REVISAO se houver KM
+        if (row.revisaoKm > 0) {
+          const { data: existingRule } = await supabase
+            .from('vehicle_maintenance_rules')
+            .select('id')
+            .eq('vehicle_id', row.veiculoId!)
+            .eq('type', 'REVISAO')
+            .maybeSingle();
+          const rulePayload = {
+            vehicle_id: row.veiculoId!,
+            type: 'REVISAO',
+            due_every_km: row.revisaoKm,
+          };
+          if (existingRule?.id) {
+            await supabase.from('vehicle_maintenance_rules').update(rulePayload).eq('id', existingRule.id);
+          } else {
+            await supabase.from('vehicle_maintenance_rules').insert(rulePayload as any);
+          }
+        }
+
         const i = updatedRows.findIndex(r => r.rowIndex === row.rowIndex);
         if (i >= 0) updatedRows[i] = { ...updatedRows[i], status: 'updated' };
       } catch (err: any) {
@@ -392,6 +450,7 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
                 <p>1. Veículo • 2. <strong>Placa</strong> • 3. Obra • 4. Responsável</p>
                 <p>5. Contato • 6. Rastreador • 7. Sit. Financeira</p>
                 <p>8. Empresa Responsável • 9. Tacógrafo (ex: "APTO VENC. 22/11/2027")</p>
+                <p>10. Revisão (KM, ex: "10000", ou data, ex: "05/03/26")</p>
               </div>
             </Card>
           )}
@@ -441,6 +500,7 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
                       <th className="px-2 py-1.5 text-center">Rastr.</th>
                       <th className="px-2 py-1.5">Sit. Fin.</th>
                       <th className="px-2 py-1.5">Tacógrafo</th>
+                      <th className="px-2 py-1.5">Revisão</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -460,6 +520,13 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
                         <td className="px-2 py-1.5 truncate max-w-[100px]">{r.situacaoFinanceira || '—'}</td>
                         <td className="px-2 py-1.5 truncate max-w-[160px]">
                           {r.tacografoVenc ? `${r.tacografoStatus || ''} ${r.tacografoVenc.split('-').reverse().join('/')}` : '—'}
+                        </td>
+                        <td className="px-2 py-1.5 truncate max-w-[120px]">
+                          {r.revisaoData
+                            ? r.revisaoData.split('-').reverse().join('/')
+                            : r.revisaoKm > 0
+                              ? `${r.revisaoKm.toLocaleString('pt-BR')} km`
+                              : '—'}
                         </td>
                       </tr>
                     ))}
