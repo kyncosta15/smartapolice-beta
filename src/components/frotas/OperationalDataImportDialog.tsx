@@ -147,6 +147,7 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
       const colSitFin = findCol('SITUAÇÃO FINANCEIRA', 'SITUACAO FINANCEIRA', 'SIT. FINANCEIRA', 'SIT FINANCEIRA');
       const colEmpresa = findCol('EMPRESA RESPONSÁVEL', 'EMPRESA RESPONSAVEL', 'EMPRESA');
       const colTac = findCol('TACÓGRAFO', 'TACOGRAFO');
+      const colRev = findCol('REVISÃO', 'REVISAO', 'REVISÃO KM', 'REVISAO KM', 'PRÓXIMA REVISÃO', 'PROXIMA REVISAO');
 
       if (colPlaca < 0) {
         toast.error('Não foi possível localizar a coluna "PLACA" no cabeçalho da planilha.');
