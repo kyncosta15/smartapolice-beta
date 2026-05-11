@@ -500,6 +500,7 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
                       <th className="px-2 py-1.5 text-center">Rastr.</th>
                       <th className="px-2 py-1.5">Sit. Fin.</th>
                       <th className="px-2 py-1.5">Tacógrafo</th>
+                      <th className="px-2 py-1.5">Revisão</th>
                     </tr>
                   </thead>
                   <tbody>
