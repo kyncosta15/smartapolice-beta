@@ -367,6 +367,26 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
           }
         }
 
+        // 4) Revisão: cria/atualiza regra de manutenção REVISAO se houver KM
+        if (row.revisaoKm > 0) {
+          const { data: existingRule } = await supabase
+            .from('vehicle_maintenance_rules')
+            .select('id')
+            .eq('vehicle_id', row.veiculoId!)
+            .eq('type', 'REVISAO')
+            .maybeSingle();
+          const rulePayload = {
+            vehicle_id: row.veiculoId!,
+            type: 'REVISAO',
+            due_every_km: row.revisaoKm,
+          };
+          if (existingRule?.id) {
+            await supabase.from('vehicle_maintenance_rules').update(rulePayload).eq('id', existingRule.id);
+          } else {
+            await supabase.from('vehicle_maintenance_rules').insert(rulePayload as any);
+          }
+        }
+
         const i = updatedRows.findIndex(r => r.rowIndex === row.rowIndex);
         if (i >= 0) updatedRows[i] = { ...updatedRows[i], status: 'updated' };
       } catch (err: any) {
