@@ -450,6 +450,7 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
                 <p>1. Veículo • 2. <strong>Placa</strong> • 3. Obra • 4. Responsável</p>
                 <p>5. Contato • 6. Rastreador • 7. Sit. Financeira</p>
                 <p>8. Empresa Responsável • 9. Tacógrafo (ex: "APTO VENC. 22/11/2027")</p>
+                <p>10. Revisão (KM, ex: "10000", ou data, ex: "05/03/26")</p>
               </div>
             </Card>
           )}
