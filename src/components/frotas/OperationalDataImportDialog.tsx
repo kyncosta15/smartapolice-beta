@@ -168,6 +168,7 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
         if (placaNorm.length !== 7 || !/^[A-Z]{3}/.test(placaNorm)) continue;
 
         const tac = parseTacografo(cell(row, colTac));
+        const rev = parseRevisao(cell(row, colRev));
         const veiculoLabel = [cell(row, colVeiculo), cell(row, colMarca)].filter(Boolean).join(' ').trim();
         parsed.push({
           rowIndex: idx + 1,
@@ -182,6 +183,9 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
           tacografoRaw: cell(row, colTac),
           tacografoStatus: tac.status,
           tacografoVenc: tac.venc,
+          revisaoRaw: cell(row, colRev),
+          revisaoKm: rev.km,
+          revisaoData: rev.data,
         });
       }
 
