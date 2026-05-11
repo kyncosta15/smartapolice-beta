@@ -1826,6 +1826,8 @@ export type Database = {
           proprietario_nome: string | null
           proprietario_tipo: string | null
           renavam: string | null
+          revisao_proxima_data: string | null
+          revisao_proxima_km: number
           status_seguro: string | null
           status_veiculo: string | null
           stolen_current_date: string | null
@@ -1873,6 +1875,8 @@ export type Database = {
           proprietario_nome?: string | null
           proprietario_tipo?: string | null
           renavam?: string | null
+          revisao_proxima_data?: string | null
+          revisao_proxima_km?: number
           status_seguro?: string | null
           status_veiculo?: string | null
           stolen_current_date?: string | null
@@ -1920,6 +1924,8 @@ export type Database = {
           proprietario_nome?: string | null
           proprietario_tipo?: string | null
           renavam?: string | null
+          revisao_proxima_data?: string | null
+          revisao_proxima_km?: number
           status_seguro?: string | null
           status_veiculo?: string | null
           stolen_current_date?: string | null

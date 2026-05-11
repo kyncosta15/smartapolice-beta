@@ -29,6 +29,9 @@ interface ParsedRow {
   tacografoRaw: string;
   tacografoStatus: string | null; // APTO/INAPTO/null
   tacografoVenc: string | null;   // YYYY-MM-DD
+  revisaoRaw: string;
+  revisaoKm: number;              // 0 quando for por data
+  revisaoData: string | null;     // YYYY-MM-DD ou null
 }
 
 interface MatchedRow extends ParsedRow {
