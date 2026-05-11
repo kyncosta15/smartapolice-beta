@@ -245,6 +245,11 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
         const updates: Record<string, any> = {
           tem_rastreador: row.rastreador,
         };
+        // Revisão: KM (intervalo) ou data específica. Se for data, KM fica em 0.
+        if (row.revisaoKm > 0 || row.revisaoData) {
+          updates.revisao_proxima_km = row.revisaoKm || 0;
+          updates.revisao_proxima_data = row.revisaoData; // null quando for por KM
+        }
         const sitUpper = (row.situacaoFinanceira || '').toUpperCase();
         let financeStatus: 'QUITADO' | 'EM_ANDAMENTO' | null = null;
         let financeType: 'A_VISTA' | 'FINANCIAMENTO' | 'CONSORCIO' | null = null;
