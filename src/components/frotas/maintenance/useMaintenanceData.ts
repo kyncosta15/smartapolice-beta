@@ -6,13 +6,14 @@ import { differenceInDays, addMonths, parseISO } from 'date-fns';
 export function useMaintenanceData(vehicleId: string) {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [rules, setRules] = useState<MaintenanceRule[]>([]);
+  const [vehicle, setVehicle] = useState<{ km_atual: number | null; revisao_proxima_km: number | null; revisao_proxima_data: string | null } | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [filter, setFilter] = useState<MaintenanceType | 'ALL'>('ALL');
 
   const fetchData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
-    const [logsRes, rulesRes] = await Promise.all([
+    const [logsRes, rulesRes, vehRes] = await Promise.all([
       supabase
         .from('vehicle_maintenance_logs')
         .select('*')
@@ -24,12 +25,18 @@ export function useMaintenanceData(vehicleId: string) {
         .from('vehicle_maintenance_rules')
         .select('*')
         .eq('vehicle_id', vehicleId),
+      supabase
+        .from('frota_veiculos')
+        .select('km_atual, revisao_proxima_km, revisao_proxima_data')
+        .eq('id', vehicleId)
+        .maybeSingle(),
     ]);
 
     if (signal?.aborted) return;
 
     if (logsRes.data) setLogs(logsRes.data as MaintenanceLog[]);
     if (rulesRes.data) setRules(rulesRes.data as MaintenanceRule[]);
+    if (vehRes.data) setVehicle(vehRes.data as any);
     setLoading(false);
     setInitialLoaded(true);
   }, [vehicleId]);
