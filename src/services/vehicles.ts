@@ -2,6 +2,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Vehicle, Policy } from '@/types/claims';
+import { plateVariants } from '@/utils/plateSearch';
 
 export class VehiclesService {
   static async searchVehicles(query: string, empresaId?: string): Promise<Vehicle[]> {
