@@ -260,10 +260,14 @@ export function useFrotasData(filters: FrotaFilters) {
     if (filters.search) {
       const term = filters.search.toLowerCase();
       const termDigits = term.replace(/\D/g, '');
+      // Normaliza placa: remove tudo que não for alfanumérico (aceita AAA1234 e AAA-1234)
+      const termPlaca = term.replace(/[^a-z0-9]/g, '');
       result = result.filter(v => {
         const anyV = v as any;
+        const placaNorm = (v.placa || '').toLowerCase().replace(/[^a-z0-9]/g, '');
         return (
           (v.placa || '').toLowerCase().includes(term) ||
+          (termPlaca && placaNorm.includes(termPlaca)) ||
           (v.proprietario_doc || '').toLowerCase().includes(term) ||
           (v.proprietario_nome || '').toLowerCase().includes(term) ||
           (v.marca || '').toLowerCase().includes(term) ||
