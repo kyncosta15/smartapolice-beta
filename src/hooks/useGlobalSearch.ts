@@ -49,6 +49,9 @@ export function useGlobalSearch(query: string) {
       const safe = escapeForOr(term);
       const like = `%${safe}%`;
       const onlyDigits = safe.replace(/\D/g, '');
+      const placaFilters = plateVariants(safe).map((v) => `placa.ilike.%${v}%`);
+      // Garante ao menos um filtro de placa baseado no termo original
+      if (placaFilters.length === 0) placaFilters.push(`placa.ilike.${like}`);
 
       try {
         const [apolicesRes, sinistrosRes, veiculosRes] = await Promise.all([
@@ -61,7 +64,7 @@ export function useGlobalSearch(query: string) {
                 `segurado.ilike.${like}`,
                 `numero_apolice.ilike.${like}`,
                 `seguradora.ilike.${like}`,
-                `placa.ilike.${like}`,
+                ...placaFilters,
                 onlyDigits ? `documento.ilike.%${onlyDigits}%` : null,
               ]
                 .filter(Boolean)
@@ -91,7 +94,7 @@ export function useGlobalSearch(query: string) {
             )
             .or(
               [
-                `placa.ilike.${like}`,
+                ...placaFilters,
                 `modelo.ilike.${like}`,
                 `marca.ilike.${like}`,
                 `current_responsible_name.ilike.${like}`,
