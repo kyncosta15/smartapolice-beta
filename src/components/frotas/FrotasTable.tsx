@@ -46,6 +46,7 @@ import { FrotasBulkActions } from './FrotasBulkActions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { VehicleStatusBadge } from './VehicleStatusBadge';
 import { useVehicleTickets } from '@/hooks/useVehicleTickets';
+import { FleetIndicatorsProvider } from '@/contexts/FleetIndicatorsContext';
 
 interface FrotasTableProps {
   veiculos: FrotaVeiculo[];
