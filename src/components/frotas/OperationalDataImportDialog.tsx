@@ -250,21 +250,31 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
           updates.revisao_proxima_km = row.revisaoKm || 0;
           updates.revisao_proxima_data = row.revisaoData; // null quando for por KM
         }
-        const sitUpper = (row.situacaoFinanceira || '').toUpperCase();
+        const sitRaw = (row.situacaoFinanceira || '').toString().trim();
+        const sitUpper = sitRaw.toUpperCase();
         let financeStatus: 'QUITADO' | 'EM_ANDAMENTO' | null = null;
         let financeType: 'A_VISTA' | 'FINANCIAMENTO' | 'CONSORCIO' | null = null;
+        let bankName: string | null = null;
+
+        // Extrai banco no formato "Bco:Bradesco", "Banco: Itaú", "Bco - Santander"
+        const bankMatch = sitRaw.match(/(?:bco|banco)\s*[:\-]\s*(.+?)(?:$|[,;|/])/i);
+        if (bankMatch && bankMatch[1]) {
+          bankName = bankMatch[1].trim();
+        }
+
         if (sitUpper) {
           if (sitUpper.includes('QUITADO') || sitUpper.includes('AVISTA') || sitUpper.includes('À VISTA') || sitUpper.includes('A VISTA')) {
             updates.modalidade_compra = 'avista';
             financeType = 'A_VISTA';
             financeStatus = 'QUITADO';
-          } else if (sitUpper.includes('FINANC')) {
-            updates.modalidade_compra = 'financiado';
-            financeType = 'FINANCIAMENTO';
-            financeStatus = 'EM_ANDAMENTO';
           } else if (sitUpper.includes('CONSORCIO') || sitUpper.includes('CONSÓRCIO')) {
             updates.modalidade_compra = 'consorcio';
             financeType = 'CONSORCIO';
+            financeStatus = 'EM_ANDAMENTO';
+          } else if (sitUpper.includes('FINANC') || bankName) {
+            // Se tem banco mencionado, assume financiamento
+            updates.modalidade_compra = 'financiado';
+            financeType = 'FINANCIAMENTO';
             financeStatus = 'EM_ANDAMENTO';
           }
         }
