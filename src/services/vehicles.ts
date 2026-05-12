@@ -2,6 +2,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Vehicle, Policy } from '@/types/claims';
+import { plateVariants } from '@/utils/plateSearch';
 
 export class VehiclesService {
   static async searchVehicles(query: string, empresaId?: string): Promise<Vehicle[]> {
@@ -32,7 +33,16 @@ export class VehiclesService {
           localizacao,
           empresa_id
         `)
-        .or(`placa.ilike.%${query}%,marca.ilike.%${query}%,modelo.ilike.%${query}%,proprietario_nome.ilike.%${query}%,chassi.ilike.%${query}%`);
+        .or(
+          [
+            ...plateVariants(query).map((v) => `placa.ilike.%${v}%`),
+            `placa.ilike.%${query}%`,
+            `marca.ilike.%${query}%`,
+            `modelo.ilike.%${query}%`,
+            `proprietario_nome.ilike.%${query}%`,
+            `chassi.ilike.%${query}%`,
+          ].join(',')
+        );
 
       // Filtrar por empresa se fornecido
       if (empresaId) {
