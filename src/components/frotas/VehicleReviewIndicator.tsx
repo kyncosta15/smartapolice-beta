@@ -18,6 +18,11 @@ interface VehicleReview {
   realizada: boolean;
 }
 
+interface ScheduledRevision {
+  km: number | null;
+  data: string | null;
+}
+
 const tipoLabels: Record<string, string> = {
   basica: 'Revisão Básica',
   completa: 'Revisão Completa',
@@ -32,34 +37,60 @@ const tipoLabels: Record<string, string> = {
 };
 
 // Cache to avoid repeated queries
-const reviewCache = new Map<string, { data: VehicleReview[] | null; ts: number }>();
+const reviewCache = new Map<
+  string,
+  { reviews: VehicleReview[]; scheduled: ScheduledRevision | null; ts: number }
+>();
 const CACHE_TTL = 60_000; // 1 min
+
+function parseDateBR(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-');
+  return `${d}/${m}/${y}`;
+}
 
 export function VehicleReviewIndicator({ vehicleId }: { vehicleId: string }) {
   const [reviews, setReviews] = useState<VehicleReview[] | null>(null);
+  const [scheduled, setScheduled] = useState<ScheduledRevision | null>(null);
 
   useEffect(() => {
     const cached = reviewCache.get(vehicleId);
     if (cached && Date.now() - cached.ts < CACHE_TTL) {
-      setReviews(cached.data);
+      setReviews(cached.reviews);
+      setScheduled(cached.scheduled);
       return;
     }
 
-    supabase
-      .from('vehicle_reviews')
-      .select('tipo, data_revisao, km_atual, valor, realizada')
-      .eq('vehicle_id', vehicleId)
-      .eq('realizada', true)
-      .order('data_revisao', { ascending: false })
-      .limit(3)
-      .then(({ data }) => {
-        const result = (data as VehicleReview[] | null) ?? [];
-        reviewCache.set(vehicleId, { data: result, ts: Date.now() });
-        setReviews(result);
-      });
+    Promise.all([
+      supabase
+        .from('vehicle_reviews')
+        .select('tipo, data_revisao, km_atual, valor, realizada')
+        .eq('vehicle_id', vehicleId)
+        .eq('realizada', true)
+        .order('data_revisao', { ascending: false })
+        .limit(3),
+      supabase
+        .from('frota_veiculos')
+        .select('revisao_proxima_km, revisao_proxima_data')
+        .eq('id', vehicleId)
+        .maybeSingle(),
+    ]).then(([reviewsRes, vehicleRes]) => {
+      const reviewsData = (reviewsRes.data as VehicleReview[] | null) ?? [];
+      const v = vehicleRes.data as { revisao_proxima_km: number | null; revisao_proxima_data: string | null } | null;
+      const sched: ScheduledRevision | null =
+        v && ((v.revisao_proxima_km && v.revisao_proxima_km > 0) || v.revisao_proxima_data)
+          ? { km: v.revisao_proxima_km, data: v.revisao_proxima_data }
+          : null;
+
+      reviewCache.set(vehicleId, { reviews: reviewsData, scheduled: sched, ts: Date.now() });
+      setReviews(reviewsData);
+      setScheduled(sched);
+    });
   }, [vehicleId]);
 
-  if (!reviews || reviews.length === 0) return null;
+  const hasReviews = reviews && reviews.length > 0;
+  const hasScheduled = !!scheduled;
+
+  if (!hasReviews && !hasScheduled) return null;
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -71,19 +102,33 @@ export function VehicleReviewIndicator({ vehicleId }: { vehicleId: string }) {
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
           <div className="space-y-1.5">
-            <p className="font-medium text-xs">Últimas revisões realizadas</p>
-            {reviews.map((r, i) => (
-              <div key={i} className="text-xs border-t border-border pt-1">
-                <p className="font-medium">{tipoLabels[r.tipo] || r.tipo}</p>
+            {hasScheduled && (
+              <div className="text-xs">
+                <p className="font-medium">Próxima revisão</p>
                 <p className="text-muted-foreground">
-                  {r.data_revisao
-                    ? format(new Date(r.data_revisao + 'T12:00:00'), 'dd/MM/yyyy')
-                    : '—'}
-                  {r.km_atual != null && ` • ${Number(r.km_atual).toLocaleString('pt-BR')} km`}
-                  {r.valor != null && ` • ${formatCurrency(Number(r.valor))}`}
+                  {scheduled!.km && scheduled!.km > 0
+                    ? `${Number(scheduled!.km).toLocaleString('pt-BR')} km`
+                    : scheduled!.data
+                      ? parseDateBR(scheduled!.data)
+                      : '—'}
                 </p>
               </div>
-            ))}
+            )}
+            {hasReviews && (
+              <>
+                <p className="font-medium text-xs">Últimas revisões realizadas</p>
+                {reviews!.map((r, i) => (
+                  <div key={i} className="text-xs border-t border-border pt-1">
+                    <p className="font-medium">{tipoLabels[r.tipo] || r.tipo}</p>
+                    <p className="text-muted-foreground">
+                      {r.data_revisao ? parseDateBR(r.data_revisao) : '—'}
+                      {r.km_atual != null && ` • ${Number(r.km_atual).toLocaleString('pt-BR')} km`}
+                      {r.valor != null && ` • ${formatCurrency(Number(r.valor))}`}
+                    </p>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </TooltipContent>
       </Tooltip>
