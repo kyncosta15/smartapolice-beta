@@ -537,6 +537,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
         </div>
       </div>
     </div>
+    </FleetIndicatorsProvider>
   );
 
   if (hideHeader) {
