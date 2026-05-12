@@ -3,23 +3,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { Gauge } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  useFleetIndicators,
+  invalidateFleetIndicatorsCache,
+  type TachoStatus,
+} from '@/contexts/FleetIndicatorsContext';
 
-interface TachoStatus {
-  inspectionDate: string;
-  validUntil: string;
-  providerName: string | null;
-  certificateNumber: string | null;
-  daysRemaining: number;
-  status: 'ok' | 'attention' | 'expired';
-}
-
-const tachoCache = new Map<string, { data: TachoStatus | null; ts: number }>();
+const localCache = new Map<string, { data: TachoStatus | null; ts: number }>();
 const CACHE_TTL = 60_000;
 
 function isTruck(categoria?: string | null): boolean {
@@ -34,14 +31,16 @@ export function VehicleTachographIndicator({
   vehicleId: string;
   categoria?: string | null;
 }) {
-  const [status, setStatus] = useState<TachoStatus | null>(null);
+  const ctx = useFleetIndicators();
+  const [localStatus, setLocalStatus] = useState<TachoStatus | null>(null);
 
   useEffect(() => {
+    if (ctx) return;
     if (!isTruck(categoria)) return;
 
-    const cached = tachoCache.get(vehicleId);
+    const cached = localCache.get(vehicleId);
     if (cached && Date.now() - cached.ts < CACHE_TTL) {
-      setStatus(cached.data);
+      setLocalStatus(cached.data);
       return;
     }
 
@@ -53,15 +52,14 @@ export function VehicleTachographIndicator({
       .limit(1)
       .then(({ data }) => {
         if (!data || data.length === 0) {
-          tachoCache.set(vehicleId, { data: null, ts: Date.now() });
-          setStatus(null);
+          localCache.set(vehicleId, { data: null, ts: Date.now() });
+          setLocalStatus(null);
           return;
         }
         const row = data[0];
         const today = new Date();
         const validUntil = new Date(row.valid_until + 'T00:00:00');
         const days = differenceInDays(validUntil, today);
-
         const result: TachoStatus = {
           inspectionDate: row.inspection_date,
           validUntil: row.valid_until,
@@ -70,12 +68,19 @@ export function VehicleTachographIndicator({
           daysRemaining: days,
           status: days < 0 ? 'expired' : days <= 30 ? 'attention' : 'ok',
         };
-        tachoCache.set(vehicleId, { data: result, ts: Date.now() });
-        setStatus(result);
+        localCache.set(vehicleId, { data: result, ts: Date.now() });
+        setLocalStatus(result);
       });
-  }, [vehicleId, categoria]);
+  }, [vehicleId, categoria, ctx]);
 
-  if (!isTruck(categoria) || !status) return null;
+  if (!isTruck(categoria)) return null;
+
+  if (ctx?.loading) {
+    return <Skeleton className="h-3.5 w-3.5 rounded-sm" />;
+  }
+
+  const status = ctx ? ctx.tachoByVehicle.get(vehicleId) ?? null : localStatus;
+  if (!status) return null;
 
   const colorClass =
     status.status === 'expired'
@@ -139,8 +144,9 @@ export function VehicleTachographIndicator({
 
 export function invalidateTachoCache(vehicleId?: string) {
   if (vehicleId) {
-    tachoCache.delete(vehicleId);
+    localCache.delete(vehicleId);
   } else {
-    tachoCache.clear();
+    localCache.clear();
   }
+  invalidateFleetIndicatorsCache(vehicleId);
 }

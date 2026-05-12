@@ -46,6 +46,7 @@ import { FrotasBulkActions } from './FrotasBulkActions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { VehicleStatusBadge } from './VehicleStatusBadge';
 import { useVehicleTickets } from '@/hooks/useVehicleTickets';
+import { FleetIndicatorsProvider } from '@/contexts/FleetIndicatorsContext';
 
 interface FrotasTableProps {
   veiculos: FrotaVeiculo[];
@@ -376,6 +377,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   }
 
   const tableContent = (
+    <FleetIndicatorsProvider vehicles={sortedVeiculos.map(v => ({ id: v.id, categoria: v.categoria }))}>
     <div className="space-y-3 md:space-y-4">
         <FrotasBulkActions
           selectedVehicles={selectedVehicles}
@@ -535,6 +537,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
         </div>
       </div>
     </div>
+    </FleetIndicatorsProvider>
   );
 
   if (hideHeader) {
