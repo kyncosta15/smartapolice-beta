@@ -319,6 +319,7 @@ export default function OperationalDataImportDialog({ open, onOpenChange, onSucc
             type: financeType,
             status: financeStatus || 'EM_ANDAMENTO',
             direct_payment: financeType === 'A_VISTA',
+            bank_name: bankName,
             term_months: 1,
             installment_value: 0,
             installments_paid: financeType === 'A_VISTA' ? 1 : 0,
