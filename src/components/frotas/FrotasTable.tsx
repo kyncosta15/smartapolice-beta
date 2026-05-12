@@ -377,6 +377,7 @@ export function FrotasTable({ veiculos, loading, onRefetch, maxHeight = '60vh', 
   }
 
   const tableContent = (
+    <FleetIndicatorsProvider vehicles={sortedVeiculos.map(v => ({ id: v.id, categoria: v.categoria }))}>
     <div className="space-y-3 md:space-y-4">
         <FrotasBulkActions
           selectedVehicles={selectedVehicles}
