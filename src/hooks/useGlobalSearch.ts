@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { plateVariants } from '@/utils/plateSearch';
 
 export type GlobalResultKind = 'apolice' | 'sinistro' | 'veiculo';
 
